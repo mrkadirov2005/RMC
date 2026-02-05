@@ -16,6 +16,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const superuserRoutes = require('./routes/superuserRoutes');
+const testRoutes = require('./routes/testRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,6 +52,7 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/superusers', superuserRoutes);
+app.use('/api/tests', testRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: any, res: any, next: any): void => {
@@ -63,14 +65,27 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
 
+// Graceful shutdown - use a flag to prevent multiple calls
+let isShuttingDown = false;
 
-// Graceful shutdown
-process.on('SIGINT', async () => {
+const gracefulShutdown = async () => {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  
   console.log('Shutting down gracefully...');
   const pool = require('../config/dbcon');
-  await pool.end();
-  server.close(() => {
-    console.log('Server closed');
-    process.exit(0);
+  
+  server.close(async () => {
+    try {
+      await pool.end();
+      console.log('Server and database pool closed');
+      process.exit(0);
+    } catch (err) {
+      console.error('Error during shutdown:', err);
+      process.exit(1);
+    }
   });
-});
+};
+
+process.on('SIGINT', gracefulShutdown);
+process.on('SIGTERM', gracefulShutdown);

@@ -31,6 +31,7 @@ import {
   Business as BusinessIcon,
   Warning as WarningIcon,
   Dashboard as DashboardIcon,
+  Quiz as QuizIcon,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector, useRBAC } from '../../features/crm/hooks';
 import { logout } from '../../slices/authSlice';
@@ -45,6 +46,7 @@ const iconMap: { [key: string]: any } = {
   MdChecklist: CheckCircleIcon,
   MdBusiness: BusinessIcon,
   MdWarning: WarningIcon,
+  MdQuiz: QuizIcon,
 };
 
 const DRAWER_WIDTH = 280;
@@ -60,9 +62,12 @@ const Sidebar = memo(() => {
 
   const menuItems = [
     { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', permission: 'VIEW_DASHBOARD', roles: ['superuser', 'teacher', 'student'] },
+    { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', permission: 'VIEW_TEACHER_PORTAL', roles: ['teacher'] },
+    { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', permission: 'VIEW_TEST', roles: ['student'] },
     { label: 'Students', path: '/students', iconName: 'MdPeople', permission: 'CRUD_STUDENT', roles: ['superuser', 'teacher', 'student'] },
     { label: 'Teachers', path: '/teachers', iconName: 'MdBook', permission: 'CRUD_TEACHER', roles: ['superuser'] },
     { label: 'Classes', path: '/classes', iconName: 'MdBook', permission: 'CRUD_CLASS', roles: ['superuser', 'teacher'] },
+    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', permission: 'CRUD_TEST', roles: ['superuser', 'teacher'] },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', permission: 'CRUD_PAYMENT', roles: ['superuser', 'teacher'] },
     { label: 'Grades', path: '/grades', iconName: 'MdBarChart', permission: 'CRUD_GRADE', roles: ['superuser', 'teacher', 'student'] },
     { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', permission: 'CRUD_ATTENDANCE', roles: ['superuser', 'teacher'] },

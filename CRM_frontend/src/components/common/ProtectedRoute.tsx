@@ -6,12 +6,14 @@ import { useAppSelector, useRBAC } from '../../features/crm/hooks';
 interface ProtectedRouteProps {
   children: ReactNode;
   requiredUserType?: 'superuser' | 'teacher' | 'student';
+  allowedUserTypes?: Array<'superuser' | 'teacher' | 'student'>;
   requiredPermission?: string;
 }
 
 export const ProtectedRoute = ({
   children,
   requiredUserType,
+  allowedUserTypes,
   requiredPermission,
 }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
@@ -21,6 +23,14 @@ export const ProtectedRoute = ({
     return <Navigate to="/login/superuser" replace />;
   }
 
+  // Check if user type is in allowed list
+  if (allowedUserTypes && allowedUserTypes.length > 0) {
+    if (!allowedUserTypes.includes(user.userType as any)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+  }
+
+  // Check single required user type
   if (requiredUserType && user.userType !== requiredUserType) {
     return <Navigate to="/unauthorized" replace />;
   }

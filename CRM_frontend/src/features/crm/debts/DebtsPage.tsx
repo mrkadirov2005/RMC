@@ -4,6 +4,7 @@ import { useCRUD } from '../hooks/useCRUD';
 import { debtAPI } from '../../../shared/api/api';
 import { SelectField } from '../students/components/SelectField';
 import { fetchStudents, fetchCenters } from '../../../utils/dropdownOptions';
+import DebtAnalyzer from './DebtAnalyzer';
 import '../dashboard/Dashboard.css';
 import '../students/CRUDStyles.css';
 
@@ -98,6 +99,9 @@ const DebtsPage = () => {
           <MdAdd /> Add Debt
         </button>
       </div>
+
+      {/* Payment Analyzer Section */}
+      <DebtAnalyzer />
 
       {state.error && <div className="alert alert-error">{state.error}</div>}
 
