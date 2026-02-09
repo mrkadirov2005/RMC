@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teacherAPI, classAPI, studentAPI, gradeAPI, subjectAPI, assignmentAPI } from '../../../shared/api/api';
+import { teacherAPI, classAPI, studentAPI, gradeAPI, subjectAPI, assignmentAPI, testAPI } from '../../../shared/api/api';
 import { AssignmentSectionTeacher } from './components/AssignmentSectionTeacher';
 import { showToast } from '../../../utils/toast';
 import {
@@ -54,6 +54,7 @@ import {
   Person as PersonIcon,
   Class as ClassIcon,
   Assignment as AssignmentIcon,
+  Quiz as QuizIcon,
 } from '@mui/icons-material';
 
 interface Subject {
@@ -439,6 +440,7 @@ const TeacherDetailPage = () => {
           <Tab icon={<PersonIcon />} iconPosition="start" label="Information" />
           <Tab icon={<ClassIcon />} iconPosition="start" label="Classes & Students" />
           <Tab icon={<AssignmentIcon />} iconPosition="start" label="Assignments" />
+          <Tab icon={<QuizIcon />} iconPosition="start" label="Tests" />
         </Tabs>
 
         <Box sx={{ p: 3 }}>
@@ -626,6 +628,41 @@ const TeacherDetailPage = () => {
               teacherId={teacher?.teacher_id || teacher?.id}
               onRefresh={loadTeacherDetails}
             />
+          </TabPanel>
+
+          {/* Tab 3: Tests */}
+          <TabPanel value={tabValue} index={3}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Tests Management
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 2 }}>
+                  <Button
+                    variant="outlined"
+                    startIcon={<QuizIcon />}
+                    onClick={() => navigate('/tests')}
+                    sx={{ borderRadius: 2 }}
+                  >
+                    View All Tests
+                  </Button>
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => navigate('/tests/create')}
+                    sx={{
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                      borderRadius: 2,
+                    }}
+                  >
+                    Create New Test
+                  </Button>
+                </Box>
+              </Box>
+              <Alert severity="info" sx={{ borderRadius: 2 }}>
+                Navigate to the Tests section to create, assign, and manage tests for your classes and students.
+              </Alert>
+            </Box>
           </TabPanel>
         </Box>
       </Card>

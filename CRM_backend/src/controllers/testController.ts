@@ -810,19 +810,45 @@ exports.assignTest = async (req: any, res: any) => {
 exports.getAssignedTests = async (req: any, res: any) => {
   try {
     const { type, id } = req.params;
+    const { student_id } = req.query; // Optional: for getting submission status when type is 'class'
     
-    let query = `
-      SELECT t.*, ta.due_date, ta.is_mandatory, ta.notes as assignment_notes,
-             s.subject_name,
-             (SELECT COUNT(*) FROM test_submissions WHERE test_id = t.test_id AND student_id = $2) as attempts
-      FROM tests t
-      JOIN test_assignments ta ON t.test_id = ta.test_id
-      LEFT JOIN subjects s ON t.subject_id = s.subject_id
-      WHERE ta.assigned_to_type = $1 AND ta.assigned_to_id = $2 AND t.is_active = true
-      ORDER BY ta.due_date ASC NULLS LAST
-    `;
+    // Determine which student_id to use for submission lookups
+    const studentIdForSubmission = student_id || (type === 'student' ? id : null);
+    
+    let query;
+    let params;
+    
+    if (studentIdForSubmission) {
+      // Include submission status for the specific student
+      query = `
+        SELECT t.*, ta.due_date, ta.is_mandatory, ta.notes as assignment_notes,
+               s.subject_name,
+               (SELECT COUNT(*) FROM test_submissions WHERE test_id = t.test_id AND student_id = $3) as attempts,
+               (SELECT status FROM test_submissions WHERE test_id = t.test_id AND student_id = $3 ORDER BY submitted_at DESC LIMIT 1) as submission_status,
+               (SELECT obtained_marks FROM test_submissions WHERE test_id = t.test_id AND student_id = $3 ORDER BY submitted_at DESC LIMIT 1) as score,
+               (SELECT submitted_at FROM test_submissions WHERE test_id = t.test_id AND student_id = $3 ORDER BY submitted_at DESC LIMIT 1) as submitted_at
+        FROM tests t
+        JOIN test_assignments ta ON t.test_id = ta.test_id
+        LEFT JOIN subjects s ON t.subject_id = s.subject_id
+        WHERE ta.assigned_to_type = $1 AND ta.assigned_to_id = $2 AND t.is_active = true
+        ORDER BY ta.due_date ASC NULLS LAST
+      `;
+      params = [type, id, studentIdForSubmission];
+    } else {
+      // No student context - return tests without submission info
+      query = `
+        SELECT t.*, ta.due_date, ta.is_mandatory, ta.notes as assignment_notes,
+               s.subject_name
+        FROM tests t
+        JOIN test_assignments ta ON t.test_id = ta.test_id
+        LEFT JOIN subjects s ON t.subject_id = s.subject_id
+        WHERE ta.assigned_to_type = $1 AND ta.assigned_to_id = $2 AND t.is_active = true
+        ORDER BY ta.due_date ASC NULLS LAST
+      `;
+      params = [type, id];
+    }
 
-    const result = await test_db.query(query, [type, id]);
+    const result = await test_db.query(query, params);
     res.json(result.rows);
   } catch (error: any) {
     console.error('Database error:', error);

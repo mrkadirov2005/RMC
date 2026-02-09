@@ -27,9 +27,10 @@ interface ClassInfo {
 
 interface TeacherClassesTabProps {
   teacherId?: number;
+  onRefresh?: () => void;
 }
 
-const TeacherClassesTab = ({ teacherId }: TeacherClassesTabProps) => {
+const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesTabProps) => {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [loading, setLoading] = useState(true);
 

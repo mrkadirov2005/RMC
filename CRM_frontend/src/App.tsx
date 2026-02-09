@@ -36,6 +36,7 @@ const TestAssignPage = lazy(() => import('./features/crm/tests/TestAssignPage'))
 const GradeSubmissionPage = lazy(() => import('./features/crm/tests/GradeSubmissionPage'));
 const ViewSubmissionPage = lazy(() => import('./features/crm/tests/ViewSubmissionPage'));
 const TeacherPortal = lazy(() => import('./features/teacher/TeacherPortal'));
+const StudentPortal = lazy(() => import('./features/student/StudentPortal'));
 
 // Loading component
 const LoadingSpinner = () => (
@@ -378,6 +379,20 @@ function AppContent() {
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <TeacherPortal />
+              </Suspense>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Student Portal */}
+      <Route
+        path="/student-portal"
+        element={
+          <ProtectedRoute allowedUserTypes={['student']}>
+            <Layout>
+              <Suspense fallback={<LoadingSpinner />}>
+                <StudentPortal />
               </Suspense>
             </Layout>
           </ProtectedRoute>

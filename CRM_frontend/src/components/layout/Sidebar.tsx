@@ -61,19 +61,20 @@ const Sidebar = memo(() => {
   const { canAccess } = useRBAC();
 
   const menuItems = [
-    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', permission: 'VIEW_DASHBOARD', roles: ['superuser', 'teacher', 'student'] },
+    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', permission: 'VIEW_DASHBOARD', roles: ['superuser', 'teacher'] },
     { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', permission: 'VIEW_TEACHER_PORTAL', roles: ['teacher'] },
+    { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', permission: 'VIEW_STUDENT_PORTAL', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', permission: 'VIEW_TEST', roles: ['student'] },
-    { label: 'Students', path: '/students', iconName: 'MdPeople', permission: 'CRUD_STUDENT', roles: ['superuser', 'teacher', 'student'] },
+    { label: 'Students', path: '/students', iconName: 'MdPeople', permission: 'CRUD_STUDENT', roles: ['superuser', 'teacher'] },
     { label: 'Teachers', path: '/teachers', iconName: 'MdBook', permission: 'CRUD_TEACHER', roles: ['superuser'] },
     { label: 'Classes', path: '/classes', iconName: 'MdBook', permission: 'CRUD_CLASS', roles: ['superuser', 'teacher'] },
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', permission: 'CRUD_TEST', roles: ['superuser', 'teacher'] },
-    { label: 'Payments', path: '/payments', iconName: 'MdPayment', permission: 'CRUD_PAYMENT', roles: ['superuser', 'teacher'] },
-    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', permission: 'CRUD_GRADE', roles: ['superuser', 'teacher', 'student'] },
+    { label: 'Payments', path: '/payments', iconName: 'MdPayment', permission: 'CRUD_PAYMENT', roles: ['superuser'] },
+    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', permission: 'CRUD_GRADE', roles: ['superuser', 'teacher'] },
     { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', permission: 'CRUD_ATTENDANCE', roles: ['superuser', 'teacher'] },
-    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', permission: 'CRUD_ASSIGNMENT', roles: ['superuser', 'teacher', 'student'] },
+    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', permission: 'CRUD_ASSIGNMENT', roles: ['superuser', 'teacher'] },
     { label: 'Subjects', path: '/subjects', iconName: 'MdBook', permission: 'CRUD_SUBJECT', roles: ['superuser', 'teacher'] },
-    { label: 'Debts', path: '/debts', iconName: 'MdWarning', permission: 'CRUD_DEBT', roles: ['superuser', 'teacher'] },
+    { label: 'Debts', path: '/debts', iconName: 'MdWarning', permission: 'CRUD_DEBT', roles: ['superuser'] },
     { label: 'Centers', path: '/centers', iconName: 'MdBusiness', permission: 'CRUD_CENTER', roles: ['superuser'] },
   ];
 
@@ -82,7 +83,7 @@ const Sidebar = memo(() => {
       return item.roles?.includes('student');
     }
     if (user?.userType === 'teacher') {
-      return item.roles?.includes('teacher') && canAccess(item.permission);
+      return item.roles?.includes('teacher');
     }
     if (user?.userType === 'superuser') {
       return item.roles?.includes('superuser');

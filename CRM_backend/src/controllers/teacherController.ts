@@ -1,10 +1,29 @@
 const pool = require('../../config/dbcon');
 const cryptoModule = require('crypto');
+import { z } from 'zod';
 
 // Hash password function
 const hashPassword = (password: string) => {
   return cryptoModule.createHash('sha256').update(password).digest('hex');
 };
+
+// Zod validation schema for creating a teacher
+const createTeacherSchema = z.object({
+  center_id: z.number(),
+  employee_id: z.string().min(1, 'Employee ID is required'),
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
+  email: z.string().email('Invalid email format'),
+  phone: z.string().optional(),
+  date_of_birth: z.string().optional(),
+  gender: z.string().optional(),
+  qualification: z.string().optional(),
+  specialization: z.string().optional(),
+  status: z.string().default('Active'),
+  roles: z.array(z.string()).optional(),
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
 
 exports.getAllTeachers = async (req: any, res: any) => {
   try {
@@ -32,10 +51,29 @@ exports.getTeacherById = async (req: any, res: any) => {
 
 exports.createTeacher = async (req: any, res: any) => {
   try {
-    const { center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, roles } = req.body;
+    // Validate request body with Zod
+    const validationResult = createTeacherSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ 
+        error: 'Validation failed', 
+        details: validationResult.error.issues.map((e: any) => ({ field: e.path.join('.'), message: e.message })) 
+      });
+    }
+    
+    const { center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, roles, username, password } = validationResult.data;
+    
+    // Check if username already exists
+    const existingUser = await pool.query('SELECT teacher_id FROM teachers WHERE username = $1', [username]);
+    if (existingUser.rows.length > 0) {
+      return res.status(400).json({ error: 'Username already exists' });
+    }
+    
+    // Hash the password
+    const password_hash = hashPassword(password);
+    
     const result = await pool.query(
-      'INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, roles) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *',
-      [center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status || 'Active', JSON.stringify(roles || [])]
+      'INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, roles, username, password_hash) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *',
+      [center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, JSON.stringify(roles || []), username, password_hash]
     );
     res.status(201).json(result.rows[0]);
   } catch (error: any) {
@@ -65,7 +103,7 @@ exports.updateTeacher = async (req: any, res: any) => {
 exports.deleteTeacher = async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const result = await pool.query('DELETE FROM teachers WHERE employee_id = $1 RETURNING *', [id]);
+    const result = await pool.query('DELETE FROM teachers WHERE teacher_id = $1 RETURNING *', [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Teacher not found' });
     }
@@ -85,7 +123,7 @@ exports.teacherLogin = async (req: any, res: any) => {
     }
 
     const result = await pool.query('SELECT teacher_id, first_name, last_name, email, password_hash, status FROM teachers WHERE username = $1', [username]);
-    
+    console.log(result)
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }

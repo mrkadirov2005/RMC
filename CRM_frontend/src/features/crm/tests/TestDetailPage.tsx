@@ -487,13 +487,22 @@ const TestDetailPage = () => {
                             >
                               View
                             </Button>
-                            {sub.status === 'submitted' && (
+                            {sub.status !== 'graded' && (
                               <Button
                                 size="small"
                                 color="primary"
                                 onClick={() => navigate(`/tests/submissions/${sub.submission_id}/grade`)}
                               >
                                 Grade
+                              </Button>
+                            )}
+                            {sub.status === 'graded' && (
+                              <Button
+                                size="small"
+                                color="success"
+                                onClick={() => navigate(`/tests/submissions/${sub.submission_id}/grade`)}
+                              >
+                                Re-Grade
                               </Button>
                             )}
                           </TableCell>

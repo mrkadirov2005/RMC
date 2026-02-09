@@ -9,6 +9,7 @@ export interface AuthUser {
   roles?: string[]; // For teachers
   userType: 'superuser' | 'teacher' | 'student';
   center_id: number;
+  class_id?: number; // For students
 }
 
 export interface AuthState {

@@ -99,13 +99,15 @@ const StudentsPage = () => {
   const handleOpenModal = (student?: Student) => {
     if (student) {
       setEditingId(student.student_id || student.id || null);
-      setFormData(student);
+      setFormData({ ...student, password: '' });
     } else {
       setEditingId(null);
       setFormData({
         center_id: 1,
         gender: 'Male',
         status: 'Active',
+        username: '',
+        password: '',
         class_id: selectedClass ? (selectedClass.class_id || selectedClass.id) : undefined,
       });
     }
@@ -119,6 +121,8 @@ const StudentsPage = () => {
       center_id: 1,
       gender: 'Male',
       status: 'Active',
+      username: '',
+      password: '',
     });
   };
 
@@ -684,6 +688,33 @@ const StudentsPage = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, email: e.target.value })
                     }
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Username {!editingId && '*'}</label>
+                  <input
+                    type="text"
+                    required={!editingId}
+                    value={formData.username || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, username: e.target.value })
+                    }
+                    placeholder="Login username"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Password {!editingId && '*'}</label>
+                  <input
+                    type="password"
+                    required={!editingId}
+                    value={formData.password || ''}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    placeholder={editingId ? 'Leave blank to keep current' : 'Login password'}
                   />
                 </div>
               </div>

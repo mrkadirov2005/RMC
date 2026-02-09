@@ -145,8 +145,8 @@ export const testAPI = {
   // Assignments
   assignTest: (testId: number, assignments: any[], assignedBy: number) =>
     apiClient.post(`/tests/${testId}/assign`, { assignments, assigned_by: assignedBy }),
-  getAssignedTests: (type: 'student' | 'teacher' | 'class', id: number) =>
-    apiClient.get(`/tests/assigned/${type}/${id}`),
+  getAssignedTests: (type: 'student' | 'teacher' | 'class', id: number, studentId?: number) =>
+    apiClient.get(`/tests/assigned/${type}/${id}${studentId ? `?student_id=${studentId}` : ''}`),
 };
 
 export const centerAPI = {

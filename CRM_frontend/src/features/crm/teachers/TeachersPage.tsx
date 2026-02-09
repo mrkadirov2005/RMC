@@ -55,6 +55,8 @@ interface Teacher {
   specialization: string;
   status: string;
   roles?: string[];
+  username?: string;
+  password?: string;
 }
 
 const TeachersPage = () => {
@@ -511,6 +513,31 @@ const TeachersPage = () => {
                   </Select>
                 </FormControl>
               </Grid>
+              {!editingId && (
+                <>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      fullWidth
+                      label="Username"
+                      required
+                      value={formData.username || ''}
+                      onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                      helperText="Used for login (min 3 characters)"
+                    />
+                  </Grid>
+                  <Grid size={{ xs: 12, sm: 6 }}>
+                    <TextField
+                      fullWidth
+                      label="Password"
+                      type="password"
+                      required
+                      value={formData.password || ''}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      helperText="Min 6 characters"
+                    />
+                  </Grid>
+                </>
+              )}
             </Grid>
           </DialogContent>
           <DialogActions sx={{ p: 3, pt: 0 }}>

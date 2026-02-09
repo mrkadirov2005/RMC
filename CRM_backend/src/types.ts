@@ -92,6 +92,8 @@ export interface Student {
   enrollment_number: string;
   first_name: string;
   last_name: string;
+  username?: string;
+  password?: string;
   email?: string;
   phone?: string;
   date_of_birth?: Date | string;

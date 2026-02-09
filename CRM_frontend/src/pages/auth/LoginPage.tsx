@@ -83,6 +83,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           role: 'student',
           userType: 'student' as const,
           center_id: student.center_id || 1,
+          class_id: student.class_id,
         };
         token = response.data.token || `student-token-${Date.now()}`;
       }

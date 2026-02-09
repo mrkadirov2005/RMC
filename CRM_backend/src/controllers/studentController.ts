@@ -8,7 +8,12 @@ const hashPassword1 = (password: string) => {
 
 exports.getAllStudents = async (req: any, res: any) => {
   try {
-    const result = await student_db.query('SELECT * FROM students ORDER BY student_id');
+    const result = await student_db.query(`
+      SELECT s.*, c.class_name 
+      FROM students s 
+      LEFT JOIN classes c ON s.class_id = c.class_id 
+      ORDER BY s.student_id
+    `);
     res.json(result.rows);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -19,7 +24,12 @@ exports.getAllStudents = async (req: any, res: any) => {
 exports.getStudentById = async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const result = await student_db.query('SELECT * FROM students WHERE student_id = $1', [id]);
+    const result = await student_db.query(`
+      SELECT s.*, c.class_name 
+      FROM students s 
+      LEFT JOIN classes c ON s.class_id = c.class_id 
+      WHERE s.student_id = $1
+    `, [id]);
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Student not found' });
     }
@@ -32,10 +42,11 @@ exports.getStudentById = async (req: any, res: any) => {
 
 exports.createStudent = async (req: any, res: any) => {
   try {
-    const { center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id } = req.body;
+    const { center_id, enrollment_number, first_name, last_name, username, password, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id } = req.body;
+    const password_hash = password ? hashPassword1(password) : null;
     const result = await student_db.query(
-      'INSERT INTO students (center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
-      [center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status || 'Active', teacher_id, class_id]
+      'INSERT INTO students (center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *',
+      [center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status || 'Active', teacher_id, class_id]
     );
     res.status(201).json(result.rows[0]);
   } catch (error: any) {
@@ -84,7 +95,7 @@ exports.studentLogin = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Username and password required' });
     }
 
-    const result = await student_db.query('SELECT student_id, first_name, last_name, email, password_hash, status FROM students WHERE username = $1', [username]);
+    const result = await student_db.query('SELECT student_id, first_name, last_name, email, password_hash, status, class_id FROM students WHERE username = $1', [username]);
     
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -107,7 +118,8 @@ exports.studentLogin = async (req: any, res: any) => {
         student_id: student.student_id,
         first_name: student.first_name,
         last_name: student.last_name,
-        email: student.email
+        email: student.email,
+        class_id: student.class_id
       }
     });
   } catch (error: any) {
