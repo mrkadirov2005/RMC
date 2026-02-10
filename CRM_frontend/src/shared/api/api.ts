@@ -75,6 +75,7 @@ export const gradeAPI = {
   getById: (id: number) => apiClient.get(`/grades/${id}`),
   getByStudent: (studentId: number) => apiClient.get(`/grades/student/${studentId}`),
   create: (data: any) => apiClient.post('/grades', data),
+  bulkCreate: (grades: any[]) => apiClient.post('/grades/bulk', { grades }),
   update: (id: number, data: any) => apiClient.put(`/grades/${id}`, data),
   delete: (id: number) => apiClient.delete(`/grades/${id}`),
 };

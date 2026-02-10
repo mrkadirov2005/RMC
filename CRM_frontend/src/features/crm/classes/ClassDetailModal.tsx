@@ -19,10 +19,14 @@ import {
   Paper,
   Alert,
   useTheme,
+  TextField,
+  MenuItem,
+  Chip,
 } from '@mui/material';
 import { Close as CloseIcon, Check as CheckIcon } from '@mui/icons-material';
-import { studentAPI, attendanceAPI } from '../../../shared/api/api';
+import { studentAPI, attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
+import { fetchSubjects } from '../../../utils/dropdownOptions';
 import ClassCalendar from './ClassCalendar';
 
 interface Class {
@@ -91,12 +95,31 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
   const [submitting, setSubmitting] = useState(false);
   const [todayAttendance, setTodayAttendance] = useState<Attendance[]>([]);
 
+  // Bulk Grading State
+  const [gradeMarks, setGradeMarks] = useState<Map<number, number | string>>(new Map());
+  const [gradeSubject, setGradeSubject] = useState('');
+  const [gradeTotalMarks, setGradeTotalMarks] = useState(100);
+  const [gradeAcademicYear, setGradeAcademicYear] = useState(new Date().getFullYear());
+  const [gradeTerm, setGradeTerm] = useState('First');
+  const [submittingGrades, setSubmittingGrades] = useState(false);
+  const [subjectOptions, setSubjectOptions] = useState<{ id: number; label: string; value: any }[]>([]);
+
   useEffect(() => {
     if (open && classData) {
       loadStudents();
       loadTodayAttendance();
+      loadSubjects();
     }
   }, [open, classData]);
+
+  const loadSubjects = async () => {
+    try {
+      const subjects = await fetchSubjects();
+      setSubjectOptions(subjects);
+    } catch (error) {
+      console.error('Error loading subjects:', error);
+    }
+  };
 
   const loadStudents = async () => {
     setLoading(true);
@@ -202,6 +225,82 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
     }
   };
 
+  const handleGradeMarksChange = (studentId: number, value: string) => {
+    const newMap = new Map(gradeMarks);
+    newMap.set(studentId, value === '' ? '' : Number(value));
+    setGradeMarks(newMap);
+  };
+
+  const getGradeLetter = (marks: number, total: number): string => {
+    const percentage = (marks / total) * 100;
+    if (percentage >= 90) return 'A';
+    if (percentage >= 80) return 'B';
+    if (percentage >= 70) return 'C';
+    if (percentage >= 60) return 'D';
+    return 'F';
+  };
+
+  const getGradeColor = (letter: string): string => {
+    switch (letter) {
+      case 'A': return '#4CAF50';
+      case 'B': return '#8BC34A';
+      case 'C': return '#FFC107';
+      case 'D': return '#FF9800';
+      case 'F': return '#F44336';
+      default: return '#9E9E9E';
+    }
+  };
+
+  const handleSubmitBulkGrades = async () => {
+    if (!gradeSubject) {
+      showToast.error('Please select a subject');
+      return;
+    }
+
+    const gradesToSubmit: any[] = [];
+    for (const [studentId, marks] of gradeMarks) {
+      if (marks === '' || marks === undefined || marks === null) continue;
+      const marksNum = Number(marks);
+      if (isNaN(marksNum) || marksNum < 0) continue;
+      const percentage = (marksNum / gradeTotalMarks) * 100;
+      const gradeLetter = getGradeLetter(marksNum, gradeTotalMarks);
+
+      gradesToSubmit.push({
+        student_id: studentId,
+        teacher_id: classData?.teacher_id || 1,
+        subject: gradeSubject,
+        class_id: classData?.class_id || classData?.id,
+        marks_obtained: marksNum,
+        total_marks: gradeTotalMarks,
+        percentage,
+        grade_letter: gradeLetter,
+        academic_year: gradeAcademicYear,
+        term: gradeTerm,
+      });
+    }
+
+    if (gradesToSubmit.length === 0) {
+      showToast.error('Please enter marks for at least one student');
+      return;
+    }
+
+    setSubmittingGrades(true);
+    try {
+      await gradeAPI.bulkCreate(gradesToSubmit);
+      showToast.success(`${gradesToSubmit.length} grades submitted successfully!`);
+      // Reset form
+      setGradeMarks(new Map());
+      setGradeSubject('');
+      setGradeTotalMarks(100);
+      setGradeTerm('First');
+    } catch (error) {
+      console.error('Error submitting grades:', error);
+      showToast.error('Failed to submit grades');
+    } finally {
+      setSubmittingGrades(false);
+    }
+  };
+
   if (!classData) return null;
 
   // Parse schedule from section field
@@ -238,6 +337,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
           <Tab label="Class Info" />
           <Tab label="Students" />
           <Tab label="Attendance" />
+          <Tab label="Grades" />
           <Tab label="Calendar" />
         </Tabs>
 
@@ -434,8 +534,164 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
           )}
         </TabPanel>
 
-        {/* Tab 4: Calendar */}
+        {/* Tab 4: Grades */}
         <TabPanel value={tabValue} index={3}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
+              <CircularProgress />
+            </Box>
+          ) : students.length === 0 ? (
+            <Alert severity="info">No students enrolled in this class to grade</Alert>
+          ) : (
+            <Stack spacing={3}>
+              <Alert severity="info">
+                Enter marks for students below, then submit all grades at once.
+              </Alert>
+
+              {/* Grade Settings Row */}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
+                <TextField
+                  select
+                  label="Subject *"
+                  value={gradeSubject}
+                  onChange={(e) => setGradeSubject(e.target.value)}
+                  size="small"
+                  fullWidth
+                >
+                  <MenuItem value="">Select Subject</MenuItem>
+                  {subjectOptions.map((opt) => (
+                    <MenuItem key={opt.id} value={opt.label}>
+                      {opt.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+                <TextField
+                  label="Total Marks"
+                  type="number"
+                  value={gradeTotalMarks}
+                  onChange={(e) => setGradeTotalMarks(Number(e.target.value) || 100)}
+                  size="small"
+                  fullWidth
+                  inputProps={{ min: 1 }}
+                />
+                <TextField
+                  label="Academic Year"
+                  type="number"
+                  value={gradeAcademicYear}
+                  onChange={(e) => setGradeAcademicYear(Number(e.target.value))}
+                  size="small"
+                  fullWidth
+                />
+                <TextField
+                  select
+                  label="Term"
+                  value={gradeTerm}
+                  onChange={(e) => setGradeTerm(e.target.value)}
+                  size="small"
+                  fullWidth
+                >
+                  <MenuItem value="First">First</MenuItem>
+                  <MenuItem value="Second">Second</MenuItem>
+                  <MenuItem value="Third">Third</MenuItem>
+                </TextField>
+              </Box>
+
+              {/* Students Grading Table */}
+              <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                  <TableHead>
+                    <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
+                      <TableCell sx={{ color: 'white', fontWeight: 600 }}>#</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 600 }}>Student Name</TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">
+                        Marks (/{gradeTotalMarks})
+                      </TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">
+                        Percentage
+                      </TableCell>
+                      <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">
+                        Grade
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {students.map((student, index) => {
+                      const studentId = student.student_id || student.id || 0;
+                      const marks = gradeMarks.get(studentId);
+                      const marksNum = marks !== undefined && marks !== '' ? Number(marks) : null;
+                      const percentage = marksNum !== null && !isNaN(marksNum) ? (marksNum / gradeTotalMarks) * 100 : null;
+                      const gradeLetter = marksNum !== null && !isNaN(marksNum) ? getGradeLetter(marksNum, gradeTotalMarks) : null;
+
+                      return (
+                        <TableRow key={studentId} sx={{ '&:nth-of-type(odd)': { backgroundColor: theme.palette.action.hover } }}>
+                          <TableCell>{index + 1}</TableCell>
+                          <TableCell sx={{ fontWeight: 500 }}>
+                            {student.first_name} {student.last_name}
+                          </TableCell>
+                          <TableCell align="center" sx={{ width: 140 }}>
+                            <TextField
+                              type="number"
+                              size="small"
+                              value={marks !== undefined ? marks : ''}
+                              onChange={(e) => handleGradeMarksChange(studentId, e.target.value)}
+                              inputProps={{ min: 0, max: gradeTotalMarks, step: 0.5 }}
+                              sx={{ width: 100 }}
+                              placeholder="--"
+                            />
+                          </TableCell>
+                          <TableCell align="center">
+                            {percentage !== null ? (
+                              <Typography variant="body2" fontWeight={500}>
+                                {percentage.toFixed(1)}%
+                              </Typography>
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">--</Typography>
+                            )}
+                          </TableCell>
+                          <TableCell align="center">
+                            {gradeLetter ? (
+                              <Chip
+                                label={gradeLetter}
+                                size="small"
+                                sx={{
+                                  backgroundColor: getGradeColor(gradeLetter),
+                                  color: 'white',
+                                  fontWeight: 700,
+                                  minWidth: 36,
+                                }}
+                              />
+                            ) : (
+                              <Typography variant="body2" color="text.secondary">--</Typography>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </TableContainer>
+
+              {/* Summary & Submit */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="body2" color="text.secondary">
+                  {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} of {students.length} students graded
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={handleSubmitBulkGrades}
+                  disabled={submittingGrades || students.length === 0}
+                  size="large"
+                  sx={{ minWidth: 180 }}
+                >
+                  {submittingGrades ? <CircularProgress size={24} /> : 'Submit All Grades'}
+                </Button>
+              </Box>
+            </Stack>
+          )}
+        </TabPanel>
+
+        {/* Tab 5: Calendar */}
+        <TabPanel value={tabValue} index={4}>
           <ClassCalendar schedule={parsedSchedule} />
         </TabPanel>
       </DialogContent>

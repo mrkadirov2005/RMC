@@ -66,6 +66,31 @@ router_grade.post('/', gradeController.createGrade);
 
 /**
  * @swagger
+ * /grades/bulk:
+ *   post:
+ *     summary: Create multiple grades at once
+ *     tags: [Grades]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               grades:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Grade'
+ *     responses:
+ *       201:
+ *         description: Grades created successfully
+ *       400:
+ *         description: Invalid input
+ */
+router_grade.post('/bulk', gradeController.createBulkGrades);
+
+/**
+ * @swagger
  * /grades/{id}:
  *   put:
  *     summary: Update grade

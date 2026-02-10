@@ -80,3 +80,27 @@ exports.deleteGrade = async (req: any, res: any) => {
     res.status(500).json({ error: 'Failed to delete grade', details: error.message || error.toString() });
   }
 };
+
+exports.createBulkGrades = async (req: any, res: any) => {
+  try {
+    const { grades } = req.body;
+    if (!Array.isArray(grades) || grades.length === 0) {
+      return res.status(400).json({ error: 'grades must be a non-empty array' });
+    }
+
+    const results: any[] = [];
+    for (const grade of grades) {
+      const { student_id, teacher_id, subject, class_id, marks_obtained, total_marks, percentage, grade_letter, academic_year, term } = grade;
+      const result = await grade_db.query(
+        'INSERT INTO grades (student_id, teacher_id, subject, class_id, marks_obtained, total_marks, percentage, grade_letter, academic_year, term) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+        [student_id, teacher_id, subject, class_id, marks_obtained, total_marks || 100, percentage, grade_letter, academic_year, term]
+      );
+      results.push(result.rows[0]);
+    }
+
+    res.status(201).json({ message: `${results.length} grades created successfully`, grades: results });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to create bulk grades', details: error.message || error.toString() });
+  }
+};

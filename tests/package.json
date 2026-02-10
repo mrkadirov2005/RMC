@@ -15,9 +15,15 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.40.0",
-    "@types/node": "^20.10.0"
+    "@types/node": "^20.19.33"
   },
-  "keywords": ["playwright", "testing", "e2e", "integration", "crm"],
+  "keywords": [
+    "playwright",
+    "testing",
+    "e2e",
+    "integration",
+    "crm"
+  ],
   "author": "",
   "license": "ISC"
 }

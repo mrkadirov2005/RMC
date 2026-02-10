@@ -136,4 +136,98 @@ export const testData = {
     current_enrollment: 0,
     status: 'Active',
   }),
+
+  generateCenter: () => ({
+    name: `Test Center ${Date.now()}`,
+    address: '123 Test Street',
+    phone: '1234567890',
+    email: `center_${Date.now()}@example.com`,
+    status: 'Active',
+  }),
+
+  generateSubject: () => ({
+    subject_name: `Test Subject ${Date.now()}`,
+    class_id: 1,
+    description: 'A test subject for automated testing',
+    total_marks: 100,
+  }),
+
+  generatePayment: () => ({
+    student_id: 1,
+    amount: 100.00,
+    payment_date: new Date().toISOString().split('T')[0],
+    payment_method: 'Cash',
+    currency: 'USD',
+    description: 'Test payment',
+    status: 'Completed',
+  }),
+
+  generateDebt: () => ({
+    student_id: 1,
+    amount: 50.00,
+    due_date: new Date().toISOString().split('T')[0],
+    description: 'Test debt',
+    status: 'Pending',
+  }),
+
+  generateGrade: () => ({
+    student_id: 1,
+    subject_id: 1,
+    grade: 85,
+    total_marks: 100,
+    grade_date: new Date().toISOString().split('T')[0],
+    comments: 'Test grade entry',
+  }),
+
+  generateAttendance: () => ({
+    student_id: 1,
+    class_id: 1,
+    date: new Date().toISOString().split('T')[0],
+    status: 'Present',
+  }),
+
+  generateAssignment: () => ({
+    class_id: 1,
+    title: `Test Assignment ${Date.now()}`,
+    description: 'A test assignment for automated testing',
+    due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    status: 'Pending',
+  }),
+
+  generateTest: () => ({
+    title: `Test Exam ${Date.now()}`,
+    description: 'A test exam for automated testing',
+    test_type: 'quiz',
+    center_id: 1,
+    subject_id: 1,
+    duration_minutes: 60,
+    total_marks: 100,
+    passing_marks: 50,
+    is_active: true,
+  }),
+
+  generateSuperuser: () => ({
+    username: `admin_${Date.now()}`,
+    password: 'testpassword123',
+    first_name: 'Test',
+    last_name: 'Admin',
+    email: `admin_${Date.now()}@example.com`,
+    role: 'admin',
+  }),
+
+  generateQuestion: (testId: number) => ({
+    test_id: testId,
+    question_text: `Test question ${Date.now()}?`,
+    question_type: 'multiple_choice',
+    options: JSON.stringify(['Option A', 'Option B', 'Option C', 'Option D']),
+    correct_answer: 'Option A',
+    marks: 5,
+  }),
+
+  generatePassage: (testId: number) => ({
+    test_id: testId,
+    title: `Test Passage ${Date.now()}`,
+    content: 'This is a test passage content for automated testing.',
+    order_number: 1,
+  }),
 };
