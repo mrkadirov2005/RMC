@@ -1,5 +1,6 @@
 const superuser_db = require('../../config/dbcon');
 const cryptoModule2 = require('crypto');
+const { generateToken } = require('../middleware/auth');
 
 // Hash password function
 const hashPassword2 = (password: string) => {
@@ -130,8 +131,18 @@ exports.login = async (req: any, res: any) => {
     // Reset login attempts on successful login
     await superuser_db.query('UPDATE superusers SET login_attempts = 0, last_login = CURRENT_TIMESTAMP WHERE superuser_id = $1', [superuser.superuser_id]);
     
+    // Generate JWT token
+    const token = generateToken({
+      id: superuser.superuser_id,
+      username: superuser.username,
+      email: superuser.email,
+      userType: 'superuser',
+      role: superuser.role,
+    });
+
     res.json({
       message: 'Login successful',
+      token,
       superuser: {
         superuser_id: superuser.superuser_id,
         username: superuser.username,
@@ -175,3 +186,5 @@ exports.changePassword = async (req: any, res: any) => {
     res.status(500).json({ error: 'Failed to change password', details: error.message || error.toString() });
   }
 };
+
+export {};

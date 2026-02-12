@@ -30,6 +30,27 @@ apiClient.interceptors.response.use(
     return response;
   },
   (error) => {
+    // Handle 401 (unauthorized) - token expired or invalid
+    if (error.response?.status === 401) {
+      // Clear auth data and redirect to login
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      const errorMessage = error.response?.data?.error || 'Session expired. Please log in again.';
+      showToast.error(errorMessage);
+      // Redirect to login page
+      if (!window.location.pathname.includes('/login')) {
+        window.location.href = '/login/superuser';
+      }
+      return Promise.reject(error);
+    }
+
+    // Handle 403 (forbidden) - insufficient permissions
+    if (error.response?.status === 403) {
+      const errorMessage = error.response?.data?.error || 'Access denied. Insufficient permissions.';
+      showToast.error(errorMessage);
+      return Promise.reject(error);
+    }
+
     const errorMessage = handleApiError(error);
     showToast.error(errorMessage);
     return Promise.reject(error);
@@ -109,6 +130,7 @@ export const debtAPI = {
     apiClient.post('/debts/generate-from-analysis', data),
   create: (data: any) => apiClient.post('/debts', data),
   update: (id: number, data: any) => apiClient.put(`/debts/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/debts/${id}`),
 };
 
 export const testAPI = {

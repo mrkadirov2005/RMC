@@ -1,18 +1,7 @@
 import { useState, useEffect } from 'react';
-import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Chip,
-  CircularProgress,
-} from '@mui/material';
-import {
-  Class as ClassIcon,
-  People as PeopleIcon,
-  AccessTime as TimeIcon,
-} from '@mui/icons-material';
+import { GraduationCap, Users, Clock, Loader2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { classAPI } from '../../../shared/api/api';
 
 interface ClassInfo {
@@ -52,130 +41,85 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active':
         return 'success';
       case 'inactive':
-        return 'error';
+        return 'destructive';
       case 'completed':
         return 'info';
       default:
-        return 'default';
+        return 'secondary';
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (classes.length === 0) {
     return (
-      <Box
-        sx={{
-          textAlign: 'center',
-          py: 8,
-          bgcolor: '#f9f9f9',
-          borderRadius: 2,
-          border: '2px dashed #e0e0e0',
-        }}
-      >
-        <ClassIcon sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
-        <Typography variant="h6" color="text.secondary">
+      <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20">
+        <GraduationCap className="h-14 w-14 text-muted-foreground/40 mx-auto mb-3" />
+        <h3 className="text-lg font-semibold text-muted-foreground">
           No classes assigned yet
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        </h3>
+        <p className="text-sm text-muted-foreground">
           Classes will appear here once they are assigned to you
-        </Typography>
-      </Box>
+        </p>
+      </div>
     );
   }
 
   return (
-    <Grid container spacing={3}>
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
       {classes.map((classItem) => (
-        <Grid size={{ xs: 12, sm: 6, md: 4 }} key={classItem.class_id}>
-          <Card
-            sx={{
-              height: '100%',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 4,
-              },
-            }}
-          >
-            <CardContent>
-              <Box
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'flex-start',
-                  mb: 2,
-                }}
-              >
-                <Box
-                  sx={{
-                    p: 1.5,
-                    borderRadius: 2,
-                    bgcolor: '#667eea15',
-                    color: '#667eea',
-                  }}
-                >
-                  <ClassIcon />
-                </Box>
-                <Chip
-                  label={classItem.status || 'Active'}
-                  size="small"
-                  color={getStatusColor(classItem.status) as any}
-                />
-              </Box>
+        <Card
+          key={classItem.class_id}
+          className="h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+        >
+          <CardContent className="p-5">
+            <div className="flex justify-between items-start mb-3">
+              <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-500">
+                <GraduationCap className="h-5 w-5" />
+              </div>
+              <Badge variant={getStatusVariant(classItem.status) as any}>
+                {classItem.status || 'Active'}
+              </Badge>
+            </div>
 
-              <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                {classItem.class_name}
-              </Typography>
+            <h3 className="text-lg font-semibold mb-1">
+              {classItem.class_name}
+            </h3>
 
-              {classItem.description && (
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{
-                    mb: 2,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  {classItem.description}
-                </Typography>
-              )}
+            {classItem.description && (
+              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                {classItem.description}
+              </p>
+            )}
 
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-                <PeopleIcon fontSize="small" color="action" />
-                <Typography variant="body2" color="text.secondary">
-                  {classItem.student_count || 0} Students
-                </Typography>
-              </Box>
+            <div className="flex items-center gap-2 mt-3 text-muted-foreground">
+              <Users className="h-4 w-4" />
+              <span className="text-sm">
+                {classItem.student_count || 0} Students
+              </span>
+            </div>
 
-              {classItem.schedule && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
-                  <TimeIcon fontSize="small" color="action" />
-                  <Typography variant="body2" color="text.secondary">
-                    {classItem.schedule}
-                  </Typography>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
+            {classItem.schedule && (
+              <div className="flex items-center gap-2 mt-1.5 text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span className="text-sm">{classItem.schedule}</span>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       ))}
-    </Grid>
+    </div>
   );
 };
 

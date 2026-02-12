@@ -1,5 +1,6 @@
 const student_db = require('../../config/dbcon');
 const cryptoModule1 = require('crypto');
+const { generateToken } = require('../middleware/auth');
 
 // Hash password function
 const hashPassword1 = (password: string) => {
@@ -112,8 +113,17 @@ exports.studentLogin = async (req: any, res: any) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
+    // Generate JWT token
+    const token = generateToken({
+      id: student.student_id,
+      email: student.email,
+      userType: 'student',
+      class_id: student.class_id,
+    });
+
     res.json({
       message: 'Login successful',
+      token,
       student: {
         student_id: student.student_id,
         first_name: student.first_name,
@@ -182,3 +192,5 @@ exports.changeStudentPassword = async (req: any, res: any) => {
     res.status(500).json({ error: 'Failed to change password', details: error.message || error.toString() });
   }
 };
+
+export {};

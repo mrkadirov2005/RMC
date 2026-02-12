@@ -3,6 +3,7 @@ const cors = require('cors');
 require('dotenv/config');
 const swaggerUI = require('swagger-ui-express');
 const swaggerDocs = require('./swagger/swagger');
+const { requireAuth, requireRole } = require('./middleware/auth');
 
 // Import routes
 const studentRoutes = require('./routes/studentRoutes');
@@ -41,18 +42,47 @@ app.get('/api/health', (req: any, res: any): void => {
 app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs, { explorer: true }));
 
 // API Routes
-app.use('/api/students', studentRoutes);
-app.use('/api/teachers', teacherRoutes);
-app.use('/api/classes', classRoutes);
-app.use('/api/centers', centerRoutes);
-app.use('/api/payments', paymentRoutes);
-app.use('/api/debts', debtRoutes);
-app.use('/api/grades', gradeRoutes);
-app.use('/api/attendance', attendanceRoutes);
-app.use('/api/assignments', assignmentRoutes);
-app.use('/api/subjects', subjectRoutes);
-app.use('/api/superusers', superuserRoutes);
-app.use('/api/tests', testRoutes);
+// Auth routes (public - no authentication required)
+app.post('/api/students/auth/login', require('./controllers/studentController').studentLogin);
+app.post('/api/teachers/auth/login', require('./controllers/teacherController').teacherLogin);
+app.post('/api/superusers/auth/login', require('./controllers/superuserController').login);
+
+// Protected routes - require authentication + role-based access
+// Students: superuser and teacher can manage; students can view own data via portal
+app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);
+
+// Teachers: superuser only for management
+app.use('/api/teachers', requireAuth, requireRole('superuser'), teacherRoutes);
+
+// Classes: superuser and teacher
+app.use('/api/classes', requireAuth, requireRole('superuser', 'teacher'), classRoutes);
+
+// Centers: superuser only
+app.use('/api/centers', requireAuth, requireRole('superuser'), centerRoutes);
+
+// Payments: superuser only
+app.use('/api/payments', requireAuth, requireRole('superuser'), paymentRoutes);
+
+// Debts: superuser only
+app.use('/api/debts', requireAuth, requireRole('superuser'), debtRoutes);
+
+// Grades: superuser and teacher
+app.use('/api/grades', requireAuth, requireRole('superuser', 'teacher'), gradeRoutes);
+
+// Attendance: superuser and teacher
+app.use('/api/attendance', requireAuth, requireRole('superuser', 'teacher'), attendanceRoutes);
+
+// Assignments: superuser and teacher
+app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
+
+// Subjects: superuser and teacher
+app.use('/api/subjects', requireAuth, requireRole('superuser', 'teacher'), subjectRoutes);
+
+// Superusers: superuser only for management
+app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
+
+// Tests: authenticated users (role checks are more granular inside routes)
+app.use('/api/tests', requireAuth, testRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: any, res: any, next: any): void => {
@@ -89,3 +119,5 @@ const gracefulShutdown = async () => {
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
+
+export {};

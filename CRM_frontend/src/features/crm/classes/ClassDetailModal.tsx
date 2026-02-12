@@ -1,29 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { X, Check, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  Tabs,
-  Tab,
-  Box,
-  Stack,
-  Button,
-  CircularProgress,
-  Typography,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Alert,
-  useTheme,
-  TextField,
-  MenuItem,
-  Chip,
-} from '@mui/material';
-import { Close as CloseIcon, Check as CheckIcon } from '@mui/icons-material';
+} from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { studentAPI, attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
 import { fetchSubjects } from '../../../utils/dropdownOptions';
@@ -36,7 +32,7 @@ interface Class {
   class_name: string;
   class_code: string;
   level: number;
-  section: string;
+  section?: string;
   capacity: number;
   teacher_id?: number;
   room_number: string;
@@ -65,21 +61,6 @@ interface Attendance {
   remarks?: string;
 }
 
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-const TabPanel = (props: TabPanelProps) => {
-  const { children, value, index } = props;
-  return (
-    <div role="tabpanel" hidden={value !== index} style={{ width: '100%' }}>
-      {value === index && <Box sx={{ pt: 2 }}>{children}</Box>}
-    </div>
-  );
-};
-
 interface ClassDetailModalProps {
   open: boolean;
   classData: Class | null;
@@ -87,13 +68,11 @@ interface ClassDetailModalProps {
 }
 
 const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, onClose }) => {
-  const theme = useTheme();
-  const [tabValue, setTabValue] = useState(0);
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Map<number, boolean>>(new Map());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [todayAttendance, setTodayAttendance] = useState<Attendance[]>([]);
+  const [, setTodayAttendance] = useState<Attendance[]>([]);
 
   // Bulk Grading State
   const [gradeMarks, setGradeMarks] = useState<Map<number, number | string>>(new Map());
@@ -102,7 +81,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
   const [gradeAcademicYear, setGradeAcademicYear] = useState(new Date().getFullYear());
   const [gradeTerm, setGradeTerm] = useState('First');
   const [submittingGrades, setSubmittingGrades] = useState(false);
-  const [subjectOptions, setSubjectOptions] = useState<{ id: number; label: string; value: any }[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<{ id: number; label: string; value: string | number }[]>([]);
 
   useEffect(() => {
     if (open && classData) {
@@ -110,6 +89,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
       loadTodayAttendance();
       loadSubjects();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, classData]);
 
   const loadSubjects = async () => {
@@ -242,12 +222,12 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
 
   const getGradeColor = (letter: string): string => {
     switch (letter) {
-      case 'A': return '#4CAF50';
-      case 'B': return '#8BC34A';
-      case 'C': return '#FFC107';
-      case 'D': return '#FF9800';
-      case 'F': return '#F44336';
-      default: return '#9E9E9E';
+      case 'A': return 'bg-green-500';
+      case 'B': return 'bg-lime-500';
+      case 'C': return 'bg-yellow-500';
+      case 'D': return 'bg-orange-500';
+      case 'F': return 'bg-red-500';
+      default: return 'bg-gray-400';
     }
   };
 
@@ -257,7 +237,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
       return;
     }
 
-    const gradesToSubmit: any[] = [];
+    const gradesToSubmit: Array<Record<string, unknown>> = [];
     for (const [studentId, marks] of gradeMarks) {
       if (marks === '' || marks === undefined || marks === null) continue;
       const marksNum = Number(marks);
@@ -314,386 +294,354 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
   }
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          {classData.class_name} ({classData.class_code})
-        </Typography>
-        <Button
-          size="small"
-          onClick={onClose}
-          sx={{ minWidth: 'auto', p: 1 }}
-        >
-          <CloseIcon />
-        </Button>
-      </DialogTitle>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <div className="flex justify-between items-center">
+            <DialogTitle className="text-xl font-bold">
+              {classData.class_name} ({classData.class_code})
+            </DialogTitle>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
 
-      <DialogContent sx={{ pb: 3 }}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, newValue) => setTabValue(newValue)}
-          sx={{ borderBottom: 1, borderColor: 'divider', mb: 3, mt: 2 }}
-        >
-          <Tab label="Class Info" />
-          <Tab label="Students" />
-          <Tab label="Attendance" />
-          <Tab label="Grades" />
-          <Tab label="Calendar" />
-        </Tabs>
+        <Tabs defaultValue="info" className="mt-2">
+          <TabsList className="w-full justify-start">
+            <TabsTrigger value="info">Class Info</TabsTrigger>
+            <TabsTrigger value="students">Students</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+          </TabsList>
 
-        {/* Tab 1: Class Info */}
-        <TabPanel value={tabValue} index={0}>
-          <Stack spacing={2}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Class Code
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {classData.class_code}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Level
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {classData.level}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Section
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {classData.section}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Capacity
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {classData.capacity} students
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Room Number
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  {classData.room_number}
-                </Typography>
-              </Box>
-              <Box>
-                <Typography variant="subtitle2" color="textSecondary">
-                  Payment Amount
-                </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                  ${classData.payment_amount} ({classData.payment_frequency})
-                </Typography>
-              </Box>
-            </Box>
+          {/* Tab 1: Class Info */}
+          <TabsContent value="info" className="pt-4">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Class Code</p>
+                  <p className="font-semibold">{classData.class_code}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Level</p>
+                  <p className="font-semibold">{classData.level}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Section</p>
+                  <p className="font-semibold">{classData.section}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Capacity</p>
+                  <p className="font-semibold">{classData.capacity} students</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Room Number</p>
+                  <p className="font-semibold">{classData.room_number}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Payment Amount</p>
+                  <p className="font-semibold">
+                    ${classData.payment_amount} ({classData.payment_frequency})
+                  </p>
+                </div>
+              </div>
 
-            {/* Schedule Info */}
-            <Box
-              sx={{
-                p: 2,
-                backgroundColor: theme.palette.background.default,
-                borderRadius: 1,
-                mt: 2,
-              }}
-            >
-              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>
-                Class Schedule
-              </Typography>
-              {parsedSchedule.days && parsedSchedule.days.length > 0 ? (
-                <Stack spacing={1}>
-                  <Typography variant="body2">
-                    <strong>Days:</strong> {parsedSchedule.days.join(', ')}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Time:</strong> {parsedSchedule.time}
-                  </Typography>
-                </Stack>
-              ) : (
-                <Typography variant="body2" color="textSecondary">
-                  No schedule set
-                </Typography>
-              )}
-            </Box>
-          </Stack>
-        </TabPanel>
+              {/* Schedule Info */}
+              <div className="p-4 bg-muted rounded-lg mt-4">
+                <h3 className="font-bold mb-2">Class Schedule</h3>
+                {parsedSchedule.days && parsedSchedule.days.length > 0 ? (
+                  <div className="space-y-1">
+                    <p className="text-sm">
+                      <strong>Days:</strong> {parsedSchedule.days.join(', ')}
+                    </p>
+                    <p className="text-sm">
+                      <strong>Time:</strong> {parsedSchedule.time}
+                    </p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No schedule set</p>
+                )}
+              </div>
+            </div>
+          </TabsContent>
 
-        {/* Tab 2: Students */}
-        <TabPanel value={tabValue} index={1}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : students.length === 0 ? (
-            <Alert severity="info">No students enrolled in this class</Alert>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>Enrollment #</TableCell>
-                    <TableCell sx={{ color: 'white', fontWeight: 600 }}>Name</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {students.map((student) => (
-                    <TableRow key={student.student_id || student.id}>
-                      <TableCell>{student.enrollment_number}</TableCell>
-                      <TableCell>
-                        {student.first_name} {student.last_name}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </TabPanel>
-
-        {/* Tab 3: Attendance */}
-        <TabPanel value={tabValue} index={2}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : students.length === 0 ? (
-            <Alert severity="info">No students to mark attendance</Alert>
-          ) : (
-            <Stack spacing={2}>
-              <Alert severity="info">
-                Marking attendance for today ({new Date().toLocaleDateString()})
+          {/* Tab 2: Students */}
+          <TabsContent value="students" className="pt-4">
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : students.length === 0 ? (
+              <Alert>
+                <AlertDescription>No students enrolled in this class</AlertDescription>
               </Alert>
-              <TableContainer component={Paper}>
+            ) : (
+              <div className="border rounded-lg">
                 <Table>
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                      <TableCell sx={{ color: 'white', fontWeight: 600 }}>Student Name</TableCell>
-                      <TableCell
-                        align="center"
-                        sx={{ color: 'white', fontWeight: 600 }}
-                      >
-                        Attendance
-                      </TableCell>
+                  <TableHeader>
+                    <TableRow className="bg-primary">
+                      <TableHead className="text-primary-foreground font-semibold">Enrollment #</TableHead>
+                      <TableHead className="text-primary-foreground font-semibold">Name</TableHead>
                     </TableRow>
-                  </TableHead>
+                  </TableHeader>
                   <TableBody>
-                    {students.map((student) => {
-                      const studentId = student.student_id || student.id || 0;
-                      const isPresent = attendance.get(studentId);
-                      return (
-                        <TableRow key={studentId}>
-                          <TableCell>
-                            {student.first_name} {student.last_name}
-                          </TableCell>
-                          <TableCell align="center">
-                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                              <Button
-                                size="small"
-                                variant={isPresent === true ? 'contained' : 'outlined'}
-                                color="success"
-                                onClick={() => handleAttendanceToggle(studentId, true)}
-                                startIcon={<CheckIcon />}
-                                sx={{ minWidth: 100 }}
-                              >
-                                Present
-                              </Button>
-                              <Button
-                                size="small"
-                                variant={isPresent === false ? 'contained' : 'outlined'}
-                                color="error"
-                                onClick={() => handleAttendanceToggle(studentId, false)}
-                                startIcon={<CloseIcon />}
-                                sx={{ minWidth: 100 }}
-                              >
-                                Absent
-                              </Button>
-                            </Box>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                    {students.map((student) => (
+                      <TableRow key={student.student_id || student.id}>
+                        <TableCell>{student.enrollment_number}</TableCell>
+                        <TableCell>
+                          {student.first_name} {student.last_name}
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
-              <Button
-                variant="contained"
-                onClick={handleMarkAttendance}
-                disabled={submitting || students.length === 0}
-                sx={{ alignSelf: 'flex-end' }}
-              >
-                {submitting ? <CircularProgress size={24} /> : 'Mark Attendance'}
-              </Button>
-            </Stack>
-          )}
-        </TabPanel>
+              </div>
+            )}
+          </TabsContent>
 
-        {/* Tab 4: Grades */}
-        <TabPanel value={tabValue} index={3}>
-          {loading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 3 }}>
-              <CircularProgress />
-            </Box>
-          ) : students.length === 0 ? (
-            <Alert severity="info">No students enrolled in this class to grade</Alert>
-          ) : (
-            <Stack spacing={3}>
-              <Alert severity="info">
-                Enter marks for students below, then submit all grades at once.
+          {/* Tab 3: Attendance */}
+          <TabsContent value="attendance" className="pt-4">
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : students.length === 0 ? (
+              <Alert>
+                <AlertDescription>No students to mark attendance</AlertDescription>
               </Alert>
+            ) : (
+              <div className="space-y-4">
+                <Alert>
+                  <AlertDescription>
+                    Marking attendance for today ({new Date().toLocaleDateString()})
+                  </AlertDescription>
+                </Alert>
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-primary">
+                        <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold text-center">Attendance</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student) => {
+                        const studentId = student.student_id || student.id || 0;
+                        const isPresent = attendance.get(studentId);
+                        return (
+                          <TableRow key={studentId}>
+                            <TableCell>
+                              {student.first_name} {student.last_name}
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex gap-2 justify-center">
+                                <Button
+                                  size="sm"
+                                  variant={isPresent === true ? 'default' : 'outline'}
+                                  className={cn(
+                                    'min-w-[100px]',
+                                    isPresent === true && 'bg-green-600 hover:bg-green-700'
+                                  )}
+                                  onClick={() => handleAttendanceToggle(studentId, true)}
+                                >
+                                  <Check className="mr-1 h-4 w-4" />
+                                  Present
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant={isPresent === false ? 'default' : 'outline'}
+                                  className={cn(
+                                    'min-w-[100px]',
+                                    isPresent === false && 'bg-red-600 hover:bg-red-700'
+                                  )}
+                                  onClick={() => handleAttendanceToggle(studentId, false)}
+                                >
+                                  <X className="mr-1 h-4 w-4" />
+                                  Absent
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleMarkAttendance}
+                    disabled={submitting || students.length === 0}
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark Attendance'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-              {/* Grade Settings Row */}
-              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr 1fr' }, gap: 2 }}>
-                <TextField
-                  select
-                  label="Subject *"
-                  value={gradeSubject}
-                  onChange={(e) => setGradeSubject(e.target.value)}
-                  size="small"
-                  fullWidth
-                >
-                  <MenuItem value="">Select Subject</MenuItem>
-                  {subjectOptions.map((opt) => (
-                    <MenuItem key={opt.id} value={opt.label}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <TextField
-                  label="Total Marks"
-                  type="number"
-                  value={gradeTotalMarks}
-                  onChange={(e) => setGradeTotalMarks(Number(e.target.value) || 100)}
-                  size="small"
-                  fullWidth
-                  inputProps={{ min: 1 }}
-                />
-                <TextField
-                  label="Academic Year"
-                  type="number"
-                  value={gradeAcademicYear}
-                  onChange={(e) => setGradeAcademicYear(Number(e.target.value))}
-                  size="small"
-                  fullWidth
-                />
-                <TextField
-                  select
-                  label="Term"
-                  value={gradeTerm}
-                  onChange={(e) => setGradeTerm(e.target.value)}
-                  size="small"
-                  fullWidth
-                >
-                  <MenuItem value="First">First</MenuItem>
-                  <MenuItem value="Second">Second</MenuItem>
-                  <MenuItem value="Third">Third</MenuItem>
-                </TextField>
-              </Box>
+          {/* Tab 4: Grades */}
+          <TabsContent value="grades" className="pt-4">
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : students.length === 0 ? (
+              <Alert>
+                <AlertDescription>No students enrolled in this class to grade</AlertDescription>
+              </Alert>
+            ) : (
+              <div className="space-y-4">
+                <Alert>
+                  <AlertDescription>
+                    Enter marks for students below, then submit all grades at once.
+                  </AlertDescription>
+                </Alert>
 
-              {/* Students Grading Table */}
-              <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
-                  <TableHead>
-                    <TableRow sx={{ backgroundColor: theme.palette.primary.main }}>
-                      <TableCell sx={{ color: 'white', fontWeight: 600 }}>#</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 600 }}>Student Name</TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">
-                        Marks (/{gradeTotalMarks})
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">
-                        Percentage
-                      </TableCell>
-                      <TableCell sx={{ color: 'white', fontWeight: 600 }} align="center">
-                        Grade
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {students.map((student, index) => {
-                      const studentId = student.student_id || student.id || 0;
-                      const marks = gradeMarks.get(studentId);
-                      const marksNum = marks !== undefined && marks !== '' ? Number(marks) : null;
-                      const percentage = marksNum !== null && !isNaN(marksNum) ? (marksNum / gradeTotalMarks) * 100 : null;
-                      const gradeLetter = marksNum !== null && !isNaN(marksNum) ? getGradeLetter(marksNum, gradeTotalMarks) : null;
+                {/* Grade Settings Row */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="grade_subject">Subject *</Label>
+                    <select
+                      id="grade_subject"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={gradeSubject}
+                      onChange={(e) => setGradeSubject(e.target.value)}
+                    >
+                      <option value="">Select Subject</option>
+                      {subjectOptions.map((opt) => (
+                        <option key={opt.id} value={opt.label}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="total_marks">Total Marks</Label>
+                    <Input
+                      id="total_marks"
+                      type="number"
+                      min={1}
+                      value={gradeTotalMarks}
+                      onChange={(e) => setGradeTotalMarks(Number(e.target.value) || 100)}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="academic_year">Academic Year</Label>
+                    <Input
+                      id="academic_year"
+                      type="number"
+                      value={gradeAcademicYear}
+                      onChange={(e) => setGradeAcademicYear(Number(e.target.value))}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="term">Term</Label>
+                    <select
+                      id="term"
+                      className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      value={gradeTerm}
+                      onChange={(e) => setGradeTerm(e.target.value)}
+                    >
+                      <option value="First">First</option>
+                      <option value="Second">Second</option>
+                      <option value="Third">Third</option>
+                    </select>
+                  </div>
+                </div>
 
-                      return (
-                        <TableRow key={studentId} sx={{ '&:nth-of-type(odd)': { backgroundColor: theme.palette.action.hover } }}>
-                          <TableCell>{index + 1}</TableCell>
-                          <TableCell sx={{ fontWeight: 500 }}>
-                            {student.first_name} {student.last_name}
-                          </TableCell>
-                          <TableCell align="center" sx={{ width: 140 }}>
-                            <TextField
-                              type="number"
-                              size="small"
-                              value={marks !== undefined ? marks : ''}
-                              onChange={(e) => handleGradeMarksChange(studentId, e.target.value)}
-                              inputProps={{ min: 0, max: gradeTotalMarks, step: 0.5 }}
-                              sx={{ width: 100 }}
-                              placeholder="--"
-                            />
-                          </TableCell>
-                          <TableCell align="center">
-                            {percentage !== null ? (
-                              <Typography variant="body2" fontWeight={500}>
-                                {percentage.toFixed(1)}%
-                              </Typography>
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">--</Typography>
-                            )}
-                          </TableCell>
-                          <TableCell align="center">
-                            {gradeLetter ? (
-                              <Chip
-                                label={gradeLetter}
-                                size="small"
-                                sx={{
-                                  backgroundColor: getGradeColor(gradeLetter),
-                                  color: 'white',
-                                  fontWeight: 700,
-                                  minWidth: 36,
-                                }}
+                {/* Students Grading Table */}
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-primary">
+                        <TableHead className="text-primary-foreground font-semibold">#</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold text-center">
+                          Marks (/{gradeTotalMarks})
+                        </TableHead>
+                        <TableHead className="text-primary-foreground font-semibold text-center">Percentage</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold text-center">Grade</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {students.map((student, index) => {
+                        const studentId = student.student_id || student.id || 0;
+                        const marks = gradeMarks.get(studentId);
+                        const marksNum = marks !== undefined && marks !== '' ? Number(marks) : null;
+                        const percentage = marksNum !== null && !isNaN(marksNum) ? (marksNum / gradeTotalMarks) * 100 : null;
+                        const gradeLetter = marksNum !== null && !isNaN(marksNum) ? getGradeLetter(marksNum, gradeTotalMarks) : null;
+
+                        return (
+                          <TableRow key={studentId} className={index % 2 === 0 ? 'bg-muted/50' : ''}>
+                            <TableCell>{index + 1}</TableCell>
+                            <TableCell className="font-medium">
+                              {student.first_name} {student.last_name}
+                            </TableCell>
+                            <TableCell className="text-center w-[140px]">
+                              <Input
+                                type="number"
+                                className="w-[100px] mx-auto"
+                                value={marks !== undefined ? marks : ''}
+                                onChange={(e) => handleGradeMarksChange(studentId, e.target.value)}
+                                min={0}
+                                max={gradeTotalMarks}
+                                step={0.5}
+                                placeholder="--"
                               />
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">--</Typography>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </TableContainer>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {percentage !== null ? (
+                                <span className="text-sm font-medium">{percentage.toFixed(1)}%</span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">--</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              {gradeLetter ? (
+                                <span
+                                  className={cn(
+                                    'inline-flex items-center justify-center min-w-[36px] px-2 py-0.5 rounded text-xs font-bold text-white',
+                                    getGradeColor(gradeLetter)
+                                  )}
+                                >
+                                  {gradeLetter}
+                                </span>
+                              ) : (
+                                <span className="text-sm text-muted-foreground">--</span>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
 
-              {/* Summary & Submit */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} of {students.length} students graded
-                </Typography>
-                <Button
-                  variant="contained"
-                  onClick={handleSubmitBulkGrades}
-                  disabled={submittingGrades || students.length === 0}
-                  size="large"
-                  sx={{ minWidth: 180 }}
-                >
-                  {submittingGrades ? <CircularProgress size={24} /> : 'Submit All Grades'}
-                </Button>
-              </Box>
-            </Stack>
-          )}
-        </TabPanel>
+                {/* Summary & Submit */}
+                <div className="flex justify-between items-center">
+                  <p className="text-sm text-muted-foreground">
+                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} of {students.length} students graded
+                  </p>
+                  <Button
+                    size="lg"
+                    className="min-w-[180px]"
+                    onClick={handleSubmitBulkGrades}
+                    disabled={submittingGrades || students.length === 0}
+                  >
+                    {submittingGrades ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit All Grades'}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
 
-        {/* Tab 5: Calendar */}
-        <TabPanel value={tabValue} index={4}>
-          <ClassCalendar schedule={parsedSchedule} />
-        </TabPanel>
+          {/* Tab 5: Calendar */}
+          <TabsContent value="calendar" className="pt-4">
+            <ClassCalendar schedule={parsedSchedule} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

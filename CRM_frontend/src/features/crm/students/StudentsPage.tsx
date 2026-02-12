@@ -1,12 +1,38 @@
 import { useState, useEffect, useMemo } from 'react';
-import { MdEdit, MdDelete, MdClose, MdInfo, MdArrowBack, MdFolder, MdFolderOpen, MdSearch, MdFilterList } from 'react-icons/md';
+import { Pencil, Trash2, X, Info, ArrowLeft, Folder, FolderOpen, Search, Filter, Plus, Users, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCRUD } from '../hooks/useCRUD';
 import { studentAPI, classAPI } from '../../../shared/api/api';
-import { SelectField } from './components/SelectField';
 import { fetchTeachers, fetchCenters, fetchClasses, genderOptions, statusOptions } from '../../../utils/dropdownOptions';
-import './CRUDStyles.css';
-import { Plus, Users, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 interface Student {
   student_id?: number;
@@ -24,6 +50,8 @@ interface Student {
   status: string;
   teacher_id?: number;
   class_id?: number;
+  username?: string;
+  password?: string;
 }
 
 interface Class {
@@ -47,12 +75,12 @@ const StudentsPage = () => {
     gender: 'Male',
     status: 'Active',
   });
-  const [teacherOptions, setTeacherOptions] = useState<any[]>([]);
-  const [centerOptions, setCenterOptions] = useState<any[]>([]);
-  const [classOptions, setClassOptions] = useState<any[]>([]);
+  const [teacherOptions, setTeacherOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
+  const [centerOptions, setCenterOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
+  const [classOptions, setClassOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [loadingClasses, setLoadingClasses] = useState(false);
-  
+
   // Search and Filter states
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGender, setFilterGender] = useState<string>('');
@@ -63,6 +91,7 @@ const StudentsPage = () => {
     actions.fetchAll();
     loadClasses();
     loadDropdownOptions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadClasses = async () => {
@@ -150,7 +179,6 @@ const StudentsPage = () => {
     setSelectedClass(null);
   };
 
-  // Get students for selected class
   const filteredStudents = selectedClass
     ? state.items.filter(
         (student) =>
@@ -158,19 +186,16 @@ const StudentsPage = () => {
       )
     : [];
 
-  // Get count of students per class
   const getStudentCount = (classId: number) => {
     return state.items.filter((student) => student.class_id === classId).length;
   };
 
-  // Get unassigned students (no class)
   const unassignedStudents = state.items.filter((student) => !student.class_id);
 
-  // Apply search and filters
   const displayedStudents = useMemo(() => {
-    let students = selectedClass?.class_id === -1 ? unassignedStudents : filteredStudents;
-    
-    // Apply search
+    const baseStudents = selectedClass?.class_id === -1 ? unassignedStudents : filteredStudents;
+    let students = baseStudents;
+
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       students = students.filter((student) =>
@@ -183,17 +208,15 @@ const StudentsPage = () => {
         `${student.first_name} ${student.last_name}`.toLowerCase().includes(search)
       );
     }
-    
-    // Apply gender filter
+
     if (filterGender) {
       students = students.filter((student) => student.gender === filterGender);
     }
-    
-    // Apply status filter
+
     if (filterStatus) {
       students = students.filter((student) => student.status === filterStatus);
     }
-    
+
     return students;
   }, [filteredStudents, unassignedStudents, selectedClass, searchTerm, filterGender, filterStatus]);
 
@@ -205,657 +228,550 @@ const StudentsPage = () => {
 
   const hasActiveFilters = searchTerm || filterGender || filterStatus;
 
+  const getStatusVariant = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'bg-green-100 text-green-800 border-green-300';
+      case 'inactive':
+        return 'bg-red-100 text-red-800 border-red-300';
+      case 'suspended':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+      default:
+        return 'bg-gray-100 text-gray-800 border-gray-300';
+    }
+  };
+
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div className="p-6">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3">
           {selectedClass && (
-            <button
-              className="btn-secondary"
+            <Button
+              variant="outline"
               onClick={handleBackToClasses}
-              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              className="flex items-center gap-1.5"
             >
-              <MdArrowBack size={18} /> Back
-            </button>
+              <ArrowLeft className="h-4 w-4" /> Back
+            </Button>
           )}
-          <h1>
+          <h1 className="text-3xl font-bold text-foreground">
             {selectedClass
               ? `${selectedClass.class_name} - Students`
               : 'Students by Class'}
           </h1>
         </div>
-        <button className="btn-primary" onClick={() => handleOpenModal()}>
-          <Plus size={18} /> Add Student
-        </button>
+        <Button
+          onClick={() => handleOpenModal()}
+          className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold"
+        >
+          <Plus className="w-5 h-5 mr-2" />
+          Add Student
+        </Button>
       </div>
 
-      {state.error && <div className="alert alert-error">{state.error}</div>}
+      {state.error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      )}
 
       {!selectedClass ? (
-        // FOLDER VIEW - Show Classes as Folders
-        <div className="folder-grid" style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-          gap: '20px',
-          padding: '20px 0',
-        }}>
+        <>
           {loadingClasses ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
-              Loading classes...
+            <div className="flex justify-center py-16">
+              <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
             </div>
           ) : classes.length === 0 ? (
-            <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
-              No classes found. Create classes first.
+            <div className="text-center py-16 text-muted-foreground">
+              <Folder className="w-16 h-16 mx-auto opacity-30 mb-4" />
+              <h3 className="text-lg font-semibold">No classes found</h3>
+              <p className="text-sm">Create classes first to organize students</p>
             </div>
           ) : (
-            <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
               {classes.map((cls) => {
                 const classId = cls.class_id || cls.id || 0;
                 const studentCount = getStudentCount(classId);
                 return (
-                  <div
+                  <Card
                     key={classId}
                     onClick={() => handleClassClick(cls)}
-                    className="folder-card"
-                    style={{
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      borderRadius: '12px',
-                      padding: '24px',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)',
-                      color: 'white',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-5px)';
-                      e.currentTarget.style.boxShadow = '0 8px 25px rgba(102, 126, 234, 0.4)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
-                    }}
+                    className="cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-indigo-500/20 border-0 overflow-hidden"
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                      <MdFolder size={40} />
-                      <div>
-                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
-                          {cls.class_name}
-                        </h3>
-                        <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                          {cls.class_code}
+                    <div className="bg-gradient-to-br from-indigo-500 to-violet-500 p-6 text-white">
+                      <div className="flex items-center gap-3 mb-3">
+                        <Folder className="h-10 w-10" />
+                        <div>
+                          <h3 className="text-lg font-semibold">{cls.class_name}</h3>
+                          <span className="text-xs opacity-80">{cls.class_code}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 mt-4 p-2.5 bg-white/20 rounded-lg">
+                        <Users className="h-4 w-4" />
+                        <span className="font-medium text-sm">
+                          {studentCount} {studentCount === 1 ? 'Student' : 'Students'}
                         </span>
                       </div>
+                      <p className="text-xs opacity-80 mt-2">
+                        Level {cls.level} &bull; Capacity: {cls.capacity}
+                      </p>
                     </div>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      marginTop: '16px',
-                      padding: '8px 12px',
-                      background: 'rgba(255,255,255,0.2)',
-                      borderRadius: '8px',
-                    }}>
-                      <Users size={16} />
-                      <span style={{ fontWeight: 500 }}>
-                        {studentCount} {studentCount === 1 ? 'Student' : 'Students'}
-                      </span>
-                    </div>
-                    <div style={{ marginTop: '8px', fontSize: '12px', opacity: 0.8 }}>
-                      Level {cls.level} • Capacity: {cls.capacity}
-                    </div>
-                  </div>
+                  </Card>
                 );
               })}
 
-              {/* Unassigned Students Folder */}
               {unassignedStudents.length > 0 && (
-                <div
-                  onClick={() => setSelectedClass({ class_id: -1, id: -1, class_name: 'Unassigned', class_code: 'N/A', level: 0, capacity: 0 })}
-                  className="folder-card"
-                  style={{
-                    background: 'linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%)',
-                    borderRadius: '12px',
-                    padding: '24px',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 4px 15px rgba(255, 107, 107, 0.3)',
-                    color: 'white',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-5px)';
-                    e.currentTarget.style.boxShadow = '0 8px 25px rgba(255, 107, 107, 0.4)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(255, 107, 107, 0.3)';
-                  }}
+                <Card
+                  onClick={() =>
+                    setSelectedClass({
+                      class_id: -1,
+                      id: -1,
+                      class_name: 'Unassigned',
+                      class_code: 'N/A',
+                      level: 0,
+                      capacity: 0,
+                    })
+                  }
+                  className="cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-rose-500/20 border-0 overflow-hidden"
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-                    <MdFolderOpen size={40} />
-                    <div>
-                      <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>
-                        Unassigned
-                      </h3>
-                      <span style={{ fontSize: '12px', opacity: 0.8 }}>
-                        No Class
+                  <div className="bg-gradient-to-br from-rose-500 to-pink-600 p-6 text-white">
+                    <div className="flex items-center gap-3 mb-3">
+                      <FolderOpen className="h-10 w-10" />
+                      <div>
+                        <h3 className="text-lg font-semibold">Unassigned</h3>
+                        <span className="text-xs opacity-80">No Class</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-4 p-2.5 bg-white/20 rounded-lg">
+                      <Users className="h-4 w-4" />
+                      <span className="font-medium text-sm">
+                        {unassignedStudents.length}{' '}
+                        {unassignedStudents.length === 1 ? 'Student' : 'Students'}
                       </span>
                     </div>
                   </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    marginTop: '16px',
-                    padding: '8px 12px',
-                    background: 'rgba(255,255,255,0.2)',
-                    borderRadius: '8px',
-                  }}>
-                    <Users size={16} />
-                    <span style={{ fontWeight: 500 }}>
-                      {unassignedStudents.length} {unassignedStudents.length === 1 ? 'Student' : 'Students'}
-                    </span>
-                  </div>
-                </div>
+                </Card>
               )}
-            </>
+            </div>
           )}
-        </div>
+        </>
       ) : (
-        // STUDENT LIST VIEW - Show Students in Selected Class
         <>
           {/* Search and Filter Bar */}
-          <div style={{
-            display: 'flex',
-            gap: '12px',
-            marginBottom: '20px',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-          }}>
-            {/* Search Input */}
-            <div style={{
-              position: 'relative',
-              flex: '1',
-              minWidth: '250px',
-              maxWidth: '400px',
-            }}>
-              <MdSearch 
-                size={20} 
-                style={{
-                  position: 'absolute',
-                  left: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#666',
-                }}
-              />
-              <input
-                type="text"
+          <div className="flex flex-wrap gap-3 mb-5 items-center">
+            <div className="relative flex-1 min-w-[250px] max-w-[400px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
                 placeholder="Search by name, email, phone, enrollment..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px 12px 12px 40px',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd',
-                  fontSize: '14px',
-                  transition: 'border-color 0.2s',
-                  outline: 'none',
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#667eea'}
-                onBlur={(e) => e.target.style.borderColor = '#ddd'}
+                className="pl-9"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  style={{
-                    position: 'absolute',
-                    right: '8px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    padding: '4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    color: '#999',
-                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
                 >
-                  <X size={16} />
+                  <X className="h-4 w-4 text-muted-foreground" />
                 </button>
               )}
             </div>
 
-            {/* Filter Toggle Button */}
-            <button
+            <Button
+              variant={showFilters ? 'default' : 'outline'}
               onClick={() => setShowFilters(!showFilters)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '12px 16px',
-                borderRadius: '8px',
-                border: '1px solid #ddd',
-                background: showFilters ? '#667eea' : 'white',
-                color: showFilters ? 'white' : '#333',
-                cursor: 'pointer',
-                fontWeight: 500,
-                transition: 'all 0.2s',
-              }}
+              className={cn(showFilters && 'bg-indigo-500 hover:bg-indigo-600')}
             >
-              <MdFilterList size={18} />
+              <Filter className="h-4 w-4 mr-1.5" />
               Filters
               {hasActiveFilters && (
-                <span style={{
-                  background: showFilters ? 'white' : '#667eea',
-                  color: showFilters ? '#667eea' : 'white',
-                  borderRadius: '50%',
-                  width: '20px',
-                  height: '20px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                }}>
+                <Badge className="ml-1.5 h-5 w-5 rounded-full p-0 flex items-center justify-center text-[10px]">
                   {(filterGender ? 1 : 0) + (filterStatus ? 1 : 0)}
-                </span>
+                </Badge>
               )}
-            </button>
+            </Button>
 
-            {/* Clear Filters */}
             {hasActiveFilters && (
-              <button
-                onClick={clearFilters}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '12px 16px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: '#ff6b6b',
-                  color: 'white',
-                  cursor: 'pointer',
-                  fontWeight: 500,
-                }}
-              >
-                <X size={16} />
+              <Button variant="destructive" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4 mr-1" />
                 Clear All
-              </button>
+              </Button>
             )}
 
-            {/* Results Count */}
-            <span style={{
-              marginLeft: 'auto',
-              color: '#666',
-              fontSize: '14px',
-            }}>
+            <span className="ml-auto text-sm text-muted-foreground">
               {displayedStudents.length} student{displayedStudents.length !== 1 ? 's' : ''} found
             </span>
           </div>
 
-          {/* Filter Options */}
           {showFilters && (
-            <div style={{
-              display: 'flex',
-              gap: '16px',
-              marginBottom: '20px',
-              padding: '16px',
-              background: '#f8f9fa',
-              borderRadius: '8px',
-              flexWrap: 'wrap',
-            }}>
-              <div style={{ minWidth: '150px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, fontSize: '13px', color: '#555' }}>
-                  Gender
-                </label>
-                <select
-                  value={filterGender}
-                  onChange={(e) => setFilterGender(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #ddd',
-                    fontSize: '14px',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="">All Genders</option>
-                  {genderOptions.map((opt) => (
-                    <option key={opt.id} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
+            <Card className="mb-5">
+              <CardContent className="py-4">
+                <div className="flex flex-wrap gap-4">
+                  <div className="min-w-[150px]">
+                    <Label className="text-xs font-semibold mb-1.5 block">Gender</Label>
+                    <Select value={filterGender || 'all'} onValueChange={(val) => setFilterGender(val === 'all' ? '' : val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Genders" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Genders</SelectItem>
+                        {genderOptions.map((opt) => (
+                          <SelectItem key={opt.id} value={String(opt.value)}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div style={{ minWidth: '150px' }}>
-                <label style={{ display: 'block', marginBottom: '6px', fontWeight: 500, fontSize: '13px', color: '#555' }}>
-                  Status
-                </label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '6px',
-                    border: '1px solid #ddd',
-                    fontSize: '14px',
-                    background: 'white',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="">All Statuses</option>
-                  {statusOptions.map((opt) => (
-                    <option key={opt.id} value={opt.value}>{opt.label}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+                  <div className="min-w-[150px]">
+                    <Label className="text-xs font-semibold mb-1.5 block">Status</Label>
+                    <Select value={filterStatus || 'all'} onValueChange={(val) => setFilterStatus(val === 'all' ? '' : val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        {statusOptions.map((opt) => (
+                          <SelectItem key={opt.id} value={String(opt.value)}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
-          <div className="crud-table-container">
-            <table className="crud-table">
-              <thead>
-                <tr>
-                  <th>Enrollment #</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  <th>Date of Birth</th>
-                  <th>Gender</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Enrollment #</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Date of Birth</TableHead>
+                  <TableHead>Gender</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {state.loading ? (
-                  <tr>
-                    <td colSpan={8} className="text-center">Loading...</td>
-                  </tr>
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+                    </TableCell>
+                  </TableRow>
                 ) : displayedStudents.length === 0 ? (
-                  <tr>
-                    <td colSpan={8} className="text-center">
-                      {hasActiveFilters 
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+                      {hasActiveFilters
                         ? 'No students match your search criteria'
                         : 'No students found in this class'}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   displayedStudents.map((student) => (
-                  <tr key={student.student_id || student.id}>
-                    <td>{student.enrollment_number}</td>
-                    <td>{student.first_name} {student.last_name}</td>
-                    <td>{student.email}</td>
-                    <td>{student.phone}</td>
-                    <td>{new Date(student.date_of_birth).toLocaleDateString()}</td>
-                    <td>{student.gender}</td>
-                    <td>
-                      <span className={`badge badge-${student.status.toLowerCase()}`}>
-                        {student.status}
-                      </span>
-                    </td>
-                    <td className="actions">
-                      <button
-                        className="btn-icon"
-                        style={{ background: '#17a2b8', borderColor: '#17a2b8', color: 'white' }}
-                        onClick={() => navigate(`/student/${student.student_id || student.id}`)}
-                        title="View Details"
-                      >
-                        <MdInfo />
-                      </button>
-                      <button
-                        className="btn-icon btn-edit"
-                        onClick={() => handleOpenModal(student)}
-                        title="Edit"
-                      >
-                        <MdEdit />
-                      </button>
-                      <button
-                        className="btn-icon btn-delete"
-                        onClick={() => handleDelete(student.student_id || student.id || 0)}
-                        title="Delete"
-                      >
-                        <MdDelete />
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-              </tbody>
-            </table>
-          </div>
+                    <TableRow key={student.student_id || student.id}>
+                      <TableCell className="font-mono text-sm">{student.enrollment_number}</TableCell>
+                      <TableCell className="font-medium">
+                        {student.first_name} {student.last_name}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground">{student.email}</TableCell>
+                      <TableCell className="text-muted-foreground">{student.phone}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {new Date(student.date_of_birth).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell>{student.gender}</TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            'text-xs font-semibold border',
+                            getStatusVariant(student.status)
+                          )}
+                        >
+                          {student.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-cyan-600 hover:text-cyan-800"
+                            onClick={() => navigate(`/student/${student.student_id || student.id}`)}
+                            title="View Details"
+                          >
+                            <Info className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-blue-500 hover:text-blue-700"
+                            onClick={() => handleOpenModal(student)}
+                            title="Edit"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-700"
+                            onClick={() => handleDelete(student.student_id || student.id || 0)}
+                            title="Delete"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </Card>
         </>
       )}
 
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingId ? 'Edit Student' : 'Add New Student'}</h2>
-              <button className="btn-close" onClick={handleCloseModal}>
-                <MdClose size={24} />
+      {/* Add/Edit Student Modal */}
+      <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
+        <DialogContent className="max-w-2xl rounded-2xl p-0 gap-0 overflow-hidden">
+          <DialogHeader className="bg-gradient-to-br from-indigo-500 to-violet-500 px-6 py-4">
+            <div className="flex justify-between items-center">
+              <DialogTitle className="text-white font-semibold text-lg">
+                {editingId ? 'Edit Student' : 'Add New Student'}
+              </DialogTitle>
+              <button
+                onClick={handleCloseModal}
+                className="text-white hover:text-white/80 transition-colors"
+              >
+                <X className="w-6 h-6" />
               </button>
             </div>
+          </DialogHeader>
 
-            <form onSubmit={handleSubmit} className="modal-form">
-              <div className="form-row">
-                <div className="form-group">
-                  <label>First Name *</label>
-                  <input
-                    type="text"
+          <form onSubmit={handleSubmit}>
+            <div className="p-6 max-h-[60vh] overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="first_name">First Name *</Label>
+                  <Input
+                    id="first_name"
                     required
                     value={formData.first_name || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, first_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Last Name *</label>
-                  <input
-                    type="text"
+                <div className="space-y-2">
+                  <Label htmlFor="last_name">Last Name *</Label>
+                  <Input
+                    id="last_name"
                     required
                     value={formData.last_name || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, last_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                   />
                 </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Enrollment Number *</label>
-                  <input
-                    type="text"
+                <div className="space-y-2">
+                  <Label htmlFor="enrollment_number">Enrollment Number *</Label>
+                  <Input
+                    id="enrollment_number"
                     required
                     value={formData.enrollment_number || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, enrollment_number: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, enrollment_number: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Email *</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
                     type="email"
                     required
                     value={formData.email || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Username {!editingId && '*'}</label>
-                  <input
-                    type="text"
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username {!editingId && '*'}</Label>
+                  <Input
+                    id="username"
                     required={!editingId}
                     value={formData.username || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, username: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     placeholder="Login username"
                   />
                 </div>
-                <div className="form-group">
-                  <label>Password {!editingId && '*'}</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password {!editingId && '*'}</Label>
+                  <Input
+                    id="password"
                     type="password"
                     required={!editingId}
                     value={formData.password || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, password: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     placeholder={editingId ? 'Leave blank to keep current' : 'Login password'}
                   />
                 </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Phone *</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone *</Label>
+                  <Input
+                    id="phone"
                     type="tel"
                     required
                     value={formData.phone || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Date of Birth *</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="date_of_birth">Date of Birth *</Label>
+                  <Input
+                    id="date_of_birth"
                     type="date"
                     required
                     value={formData.date_of_birth || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, date_of_birth: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })}
                   />
                 </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Parent Name *</label>
-                  <input
-                    type="text"
+                <div className="space-y-2">
+                  <Label htmlFor="parent_name">Parent Name *</Label>
+                  <Input
+                    id="parent_name"
                     required
                     value={formData.parent_name || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, parent_name: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, parent_name: e.target.value })}
                   />
                 </div>
-                <div className="form-group">
-                  <label>Parent Phone *</label>
-                  <input
+                <div className="space-y-2">
+                  <Label htmlFor="parent_phone">Parent Phone *</Label>
+                  <Input
+                    id="parent_phone"
                     type="tel"
                     required
                     value={formData.parent_phone || ''}
-                    onChange={(e) =>
-                      setFormData({ ...formData, parent_phone: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, parent_phone: e.target.value })}
                   />
                 </div>
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Gender *</label>
-                  <select
-                    required
+                <div className="space-y-2">
+                  <Label>Gender *</Label>
+                  <Select
                     value={formData.gender || 'Male'}
-                    onChange={(e) =>
-                      setFormData({ ...formData, gender: e.target.value })
-                    }
-                    className="form-select"
+                    onValueChange={(val) => setFormData({ ...formData, gender: val })}
                   >
-                    <option value="">Select Gender</option>
-                    {genderOptions.map((opt) => (
-                      <option key={opt.id} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {genderOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={String(opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div className="form-group">
-                  <label>Status *</label>
-                  <select
-                    required
+                <div className="space-y-2">
+                  <Label>Status *</Label>
+                  <Select
                     value={formData.status || 'Active'}
-                    onChange={(e) =>
-                      setFormData({ ...formData, status: e.target.value })
-                    }
-                    className="form-select"
+                    onValueChange={(val) => setFormData({ ...formData, status: val })}
                   >
-                    <option value="">Select Status</option>
-                    {statusOptions.map((opt) => (
-                      <option key={opt.id} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statusOptions.map((opt) => (
+                        <SelectItem key={opt.id} value={String(opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Center *</Label>
+                  <Select
+                    value={String(formData.center_id || '')}
+                    onValueChange={(val) => setFormData({ ...formData, center_id: Number(val) })}
+                    disabled={isLoadingOptions}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingOptions ? 'Loading...' : 'Select a center'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {centerOptions.map((opt) => (
+                        <SelectItem key={opt.id || opt.value} value={String(opt.id || opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Teacher</Label>
+                  <Select
+                    value={String(formData.teacher_id || 'none')}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, teacher_id: val === 'none' ? undefined : Number(val) })
+                    }
+                    disabled={isLoadingOptions}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingOptions ? 'Loading...' : 'Select a teacher (optional)'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {teacherOptions.map((opt) => (
+                        <SelectItem key={opt.id || opt.value} value={String(opt.id || opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2 sm:col-span-2">
+                  <Label>Class</Label>
+                  <Select
+                    value={String(formData.class_id || 'none')}
+                    onValueChange={(val) =>
+                      setFormData({ ...formData, class_id: val === 'none' ? undefined : Number(val) })
+                    }
+                    disabled={isLoadingOptions}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoadingOptions ? 'Loading...' : 'Select a class (optional)'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">None</SelectItem>
+                      {classOptions.map((opt) => (
+                        <SelectItem key={opt.id || opt.value} value={String(opt.id || opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-
-              <div className="form-row">
-                <SelectField
-                  label="Center"
-                  name="center_id"
-                  value={formData.center_id || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, center_id: Number(e.target.value) })
-                  }
-                  options={centerOptions}
-                  isLoading={isLoadingOptions}
-                  required
-                  placeholder="Select a center"
-                />
-                <SelectField
-                  label="Teacher"
-                  name="teacher_id"
-                  value={formData.teacher_id || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, teacher_id: e.target.value ? Number(e.target.value) : undefined })
-                  }
-                  options={teacherOptions}
-                  isLoading={isLoadingOptions}
-                  placeholder="Select a teacher (optional)"
-                />
-              </div>
-
-              <div className="form-group">
-                <SelectField
-                  label="Class"
-                  name="class_id"
-                  value={formData.class_id || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, class_id: e.target.value ? Number(e.target.value) : undefined })
-                  }
-                  options={classOptions}
-                  isLoading={isLoadingOptions}
-                  placeholder="Select a class (optional)"
-                />
-              </div>
-
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary" disabled={state.loading}>
-                  {state.loading ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            </div>
+            <DialogFooter className="px-6 py-4">
+              <Button type="button" variant="outline" onClick={handleCloseModal} className="rounded-lg">
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                disabled={state.loading}
+                className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 rounded-lg px-8"
+              >
+                {state.loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

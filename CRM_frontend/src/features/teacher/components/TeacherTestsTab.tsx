@@ -1,51 +1,41 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert,
-  IconButton,
-  Tooltip,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
+  Plus,
+  FileQuestion,
+  Timer,
+  CheckCircle,
+  MoreVertical,
+  Edit,
+  Trash2,
+  ClipboardList,
+  Eye,
+  Award,
+  Search,
+  Users,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Badge,
-  Tabs,
-  Tab,
-  TextField,
-  InputAdornment,
-} from '@mui/material';
-import {
-  Add as AddIcon,
-  Quiz as QuizIcon,
-  Timer as TimerIcon,
-  CheckCircle as CheckIcon,
-  MoreVert as MoreIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Assignment as AssignIcon,
-  Visibility as ViewIcon,
-  Grade as GradeIcon,
-  Search as SearchIcon,
-  People as PeopleIcon,
-} from '@mui/icons-material';
+} from '@/components/ui/table';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -86,13 +76,15 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterTab, setFilterTab] = useState(0);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const [filterTab, setFilterTab] = useState('all');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const [selectedTest, setSelectedTest] = useState<Test | null>(null);
   const [submissionsDialog, setSubmissionsDialog] = useState(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [submissionsLoading, setSubmissionsLoading] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadTests();
@@ -101,6 +93,16 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
   useEffect(() => {
     filterTests();
   }, [tests, searchTerm, filterTab]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadTests = async () => {
     try {
@@ -119,7 +121,6 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
   const filterTests = () => {
     let filtered = [...tests];
 
-    // Apply search
     if (searchTerm) {
       filtered = filtered.filter(
         (t) =>
@@ -129,15 +130,14 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       );
     }
 
-    // Apply tab filter
     switch (filterTab) {
-      case 1: // Active
+      case 'active':
         filtered = filtered.filter((t) => t.is_active);
         break;
-      case 2: // Inactive
+      case 'inactive':
         filtered = filtered.filter((t) => !t.is_active);
         break;
-      case 3: // With Submissions
+      case 'submissions':
         filtered = filtered.filter((t) => (t.submission_count || 0) > 0);
         break;
       default:
@@ -149,12 +149,14 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, test: Test) => {
     event.stopPropagation();
-    setAnchorEl(event.currentTarget);
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 4, left: rect.right - 180 });
     setSelectedTest(test);
+    setMenuOpen(true);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setMenuOpen(false);
   };
 
   const handleViewSubmissions = async () => {
@@ -190,321 +192,265 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
 
   const getTestTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
-      multiple_choice: '#667eea',
-      essay: '#f5576c',
-      short_answer: '#4facfe',
-      true_false: '#43e97b',
-      form_filling: '#fa709a',
-      reading_passage: '#a855f7',
-      writing: '#ec4899',
-      matching: '#14b8a6',
+      multiple_choice: 'bg-indigo-500',
+      essay: 'bg-rose-500',
+      short_answer: 'bg-blue-400',
+      true_false: 'bg-emerald-500',
+      form_filling: 'bg-pink-500',
+      reading_passage: 'bg-purple-500',
+      writing: 'bg-pink-500',
+      matching: 'bg-teal-500',
     };
-    return colors[type] || '#6b7280';
+    return colors[type] || 'bg-gray-500';
   };
 
   const formatTestType = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeClass = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'graded':
-        return 'success';
+        return 'bg-green-100 text-green-700 border-green-300';
       case 'submitted':
-        return 'warning';
+        return 'bg-amber-100 text-amber-700 border-amber-300';
       case 'in_progress':
-        return 'info';
+        return 'bg-blue-100 text-blue-700 border-blue-300';
       default:
-        return 'default';
+        return '';
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
     );
   }
 
   return (
-    <Box>
+    <div>
       {/* Header with Create Button and Search */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h6" fontWeight={600}>
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <h3 className="text-lg font-semibold">
           My Tests ({filteredTests.length})
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <TextField
-            size="small"
-            placeholder="Search tests..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-            sx={{ minWidth: 250 }}
-          />
+        </h3>
+        <div className="flex gap-3 items-center">
+          <div className="relative min-w-[250px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search tests..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
           <Button
-            variant="contained"
-            startIcon={<AddIcon />}
             onClick={() => navigate('/tests/create')}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              textTransform: 'none',
-            }}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
           >
+            <Plus className="h-4 w-4 mr-2" />
             Create Test
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Filter Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs
-          value={filterTab}
-          onChange={(_, v) => setFilterTab(v)}
-          sx={{ '& .MuiTab-root': { textTransform: 'none' } }}
-        >
-          <Tab label={`All (${tests.length})`} />
-          <Tab label={`Active (${tests.filter((t) => t.is_active).length})`} />
-          <Tab label={`Inactive (${tests.filter((t) => !t.is_active).length})`} />
-          <Tab
-            label={
-              <Badge
-                badgeContent={tests.filter((t) => (t.submission_count || 0) > 0).length}
-                color="primary"
-              >
-                With Submissions
-              </Badge>
-            }
-          />
-        </Tabs>
-      </Box>
+      <Tabs value={filterTab} onValueChange={setFilterTab} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="all">All ({tests.length})</TabsTrigger>
+          <TabsTrigger value="active">Active ({tests.filter((t) => t.is_active).length})</TabsTrigger>
+          <TabsTrigger value="inactive">Inactive ({tests.filter((t) => !t.is_active).length})</TabsTrigger>
+          <TabsTrigger value="submissions">
+            With Submissions
+            {tests.filter((t) => (t.submission_count || 0) > 0).length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-xs w-5 h-5">
+                {tests.filter((t) => (t.submission_count || 0) > 0).length}
+              </span>
+            )}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }}>
-          {error}
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
 
       {/* Tests Grid */}
       {filteredTests.length === 0 ? (
-        <Box
-          sx={{
-            textAlign: 'center',
-            py: 8,
-            bgcolor: '#f9f9f9',
-            borderRadius: 2,
-            border: '2px dashed #e0e0e0',
-          }}
-        >
-          <QuizIcon sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            No tests found
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+        <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <FileQuestion className="h-14 w-14 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-muted-foreground">No tests found</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             {searchTerm ? 'Try adjusting your search' : 'Create your first test to get started'}
-          </Typography>
+          </p>
           {!searchTerm && (
             <Button
-              variant="contained"
-              startIcon={<AddIcon />}
               onClick={() => navigate('/tests/create')}
-              sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                textTransform: 'none',
-              }}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
             >
+              <Plus className="h-4 w-4 mr-2" />
               Create Test
             </Button>
           )}
-        </Box>
+        </div>
       ) : (
-        <Grid container spacing={3}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredTests.map((test) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={test.test_id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  position: 'relative',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 4,
-                  },
-                }}
-                onClick={() => navigate(`/tests/${test.test_id}`)}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                      <Chip
-                        label={formatTestType(test.test_type)}
-                        size="small"
-                        sx={{
-                          bgcolor: getTestTypeColor(test.test_type),
-                          color: 'white',
-                        }}
-                      />
-                      {test.subject_name && (
-                        <Chip label={test.subject_name} size="small" variant="outlined" />
-                      )}
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Chip
-                        label={test.is_active ? 'Active' : 'Inactive'}
-                        size="small"
-                        color={test.is_active ? 'success' : 'default'}
-                        variant="outlined"
-                      />
-                      <IconButton
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, test)}
-                      >
-                        <MoreIcon />
-                      </IconButton>
-                    </Box>
-                  </Box>
-
-                  <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                    {test.test_name}
-                  </Typography>
-
-                  {test.description && (
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mb: 2,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                      }}
-                    >
-                      {test.description}
-                    </Typography>
-                  )}
-
-                  <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <TimerIcon fontSize="small" color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        {test.duration_minutes} min
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <CheckIcon fontSize="small" color="action" />
-                      <Typography variant="body2" color="text.secondary">
-                        {test.total_marks} marks
-                      </Typography>
-                    </Box>
-                  </Box>
-
-                  <Box sx={{ display: 'flex', gap: 2, mt: 1, alignItems: 'center' }}>
-                    <Typography variant="caption" color="text.secondary">
-                      {test.question_count || 0} questions
-                    </Typography>
-                    <Badge
-                      badgeContent={test.submission_count || 0}
-                      color="primary"
-                      max={99}
-                    >
-                      <Typography variant="caption" color="text.secondary" sx={{ pr: 1 }}>
-                        submissions
-                      </Typography>
+            <Card
+              key={test.test_id}
+              className="cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg relative"
+              onClick={() => navigate(`/tests/${test.test_id}`)}
+            >
+              <CardContent className="pt-5">
+                <div className="flex justify-between items-start mb-3">
+                  <div className="flex gap-1.5 flex-wrap">
+                    <span className={cn('text-xs px-2 py-0.5 rounded-full text-white font-medium', getTestTypeColor(test.test_type))}>
+                      {formatTestType(test.test_type)}
+                    </span>
+                    {test.subject_name && (
+                      <Badge variant="outline" className="text-xs">{test.subject_name}</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className={cn('text-xs', test.is_active ? 'border-green-400 text-green-600' : 'border-gray-300 text-gray-500')}>
+                      {test.is_active ? 'Active' : 'Inactive'}
                     </Badge>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
+                    <button
+                      className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                      onClick={(e) => handleMenuOpen(e, test)}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <h3 className="text-base font-semibold mb-1">{test.test_name}</h3>
+
+                {test.description && (
+                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                    {test.description}
+                  </p>
+                )}
+
+                <div className="flex gap-4 mt-3">
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <Timer className="h-4 w-4" />
+                    {test.duration_minutes} min
+                  </div>
+                  <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <CheckCircle className="h-4 w-4" />
+                    {test.total_marks} marks
+                  </div>
+                </div>
+
+                <div className="flex gap-4 mt-2 items-center">
+                  <span className="text-xs text-muted-foreground">
+                    {test.question_count || 0} questions
+                  </span>
+                  <span className="text-xs text-muted-foreground relative">
+                    submissions
+                    {(test.submission_count || 0) > 0 && (
+                      <span className="absolute -top-2 -right-5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] w-4 h-4">
+                        {test.submission_count}
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
           ))}
-        </Grid>
+        </div>
       )}
 
-      {/* Test Actions Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}`); }}>
-          <ListItemIcon><ViewIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>View Details</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/edit`); }}>
-          <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Edit Test</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/assign`); }}>
-          <ListItemIcon><AssignIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Assign Test</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={handleViewSubmissions}>
-          <ListItemIcon>
-            <Badge badgeContent={selectedTest?.submission_count || 0} color="primary">
-              <PeopleIcon fontSize="small" />
-            </Badge>
-          </ListItemIcon>
-          <ListItemText>View Submissions</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); setDeleteDialog(true); }} sx={{ color: 'error.main' }}>
-          <ListItemIcon><DeleteIcon fontSize="small" color="error" /></ListItemIcon>
-          <ListItemText>Delete Test</ListItemText>
-        </MenuItem>
-      </Menu>
+      {/* Dropdown Menu (portal-style) */}
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-48 bg-white rounded-md shadow-lg border py-1"
+          style={{ top: menuPos.top, left: menuPos.left }}
+        >
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}`); }}
+          >
+            <Eye className="h-4 w-4" /> View Details
+          </button>
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/edit`); }}
+          >
+            <Edit className="h-4 w-4" /> Edit Test
+          </button>
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/assign`); }}
+          >
+            <ClipboardList className="h-4 w-4" /> Assign Test
+          </button>
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            onClick={handleViewSubmissions}
+          >
+            <Users className="h-4 w-4" />
+            View Submissions
+            {(selectedTest?.submission_count || 0) > 0 && (
+              <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] w-4 h-4">
+                {selectedTest?.submission_count}
+              </span>
+            )}
+          </button>
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={() => { handleMenuClose(); setDeleteDialog(true); }}
+          >
+            <Trash2 className="h-4 w-4" /> Delete Test
+          </button>
+        </div>
+      )}
 
       {/* Submissions Dialog */}
-      <Dialog
-        open={submissionsDialog}
-        onClose={() => setSubmissionsDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Typography variant="h6">Test Submissions - {selectedTest?.test_name}</Typography>
-            <Chip label={`${submissions.length} submissions`} size="small" color="primary" />
-          </Box>
-        </DialogTitle>
-        <DialogContent>
+      <Dialog open={submissionsDialog} onOpenChange={setSubmissionsDialog}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <div className="flex justify-between items-center">
+              <DialogTitle>Test Submissions - {selectedTest?.test_name}</DialogTitle>
+              <Badge className="bg-indigo-100 text-indigo-700 border-indigo-300">
+                {submissions.length} submissions
+              </Badge>
+            </div>
+          </DialogHeader>
           {submissionsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            </div>
           ) : submissions.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <Typography color="text.secondary">No submissions yet</Typography>
-            </Box>
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">No submissions yet</p>
+            </div>
           ) : (
-            <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell>Student</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Score</TableCell>
-                    <TableCell>Submitted At</TableCell>
-                    <TableCell align="right">Actions</TableCell>
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead>Student</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Score</TableHead>
+                    <TableHead>Submitted At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                </TableHead>
+                </TableHeader>
                 <TableBody>
                   {submissions.map((sub) => (
                     <TableRow key={sub.submission_id}>
                       <TableCell>{sub.student_name}</TableCell>
                       <TableCell>
-                        <Chip
-                          label={sub.status}
-                          size="small"
-                          color={getStatusColor(sub.status) as any}
-                        />
+                        <Badge variant="outline" className={getStatusBadgeClass(sub.status)}>
+                          {sub.status}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         {sub.score !== null ? `${sub.score}/${sub.total_marks}` : '-'}
@@ -512,55 +458,52 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                       <TableCell>
                         {new Date(sub.submitted_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell align="right">
-                        <Tooltip title="View Submission">
-                          <IconButton
-                            size="small"
-                            onClick={() => navigate(`/tests/submissions/${sub.submission_id}`)}
-                          >
-                            <ViewIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                      <TableCell className="text-right">
+                        <button
+                          className="p-1.5 rounded hover:bg-gray-100 text-gray-600"
+                          title="View Submission"
+                          onClick={() => navigate(`/tests/submissions/${sub.submission_id}`)}
+                        >
+                          <Eye className="h-4 w-4" />
+                        </button>
                         {sub.status !== 'graded' && (
-                          <Tooltip title="Grade Submission">
-                            <IconButton
-                              size="small"
-                              color="primary"
-                              onClick={() => navigate(`/tests/submissions/${sub.submission_id}/grade`)}
-                            >
-                              <GradeIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
+                          <button
+                            className="p-1.5 rounded hover:bg-indigo-50 text-indigo-600 ml-1"
+                            title="Grade Submission"
+                            onClick={() => navigate(`/tests/submissions/${sub.submission_id}/grade`)}
+                          >
+                            <Award className="h-4 w-4" />
+                          </button>
                         )}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
-            </TableContainer>
+            </div>
           )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSubmissionsDialog(false)}>Close</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSubmissionsDialog(false)}>Close</Button>
-        </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialog} onClose={() => setDeleteDialog(false)}>
-        <DialogTitle>Delete Test</DialogTitle>
+      <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
         <DialogContent>
-          <Typography>
-            Are you sure you want to delete "{selectedTest?.test_name}"? This action cannot be undone.
-          </Typography>
+          <DialogHeader>
+            <DialogTitle>Delete Test</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete &quot;{selectedTest?.test_name}&quot;? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialog(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteTest}>Delete</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialog(false)}>Cancel</Button>
-          <Button onClick={handleDeleteTest} color="error" variant="contained">
-            Delete
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 

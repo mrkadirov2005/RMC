@@ -1,4 +1,3 @@
-import './ProtectedRoute.css';
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAppSelector, useRBAC } from '../../features/crm/hooks';
@@ -25,7 +24,7 @@ export const ProtectedRoute = ({
 
   // Check if user type is in allowed list
   if (allowedUserTypes && allowedUserTypes.length > 0) {
-    if (!allowedUserTypes.includes(user.userType as any)) {
+    if (!allowedUserTypes.includes(user.userType as 'superuser' | 'teacher' | 'student')) {
       return <Navigate to="/unauthorized" replace />;
     }
   }

@@ -1,11 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface SelectFieldProps {
   label: string;
   name: string;
-  value: any;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  options: Array<{ id?: number; label: string; value: any }>;
+  value: string | number | undefined;
+  onChange: (value: string) => void;
+  options: Array<{ id?: number; label: string; value: string | number }>;
   isLoading?: boolean;
   required?: boolean;
   placeholder?: string;
@@ -22,26 +30,28 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   placeholder = 'Select an option',
 }) => {
   return (
-    <div className="form-group">
-      <label>
+    <div className="space-y-2">
+      <Label htmlFor={name}>
         {label}
-        {required && <span className="required-asterisk">*</span>}
-      </label>
-      <select
-        name={name}
-        value={value || ''}
-        onChange={onChange}
+        {required && <span className="text-destructive ml-1">*</span>}
+      </Label>
+      <Select
+        value={value?.toString() || ''}
+        onValueChange={onChange}
         disabled={isLoading}
         required={required}
-        className="form-select"
       >
-        <option value="">{isLoading ? 'Loading...' : placeholder}</option>
-        {options.map((option) => (
-          <option key={option.id || option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        <SelectTrigger>
+          <SelectValue placeholder={isLoading ? 'Loading...' : placeholder} />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.id || option.value} value={option.value.toString()}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 };
@@ -49,9 +59,9 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 interface DynamicSelectFieldProps {
   label: string;
   name: string;
-  value: any;
-  onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  fetchOptions: () => Promise<Array<{ id?: number; label: string; value: any }>>;
+  value: string | number | undefined;
+  onChange: (value: string) => void;
+  fetchOptions: () => Promise<Array<{ id?: number; label: string; value: string | number }>>;
   required?: boolean;
   placeholder?: string;
 }
@@ -65,7 +75,7 @@ export const DynamicSelectField: React.FC<DynamicSelectFieldProps> = ({
   required = false,
   placeholder = 'Select an option',
 }) => {
-  const [options, setOptions] = useState<Array<{ id?: number; label: string; value: any }>>([]);
+  const [options, setOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {

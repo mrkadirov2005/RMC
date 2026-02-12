@@ -1,34 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Grid,
-  Switch,
-  FormControlLabel,
-  Stepper,
-  Step,
-  StepLabel,
-  Divider,
-  IconButton,
-  Alert,
-  Chip,
-  Paper,
-} from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  Add as AddIcon,
-  Delete as DeleteIcon,
-  DragIndicator as DragIcon,
-} from '@mui/icons-material';
+  ArrowLeft,
+  Plus,
+  Trash2,
+  GripVertical,
+  Loader2,
+  Check,
+  X,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import { testAPI, subjectAPI, centerAPI } from '../../../shared/api/api';
 import { useAppSelector } from '../hooks';
 
@@ -53,13 +41,13 @@ interface Passage {
 const CreateTestPage = () => {
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
-  
+
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [centers, setCenters] = useState<any[]>([]);
-  
+
   // Test basic info
   const [testData, setTestData] = useState({
     test_name: '',
@@ -81,7 +69,7 @@ const CreateTestPage = () => {
 
   // Questions
   const [questions, setQuestions] = useState<Question[]>([]);
-  
+
   // Passages (for reading tests)
   const [passages, setPassages] = useState<Passage[]>([]);
 
@@ -237,477 +225,453 @@ const CreateTestPage = () => {
   };
 
   const renderBasicInfo = () => (
-    <Grid container spacing={3}>
-      <Grid size={{ xs: 12 }}>
-        <TextField
-          fullWidth
-          label="Test Name"
+    <div className="grid grid-cols-1 gap-6">
+      <div>
+        <Label htmlFor="test_name">Test Name *</Label>
+        <Input
+          id="test_name"
           value={testData.test_name}
           onChange={(e) => setTestData({ ...testData, test_name: e.target.value })}
-          required
+          className="mt-1"
         />
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <FormControl fullWidth>
-          <InputLabel>Test Type</InputLabel>
-          <Select
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <Label htmlFor="test_type">Test Type</Label>
+          <select
+            id="test_type"
             value={testData.test_type}
-            label="Test Type"
             onChange={(e) => setTestData({ ...testData, test_type: e.target.value })}
+            className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
             {testTypes.map((type) => (
-              <MenuItem key={type.value} value={type.value}>
+              <option key={type.value} value={type.value}>
                 {type.label}
-              </MenuItem>
+              </option>
             ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <FormControl fullWidth>
-          <InputLabel>Subject</InputLabel>
-          <Select
+          </select>
+        </div>
+        <div>
+          <Label htmlFor="subject_id">Subject</Label>
+          <select
+            id="subject_id"
             value={testData.subject_id}
-            label="Subject"
             onChange={(e) => setTestData({ ...testData, subject_id: e.target.value })}
+            className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            <MenuItem value="">No Subject</MenuItem>
+            <option value="">No Subject</option>
             {subjects.map((subject) => (
-              <MenuItem key={subject.subject_id} value={subject.subject_id}>
+              <option key={subject.subject_id} value={subject.subject_id}>
                 {subject.subject_name}
-              </MenuItem>
+              </option>
             ))}
-          </Select>
-        </FormControl>
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <TextField
-          fullWidth
-          label="Description"
+          </select>
+        </div>
+      </div>
+      <div>
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
           value={testData.description}
           onChange={(e) => setTestData({ ...testData, description: e.target.value })}
-          multiline
           rows={3}
+          className="mt-1"
         />
-      </Grid>
-      <Grid size={{ xs: 12 }}>
-        <TextField
-          fullWidth
-          label="Instructions"
+      </div>
+      <div>
+        <Label htmlFor="instructions">Instructions</Label>
+        <Textarea
+          id="instructions"
           value={testData.instructions}
           onChange={(e) => setTestData({ ...testData, instructions: e.target.value })}
-          multiline
           rows={3}
           placeholder="Enter instructions for students taking this test..."
+          className="mt-1"
         />
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <TextField
-          fullWidth
-          type="number"
-          label="Duration (minutes)"
-          value={testData.duration_minutes}
-          onChange={(e) => setTestData({ ...testData, duration_minutes: parseInt(e.target.value) || 60 })}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <TextField
-          fullWidth
-          type="number"
-          label="Passing Marks"
-          value={testData.passing_marks}
-          onChange={(e) => setTestData({ ...testData, passing_marks: parseInt(e.target.value) || 0 })}
-        />
-      </Grid>
-      <Grid size={{ xs: 12, md: 4 }}>
-        <FormControl fullWidth>
-          <InputLabel>Center</InputLabel>
-          <Select
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div>
+          <Label htmlFor="duration">Duration (minutes)</Label>
+          <Input
+            id="duration"
+            type="number"
+            value={testData.duration_minutes}
+            onChange={(e) => setTestData({ ...testData, duration_minutes: parseInt(e.target.value) || 60 })}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="passing_marks">Passing Marks</Label>
+          <Input
+            id="passing_marks"
+            type="number"
+            value={testData.passing_marks}
+            onChange={(e) => setTestData({ ...testData, passing_marks: parseInt(e.target.value) || 0 })}
+            className="mt-1"
+          />
+        </div>
+        <div>
+          <Label htmlFor="center_id">Center</Label>
+          <select
+            id="center_id"
             value={testData.center_id}
-            label="Center"
-            onChange={(e) => setTestData({ ...testData, center_id: e.target.value })}
+            onChange={(e) => setTestData({ ...testData, center_id: Number(e.target.value) })}
+            className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
             {centers.map((center) => (
-              <MenuItem key={center.center_id} value={center.center_id}>
+              <option key={center.center_id} value={center.center_id}>
                 {center.center_name}
-              </MenuItem>
+              </option>
             ))}
-          </Select>
-        </FormControl>
-      </Grid>
-    </Grid>
+          </select>
+        </div>
+      </div>
+    </div>
   );
 
   const renderQuestions = () => (
-    <Box>
+    <div>
       {/* Reading Passages Section */}
       {testData.test_type === 'reading_passage' && (
-        <Box sx={{ mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6">Reading Passages</Typography>
-            <Button startIcon={<AddIcon />} onClick={addPassage}>
+        <div className="mb-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Reading Passages</h3>
+            <Button variant="outline" onClick={addPassage}>
+              <Plus className="h-4 w-4 mr-2" />
               Add Passage
             </Button>
-          </Box>
+          </div>
           {passages.map((passage, index) => (
-            <Paper key={passage.id} sx={{ p: 3, mb: 2 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Passage {index + 1}
-                </Typography>
-                <IconButton size="small" color="error" onClick={() => deletePassage(passage.id)}>
-                  <DeleteIcon />
-                </IconButton>
-              </Box>
-              <Grid container spacing={2}>
-                <Grid size={{ xs: 12, md: 8 }}>
-                  <TextField
-                    fullWidth
-                    label="Title"
+            <div key={passage.id} className="border rounded-lg p-4 mb-3 bg-background">
+              <div className="flex justify-between mb-3">
+                <h4 className="font-semibold">Passage {index + 1}</h4>
+                <button
+                  className="p-1 text-red-500 hover:bg-red-50 rounded"
+                  onClick={() => deletePassage(passage.id)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <div className="md:col-span-8">
+                  <Label>Title</Label>
+                  <Input
                     value={passage.title}
                     onChange={(e) => updatePassage(passage.id, { title: e.target.value })}
+                    className="mt-1"
                   />
-                </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
-                  <FormControl fullWidth>
-                    <InputLabel>Difficulty</InputLabel>
-                    <Select
-                      value={passage.difficulty_level}
-                      label="Difficulty"
-                      onChange={(e) => updatePassage(passage.id, { difficulty_level: e.target.value })}
-                    >
-                      <MenuItem value="easy">Easy</MenuItem>
-                      <MenuItem value="medium">Medium</MenuItem>
-                      <MenuItem value="hard">Hard</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Passage Content"
+                </div>
+                <div className="md:col-span-4">
+                  <Label>Difficulty</Label>
+                  <select
+                    value={passage.difficulty_level}
+                    onChange={(e) => updatePassage(passage.id, { difficulty_level: e.target.value })}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  >
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                  </select>
+                </div>
+                <div className="md:col-span-12">
+                  <Label>Passage Content</Label>
+                  <Textarea
                     value={passage.content}
                     onChange={(e) => updatePassage(passage.id, { content: e.target.value })}
-                    multiline
                     rows={6}
+                    className="mt-1"
                   />
-                </Grid>
-              </Grid>
-            </Paper>
+                </div>
+              </div>
+            </div>
           ))}
-          <Divider sx={{ my: 3 }} />
-        </Box>
+          <hr className="my-6" />
+        </div>
       )}
 
       {/* Questions Section */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box>
-          <Typography variant="h6">Questions</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Total Marks: {calculateTotalMarks()}
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddIcon />} onClick={addQuestion}>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h3 className="text-lg font-semibold">Questions</h3>
+          <p className="text-sm text-muted-foreground">Total Marks: {calculateTotalMarks()}</p>
+        </div>
+        <Button onClick={addQuestion}>
+          <Plus className="h-4 w-4 mr-2" />
           Add Question
         </Button>
-      </Box>
+      </div>
 
       {questions.length === 0 ? (
-        <Box
-          sx={{
-            textAlign: 'center',
-            py: 6,
-            bgcolor: '#f9f9f9',
-            borderRadius: 2,
-            border: '2px dashed #e0e0e0',
-          }}
-        >
-          <Typography color="text.secondary" sx={{ mb: 2 }}>
-            No questions added yet
-          </Typography>
-          <Button variant="outlined" startIcon={<AddIcon />} onClick={addQuestion}>
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <p className="text-muted-foreground mb-4">No questions added yet</p>
+          <Button variant="outline" onClick={addQuestion}>
+            <Plus className="h-4 w-4 mr-2" />
             Add First Question
           </Button>
-        </Box>
+        </div>
       ) : (
         questions.map((question, index) => (
-          <Paper key={question.id} sx={{ p: 3, mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <DragIcon color="action" />
-                <Chip label={`Q${index + 1}`} size="small" color="primary" />
-                <Chip label={`${question.marks} marks`} size="small" variant="outlined" />
-              </Box>
-              <IconButton size="small" color="error" onClick={() => deleteQuestion(question.id)}>
-                <DeleteIcon />
-              </IconButton>
-            </Box>
+          <div key={question.id} className="border rounded-lg p-4 mb-3 bg-background">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex items-center gap-2">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <Badge>Q{index + 1}</Badge>
+                <Badge variant="outline">{question.marks} marks</Badge>
+              </div>
+              <button
+                className="p-1 text-red-500 hover:bg-red-50 rounded"
+                onClick={() => deleteQuestion(question.id)}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
 
-            <Grid container spacing={2}>
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Question Text"
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label>Question Text</Label>
+                <Textarea
                   value={question.question_text}
                   onChange={(e) => updateQuestion(question.id, { question_text: e.target.value })}
-                  multiline
                   rows={2}
+                  className="mt-1"
                 />
-              </Grid>
+              </div>
 
-              <Grid size={{ xs: 12, md: 6 }}>
-                <FormControl fullWidth size="small">
-                  <InputLabel>Question Type</InputLabel>
-                  <Select
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Question Type</Label>
+                  <select
                     value={question.question_type}
-                    label="Question Type"
                     onChange={(e) => updateQuestion(question.id, { question_type: e.target.value })}
+                    className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     {testTypes.map((type) => (
-                      <MenuItem key={type.value} value={type.value}>
+                      <option key={type.value} value={type.value}>
                         {type.label}
-                      </MenuItem>
+                      </option>
                     ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-
-              <Grid size={{ xs: 12, md: 6 }}>
-                <TextField
-                  fullWidth
-                  type="number"
-                  label="Marks"
-                  value={question.marks}
-                  onChange={(e) => updateQuestion(question.id, { marks: parseInt(e.target.value) || 1 })}
-                  size="small"
-                />
-              </Grid>
+                  </select>
+                </div>
+                <div>
+                  <Label>Marks</Label>
+                  <Input
+                    type="number"
+                    value={question.marks}
+                    onChange={(e) => updateQuestion(question.id, { marks: parseInt(e.target.value) || 1 })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
 
               {/* Options for MCQ */}
               {(question.question_type === 'multiple_choice' || question.question_type === 'true_false') && (
-                <Grid size={{ xs: 12 }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    Options
-                  </Typography>
+                <div>
+                  <Label className="mb-2 block">Options</Label>
                   {question.question_type === 'true_false' ? (
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Correct Answer</InputLabel>
-                      <Select
-                        value={question.correct_answer?.value ?? ''}
-                        label="Correct Answer"
-                        onChange={(e) => updateQuestion(question.id, { correct_answer: { value: e.target.value === 'true' } })}
-                      >
-                        <MenuItem value="true">True</MenuItem>
-                        <MenuItem value="false">False</MenuItem>
-                      </Select>
-                    </FormControl>
+                    <select
+                      value={question.correct_answer?.value ?? ''}
+                      onChange={(e) => updateQuestion(question.id, { correct_answer: { value: e.target.value === 'true' } })}
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                      <option value="">Select correct answer</option>
+                      <option value="true">True</option>
+                      <option value="false">False</option>
+                    </select>
                   ) : (
                     <>
                       {question.options?.map((option, optIndex) => (
-                        <Box key={optIndex} sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
-                          <TextField
-                            fullWidth
-                            size="small"
+                        <div key={optIndex} className="flex gap-2 mb-2 items-center">
+                          <Input
                             placeholder={`Option ${optIndex + 1}`}
                             value={option}
                             onChange={(e) => updateOption(question.id, optIndex, e.target.value)}
                           />
-                          <IconButton
-                            size="small"
-                            color={question.correct_answer?.index === optIndex ? 'success' : 'default'}
+                          <button
+                            className={cn(
+                              'p-2 rounded-md border',
+                              question.correct_answer?.index === optIndex
+                                ? 'bg-green-100 text-green-700 border-green-300'
+                                : 'hover:bg-muted'
+                            )}
                             onClick={() => updateQuestion(question.id, { correct_answer: { index: optIndex } })}
                           >
-                            ✓
-                          </IconButton>
+                            <Check className="h-4 w-4" />
+                          </button>
                           {question.options && question.options.length > 2 && (
-                            <IconButton size="small" color="error" onClick={() => deleteOption(question.id, optIndex)}>
-                              <DeleteIcon fontSize="small" />
-                            </IconButton>
+                            <button
+                              className="p-2 text-red-500 hover:bg-red-50 rounded-md"
+                              onClick={() => deleteOption(question.id, optIndex)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
                           )}
-                        </Box>
+                        </div>
                       ))}
-                      <Button size="small" onClick={() => addOption(question.id)}>
+                      <Button variant="ghost" size="sm" onClick={() => addOption(question.id)}>
                         Add Option
                       </Button>
                     </>
                   )}
-                </Grid>
+                </div>
               )}
 
               {/* Word limit for essay/writing */}
               {(question.question_type === 'essay' || question.question_type === 'writing') && (
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <TextField
-                    fullWidth
+                <div className="md:w-1/2">
+                  <Label>Word Limit (optional)</Label>
+                  <Input
                     type="number"
-                    label="Word Limit (optional)"
                     value={question.word_limit || ''}
                     onChange={(e) => updateQuestion(question.id, { word_limit: parseInt(e.target.value) || undefined })}
-                    size="small"
+                    className="mt-1"
                   />
-                </Grid>
+                </div>
               )}
 
               {/* Correct answer for short answer/form filling */}
               {(question.question_type === 'short_answer' || question.question_type === 'form_filling') && (
-                <Grid size={{ xs: 12 }}>
-                  <TextField
-                    fullWidth
-                    label="Correct Answer(s) - comma separated for multiple accepted answers"
+                <div>
+                  <Label>Correct Answer(s) - comma separated for multiple accepted answers</Label>
+                  <Input
                     value={question.correct_answer?.answers?.join(', ') || ''}
-                    onChange={(e) => updateQuestion(question.id, { 
-                      correct_answer: { answers: e.target.value.split(',').map(a => a.trim()) } 
+                    onChange={(e) => updateQuestion(question.id, {
+                      correct_answer: { answers: e.target.value.split(',').map(a => a.trim()) }
                     })}
-                    size="small"
+                    className="mt-1"
                   />
-                </Grid>
+                </div>
               )}
 
-              <Grid size={{ xs: 12 }}>
-                <TextField
-                  fullWidth
-                  label="Explanation (shown after submission)"
+              <div>
+                <Label>Explanation (shown after submission)</Label>
+                <Input
                   value={question.explanation || ''}
                   onChange={(e) => updateQuestion(question.id, { explanation: e.target.value })}
-                  size="small"
+                  className="mt-1"
                 />
-              </Grid>
-            </Grid>
-          </Paper>
+              </div>
+            </div>
+          </div>
         ))
       )}
-    </Box>
+    </div>
   );
 
   const renderSettings = () => (
-    <Grid container spacing={3}>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Test Settings
-            </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={testData.is_timed}
-                    onChange={(e) => setTestData({ ...testData, is_timed: e.target.checked })}
-                  />
-                }
-                label="Timed Test"
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4">Test Settings</h3>
+          <div className="flex flex-col gap-4">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={testData.is_timed}
+                onChange={(e) => setTestData({ ...testData, is_timed: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
               />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={testData.shuffle_questions}
-                    onChange={(e) => setTestData({ ...testData, shuffle_questions: e.target.checked })}
-                  />
-                }
-                label="Shuffle Questions"
+              <span className="text-sm">Timed Test</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={testData.shuffle_questions}
+                onChange={(e) => setTestData({ ...testData, shuffle_questions: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
               />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={testData.show_results_immediately}
-                    onChange={(e) => setTestData({ ...testData, show_results_immediately: e.target.checked })}
-                  />
-                }
-                label="Show Results Immediately"
+              <span className="text-sm">Shuffle Questions</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={testData.show_results_immediately}
+                onChange={(e) => setTestData({ ...testData, show_results_immediately: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
               />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={testData.allow_retake}
-                    onChange={(e) => setTestData({ ...testData, allow_retake: e.target.checked })}
-                  />
-                }
-                label="Allow Retakes"
+              <span className="text-sm">Show Results Immediately</span>
+            </label>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={testData.allow_retake}
+                onChange={(e) => setTestData({ ...testData, allow_retake: e.target.checked })}
+                className="h-4 w-4 rounded border-gray-300"
               />
-              {testData.allow_retake && (
-                <TextField
+              <span className="text-sm">Allow Retakes</span>
+            </label>
+            {testData.allow_retake && (
+              <div className="ml-7 w-36">
+                <Label>Maximum Retakes</Label>
+                <Input
                   type="number"
-                  label="Maximum Retakes"
                   value={testData.max_retakes}
                   onChange={(e) => setTestData({ ...testData, max_retakes: parseInt(e.target.value) || 1 })}
-                  size="small"
-                  sx={{ ml: 4, width: 150 }}
+                  className="mt-1"
                 />
-              )}
-            </Box>
-          </CardContent>
-        </Card>
-      </Grid>
-      <Grid size={{ xs: 12, md: 6 }}>
-        <Card>
-          <CardContent>
-            <Typography variant="h6" sx={{ mb: 2 }}>
-              Assignment
-            </Typography>
-            <FormControl fullWidth>
-              <InputLabel>Assign To</InputLabel>
-              <Select
-                value={testData.assignment_type}
-                label="Assign To"
-                onChange={(e) => setTestData({ ...testData, assignment_type: e.target.value })}
-              >
-                <MenuItem value="all_students">All Students</MenuItem>
-                <MenuItem value="specific_students">Specific Students</MenuItem>
-                <MenuItem value="specific_class">Specific Class</MenuItem>
-                <MenuItem value="specific_teacher">Specific Teacher's Students</MenuItem>
-              </Select>
-            </FormControl>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              You can assign this test to specific students after creation.
-            </Typography>
-          </CardContent>
-        </Card>
-      </Grid>
-    </Grid>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="pt-6">
+          <h3 className="text-lg font-semibold mb-4">Assignment</h3>
+          <div>
+            <Label htmlFor="assignment_type">Assign To</Label>
+            <select
+              id="assignment_type"
+              value={testData.assignment_type}
+              onChange={(e) => setTestData({ ...testData, assignment_type: e.target.value })}
+              className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+            >
+              <option value="all_students">All Students</option>
+              <option value="specific_students">Specific Students</option>
+              <option value="specific_class">Specific Class</option>
+              <option value="specific_teacher">Specific Teacher's Students</option>
+            </select>
+          </div>
+          <p className="text-sm text-muted-foreground mt-4">
+            You can assign this test to specific students after creation.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderReview = () => (
-    <Box>
-      <Alert severity="info" sx={{ mb: 3 }}>
-        Review your test details before creating.
+    <div>
+      <Alert className="mb-6">
+        <AlertDescription>Review your test details before creating.</AlertDescription>
       </Alert>
-      
-      <Grid container spacing={3}>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Test Information
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography><strong>Name:</strong> {testData.test_name}</Typography>
-                <Typography><strong>Type:</strong> {testTypes.find(t => t.value === testData.test_type)?.label}</Typography>
-                <Typography><strong>Duration:</strong> {testData.duration_minutes} minutes</Typography>
-                <Typography><strong>Total Marks:</strong> {calculateTotalMarks()}</Typography>
-                <Typography><strong>Passing Marks:</strong> {testData.passing_marks || Math.ceil(calculateTotalMarks() * 0.6)}</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 12, md: 6 }}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Content Summary
-              </Typography>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <Typography><strong>Questions:</strong> {questions.length}</Typography>
-                {testData.test_type === 'reading_passage' && (
-                  <Typography><strong>Passages:</strong> {passages.length}</Typography>
-                )}
-                <Typography><strong>Timed:</strong> {testData.is_timed ? 'Yes' : 'No'}</Typography>
-                <Typography><strong>Retakes Allowed:</strong> {testData.allow_retake ? `Yes (${testData.max_retakes})` : 'No'}</Typography>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-    </Box>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-3">Test Information</h3>
+            <div className="flex flex-col gap-2 text-sm">
+              <p><strong>Name:</strong> {testData.test_name}</p>
+              <p><strong>Type:</strong> {testTypes.find(t => t.value === testData.test_type)?.label}</p>
+              <p><strong>Duration:</strong> {testData.duration_minutes} minutes</p>
+              <p><strong>Total Marks:</strong> {calculateTotalMarks()}</p>
+              <p><strong>Passing Marks:</strong> {testData.passing_marks || Math.ceil(calculateTotalMarks() * 0.6)}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold mb-3">Content Summary</h3>
+            <div className="flex flex-col gap-2 text-sm">
+              <p><strong>Questions:</strong> {questions.length}</p>
+              {testData.test_type === 'reading_passage' && (
+                <p><strong>Passages:</strong> {passages.length}</p>
+              )}
+              <p><strong>Timed:</strong> {testData.is_timed ? 'Yes' : 'No'}</p>
+              <p><strong>Retakes Allowed:</strong> {testData.allow_retake ? `Yes (${testData.max_retakes})` : 'No'}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
   );
 
   const getStepContent = (step: number) => {
@@ -726,60 +690,101 @@ const CreateTestPage = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="p-6">
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-        <IconButton onClick={() => navigate('/tests')}>
-          <BackIcon />
-        </IconButton>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Create New Test
-        </Typography>
-      </Box>
+      <div className="flex items-center gap-3 mb-8">
+        <button
+          className="p-2 rounded-md hover:bg-muted"
+          onClick={() => navigate('/tests')}
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="text-3xl font-bold">Create New Test</h1>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription className="flex justify-between items-center">
+            {error}
+            <button onClick={() => setError(null)}>
+              <X className="h-4 w-4" />
+            </button>
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Stepper */}
-      <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
-        {steps.map((label) => (
-          <Step key={label}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
+      <div className="flex items-center mb-8">
+        {steps.map((label, index) => (
+          <div key={label} className="flex items-center flex-1">
+            <div className="flex items-center gap-2">
+              <div
+                className={cn(
+                  'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium border-2',
+                  index < activeStep
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : index === activeStep
+                    ? 'border-primary text-primary'
+                    : 'border-muted-foreground/30 text-muted-foreground'
+                )}
+              >
+                {index < activeStep ? <Check className="h-4 w-4" /> : index + 1}
+              </div>
+              <span
+                className={cn(
+                  'text-sm font-medium hidden sm:inline',
+                  index <= activeStep ? 'text-foreground' : 'text-muted-foreground'
+                )}
+              >
+                {label}
+              </span>
+            </div>
+            {index < steps.length - 1 && (
+              <div
+                className={cn(
+                  'flex-1 h-0.5 mx-4',
+                  index < activeStep ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            )}
+          </div>
         ))}
-      </Stepper>
+      </div>
 
       {/* Content */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent sx={{ p: 4 }}>
+      <Card className="mb-6">
+        <CardContent className="p-6">
           {getStepContent(activeStep)}
         </CardContent>
       </Card>
 
       {/* Navigation Buttons */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      <div className="flex justify-between">
         <Button
+          variant="outline"
           disabled={activeStep === 0}
           onClick={handleBack}
-          variant="outlined"
         >
           Back
         </Button>
         <Button
-          variant="contained"
           onClick={handleNext}
           disabled={loading}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          }}
+          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
         >
-          {loading ? 'Creating...' : activeStep === steps.length - 1 ? 'Create Test' : 'Next'}
+          {loading ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Creating...
+            </>
+          ) : activeStep === steps.length - 1 ? (
+            'Create Test'
+          ) : (
+            'Next'
+          )}
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

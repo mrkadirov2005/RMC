@@ -1,35 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Tab,
-  Tabs,
-  CircularProgress,
-  Avatar,
-  Chip,
-  IconButton,
-  Tooltip,
-  Fab,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-} from '@mui/material';
+  Users,
+  ClipboardList,
+  FileQuestion,
+  GraduationCap,
+  CalendarDays,
+  Star,
+  Plus,
+  Bell,
+  Clock,
+  TrendingUp,
+  Loader2,
+} from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
-  People as StudentsIcon,
-  Assignment as AssignmentIcon,
-  Quiz as QuizIcon,
-  Class as ClassIcon,
-  EventNote as AttendanceIcon,
-  Grade as GradeIcon,
-  Add as AddIcon,
-  Notifications as NotificationsIcon,
-  TrendingUp as TrendingUpIcon,
-  Schedule as ScheduleIcon,
-} from '@mui/icons-material';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useAppSelector } from '../crm/hooks';
 import { useNavigate } from 'react-router-dom';
 import TeacherStudentsTab from './components/TeacherStudentsTab';
@@ -40,27 +38,6 @@ import TeacherGradesTab from './components/TeacherGradesTab';
 import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
 import type { RootState } from '../../store';
 import { testAPI, studentAPI, classAPI, attendanceAPI, assignmentAPI } from '../../shared/api/api';
-
-interface TabPanelProps {
-  children?: React.ReactNode;
-  index: number;
-  value: number;
-}
-
-function TabPanel(props: TabPanelProps) {
-  const { children, value, index, ...other } = props;
-  return (
-    <div
-      role="tabpanel"
-      hidden={value !== index}
-      id={`teacher-tabpanel-${index}`}
-      aria-labelledby={`teacher-tab-${index}`}
-      {...other}
-    >
-      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
-    </div>
-  );
-}
 
 interface TeacherStats {
   totalStudents: number;
@@ -76,7 +53,7 @@ interface TeacherStats {
 const TeacherPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState('students');
   const [stats, setStats] = useState<TeacherStats>({
     totalStudents: 0,
     totalClasses: 0,
@@ -88,12 +65,11 @@ const TeacherPortal = () => {
     upcomingClasses: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [quickAddAnchor, setQuickAddAnchor] = useState<null | HTMLElement>(null);
 
   const loadStats = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Load all data in parallel
       const [testsRes, studentsRes, classesRes, attendanceRes, assignmentsRes] = await Promise.all([
         testAPI.getAll().catch(() => ({ data: [] })),
@@ -141,32 +117,19 @@ const TeacherPortal = () => {
     loadStats();
   }, [loadStats]);
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  const handleQuickAdd = (event: React.MouseEvent<HTMLElement>) => {
-    setQuickAddAnchor(event.currentTarget);
-  };
-
-  const handleQuickAddClose = () => {
-    setQuickAddAnchor(null);
-  };
-
   const handleQuickAction = (action: string) => {
-    handleQuickAddClose();
     switch (action) {
       case 'test':
         navigate('/tests/create');
         break;
       case 'attendance':
-        setTabValue(3);
+        setTabValue('attendance');
         break;
       case 'assignment':
         navigate('/assignments');
         break;
       case 'grade':
-        setTabValue(4);
+        setTabValue('grades');
         break;
       default:
         break;
@@ -177,319 +140,230 @@ const TeacherPortal = () => {
     {
       title: 'My Students',
       value: stats.totalStudents,
-      icon: <StudentsIcon sx={{ fontSize: 40 }} />,
-      color: '#667eea',
+      icon: <Users className="h-10 w-10" />,
+      color: '#6366f1',
       trend: '+5%',
+      tab: 'students',
     },
     {
       title: 'My Classes',
       value: stats.totalClasses,
-      icon: <ClassIcon sx={{ fontSize: 40 }} />,
-      color: '#764ba2',
+      icon: <GraduationCap className="h-10 w-10" />,
+      color: '#8b5cf6',
       trend: null,
+      tab: 'classes',
     },
     {
       title: 'Active Tests',
       value: stats.pendingTests,
-      icon: <QuizIcon sx={{ fontSize: 40 }} />,
+      icon: <FileQuestion className="h-10 w-10" />,
       color: '#f5576c',
       trend: null,
+      tab: 'tests',
     },
     {
       title: 'Pending Grading',
       value: stats.pendingGrading,
-      icon: <GradeIcon sx={{ fontSize: 40 }} />,
+      icon: <Star className="h-10 w-10" />,
       color: '#4facfe',
       trend: stats.pendingGrading > 0 ? 'Needs attention' : null,
+      tab: 'grades',
     },
     {
       title: "Today's Attendance",
       value: stats.todayAttendance,
-      icon: <AttendanceIcon sx={{ fontSize: 40 }} />,
+      icon: <CalendarDays className="h-10 w-10" />,
       color: '#43e97b',
       trend: null,
+      tab: 'attendance',
     },
     {
       title: 'Pending Assignments',
       value: stats.pendingAssignments,
-      icon: <AssignmentIcon sx={{ fontSize: 40 }} />,
+      icon: <ClipboardList className="h-10 w-10" />,
       color: '#fa709a',
       trend: stats.pendingAssignments > 0 ? `${stats.pendingAssignments} to review` : null,
+      tab: 'assignments',
     },
   ];
 
   const tabs = [
-    { label: 'My Students', icon: <StudentsIcon /> },
-    { label: 'My Tests', icon: <QuizIcon /> },
-    { label: 'My Classes', icon: <ClassIcon /> },
-    { label: 'Attendance', icon: <AttendanceIcon /> },
-    { label: 'Grades', icon: <GradeIcon /> },
-    { label: 'Assignments', icon: <AssignmentIcon /> },
+    { value: 'students', label: 'My Students', icon: <Users className="h-4 w-4" /> },
+    { value: 'tests', label: 'My Tests', icon: <FileQuestion className="h-4 w-4" /> },
+    { value: 'classes', label: 'My Classes', icon: <GraduationCap className="h-4 w-4" /> },
+    { value: 'attendance', label: 'Attendance', icon: <CalendarDays className="h-4 w-4" /> },
+    { value: 'grades', label: 'Grades', icon: <Star className="h-4 w-4" /> },
+    { value: 'assignments', label: 'Assignments', icon: <ClipboardList className="h-4 w-4" /> },
   ];
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, position: 'relative' }}>
+    <div className="p-6 relative">
       {/* Header with teacher info */}
-      <Card
-        sx={{
-          mb: 4,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          color: 'white',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
-      >
-        <Box
-          sx={{
-            position: 'absolute',
-            right: -50,
-            top: -50,
-            width: 200,
-            height: 200,
-            borderRadius: '50%',
-            bgcolor: 'rgba(255,255,255,0.1)',
-          }}
-        />
-        <Box
-          sx={{
-            position: 'absolute',
-            right: 100,
-            bottom: -80,
-            width: 150,
-            height: 150,
-            borderRadius: '50%',
-            bgcolor: 'rgba(255,255,255,0.05)',
-          }}
-        />
-        <CardContent sx={{ py: 3, position: 'relative', zIndex: 1 }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-              <Avatar
-                sx={{
-                  width: 80,
-                  height: 80,
-                  fontSize: 32,
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  border: '3px solid rgba(255,255,255,0.3)',
-                }}
-              >
+      <div className="mb-6 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white relative overflow-hidden">
+        <div className="absolute -right-12 -top-12 w-[200px] h-[200px] rounded-full bg-white/10" />
+        <div className="absolute right-24 -bottom-20 w-[150px] h-[150px] rounded-full bg-white/5" />
+        <div className="py-6 px-6 relative z-10">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold bg-white/20 border-[3px] border-white/30">
                 {user?.first_name?.[0]}{user?.last_name?.[0]}
-              </Avatar>
-              <Box>
-                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              </div>
+              <div>
+                <h2 className="text-3xl font-bold">
                   Welcome back, {user?.first_name}!
-                </Typography>
-                <Typography variant="subtitle1" sx={{ opacity: 0.9, mt: 0.5 }}>
+                </h2>
+                <p className="text-white/90 mt-1">
                   Teacher Portal - Manage your classes, students, and tests
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                  <Chip
-                    label="Teacher"
-                    size="small"
-                    sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
-                  />
+                </p>
+                <div className="flex gap-2 mt-2">
+                  <Badge className="bg-white/20 text-white border-none hover:bg-white/30">
+                    Teacher
+                  </Badge>
                   {user?.roles && user.roles.length > 0 && user.roles.map((role: string) => (
-                    <Chip
-                      key={role}
-                      label={role}
-                      size="small"
-                      sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'white' }}
-                    />
+                    <Badge key={role} className="bg-white/15 text-white border-none hover:bg-white/25">
+                      {role}
+                    </Badge>
                   ))}
-                </Box>
-              </Box>
-            </Box>
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              <Tooltip title="Notifications">
-                <IconButton sx={{ color: 'white' }}>
-                  <NotificationsIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Schedule">
-                <IconButton sx={{ color: 'white' }}>
-                  <ScheduleIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-1">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="p-2 rounded-lg hover:bg-white/20 text-white transition-colors">
+                      <Bell className="h-5 w-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Notifications</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="p-2 rounded-lg hover:bg-white/20 text-white transition-colors">
+                      <Clock className="h-5 w-5" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>Schedule</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
         {statsCards.map((stat, index) => (
-          <Grid size={{ xs: 12, sm: 6, md: 4, lg: 2 }} key={index}>
-            <Card
-              sx={{
-                height: '100%',
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                cursor: 'pointer',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 6,
-                },
-              }}
-              onClick={() => {
-                const tabMapping: { [key: string]: number } = {
-                  'My Students': 0,
-                  'My Classes': 2,
-                  'Active Tests': 1,
-                  'Pending Grading': 4,
-                  "Today's Attendance": 3,
-                  'Pending Assignments': 5,
-                };
-                const tabIndex = tabMapping[stat.title];
-                if (tabIndex !== undefined) {
-                  setTabValue(tabIndex);
-                }
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Box>
-                    <Typography variant="subtitle2" color="text.secondary" sx={{ fontSize: '0.75rem' }}>
-                      {stat.title}
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mt: 0.5 }}>
-                      {stat.value}
-                    </Typography>
-                    {stat.trend && (
-                      <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                        <TrendingUpIcon sx={{ fontSize: 14, color: 'success.main', mr: 0.5 }} />
-                        <Typography variant="caption" color="success.main">
-                          {stat.trend}
-                        </Typography>
-                      </Box>
-                    )}
-                  </Box>
-                  <Box
-                    sx={{
-                      p: 1,
-                      borderRadius: 2,
-                      bgcolor: `${stat.color}15`,
-                      color: stat.color,
-                    }}
-                  >
-                    {stat.icon}
-                  </Box>
-                </Box>
-              </CardContent>
-            </Card>
-          </Grid>
+          <Card
+            key={index}
+            className="h-full transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-lg"
+            onClick={() => setTabValue(stat.tab)}
+          >
+            <CardContent className="p-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-xs text-muted-foreground">{stat.title}</p>
+                  <p className="text-3xl font-bold mt-1">{stat.value}</p>
+                  {stat.trend && (
+                    <div className="flex items-center mt-1">
+                      <TrendingUp className="h-3.5 w-3.5 text-emerald-500 mr-1" />
+                      <span className="text-xs text-emerald-500">{stat.trend}</span>
+                    </div>
+                  )}
+                </div>
+                <div
+                  className="p-2 rounded-lg"
+                  style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
+                >
+                  {stat.icon}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ))}
-      </Grid>
+      </div>
 
       {/* Tabs Section */}
       <Card>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Tabs
-            value={tabValue}
-            onChange={handleTabChange}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontWeight: 600,
-                fontSize: '0.9rem',
-                minHeight: 64,
-              },
-            }}
-          >
-            {tabs.map((tab, index) => (
-              <Tab
-                key={index}
-                icon={tab.icon}
-                iconPosition="start"
-                label={tab.label}
-              />
-            ))}
-          </Tabs>
-        </Box>
-        
-        <CardContent>
-          <TabPanel value={tabValue} index={0}>
-            <TeacherStudentsTab teacherId={user?.id} onRefresh={loadStats} />
-          </TabPanel>
-          <TabPanel value={tabValue} index={1}>
-            <TeacherTestsTab teacherId={user?.id} onRefresh={loadStats} />
-          </TabPanel>
-          <TabPanel value={tabValue} index={2}>
-            <TeacherClassesTab teacherId={user?.id} onRefresh={loadStats} />
-          </TabPanel>
-          <TabPanel value={tabValue} index={3}>
-            <TeacherAttendanceTab teacherId={user?.id} onRefresh={loadStats} />
-          </TabPanel>
-          <TabPanel value={tabValue} index={4}>
-            <TeacherGradesTab teacherId={user?.id} onRefresh={loadStats} />
-          </TabPanel>
-          <TabPanel value={tabValue} index={5}>
-            <TeacherAssignmentsTab teacherId={user?.id} onRefresh={loadStats} />
-          </TabPanel>
-        </CardContent>
+        <Tabs value={tabValue} onValueChange={setTabValue}>
+          <div className="border-b px-4">
+            <TabsList className="bg-transparent h-auto p-0 gap-0">
+              {tabs.map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 gap-2 text-sm font-semibold"
+                >
+                  {tab.icon}
+                  {tab.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
+
+          <CardContent className="pt-4">
+            <TabsContent value="students">
+              <TeacherStudentsTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="tests">
+              <TeacherTestsTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="classes">
+              <TeacherClassesTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="attendance">
+              <TeacherAttendanceTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="grades">
+              <TeacherGradesTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="assignments">
+              <TeacherAssignmentsTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+          </CardContent>
+        </Tabs>
       </Card>
 
       {/* Quick Add FAB */}
-      <Fab
-        color="primary"
-        sx={{
-          position: 'fixed',
-          bottom: 24,
-          right: 24,
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        }}
-        onClick={handleQuickAdd}
-      >
-        <AddIcon />
-      </Fab>
-
-      <Menu
-        anchorEl={quickAddAnchor}
-        open={Boolean(quickAddAnchor)}
-        onClose={handleQuickAddClose}
-        anchorOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-      >
-        <MenuItem onClick={() => handleQuickAction('test')}>
-          <ListItemIcon>
-            <QuizIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Create Test</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleQuickAction('attendance')}>
-          <ListItemIcon>
-            <AttendanceIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Take Attendance</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleQuickAction('assignment')}>
-          <ListItemIcon>
-            <AssignmentIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Create Assignment</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleQuickAction('grade')}>
-          <ListItemIcon>
-            <GradeIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Enter Grades</ListItemText>
-        </MenuItem>
-      </Menu>
-    </Box>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="icon"
+            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+          >
+            <Plus className="h-6 w-6" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="top" align="end" className="w-48">
+          <DropdownMenuItem onClick={() => handleQuickAction('test')}>
+            <FileQuestion className="h-4 w-4 mr-2" />
+            Create Test
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleQuickAction('attendance')}>
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Take Attendance
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleQuickAction('assignment')}>
+            <ClipboardList className="h-4 w-4 mr-2" />
+            Create Assignment
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleQuickAction('grade')}>
+            <Star className="h-4 w-4 mr-2" />
+            Enter Grades
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
   );
 };
 

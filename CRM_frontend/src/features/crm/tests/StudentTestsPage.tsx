@@ -1,25 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  CircularProgress,
-  Alert,
-  Tab,
-  Tabs,
-} from '@mui/material';
-import {
-  PlayArrow as StartIcon,
-  Timer as TimerIcon,
-  CheckCircle as CheckIcon,
-  Schedule as ScheduleIcon,
-  Quiz as QuizIcon,
-} from '@mui/icons-material';
+  Play,
+  Clock,
+  CheckCircle,
+  CalendarClock,
+  FileQuestion,
+  Loader2,
+  X,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 import { useAppSelector } from '../hooks';
 import type { RootState } from '../../../store';
@@ -41,11 +36,11 @@ interface Test {
 const StudentTestsPage = () => {
   const navigate = useNavigate();
   const { user } = useAppSelector((state: RootState) => state.auth);
-  
+
   const [tests, setTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState('available');
 
   useEffect(() => {
     loadTests();
@@ -55,20 +50,13 @@ const StudentTestsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Get tests assigned to the student (via their ID or class)
       const response = await testAPI.getAssignedTests('student', user?.id || 0);
       setTests(response.data || []);
     } catch (err: any) {
       console.error('Error loading tests:', err);
-      // Fallback: load all active tests
-      try {
-        const allTestsRes = await testAPI.getAll();
-        const activeTests = (allTestsRes.data || []).filter((t: Test) => t.test_id);
-        setTests(activeTests);
-      } catch {
-        setError('Failed to load available tests');
-      }
+      setError('Failed to load available tests. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -78,13 +66,13 @@ const StudentTestsPage = () => {
     try {
       // Store test ID for the take test page
       localStorage.setItem(`submission_pending_test`, String(test.test_id));
-      
+
       const response = await testAPI.startTest(test.test_id, user?.id || 0);
       const submissionId = response.data.submission_id;
-      
+
       // Store test ID associated with submission
       localStorage.setItem(`submission_${submissionId}_test`, String(test.test_id));
-      
+
       navigate(`/tests/take/${submissionId}`);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Failed to start test');
@@ -93,16 +81,16 @@ const StudentTestsPage = () => {
 
   const getTestTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
-      multiple_choice: '#667eea',
-      essay: '#f5576c',
-      short_answer: '#4facfe',
-      true_false: '#43e97b',
-      form_filling: '#fa709a',
-      reading_passage: '#a855f7',
-      writing: '#ec4899',
-      matching: '#14b8a6',
+      multiple_choice: 'bg-indigo-500',
+      essay: 'bg-rose-500',
+      short_answer: 'bg-sky-500',
+      true_false: 'bg-emerald-500',
+      form_filling: 'bg-pink-500',
+      reading_passage: 'bg-purple-500',
+      writing: 'bg-pink-500',
+      matching: 'bg-teal-500',
     };
-    return colors[type] || '#6b7280';
+    return colors[type] || 'bg-gray-500';
   };
 
   const formatTestType = (type: string) => {
@@ -115,9 +103,9 @@ const StudentTestsPage = () => {
 
   const getFilteredTests = () => {
     switch (tabValue) {
-      case 1:
+      case 'in_progress':
         return inProgressTests;
-      case 2:
+      case 'completed':
         return completedTests;
       default:
         return availableTests;
@@ -126,180 +114,154 @@ const StudentTestsPage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
+    <div className="p-6">
       {/* Header */}
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-          My Tests
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          View and take tests assigned to you
-        </Typography>
-      </Box>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-1">My Tests</h1>
+        <p className="text-muted-foreground">View and take tests assigned to you</p>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription className="flex justify-between items-center">
+            {error}
+            <button onClick={() => setError(null)}>
+              <X className="h-4 w-4" />
+            </button>
+          </AlertDescription>
         </Alert>
       )}
 
       {/* Stats */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid size={{ xs: 6, sm: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" fontWeight={700} color="primary">
-                {availableTests.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Available
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, sm: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" fontWeight={700} color="warning.main">
-                {inProgressTests.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                In Progress
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, sm: 4 }}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" fontWeight={700} color="success.main">
-                {completedTests.length}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Completed
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
-
-      {/* Tabs */}
-      <Card sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)}>
-          <Tab label={`Available (${availableTests.length})`} />
-          <Tab label={`In Progress (${inProgressTests.length})`} />
-          <Tab label={`Completed (${completedTests.length})`} />
-        </Tabs>
-      </Card>
-
-      {/* Tests Grid */}
-      {getFilteredTests().length === 0 ? (
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
         <Card>
-          <CardContent sx={{ textAlign: 'center', py: 6 }}>
-            <QuizIcon sx={{ fontSize: 60, color: 'text.disabled', mb: 2 }} />
-            <Typography variant="h6" color="text.secondary">
-              {tabValue === 0
-                ? 'No tests available at the moment'
-                : tabValue === 1
-                ? 'No tests in progress'
-                : 'No completed tests yet'}
-            </Typography>
+          <CardContent className="text-center pt-6">
+            <p className="text-4xl font-bold text-primary">{availableTests.length}</p>
+            <p className="text-sm text-muted-foreground">Available</p>
           </CardContent>
         </Card>
-      ) : (
-        <Grid container spacing={3}>
-          {getFilteredTests().map((test) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={test.test_id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  transition: 'transform 0.2s, box-shadow 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    boxShadow: 6,
-                  },
-                }}
-              >
-                <CardContent>
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                    <Chip
-                      label={formatTestType(test.test_type)}
-                      size="small"
-                      sx={{
-                        bgcolor: getTestTypeColor(test.test_type),
-                        color: 'white',
-                      }}
-                    />
-                    {test.is_mandatory && (
-                      <Chip label="Required" size="small" color="error" variant="outlined" />
-                    )}
-                  </Box>
+        <Card>
+          <CardContent className="text-center pt-6">
+            <p className="text-4xl font-bold text-amber-500">{inProgressTests.length}</p>
+            <p className="text-sm text-muted-foreground">In Progress</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="text-center pt-6">
+            <p className="text-4xl font-bold text-green-600">{completedTests.length}</p>
+            <p className="text-sm text-muted-foreground">Completed</p>
+          </CardContent>
+        </Card>
+      </div>
 
-                  <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                    {test.test_name}
-                  </Typography>
+      {/* Tabs */}
+      <Tabs value={tabValue} onValueChange={setTabValue}>
+        <Card className="mb-6">
+          <TabsList className="bg-transparent h-auto p-0 w-full justify-start border-b rounded-none">
+            <TabsTrigger value="available" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
+              Available ({availableTests.length})
+            </TabsTrigger>
+            <TabsTrigger value="in_progress" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
+              In Progress ({inProgressTests.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
+              Completed ({completedTests.length})
+            </TabsTrigger>
+          </TabsList>
+        </Card>
+
+        {/* Tests Grid */}
+        {getFilteredTests().length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-12">
+              <FileQuestion className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-muted-foreground">
+                {tabValue === 'available'
+                  ? 'No tests available at the moment'
+                  : tabValue === 'in_progress'
+                  ? 'No tests in progress'
+                  : 'No completed tests yet'}
+              </h3>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+            {getFilteredTests().map((test) => (
+              <Card
+                key={test.test_id}
+                className="h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+              >
+                <CardContent className="pt-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <span
+                      className={cn(
+                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white',
+                        getTestTypeColor(test.test_type)
+                      )}
+                    >
+                      {formatTestType(test.test_type)}
+                    </span>
+                    {test.is_mandatory && (
+                      <Badge variant="outline" className="border-red-300 text-red-600">
+                        Required
+                      </Badge>
+                    )}
+                  </div>
+
+                  <h3 className="text-lg font-semibold mb-1">{test.test_name}</h3>
 
                   {test.subject_name && (
-                    <Typography variant="body2" color="primary" sx={{ mb: 1 }}>
-                      {test.subject_name}
-                    </Typography>
+                    <p className="text-sm text-primary mb-1">{test.subject_name}</p>
                   )}
 
                   {test.description && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    <p className="text-sm text-muted-foreground mb-3">
                       {test.description.substring(0, 100)}
                       {test.description.length > 100 ? '...' : ''}
-                    </Typography>
+                    </p>
                   )}
 
-                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <TimerIcon fontSize="small" color="action" />
-                      <Typography variant="body2">{test.duration_minutes} min</Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <CheckIcon fontSize="small" color="action" />
-                      <Typography variant="body2">{test.total_marks} marks</Typography>
-                    </Box>
-                  </Box>
+                  <div className="flex gap-4 mb-3">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{test.duration_minutes} min</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">{test.total_marks} marks</span>
+                    </div>
+                  </div>
 
                   {test.due_date && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
-                      <ScheduleIcon fontSize="small" color="warning" />
-                      <Typography variant="body2" color="warning.main">
+                    <div className="flex items-center gap-1 mb-3">
+                      <CalendarClock className="h-4 w-4 text-amber-500" />
+                      <span className="text-sm text-amber-600">
                         Due: {new Date(test.due_date).toLocaleDateString()}
-                      </Typography>
-                    </Box>
+                      </span>
+                    </div>
                   )}
 
-                  {tabValue === 0 && (
+                  {tabValue === 'available' && (
                     <Button
-                      fullWidth
-                      variant="contained"
-                      startIcon={<StartIcon />}
+                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
                       onClick={() => handleStartTest(test)}
-                      sx={{
-                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      }}
                     >
+                      <Play className="h-4 w-4 mr-2" />
                       Start Test
                     </Button>
                   )}
 
-                  {tabValue === 1 && (
+                  {tabValue === 'in_progress' && (
                     <Button
-                      fullWidth
-                      variant="contained"
-                      color="warning"
+                      className="w-full bg-amber-500 hover:bg-amber-600 text-white"
                       onClick={() => {
-                        // Resume test logic
                         navigate(`/tests/${test.test_id}`);
                       }}
                     >
@@ -307,10 +269,10 @@ const StudentTestsPage = () => {
                     </Button>
                   )}
 
-                  {tabValue === 2 && (
+                  {tabValue === 'completed' && (
                     <Button
-                      fullWidth
-                      variant="outlined"
+                      variant="outline"
+                      className="w-full"
                       onClick={() => navigate(`/tests/${test.test_id}`)}
                     >
                       View Results
@@ -318,11 +280,11 @@ const StudentTestsPage = () => {
                   )}
                 </CardContent>
               </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Box>
+            ))}
+          </div>
+        )}
+      </Tabs>
+    </div>
   );
 };
 

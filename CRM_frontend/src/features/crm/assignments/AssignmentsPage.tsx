@@ -1,13 +1,31 @@
 import { useState, useEffect, useMemo } from 'react';
-import { MdEdit, MdDelete, MdAdd, MdClose, MdArrowBack, MdFolder, MdSearch, MdFilterList } from 'react-icons/md';
+import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { useCRUD } from '../hooks/useCRUD';
 import { assignmentAPI, classAPI } from '../../../shared/api/api';
 import { SelectField } from '../students/components/SelectField';
 import { fetchClasses, assignmentStatusOptions } from '../../../utils/dropdownOptions';
-import '../dashboard/Dashboard.css';
-import '../students/CRUDStyles.css';
-import '../payments/PaymentsPage.css';
-import { Plus, FileText, Users, X } from 'lucide-react';
 
 interface Assignment {
   assignment_id?: number;
@@ -37,13 +55,13 @@ const AssignmentsPage = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('classes');
   const [selectedFolder, setSelectedFolder] = useState<{ type: FolderType; id?: number; name: string } | null>(null);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Assignment>>({
     status: 'Pending',
   });
-  const [classOptions, setClassOptions] = useState<any[]>([]);
+  const [classOptions, setClassOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
   const [isLoadingOptions, setIsLoadingOptions] = useState(false);
   const [loadingData, setLoadingData] = useState(false);
 
@@ -56,6 +74,7 @@ const AssignmentsPage = () => {
     actions.fetchAll();
     loadAllData();
     loadDropdownOptions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAllData = async () => {
@@ -164,6 +183,7 @@ const AssignmentsPage = () => {
     }
 
     return assignments;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.items, selectedFolder, searchTerm, filterStatus, classes]);
 
   const clearFilters = () => {
@@ -183,348 +203,428 @@ const AssignmentsPage = () => {
   };
 
   const getStatusColor = (status: string) => {
-    switch(status?.toLowerCase()) {
-      case 'completed': return '#4CAF50';
-      case 'pending': return '#FFC107';
-      case 'submitted': return '#2196F3';
-      case 'graded': return '#8BC34A';
-      default: return '#9E9E9E';
+    switch (status?.toLowerCase()) {
+      case 'completed': return 'bg-green-500';
+      case 'pending': return 'bg-amber-500';
+      case 'submitted': return 'bg-blue-500';
+      case 'graded': return 'bg-lime-600';
+      default: return 'bg-gray-400';
     }
   };
 
   return (
-    <div className="payments-page">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="payments-header">
-        <div className="payments-header-left">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           {selectedFolder && (
-            <button className="btn-back" onClick={handleBackToFolders}>
-              <MdArrowBack size={20} /> Back
-            </button>
+            <Button variant="ghost" size="sm" onClick={handleBackToFolders}>
+              <ArrowLeft className="mr-1 h-4 w-4" /> Back
+            </Button>
           )}
-          <h1>
+          <h1 className="text-2xl font-bold tracking-tight">
             {selectedFolder
               ? `${selectedFolder.name} - Assignments`
               : 'Assignments Management'}
           </h1>
         </div>
-        <button className="btn-add" onClick={() => handleOpenModal()}>
-          <Plus size={18} /> Add Assignment
-        </button>
+        <Button onClick={() => handleOpenModal()}>
+          <Plus className="mr-2 h-4 w-4" /> Add Assignment
+        </Button>
       </div>
 
-      {state.error && <div className="alert-error">{state.error}</div>}
+      {state.error && (
+        <Alert variant="destructive">
+          <AlertDescription>{state.error}</AlertDescription>
+        </Alert>
+      )}
 
       {!selectedFolder ? (
         <>
           {/* Tab Navigation */}
-          <div className="tabs-container">
-            <div className="tabs-bar">
+          <div className="border-b">
+            <div className="flex gap-1">
               <button
-                className={`tab ${activeTab === 'classes' ? 'active' : ''}`}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                  activeTab === 'classes'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                )}
                 onClick={() => setActiveTab('classes')}
               >
-                <Users size={18} />
+                <Users className="h-4 w-4" />
                 By Classes
               </button>
               <button
-                className={`tab ${activeTab === 'personal' ? 'active' : ''}`}
+                className={cn(
+                  'flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                  activeTab === 'personal'
+                    ? 'border-primary text-primary'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                )}
                 onClick={() => setActiveTab('personal')}
               >
-                <FileText size={18} />
+                <FileText className="h-4 w-4" />
                 Personal Tasks
               </button>
             </div>
           </div>
 
           {/* Tab Content */}
-          <div className="tab-content">
+          <div>
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className="folder-section">
-                <div className="folder-grid">
-                  {loadingData ? (
-                    <div className="loading-text">Loading classes...</div>
-                  ) : classes.length === 0 ? (
-                    <div className="empty-text">No classes found</div>
-                  ) : (
-                    classes.map((cls) => {
-                      const classId = cls.class_id || cls.id || 0;
-                      const assignmentCount = getAssignmentCountForClass(classId);
-                      const completedCount = getCompletedCountForClass(classId);
-                      const completionPercentage = assignmentCount > 0 ? (completedCount / assignmentCount) * 100 : 0;
-                      
-                      return assignmentCount > 0 ? (
-                        <div
-                          key={classId}
-                          className="folder-card class-folder"
-                          onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                        >
-                          <div className="folder-icon">
-                            <MdFolder size={36} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {loadingData ? (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                    Loading classes...
+                  </div>
+                ) : classes.length === 0 ? (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    No classes found
+                  </div>
+                ) : (
+                  classes.map((cls) => {
+                    const classId = cls.class_id || cls.id || 0;
+                    const assignmentCount = getAssignmentCountForClass(classId);
+                    const completedCount = getCompletedCountForClass(classId);
+                    const completionPercentage = assignmentCount > 0 ? (completedCount / assignmentCount) * 100 : 0;
+
+                    return assignmentCount > 0 ? (
+                      <Card
+                        key={classId}
+                        className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-indigo-500"
+                        onClick={() => handleFolderClick('class', classId, cls.class_name)}
+                      >
+                        <CardContent className="pt-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-indigo-50">
+                              <Folder className="h-8 w-8 text-indigo-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold truncate">{cls.class_name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {cls.class_code} &bull; Level {cls.level}
+                              </p>
+                            </div>
                           </div>
-                          <div className="folder-info">
-                            <h3>{cls.class_name}</h3>
-                            <span className="folder-code">{cls.class_code} • Level {cls.level}</span>
-                          </div>
-                          <div className="folder-stats">
-                            <div className="stat">
-                              <FileText size={14} />
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <FileText className="h-3.5 w-3.5" />
                               <span>{assignmentCount} assignment{assignmentCount !== 1 ? 's' : ''}</span>
                             </div>
-                            <div className="stat total">
-                              <span style={{ fontSize: '14px', fontWeight: 'bold', color: getStatusColor('completed') }}>
-                                {completionPercentage.toFixed(0)}%
-                              </span>
-                            </div>
+                            <span className="text-sm font-bold text-green-600">
+                              {completionPercentage.toFixed(0)}%
+                            </span>
                           </div>
-                        </div>
-                      ) : null;
-                    })
-                  )}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ) : null;
+                  })
+                )}
               </div>
             )}
 
             {/* Personal Tasks Tab */}
             {activeTab === 'personal' && (
-              <div className="folder-section">
-                <div className="folder-grid">
-                  {loadingData ? (
-                    <div className="loading-text">Loading personal tasks...</div>
-                  ) : (
-                    (() => {
-                      const personalCount = getPersonalAssignments().length;
-                      const personalCompleted = getPersonalAssignments().filter((a) => a.status === 'Completed').length;
-                      const completionPercentage = personalCount > 0 ? (personalCompleted / personalCount) * 100 : 0;
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {loadingData ? (
+                  <div className="col-span-full text-center py-8 text-muted-foreground">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                    Loading personal tasks...
+                  </div>
+                ) : (
+                  (() => {
+                    const personalCount = getPersonalAssignments().length;
+                    const personalCompleted = getPersonalAssignments().filter((a) => a.status === 'Completed').length;
+                    const completionPercentage = personalCount > 0 ? (personalCompleted / personalCount) * 100 : 0;
 
-                      return personalCount > 0 ? (
-                        <div
-                          className="folder-card"
-                          onClick={() => handleFolderClick('personal', undefined, 'Personal Tasks')}
-                          style={{ backgroundColor: '#fef3c7', borderLeft: '4px solid #f59e0b' }}
-                        >
-                          <div className="folder-icon">
-                            <MdFolder size={36} color="#f59e0b" />
+                    return personalCount > 0 ? (
+                      <Card
+                        className="cursor-pointer hover:shadow-md transition-shadow bg-amber-50 border-l-4 border-l-amber-500"
+                        onClick={() => handleFolderClick('personal', undefined, 'Personal Tasks')}
+                      >
+                        <CardContent className="pt-4">
+                          <div className="flex items-start gap-3">
+                            <div className="p-2 rounded-lg bg-amber-100">
+                              <Folder className="h-8 w-8 text-amber-500" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="font-semibold">Personal Tasks</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Independent assignments without class
+                              </p>
+                            </div>
                           </div>
-                          <div className="folder-info">
-                            <h3>Personal Tasks</h3>
-                            <span className="folder-code">Independent assignments without class</span>
-                          </div>
-                          <div className="folder-stats">
-                            <div className="stat">
-                              <FileText size={14} />
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <FileText className="h-3.5 w-3.5" />
                               <span>{personalCount} task{personalCount !== 1 ? 's' : ''}</span>
                             </div>
-                            <div className="stat total">
-                              <span style={{ fontSize: '14px', fontWeight: 'bold', color: getStatusColor('completed') }}>
-                                {completionPercentage.toFixed(0)}%
-                              </span>
-                            </div>
+                            <span className="text-sm font-bold text-green-600">
+                              {completionPercentage.toFixed(0)}%
+                            </span>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="empty-text">No personal tasks found</div>
-                      );
-                    })()
-                  )}
-                </div>
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <div className="col-span-full text-center py-8 text-muted-foreground">
+                        No personal tasks found
+                      </div>
+                    );
+                  })()
+                )}
               </div>
             )}
           </div>
         </>
       ) : (
-        // ASSIGNMENTS LIST VIEW
+        /* ASSIGNMENTS LIST VIEW */
         <>
           {/* Search and Filter Bar */}
-          <div className="search-filter-bar">
-            <div className="search-input-wrapper">
-              <MdSearch size={20} className="search-icon" />
-              <input
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
                 type="text"
                 placeholder="Search by title or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="search-input"
+                className="pl-9 pr-8"
               />
               {searchTerm && (
-                <button className="clear-search" onClick={() => setSearchTerm('')}>
-                  <X size={16} />
+                <button
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <X className="h-4 w-4" />
                 </button>
               )}
             </div>
 
-            <button
-              className={`btn-filter ${showFilters ? 'active' : ''}`}
+            <Button
+              variant={showFilters ? 'default' : 'outline'}
+              size="sm"
               onClick={() => setShowFilters(!showFilters)}
             >
-              <MdFilterList size={18} />
+              <Filter className="mr-1 h-4 w-4" />
               Filters
               {hasActiveFilters && (
-                <span className="filter-badge">
+                <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
                   {filterStatus ? 1 : 0}
-                </span>
+                </Badge>
               )}
-            </button>
+            </Button>
 
             {hasActiveFilters && (
-              <button className="btn-clear-all" onClick={clearFilters}>
-                <X size={16} /> Clear All
-              </button>
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="mr-1 h-4 w-4" /> Clear All
+              </Button>
             )}
 
-            <div className="results-summary">
-              <span>{displayedAssignments.length} assignment{displayedAssignments.length !== 1 ? 's' : ''}</span>
-            </div>
+            <span className="text-sm text-muted-foreground ml-auto">
+              {displayedAssignments.length} assignment{displayedAssignments.length !== 1 ? 's' : ''}
+            </span>
           </div>
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="filter-options">
-              <div className="filter-group">
-                <label>Status</label>
-                <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
-                  <option value="">All Status</option>
+            <Card>
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-center gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Status</Label>
+                    <select
+                      value={filterStatus}
+                      onChange={(e) => setFilterStatus(e.target.value)}
+                      className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <option value="">All Status</option>
+                      {assignmentStatusOptions.map((opt) => (
+                        <option key={opt.id} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Assignments Table */}
+          <Card>
+            <CardContent className="p-0">
+              <div className="rounded-md border">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Submission Date</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Grade</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {state.loading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ) : displayedAssignments.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          {hasActiveFilters ? 'No assignments match your criteria' : 'No assignments found'}
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      displayedAssignments.map((assignment) => (
+                        <TableRow key={assignment.assignment_id || assignment.id}>
+                          <TableCell className="font-semibold">{assignment.assignment_title}</TableCell>
+                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                            {assignment.description?.substring(0, 50)}...
+                          </TableCell>
+                          <TableCell>{new Date(assignment.due_date).toLocaleDateString()}</TableCell>
+                          <TableCell>{new Date(assignment.submission_date).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <span
+                              className={cn(
+                                'inline-flex items-center px-2 py-1 rounded text-xs font-bold text-white',
+                                getStatusColor(assignment.status)
+                              )}
+                            >
+                              {assignment.status}
+                            </span>
+                          </TableCell>
+                          <TableCell>{assignment.grade || '-'}</TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenModal(assignment)}
+                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleDelete(assignment.assignment_id || assignment.id || 0)}
+                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
+
+      {/* Add/Edit Assignment Dialog */}
+      <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Assignment' : 'Add New Assignment'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label>Title *</Label>
+              <Input
+                type="text"
+                required
+                value={formData.assignment_title || ''}
+                onChange={(e) => setFormData({ ...formData, assignment_title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Description *</Label>
+              <textarea
+                required
+                className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <SelectField
+                label="Class (Optional - leave empty for personal task)"
+                name="class_id"
+                value={formData.class_id || ''}
+                onChange={(e) =>
+                  setFormData({ ...formData, class_id: e.target.value ? Number(e.target.value) : undefined })
+                }
+                options={classOptions}
+                isLoading={isLoadingOptions}
+                placeholder="Select a class or leave empty"
+              />
+              <div className="space-y-2">
+                <Label>Due Date *</Label>
+                <Input
+                  type="date"
+                  required
+                  value={formData.due_date || ''}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Submission Date *</Label>
+                <Input
+                  type="date"
+                  required
+                  value={formData.submission_date || ''}
+                  onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status *</Label>
+                <select
+                  required
+                  value={formData.status || 'Pending'}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
                   {assignmentStatusOptions.map((opt) => (
                     <option key={opt.id} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
             </div>
-          )}
-
-          {/* Assignments Table */}
-          <div className="payments-table-container">
-            <table className="payments-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Description</th>
-                  <th>Due Date</th>
-                  <th>Submission Date</th>
-                  <th>Status</th>
-                  <th>Grade</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {state.loading ? (
-                  <tr>
-                    <td colSpan={7} className="text-center">Loading...</td>
-                  </tr>
-                ) : displayedAssignments.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="text-center">
-                      {hasActiveFilters ? 'No assignments match your criteria' : 'No assignments found'}
-                    </td>
-                  </tr>
-                ) : (
-                  displayedAssignments.map((assignment) => (
-                    <tr key={assignment.assignment_id || assignment.id}>
-                      <td style={{ fontWeight: '600' }}>{assignment.assignment_title}</td>
-                      <td style={{ fontSize: '12px', color: '#666' }}>{assignment.description.substring(0, 50)}...</td>
-                      <td>{new Date(assignment.due_date).toLocaleDateString()}</td>
-                      <td>{new Date(assignment.submission_date).toLocaleDateString()}</td>
-                      <td>
-                        <span style={{ 
-                          backgroundColor: getStatusColor(assignment.status), 
-                          color: 'white',
-                          padding: '4px 8px',
-                          borderRadius: '4px',
-                          fontWeight: 'bold'
-                        }}>
-                          {assignment.status}
-                        </span>
-                      </td>
-                      <td>{assignment.grade || '-'}</td>
-                      <td className="actions-cell">
-                        <button className="btn-icon btn-edit" onClick={() => handleOpenModal(assignment)} title="Edit">
-                          <MdEdit size={18} />
-                        </button>
-                        <button className="btn-icon btn-delete" onClick={() => handleDelete(assignment.assignment_id || assignment.id || 0)} title="Delete">
-                          <MdDelete size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </>
-      )}
-
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingId ? 'Edit Assignment' : 'Add New Assignment'}</h2>
-              <button className="btn-close" onClick={handleCloseModal}>
-                <MdClose size={24} />
-              </button>
+            <div className="space-y-2">
+              <Label>Grade</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={formData.grade || ''}
+                onChange={(e) => setFormData({ ...formData, grade: e.target.value ? Number(e.target.value) : undefined })}
+              />
             </div>
-            <form onSubmit={handleSubmit} className="modal-form">
-              <div className="form-row full">
-                <div className="form-group">
-                  <label>Title *</label>
-                  <input type="text" required value={formData.assignment_title || ''} onChange={(e) => setFormData({ ...formData, assignment_title: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-row full">
-                <div className="form-group">
-                  <label>Description *</label>
-                  <textarea required value={formData.description || ''} onChange={(e) => setFormData({ ...formData, description: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-row">
-                <SelectField
-                  label="Class (Optional - leave empty for personal task)"
-                  name="class_id"
-                  value={formData.class_id || ''}
-                  onChange={(e) =>
-                    setFormData({ ...formData, class_id: e.target.value ? Number(e.target.value) : undefined })
-                  }
-                  options={classOptions}
-                  isLoading={isLoadingOptions}
-                  placeholder="Select a class or leave empty"
-                />
-                <div className="form-group">
-                  <label>Due Date *</label>
-                  <input type="date" required value={formData.due_date || ''} onChange={(e) => setFormData({ ...formData, due_date: e.target.value })} />
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Submission Date *</label>
-                  <input type="date" required value={formData.submission_date || ''} onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })} />
-                </div>
-                <div className="form-group">
-                  <label>Status *</label>
-                  <select required value={formData.status || 'Pending'} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="form-select">
-                    {assignmentStatusOptions.map((opt) => (
-                      <option key={opt.id} value={opt.value}>{opt.label}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Grade</label>
-                  <input type="number" step="0.1" value={formData.grade || ''} onChange={(e) => setFormData({ ...formData, grade: e.target.value ? Number(e.target.value) : undefined })} />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary" disabled={state.loading}>
-                  {state.loading ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseModal}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={state.loading}>
+                {state.loading ? 'Saving...' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

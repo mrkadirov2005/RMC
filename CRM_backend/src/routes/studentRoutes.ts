@@ -1,6 +1,7 @@
 const express_student = require('express');
 const router_student = express_student.Router();
 const studentController = require('../controllers/studentController');
+const { requireRole } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -104,7 +105,7 @@ router_student.put('/:id', studentController.updateStudent);
  *       404:
  *         description: Student not found
  */
-router_student.delete('/:id', studentController.deleteStudent);
+router_student.delete('/:id', requireRole('superuser'), studentController.deleteStudent);
 
 /**
  * @swagger
@@ -164,7 +165,7 @@ router_student.post('/auth/login', studentController.studentLogin);
  *       200:
  *         description: Password set successfully
  */
-router_student.post('/:id/set-password', studentController.setStudentPassword);
+router_student.post('/:id/set-password', requireRole('superuser'), studentController.setStudentPassword);
 
 /**
  * @swagger
@@ -199,3 +200,5 @@ router_student.post('/:id/set-password', studentController.setStudentPassword);
 router_student.post('/:id/change-password', studentController.changeStudentPassword);
 
 module.exports = router_student;
+
+export {};

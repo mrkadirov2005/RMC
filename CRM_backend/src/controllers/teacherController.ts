@@ -1,5 +1,6 @@
 const pool = require('../../config/dbcon');
 const cryptoModule = require('crypto');
+const { generateToken } = require('../middleware/auth');
 import { z } from 'zod';
 
 // Hash password function
@@ -127,7 +128,6 @@ exports.teacherLogin = async (req: any, res: any) => {
     if (result.rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
-
     const teacher = result.rows[0];
 
     if (teacher.status !== 'Active') {
@@ -139,8 +139,16 @@ exports.teacherLogin = async (req: any, res: any) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
+    // Generate JWT token
+    const token = generateToken({
+      id: teacher.teacher_id,
+      email: teacher.email,
+      userType: 'teacher',
+    });
+
     res.json({
       message: 'Login successful',
+      token,
       teacher: {
         teacher_id: teacher.teacher_id,
         first_name: teacher.first_name,

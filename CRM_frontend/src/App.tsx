@@ -1,11 +1,10 @@
-import './App.css';
 import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { store } from './store';
-import { useAppDispatch } from './features/crm/hooks';
+import { useAppDispatch, useAppSelector } from './features/crm/hooks';
 import { initializeAuth } from './slices/authSlice';
 import Layout from './components/layout/Layout';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
@@ -13,6 +12,8 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { OwnerLoginPage } from './pages/auth/OwnerLoginPage';
 import Dashboard from './features/crm/dashboard/Dashboard';
 import OwnerManager from './pages/owner/OwnerManager';
+import { useThemeMode } from './theme/ThemeContext';
+import { Loader2 } from 'lucide-react';
 
 // Lazy load pages for better performance
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
@@ -40,20 +41,39 @@ const StudentPortal = lazy(() => import('./features/student/StudentPortal'));
 
 // Loading component
 const LoadingSpinner = () => (
-  <div className="loading-spinner">
-    <div className="spinner"></div>
-    <p>Loading...</p>
+  <div className="flex flex-col items-center justify-center min-h-[200px] gap-3">
+    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    <p className="text-sm text-muted-foreground">Loading...</p>
   </div>
 );
 
 // Unauthorized page
 const UnauthorizedPage = () => (
-  <div className="unauthorized">
-    <h1>Access Denied</h1>
-    <p>You don't have permission to access this resource.</p>
-    <a href="/dashboard">Go to Dashboard</a>
+  <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center">
+    <h1 className="text-4xl font-bold text-destructive">Access Denied</h1>
+    <p className="text-muted-foreground">You don't have permission to access this resource.</p>
+    <a href="/dashboard" className="text-primary hover:underline font-medium">Go to Dashboard</a>
   </div>
 );
+
+// Role-based redirect for default/catch-all routes
+const RoleBasedRedirect = () => {
+  const { isAuthenticated, user } = useAppSelector((state: any) => state.auth);
+  
+  if (!isAuthenticated || !user) {
+    return <Navigate to="/login/superuser" replace />;
+  }
+  
+  switch (user.userType) {
+    case 'student':
+      return <Navigate to="/student-portal" replace />;
+    case 'teacher':
+      return <Navigate to="/teacher-portal" replace />;
+    case 'superuser':
+    default:
+      return <Navigate to="/dashboard" replace />;
+  }
+};
 
 function AppContent() {
   const dispatch = useAppDispatch();
@@ -74,7 +94,7 @@ function AppContent() {
       <Route
         path="/owner/manage"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredUserType="superuser">
             <Layout>
               <OwnerManager />
             </Layout>
@@ -89,7 +109,7 @@ function AppContent() {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Dashboard />
             </Layout>
@@ -100,7 +120,7 @@ function AppContent() {
       <Route
         path="/students"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <StudentsPage />
@@ -113,7 +133,7 @@ function AppContent() {
       <Route
         path="/student/:studentId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <StudentDetailPage />
@@ -152,7 +172,7 @@ function AppContent() {
       <Route
         path="/payments"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredUserType="superuser">
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <PaymentsPage />
@@ -165,7 +185,7 @@ function AppContent() {
       <Route
         path="/grades"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <GradesPage />
@@ -178,7 +198,7 @@ function AppContent() {
       <Route
         path="/attendance"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <AttendancePage />
@@ -191,7 +211,7 @@ function AppContent() {
       <Route
         path="/classes"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <ClassesPage />
@@ -217,7 +237,7 @@ function AppContent() {
       <Route
         path="/debts"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute requiredUserType="superuser">
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <DebtsPage />
@@ -230,7 +250,7 @@ function AppContent() {
       <Route
         path="/assignments"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <AssignmentsPage />
@@ -243,7 +263,7 @@ function AppContent() {
       <Route
         path="/subjects"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <SubjectsPage />
@@ -270,7 +290,7 @@ function AppContent() {
       <Route
         path="/tests"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <TestsPage />
@@ -296,7 +316,7 @@ function AppContent() {
       <Route
         path="/tests/:testId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <TestDetailPage />
@@ -335,7 +355,7 @@ function AppContent() {
       <Route
         path="/tests/take/:submissionId"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedUserTypes={['superuser', 'teacher', 'student']}>
             <Layout>
               <Suspense fallback={<LoadingSpinner />}>
                 <TakeTestPage />
@@ -399,9 +419,9 @@ function AppContent() {
         }
       />
 
-      {/* Default route */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      {/* Default route - role-aware redirect */}
+      <Route path="/" element={<RoleBasedRedirect />} />
+      <Route path="*" element={<RoleBasedRedirect />} />
     </Routes>
   );
 }
@@ -411,20 +431,27 @@ function App() {
     <Provider store={store}>
       <BrowserRouter>
         <AppContent />
-        <ToastContainer
-          position="top-right"
-          autoClose={3000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="light"
-        />
+        <ThemedToast />
       </BrowserRouter>
     </Provider>
+  );
+}
+
+function ThemedToast() {
+  const { isDark } = useThemeMode();
+  return (
+    <ToastContainer
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme={isDark ? 'dark' : 'light'}
+    />
   );
 }
 

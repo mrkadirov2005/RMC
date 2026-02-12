@@ -1,46 +1,43 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  Card,
-  Grid,
-  Button,
-  Chip,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Star,
+  Save,
+  Plus,
+  BarChart3,
+  TrendingUp,
+  Search,
+  SlidersHorizontal,
+  Loader2,
+} from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  IconButton,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  Avatar,
-  TextField,
-  Tabs,
-  Tab,
-  Snackbar,
-  InputAdornment,
-} from '@mui/material';
+} from '@/components/ui/table';
 import {
-  GradeOutlined as GradeIcon,
-  Save as SaveIcon,
-  Add as AddIcon,
-  Assessment as AssessmentIcon,
-  TrendingUp as TrendingUpIcon,
-  Search as SearchIcon,
-  FilterList as FilterIcon,
-} from '@mui/icons-material';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { classAPI, studentAPI, gradeAPI, subjectAPI } from '../../../shared/api/api';
 
 interface ClassInfo {
@@ -86,7 +83,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
   const [selectedSubject, setSelectedSubject] = useState<number | ''>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState('student-grades');
   const [searchQuery, setSearchQuery] = useState('');
   const [gradeDialogOpen, setGradeDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -226,7 +223,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
   const getGradeColor = (percentage: number) => {
     if (percentage >= 90) return '#43e97b';
     if (percentage >= 80) return '#2196f3';
-    if (percentage >= 70) return '#667eea';
+    if (percentage >= 70) return '#6366f1';
     if (percentage >= 60) return '#ff9800';
     return '#f5576c';
   };
@@ -250,391 +247,371 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
 
   if (loading && classes.length === 0) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Box>
+    <div>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h6" fontWeight={600}>
-          Manage Grades
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField
-            size="small"
-            placeholder="Search students..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Class</InputLabel>
-            <Select
-              value={selectedClass}
-              label="Class"
-              onChange={(e) => setSelectedClass(e.target.value as number)}
-            >
-              <MenuItem value="">All Classes</MenuItem>
-              {classes.map((cls) => (
-                <MenuItem key={cls.class_id} value={cls.class_id}>
-                  {cls.class_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Subject</InputLabel>
-            <Select
-              value={selectedSubject}
-              label="Subject"
-              onChange={(e) => setSelectedSubject(e.target.value as number)}
-            >
-              <MenuItem value="">All Subjects</MenuItem>
-              {subjects.map((subj) => (
-                <MenuItem key={subj.subject_id} value={subj.subject_id}>
-                  {subj.subject_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        </Box>
-      </Box>
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+        <h3 className="text-lg font-semibold">Manage Grades</h3>
+        <div className="flex gap-3 items-center flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search students..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-48"
+            />
+          </div>
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring min-w-[150px]"
+          >
+            <option value="">All Classes</option>
+            {classes.map((cls) => (
+              <option key={cls.class_id} value={cls.class_id}>
+                {cls.class_name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={selectedSubject}
+            onChange={(e) => setSelectedSubject(e.target.value ? Number(e.target.value) : '')}
+            className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring min-w-[150px]"
+          >
+            <option value="">All Subjects</option>
+            {subjects.map((subj) => (
+              <option key={subj.subject_id} value={subj.subject_id}>
+                {subj.subject_name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
 
       {/* Quick Stats */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#667eea15', textAlign: 'center', p: 2 }}>
-            <GradeIcon sx={{ fontSize: 32, color: '#667eea' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#667eea' }}>
-              {grades.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Total Grades
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#43e97b15', textAlign: 'center', p: 2 }}>
-            <TrendingUpIcon sx={{ fontSize: 32, color: '#43e97b' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#43e97b' }}>
-              {grades.length > 0
-                ? (
-                    grades.reduce((acc, g) => acc + (g.grade_value / g.max_value) * 100, 0) /
-                    grades.length
-                  ).toFixed(0)
-                : 0}
-              %
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Class Average
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#2196f315', textAlign: 'center', p: 2 }}>
-            <AssessmentIcon sx={{ fontSize: 32, color: '#2196f3' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#2196f3' }}>
-              {students.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Students
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#ff980015', textAlign: 'center', p: 2 }}>
-            <FilterIcon sx={{ fontSize: 32, color: '#ff9800' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#ff9800' }}>
-              {new Set(grades.map((g) => g.grade_type)).size}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Grade Types
-            </Typography>
-          </Card>
-        </Grid>
-      </Grid>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <Card className="bg-indigo-500/10 text-center p-4">
+          <Star className="h-8 w-8 text-indigo-500 mx-auto" />
+          <p className="text-3xl font-bold text-indigo-500">{grades.length}</p>
+          <p className="text-xs text-muted-foreground">Total Grades</p>
+        </Card>
+        <Card className="bg-emerald-500/10 text-center p-4">
+          <TrendingUp className="h-8 w-8 text-emerald-500 mx-auto" />
+          <p className="text-3xl font-bold text-emerald-500">
+            {grades.length > 0
+              ? (
+                  grades.reduce((acc, g) => acc + (g.grade_value / g.max_value) * 100, 0) /
+                  grades.length
+                ).toFixed(0)
+              : 0}
+            %
+          </p>
+          <p className="text-xs text-muted-foreground">Class Average</p>
+        </Card>
+        <Card className="bg-sky-500/10 text-center p-4">
+          <BarChart3 className="h-8 w-8 text-sky-500 mx-auto" />
+          <p className="text-3xl font-bold text-sky-500">{students.length}</p>
+          <p className="text-xs text-muted-foreground">Students</p>
+        </Card>
+        <Card className="bg-amber-500/10 text-center p-4">
+          <SlidersHorizontal className="h-8 w-8 text-amber-500 mx-auto" />
+          <p className="text-3xl font-bold text-amber-500">
+            {new Set(grades.map((g) => g.grade_type)).size}
+          </p>
+          <p className="text-xs text-muted-foreground">Grade Types</p>
+        </Card>
+      </div>
 
       {/* Tabs */}
-      <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label="Student Grades" />
-        <Tab label="Recent Activity" />
-      </Tabs>
+      <Tabs value={tabValue} onValueChange={setTabValue} className="mb-4">
+        <TabsList>
+          <TabsTrigger value="student-grades">Student Grades</TabsTrigger>
+          <TabsTrigger value="recent-activity">Recent Activity</TabsTrigger>
+        </TabsList>
 
-      {tabValue === 0 && (
-        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                <TableCell>Student</TableCell>
-                <TableCell>Enrollment #</TableCell>
-                <TableCell align="center">Grades Count</TableCell>
-                <TableCell align="center">Average</TableCell>
-                <TableCell align="center">Letter Grade</TableCell>
-                <TableCell align="center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <CircularProgress />
-                  </TableCell>
+        <TabsContent value="student-grades">
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead>Student</TableHead>
+                  <TableHead>Enrollment #</TableHead>
+                  <TableHead className="text-center">Grades Count</TableHead>
+                  <TableHead className="text-center">Average</TableHead>
+                  <TableHead className="text-center">Letter Grade</TableHead>
+                  <TableHead className="text-center">Actions</TableHead>
                 </TableRow>
-              ) : filteredStudents.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
-                    <Typography color="text.secondary">
-                      {selectedClass ? 'No students found' : 'Select a class to view students'}
-                    </Typography>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                filteredStudents.map((student) => {
-                  const avgStr = calculateStudentAverage(student.student_id);
-                  const avg = avgStr ? parseFloat(avgStr) : null;
-                  const studentGradeCount = grades.filter(
-                    (g) => g.student_id === student.student_id
-                  ).length;
+              </TableHeader>
+              <TableBody>
+                {loading ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" />
+                    </TableCell>
+                  </TableRow>
+                ) : filteredStudents.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        {selectedClass ? 'No students found' : 'Select a class to view students'}
+                      </p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredStudents.map((student) => {
+                    const avgStr = calculateStudentAverage(student.student_id);
+                    const avg = avgStr ? parseFloat(avgStr) : null;
+                    const studentGradeCount = grades.filter(
+                      (g) => g.student_id === student.student_id
+                    ).length;
+
+                    return (
+                      <TableRow key={student.student_id} className="hover:bg-muted/30">
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-semibold">
+                              {student.first_name?.[0]}
+                              {student.last_name?.[0]}
+                            </div>
+                            <span className="font-semibold text-sm">
+                              {student.first_name} {student.last_name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <span className="font-mono text-sm">{student.enrollment_number}</span>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={studentGradeCount > 0 ? 'default' : 'secondary'}>
+                            {studentGradeCount}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {avg !== null ? (
+                            <span
+                              className="font-bold text-sm"
+                              style={{ color: getGradeColor(avg) }}
+                            >
+                              {avg}%
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {avg !== null ? (
+                            <span
+                              className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold"
+                              style={{
+                                backgroundColor: getGradeColor(avg) + '20',
+                                color: getGradeColor(avg),
+                              }}
+                            >
+                              {getLetterGrade(avg)}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  className="p-1.5 rounded-md hover:bg-muted text-primary"
+                                  onClick={() => handleOpenGradeDialog(student)}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>Add Grade</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="recent-activity">
+          <div className="py-2">
+            {grades.length === 0 ? (
+              <div className="text-center py-8">
+                <Star className="h-14 w-14 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-muted-foreground">No grades recorded yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {grades.slice(0, 10).map((grade, idx) => {
+                  const student = students.find((s) => s.student_id === grade.student_id);
+                  const subject = subjects.find((s) => s.subject_id === grade.subject_id);
+                  const percentage = (grade.grade_value / grade.max_value) * 100;
 
                   return (
-                    <TableRow key={student.student_id} sx={{ '&:hover': { bgcolor: '#f9f9f9' } }}>
-                      <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar sx={{ bgcolor: '#667eea', width: 32, height: 32, fontSize: 14 }}>
-                            {student.first_name?.[0]}
-                            {student.last_name?.[0]}
-                          </Avatar>
-                          <Typography variant="body2" fontWeight={600}>
-                            {student.first_name} {student.last_name}
-                          </Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell>
-                        <Typography variant="body2" fontFamily="monospace">
-                          {student.enrollment_number}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="center">
-                        <Chip
-                          label={studentGradeCount}
-                          size="small"
-                          color={studentGradeCount > 0 ? 'primary' : 'default'}
-                        />
-                      </TableCell>
-                      <TableCell align="center">
-                        {avg !== null ? (
-                          <Typography
-                            variant="body2"
-                            fontWeight={700}
-                            sx={{ color: getGradeColor(avg) }}
+                    <Card key={grade.grade_id || idx} className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <div
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold"
+                            style={{ backgroundColor: getGradeColor(percentage) }}
                           >
-                            {avg}%
-                          </Typography>
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            —
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        {avg !== null ? (
-                          <Chip
-                            label={getLetterGrade(avg)}
-                            size="small"
-                            sx={{
-                              bgcolor: getGradeColor(avg) + '20',
-                              color: getGradeColor(avg),
-                              fontWeight: 700,
-                            }}
-                          />
-                        ) : (
-                          <Typography variant="body2" color="text.secondary">
-                            —
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell align="center">
-                        <Tooltip title="Add Grade">
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={() => handleOpenGradeDialog(student)}
-                          >
-                            <AddIcon />
-                          </IconButton>
-                        </Tooltip>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      )}
-
-      {tabValue === 1 && (
-        <Box sx={{ py: 2 }}>
-          {grades.length === 0 ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
-              <GradeIcon sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
-              <Typography color="text.secondary">No grades recorded yet</Typography>
-            </Box>
-          ) : (
-            <Grid container spacing={2}>
-              {grades.slice(0, 10).map((grade, idx) => {
-                const student = students.find((s) => s.student_id === grade.student_id);
-                const subject = subjects.find((s) => s.subject_id === grade.subject_id);
-                const percentage = (grade.grade_value / grade.max_value) * 100;
-
-                return (
-                  <Grid size={{ xs: 12, md: 6 }} key={grade.grade_id || idx}>
-                    <Card sx={{ p: 2 }}>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <Box sx={{ display: 'flex', gap: 2 }}>
-                          <Avatar sx={{ bgcolor: getGradeColor(percentage), width: 40, height: 40 }}>
                             {getLetterGrade(percentage)}
-                          </Avatar>
-                          <Box>
-                            <Typography variant="body2" fontWeight={600}>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold">
                               {student
                                 ? `${student.first_name} ${student.last_name}`
                                 : `Student #${grade.student_id}`}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {subject?.subject_name || `Subject #${grade.subject_id}`} • {grade.grade_type}
-                            </Typography>
-                          </Box>
-                        </Box>
-                        <Box sx={{ textAlign: 'right' }}>
-                          <Typography variant="body2" fontWeight={700} sx={{ color: getGradeColor(percentage) }}>
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {subject?.subject_name || `Subject #${grade.subject_id}`} &bull; {grade.grade_type}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p
+                            className="text-sm font-bold"
+                            style={{ color: getGradeColor(percentage) }}
+                          >
                             {grade.grade_value}/{grade.max_value}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
+                          </p>
+                          <p className="text-xs text-muted-foreground">
                             {percentage.toFixed(0)}%
-                          </Typography>
-                        </Box>
-                      </Box>
+                          </p>
+                        </div>
+                      </div>
                     </Card>
-                  </Grid>
-                );
-              })}
-            </Grid>
-          )}
-        </Box>
-      )}
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Add Grade Dialog */}
-      <Dialog open={gradeDialogOpen} onClose={() => setGradeDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          Add Grade for {selectedStudent?.first_name} {selectedStudent?.last_name}
-        </DialogTitle>
-        <DialogContent dividers>
-          {!selectedSubject && (
-            <Alert severity="warning" sx={{ mb: 2 }}>
-              Please select a subject from the filters above before adding a grade
-            </Alert>
-          )}
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <FormControl fullWidth size="small">
-                <InputLabel>Grade Type</InputLabel>
-                <Select
-                  value={newGrade.grade_type}
-                  label="Grade Type"
+      <Dialog open={gradeDialogOpen} onOpenChange={setGradeDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              Add Grade for {selectedStudent?.first_name} {selectedStudent?.last_name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            {!selectedSubject && (
+              <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
+                <AlertDescription>
+                  Please select a subject from the filters above before adding a grade
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="space-y-2">
+              <Label>Grade Type</Label>
+              <select
+                value={newGrade.grade_type}
+                onChange={(e) =>
+                  setNewGrade({ ...newGrade, grade_type: e.target.value })
+                }
+                className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                {gradeTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label>Score</Label>
+                <Input
+                  type="number"
+                  value={newGrade.grade_value}
                   onChange={(e) =>
-                    setNewGrade({ ...newGrade, grade_type: e.target.value })
+                    setNewGrade({
+                      ...newGrade,
+                      grade_value: parseFloat(e.target.value) || 0,
+                    })
                   }
-                >
-                  {gradeTypes.map((type) => (
-                    <MenuItem key={type} value={type}>
-                      {type}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Score"
-                type="number"
-                value={newGrade.grade_value}
-                onChange={(e) =>
-                  setNewGrade({
-                    ...newGrade,
-                    grade_value: parseFloat(e.target.value) || 0,
-                  })
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Max Score"
-                type="number"
-                value={newGrade.max_value}
-                onChange={(e) =>
-                  setNewGrade({
-                    ...newGrade,
-                    max_value: parseFloat(e.target.value) || 100,
-                  })
-                }
-              />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                size="small"
-                label="Notes (optional)"
-                multiline
-                rows={2}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Max Score</Label>
+                <Input
+                  type="number"
+                  value={newGrade.max_value}
+                  onChange={(e) =>
+                    setNewGrade({
+                      ...newGrade,
+                      max_value: parseFloat(e.target.value) || 100,
+                    })
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Notes (optional)</Label>
+              <textarea
+                className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 value={newGrade.notes}
                 onChange={(e) => setNewGrade({ ...newGrade, notes: e.target.value })}
               />
-            </Grid>
-          </Grid>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setGradeDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveGrade}
+              disabled={saving || !selectedSubject}
+            >
+              {saving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              {saving ? 'Saving...' : 'Save Grade'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setGradeDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleSaveGrade}
-            disabled={saving || !selectedSubject}
-            startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
-          >
-            {saving ? 'Saving...' : 'Save Grade'}
-          </Button>
-        </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+      {/* Toast / Snackbar */}
+      {snackbar.open && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4">
+          <Alert
+            className={cn(
+              'w-auto min-w-[300px] shadow-lg',
+              snackbar.severity === 'success'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                : 'border-red-200 bg-red-50 text-red-800'
+            )}
+          >
+            <AlertDescription className="flex items-center justify-between gap-4">
+              {snackbar.message}
+              <button
+                className="text-current opacity-70 hover:opacity-100"
+                onClick={() => setSnackbar({ ...snackbar, open: false })}
+              >
+                ✕
+              </button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+    </div>
   );
 };
 

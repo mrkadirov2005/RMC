@@ -1,47 +1,48 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
+  Search,
+  Eye,
+  Mail,
+  Phone,
+  MoreVertical,
+  Star,
+  CalendarDays,
+  FileQuestion,
+  TrendingUp,
+  Loader2,
+} from 'lucide-react';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Avatar,
-  Chip,
-  TextField,
-  InputAdornment,
-  CircularProgress,
-  IconButton,
-  Tooltip,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Grid,
-  Card,
-  Tabs,
-  Tab,
-  LinearProgress,
-} from '@mui/material';
+} from '@/components/ui/table';
 import {
-  Search as SearchIcon,
-  Visibility as ViewIcon,
-  Email as EmailIcon,
-  Phone as PhoneIcon,
-  MoreVert as MoreIcon,
-  Grade as GradeIcon,
-  EventNote as AttendanceIcon,
-  Quiz as QuizIcon,
-  TrendingUp as TrendingUpIcon,
-} from '@mui/icons-material';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { studentAPI, gradeAPI, attendanceAPI, testAPI } from '../../../shared/api/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -83,10 +84,9 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
   const [filteredStudents, setFilteredStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [detailsDialog, setDetailsDialog] = useState(false);
-  const [detailsTab, setDetailsTab] = useState(0);
+  const [detailsTab, setDetailsTab] = useState('overview');
   const [studentDetails, setStudentDetails] = useState<StudentDetails>({
     grades: [],
     attendance: [],
@@ -150,35 +150,23 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   };
 
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, student: Student) => {
-    event.stopPropagation();
-    setAnchorEl(event.currentTarget);
+  const handleViewDetails = (student: Student, tab = 'overview') => {
     setSelectedStudent(student);
+    setDetailsDialog(true);
+    setDetailsTab(tab);
+    loadStudentDetails(student);
   };
 
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleViewDetails = () => {
-    handleMenuClose();
-    if (selectedStudent) {
-      setDetailsDialog(true);
-      setDetailsTab(0);
-      loadStudentDetails(selectedStudent);
-    }
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active':
         return 'success';
       case 'inactive':
-        return 'error';
+        return 'destructive';
       case 'graduated':
         return 'info';
       default:
-        return 'default';
+        return 'secondary';
     }
   };
 
@@ -198,481 +186,426 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <Box>
+    <div>
       {/* Search Bar */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h6" fontWeight={600}>
+      <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
+        <h3 className="text-lg font-semibold">
           My Students ({filteredStudents.length})
-        </Typography>
-        <TextField
-          placeholder="Search students by name, email, or enrollment..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon color="action" />
-              </InputAdornment>
-            ),
-          }}
-          sx={{ minWidth: 350 }}
-        />
-      </Box>
+        </h3>
+        <div className="relative min-w-[350px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search students by name, email, or enrollment..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
 
       {/* Students Table */}
       {filteredStudents.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body1" color="text.secondary">
-            No students found
-          </Typography>
-        </Box>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No students found</p>
+        </div>
       ) : (
-        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
+        <div className="border rounded-lg overflow-hidden">
           <Table>
-            <TableHead>
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                <TableCell>Student</TableCell>
-                <TableCell>Enrollment #</TableCell>
-                <TableCell>Class</TableCell>
-                <TableCell>Contact</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead>Student</TableHead>
+                <TableHead>Enrollment #</TableHead>
+                <TableHead>Class</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            </TableHead>
+            </TableHeader>
             <TableBody>
               {filteredStudents.map((student) => (
                 <TableRow
                   key={student.student_id}
-                  sx={{
-                    '&:hover': { bgcolor: '#f9f9f9' },
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => {
-                    setSelectedStudent(student);
-                    handleViewDetails();
-                  }}
+                  className="cursor-pointer hover:bg-muted/30"
+                  onClick={() => handleViewDetails(student)}
                 >
                   <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                      <Avatar sx={{ bgcolor: '#667eea' }}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-indigo-500 text-white flex items-center justify-center text-sm font-semibold">
                         {student.first_name?.[0]}{student.last_name?.[0]}
-                      </Avatar>
-                      <Box>
-                        <Typography variant="body1" fontWeight={600}>
+                      </div>
+                      <div>
+                        <p className="font-semibold">
                           {student.first_name} {student.last_name}
-                        </Typography>
+                        </p>
                         {student.email && (
-                          <Typography variant="caption" color="text.secondary">
-                            {student.email}
-                          </Typography>
+                          <p className="text-xs text-muted-foreground">{student.email}</p>
                         )}
-                      </Box>
-                    </Box>
+                      </div>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2" fontFamily="monospace">
-                      {student.enrollment_number}
-                    </Typography>
+                    <span className="font-mono text-sm">{student.enrollment_number}</span>
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={student.class_name || 'Unassigned'}
-                      size="small"
-                      variant="outlined"
-                    />
+                    <Badge variant="outline">
+                      {student.class_name || 'Unassigned'}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    <Box sx={{ display: 'flex', gap: 1 }}>
+                    <div className="flex gap-1">
                       {student.email && (
-                        <Tooltip title={student.email}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.location.href = `mailto:${student.email}`;
-                            }}
-                          >
-                            <EmailIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className="p-1.5 rounded-md hover:bg-muted text-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `mailto:${student.email}`;
+                                }}
+                              >
+                                <Mail className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{student.email}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
                       {student.phone && (
-                        <Tooltip title={student.phone}>
-                          <IconButton
-                            size="small"
-                            color="primary"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              window.location.href = `tel:${student.phone}`;
-                            }}
-                          >
-                            <PhoneIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                className="p-1.5 rounded-md hover:bg-muted text-primary"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `tel:${student.phone}`;
+                                }}
+                              >
+                                <Phone className="h-4 w-4" />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent>{student.phone}</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       )}
-                    </Box>
+                    </div>
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      label={student.status || 'Active'}
-                      size="small"
-                      color={getStatusColor(student.status) as any}
-                    />
+                    <Badge variant={getStatusVariant(student.status) as any}>
+                      {student.status || 'Active'}
+                    </Badge>
                   </TableCell>
-                  <TableCell align="right">
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleMenuOpen(e, student)}
-                    >
-                      <MoreIcon />
-                    </IconButton>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="p-1.5 rounded-md hover:bg-muted"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleViewDetails(student)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/student/${student.student_id}`)}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Full Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(student, 'grades')}>
+                          <Star className="h-4 w-4 mr-2" />
+                          View Grades
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(student, 'attendance')}>
+                          <CalendarDays className="h-4 w-4 mr-2" />
+                          View Attendance
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleViewDetails(student, 'tests')}>
+                          <FileQuestion className="h-4 w-4 mr-2" />
+                          View Test Results
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        </TableContainer>
+        </div>
       )}
 
-      <Box sx={{ mt: 2 }}>
-        <Typography variant="body2" color="text.secondary">
+      <div className="mt-3">
+        <p className="text-sm text-muted-foreground">
           Showing {filteredStudents.length} of {students.length} students
-        </Typography>
-      </Box>
-
-      {/* Actions Menu */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem onClick={handleViewDetails}>
-          <ListItemIcon><ViewIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>View Details</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); navigate(`/student/${selectedStudent?.student_id}`); }}>
-          <ListItemIcon><ViewIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>Full Profile</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); setDetailsDialog(true); setDetailsTab(1); loadStudentDetails(selectedStudent!); }}>
-          <ListItemIcon><GradeIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>View Grades</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); setDetailsDialog(true); setDetailsTab(2); loadStudentDetails(selectedStudent!); }}>
-          <ListItemIcon><AttendanceIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>View Attendance</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => { handleMenuClose(); setDetailsDialog(true); setDetailsTab(3); loadStudentDetails(selectedStudent!); }}>
-          <ListItemIcon><QuizIcon fontSize="small" /></ListItemIcon>
-          <ListItemText>View Test Results</ListItemText>
-        </MenuItem>
-      </Menu>
+        </p>
+      </div>
 
       {/* Student Details Dialog */}
-      <Dialog
-        open={detailsDialog}
-        onClose={() => setDetailsDialog(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <Avatar sx={{ bgcolor: '#667eea', width: 56, height: 56 }}>
-              {selectedStudent?.first_name?.[0]}{selectedStudent?.last_name?.[0]}
-            </Avatar>
-            <Box>
-              <Typography variant="h6">
-                {selectedStudent?.first_name} {selectedStudent?.last_name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {selectedStudent?.enrollment_number}
-              </Typography>
-            </Box>
-          </Box>
-        </DialogTitle>
-        <DialogContent>
+      <Dialog open={detailsDialog} onOpenChange={setDetailsDialog}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xl font-bold">
+                {selectedStudent?.first_name?.[0]}{selectedStudent?.last_name?.[0]}
+              </div>
+              <div>
+                <DialogTitle className="text-lg">
+                  {selectedStudent?.first_name} {selectedStudent?.last_name}
+                </DialogTitle>
+                <p className="text-sm text-muted-foreground">
+                  {selectedStudent?.enrollment_number}
+                </p>
+              </div>
+            </div>
+          </DialogHeader>
+
           {detailsLoading ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-              <CircularProgress />
-            </Box>
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
           ) : (
             <>
               {/* Quick Stats */}
-              <Grid container spacing={2} sx={{ mb: 3 }}>
-                <Grid size={{ xs: 6, md: 3 }}>
-                  <Card sx={{ bgcolor: '#667eea15', textAlign: 'center', p: 2 }}>
-                    <Typography variant="h4" color="primary" fontWeight={700}>
-                      {calculateAverageGrade()}%
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Avg. Grade
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 6, md: 3 }}>
-                  <Card sx={{ bgcolor: '#43e97b15', textAlign: 'center', p: 2 }}>
-                    <Typography variant="h4" sx={{ color: '#43e97b' }} fontWeight={700}>
-                      {calculateAttendancePercentage()}%
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Attendance
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 6, md: 3 }}>
-                  <Card sx={{ bgcolor: '#f5576c15', textAlign: 'center', p: 2 }}>
-                    <Typography variant="h4" sx={{ color: '#f5576c' }} fontWeight={700}>
-                      {studentDetails.testResults.length}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Tests Taken
-                    </Typography>
-                  </Card>
-                </Grid>
-                <Grid size={{ xs: 6, md: 3 }}>
-                  <Card sx={{ bgcolor: '#4facfe15', textAlign: 'center', p: 2 }}>
-                    <Typography variant="h4" sx={{ color: '#4facfe' }} fontWeight={700}>
-                      {studentDetails.grades.length}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      Grades
-                    </Typography>
-                  </Card>
-                </Grid>
-              </Grid>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                <Card className="bg-indigo-500/10 text-center p-4">
+                  <p className="text-3xl font-bold text-primary">{calculateAverageGrade()}%</p>
+                  <p className="text-xs text-muted-foreground">Avg. Grade</p>
+                </Card>
+                <Card className="bg-emerald-500/10 text-center p-4">
+                  <p className="text-3xl font-bold text-emerald-500">{calculateAttendancePercentage()}%</p>
+                  <p className="text-xs text-muted-foreground">Attendance</p>
+                </Card>
+                <Card className="bg-rose-500/10 text-center p-4">
+                  <p className="text-3xl font-bold text-rose-500">{studentDetails.testResults.length}</p>
+                  <p className="text-xs text-muted-foreground">Tests Taken</p>
+                </Card>
+                <Card className="bg-sky-500/10 text-center p-4">
+                  <p className="text-3xl font-bold text-sky-500">{studentDetails.grades.length}</p>
+                  <p className="text-xs text-muted-foreground">Grades</p>
+                </Card>
+              </div>
 
               {/* Tabs */}
-              <Tabs
-                value={detailsTab}
-                onChange={(_, v) => setDetailsTab(v)}
-                sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}
-              >
-                <Tab icon={<TrendingUpIcon />} iconPosition="start" label="Overview" />
-                <Tab icon={<GradeIcon />} iconPosition="start" label="Grades" />
-                <Tab icon={<AttendanceIcon />} iconPosition="start" label="Attendance" />
-                <Tab icon={<QuizIcon />} iconPosition="start" label="Test Results" />
-              </Tabs>
+              <Tabs value={detailsTab} onValueChange={setDetailsTab}>
+                <TabsList className="w-full justify-start">
+                  <TabsTrigger value="overview" className="gap-1.5">
+                    <TrendingUp className="h-4 w-4" /> Overview
+                  </TabsTrigger>
+                  <TabsTrigger value="grades" className="gap-1.5">
+                    <Star className="h-4 w-4" /> Grades
+                  </TabsTrigger>
+                  <TabsTrigger value="attendance" className="gap-1.5">
+                    <CalendarDays className="h-4 w-4" /> Attendance
+                  </TabsTrigger>
+                  <TabsTrigger value="tests" className="gap-1.5">
+                    <FileQuestion className="h-4 w-4" /> Test Results
+                  </TabsTrigger>
+                </TabsList>
 
-              {/* Overview Tab */}
-              {detailsTab === 0 && (
-                <Box>
-                  {/* Personal Information */}
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                    Personal Information
-                  </Typography>
-                  <Grid container spacing={2} sx={{ mb: 3 }}>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Email</Typography>
-                      <Typography variant="body2">{selectedStudent?.email || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Phone</Typography>
-                      <Typography variant="body2">{selectedStudent?.phone || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Date of Birth</Typography>
-                      <Typography variant="body2">
-                        {selectedStudent?.date_of_birth 
-                          ? new Date(selectedStudent.date_of_birth).toLocaleDateString() 
+                {/* Overview Tab */}
+                <TabsContent value="overview">
+                  <h4 className="font-semibold mb-3">Personal Information</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="text-sm">{selectedStudent?.email || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="text-sm">{selectedStudent?.phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Date of Birth</p>
+                      <p className="text-sm">
+                        {selectedStudent?.date_of_birth
+                          ? new Date(selectedStudent.date_of_birth).toLocaleDateString()
                           : 'N/A'}
-                      </Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Gender</Typography>
-                      <Typography variant="body2">{selectedStudent?.gender || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Parent/Guardian</Typography>
-                      <Typography variant="body2">{selectedStudent?.parent_name || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Parent Phone</Typography>
-                      <Typography variant="body2">{selectedStudent?.parent_phone || 'N/A'}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Class</Typography>
-                      <Typography variant="body2">{selectedStudent?.class_name || 'Unassigned'}</Typography>
-                    </Grid>
-                    <Grid size={{ xs: 12, sm: 6, md: 4 }}>
-                      <Typography variant="caption" color="text.secondary">Status</Typography>
-                      <Chip 
-                        label={selectedStudent?.status || 'Active'} 
-                        size="small" 
-                        color={getStatusColor(selectedStudent?.status || '') as any} 
-                      />
-                    </Grid>
-                  </Grid>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Gender</p>
+                      <p className="text-sm">{selectedStudent?.gender || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Parent/Guardian</p>
+                      <p className="text-sm">{selectedStudent?.parent_name || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Parent Phone</p>
+                      <p className="text-sm">{selectedStudent?.parent_phone || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Class</p>
+                      <p className="text-sm">{selectedStudent?.class_name || 'Unassigned'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Status</p>
+                      <Badge variant={getStatusVariant(selectedStudent?.status || '') as any}>
+                        {selectedStudent?.status || 'Active'}
+                      </Badge>
+                    </div>
+                  </div>
 
-                  <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
-                    Recent Activity
-                  </Typography>
+                  <h4 className="font-semibold mb-3">Recent Activity</h4>
                   {studentDetails.grades.length === 0 && studentDetails.attendance.length === 0 ? (
-                    <Typography color="text.secondary">No activity recorded yet</Typography>
+                    <p className="text-muted-foreground">No activity recorded yet</p>
                   ) : (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <div className="flex flex-col gap-2">
                       {studentDetails.grades.slice(0, 3).map((grade, i) => (
-                        <Card key={i} variant="outlined" sx={{ p: 1 }}>
-                          <Typography variant="body2">
+                        <Card key={i} className="p-3 border">
+                          <p className="text-sm">
                             Grade: <strong>{grade.marks_obtained}/{grade.total_marks}</strong> in {grade.subject}
-                          </Typography>
+                          </p>
                         </Card>
                       ))}
-                    </Box>
+                    </div>
                   )}
-                </Box>
-              )}
+                </TabsContent>
 
-              {/* Grades Tab */}
-              {detailsTab === 1 && (
-                <Box>
+                {/* Grades Tab */}
+                <TabsContent value="grades">
                   {studentDetails.grades.length === 0 ? (
-                    <Typography color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
-                      No grades recorded
-                    </Typography>
+                    <p className="text-center py-6 text-muted-foreground">No grades recorded</p>
                   ) : (
-                    <TableContainer>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Subject</TableCell>
-                            <TableCell>Score</TableCell>
-                            <TableCell>Percentage</TableCell>
-                            <TableCell>Grade</TableCell>
-                          </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {studentDetails.grades.map((grade, i) => (
-                            <TableRow key={i}>
-                              <TableCell>{grade.subject}</TableCell>
-                              <TableCell>{grade.marks_obtained}/{grade.total_marks}</TableCell>
-                              <TableCell>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                  <LinearProgress
-                                    variant="determinate"
-                                    value={grade.percentage || 0}
-                                    sx={{ width: 60, height: 8, borderRadius: 4 }}
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Subject</TableHead>
+                          <TableHead>Score</TableHead>
+                          <TableHead>Percentage</TableHead>
+                          <TableHead>Grade</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {studentDetails.grades.map((grade, i) => (
+                          <TableRow key={i}>
+                            <TableCell>{grade.subject}</TableCell>
+                            <TableCell>{grade.marks_obtained}/{grade.total_marks}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <div className="w-16 h-2 rounded-full bg-muted overflow-hidden">
+                                  <div
+                                    className="h-full rounded-full bg-primary"
+                                    style={{ width: `${grade.percentage || 0}%` }}
                                   />
-                                  {grade.percentage}%
-                                </Box>
-                              </TableCell>
-                              <TableCell>
-                                <Chip label={grade.grade_letter} size="small" color="primary" />
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                                </div>
+                                <span className="text-sm">{grade.percentage}%</span>
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <Badge>{grade.grade_letter}</Badge>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
                   )}
-                </Box>
-              )}
+                </TabsContent>
 
-              {/* Attendance Tab */}
-              {detailsTab === 2 && (
-                <Box>
+                {/* Attendance Tab */}
+                <TabsContent value="attendance">
                   {studentDetails.attendance.length === 0 ? (
-                    <Typography color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
-                      No attendance records
-                    </Typography>
+                    <p className="text-center py-6 text-muted-foreground">No attendance records</p>
                   ) : (
-                    <TableContainer>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Date</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell>Notes</TableCell>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Date</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Notes</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {studentDetails.attendance.slice(0, 10).map((att, i) => (
+                          <TableRow key={i}>
+                            <TableCell>
+                              {new Date(att.attendance_date).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  att.status === 'Present'
+                                    ? 'success'
+                                    : att.status === 'Late'
+                                    ? 'warning'
+                                    : 'destructive'
+                                }
+                              >
+                                {att.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{att.notes || '-'}</TableCell>
                           </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {studentDetails.attendance.slice(0, 10).map((att, i) => (
-                            <TableRow key={i}>
-                              <TableCell>
-                                {new Date(att.attendance_date).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                <Chip
-                                  label={att.status}
-                                  size="small"
-                                  color={att.status === 'Present' ? 'success' : att.status === 'Late' ? 'warning' : 'error'}
-                                />
-                              </TableCell>
-                              <TableCell>{att.notes || '-'}</TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                        ))}
+                      </TableBody>
+                    </Table>
                   )}
-                </Box>
-              )}
+                </TabsContent>
 
-              {/* Test Results Tab */}
-              {detailsTab === 3 && (
-                <Box>
+                {/* Test Results Tab */}
+                <TabsContent value="tests">
                   {studentDetails.testResults.length === 0 ? (
-                    <Typography color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
-                      No test results
-                    </Typography>
+                    <p className="text-center py-6 text-muted-foreground">No test results</p>
                   ) : (
-                    <TableContainer>
-                      <Table size="small">
-                        <TableHead>
-                          <TableRow>
-                            <TableCell>Test</TableCell>
-                            <TableCell>Score</TableCell>
-                            <TableCell>Status</TableCell>
-                            <TableCell>Date</TableCell>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Test</TableHead>
+                          <TableHead>Score</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {studentDetails.testResults.map((result, i) => (
+                          <TableRow key={i}>
+                            <TableCell>{result.test_name}</TableCell>
+                            <TableCell>
+                              {result.score !== null ? `${result.score}/${result.total_marks}` : '-'}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={result.status === 'graded' ? 'success' : 'warning'}
+                              >
+                                {result.status}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              {result.submitted_at
+                                ? new Date(result.submitted_at).toLocaleDateString()
+                                : '-'}
+                            </TableCell>
                           </TableRow>
-                        </TableHead>
-                        <TableBody>
-                          {studentDetails.testResults.map((result, i) => (
-                            <TableRow key={i}>
-                              <TableCell>{result.test_name}</TableCell>
-                              <TableCell>
-                                {result.score !== null ? `${result.score}/${result.total_marks}` : '-'}
-                              </TableCell>
-                              <TableCell>
-                                <Chip
-                                  label={result.status}
-                                  size="small"
-                                  color={result.status === 'graded' ? 'success' : 'warning'}
-                                />
-                              </TableCell>
-                              <TableCell>
-                                {result.submitted_at ? new Date(result.submitted_at).toLocaleDateString() : '-'}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </TableContainer>
+                        ))}
+                      </TableBody>
+                    </Table>
                   )}
-                </Box>
-              )}
+                </TabsContent>
+              </Tabs>
             </>
           )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailsDialog(false)}>
+              Close
+            </Button>
+            <Button onClick={() => navigate(`/student/${selectedStudent?.student_id}`)}>
+              View Full Profile
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDetailsDialog(false)}>Close</Button>
-          <Button
-            variant="contained"
-            onClick={() => navigate(`/student/${selectedStudent?.student_id}`)}
-          >
-            View Full Profile
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 

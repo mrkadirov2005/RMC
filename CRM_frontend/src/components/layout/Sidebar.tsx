@@ -1,94 +1,74 @@
-import { useState, memo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect, memo } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  Drawer,
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  IconButton,
-  Divider,
-  Button,
-  useMediaQuery,
-  useTheme,
-  Avatar,
-  Stack,
-  Badge,
-} from '@mui/material';
-import {
-  Menu as MenuIcon,
-  Close as CloseIcon,
-  Logout as LogoutIcon,
-  People as PeopleIcon,
-  Book as BookIcon,
-  Payment as PaymentIcon,
-  BarChart as BarChartIcon,
-  Assignment as AssignmentIcon,
-  CheckCircle as CheckCircleIcon,
-  Business as BusinessIcon,
-  Warning as WarningIcon,
-  Dashboard as DashboardIcon,
-  Quiz as QuizIcon,
-} from '@mui/icons-material';
+  LayoutDashboard, Users, BookOpen, CreditCard, BarChart3,
+  ClipboardList, CheckCircle, Building2, AlertTriangle, FileQuestion,
+  LogOut, Sun, Moon, Menu, X, User,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppDispatch, useAppSelector, useRBAC } from '../../features/crm/hooks';
 import { logout } from '../../slices/authSlice';
+import { useThemeMode } from '../../theme/ThemeContext';
 
-// Icon map for menu items
-const iconMap: { [key: string]: any } = {
-  MdPeople: PeopleIcon,
-  MdBook: BookIcon,
-  MdPayment: PaymentIcon,
-  MdBarChart: BarChartIcon,
-  MdAssignment: AssignmentIcon,
-  MdChecklist: CheckCircleIcon,
-  MdBusiness: BusinessIcon,
-  MdWarning: WarningIcon,
-  MdQuiz: QuizIcon,
+const iconMap: Record<string, React.ElementType> = {
+  Dashboard: LayoutDashboard,
+  MdPeople: Users,
+  MdPerson: User,
+  MdBook: BookOpen,
+  MdPayment: CreditCard,
+  MdBarChart: BarChart3,
+  MdAssignment: ClipboardList,
+  MdChecklist: CheckCircle,
+  MdBusiness: Building2,
+  MdWarning: AlertTriangle,
+  MdQuiz: FileQuestion,
 };
 
 const DRAWER_WIDTH = 280;
 
 const Sidebar = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAppSelector((state) => state.auth);
-  const { canAccess } = useRBAC();
+  const { toggleTheme, isDark } = useThemeMode();
+  useRBAC();
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const menuItems = [
-    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', permission: 'VIEW_DASHBOARD', roles: ['superuser', 'teacher'] },
-    { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', permission: 'VIEW_TEACHER_PORTAL', roles: ['teacher'] },
-    { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', permission: 'VIEW_STUDENT_PORTAL', roles: ['student'] },
-    { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', permission: 'VIEW_TEST', roles: ['student'] },
-    { label: 'Students', path: '/students', iconName: 'MdPeople', permission: 'CRUD_STUDENT', roles: ['superuser', 'teacher'] },
-    { label: 'Teachers', path: '/teachers', iconName: 'MdBook', permission: 'CRUD_TEACHER', roles: ['superuser'] },
-    { label: 'Classes', path: '/classes', iconName: 'MdBook', permission: 'CRUD_CLASS', roles: ['superuser', 'teacher'] },
-    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', permission: 'CRUD_TEST', roles: ['superuser', 'teacher'] },
-    { label: 'Payments', path: '/payments', iconName: 'MdPayment', permission: 'CRUD_PAYMENT', roles: ['superuser'] },
-    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', permission: 'CRUD_GRADE', roles: ['superuser', 'teacher'] },
-    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', permission: 'CRUD_ATTENDANCE', roles: ['superuser', 'teacher'] },
-    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', permission: 'CRUD_ASSIGNMENT', roles: ['superuser', 'teacher'] },
-    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', permission: 'CRUD_SUBJECT', roles: ['superuser', 'teacher'] },
-    { label: 'Debts', path: '/debts', iconName: 'MdWarning', permission: 'CRUD_DEBT', roles: ['superuser'] },
-    { label: 'Centers', path: '/centers', iconName: 'MdBusiness', permission: 'CRUD_CENTER', roles: ['superuser'] },
+    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser', 'teacher'] },
+    { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', roles: ['teacher'] },
+    { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', roles: ['student'] },
+    { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
+    { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser', 'teacher'] },
+    { label: 'Teachers', path: '/teachers', iconName: 'MdBook', roles: ['superuser'] },
+    { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser', 'teacher'] },
+    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'] },
+    { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser'] },
+    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser', 'teacher'] },
+    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser', 'teacher'] },
+    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', roles: ['superuser', 'teacher'] },
+    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', roles: ['superuser', 'teacher'] },
+    { label: 'Debts', path: '/debts', iconName: 'MdWarning', roles: ['superuser'] },
+    { label: 'Centers', path: '/centers', iconName: 'MdBusiness', roles: ['superuser'] },
   ];
 
   const filteredMenuItems = menuItems.filter((item) => {
-    if (user?.userType === 'student') {
-      return item.roles?.includes('student');
-    }
-    if (user?.userType === 'teacher') {
-      return item.roles?.includes('teacher');
-    }
-    if (user?.userType === 'superuser') {
-      return item.roles?.includes('superuser');
-    }
-    return false;
+    if (!user?.userType) return false;
+    return item.roles?.includes(user.userType);
   });
 
   const handleLogout = () => {
@@ -98,191 +78,135 @@ const Sidebar = memo(() => {
 
   const handleNavigation = (path: string) => {
     navigate(path);
-    if (isMobile) {
-      setIsOpen(false);
-    }
+    if (isMobile) setIsOpen(false);
   };
 
-  const drawerContent = (
-    <Box
-      sx={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        backgroundColor: theme.palette.primary.main,
-        color: 'white',
-      }}
-    >
+  const sidebarContent = (
+    <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white">
       {/* Header */}
-      <Box
-        sx={{
-          padding: 2,
-          borderBottom: `1px solid ${theme.palette.primary.dark}`,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: 700 }}>
-          CRM System
-        </Typography>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/40">
+            <LayoutDashboard className="w-5 h-5 text-white" />
+          </div>
+          <h1 className="text-lg font-bold tracking-tight">EduCRM</h1>
+        </div>
         {isMobile && (
-          <IconButton
-            onClick={() => setIsOpen(false)}
-            sx={{ color: 'white' }}
-          >
-            <CloseIcon />
-          </IconButton>
+          <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
         )}
-      </Box>
+      </div>
 
       {/* User Info */}
       {user && (
-        <Box
-          sx={{
-            padding: 2,
-            backgroundColor: theme.palette.primary.dark,
-            margin: 1,
-            borderRadius: 1,
-            textAlign: 'center',
-          }}
-        >
-          <Badge
-            overlap="circular"
-            anchorOrigin={{
-              vertical: 'bottom',
-              horizontal: 'right',
-            }}
-            variant="dot"
-            sx={{
-              '& .MuiBadge-badge': {
-                backgroundColor: '#44b700',
-                color: '#44b700',
-                boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
-                '&::after': {
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: '50%',
-                  animation: 'ripple 1.2s infinite ease-in-out',
-                  border: '1px solid currentColor',
-                },
-              },
-            }}
-          >
-            <Avatar sx={{ backgroundColor: theme.palette.secondary.main, margin: '0 auto' }}>
-              {user.first_name?.[0]}{user.last_name?.[0]}
-            </Avatar>
-          </Badge>
-          <Typography variant="subtitle2" sx={{ marginTop: 1, fontWeight: 600 }}>
-            {user.first_name} {user.last_name}
-          </Typography>
-          <Typography variant="caption" sx={{ opacity: 0.9 }}>
-            {user.userType?.toUpperCase()}
-          </Typography>
-        </Box>
+        <div className="mx-3 mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <Avatar className="w-10 h-10">
+                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-400 text-white text-sm font-semibold">
+                  {user.first_name?.[0]}{user.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-slate-800" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold leading-tight">{user.first_name} {user.last_name}</p>
+              <p className="text-[0.7rem] font-medium text-indigo-400 uppercase tracking-wider">{user.userType}</p>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Navigation Menu */}
-      <Box sx={{ flex: 1, overflow: 'auto', paddingTop: 1 }}>
-        <List sx={{ padding: 0 }}>
-          {filteredMenuItems.map((item) => {
-            const IconComponent =
-              item.iconName === 'Dashboard' ? DashboardIcon : (iconMap[item.iconName] || PeopleIcon);
-            return (
-              <ListItem key={item.path} disablePadding>
-                <ListItemButton
-                  onClick={() => handleNavigation(item.path)}
-                  sx={{
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: theme.palette.primary.dark,
-                      paddingLeft: 3,
-                    },
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <ListItemIcon
-                    sx={{
-                      color: 'white',
-                      minWidth: 40,
-                    }}
-                  >
-                    <IconComponent />
-                  </ListItemIcon>
-                  <ListItemText primary={item.label} />
-                </ListItemButton>
-              </ListItem>
-            );
-          })}
-        </List>
-      </Box>
+      {/* Navigation */}
+      <ScrollArea className="flex-1 pt-2 px-2">
+        <TooltipProvider delayDuration={0}>
+          <nav className="space-y-0.5">
+            {filteredMenuItems.map((item) => {
+              const Icon = iconMap[item.iconName] || Users;
+              const isActive = location.pathname === item.path;
+              return (
+                <Tooltip key={item.path}>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => handleNavigation(item.path)}
+                      className={cn(
+                        'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 border-l-[3px]',
+                        isActive
+                          ? 'bg-gradient-to-r from-indigo-500/30 to-violet-500/20 text-white border-indigo-400 font-semibold'
+                          : 'text-white/60 border-transparent hover:bg-white/[0.06] hover:text-white'
+                      )}
+                    >
+                      <Icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-indigo-400' : 'text-white/40')} />
+                      <span>{item.label}</span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="sm:hidden">
+                    {item.label}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </nav>
+        </TooltipProvider>
+      </ScrollArea>
 
-      <Divider sx={{ backgroundColor: theme.palette.primary.dark }} />
+      <Separator className="bg-white/[0.06]" />
 
-      {/* Footer - Logout Button */}
-      <Box sx={{ padding: 2 }}>
+      {/* Theme Toggle */}
+      <div className="px-3 pt-3 pb-1.5">
         <Button
-          fullWidth
-          variant="contained"
-          color="secondary"
-          startIcon={<LogoutIcon />}
-          onClick={handleLogout}
-          sx={{
-            backgroundColor: theme.palette.secondary.main,
-            '&:hover': {
-              backgroundColor: theme.palette.secondary.dark,
-            },
-          }}
+          variant="ghost"
+          onClick={toggleTheme}
+          className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]"
         >
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          {isDark ? 'Light Mode' : 'Dark Mode'}
+        </Button>
+      </div>
+
+      {/* Logout */}
+      <div className="px-3 pb-3 pt-1.5">
+        <Button
+          variant="ghost"
+          onClick={handleLogout}
+          className="w-full justify-start gap-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 border border-rose-500/20"
+        >
+          <LogOut className="w-4 h-4" />
           Logout
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 
   return (
     <>
-      {/* Mobile Toggle Button */}
+      {/* Mobile Toggle */}
       {isMobile && (
-        <IconButton
+        <button
           onClick={() => setIsOpen(true)}
-          sx={{
-            position: 'fixed',
-            top: 16,
-            left: 16,
-            zIndex: 999,
-            backgroundColor: theme.palette.primary.main,
-            color: 'white',
-            '&:hover': {
-              backgroundColor: theme.palette.primary.dark,
-            },
-          }}
+          className="fixed top-4 left-4 z-[999] p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-lg"
         >
-          <MenuIcon />
-        </IconButton>
+          <Menu className="w-5 h-5" />
+        </button>
       )}
 
-      {/* Permanent Drawer for Desktop */}
-      <Drawer
-        variant={isMobile ? 'temporary' : 'permanent'}
-        anchor="left"
-        open={isMobile ? isOpen : true}
-        onClose={() => setIsOpen(false)}
-        sx={{
-          width: DRAWER_WIDTH,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
-            width: DRAWER_WIDTH,
-            boxSizing: 'border-box',
-            backgroundColor: theme.palette.primary.main,
-          },
-        }}
+      {/* Mobile overlay */}
+      {isMobile && isOpen && (
+        <div className="fixed inset-0 z-[1200] bg-black/60" onClick={() => setIsOpen(false)} />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={cn(
+          'h-screen border-r border-white/[0.06] shrink-0 transition-transform duration-300 z-[1300]',
+          isMobile ? 'fixed top-0 left-0' : 'fixed top-0 left-0',
+          isMobile && !isOpen && '-translate-x-full'
+        )}
+        style={{ width: DRAWER_WIDTH }}
       >
-        {drawerContent}
-      </Drawer>
+        {sidebarContent}
+      </aside>
     </>
   );
 });
@@ -290,5 +214,3 @@ const Sidebar = memo(() => {
 Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;
-
-

@@ -1,34 +1,27 @@
 import { useState } from 'react';
+import { BarChart3, ChevronDown, ChevronUp, Plus, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Collapse,
-  IconButton,
-} from '@mui/material';
-import {
-  Analytics as AnalyzeIcon,
-  ExpandMore as ExpandIcon,
-  ExpandLess as CollapseIcon,
-  Add as AddIcon,
-} from '@mui/icons-material';
+} from '@/components/ui/table';
 import { debtAPI } from '../../../shared/api/api';
 
 interface UnpaidMonth {
@@ -77,8 +70,9 @@ const DebtAnalyzer = () => {
       setError(null);
       const response = await debtAPI.analyzeUnpaidMonths();
       setAnalysis(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to analyze payments');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to analyze payments');
     } finally {
       setLoading(false);
     }
@@ -97,8 +91,9 @@ const DebtAnalyzer = () => {
       setSelectedStudents([]);
       // Re-analyze to show updated data
       handleAnalyze();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to generate debts');
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      setError(error.response?.data?.error || 'Failed to generate debts');
     } finally {
       setGenerating(false);
     }
@@ -119,221 +114,231 @@ const DebtAnalyzer = () => {
   };
 
   return (
-    <Card sx={{ mb: 3 }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6">Payment Analysis</Typography>
+    <Card className="mb-6">
+      <CardContent className="pt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Payment Analysis</h3>
           <Button
-            variant="contained"
-            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <AnalyzeIcon />}
             onClick={handleAnalyze}
             disabled={loading}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            }}
+            className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white"
           >
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <BarChart3 className="mr-2 h-4 w-4" />
+            )}
             {loading ? 'Analyzing...' : 'Analyze Unpaid Months'}
           </Button>
-        </Box>
+        </div>
 
         {error && (
-          <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError(null)}>
-            {error}
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription className="flex justify-between items-center">
+              {error}
+              <button onClick={() => setError(null)} className="text-sm underline ml-2">
+                Dismiss
+              </button>
+            </AlertDescription>
           </Alert>
         )}
 
         {analysis && (
           <>
             {/* Summary Cards */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
-              <Paper sx={{ p: 2, flex: 1, minWidth: 150, textAlign: 'center' }}>
-                <Typography variant="h4" fontWeight={700} color="primary">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <p className="text-3xl font-bold text-indigo-600">
                   {analysis.summary.total_students_analyzed}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Students Analyzed
-                </Typography>
-              </Paper>
-              <Paper sx={{ p: 2, flex: 1, minWidth: 150, textAlign: 'center' }}>
-                <Typography variant="h4" fontWeight={700} color="error.main">
+                </p>
+                <p className="text-sm text-muted-foreground">Students Analyzed</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <p className="text-3xl font-bold text-red-600">
                   {analysis.summary.students_with_unpaid_months}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  With Unpaid Months
-                </Typography>
-              </Paper>
-              <Paper sx={{ p: 2, flex: 1, minWidth: 150, textAlign: 'center' }}>
-                <Typography variant="h4" fontWeight={700} color="warning.main">
+                </p>
+                <p className="text-sm text-muted-foreground">With Unpaid Months</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <p className="text-3xl font-bold text-amber-600">
                   {analysis.summary.total_unpaid_instances}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Unpaid Instances
-                </Typography>
-              </Paper>
-              <Paper sx={{ p: 2, flex: 1, minWidth: 150, textAlign: 'center' }}>
-                <Typography variant="body2" color="text.secondary">
-                  Analysis Period
-                </Typography>
-                <Typography variant="body1" fontWeight={600}>
+                </p>
+                <p className="text-sm text-muted-foreground">Total Unpaid Instances</p>
+              </div>
+              <div className="rounded-lg border bg-card p-4 text-center">
+                <p className="text-sm text-muted-foreground">Analysis Period</p>
+                <p className="text-base font-semibold">
                   {analysis.analysis_period.months_analyzed} months
-                </Typography>
-              </Paper>
-            </Box>
+                </p>
+              </div>
+            </div>
 
             {/* Results Table */}
             {analysis.results.length > 0 ? (
               <>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
+                <div className="flex justify-between items-center mb-4">
+                  <p className="font-semibold">
                     Students with Payment Issues ({analysis.results.length})
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button size="small" onClick={selectAllStudents}>
+                  </p>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={selectAllStudents}>
                       Select All
                     </Button>
                     <Button
-                      size="small"
-                      variant="contained"
-                      startIcon={<AddIcon />}
+                      size="sm"
                       onClick={() => setGenerateDialogOpen(true)}
                       disabled={selectedStudents.length === 0}
                     >
+                      <Plus className="mr-1 h-4 w-4" />
                       Generate Debts ({selectedStudents.length})
                     </Button>
-                  </Box>
-                </Box>
+                  </div>
+                </div>
 
-                <TableContainer component={Paper}>
-                  <Table size="small">
-                    <TableHead>
+                <div className="rounded-md border">
+                  <Table>
+                    <TableHeader>
                       <TableRow>
-                        <TableCell padding="checkbox">
+                        <TableHead className="w-10">
                           <input
                             type="checkbox"
+                            className="rounded border-gray-300"
                             checked={selectedStudents.length === analysis.results.length}
                             onChange={(e) =>
                               e.target.checked ? selectAllStudents() : setSelectedStudents([])
                             }
                           />
-                        </TableCell>
-                        <TableCell>Student</TableCell>
-                        <TableCell align="center">Unpaid Months</TableCell>
-                        <TableCell align="center">Total Payments</TableCell>
-                        <TableCell align="right">Current Debt</TableCell>
-                        <TableCell />
+                        </TableHead>
+                        <TableHead>Student</TableHead>
+                        <TableHead className="text-center">Unpaid Months</TableHead>
+                        <TableHead className="text-center">Total Payments</TableHead>
+                        <TableHead className="text-right">Current Debt</TableHead>
+                        <TableHead className="w-10" />
                       </TableRow>
-                    </TableHead>
+                    </TableHeader>
                     <TableBody>
                       {analysis.results.map((result) => (
                         <>
-                          <TableRow
-                            key={result.student_id}
-                            sx={{ '&:hover': { bgcolor: 'action.hover' } }}
-                          >
-                            <TableCell padding="checkbox">
+                          <TableRow key={result.student_id} className="hover:bg-muted/50">
+                            <TableCell className="w-10">
                               <input
                                 type="checkbox"
+                                className="rounded border-gray-300"
                                 checked={selectedStudents.includes(result.student_id)}
                                 onChange={() => toggleStudentSelection(result.student_id)}
                               />
                             </TableCell>
                             <TableCell>
-                              <Typography fontWeight={600}>{result.student_name}</Typography>
-                              <Typography variant="caption" color="text.secondary">
+                              <p className="font-semibold">{result.student_name}</p>
+                              <p className="text-xs text-muted-foreground">
                                 {result.enrollment_number}
-                              </Typography>
+                              </p>
                             </TableCell>
-                            <TableCell align="center">
-                              <Chip
-                                label={result.unpaid_months_count}
-                                color={result.unpaid_months_count > 3 ? 'error' : 'warning'}
-                                size="small"
-                              />
+                            <TableCell className="text-center">
+                              <Badge
+                                variant={result.unpaid_months_count > 3 ? 'destructive' : 'secondary'}
+                                className={cn(
+                                  result.unpaid_months_count <= 3 &&
+                                    'bg-amber-100 text-amber-800 hover:bg-amber-100'
+                                )}
+                              >
+                                {result.unpaid_months_count}
+                              </Badge>
                             </TableCell>
-                            <TableCell align="center">{result.total_payments}</TableCell>
-                            <TableCell align="right">
+                            <TableCell className="text-center">
+                              {result.total_payments}
+                            </TableCell>
+                            <TableCell className="text-right">
                               ${result.total_debt_balance.toFixed(2)}
                             </TableCell>
                             <TableCell>
-                              <IconButton
-                                size="small"
+                              <button
+                                className="p-1 rounded hover:bg-muted"
                                 onClick={() =>
                                   setExpandedStudent(
-                                    expandedStudent === result.student_id ? null : result.student_id
+                                    expandedStudent === result.student_id
+                                      ? null
+                                      : result.student_id
                                   )
                                 }
                               >
                                 {expandedStudent === result.student_id ? (
-                                  <CollapseIcon />
+                                  <ChevronUp className="h-4 w-4" />
                                 ) : (
-                                  <ExpandIcon />
+                                  <ChevronDown className="h-4 w-4" />
                                 )}
-                              </IconButton>
+                              </button>
                             </TableCell>
                           </TableRow>
-                          <TableRow>
-                            <TableCell colSpan={6} sx={{ py: 0 }}>
-                              <Collapse in={expandedStudent === result.student_id}>
-                                <Box sx={{ p: 2, bgcolor: '#f9f9f9' }}>
-                                  <Typography variant="subtitle2" gutterBottom>
-                                    Unpaid Months:
-                                  </Typography>
-                                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                          {expandedStudent === result.student_id && (
+                            <TableRow key={`${result.student_id}-detail`}>
+                              <TableCell colSpan={6} className="py-0">
+                                <div className="p-4 bg-muted/30">
+                                  <p className="text-sm font-medium mb-2">Unpaid Months:</p>
+                                  <div className="flex gap-2 flex-wrap">
                                     {result.unpaid_months.map((month, i) => (
-                                      <Chip
+                                      <Badge
                                         key={i}
-                                        label={month.label}
-                                        size="small"
-                                        color="warning"
-                                        variant="outlined"
-                                      />
+                                        variant="outline"
+                                        className="border-amber-400 text-amber-700"
+                                      >
+                                        {month.label}
+                                      </Badge>
                                     ))}
-                                  </Box>
-                                </Box>
-                              </Collapse>
-                            </TableCell>
-                          </TableRow>
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          )}
                         </>
                       ))}
                     </TableBody>
                   </Table>
-                </TableContainer>
+                </div>
               </>
             ) : (
-              <Alert severity="success">
-                All students have made payments for the analyzed period!
+              <Alert className="border-green-200 bg-green-50 text-green-800">
+                <AlertDescription>
+                  All students have made payments for the analyzed period!
+                </AlertDescription>
               </Alert>
             )}
           </>
         )}
 
         {/* Generate Debts Dialog */}
-        <Dialog open={generateDialogOpen} onClose={() => setGenerateDialogOpen(false)}>
-          <DialogTitle>Generate Debt Records</DialogTitle>
+        <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
           <DialogContent>
-            <Typography gutterBottom>
+            <DialogHeader>
+              <DialogTitle>Generate Debt Records</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
               This will create debt records for {selectedStudents.length} selected student(s).
-            </Typography>
-            <TextField
-              label="Monthly Fee Amount"
-              type="number"
-              value={monthlyFee}
-              onChange={(e) => setMonthlyFee(e.target.value)}
-              fullWidth
-              sx={{ mt: 2 }}
-              InputProps={{ startAdornment: '$' }}
-            />
+            </p>
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="monthlyFee">Monthly Fee Amount</Label>
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">$</span>
+                <Input
+                  id="monthlyFee"
+                  type="number"
+                  value={monthlyFee}
+                  onChange={(e) => setMonthlyFee(e.target.value)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleGenerateDebts}
+                disabled={generating || !monthlyFee}
+              >
+                {generating ? 'Generating...' : 'Generate'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setGenerateDialogOpen(false)}>Cancel</Button>
-            <Button
-              variant="contained"
-              onClick={handleGenerateDebts}
-              disabled={generating || !monthlyFee}
-            >
-              {generating ? 'Generating...' : 'Generate'}
-            </Button>
-          </DialogActions>
         </Dialog>
       </CardContent>
     </Card>

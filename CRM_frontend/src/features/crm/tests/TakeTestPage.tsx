@@ -1,41 +1,34 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
-  Radio,
-  RadioGroup,
-  FormControlLabel,
-  TextField,
-  Paper,
-  LinearProgress,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Chip,
-  IconButton,
-  Divider,
-} from '@mui/material';
+  ArrowLeft,
+  ArrowRight,
+  Send,
+  Clock,
+  Flag,
+  FlagOff,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  ArrowBack as BackIcon,
-  ArrowForward as NextIcon,
-  Send as SubmitIcon,
-  Timer as TimerIcon,
-  Flag as FlagIcon,
-  FlagOutlined as FlagOutlinedIcon,
-} from '@mui/icons-material';
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 
 const TakeTestPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  
+
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -75,10 +68,10 @@ const TakeTestPage = () => {
   const loadSubmission = async () => {
     try {
       setLoading(true);
-      
+
       // First try to get test ID from localStorage, then from submission details
       let testId = localStorage.getItem(`submission_${submissionId}_test`);
-      
+
       if (!testId) {
         // Fetch submission details to get test_id
         try {
@@ -89,21 +82,21 @@ const TakeTestPage = () => {
           throw new Error('Test information not found. Please go back and start the test again.');
         }
       }
-      
+
       const testRes = await testAPI.getById(Number(testId));
       setTest(testRes.data);
-      
+
       const testQuestions = testRes.data.questions || [];
       // Shuffle questions if enabled
       if (testRes.data.shuffle_questions) {
         testQuestions.sort(() => Math.random() - 0.5);
       }
       setQuestions(testQuestions);
-      
+
       if (testQuestions.length === 0) {
         setError('This test has no questions. Please contact the administrator.');
       }
-      
+
       // Calculate remaining time
       if (testRes.data.is_timed) {
         setTimeRemaining(testRes.data.duration_minutes * 60);
@@ -153,10 +146,10 @@ const TakeTestPage = () => {
       });
 
       await testAPI.submitTest(Number(submissionId), formattedAnswers);
-      
+
       // Navigate to results or confirmation
-      navigate('/tests', { 
-        state: { message: 'Test submitted successfully!' } 
+      navigate('/tests', {
+        state: { message: 'Test submitted successfully!' },
       });
     } catch (err: any) {
       console.error('Error submitting test:', err);
@@ -171,214 +164,272 @@ const TakeTestPage = () => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getTimeColor = () => {
-    if (timeRemaining === null) return 'primary';
-    if (timeRemaining < 60) return 'error';
-    if (timeRemaining < 300) return 'warning';
-    return 'primary';
+  const getTimeColorClass = () => {
+    if (timeRemaining === null) return 'bg-indigo-100 text-indigo-800 border-indigo-300';
+    if (timeRemaining < 60) return 'bg-red-100 text-red-800 border-red-300 animate-pulse';
+    if (timeRemaining < 300) return 'bg-amber-100 text-amber-800 border-amber-300';
+    return 'bg-indigo-100 text-indigo-800 border-indigo-300';
   };
 
   const currentQuestion = questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
-  const progress = (answeredCount / questions.length) * 100;
+  const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
     );
   }
 
   if (error && !test) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">{error}</Alert>
-        <Button startIcon={<BackIcon />} onClick={() => navigate('/tests')} sx={{ mt: 2 }}>
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+        <Button variant="ghost" onClick={() => navigate('/tests')} className="mt-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Tests
         </Button>
-      </Box>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <Paper sx={{ p: 2, mb: 3, position: 'sticky', top: 0, zIndex: 10 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
-          <Box>
-            <Typography variant="h6" fontWeight={700}>
-              {test?.test_name}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+      <div className="bg-white rounded-lg border p-4 mb-6 sticky top-0 z-10 shadow-sm">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-lg font-bold">{test?.test_name}</h2>
+            <p className="text-sm text-gray-500">
               Question {currentIndex + 1} of {questions.length}
-            </Typography>
-          </Box>
-          
+            </p>
+          </div>
+
           {test?.is_timed && timeRemaining !== null && (
-            <Chip
-              icon={<TimerIcon />}
-              label={formatTime(timeRemaining)}
-              color={getTimeColor()}
-              variant={timeRemaining < 60 ? 'filled' : 'outlined'}
-              sx={{ fontSize: '1.2rem', py: 2, px: 1 }}
-            />
+            <span
+              className={cn(
+                'inline-flex items-center gap-2 px-4 py-2 rounded-full border text-lg font-semibold',
+                getTimeColorClass()
+              )}
+            >
+              <Clock className="h-5 w-5" />
+              {formatTime(timeRemaining)}
+            </span>
           )}
-          
-          <Box sx={{ display: 'flex', gap: 1 }}>
-            <Typography variant="body2" color="text.secondary">
+
+          <div className="flex gap-3">
+            <span className="text-sm text-gray-500">
               {answeredCount}/{questions.length} answered
-            </Typography>
-            <Typography variant="body2" color="warning.main">
+            </span>
+            <span className="text-sm text-amber-600">
               {flagged.size} flagged
-            </Typography>
-          </Box>
-        </Box>
-        <LinearProgress variant="determinate" value={progress} sx={{ mt: 2, height: 6, borderRadius: 3 }} />
-      </Paper>
+            </span>
+          </div>
+        </div>
+        {/* Progress bar */}
+        <div className="mt-3 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-indigo-500 rounded-full transition-all duration-300"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
         </Alert>
       )}
 
       {/* Question Navigator */}
-      <Paper sx={{ p: 2, mb: 3 }}>
-        <Typography variant="subtitle2" gutterBottom>
-          Question Navigator
-        </Typography>
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+      <div className="bg-white rounded-lg border p-4 mb-6">
+        <p className="text-sm font-semibold mb-2">Question Navigator</p>
+        <div className="flex flex-wrap gap-1.5">
           {questions.map((q, index) => (
-            <Button
+            <button
               key={q.question_id}
-              size="small"
-              variant={index === currentIndex ? 'contained' : 'outlined'}
               onClick={() => setCurrentIndex(index)}
-              sx={{
-                minWidth: 40,
-                height: 40,
-                bgcolor: index === currentIndex ? 'primary.main' :
-                  flagged.has(q.question_id) ? 'warning.light' :
-                  answers[q.question_id] ? 'success.light' : undefined,
-                color: index === currentIndex ? 'white' :
-                  flagged.has(q.question_id) || answers[q.question_id] ? 'text.primary' : undefined,
-              }}
+              className={cn(
+                'min-w-[40px] h-10 rounded-md text-sm font-medium border transition-colors',
+                index === currentIndex
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : flagged.has(q.question_id)
+                    ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200'
+                    : answers[q.question_id]
+                      ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
+                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              )}
             >
               {index + 1}
-            </Button>
+            </button>
           ))}
-        </Box>
-      </Paper>
+        </div>
+      </div>
 
       {/* Current Question */}
       {currentQuestion && (
-        <Card sx={{ mb: 3 }}>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-              <Box sx={{ flex: 1 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <Chip label={`${currentQuestion.marks} marks`} size="small" />
-                  <Chip
-                    label={currentQuestion.question_type?.replace(/_/g, ' ')}
-                    size="small"
-                    variant="outlined"
-                  />
-                </Box>
-                <Typography variant="h6">
-                  {currentQuestion.question_text}
-                </Typography>
-              </Box>
-              <IconButton
+        <Card className="mb-6">
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <Badge variant="secondary">{currentQuestion.marks} marks</Badge>
+                  <Badge variant="outline">
+                    {currentQuestion.question_type?.replace(/_/g, ' ')}
+                  </Badge>
+                </div>
+                <h3 className="text-lg font-semibold">{currentQuestion.question_text}</h3>
+              </div>
+              <button
                 onClick={() => toggleFlag(currentQuestion.question_id)}
-                color={flagged.has(currentQuestion.question_id) ? 'warning' : 'default'}
+                className={cn(
+                  'p-2 rounded-md transition-colors',
+                  flagged.has(currentQuestion.question_id)
+                    ? 'text-amber-500 hover:bg-amber-50'
+                    : 'text-gray-400 hover:bg-gray-100'
+                )}
               >
-                {flagged.has(currentQuestion.question_id) ? <FlagIcon /> : <FlagOutlinedIcon />}
-              </IconButton>
-            </Box>
+                {flagged.has(currentQuestion.question_id) ? (
+                  <Flag className="h-5 w-5" />
+                ) : (
+                  <FlagOff className="h-5 w-5" />
+                )}
+              </button>
+            </div>
 
-            <Divider sx={{ my: 2 }} />
+            <hr className="my-4" />
 
             {/* Answer Input based on question type */}
             {currentQuestion.question_type === 'multiple_choice' && (
-              <RadioGroup
-                value={answers[currentQuestion.question_id]?.index ?? ''}
-                onChange={(e) => handleAnswerChange(currentQuestion.question_id, { index: parseInt(e.target.value) })}
-              >
+              <div className="space-y-2">
                 {currentQuestion.options?.map((option: string, index: number) => (
-                  <FormControlLabel
+                  <label
                     key={index}
-                    value={index}
-                    control={<Radio />}
-                    label={`${String.fromCharCode(65 + index)}. ${option}`}
-                    sx={{
-                      mb: 1,
-                      p: 1,
-                      borderRadius: 1,
-                      '&:hover': { bgcolor: 'action.hover' },
-                      bgcolor: answers[currentQuestion.question_id]?.index === index ? 'primary.lighter' : undefined,
-                    }}
-                  />
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border',
+                      answers[currentQuestion.question_id]?.index === index
+                        ? 'bg-indigo-50 border-indigo-300'
+                        : 'hover:bg-gray-50 border-transparent'
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name={`q_${currentQuestion.question_id}`}
+                      value={index}
+                      checked={answers[currentQuestion.question_id]?.index === index}
+                      onChange={() =>
+                        handleAnswerChange(currentQuestion.question_id, { index })
+                      }
+                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span>
+                      {String.fromCharCode(65 + index)}. {option}
+                    </span>
+                  </label>
                 ))}
-              </RadioGroup>
+              </div>
             )}
 
             {currentQuestion.question_type === 'true_false' && (
-              <RadioGroup
-                value={answers[currentQuestion.question_id]?.value ?? ''}
-                onChange={(e) => handleAnswerChange(currentQuestion.question_id, { value: e.target.value === 'true' })}
-              >
-                <FormControlLabel value="true" control={<Radio />} label="True" sx={{ mb: 1 }} />
-                <FormControlLabel value="false" control={<Radio />} label="False" />
-              </RadioGroup>
+              <div className="space-y-2">
+                {[
+                  { value: true, label: 'True' },
+                  { value: false, label: 'False' },
+                ].map((opt) => (
+                  <label
+                    key={String(opt.value)}
+                    className={cn(
+                      'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border',
+                      answers[currentQuestion.question_id]?.value === opt.value
+                        ? 'bg-indigo-50 border-indigo-300'
+                        : 'hover:bg-gray-50 border-transparent'
+                    )}
+                  >
+                    <input
+                      type="radio"
+                      name={`q_${currentQuestion.question_id}`}
+                      value={String(opt.value)}
+                      checked={answers[currentQuestion.question_id]?.value === opt.value}
+                      onChange={() =>
+                        handleAnswerChange(currentQuestion.question_id, { value: opt.value })
+                      }
+                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                    />
+                    <span>{opt.label}</span>
+                  </label>
+                ))}
+              </div>
             )}
 
             {(currentQuestion.question_type === 'short_answer' ||
               currentQuestion.question_type === 'form_filling') && (
-              <TextField
-                fullWidth
-                placeholder="Type your answer here..."
-                value={answers[currentQuestion.question_id]?.text || ''}
-                onChange={(e) => handleAnswerChange(currentQuestion.question_id, { text: e.target.value })}
-                multiline={currentQuestion.question_type === 'form_filling'}
-                rows={currentQuestion.question_type === 'form_filling' ? 3 : 1}
-              />
+              currentQuestion.question_type === 'form_filling' ? (
+                <Textarea
+                  placeholder="Type your answer here..."
+                  value={answers[currentQuestion.question_id]?.text || ''}
+                  onChange={(e) =>
+                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
+                  }
+                  rows={3}
+                />
+              ) : (
+                <Input
+                  placeholder="Type your answer here..."
+                  value={answers[currentQuestion.question_id]?.text || ''}
+                  onChange={(e) =>
+                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
+                  }
+                />
+              )
             )}
 
             {(currentQuestion.question_type === 'essay' ||
               currentQuestion.question_type === 'writing') && (
-              <TextField
-                fullWidth
-                placeholder="Write your answer here..."
-                value={answers[currentQuestion.question_id]?.text || ''}
-                onChange={(e) => handleAnswerChange(currentQuestion.question_id, { text: e.target.value })}
-                multiline
-                rows={10}
-                helperText={`${(answers[currentQuestion.question_id]?.text || '').length} characters`}
-              />
+              <div>
+                <Textarea
+                  placeholder="Write your answer here..."
+                  value={answers[currentQuestion.question_id]?.text || ''}
+                  onChange={(e) =>
+                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
+                  }
+                  rows={10}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  {(answers[currentQuestion.question_id]?.text || '').length} characters
+                </p>
+              </div>
             )}
 
             {currentQuestion.question_type === 'matching' && currentQuestion.matching_pairs && (
-              <Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              <div>
+                <p className="text-sm text-gray-500 mb-3">
                   Match the items on the left with the correct items on the right
-                </Typography>
+                </p>
                 {currentQuestion.matching_pairs.map((pair: any, index: number) => (
-                  <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                    <Paper sx={{ p: 1.5, flex: 1, bgcolor: '#f5f5f5' }}>
-                      <Typography>{pair.left}</Typography>
-                    </Paper>
-                    <TextField
-                      select
-                      SelectProps={{ native: true }}
+                  <div key={index} className="flex items-center gap-3 mb-3">
+                    <div className="flex-1 p-3 bg-gray-100 rounded-lg">
+                      <span>{pair.left}</span>
+                    </div>
+                    <select
                       value={answers[currentQuestion.question_id]?.matches?.[index] ?? ''}
                       onChange={(e) => {
-                        const currentMatches = answers[currentQuestion.question_id]?.matches || {};
+                        const currentMatches =
+                          answers[currentQuestion.question_id]?.matches || {};
                         handleAnswerChange(currentQuestion.question_id, {
                           matches: { ...currentMatches, [index]: e.target.value },
                         });
                       }}
-                      sx={{ minWidth: 200 }}
+                      className="min-w-[200px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">Select match...</option>
                       {currentQuestion.matching_pairs.map((p: any, i: number) => (
@@ -386,122 +437,117 @@ const TakeTestPage = () => {
                           {p.right}
                         </option>
                       ))}
-                    </TextField>
-                  </Box>
+                    </select>
+                  </div>
                 ))}
-              </Box>
+              </div>
             )}
 
             {/* Reading Passage */}
             {currentQuestion.question_type === 'reading_passage' && currentQuestion.passage && (
-              <Box sx={{ mb: 3 }}>
-                <Paper sx={{ p: 2, bgcolor: '#f9f9f9', maxHeight: 300, overflow: 'auto', mb: 2 }}>
-                  <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-                    {currentQuestion.passage.title}
-                  </Typography>
-                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                    {currentQuestion.passage.content}
-                  </Typography>
-                </Paper>
-                <TextField
-                  fullWidth
+              <div className="mb-4">
+                <div className="p-4 bg-gray-50 rounded-lg max-h-[300px] overflow-auto mb-3 border">
+                  <h4 className="font-semibold mb-2">{currentQuestion.passage.title}</h4>
+                  <p className="text-sm whitespace-pre-wrap">{currentQuestion.passage.content}</p>
+                </div>
+                <Textarea
                   placeholder="Answer based on the reading passage..."
                   value={answers[currentQuestion.question_id]?.text || ''}
-                  onChange={(e) => handleAnswerChange(currentQuestion.question_id, { text: e.target.value })}
-                  multiline
+                  onChange={(e) =>
+                    handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
+                  }
                   rows={4}
                 />
-              </Box>
+              </div>
             )}
           </CardContent>
         </Card>
       )}
 
       {/* Navigation */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+      <div className="flex justify-between gap-3">
         <Button
-          variant="outlined"
-          startIcon={<BackIcon />}
+          variant="outline"
           onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
           disabled={currentIndex === 0}
         >
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Previous
         </Button>
-        
-        <Box sx={{ display: 'flex', gap: 2 }}>
+
+        <div className="flex gap-3">
           {/* Always show Submit button */}
           <Button
-            variant="contained"
-            color="success"
-            endIcon={<SubmitIcon />}
+            variant="default"
+            className="bg-green-600 hover:bg-green-700"
             onClick={() => handleSubmit(false)}
             disabled={submitting}
           >
             Submit Test
+            <Send className="ml-2 h-4 w-4" />
           </Button>
-          
+
           {currentIndex < questions.length - 1 && (
             <Button
-              variant="contained"
-              endIcon={<NextIcon />}
-              onClick={() => setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))}
-              sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              }}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+              onClick={() =>
+                setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))
+              }
             >
               Next
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           )}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Confirm Submit Dialog */}
-      <Dialog open={confirmDialogOpen} onClose={() => setConfirmDialogOpen(false)}>
-        <DialogTitle>Submit Test?</DialogTitle>
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
         <DialogContent>
-          <Typography gutterBottom>
-            Are you sure you want to submit your test?
-          </Typography>
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="body2">
-              • Answered: {answeredCount} of {questions.length} questions
-            </Typography>
-            <Typography variant="body2">
-              • Unanswered: {questions.length - answeredCount}
-            </Typography>
-            <Typography variant="body2" color="warning.main">
-              • Flagged for review: {flagged.size}
-            </Typography>
-          </Box>
-          {questions.length - answeredCount > 0 && (
-            <Alert severity="warning" sx={{ mt: 2 }}>
-              You have {questions.length - answeredCount} unanswered question(s).
-            </Alert>
-          )}
+          <DialogHeader>
+            <DialogTitle>Submit Test?</DialogTitle>
+          </DialogHeader>
+          <div>
+            <p className="mb-3">Are you sure you want to submit your test?</p>
+            <div className="space-y-1 text-sm">
+              <p>• Answered: {answeredCount} of {questions.length} questions</p>
+              <p>• Unanswered: {questions.length - answeredCount}</p>
+              <p className="text-amber-600">• Flagged for review: {flagged.size}</p>
+            </div>
+            {questions.length - answeredCount > 0 && (
+              <Alert variant="destructive" className="mt-3">
+                <AlertDescription>
+                  You have {questions.length - answeredCount} unanswered question(s).
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDialogOpen(false)}>
+              Review Answers
+            </Button>
+            <Button onClick={() => handleSubmit(true)} disabled={submitting}>
+              Submit
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setConfirmDialogOpen(false)}>Review Answers</Button>
-          <Button variant="contained" onClick={() => handleSubmit(true)} disabled={submitting}>
-            Submit
-          </Button>
-        </DialogActions>
       </Dialog>
 
       {/* Time Up Dialog */}
-      <Dialog open={timeUpDialogOpen} disableEscapeKeyDown>
-        <DialogTitle>Time's Up!</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Your time has expired. Your test will be submitted automatically.
-          </Typography>
+      <Dialog open={timeUpDialogOpen} onOpenChange={() => {}}>
+        <DialogContent className="[&>button]:hidden">
+          <DialogHeader>
+            <DialogTitle>Time's Up!</DialogTitle>
+          </DialogHeader>
+          <p>Your time has expired. Your test will be submitted automatically.</p>
+          <DialogFooter>
+            <Button onClick={() => handleSubmit(true)} disabled={submitting}>
+              Submit Now
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button variant="contained" onClick={() => handleSubmit(true)} disabled={submitting}>
-            Submit Now
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 

@@ -1,25 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
-  TextField,
-  Grid,
-  Chip,
-  Paper,
-  Divider,
-} from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  Save as SaveIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-} from '@mui/icons-material';
+  ArrowLeft,
+  Save,
+  Check,
+  X,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 import { toast } from 'react-toastify';
 
@@ -59,7 +53,7 @@ interface Submission {
 const GradeSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  
+
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [grades, setGrades] = useState<{ [key: number]: { marks: number; feedback: string } }>({});
   const [loading, setLoading] = useState(true);
@@ -75,7 +69,7 @@ const GradeSubmissionPage = () => {
       setLoading(true);
       const response = await testAPI.getSubmissionDetails(Number(submissionId));
       setSubmission(response.data);
-      
+
       // Initialize grades from existing data
       const initialGrades: { [key: number]: { marks: number; feedback: string } } = {};
       response.data.answers?.forEach((answer: Answer) => {
@@ -201,20 +195,23 @@ const GradeSubmissionPage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
     );
   }
 
   if (!submission) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">Submission not found</Alert>
-        <Button startIcon={<BackIcon />} onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertDescription>Submission not found</AlertDescription>
+        </Alert>
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mt-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Go Back
         </Button>
-      </Box>
+      </div>
     );
   }
 
@@ -222,238 +219,253 @@ const GradeSubmissionPage = () => {
   const isPassing = totalScore >= (submission.passing_marks || 0);
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <Button startIcon={<BackIcon />} onClick={() => navigate(`/tests/${submission.test_id}`)}>
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" onClick={() => navigate(`/tests/${submission.test_id}`)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Grade Submission
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold">Grade Submission</h1>
+          <p className="text-gray-500">
             {submission.test_name} - {submission.first_name} {submission.last_name}
-          </Typography>
-        </Box>
+          </p>
+        </div>
         <Button
-          variant="contained"
-          startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
           onClick={handleSave}
           disabled={saving}
-          sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
         >
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           {saving ? 'Saving...' : 'Save Grades'}
         </Button>
-      </Box>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
         </Alert>
       )}
 
       {/* Score Summary */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={3} alignItems="center">
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" gutterBottom>
-                Student
-              </Typography>
-              <Typography variant="body1">
-                {submission.first_name} {submission.last_name}
-              </Typography>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-1">Student</h3>
+              <p>{submission.first_name} {submission.last_name}</p>
               {submission.enrollment_number && (
-                <Typography variant="body2" color="text.secondary">
-                  {submission.enrollment_number}
-                </Typography>
+                <p className="text-sm text-gray-500">{submission.enrollment_number}</p>
               )}
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" gutterBottom>
-                Current Score
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                <Typography variant="h3" fontWeight={700} color={isPassing ? 'success.main' : 'error.main'}>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-1">Current Score</h3>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={cn(
+                    'text-4xl font-bold',
+                    isPassing ? 'text-green-600' : 'text-red-600'
+                  )}
+                >
                   {totalScore}
-                </Typography>
-                <Typography variant="h5" color="text.secondary">
-                  / {submission.total_marks}
-                </Typography>
-              </Box>
-              <Chip
-                label={isPassing ? 'Passing' : 'Failing'}
-                color={isPassing ? 'success' : 'error'}
-                size="small"
-              />
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Typography variant="h6" gutterBottom>
-                Submission Info
-              </Typography>
-              <Typography variant="body2">
+                </span>
+                <span className="text-xl text-gray-500">/ {submission.total_marks}</span>
+              </div>
+              <Badge
+                className={cn(
+                  'mt-1',
+                  isPassing
+                    ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                    : 'bg-red-100 text-red-800 hover:bg-red-100'
+                )}
+              >
+                {isPassing ? 'Passing' : 'Failing'}
+              </Badge>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold mb-1">Submission Info</h3>
+              <p className="text-sm">
                 Submitted: {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : 'N/A'}
-              </Typography>
-              <Typography variant="body2">
-                Status: <Chip label={submission.status} size="small" />
-              </Typography>
-            </Grid>
-          </Grid>
+              </p>
+              <p className="text-sm">
+                Status: <Badge variant="outline" className="ml-1">{submission.status}</Badge>
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Questions and Grading */}
       {submission.answers?.length === 0 ? (
         <Card>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <Typography color="text.secondary">No answers to grade</Typography>
+          <CardContent className="flex items-center justify-center py-10">
+            <p className="text-gray-500">No answers to grade</p>
           </CardContent>
         </Card>
       ) : (
         submission.answers?.map((answer, index) => (
-          <Card key={answer.question_id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Box>
-                  <Typography variant="subtitle2" color="text.secondary">
+          <Card key={answer.question_id} className="mb-4">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start mb-3">
+                <div>
+                  <p className="text-sm text-gray-500">
                     Question {index + 1} • {answer.question_type?.replace(/_/g, ' ')}
-                  </Typography>
-                  <Typography variant="h6" sx={{ mt: 1 }}>
-                    {answer.question_text}
-                  </Typography>
-                </Box>
-                <Chip label={`${answer.marks} marks`} variant="outlined" />
-              </Box>
+                  </p>
+                  <h3 className="text-lg font-semibold mt-1">{answer.question_text}</h3>
+                </div>
+                <Badge variant="outline">{answer.marks} marks</Badge>
+              </div>
 
-              <Divider sx={{ my: 2 }} />
+              <hr className="my-4" />
 
-              <Grid container spacing={3}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Student Answer */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Student's Answer
-                  </Typography>
-                  <Paper sx={{ p: 2, bgcolor: '#f5f5f5', minHeight: 80 }}>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {formatAnswer(answer)}
-                    </Typography>
-                  </Paper>
-                </Grid>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-2">Student's Answer</p>
+                  <div className="p-4 bg-gray-100 rounded-lg min-h-[80px] whitespace-pre-wrap">
+                    {formatAnswer(answer)}
+                  </div>
+                </div>
 
                 {/* Correct Answer */}
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Correct Answer
-                  </Typography>
-                  <Paper sx={{ p: 2, bgcolor: '#e8f5e9', minHeight: 80 }}>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {formatCorrectAnswer(answer)}
-                    </Typography>
-                  </Paper>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-2">Correct Answer</p>
+                  <div className="p-4 bg-green-50 rounded-lg min-h-[80px] whitespace-pre-wrap">
+                    {formatCorrectAnswer(answer)}
+                  </div>
                   {answer.explanation && (
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    <p className="text-sm text-gray-500 mt-2">
                       <strong>Explanation:</strong> {answer.explanation}
-                    </Typography>
+                    </p>
                   )}
-                </Grid>
+                </div>
+              </div>
 
-                {/* Grading Section */}
-                <Grid size={{ xs: 12 }}>
-                  <Divider sx={{ my: 2 }} />
-                  <Box sx={{ display: 'flex', gap: 3, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                    {/* Quick Grade Buttons */}
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Quick Grade
-                      </Typography>
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Button
-                          size="small"
-                          variant={grades[answer.question_id]?.marks === 0 ? 'contained' : 'outlined'}
-                          color="error"
-                          startIcon={<CloseIcon />}
-                          onClick={() => handleQuickGrade(answer.question_id, 0, answer.marks)}
-                        >
-                          0
-                        </Button>
-                        {answer.marks > 1 && (
-                          <Button
-                            size="small"
-                            variant={grades[answer.question_id]?.marks === Math.floor(answer.marks / 2) ? 'contained' : 'outlined'}
-                            color="warning"
-                            onClick={() => handleQuickGrade(answer.question_id, Math.floor(answer.marks / 2), answer.marks)}
-                          >
-                            {Math.floor(answer.marks / 2)}
-                          </Button>
+              {/* Grading Section */}
+              <hr className="my-4" />
+              <div className="flex gap-6 items-start flex-wrap">
+                {/* Quick Grade Buttons */}
+                <div>
+                  <p className="text-sm font-medium mb-2">Quick Grade</p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant={grades[answer.question_id]?.marks === 0 ? 'default' : 'outline'}
+                      className={cn(
+                        grades[answer.question_id]?.marks === 0 &&
+                          'bg-red-600 hover:bg-red-700 text-white'
+                      )}
+                      onClick={() => handleQuickGrade(answer.question_id, 0, answer.marks)}
+                    >
+                      <X className="mr-1 h-3 w-3" />
+                      0
+                    </Button>
+                    {answer.marks > 1 && (
+                      <Button
+                        size="sm"
+                        variant={
+                          grades[answer.question_id]?.marks === Math.floor(answer.marks / 2)
+                            ? 'default'
+                            : 'outline'
+                        }
+                        className={cn(
+                          grades[answer.question_id]?.marks === Math.floor(answer.marks / 2) &&
+                            'bg-amber-500 hover:bg-amber-600 text-white'
                         )}
-                        <Button
-                          size="small"
-                          variant={grades[answer.question_id]?.marks === answer.marks ? 'contained' : 'outlined'}
-                          color="success"
-                          startIcon={<CheckIcon />}
-                          onClick={() => handleQuickGrade(answer.question_id, answer.marks, answer.marks)}
-                        >
-                          {answer.marks}
-                        </Button>
-                      </Box>
-                    </Box>
+                        onClick={() =>
+                          handleQuickGrade(
+                            answer.question_id,
+                            Math.floor(answer.marks / 2),
+                            answer.marks
+                          )
+                        }
+                      >
+                        {Math.floor(answer.marks / 2)}
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={
+                        grades[answer.question_id]?.marks === answer.marks ? 'default' : 'outline'
+                      }
+                      className={cn(
+                        grades[answer.question_id]?.marks === answer.marks &&
+                          'bg-green-600 hover:bg-green-700 text-white'
+                      )}
+                      onClick={() => handleQuickGrade(answer.question_id, answer.marks, answer.marks)}
+                    >
+                      <Check className="mr-1 h-3 w-3" />
+                      {answer.marks}
+                    </Button>
+                  </div>
+                </div>
 
-                    {/* Manual Marks */}
-                    <Box>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Marks Awarded
-                      </Typography>
-                      <TextField
-                        type="number"
-                        size="small"
-                        value={grades[answer.question_id]?.marks ?? 0}
-                        onChange={(e) => handleGradeChange(answer.question_id, 'marks', Math.min(Number(e.target.value), answer.marks))}
-                        inputProps={{ min: 0, max: answer.marks, step: 0.5 }}
-                        sx={{ width: 100 }}
-                      />
-                    </Box>
+                {/* Manual Marks */}
+                <div>
+                  <p className="text-sm font-medium mb-2">Marks Awarded</p>
+                  <Input
+                    type="number"
+                    value={grades[answer.question_id]?.marks ?? 0}
+                    onChange={(e) =>
+                      handleGradeChange(
+                        answer.question_id,
+                        'marks',
+                        Math.min(Number(e.target.value), answer.marks)
+                      )
+                    }
+                    min={0}
+                    max={answer.marks}
+                    step={0.5}
+                    className="w-24"
+                  />
+                </div>
 
-                    {/* Feedback */}
-                    <Box sx={{ flex: 1, minWidth: 200 }}>
-                      <Typography variant="subtitle2" gutterBottom>
-                        Feedback (optional)
-                      </Typography>
-                      <TextField
-                        fullWidth
-                        size="small"
-                        placeholder="Add feedback for this answer..."
-                        value={grades[answer.question_id]?.feedback || ''}
-                        onChange={(e) => handleGradeChange(answer.question_id, 'feedback', e.target.value)}
-                        multiline
-                        rows={2}
-                      />
-                    </Box>
-                  </Box>
-                </Grid>
-              </Grid>
+                {/* Feedback */}
+                <div className="flex-1 min-w-[200px]">
+                  <p className="text-sm font-medium mb-2">Feedback (optional)</p>
+                  <Textarea
+                    placeholder="Add feedback for this answer..."
+                    value={grades[answer.question_id]?.feedback || ''}
+                    onChange={(e) =>
+                      handleGradeChange(answer.question_id, 'feedback', e.target.value)
+                    }
+                    rows={2}
+                  />
+                </div>
+              </div>
             </CardContent>
           </Card>
         ))
       )}
 
       {/* Floating Save Button */}
-      <Box sx={{ position: 'fixed', bottom: 24, right: 24 }}>
+      <div className="fixed bottom-6 right-6">
         <Button
-          variant="contained"
-          size="large"
-          startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+          size="lg"
+          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white shadow-lg"
           onClick={handleSave}
           disabled={saving}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            boxShadow: 4,
-          }}
         >
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           Save Grades ({totalScore}/{submission.total_marks})
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

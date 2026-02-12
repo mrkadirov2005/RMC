@@ -1,6 +1,7 @@
 const express_test = require('express');
 const router_test = express_test.Router();
 const testController = require('../controllers/testController');
+const { requireRole } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -101,7 +102,7 @@ router_test.get('/:id', testController.getTestById);
  *       201:
  *         description: Test created successfully
  */
-router_test.post('/', testController.createTest);
+router_test.post('/', requireRole('superuser', 'teacher'), testController.createTest);
 
 /**
  * @swagger
@@ -125,7 +126,7 @@ router_test.post('/', testController.createTest);
  *       200:
  *         description: Test updated successfully
  */
-router_test.put('/:id', testController.updateTest);
+router_test.put('/:id', requireRole('superuser', 'teacher'), testController.updateTest);
 
 /**
  * @swagger
@@ -143,7 +144,7 @@ router_test.put('/:id', testController.updateTest);
  *       200:
  *         description: Test deleted successfully
  */
-router_test.delete('/:id', testController.deleteTest);
+router_test.delete('/:id', requireRole('superuser', 'teacher'), testController.deleteTest);
 
 // ============================================================================
 // Question Routes
@@ -165,7 +166,7 @@ router_test.delete('/:id', testController.deleteTest);
  *       201:
  *         description: Question added successfully
  */
-router_test.post('/:testId/questions', testController.addQuestion);
+router_test.post('/:testId/questions', requireRole('superuser', 'teacher'), testController.addQuestion);
 
 /**
  * @swagger
@@ -183,7 +184,7 @@ router_test.post('/:testId/questions', testController.addQuestion);
  *       200:
  *         description: Question updated successfully
  */
-router_test.put('/questions/:questionId', testController.updateQuestion);
+router_test.put('/questions/:questionId', requireRole('superuser', 'teacher'), testController.updateQuestion);
 
 /**
  * @swagger
@@ -201,7 +202,7 @@ router_test.put('/questions/:questionId', testController.updateQuestion);
  *       200:
  *         description: Question deleted successfully
  */
-router_test.delete('/questions/:questionId', testController.deleteQuestion);
+router_test.delete('/questions/:questionId', requireRole('superuser', 'teacher'), testController.deleteQuestion);
 
 // ============================================================================
 // Passage Routes
@@ -223,7 +224,7 @@ router_test.delete('/questions/:questionId', testController.deleteQuestion);
  *       201:
  *         description: Passage added successfully
  */
-router_test.post('/:testId/passages', testController.addPassage);
+router_test.post('/:testId/passages', requireRole('superuser', 'teacher'), testController.addPassage);
 
 /**
  * @swagger
@@ -241,7 +242,7 @@ router_test.post('/:testId/passages', testController.addPassage);
  *       200:
  *         description: Passage updated successfully
  */
-router_test.put('/passages/:passageId', testController.updatePassage);
+router_test.put('/passages/:passageId', requireRole('superuser', 'teacher'), testController.updatePassage);
 
 /**
  * @swagger
@@ -259,7 +260,7 @@ router_test.put('/passages/:passageId', testController.updatePassage);
  *       200:
  *         description: Passage deleted successfully
  */
-router_test.delete('/passages/:passageId', testController.deletePassage);
+router_test.delete('/passages/:passageId', requireRole('superuser', 'teacher'), testController.deletePassage);
 
 // ============================================================================
 // Test Submission Routes
@@ -317,7 +318,7 @@ router_test.post('/submissions/:submissionId/submit', testController.submitTest)
  *       200:
  *         description: Submission graded successfully
  */
-router_test.post('/submissions/:submissionId/grade', testController.gradeSubmission);
+router_test.post('/submissions/:submissionId/grade', requireRole('superuser', 'teacher'), testController.gradeSubmission);
 
 /**
  * @swagger
@@ -335,7 +336,7 @@ router_test.post('/submissions/:submissionId/grade', testController.gradeSubmiss
  *       200:
  *         description: List of submissions
  */
-router_test.get('/:testId/submissions', testController.getSubmissionsByTest);
+router_test.get('/:testId/submissions', requireRole('superuser', 'teacher'), testController.getSubmissionsByTest);
 
 /**
  * @swagger
@@ -393,7 +394,7 @@ router_test.get('/student/:studentId/submissions', testController.getSubmissions
  *       200:
  *         description: Test results and statistics
  */
-router_test.get('/:testId/results', testController.getTestResults);
+router_test.get('/:testId/results', requireRole('superuser', 'teacher'), testController.getTestResults);
 
 /**
  * @swagger
@@ -433,7 +434,7 @@ router_test.get('/student/:studentId/results', testController.getStudentResults)
  *       201:
  *         description: Test assigned successfully
  */
-router_test.post('/:testId/assign', testController.assignTest);
+router_test.post('/:testId/assign', requireRole('superuser', 'teacher'), testController.assignTest);
 
 /**
  * @swagger
@@ -460,3 +461,5 @@ router_test.post('/:testId/assign', testController.assignTest);
 router_test.get('/assigned/:type/:id', testController.getAssignedTests);
 
 module.exports = router_test;
+
+export {};

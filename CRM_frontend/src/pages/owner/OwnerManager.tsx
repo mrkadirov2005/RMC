@@ -1,9 +1,7 @@
-import './OwnerManager.css';
 import { useState, useEffect, memo } from 'react';
-import { MdEdit, MdDelete } from 'react-icons/md';
 import { studentAPI, teacherAPI, centerAPI, superuserAPI } from '../../shared/api/api';
 import { showToast, handleApiError } from '../../utils/toast';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 
 interface FormData {
   [key: string]: string | number | boolean;
@@ -338,7 +336,7 @@ const OwnerManager = memo(() => {
                         onClick={() => handleEdit(item)}
                         title="Edit"
                       >
-                        <MdEdit />
+                        <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         className="delete-btn"
@@ -347,7 +345,7 @@ const OwnerManager = memo(() => {
                         }
                         title="Delete"
                       >
-                        <MdDelete />
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </td>
                   </tr>

@@ -1,13 +1,6 @@
 import React from 'react';
-import {
-  Box,
-  Paper,
-  Typography,
-  Stack,
-  Chip,
-  useTheme,
-} from '@mui/material';
-import { Event as EventIcon } from '@mui/icons-material';
+import { Calendar } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Schedule {
   days: string[];
@@ -19,7 +12,6 @@ interface ClassCalendarProps {
 }
 
 const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
-  const theme = useTheme();
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -65,10 +57,6 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
     });
   }
 
-  const isClassDay = (dayName: string) => {
-    return schedule.days && schedule.days.includes(dayName);
-  };
-
   // Create weeks
   const weeks = [];
   for (let i = 0; i < calendarDays.length; i += 7) {
@@ -76,98 +64,57 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
   }
 
   return (
-    <Stack spacing={3}>
+    <div className="space-y-6">
       {/* Schedule Summary */}
-      <Paper sx={{ p: 2, backgroundColor: theme.palette.background.default }}>
-        <Stack spacing={1}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Class Schedule
-          </Typography>
+      <div className="p-4 bg-muted rounded-lg">
+        <div className="space-y-2">
+          <h3 className="font-bold text-base">Class Schedule</h3>
           {schedule.days && schedule.days.length > 0 ? (
-            <Stack spacing={1}>
-              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            <div className="space-y-2">
+              <div className="flex gap-2 flex-wrap">
                 {schedule.days.map((day) => (
-                  <Chip
+                  <span
                     key={day}
-                    label={day}
-                    color="primary"
-                    variant="outlined"
-                    sx={{
-                      backgroundColor: theme.palette.primary.light,
-                      color: 'white',
-                      fontWeight: 600,
-                    }}
-                  />
+                    className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground"
+                  >
+                    {day}
+                  </span>
                 ))}
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <EventIcon sx={{ color: theme.palette.primary.main }} />
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  {schedule.time}
-                </Typography>
-              </Box>
-            </Stack>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">{schedule.time}</span>
+              </div>
+            </div>
           ) : (
-            <Typography variant="body2" color="textSecondary">
-              No schedule configured
-            </Typography>
+            <p className="text-sm text-muted-foreground">No schedule configured</p>
           )}
-        </Stack>
-      </Paper>
+        </div>
+      </div>
 
       {/* Calendar Grid */}
-      <Box sx={{ overflowX: 'auto' }}>
-        <Box sx={{ minWidth: '100%' }}>
+      <div className="overflow-x-auto">
+        <div className="min-w-full">
           {/* Month Header */}
-          <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              mb: 2,
-              textAlign: 'center',
-              color: theme.palette.primary.main,
-            }}
-          >
+          <h2 className="text-lg font-bold mb-4 text-center text-primary">
             {today.toLocaleString('default', { month: 'long', year: 'numeric' })}
-          </Typography>
+          </h2>
 
           {/* Weekday Headers */}
-          <Box
-            sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(7, 1fr)',
-              gap: 1,
-              mb: 1,
-            }}
-          >
+          <div className="grid grid-cols-7 gap-1 mb-1">
             {weekDays.map((day) => (
-              <Box
+              <div
                 key={day}
-                sx={{
-                  p: 1,
-                  textAlign: 'center',
-                  fontWeight: 700,
-                  backgroundColor: theme.palette.primary.main,
-                  color: 'white',
-                  borderRadius: 1,
-                }}
+                className="p-1 text-center font-bold bg-primary text-primary-foreground rounded"
               >
-                <Typography variant="body2">{day.substring(0, 3)}</Typography>
-              </Box>
+                <span className="text-xs">{day.substring(0, 3)}</span>
+              </div>
             ))}
-          </Box>
+          </div>
 
           {/* Calendar Days */}
           {weeks.map((week, weekIndex) => (
-            <Box
-              key={weekIndex}
-              sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(7, 1fr)',
-                gap: 1,
-                mb: 1,
-              }}
-            >
+            <div key={weekIndex} className="grid grid-cols-7 gap-1 mb-1">
               {week.map((day, dayIndex) => {
                 const isClassDay = schedule.days && schedule.days.includes(day.dayName);
                 const isToday =
@@ -177,98 +124,58 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
                   today.getFullYear() === currentYear;
 
                 return (
-                  <Box
+                  <div
                     key={dayIndex}
-                    sx={{
-                      p: 2,
-                      minHeight: 80,
-                      borderRadius: 1,
-                      backgroundColor: isClassDay
-                        ? theme.palette.primary.light
+                    className={cn(
+                      'p-2 min-h-[80px] rounded flex flex-col justify-start items-center cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-0.5',
+                      isClassDay
+                        ? 'bg-primary text-primary-foreground'
                         : day.isCurrentMonth
-                        ? theme.palette.background.default
-                        : theme.palette.action.disabledBackground,
-                      border: isToday ? `3px solid ${theme.palette.secondary.main}` : '1px solid #e0e0e0',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-start',
-                      alignItems: 'center',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease',
-                      '&:hover': {
-                        boxShadow: 2,
-                        transform: 'translateY(-2px)',
-                      },
-                    }}
+                        ? 'bg-muted'
+                        : 'bg-muted/40',
+                      isToday ? 'ring-3 ring-secondary' : 'border border-gray-200'
+                    )}
                   >
-                    <Typography
-                      variant="subtitle2"
-                      sx={{
-                        fontWeight: 700,
-                        color: isClassDay ? 'white' : day.isCurrentMonth ? 'inherit' : 'text.disabled',
-                        mb: 0.5,
-                      }}
+                    <span
+                      className={cn(
+                        'text-sm font-bold mb-0.5',
+                        isClassDay
+                          ? 'text-primary-foreground'
+                          : day.isCurrentMonth
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
+                      )}
                     >
                       {day.date}
-                    </Typography>
+                    </span>
                     {isClassDay && (
-                      <Stack spacing={0.5} sx={{ width: '100%', alignItems: 'center' }}>
-                        <Box
-                          sx={{
-                            width: '100%',
-                            height: '2px',
-                            backgroundColor: 'white',
-                            borderRadius: 1,
-                          }}
-                        />
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '0.65rem',
-                            textAlign: 'center',
-                          }}
-                        >
+                      <div className="w-full flex flex-col items-center gap-0.5">
+                        <div className="w-full h-0.5 bg-primary-foreground rounded" />
+                        <span className="text-[0.65rem] font-semibold text-primary-foreground text-center">
                           {schedule.time}
-                        </Typography>
-                      </Stack>
+                        </span>
+                      </div>
                     )}
-                  </Box>
+                  </div>
                 );
               })}
-            </Box>
+            </div>
           ))}
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Legend */}
-      <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 16,
-              height: 16,
-              borderRadius: 1,
-              backgroundColor: theme.palette.primary.light,
-            }}
-          />
-          <Typography variant="caption">Class Day</Typography>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Box
-            sx={{
-              width: 16,
-              height: 16,
-              borderRadius: 1,
-              border: `3px solid ${theme.palette.secondary.main}`,
-              backgroundColor: 'white',
-            }}
-          />
-          <Typography variant="caption">Today</Typography>
-        </Box>
-      </Box>
-    </Stack>
+      <div className="flex gap-4 justify-center mt-4">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded bg-primary" />
+          <span className="text-xs">Class Day</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-4 rounded border-3 border-secondary bg-white" />
+          <span className="text-xs">Today</span>
+        </div>
+      </div>
+    </div>
   );
 };
 

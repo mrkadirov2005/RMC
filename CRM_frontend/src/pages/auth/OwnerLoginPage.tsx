@@ -1,20 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Box,
-  Card,
-  CardContent,
-  TextField,
-  Button,
-  Typography,
-  Alert,
-  Stack,
-  Link,
-  CircularProgress,
-  useTheme,
-} from '@mui/material';
-import { AdminPanelSettings as AdminIcon } from '@mui/icons-material';
+  User, Lock, Eye, EyeOff, Shield, ArrowRight, ArrowLeft, Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '../../features/crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { showToast } from '../../utils/toast';
@@ -22,9 +14,9 @@ import { showToast } from '../../utils/toast';
 export const OwnerLoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const theme = useTheme();
   const { loading, error } = useAppSelector((state) => state.auth);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -32,7 +24,6 @@ export const OwnerLoginPage = () => {
     dispatch(setLoading(true));
 
     try {
-      // Simple authentication for owner/manager
       if (username === 'Muzaffar' && password === '123456789') {
         dispatch(
           loginSuccess({
@@ -57,7 +48,7 @@ export const OwnerLoginPage = () => {
         dispatch(loginFailure(errorMsg));
         showToast.error(errorMsg);
       }
-    } catch (err: any) {
+    } catch {
       const errorMsg = 'Login failed. Please try again.';
       dispatch(loginFailure(errorMsg));
       showToast.error(errorMsg);
@@ -65,126 +56,102 @@ export const OwnerLoginPage = () => {
   };
 
   return (
-    <Box
-      sx={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: `linear-gradient(135deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.dark} 100%)`,
-        padding: 2,
-      }}
-    >
-      <Container maxWidth="sm">
-        <Card
-          sx={{
-            borderRadius: 3,
-            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-          }}
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-900">
+      {/* Background */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(245,175,25,0.12)_0%,transparent_50%),radial-gradient(circle_at_70%_30%,rgba(241,39,17,0.12)_0%,transparent_50%)]" />
+
+      <div className="relative z-10 w-full max-w-[440px] px-4 sm:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Back button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/login/superuser')}
+          className="mb-6 text-white/40 hover:text-white/70"
         >
-          <CardContent sx={{ padding: 4 }}>
-            {/* Header */}
-            <Stack spacing={2} sx={{ marginBottom: 3, textAlign: 'center' }}>
-              <Box
-                sx={{
-                  width: 60,
-                  height: 60,
-                  borderRadius: '50%',
-                  backgroundColor: theme.palette.secondary.main,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto',
-                }}
-              >
-                <AdminIcon sx={{ color: 'white', fontSize: 32 }} />
-              </Box>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: theme.palette.secondary.main }}>
-                CRM System
-              </Typography>
-              <Typography variant="subtitle1" sx={{ color: 'text.secondary' }}>
-                Owner/Manager Access
-              </Typography>
-            </Stack>
+          <ArrowLeft className="w-4 h-4 mr-1.5" />
+          Back to Login
+        </Button>
 
-            {/* Error Alert */}
-            {error && (
-              <Alert severity="error" sx={{ marginBottom: 2 }}>
-                {error}
-              </Alert>
+        {/* Icon */}
+        <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-amber-400 to-red-500 flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/40 -rotate-[5deg] hover:rotate-0 hover:scale-105 transition-transform duration-300">
+          <Shield className="w-11 h-11 text-white" />
+        </div>
+
+        {/* Badge */}
+        <Badge variant="outline" className="mb-4 bg-amber-500/10 text-amber-400 border-amber-500/20">
+          <Shield className="w-3.5 h-3.5 mr-1.5" />
+          Restricted Access
+        </Badge>
+
+        <h2 className="text-3xl font-bold text-white mb-1">Owner Panel</h2>
+        <p className="text-white/45 mb-6">System owner & manager access only</p>
+
+        {/* Error */}
+        {error && (
+          <Alert variant="destructive" className="mb-4 bg-red-500/10 text-red-300 border-red-500/20">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="relative">
+            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <Input
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              disabled={loading}
+              autoComplete="username"
+              className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500 h-11"
+            />
+          </div>
+
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+            <Input
+              placeholder="Password"
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              disabled={loading}
+              autoComplete="current-password"
+              className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500 h-11"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full h-12 text-[0.95rem] font-semibold text-white bg-gradient-to-r from-amber-400 to-red-500 hover:from-amber-500 hover:to-red-600 shadow-2xl shadow-amber-500/35 transition-all duration-300 hover:-translate-y-0.5"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                Access Manager Panel
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </>
             )}
+          </Button>
+        </form>
 
-            {/* Login Form */}
-            <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Username"
-                variant="outlined"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username"
-                required
-                disabled={loading}
-                autoComplete="username"
-              />
-
-              <TextField
-                fullWidth
-                label="Password"
-                type="password"
-                variant="outlined"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                required
-                disabled={loading}
-                autoComplete="current-password"
-              />
-
-              <Button
-                fullWidth
-                variant="contained"
-                size="large"
-                type="submit"
-                disabled={loading}
-                startIcon={loading ? <CircularProgress size={20} /> : <AdminIcon />}
-                sx={{
-                  marginTop: 2,
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  fontWeight: 600,
-                  backgroundColor: theme.palette.secondary.main,
-                  '&:hover': {
-                    backgroundColor: theme.palette.secondary.dark,
-                  },
-                }}
-              >
-                {loading ? 'Logging in...' : 'Access Manager Panel'}
-              </Button>
-            </Box>
-
-            {/* Login Link */}
-            <Stack spacing={1} sx={{ marginTop: 3, textAlign: 'center' }}>
-              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Regular User?{' '}
-                <Link
-                  href="/login/superuser"
-                  sx={{
-                    cursor: 'pointer',
-                    color: theme.palette.secondary.main,
-                    fontWeight: 600,
-                    '&:hover': {
-                      textDecoration: 'underline',
-                    },
-                  }}
-                >
-                  Login here
-                </Link>
-              </Typography>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Container>
-    </Box>
+        <p className="text-center mt-6 text-white/20 text-[0.7rem]">
+          Education CRM &copy; {new Date().getFullYear()}
+        </p>
+      </div>
+    </div>
   );
 };

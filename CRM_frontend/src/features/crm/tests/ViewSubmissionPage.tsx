@@ -1,30 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
-  Grid,
-  Chip,
-  Paper,
-  Divider,
+  ArrowLeft,
+  Check,
+  X,
+  Pencil,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-} from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  Check as CheckIcon,
-  Close as CloseIcon,
-  Edit as EditIcon,
-} from '@mui/icons-material';
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 
 interface Answer {
@@ -66,7 +61,7 @@ interface Submission {
 const ViewSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
-  
+
   const [submission, setSubmission] = useState<Submission | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,284 +134,283 @@ const ViewSubmissionPage = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeClass = (status: string) => {
     switch (status) {
-      case 'submitted': return 'warning';
-      case 'graded': return 'success';
-      case 'in_progress': return 'info';
-      default: return 'default';
+      case 'submitted':
+        return 'bg-amber-100 text-amber-800 hover:bg-amber-100';
+      case 'graded':
+        return 'bg-green-100 text-green-800 hover:bg-green-100';
+      case 'in_progress':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
     }
   };
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
     );
   }
 
   if (!submission) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">Submission not found</Alert>
-        <Button startIcon={<BackIcon />} onClick={() => navigate(-1)} sx={{ mt: 2 }}>
+      <div className="p-6">
+        <Alert variant="destructive">
+          <AlertDescription>Submission not found</AlertDescription>
+        </Alert>
+        <Button variant="ghost" onClick={() => navigate(-1)} className="mt-4">
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Go Back
         </Button>
-      </Box>
+      </div>
     );
   }
 
   const isPassing = (submission.score || 0) >= (submission.passing_marks || 0);
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <Button startIcon={<BackIcon />} onClick={() => navigate(`/tests/${submission.test_id}`)}>
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" onClick={() => navigate(`/tests/${submission.test_id}`)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Submission Details
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {submission.test_name}
-          </Typography>
-        </Box>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold">Submission Details</h1>
+          <p className="text-gray-500">{submission.test_name}</p>
+        </div>
         {submission.status === 'submitted' && (
           <Button
-            variant="contained"
-            startIcon={<EditIcon />}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
             onClick={() => navigate(`/tests/submissions/${submissionId}/grade`)}
-            sx={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
           >
+            <Pencil className="mr-2 h-4 w-4" />
             Grade Submission
           </Button>
         )}
-      </Box>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
         </Alert>
       )}
 
       {/* Student & Score Summary */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Student
-              </Typography>
-              <Typography variant="h6">
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Student</p>
+              <h3 className="text-lg font-semibold">
                 {submission.first_name} {submission.last_name}
-              </Typography>
+              </h3>
               {submission.enrollment_number && (
-                <Typography variant="body2" color="text.secondary">
-                  {submission.enrollment_number}
-                </Typography>
+                <p className="text-sm text-gray-500">{submission.enrollment_number}</p>
               )}
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Score
-              </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-                <Typography 
-                  variant="h4" 
-                  fontWeight={700} 
-                  color={submission.status === 'graded' ? (isPassing ? 'success.main' : 'error.main') : 'text.primary'}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Score</p>
+              <div className="flex items-baseline gap-1">
+                <span
+                  className={cn(
+                    'text-3xl font-bold',
+                    submission.status === 'graded'
+                      ? isPassing
+                        ? 'text-green-600'
+                        : 'text-red-600'
+                      : 'text-gray-900'
+                  )}
                 >
                   {submission.score ?? '-'}
-                </Typography>
-                <Typography variant="h6" color="text.secondary">
-                  / {submission.total_marks}
-                </Typography>
-              </Box>
+                </span>
+                <span className="text-lg text-gray-500">/ {submission.total_marks}</span>
+              </div>
               {submission.status === 'graded' && (
-                <Chip
-                  label={isPassing ? 'Passed' : 'Failed'}
-                  color={isPassing ? 'success' : 'error'}
-                  size="small"
-                />
+                <Badge
+                  className={cn(
+                    'mt-1',
+                    isPassing
+                      ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                      : 'bg-red-100 text-red-800 hover:bg-red-100'
+                  )}
+                >
+                  {isPassing ? 'Passed' : 'Failed'}
+                </Badge>
               )}
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Status
-              </Typography>
-              <Chip 
-                label={submission.status.replace(/_/g, ' ')} 
-                color={getStatusColor(submission.status) as any}
-              />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Status</p>
+              <Badge className={getStatusBadgeClass(submission.status)}>
+                {submission.status.replace(/_/g, ' ')}
+              </Badge>
               {submission.attempt_number && (
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                <p className="text-sm text-gray-500 mt-1">
                   Attempt #{submission.attempt_number}
-                </Typography>
+                </p>
               )}
-            </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
-              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                Timestamps
-              </Typography>
-              <Typography variant="body2">
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-500 mb-1">Timestamps</p>
+              <p className="text-sm">
                 Started: {submission.started_at ? new Date(submission.started_at).toLocaleString() : 'N/A'}
-              </Typography>
-              <Typography variant="body2">
+              </p>
+              <p className="text-sm">
                 Submitted: {submission.submitted_at ? new Date(submission.submitted_at).toLocaleString() : 'N/A'}
-              </Typography>
+              </p>
               {submission.graded_at && (
-                <Typography variant="body2">
+                <p className="text-sm">
                   Graded: {new Date(submission.graded_at).toLocaleString()}
-                </Typography>
+                </p>
               )}
-            </Grid>
-          </Grid>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Answers Summary Table */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Answers Summary
-          </Typography>
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-semibold mb-4">Answers Summary</h2>
+          <div className="border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell>#</TableCell>
-                  <TableCell>Question</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell align="center">Correct</TableCell>
-                  <TableCell align="right">Marks</TableCell>
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead>Question</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead className="text-center">Correct</TableHead>
+                  <TableHead className="text-right">Marks</TableHead>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 {submission.answers?.map((answer, index) => (
                   <TableRow key={answer.question_id}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <TableCell className="max-w-[300px] truncate">
                       {answer.question_text}
                     </TableCell>
                     <TableCell>
-                      <Chip label={answer.question_type?.replace(/_/g, ' ')} size="small" variant="outlined" />
+                      <Badge variant="outline">
+                        {answer.question_type?.replace(/_/g, ' ')}
+                      </Badge>
                     </TableCell>
-                    <TableCell align="center">
+                    <TableCell className="text-center">
                       {answer.is_correct === true ? (
-                        <CheckIcon color="success" />
+                        <Check className="h-5 w-5 text-green-600 mx-auto" />
                       ) : answer.is_correct === false ? (
-                        <CloseIcon color="error" />
+                        <X className="h-5 w-5 text-red-600 mx-auto" />
                       ) : (
                         '-'
                       )}
                     </TableCell>
-                    <TableCell align="right">
-                      <Typography fontWeight={600}>
-                        {answer.marks_awarded ?? '-'} / {answer.marks}
-                      </Typography>
+                    <TableCell className="text-right font-semibold">
+                      {answer.marks_awarded ?? '-'} / {answer.marks}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
-          </TableContainer>
+          </div>
         </CardContent>
       </Card>
 
       {/* Detailed Answers */}
-      <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
-        Detailed Answers
-      </Typography>
-      
+      <h2 className="text-lg font-semibold mb-4 mt-8">Detailed Answers</h2>
+
       {submission.answers?.length === 0 ? (
         <Card>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <Typography color="text.secondary">No answers recorded</Typography>
+          <CardContent className="flex items-center justify-center py-10">
+            <p className="text-gray-500">No answers recorded</p>
           </CardContent>
         </Card>
       ) : (
         submission.answers?.map((answer, index) => (
-          <Card key={answer.question_id} sx={{ mb: 2 }}>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                <Box sx={{ flex: 1 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Question {index + 1}
-                    </Typography>
-                    <Chip label={answer.question_type?.replace(/_/g, ' ')} size="small" variant="outlined" />
-                    {answer.is_correct === true && <Chip label="Correct" color="success" size="small" />}
-                    {answer.is_correct === false && <Chip label="Incorrect" color="error" size="small" />}
-                  </Box>
-                  <Typography variant="h6">
-                    {answer.question_text}
-                  </Typography>
-                </Box>
-                <Box sx={{ textAlign: 'right' }}>
-                  <Typography variant="h5" fontWeight={700} color={answer.marks_awarded === answer.marks ? 'success.main' : 'text.primary'}>
+          <Card key={answer.question_id} className="mb-4">
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-gray-500">Question {index + 1}</span>
+                    <Badge variant="outline">
+                      {answer.question_type?.replace(/_/g, ' ')}
+                    </Badge>
+                    {answer.is_correct === true && (
+                      <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
+                        Correct
+                      </Badge>
+                    )}
+                    {answer.is_correct === false && (
+                      <Badge className="bg-red-100 text-red-800 hover:bg-red-100">
+                        Incorrect
+                      </Badge>
+                    )}
+                  </div>
+                  <h3 className="text-lg font-semibold">{answer.question_text}</h3>
+                </div>
+                <div className="text-right">
+                  <span
+                    className={cn(
+                      'text-2xl font-bold',
+                      answer.marks_awarded === answer.marks
+                        ? 'text-green-600'
+                        : 'text-gray-900'
+                    )}
+                  >
                     {answer.marks_awarded ?? '-'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    / {answer.marks} marks
-                  </Typography>
-                </Box>
-              </Box>
+                  </span>
+                  <p className="text-sm text-gray-500">/ {answer.marks} marks</p>
+                </div>
+              </div>
 
-              <Divider sx={{ my: 2 }} />
+              <hr className="my-4" />
 
-              <Grid container spacing={3}>
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Student's Answer
-                  </Typography>
-                  <Paper sx={{ p: 2, bgcolor: '#f5f5f5', minHeight: 60 }}>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {formatAnswer(answer)}
-                    </Typography>
-                  </Paper>
-                </Grid>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-2">Student's Answer</p>
+                  <div className="p-4 bg-gray-100 rounded-lg min-h-[60px] whitespace-pre-wrap">
+                    {formatAnswer(answer)}
+                  </div>
+                </div>
 
-                <Grid size={{ xs: 12, md: 6 }}>
-                  <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                    Correct Answer
-                  </Typography>
-                  <Paper sx={{ p: 2, bgcolor: '#e8f5e9', minHeight: 60 }}>
-                    <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {formatCorrectAnswer(answer)}
-                    </Typography>
-                  </Paper>
-                </Grid>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-2">Correct Answer</p>
+                  <div className="p-4 bg-green-50 rounded-lg min-h-[60px] whitespace-pre-wrap">
+                    {formatCorrectAnswer(answer)}
+                  </div>
+                </div>
 
                 {answer.feedback && (
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      Feedback
-                    </Typography>
-                    <Paper sx={{ p: 2, bgcolor: '#fff3e0' }}>
-                      <Typography variant="body1">{answer.feedback}</Typography>
-                    </Paper>
-                  </Grid>
+                  <div className="md:col-span-2">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Feedback</p>
+                    <div className="p-4 bg-orange-50 rounded-lg">
+                      {answer.feedback}
+                    </div>
+                  </div>
                 )}
 
                 {answer.explanation && (
-                  <Grid size={{ xs: 12 }}>
-                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-                      Explanation
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {answer.explanation}
-                    </Typography>
-                  </Grid>
+                  <div className="md:col-span-2">
+                    <p className="text-sm font-medium text-gray-500 mb-2">Explanation</p>
+                    <p className="text-sm text-gray-500">{answer.explanation}</p>
+                  </div>
                 )}
-              </Grid>
+              </div>
             </CardContent>
           </Card>
         ))
       )}
-    </Box>
+    </div>
   );
 };
 

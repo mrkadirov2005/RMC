@@ -1,6 +1,7 @@
 const express_teacher = require('express');
 const router_teacher = express_teacher.Router();
 const teacherController = require('../controllers/teacherController');
+const { requireRole } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -108,7 +109,7 @@ router_teacher.put('/:id', teacherController.updateTeacher);
  *       404:
  *         description: Teacher not found
  */
-router_teacher.delete('/:id', teacherController.deleteTeacher);
+router_teacher.delete('/:id', requireRole('superuser'), teacherController.deleteTeacher);
 
 /**
  * @swagger
@@ -168,7 +169,7 @@ router_teacher.post('/auth/login', teacherController.teacherLogin);
  *       200:
  *         description: Password set successfully
  */
-router_teacher.post('/:id/set-password', teacherController.setTeacherPassword);
+router_teacher.post('/:id/set-password', requireRole('superuser'), teacherController.setTeacherPassword);
 
 /**
  * @swagger
@@ -203,3 +204,5 @@ router_teacher.post('/:id/set-password', teacherController.setTeacherPassword);
 router_teacher.post('/:id/change-password', teacherController.changeTeacherPassword);
 
 module.exports = router_teacher;
+
+export {};

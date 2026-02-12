@@ -1,35 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Button,
-  CircularProgress,
-  Alert,
+  ArrowLeft,
+  Save,
+  Users,
+  School,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Checkbox,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  TextField,
-  Grid,
-  Chip,
-} from '@mui/material';
-import {
-  ArrowBack as BackIcon,
-  Save as SaveIcon,
-  People as PeopleIcon,
-  Class as ClassIcon,
-} from '@mui/icons-material';
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { testAPI, studentAPI, classAPI } from '../../../shared/api/api';
 import { toast } from 'react-toastify';
 
@@ -50,14 +41,14 @@ interface ClassType {
 const TestAssignPage = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
-  
+
   const [test, setTest] = useState<any>(null);
   const [students, setStudents] = useState<Student[]>([]);
   const [classes, setClasses] = useState<ClassType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [assignmentType, setAssignmentType] = useState<'all' | 'class' | 'individual'>('all');
   const [selectedStudents, setSelectedStudents] = useState<number[]>([]);
   const [selectedClasses, setSelectedClasses] = useState<number[]>([]);
@@ -72,17 +63,17 @@ const TestAssignPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const [testRes, studentsRes, classesRes] = await Promise.all([
         testAPI.getById(Number(testId)),
         studentAPI.getAll(),
         classAPI.getAll(),
       ]);
-      
+
       setTest(testRes.data);
       setStudents(studentsRes.data || []);
       setClasses(classesRes.data || []);
-      
+
       // Pre-fill from test data
       if (testRes.data.assignment_type) {
         setAssignmentType(testRes.data.assignment_type);
@@ -135,7 +126,7 @@ const TestAssignPage = () => {
       // Build assignments array based on type
       // Backend expects: { assigned_to_type, assigned_to_id, due_date, is_mandatory, notes }
       let assignments: any[] = [];
-      
+
       if (assignmentType === 'all') {
         // Assign to all students individually
         assignments = students.map((s) => ({
@@ -167,7 +158,7 @@ const TestAssignPage = () => {
       const userId = authData ? JSON.parse(authData).user?.id : 0;
 
       await testAPI.assignTest(Number(testId), assignments, userId);
-      
+
       toast.success('Test assigned successfully!');
       navigate(`/tests/${testId}`);
     } catch (err: any) {
@@ -180,137 +171,136 @@ const TestAssignPage = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3, maxWidth: 1200, mx: 'auto' }}>
+    <div className="p-6 max-w-5xl mx-auto">
       {/* Header */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-        <Button startIcon={<BackIcon />} onClick={() => navigate(`/tests/${testId}`)}>
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="ghost" onClick={() => navigate(`/tests/${testId}`)}>
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h4" sx={{ fontWeight: 700 }}>
-            Assign Test
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {test?.test_name}
-          </Typography>
-        </Box>
-      </Box>
+        <div className="flex-1">
+          <h1 className="text-2xl font-bold">Assign Test</h1>
+          <p className="text-gray-500">{test?.test_name}</p>
+        </div>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+          <button
+            onClick={() => setError(null)}
+            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+          >
+            ×
+          </button>
         </Alert>
       )}
 
       {/* Assignment Settings */}
-      <Card sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Assignment Settings
-          </Typography>
-          
-          <Grid container spacing={3}>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth>
-                <InputLabel>Assignment Type</InputLabel>
-                <Select
-                  value={assignmentType}
-                  label="Assignment Type"
-                  onChange={(e) => setAssignmentType(e.target.value as any)}
-                >
-                  <MenuItem value="all">All Students</MenuItem>
-                  <MenuItem value="class">By Class</MenuItem>
-                  <MenuItem value="individual">Individual Students</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                fullWidth
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <h2 className="text-lg font-semibold mb-4">Assignment Settings</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <Label htmlFor="assignmentType">Assignment Type</Label>
+              <select
+                id="assignmentType"
+                value={assignmentType}
+                onChange={(e) => setAssignmentType(e.target.value as any)}
+                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="all">All Students</option>
+                <option value="class">By Class</option>
+                <option value="individual">Individual Students</option>
+              </select>
+            </div>
+
+            <div>
+              <Label htmlFor="dueDate">Due Date</Label>
+              <Input
+                id="dueDate"
                 type="date"
-                label="Due Date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                InputLabelProps={{ shrink: true }}
+                className="mt-1"
               />
-            </Grid>
-            
-            <Grid size={{ xs: 12, md: 4 }}>
-              <FormControl fullWidth>
-                <InputLabel>Mandatory</InputLabel>
-                <Select
-                  value={isMandatory ? 'yes' : 'no'}
-                  label="Mandatory"
-                  onChange={(e) => setIsMandatory(e.target.value === 'yes')}
-                >
-                  <MenuItem value="yes">Yes - Required</MenuItem>
-                  <MenuItem value="no">No - Optional</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-          </Grid>
+            </div>
+
+            <div>
+              <Label htmlFor="mandatory">Mandatory</Label>
+              <select
+                id="mandatory"
+                value={isMandatory ? 'yes' : 'no'}
+                onChange={(e) => setIsMandatory(e.target.value === 'yes')}
+                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              >
+                <option value="yes">Yes - Required</option>
+                <option value="no">No - Optional</option>
+              </select>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* Selection Based on Type */}
       {assignmentType === 'all' && (
         <Card>
-          <CardContent sx={{ textAlign: 'center', py: 4 }}>
-            <PeopleIcon sx={{ fontSize: 60, color: 'primary.main', mb: 2 }} />
-            <Typography variant="h6">
+          <CardContent className="flex flex-col items-center py-10">
+            <Users className="h-14 w-14 text-indigo-500 mb-3" />
+            <h3 className="text-lg font-semibold">
               This test will be assigned to all students
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            </h3>
+            <p className="text-sm text-gray-500">
               Total: {students.length} students
-            </Typography>
+            </p>
           </CardContent>
         </Card>
       )}
 
       {assignmentType === 'class' && (
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Select Classes
-              </Typography>
-              <Button size="small" onClick={handleSelectAllClasses}>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Select Classes</h3>
+              <Button variant="ghost" size="sm" onClick={handleSelectAllClasses}>
                 {selectedClasses.length === classes.length ? 'Deselect All' : 'Select All'}
               </Button>
-            </Box>
-            
+            </div>
+
             {classes.length === 0 ? (
-              <Typography color="text.secondary">No classes available</Typography>
+              <p className="text-gray-500">No classes available</p>
             ) : (
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              <div className="flex flex-wrap gap-2">
                 {classes.map((cls) => (
-                  <Chip
+                  <button
                     key={cls.class_id}
-                    icon={<ClassIcon />}
-                    label={cls.class_name}
                     onClick={() => handleClassToggle(cls.class_id)}
-                    color={selectedClasses.includes(cls.class_id) ? 'primary' : 'default'}
-                    variant={selectedClasses.includes(cls.class_id) ? 'filled' : 'outlined'}
-                    sx={{ m: 0.5 }}
-                  />
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors',
+                      selectedClasses.includes(cls.class_id)
+                        ? 'bg-indigo-100 text-indigo-800 border-indigo-300'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                    )}
+                  >
+                    <School className="h-4 w-4" />
+                    {cls.class_name}
+                  </button>
                 ))}
-              </Box>
+              </div>
             )}
-            
+
             {selectedClasses.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Selected: {selectedClasses.length} class(es)
-                </Typography>
-              </Box>
+              <p className="text-sm text-gray-500 mt-3">
+                Selected: {selectedClasses.length} class(es)
+              </p>
             )}
           </CardContent>
         </Card>
@@ -318,45 +308,56 @@ const TestAssignPage = () => {
 
       {assignmentType === 'individual' && (
         <Card>
-          <CardContent>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h6">
-                Select Students
-              </Typography>
-              <Button size="small" onClick={handleSelectAllStudents}>
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Select Students</h3>
+              <Button variant="ghost" size="sm" onClick={handleSelectAllStudents}>
                 {selectedStudents.length === students.length ? 'Deselect All' : 'Select All'}
               </Button>
-            </Box>
-            
+            </div>
+
             {students.length === 0 ? (
-              <Typography color="text.secondary">No students available</Typography>
+              <p className="text-gray-500">No students available</p>
             ) : (
-              <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
-                  <TableHead>
+              <div className="border rounded-lg overflow-hidden">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell padding="checkbox">
-                        <Checkbox
+                      <TableHead className="w-12">
+                        <input
+                          type="checkbox"
                           checked={selectedStudents.length === students.length}
-                          indeterminate={selectedStudents.length > 0 && selectedStudents.length < students.length}
+                          ref={(el) => {
+                            if (el) {
+                              el.indeterminate =
+                                selectedStudents.length > 0 &&
+                                selectedStudents.length < students.length;
+                            }
+                          }}
                           onChange={handleSelectAllStudents}
+                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                      </TableCell>
-                      <TableCell>Name</TableCell>
-                      <TableCell>Phone</TableCell>
-                      <TableCell>Class</TableCell>
+                      </TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Class</TableHead>
                     </TableRow>
-                  </TableHead>
+                  </TableHeader>
                   <TableBody>
                     {students.map((student) => (
                       <TableRow
                         key={student.student_id}
-                        hover
+                        className="cursor-pointer hover:bg-gray-50"
                         onClick={() => handleStudentToggle(student.student_id)}
-                        sx={{ cursor: 'pointer' }}
                       >
-                        <TableCell padding="checkbox">
-                          <Checkbox checked={selectedStudents.includes(student.student_id)} />
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            checked={selectedStudents.includes(student.student_id)}
+                            onChange={() => handleStudentToggle(student.student_id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          />
                         </TableCell>
                         <TableCell>
                           {student.first_name} {student.last_name}
@@ -367,38 +368,41 @@ const TestAssignPage = () => {
                     ))}
                   </TableBody>
                 </Table>
-              </TableContainer>
+              </div>
             )}
-            
+
             {selectedStudents.length > 0 && (
-              <Box sx={{ mt: 2 }}>
-                <Typography variant="body2" color="text.secondary">
-                  Selected: {selectedStudents.length} student(s)
-                </Typography>
-              </Box>
+              <p className="text-sm text-gray-500 mt-3">
+                Selected: {selectedStudents.length} student(s)
+              </p>
             )}
           </CardContent>
         </Card>
       )}
 
       {/* Save Button */}
-      <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end', gap: 2 }}>
-        <Button variant="outlined" onClick={() => navigate(`/tests/${testId}`)}>
+      <div className="mt-6 flex justify-end gap-3">
+        <Button variant="outline" onClick={() => navigate(`/tests/${testId}`)}>
           Cancel
         </Button>
         <Button
-          variant="contained"
-          startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
+          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
           onClick={handleSave}
-          disabled={saving || (assignmentType === 'class' && selectedClasses.length === 0) || (assignmentType === 'individual' && selectedStudents.length === 0)}
-          sx={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-          }}
+          disabled={
+            saving ||
+            (assignmentType === 'class' && selectedClasses.length === 0) ||
+            (assignmentType === 'individual' && selectedStudents.length === 0)
+          }
         >
+          {saving ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-2 h-4 w-4" />
+          )}
           {saving ? 'Saving...' : 'Save Assignment'}
         </Button>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 };
 

@@ -1,38 +1,25 @@
 import { useState, useEffect } from 'react';
+import { Plus, Pencil, Trash2, Info, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-  Box,
-  Button,
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  TextField,
-  Stack,
-  Alert,
-  CircularProgress,
-  Container,
-  Typography,
-  useTheme,
-  Grid,
-  Card,
-  CardHeader,
-  CardContent,
-  CardActions,
-  Chip,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  FormGroup,
-  FormControlLabel,
-  Checkbox,
-} from '@mui/material';
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import {
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Info as InfoIcon,
-} from '@mui/icons-material';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useCRUD } from '../hooks/useCRUD';
 import { classAPI } from '../../../shared/api/api';
 import { fetchCenters, fetchTeachers, frequencyOptions } from '../../../utils/dropdownOptions';
@@ -55,7 +42,6 @@ interface Class {
 }
 
 const ClassesPage = () => {
-  const theme = useTheme();
   const [state, actions] = useCRUD<Class>(classAPI, 'Class');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -63,9 +49,9 @@ const ClassesPage = () => {
     center_id: 1,
     payment_frequency: 'Monthly',
   });
-  const [centerOptions, setCenterOptions] = useState<any[]>([]);
-  const [teacherOptions, setTeacherOptions] = useState<any[]>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
+  const [centerOptions, setCenterOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
+  const [teacherOptions, setTeacherOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
+  const [, setIsLoadingOptions] = useState(false);
 
   // Schedule state
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
@@ -79,6 +65,7 @@ const ClassesPage = () => {
   useEffect(() => {
     actions.fetchAll();
     loadDropdownOptions();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDropdownOptions = async () => {
@@ -168,7 +155,7 @@ const ClassesPage = () => {
         showToast.success('Class created successfully!');
       }
       handleCloseModal();
-    } catch (error) {
+    } catch {
       showToast.error('Error saving class');
     }
   };
@@ -178,7 +165,7 @@ const ClassesPage = () => {
       try {
         await actions.delete(id);
         showToast.success('Class deleted successfully!');
-      } catch (error) {
+      } catch {
         showToast.error('Error deleting class');
       }
     }
@@ -195,314 +182,277 @@ const ClassesPage = () => {
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 3 }}>
-      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h4" sx={{ fontWeight: 700 }}>
-          Classes Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => handleOpenModal()}
-          sx={{
-            backgroundColor: theme.palette.primary.main,
-            '&:hover': {
-              backgroundColor: theme.palette.primary.dark,
-            },
-          }}
-        >
+    <div className="max-w-7xl mx-auto py-6 px-4">
+      <div className="mb-6 flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Classes Management</h1>
+        <Button onClick={() => handleOpenModal()}>
+          <Plus className="mr-2 h-4 w-4" />
           Add Class
         </Button>
-      </Box>
+      </div>
 
       {state.error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {state.error}
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
 
       {state.loading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-          <CircularProgress />
-        </Box>
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
       ) : state.items.length === 0 ? (
-        <Alert severity="info">No classes found. Create your first class to get started!</Alert>
+        <Alert className="mb-4">
+          <AlertDescription>No classes found. Create your first class to get started!</AlertDescription>
+        </Alert>
       ) : (
-        <Grid container spacing={3}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {state.items.map((cls) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={cls.class_id || cls.id}>
-              <Card
-                sx={{
-                  height: '100%',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  transition: 'all 0.3s ease',
-                  '&:hover': {
-                    boxShadow: 4,
-                    transform: 'translateY(-8px)',
-                  },
-                }}
-              >
-                <CardHeader
-                  title={cls.class_name}
-                  subheader={cls.class_code}
-                  sx={{
-                    backgroundColor: theme.palette.primary.light,
-                    color: 'white',
-                    '& .MuiCardHeader-subheader': {
-                      color: 'rgba(255, 255, 255, 0.8)',
-                    },
-                  }}
-                />
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Stack spacing={2}>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Level
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        Level {cls.level}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Schedule
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {(() => {
-                          try {
-                            const schedule = JSON.parse(cls.section || '{}');
-                            return `${schedule.days?.join(', ')} at ${schedule.time}`;
-                          } catch {
-                            return cls.section || 'Not set';
-                          }
-                        })()}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Capacity
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {cls.capacity} students
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Room Number
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        {cls.room_number}
-                      </Typography>
-                    </Box>
-                    <Box>
-                      <Typography variant="caption" color="textSecondary">
-                        Payment
-                      </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        ${cls.payment_amount} ({cls.payment_frequency})
-                      </Typography>
-                    </Box>
-                  </Stack>
-                </CardContent>
-                <CardActions sx={{ pt: 0, justifyContent: 'space-between' }}>
-                  <Button
-                    size="small"
-                    startIcon={<InfoIcon />}
-                    onClick={() => handleViewDetails(cls)}
-                    sx={{ color: theme.palette.primary.main }}
-                  >
-                    Details
+            <Card
+              key={cls.class_id || cls.id}
+              className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-2"
+            >
+              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
+                <CardTitle className="text-lg">{cls.class_name}</CardTitle>
+                <p className="text-sm text-primary-foreground/80">{cls.class_code}</p>
+              </CardHeader>
+              <CardContent className="flex-1 pt-4 space-y-3">
+                <div>
+                  <p className="text-xs text-muted-foreground">Level</p>
+                  <p className="text-sm font-semibold">Level {cls.level}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Schedule</p>
+                  <p className="text-sm font-semibold">
+                    {(() => {
+                      try {
+                        const schedule = JSON.parse(cls.section || '{}');
+                        return `${schedule.days?.join(', ')} at ${schedule.time}`;
+                      } catch {
+                        return cls.section || 'Not set';
+                      }
+                    })()}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Capacity</p>
+                  <p className="text-sm font-semibold">{cls.capacity} students</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Room Number</p>
+                  <p className="text-sm font-semibold">{cls.room_number}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Payment</p>
+                  <p className="text-sm font-semibold">
+                    ${cls.payment_amount} ({cls.payment_frequency})
+                  </p>
+                </div>
+              </CardContent>
+              <div className="px-4 pb-4 pt-0 flex justify-between items-center">
+                <Button variant="ghost" size="sm" onClick={() => handleViewDetails(cls)}>
+                  <Info className="mr-1 h-4 w-4" />
+                  Details
+                </Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => handleOpenModal(cls)}>
+                    <Pencil className="mr-1 h-4 w-4" />
+                    Edit
                   </Button>
-                  <Stack direction="row" spacing={0.5}>
-                    <Button
-                      size="small"
-                      startIcon={<EditIcon />}
-                      onClick={() => handleOpenModal(cls)}
-                      sx={{ minWidth: 'auto' }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      size="small"
-                      startIcon={<DeleteIcon />}
-                      onClick={() => handleDelete(cls.class_id || cls.id || 0)}
-                      sx={{ color: 'error.main', minWidth: 'auto' }}
-                    >
-                      Delete
-                    </Button>
-                  </Stack>
-                </CardActions>
-              </Card>
-            </Grid>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => handleDelete(cls.class_id || cls.id || 0)}
+                  >
+                    <Trash2 className="mr-1 h-4 w-4" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </Card>
           ))}
-        </Grid>
+        </div>
       )}
 
       {/* Add/Edit Class Dialog */}
-      <Dialog open={isModalOpen} onClose={handleCloseModal} maxWidth="sm" fullWidth>
-        <DialogTitle>{editingId ? 'Edit Class' : 'Add New Class'}</DialogTitle>
-        <DialogContent sx={{ pt: 2 }}>
-          <Stack spacing={2}>
-            <TextField
-              fullWidth
-              label="Class Name"
-              required
-              value={formData.class_name || ''}
-              onChange={(e) => setFormData({ ...formData, class_name: e.target.value })}
-            />
-            <TextField
-              fullWidth
-              label="Class Code"
-              required
-              value={formData.class_code || ''}
-              onChange={(e) => setFormData({ ...formData, class_code: e.target.value })}
-            />
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Level"
-                type="number"
+      <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Class' : 'Add New Class'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="class_name">Class Name *</Label>
+              <Input
+                id="class_name"
                 required
-                value={formData.level || ''}
-                onChange={(e) => setFormData({ ...formData, level: Number(e.target.value) })}
+                value={formData.class_name || ''}
+                onChange={(e) => setFormData({ ...formData, class_name: e.target.value })}
               />
-
-            </Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Capacity"
-                type="number"
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="class_code">Class Code *</Label>
+              <Input
+                id="class_code"
                 required
-                value={formData.capacity || ''}
-                onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                value={formData.class_code || ''}
+                onChange={(e) => setFormData({ ...formData, class_code: e.target.value })}
               />
-              <TextField
-                fullWidth
-                label="Room Number"
-                required
-                value={formData.room_number || ''}
-                onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
-              />
-            </Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="Payment Amount"
-                type="number"
-                required
-                inputProps={{ step: '0.01' }}
-                value={formData.payment_amount || ''}
-                onChange={(e) => setFormData({ ...formData, payment_amount: Number(e.target.value) })}
-              />
-              <FormControl fullWidth>
-                <InputLabel>Payment Frequency</InputLabel>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="level">Level *</Label>
+                <Input
+                  id="level"
+                  type="number"
+                  required
+                  value={formData.level || ''}
+                  onChange={(e) => setFormData({ ...formData, level: Number(e.target.value) })}
+                />
+              </div>
+              <div />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="capacity">Capacity *</Label>
+                <Input
+                  id="capacity"
+                  type="number"
+                  required
+                  value={formData.capacity || ''}
+                  onChange={(e) => setFormData({ ...formData, capacity: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="room_number">Room Number *</Label>
+                <Input
+                  id="room_number"
+                  required
+                  value={formData.room_number || ''}
+                  onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="payment_amount">Payment Amount *</Label>
+                <Input
+                  id="payment_amount"
+                  type="number"
+                  required
+                  step="0.01"
+                  value={formData.payment_amount || ''}
+                  onChange={(e) => setFormData({ ...formData, payment_amount: Number(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="payment_frequency">Payment Frequency</Label>
                 <Select
                   value={formData.payment_frequency || 'Monthly'}
-                  label="Payment Frequency"
-                  onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
+                  onValueChange={(val) => setFormData({ ...formData, payment_frequency: val })}
                 >
-                  {frequencyOptions.map((opt) => (
-                    <MenuItem key={opt.id} value={opt.value}>
-                      {opt.label}
-                    </MenuItem>
-                  ))}
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Frequency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {frequencyOptions.map((opt) => (
+                      <SelectItem key={opt.id} value={String(opt.value)}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
-              </FormControl>
-            </Box>
+              </div>
+            </div>
 
             {/* Schedule Section */}
-            <Box
-              sx={{
-                p: 2,
-                backgroundColor: theme.palette.background.default,
-                borderRadius: 1,
-                mt: 1,
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ fontWeight: 700, mb: 2 }}>
-                Class Schedule
-              </Typography>
+            <div className="p-4 bg-muted rounded-lg mt-2">
+              <h4 className="font-bold text-sm mb-3">Class Schedule</h4>
 
               {/* Days Selection */}
-              <Box sx={{ mb: 2 }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, display: 'block', mb: 1 }}>
-                  Select Class Days
-                </Typography>
-                <FormGroup>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1 }}>
-                    {weekDays.map((day) => (
-                      <FormControlLabel
-                        key={day}
-                        control={
-                          <Checkbox
-                            checked={selectedDays.includes(day)}
-                            onChange={(e) => handleDayChange(day, e.target.checked)}
-                          />
-                        }
-                        label={day}
+              <div className="mb-3">
+                <p className="text-xs font-semibold mb-2">Select Class Days</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {weekDays.map((day) => (
+                    <label key={day} className="flex items-center gap-2 text-sm cursor-pointer">
+                      <Switch
+                        checked={selectedDays.includes(day)}
+                        onCheckedChange={(checked) => handleDayChange(day, checked)}
                       />
-                    ))}
-                  </Box>
-                </FormGroup>
-              </Box>
+                      {day}
+                    </label>
+                  ))}
+                </div>
+              </div>
 
               {/* Time Selection */}
-              <TextField
-                fullWidth
-                label="Class Time"
-                type="time"
-                InputLabelProps={{ shrink: true }}
-                value={scheduleTime}
-                onChange={(e) => setScheduleTime(e.target.value)}
-              />
-            </Box>
+              <div className="space-y-2">
+                <Label htmlFor="schedule_time">Class Time</Label>
+                <Input
+                  id="schedule_time"
+                  type="time"
+                  value={scheduleTime}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                />
+              </div>
+            </div>
 
             {/* Center and Teacher Selection */}
-            <FormControl fullWidth>
-              <InputLabel>Center</InputLabel>
+            <div className="space-y-2">
+              <Label htmlFor="center_id">Center</Label>
               <Select
-                value={formData.center_id || ''}
-                label="Center"
-                onChange={(e) => setFormData({ ...formData, center_id: Number(e.target.value) })}
+                value={String(formData.center_id || '')}
+                onValueChange={(val) => setFormData({ ...formData, center_id: Number(val) })}
               >
-                {centerOptions.map((opt) => (
-                  <MenuItem key={opt.id || opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Center" />
+                </SelectTrigger>
+                <SelectContent>
+                  {centerOptions.map((opt) => (
+                    <SelectItem key={opt.id || opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
-            </FormControl>
+            </div>
 
-            <FormControl fullWidth>
-              <InputLabel>Teacher (Optional)</InputLabel>
+            <div className="space-y-2">
+              <Label htmlFor="teacher_id">Teacher (Optional)</Label>
               <Select
-                value={formData.teacher_id || ''}
-                label="Teacher (Optional)"
-                onChange={(e) =>
+                value={String(formData.teacher_id || 'none')}
+                onValueChange={(val) =>
                   setFormData({
                     ...formData,
-                    teacher_id: e.target.value ? Number(e.target.value) : undefined,
+                    teacher_id: val === 'none' ? undefined : Number(val),
                   })
                 }
               >
-                <MenuItem value="">None</MenuItem>
-                {teacherOptions.map((opt) => (
-                  <MenuItem key={opt.id || opt.value} value={opt.value}>
-                    {opt.label}
-                  </MenuItem>
-                ))}
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Teacher" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">None</SelectItem>
+                  {teacherOptions.map((opt) => (
+                    <SelectItem key={opt.id || opt.value} value={String(opt.value)}>
+                      {opt.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
-            </FormControl>
-          </Stack>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={handleCloseModal}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={state.loading}>
+                {state.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal}>Cancel</Button>
-          <Button onClick={handleSubmit} variant="contained" disabled={state.loading}>
-            {state.loading ? <CircularProgress size={24} /> : 'Save'}
-          </Button>
-        </DialogActions>
       </Dialog>
 
       {/* Class Detail Modal with Tabs */}
@@ -511,7 +461,7 @@ const ClassesPage = () => {
         classData={selectedClass}
         onClose={handleCloseDetailModal}
       />
-    </Container>
+    </div>
   );
 };
 

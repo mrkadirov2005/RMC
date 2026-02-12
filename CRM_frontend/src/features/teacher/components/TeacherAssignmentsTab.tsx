@@ -1,46 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Button,
-  Chip,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  IconButton,
+  ClipboardList,
+  Save,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  MoreVertical,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Calendar,
+  Users,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
   Dialog,
-  DialogTitle,
   DialogContent,
-  DialogActions,
-  Alert,
-  TextField,
-  Tabs,
-  Tab,
-  Snackbar,
-  InputAdornment,
-  Menu,
-  ListItemIcon,
-  ListItemText,
-} from '@mui/material';
-import {
-  Assignment as AssignmentIcon,
-  Save as SaveIcon,
-  Add as AddIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Search as SearchIcon,
-  MoreVert as MoreVertIcon,
-  Schedule as ScheduleIcon,
-  CheckCircle as CheckCircleIcon,
-  Warning as WarningIcon,
-  CalendarToday as CalendarIcon,
-  People as PeopleIcon,
-} from '@mui/icons-material';
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { classAPI, subjectAPI, assignmentAPI } from '../../../shared/api/api';
 
 interface ClassInfo {
@@ -55,7 +44,7 @@ interface SubjectInfo {
 
 interface Assignment {
   assignment_id: number;
-  title: string;
+  assignment_title: string;
   description?: string;
   class_id: number;
   subject_id?: number;
@@ -78,14 +67,16 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
   const [selectedClass, setSelectedClass] = useState<number | ''>('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [tabValue, setTabValue] = useState(0);
+  const [tabValue, setTabValue] = useState('active');
   const [searchQuery, setSearchQuery] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
+  const menuRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
-    title: '',
+    assignment_title: '',
     description: '',
     class_id: '' as number | '',
     subject_id: '' as number | '',
@@ -105,6 +96,24 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
   useEffect(() => {
     loadAssignments();
   }, [selectedClass]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Auto-hide snackbar
+  useEffect(() => {
+    if (snackbar.open) {
+      const timer = setTimeout(() => setSnackbar({ ...snackbar, open: false }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [snackbar.open]);
 
   const loadInitialData = async () => {
     try {
@@ -141,7 +150,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     if (assignment) {
       setSelectedAssignment(assignment);
       setFormData({
-        title: assignment.title,
+        assignment_title: assignment.assignment_title,
         description: assignment.description || '',
         class_id: assignment.class_id,
         subject_id: assignment.subject_id || '',
@@ -151,7 +160,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     } else {
       setSelectedAssignment(null);
       setFormData({
-        title: '',
+        assignment_title: '',
         description: '',
         class_id: selectedClass || '',
         subject_id: '',
@@ -160,11 +169,11 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       });
     }
     setDialogOpen(true);
-    setMenuAnchorEl(null);
+    setMenuOpen(false);
   };
 
   const handleSaveAssignment = async () => {
-    if (!formData.title || !formData.class_id || !formData.due_date) {
+    if (!formData.assignment_title || !formData.class_id || !formData.due_date) {
       setSnackbar({
         open: true,
         message: 'Please fill in all required fields',
@@ -236,8 +245,11 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
   };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, assignment: Assignment) => {
+    event.stopPropagation();
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    setMenuPos({ top: rect.bottom + 4, left: rect.right - 140 });
     setSelectedAssignment(assignment);
-    setMenuAnchorEl(event.currentTarget);
+    setMenuOpen(true);
   };
 
   const getAssignmentStatus = (dueDate: string) => {
@@ -245,15 +257,15 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     const due = new Date(dueDate);
     const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return { label: 'Overdue', color: 'error' as const, icon: <WarningIcon fontSize="small" /> };
-    if (diffDays === 0) return { label: 'Due Today', color: 'warning' as const, icon: <ScheduleIcon fontSize="small" /> };
-    if (diffDays <= 3) return { label: 'Due Soon', color: 'warning' as const, icon: <ScheduleIcon fontSize="small" /> };
-    return { label: 'Active', color: 'success' as const, icon: <CheckCircleIcon fontSize="small" /> };
+    if (diffDays < 0) return { label: 'Overdue', colorClass: 'bg-red-100 text-red-700 border-red-300', icon: <AlertTriangle className="h-3.5 w-3.5" /> };
+    if (diffDays === 0) return { label: 'Due Today', colorClass: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Clock className="h-3.5 w-3.5" /> };
+    if (diffDays <= 3) return { label: 'Due Soon', colorClass: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Clock className="h-3.5 w-3.5" /> };
+    return { label: 'Active', colorClass: 'bg-green-100 text-green-700 border-green-300', icon: <CheckCircle className="h-3.5 w-3.5" /> };
   };
 
   const filteredAssignments = assignments.filter(
     (a) =>
-      a.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      a.assignment_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -269,388 +281,311 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
 
   if (loading && classes.length === 0) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
     );
   }
 
+  const currentList = tabValue === 'active' ? activeAssignments : tabValue === 'past' ? pastAssignments : filteredAssignments;
+
   return (
-    <Box>
+    <div>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h6" fontWeight={600}>
-          Manage Assignments
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
-          <TextField
-            size="small"
-            placeholder="Search assignments..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
-                </InputAdornment>
-              ),
-            }}
-          />
-          <FormControl size="small" sx={{ minWidth: 150 }}>
-            <InputLabel>Class</InputLabel>
-            <Select
-              value={selectedClass}
-              label="Class"
-              onChange={(e) => setSelectedClass(e.target.value as number)}
-            >
-              <MenuItem value="">All Classes</MenuItem>
-              {classes.map((cls) => (
-                <MenuItem key={cls.class_id} value={cls.class_id}>
-                  {cls.class_name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={() => handleOpenDialog()}
-            sx={{
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            }}
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <h3 className="text-lg font-semibold">Manage Assignments</h3>
+        <div className="flex gap-3 items-center flex-wrap">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search assignments..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 w-52"
+            />
+          </div>
+          <select
+            value={selectedClass}
+            onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
+            className="flex h-9 w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
+            <option value="">All Classes</option>
+            {classes.map((cls) => (
+              <option key={cls.class_id} value={cls.class_id}>{cls.class_name}</option>
+            ))}
+          </select>
+          <Button
+            onClick={() => handleOpenDialog()}
+            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+          >
+            <Plus className="h-4 w-4 mr-2" />
             New Assignment
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
       {/* Quick Stats */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#667eea15', textAlign: 'center', p: 2 }}>
-            <AssignmentIcon sx={{ fontSize: 32, color: '#667eea' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#667eea' }}>
-              {assignments.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Total Assignments
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#43e97b15', textAlign: 'center', p: 2 }}>
-            <CheckCircleIcon sx={{ fontSize: 32, color: '#43e97b' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#43e97b' }}>
-              {activeAssignments.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Active
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#f5576c15', textAlign: 'center', p: 2 }}>
-            <WarningIcon sx={{ fontSize: 32, color: '#f5576c' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#f5576c' }}>
-              {pastAssignments.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Past Due
-            </Typography>
-          </Card>
-        </Grid>
-        <Grid size={{ xs: 6, md: 3 }}>
-          <Card sx={{ bgcolor: '#2196f315', textAlign: 'center', p: 2 }}>
-            <PeopleIcon sx={{ fontSize: 32, color: '#2196f3' }} />
-            <Typography variant="h4" fontWeight={700} sx={{ color: '#2196f3' }}>
-              {classes.length}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              Classes
-            </Typography>
-          </Card>
-        </Grid>
-      </Grid>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <Card className="bg-indigo-50/50 text-center p-3">
+          <ClipboardList className="h-8 w-8 text-indigo-500 mx-auto" />
+          <p className="text-3xl font-bold text-indigo-500">{assignments.length}</p>
+          <p className="text-xs text-muted-foreground">Total Assignments</p>
+        </Card>
+        <Card className="bg-green-50/50 text-center p-3">
+          <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
+          <p className="text-3xl font-bold text-green-500">{activeAssignments.length}</p>
+          <p className="text-xs text-muted-foreground">Active</p>
+        </Card>
+        <Card className="bg-red-50/50 text-center p-3">
+          <AlertTriangle className="h-8 w-8 text-red-500 mx-auto" />
+          <p className="text-3xl font-bold text-red-500">{pastAssignments.length}</p>
+          <p className="text-xs text-muted-foreground">Past Due</p>
+        </Card>
+        <Card className="bg-blue-50/50 text-center p-3">
+          <Users className="h-8 w-8 text-blue-500 mx-auto" />
+          <p className="text-3xl font-bold text-blue-500">{classes.length}</p>
+          <p className="text-xs text-muted-foreground">Classes</p>
+        </Card>
+      </div>
 
       {/* Tabs */}
-      <Tabs value={tabValue} onChange={(_, v) => setTabValue(v)} sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}>
-        <Tab label={`Active (${activeAssignments.length})`} />
-        <Tab label={`Past Due (${pastAssignments.length})`} />
-        <Tab label={`All (${filteredAssignments.length})`} />
+      <Tabs value={tabValue} onValueChange={setTabValue} className="mb-6">
+        <TabsList>
+          <TabsTrigger value="active">Active ({activeAssignments.length})</TabsTrigger>
+          <TabsTrigger value="past">Past Due ({pastAssignments.length})</TabsTrigger>
+          <TabsTrigger value="all">All ({filteredAssignments.length})</TabsTrigger>
+        </TabsList>
       </Tabs>
 
       {/* Assignment Cards */}
-      <Grid container spacing={2}>
-        {(tabValue === 0 ? activeAssignments : tabValue === 1 ? pastAssignments : filteredAssignments).length === 0 ? (
-          <Grid size={{ xs: 12 }}>
-            <Box
-              sx={{
-                textAlign: 'center',
-                py: 6,
-                bgcolor: '#f9f9f9',
-                borderRadius: 2,
-                border: '2px dashed #e0e0e0',
-              }}
-            >
-              <AssignmentIcon sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
-              <Typography variant="h6" color="text.secondary">
-                No assignments found
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                {tabValue === 0 ? 'Create a new assignment to get started' : 'No past due assignments'}
-              </Typography>
-              {tabValue === 0 && (
-                <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
-                  Create Assignment
-                </Button>
-              )}
-            </Box>
-          </Grid>
-        ) : (
-          (tabValue === 0 ? activeAssignments : tabValue === 1 ? pastAssignments : filteredAssignments).map(
-            (assignment) => {
-              const status = getAssignmentStatus(assignment.due_date);
-              const classInfo = classes.find((c) => c.class_id === assignment.class_id);
-              const subjectInfo = subjects.find((s) => s.subject_id === assignment.subject_id);
+      {currentList.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <ClipboardList className="h-14 w-14 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-muted-foreground">No assignments found</h3>
+          <p className="text-sm text-muted-foreground mb-3">
+            {tabValue === 'active' ? 'Create a new assignment to get started' : 'No past due assignments'}
+          </p>
+          {tabValue === 'active' && (
+            <Button variant="outline" onClick={() => handleOpenDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Assignment
+            </Button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {currentList.map((assignment) => {
+            const status = getAssignmentStatus(assignment.due_date);
+            const classInfo = classes.find((c) => c.class_id === assignment.class_id);
+            const subjectInfo = subjects.find((s) => s.subject_id === assignment.subject_id);
 
-              return (
-                <Grid size={{ xs: 12, sm: 6, md: 4 }} key={assignment.assignment_id}>
-                  <Card
-                    sx={{
-                      height: '100%',
-                      '&:hover': { boxShadow: 4 },
-                      position: 'relative',
-                    }}
-                  >
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                        <Chip
-                          icon={status.icon}
-                          label={status.label}
-                          size="small"
-                          color={status.color}
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={(e) => handleMenuClick(e, assignment)}
-                        >
-                          <MoreVertIcon fontSize="small" />
-                        </IconButton>
-                      </Box>
+            return (
+              <Card key={assignment.assignment_id} className="hover:shadow-lg transition-shadow relative">
+                <CardContent className="pt-5">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className={cn('inline-flex items-center gap-1 text-xs border rounded-full px-2 py-0.5', status.colorClass)}>
+                      {status.icon}
+                      {status.label}
+                    </span>
+                    <button
+                      className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                      onClick={(e) => handleMenuClick(e, assignment)}
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                  </div>
 
-                      <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
-                        {assignment.title}
-                      </Typography>
+                  <h3 className="text-base font-semibold mb-1">{assignment.assignment_title}</h3>
 
-                      {assignment.description && (
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{
-                            mb: 2,
-                            display: '-webkit-box',
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: 'vertical',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          {assignment.description}
-                        </Typography>
-                      )}
+                  {assignment.description && (
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {assignment.description}
+                    </p>
+                  )}
 
-                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                        {classInfo && (
-                          <Chip
-                            label={classInfo.class_name}
-                            size="small"
-                            variant="outlined"
-                          />
-                        )}
-                        {subjectInfo && (
-                          <Chip
-                            label={subjectInfo.subject_name}
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                          />
-                        )}
-                      </Box>
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {classInfo && (
+                      <Badge variant="outline" className="text-xs">{classInfo.class_name}</Badge>
+                    )}
+                    {subjectInfo && (
+                      <Badge variant="outline" className="text-xs border-indigo-300 text-indigo-600">{subjectInfo.subject_name}</Badge>
+                    )}
+                  </div>
 
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          <CalendarIcon fontSize="small" color="action" />
-                          <Typography variant="caption" color="text.secondary">
-                            Due: {new Date(assignment.due_date).toLocaleDateString()}
-                          </Typography>
-                        </Box>
-                        {assignment.max_score && (
-                          <Typography variant="caption" color="text.secondary">
-                            Max: {assignment.max_score} pts
-                          </Typography>
-                        )}
-                      </Box>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              );
-            }
-          )
-        )}
-      </Grid>
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <Calendar className="h-3.5 w-3.5" />
+                      Due: {new Date(assignment.due_date).toLocaleDateString()}
+                    </div>
+                    {assignment.max_score && (
+                      <span className="text-xs text-muted-foreground">Max: {assignment.max_score} pts</span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Actions Menu */}
-      <Menu
-        anchorEl={menuAnchorEl}
-        open={Boolean(menuAnchorEl)}
-        onClose={() => setMenuAnchorEl(null)}
-      >
-        <MenuItem onClick={() => handleOpenDialog(selectedAssignment!)}>
-          <ListItemIcon>
-            <EditIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Edit</ListItemText>
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
-            setDeleteDialogOpen(true);
-            setMenuAnchorEl(null);
-          }}
+      {/* Dropdown Menu */}
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          className="fixed z-50 w-36 bg-white rounded-md shadow-lg border py-1"
+          style={{ top: menuPos.top, left: menuPos.left }}
         >
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText>Delete</ListItemText>
-        </MenuItem>
-      </Menu>
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            onClick={() => handleOpenDialog(selectedAssignment!)}
+          >
+            <Edit className="h-4 w-4" /> Edit
+          </button>
+          <button
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+            onClick={() => { setDeleteDialogOpen(true); setMenuOpen(false); }}
+          >
+            <Trash2 className="h-4 w-4" /> Delete
+          </button>
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>
-          {selectedAssignment ? 'Edit Assignment' : 'Create New Assignment'}
-        </DialogTitle>
-        <DialogContent dividers>
-          <Grid container spacing={2} sx={{ mt: 1 }}>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Title *"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedAssignment ? 'Edit Assignment' : 'Create New Assignment'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="assign-title">Title *</Label>
+              <Input
+                id="assign-title"
+                value={formData.assignment_title}
+                onChange={(e) => setFormData({ ...formData, assignment_title: e.target.value })}
               />
-            </Grid>
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                fullWidth
-                label="Description"
-                multiline
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="assign-desc">Description</Label>
+              <Textarea
+                id="assign-desc"
                 rows={3}
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
               />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Class *</InputLabel>
-                <Select
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="assign-class">Class *</Label>
+                <select
+                  id="assign-class"
                   value={formData.class_id}
-                  label="Class *"
-                  onChange={(e) => setFormData({ ...formData, class_id: e.target.value as number })}
+                  onChange={(e) => setFormData({ ...formData, class_id: e.target.value ? Number(e.target.value) : '' })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
+                  <option value="">-- Select --</option>
                   {classes.map((cls) => (
-                    <MenuItem key={cls.class_id} value={cls.class_id}>
-                      {cls.class_name}
-                    </MenuItem>
+                    <option key={cls.class_id} value={cls.class_id}>{cls.class_name}</option>
                   ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <FormControl fullWidth>
-                <InputLabel>Subject</InputLabel>
-                <Select
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="assign-subject">Subject</Label>
+                <select
+                  id="assign-subject"
                   value={formData.subject_id}
-                  label="Subject"
-                  onChange={(e) => setFormData({ ...formData, subject_id: e.target.value as number })}
+                  onChange={(e) => setFormData({ ...formData, subject_id: e.target.value ? Number(e.target.value) : '' })}
+                  className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
-                  <MenuItem value="">None</MenuItem>
+                  <option value="">None</option>
                   {subjects.map((subj) => (
-                    <MenuItem key={subj.subject_id} value={subj.subject_id}>
-                      {subj.subject_name}
-                    </MenuItem>
+                    <option key={subj.subject_id} value={subj.subject_id}>{subj.subject_name}</option>
                   ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                fullWidth
-                type="date"
-                label="Due Date *"
-                value={formData.due_date}
-                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
-            <Grid size={{ xs: 6 }}>
-              <TextField
-                fullWidth
-                type="number"
-                label="Max Score"
-                value={formData.max_score}
-                onChange={(e) =>
-                  setFormData({ ...formData, max_score: parseInt(e.target.value) || 100 })
-                }
-              />
-            </Grid>
-          </Grid>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="assign-due">Due Date *</Label>
+                <Input
+                  id="assign-due"
+                  type="date"
+                  value={formData.due_date}
+                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="assign-score">Max Score</Label>
+                <Input
+                  id="assign-score"
+                  type="number"
+                  value={formData.max_score}
+                  onChange={(e) => setFormData({ ...formData, max_score: parseInt(e.target.value) || 100 })}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleSaveAssignment}
+              disabled={saving}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {selectedAssignment ? 'Update' : 'Create'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDialogOpen(false)}>Cancel</Button>
-          <Button
-            variant="contained"
-            onClick={handleSaveAssignment}
-            disabled={saving}
-            startIcon={saving ? <CircularProgress size={16} /> : <SaveIcon />}
-          >
-            {saving ? 'Saving...' : selectedAssignment ? 'Update' : 'Create'}
-          </Button>
-        </DialogActions>
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)}>
-        <DialogTitle>Delete Assignment</DialogTitle>
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
-          <Alert severity="warning" sx={{ mb: 2 }}>
-            This action cannot be undone.
+          <DialogHeader>
+            <DialogTitle>Delete Assignment</DialogTitle>
+          </DialogHeader>
+          <Alert variant="destructive" className="mb-3">
+            <AlertDescription>This action cannot be undone.</AlertDescription>
           </Alert>
-          <Typography>
-            Are you sure you want to delete "{selectedAssignment?.title}"?
-          </Typography>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete &quot;{selectedAssignment?.assignment_title}&quot;?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteAssignment}>Delete</Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-          <Button variant="contained" color="error" onClick={handleDeleteAssignment}>
-            Delete
-          </Button>
-        </DialogActions>
       </Dialog>
 
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+      {/* Snackbar / Toast */}
+      {snackbar.open && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50">
+          <Alert
+            className={cn(
+              'shadow-lg min-w-[300px]',
+              snackbar.severity === 'success'
+                ? 'border-green-300 bg-green-50 text-green-800'
+                : 'border-red-300 bg-red-50 text-red-800'
+            )}
+          >
+            <AlertDescription className="flex items-center justify-between">
+              {snackbar.message}
+              <button onClick={() => setSnackbar({ ...snackbar, open: false })} className="ml-3 text-sm font-medium">✕</button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,5 +1,13 @@
 import { useState } from 'react';
-import { MdEdit, MdDelete, MdAdd, MdClose } from 'react-icons/md';
+import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { assignmentAPI } from '../../../../shared/api/api';
 import { showToast } from '../../../../utils/toast';
 
@@ -18,6 +26,19 @@ interface AssignmentSectionTeacherProps {
   teacherId: number | undefined;
   onRefresh: () => void;
 }
+
+const getStatusBadgeVariant = (status: string) => {
+  switch (status.toLowerCase()) {
+    case 'pending':
+      return 'bg-yellow-100 text-yellow-800 border-yellow-300';
+    case 'submitted':
+      return 'bg-blue-100 text-blue-800 border-blue-300';
+    case 'graded':
+      return 'bg-green-100 text-green-800 border-green-300';
+    default:
+      return 'bg-gray-100 text-gray-800 border-gray-300';
+  }
+};
 
 export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: AssignmentSectionTeacherProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -81,116 +102,121 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
   };
 
   return (
-    <div className="detail-section">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2>Assignments</h2>
-        <button className="btn-primary" onClick={() => handleOpenModal()} style={{ margin: 0 }}>
-          <MdAdd /> Add Assignment
-        </button>
-      </div>
-      <div className="crud-table-container">
-        <table className="crud-table">
-          <thead>
-            <tr>
-              <th>Assignment Name</th>
-              <th>Due Date</th>
-              <th>Status</th>
-              <th>Grade</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredAssignments.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="text-center">No assignments for this teacher</td>
-              </tr>
-            ) : (
-              filteredAssignments.map((assignment) => (
-                <tr key={assignment.assignment_id || assignment.id}>
-                  <td>{assignment.assignment_title}</td>
-                  <td>{new Date(assignment.due_date).toLocaleDateString()}</td>
-                  <td>
-                    <span className={`badge badge-${assignment.status.toLowerCase()}`}>
-                      {assignment.status}
-                    </span>
-                  </td>
-                  <td>{assignment.grade || '-'}</td>
-                  <td className="actions">
-                    <button className="btn-icon btn-edit" onClick={() => handleOpenModal(assignment)} title="Edit">
-                      <MdEdit />
-                    </button>
-                    <button className="btn-icon btn-delete" onClick={() => handleDelete(assignment.assignment_id || assignment.id || 0)} title="Delete">
-                      <MdDelete />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={handleCloseModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h2>{editingId ? 'Edit Assignment' : 'Add Assignment to Teacher'}</h2>
-              <button className="btn-close" onClick={handleCloseModal}>
-                <MdClose size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleSubmit} className="modal-form">
-              <div className="form-group">
-                <label>Assignment Name *</label>
-                <input
-                  type="text"
-                  required
-                  value={formData.assignment_title || ''}
-                  onChange={(e) => setFormData({ ...formData, assignment_title: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Due Date *</label>
-                <input
-                  type="date"
-                  required
-                  value={formData.due_date || ''}
-                  onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>Status *</label>
-                <select
-                  required
-                  value={formData.status || 'Pending'}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                  className="form-select"
-                >
-                  <option value="Pending">Pending</option>
-                  <option value="Submitted">Submitted</option>
-                  <option value="Graded">Graded</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Grade</label>
-                <input
-                  type="number"
-                  value={formData.grade || ''}
-                  onChange={(e) => setFormData({ ...formData, grade: Number(e.target.value) })}
-                />
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn-secondary" onClick={handleCloseModal}>
-                  Cancel
-                </button>
-                <button type="submit" className="btn-primary" disabled={loading}>
-                  {loading ? 'Saving...' : 'Save'}
-                </button>
-              </div>
-            </form>
-          </div>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <CardTitle>Assignments</CardTitle>
+        <Button size="sm" onClick={() => handleOpenModal()}>
+          <Plus className="h-4 w-4 mr-2" /> Add Assignment
+        </Button>
+      </CardHeader>
+      <CardContent>
+        <div className="border rounded-lg overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Assignment Name</TableHead>
+                <TableHead>Due Date</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Grade</TableHead>
+                <TableHead className="w-24">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredAssignments.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                    No assignments for this teacher
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredAssignments.map((assignment) => (
+                  <TableRow key={assignment.assignment_id || assignment.id}>
+                    <TableCell>{assignment.assignment_title}</TableCell>
+                    <TableCell>{new Date(assignment.due_date).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={`text-xs font-semibold border ${getStatusBadgeVariant(assignment.status)}`}>
+                        {assignment.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{assignment.grade || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button variant="ghost" size="sm" onClick={() => handleOpenModal(assignment)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(assignment.assignment_id || assignment.id || 0)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
-      )}
-    </div>
+      </CardContent>
+
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingId ? 'Edit Assignment' : 'Add Assignment to Teacher'}</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="assignment_title">Assignment Name *</Label>
+              <Input
+                id="assignment_title"
+                type="text"
+                required
+                value={formData.assignment_title || ''}
+                onChange={(e) => setFormData({ ...formData, assignment_title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="due_date">Due Date *</Label>
+              <Input
+                id="due_date"
+                type="date"
+                required
+                value={formData.due_date || ''}
+                onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="status">Status *</Label>
+              <Select value={formData.status || 'Pending'} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="Submitted">Submitted</SelectItem>
+                  <SelectItem value="Graded">Graded</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="grade">Grade</Label>
+              <Input
+                id="grade"
+                type="number"
+                step="0.1"
+                value={formData.grade || ''}
+                onChange={(e) => setFormData({ ...formData, grade: Number(e.target.value) })}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={handleCloseModal}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? 'Saving...' : 'Save'}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </Card>
   );
 };

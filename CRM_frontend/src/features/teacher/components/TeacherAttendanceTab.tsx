@@ -1,42 +1,33 @@
 import { useState, useEffect } from 'react';
 import {
-  Box,
-  Typography,
-  Card,
-  CardContent,
-  Grid,
-  Button,
-  Chip,
-  CircularProgress,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  CalendarDays,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Save,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  Paper,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Alert,
-  Avatar,
-  ToggleButtonGroup,
-  ToggleButton,
-  TextField,
-} from '@mui/material';
-import {
-  EventNote as AttendanceIcon,
-  CheckCircle as PresentIcon,
-  Cancel as AbsentIcon,
-  Schedule as LateIcon,
-  Save as SaveIcon,
-} from '@mui/icons-material';
+} from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 import { classAPI, studentAPI, attendanceAPI } from '../../../shared/api/api';
 
 interface ClassInfo {
@@ -104,14 +95,12 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     try {
       setStudentsLoading(true);
       const response = await studentAPI.getAll();
-      // Filter by class if the API supports it
       const allStudents = response.data || [];
       const classStudents = selectedClass
         ? allStudents.filter((s: any) => s.class_id === selectedClass)
         : allStudents;
       setStudents(classStudents);
-      
-      // Initialize attendance records
+
       const initialAttendance = new Map<number, AttendanceRecord>();
       classStudents.forEach((student: Student) => {
         initialAttendance.set(student.student_id, {
@@ -136,7 +125,6 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
       );
       setExistingAttendance(existing);
 
-      // Update attendance map with existing records
       const updatedAttendance = new Map(attendance);
       existing.forEach((record: any) => {
         updatedAttendance.set(record.student_id, {
@@ -201,7 +189,6 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
         teacher_id: teacherId,
       }));
 
-      // Save each record
       for (const record of records) {
         await attendanceAPI.create(record);
       }
@@ -226,234 +213,197 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="flex justify-center py-8">
+        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      </div>
     );
   }
 
   return (
-    <Box>
+    <div>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3, flexWrap: 'wrap', gap: 2 }}>
-        <Typography variant="h6" fontWeight={600}>
-          Take Attendance
-        </Typography>
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-          <TextField
-            type="date"
-            label="Date"
-            value={attendanceDate}
-            onChange={(e) => setAttendanceDate(e.target.value)}
-            size="small"
-            InputLabelProps={{ shrink: true }}
-          />
-          <FormControl size="small" sx={{ minWidth: 200 }}>
-            <InputLabel>Select Class</InputLabel>
-            <Select
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
+        <h3 className="text-lg font-semibold">Take Attendance</h3>
+        <div className="flex gap-3 items-center">
+          <div>
+            <Label htmlFor="att-date" className="text-xs text-muted-foreground">Date</Label>
+            <Input
+              id="att-date"
+              type="date"
+              value={attendanceDate}
+              onChange={(e) => setAttendanceDate(e.target.value)}
+              className="w-40"
+            />
+          </div>
+          <div>
+            <Label htmlFor="att-class" className="text-xs text-muted-foreground">Select Class</Label>
+            <select
+              id="att-class"
               value={selectedClass}
-              label="Select Class"
-              onChange={(e) => setSelectedClass(e.target.value as number)}
+              onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
+              className="flex h-9 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
+              <option value="">-- Select --</option>
               {classes.map((cls) => (
-                <MenuItem key={cls.class_id} value={cls.class_id}>
+                <option key={cls.class_id} value={cls.class_id}>
                   {cls.class_name}
-                </MenuItem>
+                </option>
               ))}
-            </Select>
-          </FormControl>
-        </Box>
-      </Box>
+            </select>
+          </div>
+        </div>
+      </div>
 
       {error && (
-        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
-          {error}
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{error}</AlertDescription>
+          <button onClick={() => setError(null)} className="absolute top-2 right-2 text-sm">✕</button>
         </Alert>
       )}
 
       {success && (
-        <Alert severity="success" sx={{ mb: 3 }} onClose={() => setSuccess(null)}>
-          {success}
+        <Alert className="mb-4 border-green-300 bg-green-50 text-green-800">
+          <AlertDescription>{success}</AlertDescription>
+          <button onClick={() => setSuccess(null)} className="absolute top-2 right-2 text-sm">✕</button>
         </Alert>
       )}
 
       {!selectedClass ? (
-        <Box
-          sx={{
-            textAlign: 'center',
-            py: 8,
-            bgcolor: '#f9f9f9',
-            borderRadius: 2,
-            border: '2px dashed #e0e0e0',
-          }}
-        >
-          <AttendanceIcon sx={{ fontSize: 60, color: '#bdbdbd', mb: 2 }} />
-          <Typography variant="h6" color="text.secondary">
-            Select a class to take attendance
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Choose a class from the dropdown above
-          </Typography>
-        </Box>
+        <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+          <CalendarDays className="h-14 w-14 text-gray-400 mx-auto mb-3" />
+          <h3 className="text-lg font-semibold text-muted-foreground">Select a class to take attendance</h3>
+          <p className="text-sm text-muted-foreground">Choose a class from the dropdown above</p>
+        </div>
       ) : studentsLoading ? (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
+        <div className="flex justify-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+        </div>
       ) : students.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography color="text.secondary">No students in this class</Typography>
-        </Box>
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">No students in this class</p>
+        </div>
       ) : (
         <>
           {/* Stats Cards */}
-          <Grid container spacing={2} sx={{ mb: 3 }}>
-            <Grid size={{ xs: 6, sm: 3 }}>
-              <Card sx={{ bgcolor: '#43e97b15', textAlign: 'center' }}>
-                <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" color="success.main" fontWeight={700}>
-                    {attendanceStats.present}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Present
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }}>
-              <Card sx={{ bgcolor: '#f5576c15', textAlign: 'center' }}>
-                <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" color="error.main" fontWeight={700}>
-                    {attendanceStats.absent}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Absent
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }}>
-              <Card sx={{ bgcolor: '#ffc10715', textAlign: 'center' }}>
-                <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" color="warning.main" fontWeight={700}>
-                    {attendanceStats.late}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Late
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid size={{ xs: 6, sm: 3 }}>
-              <Card sx={{ bgcolor: '#4facfe15', textAlign: 'center' }}>
-                <CardContent sx={{ py: 2 }}>
-                  <Typography variant="h4" color="info.main" fontWeight={700}>
-                    {attendanceStats.halfDay}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Half Day
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+            <Card className="bg-green-50/50 text-center">
+              <CardContent className="py-3">
+                <p className="text-3xl font-bold text-green-600">{attendanceStats.present}</p>
+                <p className="text-xs text-muted-foreground">Present</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-red-50/50 text-center">
+              <CardContent className="py-3">
+                <p className="text-3xl font-bold text-red-500">{attendanceStats.absent}</p>
+                <p className="text-xs text-muted-foreground">Absent</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-amber-50/50 text-center">
+              <CardContent className="py-3">
+                <p className="text-3xl font-bold text-amber-500">{attendanceStats.late}</p>
+                <p className="text-xs text-muted-foreground">Late</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-blue-50/50 text-center">
+              <CardContent className="py-3">
+                <p className="text-3xl font-bold text-blue-500">{attendanceStats.halfDay}</p>
+                <p className="text-xs text-muted-foreground">Half Day</p>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Quick Actions */}
-          <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-            <Button variant="outlined" color="success" onClick={markAllPresent} startIcon={<PresentIcon />}>
+          <div className="flex gap-3 mb-4 flex-wrap">
+            <Button variant="outline" className="border-green-400 text-green-600 hover:bg-green-50" onClick={markAllPresent}>
+              <CheckCircle className="h-4 w-4 mr-2" />
               Mark All Present
             </Button>
-            <Button variant="outlined" color="error" onClick={markAllAbsent} startIcon={<AbsentIcon />}>
+            <Button variant="outline" className="border-red-400 text-red-600 hover:bg-red-50" onClick={markAllAbsent}>
+              <XCircle className="h-4 w-4 mr-2" />
               Mark All Absent
             </Button>
-            <Box sx={{ flex: 1 }} />
+            <div className="flex-1" />
             <Button
-              variant="contained"
-              color="primary"
               onClick={() => setShowSaveDialog(true)}
-              startIcon={<SaveIcon />}
-              sx={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              }}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
             >
+              <Save className="h-4 w-4 mr-2" />
               Save Attendance
             </Button>
-          </Box>
+          </div>
 
           {existingAttendance.length > 0 && (
-            <Alert severity="info" sx={{ mb: 2 }}>
-              Attendance already recorded for this date. Saving will update the records.
+            <Alert className="mb-4 border-blue-300 bg-blue-50 text-blue-800">
+              <AlertDescription>
+                Attendance already recorded for this date. Saving will update the records.
+              </AlertDescription>
             </Alert>
           )}
 
           {/* Attendance Table */}
-          <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0' }}>
+          <div className="border rounded-md overflow-hidden">
             <Table>
-              <TableHead>
-                <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                  <TableCell width={50}>#</TableCell>
-                  <TableCell>Student</TableCell>
-                  <TableCell>Enrollment #</TableCell>
-                  <TableCell width={300}>Status</TableCell>
-                  <TableCell>Notes</TableCell>
+              <TableHeader>
+                <TableRow className="bg-gray-50">
+                  <TableHead className="w-12">#</TableHead>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Enrollment #</TableHead>
+                  <TableHead className="w-[300px]">Status</TableHead>
+                  <TableHead>Notes</TableHead>
                 </TableRow>
-              </TableHead>
+              </TableHeader>
               <TableBody>
                 {students.map((student, index) => {
                   const record = attendance.get(student.student_id);
                   return (
-                    <TableRow key={student.student_id} sx={{ '&:hover': { bgcolor: '#f9f9f9' } }}>
+                    <TableRow key={student.student_id} className="hover:bg-gray-50">
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                          <Avatar sx={{ bgcolor: '#667eea', width: 32, height: 32, fontSize: 14 }}>
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-medium">
                             {student.first_name?.[0]}{student.last_name?.[0]}
-                          </Avatar>
-                          <Typography variant="body2" fontWeight={500}>
+                          </div>
+                          <span className="font-medium text-sm">
                             {student.first_name} {student.last_name}
-                          </Typography>
-                        </Box>
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <Typography variant="body2" fontFamily="monospace">
-                          {student.enrollment_number}
-                        </Typography>
+                        <span className="font-mono text-sm">{student.enrollment_number}</span>
                       </TableCell>
                       <TableCell>
-                        <ToggleButtonGroup
-                          value={record?.status || 'Present'}
-                          exclusive
-                          onChange={(_, value) => value && handleStatusChange(student.student_id, value)}
-                          size="small"
-                        >
-                          <ToggleButton value="Present" sx={{ color: 'success.main' }}>
-                            <Tooltip title="Present">
-                              <PresentIcon fontSize="small" />
-                            </Tooltip>
-                          </ToggleButton>
-                          <ToggleButton value="Absent" sx={{ color: 'error.main' }}>
-                            <Tooltip title="Absent">
-                              <AbsentIcon fontSize="small" />
-                            </Tooltip>
-                          </ToggleButton>
-                          <ToggleButton value="Late" sx={{ color: 'warning.main' }}>
-                            <Tooltip title="Late">
-                              <LateIcon fontSize="small" />
-                            </Tooltip>
-                          </ToggleButton>
-                          <ToggleButton value="Half Day" sx={{ color: 'info.main' }}>
-                            <Tooltip title="Half Day">
-                              <Box component="span">HD</Box>
-                            </Tooltip>
-                          </ToggleButton>
-                        </ToggleButtonGroup>
+                        <div className="flex gap-1">
+                          {(['Present', 'Absent', 'Late', 'Half Day'] as const).map((status) => (
+                            <button
+                              key={status}
+                              onClick={() => handleStatusChange(student.student_id, status)}
+                              className={cn(
+                                'px-2 py-1 text-xs rounded border transition-colors',
+                                record?.status === status
+                                  ? status === 'Present'
+                                    ? 'bg-green-500 text-white border-green-500'
+                                    : status === 'Absent'
+                                    ? 'bg-red-500 text-white border-red-500'
+                                    : status === 'Late'
+                                    ? 'bg-amber-500 text-white border-amber-500'
+                                    : 'bg-blue-500 text-white border-blue-500'
+                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                              )}
+                            >
+                              {status === 'Present' && <CheckCircle className="h-3 w-3 inline mr-1" />}
+                              {status === 'Absent' && <XCircle className="h-3 w-3 inline mr-1" />}
+                              {status === 'Late' && <Clock className="h-3 w-3 inline mr-1" />}
+                              {status === 'Half Day' ? 'HD' : status.charAt(0)}
+                            </button>
+                          ))}
+                        </div>
                       </TableCell>
                       <TableCell>
-                        <TextField
-                          size="small"
+                        <Input
                           placeholder="Add notes..."
                           value={record?.notes || ''}
                           onChange={(e) => handleNotesChange(student.student_id, e.target.value)}
-                          sx={{ width: 200 }}
+                          className="w-48 h-8 text-sm"
                         />
                       </TableCell>
                     </TableRow>
@@ -461,52 +411,54 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                 })}
               </TableBody>
             </Table>
-          </TableContainer>
+          </div>
         </>
       )}
 
       {/* Save Confirmation Dialog */}
-      <Dialog open={showSaveDialog} onClose={() => setShowSaveDialog(false)}>
-        <DialogTitle>Save Attendance</DialogTitle>
+      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <DialogContent>
-          <Typography sx={{ mb: 2 }}>
+          <DialogHeader>
+            <DialogTitle>Save Attendance</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground mb-3">
             You are about to save attendance for <strong>{students.length}</strong> students on{' '}
             <strong>{new Date(attendanceDate).toLocaleDateString()}</strong>.
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Chip
-              icon={<PresentIcon />}
-              label={`${attendanceStats.present} Present`}
-              color="success"
-              variant="outlined"
-            />
-            <Chip
-              icon={<AbsentIcon />}
-              label={`${attendanceStats.absent} Absent`}
-              color="error"
-              variant="outlined"
-            />
-            <Chip
-              icon={<LateIcon />}
-              label={`${attendanceStats.late} Late`}
-              color="warning"
-              variant="outlined"
-            />
-          </Box>
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1 text-xs border border-green-400 text-green-600 rounded-full px-2.5 py-1">
+              <CheckCircle className="h-3 w-3" /> {attendanceStats.present} Present
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs border border-red-400 text-red-600 rounded-full px-2.5 py-1">
+              <XCircle className="h-3 w-3" /> {attendanceStats.absent} Absent
+            </span>
+            <span className="inline-flex items-center gap-1 text-xs border border-amber-400 text-amber-600 rounded-full px-2.5 py-1">
+              <Clock className="h-3 w-3" /> {attendanceStats.late} Late
+            </span>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+            <Button
+              onClick={handleSaveAttendance}
+              disabled={saving}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500"
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Attendance
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowSaveDialog(false)}>Cancel</Button>
-          <Button
-            onClick={handleSaveAttendance}
-            variant="contained"
-            disabled={saving}
-            startIcon={saving ? <CircularProgress size={20} /> : <SaveIcon />}
-          >
-            {saving ? 'Saving...' : 'Save Attendance'}
-          </Button>
-        </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 
