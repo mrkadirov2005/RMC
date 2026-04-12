@@ -1,0 +1,2 @@
+-- Deprecated: the canonical PostgreSQL schema lives in `db/schema/`.
+-- Apply with: `npm run db:migrate` (loads 001_base.sql, 002_phase1.sql, 003_tests.sql in order).
