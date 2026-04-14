@@ -5,16 +5,13 @@ const getAll = async (centerId?: number, teacherId?: number) => {
   const params: any[] = [];
   const conditions: string[] = [];
 
-  if (centerId || teacherId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id';
-  }
-
   if (centerId) {
     params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
+    conditions.push(`a.center_id = $${params.length}`);
   }
 
   if (teacherId) {
+    query += ' JOIN classes c ON c.class_id = a.class_id';
     params.push(teacherId);
     conditions.push(`c.teacher_id = $${params.length}`);
   }
@@ -33,16 +30,13 @@ const getById = async (id: number, centerId?: number, teacherId?: number) => {
   const params: any[] = [id];
   const conditions: string[] = ['a.assignment_id = $1'];
 
-  if (centerId || teacherId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id';
-  }
-
   if (centerId) {
     params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
+    conditions.push(`a.center_id = $${params.length}`);
   }
 
   if (teacherId) {
+    query += ' JOIN classes c ON c.class_id = a.class_id';
     params.push(teacherId);
     conditions.push(`c.teacher_id = $${params.length}`);
   }
@@ -53,9 +47,9 @@ const getById = async (id: number, centerId?: number, teacherId?: number) => {
 };
 
 const create = async (payload: any) => {
-  const { class_id, assignment_title, description, due_date, submission_date, status, grade, center_id, student_id } = payload;
+  const { class_id, assignment_title, description, due_date, submission_date, status, grade, center_id, student_id, teacher_id } = payload;
   const baseParams = [
-    class_id,
+    class_id ?? null,
     assignment_title,
     description,
     due_date,
@@ -75,8 +69,19 @@ const create = async (payload: any) => {
 
   try {
     return await tryInsert(
-      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'student_id', 'center_id'],
-      [...baseParams, student_id, center_id]
+      [
+        'class_id',
+        'assignment_title',
+        'description',
+        'due_date',
+        'submission_date',
+        'status',
+        'grade',
+        'student_id',
+        'teacher_id',
+        'center_id',
+      ],
+      [...baseParams, student_id, teacher_id, center_id]
     );
   } catch (error: any) {
     if (error?.code !== '42703') {
@@ -86,8 +91,19 @@ const create = async (payload: any) => {
 
   try {
     return await tryInsert(
-      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'student_id'],
-      [...baseParams, student_id]
+      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'student_id', 'teacher_id'],
+      [...baseParams, student_id, teacher_id]
+    );
+  } catch (error: any) {
+    if (error?.code !== '42703') {
+      throw error;
+    }
+  }
+
+  try {
+    return await tryInsert(
+      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'teacher_id'],
+      [...baseParams, teacher_id]
     );
   } catch (error: any) {
     if (error?.code !== '42703') {
@@ -123,16 +139,14 @@ const update = async (id: number, payload: any, centerId?: number, teacherId?: n
       updated_at = CURRENT_TIMESTAMP
     WHERE assignment_id = $6`;
   const params: any[] = [assignment_title, description, due_date, status, grade, id];
-  if (centerId || teacherId) {
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (teacherId) {
     query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
-    if (centerId) {
-      params.push(centerId);
-      query += ` AND center_id = $${params.length}`;
-    }
-    if (teacherId) {
-      params.push(teacherId);
-      query += ` AND teacher_id = $${params.length}`;
-    }
+    params.push(teacherId);
+    query += ` AND teacher_id = $${params.length}`;
     query += ')';
   }
   query += ' RETURNING *';
@@ -143,16 +157,14 @@ const update = async (id: number, payload: any, centerId?: number, teacherId?: n
 const remove = async (id: number, centerId?: number, teacherId?: number) => {
   let query = 'DELETE FROM assignments WHERE assignment_id = $1';
   const params: any[] = [id];
-  if (centerId || teacherId) {
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (teacherId) {
     query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
-    if (centerId) {
-      params.push(centerId);
-      query += ` AND center_id = $${params.length}`;
-    }
-    if (teacherId) {
-      params.push(teacherId);
-      query += ` AND teacher_id = $${params.length}`;
-    }
+    params.push(teacherId);
+    query += ` AND teacher_id = $${params.length}`;
     query += ')';
   }
   query += ' RETURNING *';

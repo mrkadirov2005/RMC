@@ -50,14 +50,18 @@ const createAssignment = async (req: any, res: any) => {
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
-    if (req.user?.userType === 'teacher') {
-      const ok = await classBelongsToTeacher(req.body.class_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Class does not belong to this teacher.' });
-    } else if (centerId) {
-      const ok = await classInCenter(req.body.class_id, centerId);
-      if (!ok) return res.status(400).json({ error: 'Class does not belong to this center.' });
+    const classId = req.body.class_id;
+    const effectiveCenterId = centerId ?? req.body.center_id;
+    if (classId !== undefined && classId !== null && classId !== '') {
+      if (req.user?.userType === 'teacher') {
+        const ok = await classBelongsToTeacher(classId, req.user?.id);
+        if (!ok) return res.status(403).json({ error: 'Class does not belong to this teacher.' });
+      } else if (effectiveCenterId) {
+        const ok = await classInCenter(classId, effectiveCenterId);
+        if (!ok) return res.status(400).json({ error: 'Class does not belong to this center.' });
+      }
     }
-    const assignment = await assignmentService.createAssignment({ ...req.body, center_id: centerId ?? req.body.center_id });
+    const assignment = await assignmentService.createAssignment({ ...req.body, center_id: effectiveCenterId });
     res.status(201).json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
