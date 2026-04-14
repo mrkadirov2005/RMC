@@ -1,7 +1,7 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TABLE classes (
+        CREATE TABLE IF NOT EXISTS classes (
           class_id SERIAL PRIMARY KEY,
           center_id INT NOT NULL,
           class_name VARCHAR(100) NOT NULL,
@@ -20,10 +20,10 @@ module.exports = {
           FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
       );
 
-      CREATE INDEX idx_class_code ON classes(class_code);
-      CREATE INDEX idx_classes_level ON classes(level);
+        CREATE INDEX IF NOT EXISTS idx_class_code ON classes(class_code);
+        CREATE INDEX IF NOT EXISTS idx_classes_level ON classes(level);
 
-      CREATE TABLE students (
+        CREATE TABLE IF NOT EXISTS students (
           student_id SERIAL PRIMARY KEY,
           center_id INT NOT NULL,
           enrollment_number VARCHAR(50) NOT NULL UNIQUE,
@@ -47,11 +47,11 @@ module.exports = {
           FOREIGN KEY (class_id) REFERENCES classes(class_id)
       );
 
-      CREATE INDEX idx_enrollment_number ON students(enrollment_number);
-      CREATE INDEX idx_students_status ON students(status);
-      CREATE INDEX idx_students_teacher_id ON students(teacher_id);
+        CREATE INDEX IF NOT EXISTS idx_enrollment_number ON students(enrollment_number);
+        CREATE INDEX IF NOT EXISTS idx_students_status ON students(status);
+        CREATE INDEX IF NOT EXISTS idx_students_teacher_id ON students(teacher_id);
 
-      CREATE TABLE subjects (
+        CREATE TABLE IF NOT EXISTS subjects (
           subject_id SERIAL PRIMARY KEY,
           class_id INT NOT NULL,
           subject_name VARCHAR(100) NOT NULL,
@@ -61,7 +61,7 @@ module.exports = {
           passing_marks INT DEFAULT 40,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
-          FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+            FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
       );
     `);
   },

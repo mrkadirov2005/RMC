@@ -1,9 +1,13 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TYPE notification_type AS ENUM ('info', 'warning', 'alert', 'success');
+      DO $$ BEGIN
+        CREATE TYPE notification_type AS ENUM ('info', 'warning', 'alert', 'success');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
 
-      CREATE TABLE notifications (
+      CREATE TABLE IF NOT EXISTS notifications (
           notification_id SERIAL PRIMARY KEY,
           user_type VARCHAR(20) NOT NULL,
           user_id INT NOT NULL,
@@ -13,9 +17,9 @@ module.exports = {
           is_read BOOLEAN DEFAULT FALSE,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-      CREATE INDEX idx_notifications_user ON notifications(user_type, user_id, is_read);
+      CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_type, user_id, is_read);
 
-      CREATE TABLE audit_logs (
+      CREATE TABLE IF NOT EXISTS audit_logs (
           audit_id SERIAL PRIMARY KEY,
           user_type VARCHAR(20) NOT NULL,
           user_id INT NOT NULL,
@@ -26,10 +30,10 @@ module.exports = {
           ip_address VARCHAR(50),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-      CREATE INDEX idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
-      CREATE INDEX idx_audit_logs_user ON audit_logs(user_type, user_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_entity ON audit_logs(entity_type, entity_id);
+      CREATE INDEX IF NOT EXISTS idx_audit_logs_user ON audit_logs(user_type, user_id);
 
-      CREATE TABLE saved_filters (
+      CREATE TABLE IF NOT EXISTS saved_filters (
           filter_id SERIAL PRIMARY KEY,
           user_type VARCHAR(20) NOT NULL,
           user_id INT NOT NULL,
@@ -39,7 +43,7 @@ module.exports = {
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
-      CREATE INDEX idx_saved_filters_user ON saved_filters(user_type, user_id, entity);
+      CREATE INDEX IF NOT EXISTS idx_saved_filters_user ON saved_filters(user_type, user_id, entity);
     `);
   },
 

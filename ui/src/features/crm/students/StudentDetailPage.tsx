@@ -333,7 +333,14 @@ const StudentDetailPage = () => {
 
       {/* Tab Content */}
       {activeTab === 'attendance' && (
-        <AttendanceTab attendance={attendance} onRefresh={loadStudentDetails} />
+        <AttendanceTab
+          attendance={attendance}
+          studentId={student.student_id || student.id}
+          studentClassId={student.class_id}
+          centerId={student.center_id}
+          teacherId={classData?.teacher_id}
+          onRefresh={loadStudentDetails}
+        />
       )}
 
       {activeTab === 'payments' && (
@@ -345,6 +352,7 @@ const StudentDetailPage = () => {
           assignments={assignments}
           studentClassId={student.class_id}
           studentId={student.student_id || student.id}
+          centerId={student.center_id}
           onRefresh={loadStudentDetails}
         />
       )}
@@ -353,6 +361,8 @@ const StudentDetailPage = () => {
         <IndividualTasksTab
           assignments={assignments}
           studentId={student.student_id || student.id}
+          centerId={student.center_id}
+          studentClassId={student.class_id}
           onRefresh={loadStudentDetails}
         />
       )}
@@ -363,6 +373,8 @@ const StudentDetailPage = () => {
           onRefresh={loadStudentDetails}
           studentId={student.student_id || student.id}
           classId={student.class_id}
+          teacherId={classData?.teacher_id}
+          centerId={student.center_id}
         />
       )}
 

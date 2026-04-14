@@ -53,14 +53,63 @@ const getById = async (id: number, centerId?: number, teacherId?: number) => {
 };
 
 const create = async (payload: any) => {
-  const { class_id, assignment_title, description, due_date, submission_date, status } = payload;
-  const result = await pool.query(
-    `INSERT INTO assignments (class_id, assignment_title, description, due_date, submission_date, status)
-     VALUES ($1, $2, $3, $4, $5, $6)
-     RETURNING *`,
-    [class_id, assignment_title, description, due_date, submission_date, status || 'Pending']
+  const { class_id, assignment_title, description, due_date, submission_date, status, grade, center_id, student_id } = payload;
+  const baseParams = [
+    class_id,
+    assignment_title,
+    description,
+    due_date,
+    submission_date,
+    status || 'Pending',
+    grade,
+  ];
+
+  const tryInsert = async (columns: string[], params: any[]) => {
+    const placeholders = params.map((_, index) => `$${index + 1}`).join(', ');
+    const result = await pool.query(
+      `INSERT INTO assignments (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`,
+      params
+    );
+    return result.rows[0];
+  };
+
+  try {
+    return await tryInsert(
+      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'student_id', 'center_id'],
+      [...baseParams, student_id, center_id]
+    );
+  } catch (error: any) {
+    if (error?.code !== '42703') {
+      throw error;
+    }
+  }
+
+  try {
+    return await tryInsert(
+      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'student_id'],
+      [...baseParams, student_id]
+    );
+  } catch (error: any) {
+    if (error?.code !== '42703') {
+      throw error;
+    }
+  }
+
+  try {
+    return await tryInsert(
+      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'center_id'],
+      [...baseParams, center_id]
+    );
+  } catch (error: any) {
+    if (error?.code !== '42703') {
+      throw error;
+    }
+  }
+
+  return tryInsert(
+    ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade'],
+    baseParams
   );
-  return result.rows[0];
 };
 
 const update = async (id: number, payload: any, centerId?: number, teacherId?: number) => {

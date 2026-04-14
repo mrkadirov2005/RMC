@@ -201,7 +201,7 @@ export const attendanceAPI = {
   getByClass: (classId: number) => apiClient.get(`/attendance/class/${classId}`),
   create: (data: any) => apiClient.post('/attendance', data),
   update: (id: number, data: any) => apiClient.put(`/attendance/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/attendance/${id}`),
+  delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/attendance/${id}`, { params }),
 };
 
 export const assignmentAPI = {

@@ -1,7 +1,7 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TABLE debts (
+      CREATE TABLE IF NOT EXISTS debts (
           debt_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           center_id INT NOT NULL,
@@ -17,9 +17,9 @@ module.exports = {
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
 
-      CREATE INDEX idx_debt_date ON debts(debt_date);
+      CREATE INDEX IF NOT EXISTS idx_debt_date ON debts(debt_date);
 
-      CREATE TABLE payments (
+      CREATE TABLE IF NOT EXISTS payments (
           payment_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           center_id INT NOT NULL,
@@ -38,9 +38,9 @@ module.exports = {
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
 
-      CREATE INDEX idx_payment_date ON payments(payment_date);
-      CREATE INDEX idx_payment_status ON payments(payment_status);
-      CREATE INDEX idx_payments_student_id ON payments(student_id);
+      CREATE INDEX IF NOT EXISTS idx_payment_date ON payments(payment_date);
+      CREATE INDEX IF NOT EXISTS idx_payment_status ON payments(payment_status);
+      CREATE INDEX IF NOT EXISTS idx_payments_student_id ON payments(student_id);
     `);
   },
 

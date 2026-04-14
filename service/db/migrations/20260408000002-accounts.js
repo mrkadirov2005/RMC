@@ -1,7 +1,7 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TABLE teachers (
+        CREATE TABLE IF NOT EXISTS teachers (
           teacher_id SERIAL PRIMARY KEY,
           center_id INT NOT NULL,
           employee_id VARCHAR(50) NOT NULL UNIQUE,
@@ -22,10 +22,10 @@ module.exports = {
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
 
-      CREATE INDEX idx_employee_id ON teachers(employee_id);
-      CREATE INDEX idx_teachers_status ON teachers(status);
+        CREATE INDEX IF NOT EXISTS idx_employee_id ON teachers(employee_id);
+        CREATE INDEX IF NOT EXISTS idx_teachers_status ON teachers(status);
 
-      CREATE TABLE superusers (
+        CREATE TABLE IF NOT EXISTS superusers (
           superuser_id SERIAL PRIMARY KEY,
           center_id INT NOT NULL,
           username VARCHAR(100) NOT NULL UNIQUE,
@@ -45,8 +45,8 @@ module.exports = {
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
 
-      CREATE INDEX idx_superuser_username ON superusers(username);
-      CREATE INDEX idx_superuser_status ON superusers(status);
+      CREATE INDEX IF NOT EXISTS idx_superuser_username ON superusers(username);
+      CREATE INDEX IF NOT EXISTS idx_superuser_status ON superusers(status);
     `);
   },
 

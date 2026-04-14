@@ -156,6 +156,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
                 <TableHead>Date</TableHead>
                 <TableHead>Method</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Notes</TableHead>
                 <TableHead className="w-24">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -178,6 +179,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
                         {payment.payment_status}
                       </Badge>
                     </TableCell>
+                    <TableCell>{payment.notes || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
                         <Button variant="ghost" size="sm" onClick={() => handleOpenModal(payment)}>

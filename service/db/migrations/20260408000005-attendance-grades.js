@@ -1,7 +1,7 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TABLE attendance (
+        CREATE TABLE IF NOT EXISTS attendance (
           attendance_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           teacher_id INT NOT NULL,
@@ -15,9 +15,9 @@ module.exports = {
           FOREIGN KEY (class_id) REFERENCES classes(class_id)
       );
 
-      CREATE INDEX idx_attendance_date ON attendance(attendance_date);
+        CREATE INDEX IF NOT EXISTS idx_attendance_date ON attendance(attendance_date);
 
-      CREATE TABLE grades (
+        CREATE TABLE IF NOT EXISTS grades (
           grade_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           teacher_id INT NOT NULL,
@@ -35,8 +35,8 @@ module.exports = {
           FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
       );
 
-      CREATE INDEX idx_grades_student_id ON grades(student_id);
-      CREATE INDEX idx_grades_academic_year ON grades(academic_year);
+      CREATE INDEX IF NOT EXISTS idx_grades_student_id ON grades(student_id);
+      CREATE INDEX IF NOT EXISTS idx_grades_academic_year ON grades(academic_year);
     `);
   },
 

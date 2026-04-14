@@ -1,7 +1,8 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TYPE test_type AS ENUM(
+      DO $$ BEGIN
+        CREATE TYPE test_type AS ENUM(
           'multiple_choice',
           'form_filling',
           'essay',
@@ -10,24 +11,35 @@ module.exports = {
           'matching',
           'reading_passage',
           'writing'
-      );
+        );
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
 
-      CREATE TYPE test_assignment_type AS ENUM(
+      DO $$ BEGIN
+        CREATE TYPE test_assignment_type AS ENUM(
           'all_students',
           'specific_students',
           'specific_class',
           'specific_teacher'
-      );
+        );
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
 
-      CREATE TYPE test_submission_status AS ENUM(
+      DO $$ BEGIN
+        CREATE TYPE test_submission_status AS ENUM(
           'not_started',
           'in_progress',
           'submitted',
           'graded',
           'reviewed'
-      );
+        );
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
 
-      CREATE TABLE tests (
+      CREATE TABLE IF NOT EXISTS tests (
           test_id SERIAL PRIMARY KEY,
           center_id INT NOT NULL,
           subject_id INT,
@@ -56,13 +68,13 @@ module.exports = {
           FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE SET NULL
       );
 
-      CREATE INDEX idx_tests_center ON tests(center_id);
-      CREATE INDEX idx_tests_subject ON tests(subject_id);
-      CREATE INDEX idx_tests_type ON tests(test_type);
-      CREATE INDEX idx_tests_active ON tests(is_active);
-      CREATE INDEX idx_tests_dates ON tests(start_date, end_date);
+      CREATE INDEX IF NOT EXISTS idx_tests_center ON tests(center_id);
+      CREATE INDEX IF NOT EXISTS idx_tests_subject ON tests(subject_id);
+      CREATE INDEX IF NOT EXISTS idx_tests_type ON tests(test_type);
+      CREATE INDEX IF NOT EXISTS idx_tests_active ON tests(is_active);
+      CREATE INDEX IF NOT EXISTS idx_tests_dates ON tests(start_date, end_date);
 
-      CREATE TABLE test_assignments (
+      CREATE TABLE IF NOT EXISTS test_assignments (
           assignment_id SERIAL PRIMARY KEY,
           test_id INT NOT NULL,
           assigned_to_type VARCHAR(20) NOT NULL,
@@ -76,10 +88,10 @@ module.exports = {
           UNIQUE(test_id, assigned_to_type, assigned_to_id)
       );
 
-      CREATE INDEX idx_test_assignments_test ON test_assignments(test_id);
-      CREATE INDEX idx_test_assignments_assigned ON test_assignments(assigned_to_type, assigned_to_id);
+      CREATE INDEX IF NOT EXISTS idx_test_assignments_test ON test_assignments(test_id);
+      CREATE INDEX IF NOT EXISTS idx_test_assignments_assigned ON test_assignments(assigned_to_type, assigned_to_id);
 
-      CREATE TABLE reading_passages (
+      CREATE TABLE IF NOT EXISTS reading_passages (
           passage_id SERIAL PRIMARY KEY,
           test_id INT NOT NULL,
           title VARCHAR(255) NOT NULL,
@@ -93,9 +105,9 @@ module.exports = {
           FOREIGN KEY (test_id) REFERENCES tests(test_id) ON DELETE CASCADE
       );
 
-      CREATE INDEX idx_passages_test ON reading_passages(test_id);
+      CREATE INDEX IF NOT EXISTS idx_passages_test ON reading_passages(test_id);
 
-      CREATE TABLE test_questions (
+      CREATE TABLE IF NOT EXISTS test_questions (
           question_id SERIAL PRIMARY KEY,
           test_id INT NOT NULL,
           passage_id INT,
@@ -115,10 +127,10 @@ module.exports = {
           FOREIGN KEY (passage_id) REFERENCES reading_passages(passage_id) ON DELETE SET NULL
       );
 
-      CREATE INDEX idx_questions_test ON test_questions(test_id);
-      CREATE INDEX idx_questions_passage ON test_questions(passage_id);
+      CREATE INDEX IF NOT EXISTS idx_questions_test ON test_questions(test_id);
+      CREATE INDEX IF NOT EXISTS idx_questions_passage ON test_questions(passage_id);
 
-      CREATE TABLE test_submissions (
+      CREATE TABLE IF NOT EXISTS test_submissions (
           submission_id SERIAL PRIMARY KEY,
           test_id INT NOT NULL,
           student_id INT NOT NULL,
@@ -143,12 +155,12 @@ module.exports = {
           FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
       );
 
-      CREATE INDEX idx_submissions_test ON test_submissions(test_id);
-      CREATE INDEX idx_submissions_student ON test_submissions(student_id);
-      CREATE INDEX idx_submissions_status ON test_submissions(status);
-      CREATE INDEX idx_submissions_graded ON test_submissions(graded_by, graded_by_type);
+      CREATE INDEX IF NOT EXISTS idx_submissions_test ON test_submissions(test_id);
+      CREATE INDEX IF NOT EXISTS idx_submissions_student ON test_submissions(student_id);
+      CREATE INDEX IF NOT EXISTS idx_submissions_status ON test_submissions(status);
+      CREATE INDEX IF NOT EXISTS idx_submissions_graded ON test_submissions(graded_by, graded_by_type);
 
-      CREATE TABLE test_answers (
+      CREATE TABLE IF NOT EXISTS test_answers (
           answer_id SERIAL PRIMARY KEY,
           submission_id INT NOT NULL,
           question_id INT NOT NULL,
@@ -162,10 +174,10 @@ module.exports = {
           FOREIGN KEY (question_id) REFERENCES test_questions(question_id) ON DELETE CASCADE
       );
 
-      CREATE INDEX idx_answers_submission ON test_answers(submission_id);
-      CREATE INDEX idx_answers_question ON test_answers(question_id);
+      CREATE INDEX IF NOT EXISTS idx_answers_submission ON test_answers(submission_id);
+      CREATE INDEX IF NOT EXISTS idx_answers_question ON test_answers(question_id);
 
-      CREATE TABLE test_results_summary (
+      CREATE TABLE IF NOT EXISTS test_results_summary (
           result_id SERIAL PRIMARY KEY,
           test_id INT NOT NULL,
           student_id INT NOT NULL,
@@ -183,8 +195,8 @@ module.exports = {
           UNIQUE(test_id, student_id)
       );
 
-      CREATE INDEX idx_results_test ON test_results_summary(test_id);
-      CREATE INDEX idx_results_student ON test_results_summary(student_id);
+      CREATE INDEX IF NOT EXISTS idx_results_test ON test_results_summary(test_id);
+      CREATE INDEX IF NOT EXISTS idx_results_student ON test_results_summary(student_id);
     `);
   },
 

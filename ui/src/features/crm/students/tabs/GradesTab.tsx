@@ -14,8 +14,19 @@ interface GradesTabProps {
   onRefresh: () => void;
   studentId?: number;
   classId?: number;
+  teacherId?: number;
+  centerId?: number;
 }
 
-export const GradesTab = ({ grades, onRefresh, studentId, classId }: GradesTabProps) => {
-  return <GradesSection grades={grades} onRefresh={onRefresh} studentId={studentId} classId={classId} />;
+export const GradesTab = ({ grades, onRefresh, studentId, classId, teacherId, centerId }: GradesTabProps) => {
+  return (
+    <GradesSection
+      grades={grades}
+      onRefresh={onRefresh}
+      studentId={studentId}
+      classId={classId}
+      teacherId={teacherId}
+      centerId={centerId}
+    />
+  );
 };

@@ -1,7 +1,7 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TABLE teacher_payment_credentials (
+      CREATE TABLE IF NOT EXISTS teacher_payment_credentials (
           teacher_id INT PRIMARY KEY,
           password_hash VARCHAR(255) NOT NULL,
           is_active BOOLEAN DEFAULT TRUE,
@@ -13,7 +13,7 @@ module.exports = {
           FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE
       );
 
-      CREATE INDEX idx_teacher_payment_active ON teacher_payment_credentials(is_active);
+      CREATE INDEX IF NOT EXISTS idx_teacher_payment_active ON teacher_payment_credentials(is_active);
     `);
   },
 

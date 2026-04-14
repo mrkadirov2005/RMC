@@ -1,14 +1,38 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TYPE invoice_status AS ENUM ('Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled');
-      CREATE TYPE plan_status AS ENUM ('Active', 'Completed', 'Cancelled');
-      CREATE TYPE installment_status AS ENUM ('Pending', 'Paid', 'Overdue');
-      CREATE TYPE discount_type AS ENUM ('percent', 'fixed');
-      CREATE TYPE refund_status AS ENUM ('Requested', 'Approved', 'Rejected', 'Processed');
-      CREATE TYPE parent_status AS ENUM ('Active', 'Inactive');
+      DO $$ BEGIN
+        CREATE TYPE invoice_status AS ENUM ('Draft', 'Sent', 'Paid', 'Overdue', 'Cancelled');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+      DO $$ BEGIN
+        CREATE TYPE plan_status AS ENUM ('Active', 'Completed', 'Cancelled');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+      DO $$ BEGIN
+        CREATE TYPE installment_status AS ENUM ('Pending', 'Paid', 'Overdue');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+      DO $$ BEGIN
+        CREATE TYPE discount_type AS ENUM ('percent', 'fixed');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+      DO $$ BEGIN
+        CREATE TYPE refund_status AS ENUM ('Requested', 'Approved', 'Rejected', 'Processed');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+      DO $$ BEGIN
+        CREATE TYPE parent_status AS ENUM ('Active', 'Inactive');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
 
-      CREATE TABLE invoices (
+      CREATE TABLE IF NOT EXISTS invoices (
           invoice_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           center_id INT NOT NULL,
@@ -27,7 +51,7 @@ module.exports = {
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
 
-      CREATE TABLE invoice_items (
+      CREATE TABLE IF NOT EXISTS invoice_items (
           invoice_item_id SERIAL PRIMARY KEY,
           invoice_id INT NOT NULL,
           description VARCHAR(200) NOT NULL,
@@ -36,9 +60,9 @@ module.exports = {
           total DECIMAL(12,2) NOT NULL DEFAULT 0,
           FOREIGN KEY (invoice_id) REFERENCES invoices(invoice_id) ON DELETE CASCADE
       );
-      CREATE INDEX idx_invoices_student ON invoices(student_id, status);
+      CREATE INDEX IF NOT EXISTS idx_invoices_student ON invoices(student_id, status);
 
-      CREATE TABLE payment_plans (
+      CREATE TABLE IF NOT EXISTS payment_plans (
           plan_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           center_id INT NOT NULL,
@@ -54,7 +78,7 @@ module.exports = {
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
 
-      CREATE TABLE payment_plan_installments (
+      CREATE TABLE IF NOT EXISTS payment_plan_installments (
           installment_id SERIAL PRIMARY KEY,
           plan_id INT NOT NULL,
           due_date DATE NOT NULL,
@@ -66,9 +90,9 @@ module.exports = {
           FOREIGN KEY (plan_id) REFERENCES payment_plans(plan_id) ON DELETE CASCADE,
           FOREIGN KEY (paid_payment_id) REFERENCES payments(payment_id)
       );
-      CREATE INDEX idx_installments_plan ON payment_plan_installments(plan_id, status);
+      CREATE INDEX IF NOT EXISTS idx_installments_plan ON payment_plan_installments(plan_id, status);
 
-      CREATE TABLE discounts (
+      CREATE TABLE IF NOT EXISTS discounts (
           discount_id SERIAL PRIMARY KEY,
           student_id INT NOT NULL,
           center_id INT NOT NULL,
@@ -83,9 +107,9 @@ module.exports = {
           FOREIGN KEY (student_id) REFERENCES students(student_id),
           FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
       );
-      CREATE INDEX idx_discounts_student ON discounts(student_id, active);
+      CREATE INDEX IF NOT EXISTS idx_discounts_student ON discounts(student_id, active);
 
-      CREATE TABLE refunds (
+      CREATE TABLE IF NOT EXISTS refunds (
           refund_id SERIAL PRIMARY KEY,
           payment_id INT NOT NULL,
           amount DECIMAL(12,2) NOT NULL,
@@ -96,9 +120,9 @@ module.exports = {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           FOREIGN KEY (payment_id) REFERENCES payments(payment_id)
       );
-      CREATE INDEX idx_refunds_payment ON refunds(payment_id, status);
+      CREATE INDEX IF NOT EXISTS idx_refunds_payment ON refunds(payment_id, status);
 
-      CREATE TABLE parents (
+      CREATE TABLE IF NOT EXISTS parents (
           parent_id SERIAL PRIMARY KEY,
           first_name VARCHAR(100) NOT NULL,
           last_name VARCHAR(100) NOT NULL,
@@ -111,7 +135,7 @@ module.exports = {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
-      CREATE TABLE parent_students (
+      CREATE TABLE IF NOT EXISTS parent_students (
           parent_id INT NOT NULL,
           student_id INT NOT NULL,
           relationship VARCHAR(50) DEFAULT 'Guardian',
@@ -120,7 +144,7 @@ module.exports = {
           FOREIGN KEY (parent_id) REFERENCES parents(parent_id) ON DELETE CASCADE,
           FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
       );
-      CREATE INDEX idx_parent_students_parent ON parent_students(parent_id);
+      CREATE INDEX IF NOT EXISTS idx_parent_students_parent ON parent_students(parent_id);
     `);
   },
 

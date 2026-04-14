@@ -28,6 +28,8 @@ interface AssignmentSectionProps {
   assignments: Assignment[];
   studentClassId: number | undefined;
   studentId?: number;
+  centerId?: number;
+  scope?: 'class' | 'individual';
   onRefresh: () => void;
 }
 
@@ -44,7 +46,14 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
-export const AssignmentSection = ({ assignments, studentClassId, studentId, onRefresh }: AssignmentSectionProps) => {
+export const AssignmentSection = ({
+  assignments,
+  studentClassId,
+  studentId,
+  centerId,
+  scope = 'class',
+  onRefresh,
+}: AssignmentSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Assignment>>({
@@ -52,12 +61,12 @@ export const AssignmentSection = ({ assignments, studentClassId, studentId, onRe
   });
   const [loading, setLoading] = useState(false);
 
-  // Filter assignments by class_id or student_id matching student's ID
-  const filteredAssignments = assignments.filter(a =>
-    Number(a.class_id) === Number(studentId) ||
-    Number(a.student_id) === Number(studentId) ||
-    Number(a.class_id) === Number(studentClassId)
-  );
+  const filteredAssignments = assignments.filter((a) => {
+    if (scope === 'individual') {
+      return Number(a.student_id) === Number(studentId);
+    }
+    return Number(a.class_id) === Number(studentClassId) && !a.student_id;
+  });
 
   const handleOpenModal = (assignment?: Assignment) => {
     if (assignment) {
@@ -84,11 +93,20 @@ export const AssignmentSection = ({ assignments, studentClassId, studentId, onRe
         await assignmentAPI.update(editingId, formData);
         showToast.success('Assignment updated successfully');
       } else {
-        // When creating a new assignment, set class_id to student_id
+        if (scope === 'individual') {
+          if (!studentId || !studentClassId || !centerId) {
+            showToast.error('Student, class, and center are required to create assignment.');
+            return;
+          }
+        } else if (!studentClassId || !centerId) {
+          showToast.error('Class and center are required to create assignment.');
+          return;
+        }
         const newAssignment = {
           ...formData,
-          class_id: studentId,
-          student_id: studentId,
+          class_id: studentClassId,
+          center_id: centerId,
+          ...(scope === 'individual' ? { student_id: studentId } : {}),
         };
         await assignmentAPI.create(newAssignment);
         showToast.success('Assignment created successfully');

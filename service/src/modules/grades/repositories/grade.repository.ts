@@ -49,8 +49,8 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
 const insert = (params: any[]) =>
   pool
     .query(
-      `INSERT INTO grades (student_id, teacher_id, subject, class_id, marks_obtained, total_marks, percentage, grade_letter, academic_year, term)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      `INSERT INTO grades (student_id, teacher_id, subject, class_id, marks_obtained, total_marks, percentage, grade_letter, academic_year, term, center_id)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
       params
     )
     .then((r: any) => r.rows[0]);

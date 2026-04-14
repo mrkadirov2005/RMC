@@ -26,6 +26,7 @@ const createGrade = async (body: any, centerId?: number) => {
     grade_letter,
     academic_year,
     term,
+    centerId ?? body.center_id,
   ]);
 };
 

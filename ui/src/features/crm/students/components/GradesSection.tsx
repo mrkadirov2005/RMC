@@ -35,9 +35,11 @@ interface GradesSectionProps {
   onRefresh: () => void;
   studentId?: number;
   classId?: number;
+  teacherId?: number;
+  centerId?: number;
 }
 
-export const GradesSection = ({ grades, onRefresh, studentId, classId }: GradesSectionProps) => {
+export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId, centerId }: GradesSectionProps) => {
   const { user } = useAppSelector((state) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -81,6 +83,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId }: GradesS
         student_id: studentId,
         class_id: classId,
         teacher_id: user?.userType === 'teacher' ? user.id : undefined,
+        center_id: centerId,
       });
     }
     setIsModalOpen(true);
@@ -100,7 +103,8 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId }: GradesS
         ...formData,
         student_id: formData.student_id ?? studentId,
         class_id: formData.class_id ?? classId,
-        teacher_id: formData.teacher_id ?? (user?.userType === 'teacher' ? user.id : undefined),
+        teacher_id: formData.teacher_id ?? (user?.userType === 'teacher' ? user.id : teacherId),
+        center_id: formData.center_id ?? centerId,
       };
       if (editingId) {
         await gradeAPI.update(editingId, payload);

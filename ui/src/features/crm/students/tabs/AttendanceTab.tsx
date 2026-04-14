@@ -10,9 +10,29 @@ interface Attendance {
 
 interface AttendanceTabProps {
   attendance: Attendance[];
+  studentId?: number;
+  studentClassId?: number;
+  centerId?: number;
+  teacherId?: number;
   onRefresh: () => void;
 }
 
-export const AttendanceTab = ({ attendance, onRefresh }: AttendanceTabProps) => {
-  return <AttendanceSection attendance={attendance} onRefresh={onRefresh} />;
+export const AttendanceTab = ({
+  attendance,
+  studentId,
+  studentClassId,
+  centerId,
+  teacherId,
+  onRefresh,
+}: AttendanceTabProps) => {
+  return (
+    <AttendanceSection
+      attendance={attendance}
+      studentId={studentId}
+      studentClassId={studentClassId}
+      centerId={centerId}
+      teacherId={teacherId}
+      onRefresh={onRefresh}
+    />
+  );
 };

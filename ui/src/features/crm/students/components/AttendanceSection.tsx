@@ -17,6 +17,9 @@ interface Attendance {
   attendance_id?: number;
   id?: number;
   student_id?: number;
+  class_id?: number;
+  center_id?: number;
+  teacher_id?: number;
   attendance_date: string;
   status: string;
   remarks?: string;
@@ -24,6 +27,10 @@ interface Attendance {
 
 interface AttendanceSectionProps {
   attendance: Attendance[];
+  studentId?: number;
+  studentClassId?: number;
+  centerId?: number;
+  teacherId?: number;
   onRefresh: () => void;
 }
 
@@ -40,7 +47,14 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
-export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionProps) => {
+export const AttendanceSection = ({
+  attendance,
+  studentId,
+  studentClassId,
+  centerId,
+  teacherId,
+  onRefresh,
+}: AttendanceSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Attendance>>({
@@ -54,7 +68,13 @@ export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionPr
       setFormData(record);
     } else {
       setEditingId(null);
-      setFormData({ status: 'Present' });
+      setFormData({
+        status: 'Present',
+        student_id: studentId,
+        class_id: studentClassId,
+        center_id: centerId,
+        teacher_id: teacherId,
+      });
     }
     setIsModalOpen(true);
   };
@@ -62,7 +82,13 @@ export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionPr
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({ status: 'Present' });
+    setFormData({
+      status: 'Present',
+      student_id: studentId,
+      class_id: studentClassId,
+      center_id: centerId,
+      teacher_id: teacherId,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -73,7 +99,17 @@ export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionPr
         await attendanceAPI.update(editingId, formData);
         showToast.success('Attendance updated successfully');
       } else {
-        await attendanceAPI.create(formData);
+        if (!studentId || !studentClassId || !centerId || !teacherId) {
+          showToast.error('Student, class, center, and teacher are required to create attendance.');
+          return;
+        }
+        await attendanceAPI.create({
+          ...formData,
+          student_id: studentId,
+          class_id: studentClassId,
+          center_id: centerId,
+          teacher_id: teacherId,
+        });
         showToast.success('Attendance created successfully');
       }
       onRefresh();
@@ -89,7 +125,7 @@ export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionPr
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure?')) {
       try {
-        await attendanceAPI.delete(id);
+        await attendanceAPI.delete(id, { center_id: centerId });
         showToast.success('Attendance deleted successfully');
         onRefresh();
       } catch (error: unknown) {
@@ -124,7 +160,7 @@ export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionPr
             <label htmlFor="day-filter" className="font-medium">Filter by Day:</label>
             <select
               id="day-filter"
-              className="border rounded px-2 py-1 text-sm"
+              className="border bg-gray-500 rounded px-2 py-1 text-sm"
               value={dayFilter}
               onChange={e => setDayFilter(e.target.value)}
             >
@@ -157,7 +193,7 @@ export const AttendanceSection = ({ attendance, onRefresh }: AttendanceSectionPr
                 ) : (
                   filteredAttendance.map((rec) => (
                     <TableRow key={rec.attendance_id || rec.id}>
-                      <TableCell>{rec.attendance_date}</TableCell>
+                      <TableCell>{rec.attendance_date.split("T")[0]}</TableCell>
                       <TableCell>{new Date(rec.attendance_date).toLocaleDateString('en-US', { weekday: 'long' })}</TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeVariant(rec.status)}>{rec.status}</Badge>

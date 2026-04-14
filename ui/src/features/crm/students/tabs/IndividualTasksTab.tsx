@@ -14,21 +14,23 @@ interface Assignment {
 interface IndividualTasksTabProps {
   assignments: Assignment[];
   studentId: number | undefined;
+  centerId?: number;
+  studentClassId?: number;
   onRefresh: () => void;
 }
 
-export const IndividualTasksTab = ({ assignments, studentId, onRefresh }: IndividualTasksTabProps) => {
-  // Filter assignments where class_id equals student_id (individual tasks)
-  console.log(assignments,studentId)
+export const IndividualTasksTab = ({ assignments, studentId, centerId, studentClassId, onRefresh }: IndividualTasksTabProps) => {
   const individualTasksAssignments = assignments.filter(
-    a => Number(a.class_id) === Number(studentId)
+    (a) => Number(a.student_id) === Number(studentId)
   );
 
   return (
     <AssignmentSection 
       assignments={individualTasksAssignments}
-      studentClassId={studentId}
+      studentClassId={studentClassId}
       studentId={studentId}
+      centerId={centerId}
+      scope="individual"
       onRefresh={onRefresh}
     />
   );

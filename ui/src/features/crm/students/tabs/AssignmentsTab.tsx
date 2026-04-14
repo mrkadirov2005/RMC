@@ -15,15 +15,18 @@ interface AssignmentsTabProps {
   assignments: Assignment[];
   studentClassId: number | undefined;
   studentId: number | undefined;
+  centerId?: number;
   onRefresh: () => void;
 }
 
-export const AssignmentsTab = ({ assignments, studentClassId, studentId, onRefresh }: AssignmentsTabProps) => {
+export const AssignmentsTab = ({ assignments, studentClassId, studentId, centerId, onRefresh }: AssignmentsTabProps) => {
   return (
     <AssignmentSection 
       assignments={assignments} 
       studentClassId={studentClassId}
       studentId={studentId}
+      centerId={centerId}
+      scope="class"
       onRefresh={onRefresh} 
     />
   );

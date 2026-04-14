@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 interface Student {
   student_id?: number;
   id?: number;
+  username: string;
   enrollment_number: string;
   first_name: string;
   last_name: string;
@@ -48,6 +49,10 @@ export const StudentInfoSection = ({ student }: StudentInfoSectionProps) => {
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Enrollment Number</p>
             <p className="text-sm font-semibold">{student.enrollment_number}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Username (login)</p>
+            <p className="text-sm font-semibold">{student.username}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Email</p>

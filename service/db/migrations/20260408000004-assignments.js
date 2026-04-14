@@ -1,7 +1,7 @@
 module.exports = {
   async up(queryInterface) {
     await queryInterface.sequelize.query(`
-      CREATE TABLE assignments (
+        CREATE TABLE IF NOT EXISTS assignments (
           assignment_id SERIAL PRIMARY KEY,
           class_id INT NOT NULL,
           assignment_title VARCHAR(255) NOT NULL,
@@ -15,10 +15,10 @@ module.exports = {
           FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE
       );
 
-      CREATE INDEX idx_assignments_class_id ON assignments(class_id);
-      CREATE INDEX idx_assignments_status ON assignments(status);
+        CREATE INDEX IF NOT EXISTS idx_assignments_class_id ON assignments(class_id);
+        CREATE INDEX IF NOT EXISTS idx_assignments_status ON assignments(status);
 
-      CREATE TABLE assignment_submissions (
+        CREATE TABLE IF NOT EXISTS assignment_submissions (
           submission_id SERIAL PRIMARY KEY,
           assignment_id INT NOT NULL,
           student_id INT NOT NULL,
@@ -34,8 +34,8 @@ module.exports = {
           FOREIGN KEY (student_id) REFERENCES students(student_id)
       );
 
-      CREATE INDEX idx_assignment_submission_assignment ON assignment_submissions(assignment_id);
-      CREATE INDEX idx_assignment_submission_student ON assignment_submissions(student_id);
+      CREATE INDEX IF NOT EXISTS idx_assignment_submission_assignment ON assignment_submissions(assignment_id);
+      CREATE INDEX IF NOT EXISTS idx_assignment_submission_student ON assignment_submissions(student_id);
     `);
   },
 
