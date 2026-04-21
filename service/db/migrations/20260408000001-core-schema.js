@@ -42,7 +42,7 @@ module.exports = {
         WHEN duplicate_object THEN NULL;
       END $$;
       DO $$ BEGIN
-        CREATE TYPE attendance_status AS ENUM ('Present', 'Absent', 'Late', 'Half Day');
+        CREATE TYPE attendance_status AS ENUM ('Present', 'Absent', 'Absent NR', 'Absent R', 'Late', 'Half Day');
       EXCEPTION
         WHEN duplicate_object THEN NULL;
       END $$;

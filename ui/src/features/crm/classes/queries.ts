@@ -1,6 +1,6 @@
 import type { Class, ClassSchedule } from './types';
 
-export const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+export const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 export const parseSchedule = (section?: string): ClassSchedule => {
   if (!section) return { days: [], time: '09:00' };

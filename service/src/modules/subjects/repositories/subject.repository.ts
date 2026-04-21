@@ -57,7 +57,7 @@ const findByClass = (classId: number, centerId?: number, teacherId?: number) => 
 const insert = (params: any[]) =>
   pool
     .query(
-      'INSERT INTO subjects (class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      'INSERT INTO subjects (center_id, class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
       params
     )
     .then((r: any) => r.rows[0]);

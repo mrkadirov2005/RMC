@@ -51,11 +51,17 @@ const createGrade = async (req: any, res: any) => {
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
+    const requestBody = { ...req.body };
+    if (!requestBody.teacher_id || requestBody.teacher_id <= 0) {
+      if (req.user?.id) {
+        requestBody.teacher_id = req.user.id;
+      }
+    }
     if (req.user?.userType === 'teacher') {
-      const ok = await studentBelongsToTeacher(req.body.student_id, req.user?.id);
+      const ok = await studentBelongsToTeacher(requestBody.student_id, req.user?.id);
       if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
     }
-    const out = await gradeService.createGrade(req.body, centerId ?? req.body.center_id);
+    const out = await gradeService.createGrade(requestBody, centerId ?? requestBody.center_id);
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student or class does not belong to this center.' });
     }
@@ -161,14 +167,48 @@ const createBulkGrades = async (req: any, res: any) => {
   }
 };
 
+const getGradesBySession = async (req: any, res: any) => {
+  try {
+    const sessionId = Number(req.params.sessionId);
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    res.json(await gradeService.listBySession(sessionId, centerId ?? undefined, teacherId));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch grades' });
+  }
+};
+
+const upsertSessionScores = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    const out = await gradeService.upsertSessionScores(req.body, centerId ?? req.body.center_id);
+    res.json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to upsert session scores', details: error.message || String(error) });
+  }
+};
+
 module.exports = {
   getAllGrades,
   getGradeById,
   createGrade,
   updateGrade,
   getGradesByStudent,
+  getGradesBySession,
   deleteGrade,
   createBulkGrades,
+  upsertSessionScores,
 };
 
 export {};

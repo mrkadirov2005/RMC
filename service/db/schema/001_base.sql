@@ -9,7 +9,7 @@ CREATE TYPE student_gender AS ENUM ('Male', 'Female', 'Other');
 CREATE TYPE superuser_status AS ENUM ('Active', 'Inactive', 'Suspended');
 CREATE TYPE teacher_status AS ENUM ('Active', 'Inactive', 'Retired');
 CREATE TYPE teacher_gender AS ENUM ('Male', 'Female', 'Other');
-CREATE TYPE attendance_status AS ENUM ('Present', 'Absent', 'Late', 'Half Day');
+CREATE TYPE attendance_status AS ENUM ('Present', 'Absent', 'Absent NR', 'Absent R', 'Late', 'Half Day');
 CREATE TYPE payment_method_t AS ENUM ('Cash', 'Credit Card', 'Bank Transfer', 'Check', 'Digital Wallet');
 
 CREATE TABLE edu_centers (
@@ -96,6 +96,27 @@ CREATE TABLE classes (
 CREATE INDEX idx_class_code ON classes(class_code);
 CREATE INDEX idx_classes_level ON classes(level);
 
+CREATE TABLE sessions (
+    session_id SERIAL PRIMARY KEY,
+    center_id INT NOT NULL,
+    class_id INT NOT NULL,
+    teacher_id INT,
+    session_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    duration_minutes INT NOT NULL,
+    end_time TIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (center_id) REFERENCES edu_centers(center_id),
+    FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+);
+
+CREATE UNIQUE INDEX ux_sessions_class_date_time ON sessions(class_id, session_date, start_time);
+CREATE INDEX idx_sessions_class_id ON sessions(class_id);
+CREATE INDEX idx_sessions_date ON sessions(session_date);
+CREATE INDEX idx_sessions_center_id ON sessions(center_id);
+
 CREATE TABLE students (
     student_id SERIAL PRIMARY KEY,
     center_id INT NOT NULL,
@@ -144,6 +165,7 @@ CREATE INDEX idx_student_coin_transactions_center_id ON student_coin_transaction
 
 CREATE TABLE subjects (
     subject_id SERIAL PRIMARY KEY,
+    center_id INT NOT NULL,
     class_id INT NOT NULL,
     subject_name VARCHAR(100) NOT NULL,
     subject_code VARCHAR(50),
@@ -152,6 +174,7 @@ CREATE TABLE subjects (
     passing_marks INT DEFAULT 40,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
+    FOREIGN KEY (center_id) REFERENCES edu_centers(center_id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
 );
 
@@ -199,37 +222,60 @@ CREATE INDEX idx_assignment_submission_student ON assignment_submissions(student
 
 CREATE TABLE attendance (
     attendance_id SERIAL PRIMARY KEY,
+    center_id INT NOT NULL,
     student_id INT NOT NULL,
     teacher_id INT NOT NULL,
     class_id INT NOT NULL,
+    session_id INT,
     attendance_date DATE NOT NULL,
     status attendance_status DEFAULT 'Present',
     remarks TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (center_id) REFERENCES edu_centers(center_id),
     FOREIGN KEY (student_id) REFERENCES students(student_id),
     FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id),
-    FOREIGN KEY (class_id) REFERENCES classes(class_id)
+    FOREIGN KEY (class_id) REFERENCES classes(class_id),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id)
 );
+
+CREATE UNIQUE INDEX uniq_attendance_no_session
+    ON attendance (student_id, class_id, attendance_date)
+    WHERE session_id IS NULL;
+
+CREATE UNIQUE INDEX uniq_attendance_session
+    ON attendance (student_id, session_id)
+    WHERE session_id IS NOT NULL;
 
 CREATE INDEX idx_attendance_date ON attendance(attendance_date);
 
 CREATE TABLE grades (
     grade_id SERIAL PRIMARY KEY,
+    center_id INT NOT NULL,
     student_id INT NOT NULL,
     teacher_id INT NOT NULL,
     subject VARCHAR(100),
     class_id INT,
+    session_id INT,
     marks_obtained DECIMAL(6,2),
     total_marks INT DEFAULT 100,
     percentage DECIMAL(5,2),
     grade_letter VARCHAR(5),
+    attendance_score INT DEFAULT 0,
+    homework_score INT DEFAULT 0,
+    activity_score INT DEFAULT 0,
     academic_year INT,
     term VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (center_id) REFERENCES edu_centers(center_id),
     FOREIGN KEY (student_id) REFERENCES students(student_id),
-    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id),
+    FOREIGN KEY (session_id) REFERENCES sessions(session_id)
 );
+
+CREATE UNIQUE INDEX uniq_grade_session
+    ON grades (student_id, session_id)
+    WHERE session_id IS NOT NULL;
 
 CREATE INDEX idx_grades_student_id ON grades(student_id);
 CREATE INDEX idx_grades_academic_year ON grades(academic_year);

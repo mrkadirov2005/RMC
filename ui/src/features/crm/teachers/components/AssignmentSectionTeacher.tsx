@@ -15,6 +15,7 @@ interface Assignment {
   assignment_id?: number;
   id?: number;
   class_id?: number;
+  teacher_id?: number;
   assignment_title: string;
   due_date: string;
   status: string;
@@ -48,7 +49,9 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
   });
   const [loading, setLoading] = useState(false);
 
-  const filteredAssignments = assignments;
+  const filteredAssignments = assignments.filter(
+    (assignment) => Number(assignment.teacher_id) === Number(teacherId)
+  );
 
   const handleOpenModal = (assignment?: Assignment) => {
     if (assignment) {
@@ -75,7 +78,14 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
         await assignmentAPI.update(editingId, formData);
         showToast.success('Assignment updated successfully');
       } else {
-        await assignmentAPI.create(formData);
+        if (!teacherId) {
+          showToast.error('Teacher is required to create assignment.');
+          return;
+        }
+        await assignmentAPI.create({
+          ...formData,
+          teacher_id: teacherId,
+        });
         showToast.success('Assignment created successfully');
       }
       onRefresh();

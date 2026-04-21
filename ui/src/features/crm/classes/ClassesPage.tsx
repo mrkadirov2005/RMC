@@ -1,4 +1,4 @@
-import { Plus, Pencil, Trash2, Info, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,20 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   Select,
   SelectContent,
@@ -41,10 +55,17 @@ const ClassesPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    deleteModalOpen,
+    deleteTarget,
+    deleteAttendance,
+    deleteLoading,
+    handleCloseDeleteModal,
+    handleForceDelete,
     detailModalOpen,
     selectedClass,
     handleViewDetails,
     handleCloseDetailModal,
+    handleGenerateSessions,
     frequencyOptions,
     isOwner,
   } = useClassesPage();
@@ -113,21 +134,30 @@ const ClassesPage = () => {
                   <Info className="mr-1 h-4 w-4" />
                   Details
                 </Button>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleOpenModal(cls)}>
-                    <Pencil className="mr-1 h-4 w-4" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    onClick={() => handleDelete(cls.class_id || cls.id || 0)}
-                  >
-                    <Trash2 className="mr-1 h-4 w-4" />
-                    Delete
-                  </Button>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuItem onClick={() => handleGenerateSessions(cls)}>
+                      <CalendarDays className="mr-2 h-4 w-4" />
+                      Generate Sessions
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleOpenModal(cls)}>
+                      <Pencil className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      className="text-destructive focus:text-destructive"
+                      onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </Card>
           ))}
@@ -313,6 +343,62 @@ const ClassesPage = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Attendance Conflict Modal */}
+      <Dialog open={deleteModalOpen} onOpenChange={(open) => !open && handleCloseDeleteModal()}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Attendance records found</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              The class{deleteTarget?.name ? ` "${deleteTarget.name}"` : ''} has
+              {` ${deleteAttendance.length} `}
+              attendance record(s). Deleting anyway will remove those records and the class.
+            </p>
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Student ID</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Session</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {deleteAttendance.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground">
+                        No attendance records found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    deleteAttendance.map((record) => (
+                      <TableRow key={record.attendance_id || `${record.student_id}-${record.attendance_date}`}>
+                        <TableCell>
+                          {record.attendance_date?.split('T')[0] || record.attendance_date}
+                        </TableCell>
+                        <TableCell>{record.student_id}</TableCell>
+                        <TableCell>{record.status}</TableCell>
+                        <TableCell>{record.session_id ?? '-'}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={handleCloseDeleteModal} disabled={deleteLoading}>
+              Cancel
+            </Button>
+            <Button type="button" variant="destructive" onClick={handleForceDelete} disabled={deleteLoading}>
+              {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete anyway'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

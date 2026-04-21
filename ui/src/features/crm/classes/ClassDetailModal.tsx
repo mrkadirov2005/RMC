@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Check, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,6 +56,7 @@ interface Attendance {
   student_id: number;
   teacher_id: number;
   class_id: number;
+  session_id?: number | null;
   attendance_date: string;
   status: string;
   remarks?: string;
@@ -64,15 +65,26 @@ interface Attendance {
 interface ClassDetailModalProps {
   open: boolean;
   classData: Class | null;
+  initialTab?: 'info' | 'students' | 'attendance' | 'grades' | 'calendar';
+  selectedDate?: string;
+  sessionId?: number | null;
   onClose: () => void;
 }
 
-const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, onClose }) => {
+const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
+  open,
+  classData,
+  initialTab = 'info',
+  selectedDate,
+  sessionId,
+  onClose,
+}) => {
   const [students, setStudents] = useState<Student[]>([]);
-  const [attendance, setAttendance] = useState<Map<number, boolean>>(new Map());
+  const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [, setTodayAttendance] = useState<Attendance[]>([]);
+  const [activeTab, setActiveTab] = useState<ClassDetailModalProps['initialTab']>('info');
 
   // Bulk Grading State
   const [gradeMarks, setGradeMarks] = useState<Map<number, number | string>>(new Map());
@@ -83,14 +95,20 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
   const [submittingGrades, setSubmittingGrades] = useState(false);
   const [subjectOptions, setSubjectOptions] = useState<{ id: number; label: string; value: string | number }[]>([]);
 
+  const normalizeAttendanceStatus = (value?: string) => {
+    if (!value) return 'Absent NR';
+    return value === 'Absent' ? 'Absent NR' : value;
+  };
+
   useEffect(() => {
     if (open && classData) {
+      setActiveTab(initialTab || 'info');
       loadStudents();
       loadTodayAttendance();
       loadSubjects();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, classData]);
+  }, [open, classData, initialTab, selectedDate, sessionId]);
 
   const loadSubjects = async () => {
     try {
@@ -114,12 +132,13 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
         : [];
       setStudents(classStudents);
       
-      // Initialize all students in attendance map (default to false/Absent)
+      // Initialize all students in attendance map (default to Absent NR)
       setAttendance((prevMap) => {
         const newMap = new Map(prevMap);
         classStudents.forEach((student: Student) => {
-          if (!newMap.has(student.student_id || student.id || 0)) {
-            newMap.set(student.student_id || student.id || 0, false);
+          const sid = student.student_id || student.id || 0;
+          if (!newMap.has(sid)) {
+            newMap.set(sid, ''); // No selection initially
           }
         });
         return newMap;
@@ -137,43 +156,54 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
       if (!classData?.class_id && !classData?.id) return;
       const response = await attendanceAPI.getByClass(classData?.class_id || classData?.id || 0);
       const allAttendance = response.data || response;
-      const today = new Date().toISOString().split('T')[0];
+      
+      const today = selectedDate || new Date().toISOString().split('T')[0];
       const todayRecords = Array.isArray(allAttendance)
-        ? allAttendance.filter((record: Attendance) => record.attendance_date.split('T')[0] === today)
+        ? allAttendance.filter((record: Attendance) => {
+            if (record.attendance_date.split('T')[0] !== today) return false;
+            if (sessionId) return Number(record.session_id) === Number(sessionId);
+            return true;
+          })
         : [];
       setTodayAttendance(todayRecords);
       
-      // Initialize attendance map
-      const newMap = new Map<number, boolean>();
-      todayRecords.forEach((record: Attendance) => {
-        newMap.set(record.student_id, record.status === 'Present');
+      // Initialize maps for records already saved today
+      setAttendance((prevMap) => {
+        const newMap = new Map(prevMap);
+        todayRecords.forEach((record: Attendance) => {
+          newMap.set(record.student_id, normalizeAttendanceStatus(record.status));
+        });
+        return newMap;
       });
-      setAttendance(newMap);
     } catch (error) {
       console.error('Error loading attendance:', error);
     }
   };
 
-  const handleAttendanceToggle = (studentId: number, status: boolean) => {
-    const newMap = new Map(attendance);
-    newMap.set(studentId, status);
-    setAttendance(newMap);
+  const handleAttendanceToggle = (studentId: number, status: string) => {
+    setAttendance(prev => new Map(prev).set(studentId, status));
   };
 
   const handleMarkAttendance = async () => {
     setSubmitting(true);
     try {
       const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+      const today = selectedDate || new Date(now.getFullYear(), now.getMonth(), now.getDate())
         .toISOString()
         .split('T')[0];
       const classId = classData?.class_id || classData?.id;
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
       const centerId = classData?.center_id || user?.center_id;
+      const teacherId = user?.id || classData?.teacher_id;
 
       if (!centerId) {
         showToast.error('Center is required to mark attendance.');
+        return;
+      }
+
+      if (!teacherId) {
+        showToast.error('Teacher ID is required.');
         return;
       }
 
@@ -181,11 +211,15 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
       const response = await attendanceAPI.getByClass(classId || 0);
       const allAttendance = response.data || response;
       const currentTodayRecords = Array.isArray(allAttendance)
-        ? allAttendance.filter((record: Attendance) => record.attendance_date.split('T')[0] === today)
+        ? allAttendance.filter((record: Attendance) => {
+            if (record.attendance_date.split('T')[0] !== today) return false;
+            if (sessionId) return Number(record.session_id) === Number(sessionId);
+            return true;
+          })
         : [];
 
       // Create/update attendance for each student
-      for (const [studentId, isPresent] of attendance) {
+      for (const [studentId, status] of attendance) {
         const existingRecord = currentTodayRecords.find(
           (r: Attendance) => r.student_id === studentId
         );
@@ -194,9 +228,10 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
           center_id: centerId,
           student_id: studentId,
           class_id: classId,
-          teacher_id: classData?.teacher_id || 1,
+          teacher_id: teacherId,
           attendance_date: today,
-          status: isPresent ? 'Present' : 'Absent',
+          session_id: sessionId ?? undefined,
+          status: normalizeAttendanceStatus(status),
           remarks: 'Marked in class detail',
         };
 
@@ -207,8 +242,9 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
         }
       }
 
-      showToast.success('Attendance marked successfully!');
-      loadTodayAttendance();
+      showToast.success('Lesson scores saved successfully!');
+      // Don't refresh - keep the current state
+      setAttendance(new Map()); // Clear attendance marks after successful save
     } catch (error) {
       console.error('Error marking attendance:', error);
       showToast.error('Failed to mark attendance');
@@ -249,6 +285,15 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
       return;
     }
 
+    const userRaw = localStorage.getItem('user');
+    const user = userRaw ? JSON.parse(userRaw) : null;
+    const teacherId = user?.id || classData?.teacher_id;
+
+    if (!teacherId) {
+      showToast.error('Teacher ID is required.');
+      return;
+    }
+
     const gradesToSubmit: Array<Record<string, unknown>> = [];
     for (const [studentId, marks] of gradeMarks) {
       if (marks === '' || marks === undefined || marks === null) continue;
@@ -259,9 +304,10 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
 
       gradesToSubmit.push({
         student_id: studentId,
-        teacher_id: classData?.teacher_id || 1,
+        teacher_id: teacherId,
         subject: gradeSubject,
         class_id: classData?.class_id || classData?.id,
+        session_id: sessionId ?? undefined,
         marks_obtained: marksNum,
         total_marks: gradeTotalMarks,
         percentage,
@@ -280,13 +326,14 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
     try {
       await gradeAPI.bulkCreate(gradesToSubmit);
       showToast.success(`${gradesToSubmit.length} grades submitted successfully!`);
-      // Reset form
       setGradeMarks(new Map());
       setGradeSubject('');
       setGradeTotalMarks(100);
       setGradeTerm('First');
+      setTimeout(() => {
+        onClose();
+      }, 500);
     } catch (error) {
-      console.error('Error submitting grades:', error);
       showToast.error('Failed to submit grades');
     } finally {
       setSubmittingGrades(false);
@@ -294,7 +341,6 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
   };
 
   if (!classData) return null;
-
   // Parse schedule from section field
   let parsedSchedule = { days: [] as string[], time: '' };
   if (classData.section) {
@@ -307,24 +353,20 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
-          <div className="flex justify-between items-center">
-            <DialogTitle className="text-xl font-bold">
-              {classData.class_name} ({classData.class_code})
-            </DialogTitle>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+          <DialogTitle className="flex justify-between items-center pr-8">
+            <span>Class: {classData.class_name} ({classData.class_code})</span>
+            {selectedDate && <span className="text-sm font-normal text-muted-foreground mr-4">Date: {selectedDate}</span>}
+          </DialogTitle>
         </DialogHeader>
-
-        <Tabs defaultValue="info" className="mt-2">
-          <TabsList className="w-full justify-start">
-            <TabsTrigger value="info">Class Info</TabsTrigger>
+        
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="info">Info</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="grades">Exam Grades</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
 
@@ -340,10 +382,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
                   <p className="text-sm text-muted-foreground">Level</p>
                   <p className="font-semibold">{classData.level}</p>
                 </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Section</p>
-                  <p className="font-semibold">{classData.section}</p>
-                </div>
+              
                 <div>
                   <p className="text-sm text-muted-foreground">Capacity</p>
                   <p className="font-semibold">{classData.capacity} students</p>
@@ -415,82 +454,56 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({ open, classData, on
 
           {/* Tab 3: Attendance */}
           <TabsContent value="attendance" className="pt-4">
-            {loading ? (
-              <div className="flex justify-center py-6">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : students.length === 0 ? (
-              <Alert>
-                <AlertDescription>No students to mark attendance</AlertDescription>
-              </Alert>
-            ) : (
-              <div className="space-y-4">
-                <Alert>
-                  <AlertDescription>
-                    Marking attendance for today ({new Date().toLocaleDateString()})
-                  </AlertDescription>
-                </Alert>
-                <div className="border rounded-lg">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="bg-primary">
-                        <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
-                        <TableHead className="text-primary-foreground font-semibold text-center">Attendance</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {students.map((student) => {
-                        const studentId = student.student_id || student.id || 0;
-                        const isPresent = attendance.get(studentId);
-                        return (
-                          <TableRow key={studentId}>
-                            <TableCell>
-                              {student.first_name} {student.last_name}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex gap-2 justify-center">
+            <div className="space-y-4">
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-primary">
+                      <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
+                      <TableHead className="text-primary-foreground font-semibold text-center">Attendance Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {students.map((student) => {
+                      const studentId = student.student_id || student.id || 0;
+                      const status = attendance.get(studentId) || '';
+
+                      return (
+                        <TableRow key={studentId}>
+                          <TableCell className="font-bold">
+                            {student.first_name} {student.last_name}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex gap-2 items-center justify-center">
+                              {['Present', 'Late', 'Absent R', 'Absent NR'].map((s) => (
                                 <Button
+                                  key={s}
                                   size="sm"
-                                  variant={isPresent === true ? 'default' : 'outline'}
+                                  variant={status === s ? 'default' : 'outline'}
                                   className={cn(
-                                    'min-w-[100px]',
-                                    isPresent === true && 'bg-green-600 hover:bg-green-700'
+                                    'text-[10px] h-8 px-2 min-w-[80px]',
+                                    status === s && (s === 'Present' ? 'bg-green-600' : s === 'Late' ? 'bg-yellow-600' : 'bg-red-600')
                                   )}
-                                  onClick={() => handleAttendanceToggle(studentId, true)}
+                                  onClick={() => handleAttendanceToggle(studentId, s)}
                                 >
-                                  <Check className="mr-1 h-4 w-4" />
-                                  Present
+                                  {s}
                                 </Button>
-                                <Button
-                                  size="sm"
-                                  variant={isPresent === false ? 'default' : 'outline'}
-                                  className={cn(
-                                    'min-w-[100px]',
-                                    isPresent === false && 'bg-red-600 hover:bg-red-700'
-                                  )}
-                                  onClick={() => handleAttendanceToggle(studentId, false)}
-                                >
-                                  <X className="mr-1 h-4 w-4" />
-                                  Absent
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
-                </div>
-                <div className="flex justify-end">
-                  <Button
-                    onClick={handleMarkAttendance}
-                    disabled={submitting || students.length === 0}
-                  >
-                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark Attendance'}
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+                
+                <div className="flex justify-end p-4 border-t">
+                  <Button onClick={handleMarkAttendance} disabled={submitting}>
+                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Attendance'}
                   </Button>
                 </div>
               </div>
-            )}
+            </div>
           </TabsContent>
 
           {/* Tab 4: Grades */}

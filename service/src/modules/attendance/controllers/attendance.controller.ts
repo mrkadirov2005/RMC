@@ -50,11 +50,23 @@ const createAttendance = async (req: any, res: any) => {
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
+    
+    // Use authenticated user's ID if teacher_id is missing or invalid
+    const requestBody = { ...req.body };
+    if (!requestBody.teacher_id || requestBody.teacher_id <= 0) {
+      if (req.user?.id) {
+        requestBody.teacher_id = req.user.id;
+        console.log(`Using authenticated user ID ${req.user.id} as teacher_id`);
+      } else {
+        return res.status(400).json({ error: 'Teacher ID is required.' });
+      }
+    }
+    
     if (req.user?.userType === 'teacher') {
-      const ok = await studentBelongsToTeacher(req.body.student_id, req.user?.id);
+      const ok = await studentBelongsToTeacher(requestBody.student_id, req.user?.id);
       if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
     }
-    const out = await attendanceService.create(req.body, centerId ?? req.body.center_id);
+    const out = await attendanceService.create(requestBody, centerId ?? requestBody.center_id);
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
     }
@@ -126,6 +138,23 @@ const getAttendanceByClass = async (req: any, res: any) => {
   }
 };
 
+const getAttendanceBySession = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    res.json(await attendanceService.bySession(Number(req.params.sessionId), centerId ?? undefined, teacherId));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch attendance' });
+  }
+};
+
 const deleteAttendance = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -152,6 +181,7 @@ module.exports = {
   updateAttendance,
   getAttendanceByStudent,
   getAttendanceByClass,
+  getAttendanceBySession,
   deleteAttendance,
 };
 

@@ -52,7 +52,19 @@ const createStudent = async (req: any, res: any) => {
     res.status(201).json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create student', details: error.message || String(error) });
+    
+    // Handle unique constraint violations
+    if (error.code === '23505') {
+      // PostgreSQL unique_violation error code
+      if (error.constraint === 'students_username_key' || error.message?.includes('username')) {
+        return res.status(409).json({ error: 'Username already exists', message: 'A student with this username already exists. Please choose a different username.' });
+      }
+      if (error.constraint === 'students_enrollment_number_key' || error.message?.includes('enrollment')) {
+        return res.status(409).json({ error: 'Enrollment number already exists', message: 'A student with this enrollment number already exists. Please choose a different number.' });
+      }
+    }
+    
+    res.status(500).json({ error: 'Failed to create student', message: error.message || String(error) });
   }
 };
 

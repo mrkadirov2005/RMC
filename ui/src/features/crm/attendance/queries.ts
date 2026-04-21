@@ -34,13 +34,21 @@ export const getPresentCountForClass = (
   classId: number
 ): number => {
   const studentIds = getStudentIdsForClass(students, classId);
-  return attendance.filter((record) => studentIds.includes(record.student_id) && record.status === 'Present').length;
+  return attendance.filter(
+    (record) =>
+      studentIds.includes(record.student_id) &&
+      (record.status === 'Present' || record.status === 'Late')
+  ).length;
 };
 
 export const getPresentCountForStudent = (
   attendance: Attendance[],
   studentId: number
-): number => attendance.filter((record) => record.student_id === studentId && record.status === 'Present').length;
+): number =>
+  attendance.filter(
+    (record) =>
+      record.student_id === studentId && (record.status === 'Present' || record.status === 'Late')
+  ).length;
 
 export const getAttendanceCountForStudent = (
   attendance: Attendance[],
@@ -71,10 +79,12 @@ export const getStatusBadgeClasses = (status: string): string => {
     case 'Present':
       return 'bg-green-100 text-green-800 border-green-200';
     case 'Absent':
+    case 'Absent NR':
+    case 'Absent R':
       return 'bg-red-100 text-red-800 border-red-200';
     case 'Late':
       return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-    case 'Excused':
+    case 'Half Day':
       return 'bg-blue-100 text-blue-800 border-blue-200';
     default:
       return 'bg-gray-100 text-gray-800 border-gray-200';

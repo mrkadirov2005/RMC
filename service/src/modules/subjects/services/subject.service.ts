@@ -10,11 +10,13 @@ const listByClass = (classId: number, centerId?: number, teacherId?: number) =>
 
 const createSubject = async (body: any, centerId?: number) => {
   const { class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks } = body;
-  if (centerId) {
-    const ok = await classInCenter(class_id, centerId);
+  const resolvedCenterId = centerId ?? body.center_id;
+  if (resolvedCenterId) {
+    const ok = await classInCenter(class_id, resolvedCenterId);
     if (!ok) return { error: 'invalid_center' as const };
   }
   return subjectRepository.insert([
+    resolvedCenterId,
     class_id,
     subject_name,
     subject_code,

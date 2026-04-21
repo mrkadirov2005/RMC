@@ -108,7 +108,50 @@ const createTest = async (body: any) => {
     end_date || null,
   ]);
 
-  return { test };
+  // Save passages first (for reading_passage tests)
+  const savedPassages: any[] = [];
+  if (body.passages && Array.isArray(body.passages) && body.passages.length > 0) {
+    for (const passage of body.passages) {
+      const savedPassage = await testRepository.insertPassage([
+        Number(test.center_id),
+        Number(test.test_id),
+        passage.title || '',
+        passage.content || '',
+        passage.word_count || null,
+        passage.difficulty_level || 'medium',
+        passage.passage_order || 1,
+        passage.audio_url || null,
+        passage.image_url || null,
+      ]);
+      savedPassages.push(savedPassage);
+    }
+  }
+
+  // Save questions
+  const savedQuestions: any[] = [];
+  if (body.questions && Array.isArray(body.questions) && body.questions.length > 0) {
+    for (const q of body.questions) {
+      const savedQ = await testRepository.insertQuestion([
+        Number(test.center_id),
+        Number(test.test_id),
+        q.passage_id ? Number(q.passage_id) : null,
+        q.question_text || '',
+        q.question_type || test.test_type,
+        Number(q.marks ?? 1),
+        Number(q.negative_marks ?? 0),
+        Number(q.question_order ?? 1),
+        q.options ? normalizeJson(q.options, null) : null,
+        q.correct_answer ? normalizeJson(q.correct_answer, null) : null,
+        q.explanation || null,
+        q.image_url || null,
+        toBool(q.is_required) ?? true,
+        q.word_limit ? Number(q.word_limit) : null,
+      ]);
+      savedQuestions.push(savedQ);
+    }
+  }
+
+  return { test, questions: savedQuestions, passages: savedPassages };
 };
 
 const updateTest = async (id: number, body: any, centerId?: number) => {

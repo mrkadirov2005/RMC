@@ -29,6 +29,10 @@ const searchRoutes = require('./routes/searchRoutes');
 const importExportRoutes = require('./routes/importExportRoutes');
 const parentRoutes = require('./routes/parentRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const portalRoutes = require('./routes/portalRoutes');
+const roomsRoutes = require('./routes/roomsRoutes');
+
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -109,6 +113,10 @@ app.use('/api/search', requireAuth, requireRole('superuser', 'teacher'), searchR
 app.use('/api/data', requireAuth, requireRole('superuser'), importExportRoutes);
 app.use('/api/parents', requireAuth, parentRoutes);
 app.use('/api/reports', requireAuth, requireRole('superuser'), reportRoutes);
+app.use('/api/portal', requireAuth, requireRole('student'), portalRoutes);
+app.use('/api/rooms', requireAuth, requireRole('superuser', 'teacher'), roomsRoutes);
+
+
 
 // Error handling middleware
 app.use((err: Error, req: any, res: any, next: any): void => {

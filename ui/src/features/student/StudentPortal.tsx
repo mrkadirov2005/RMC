@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+
 import {
   Bell,
   CalendarDays,
@@ -14,6 +16,7 @@ import {
   Users,
   AlertTriangle,
   Coins,
+  Wallet,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,17 +24,9 @@ import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '../crm/hooks';
 import type { RootState } from '../../store';
 import {
-  assignmentAPI,
-  attendanceAPI,
-  classAPI,
-  debtAPI,
-  gradeAPI,
-  paymentAPI,
-  studentAPI,
-  subjectAPI,
-  teacherAPI,
-  testAPI,
+  portalAPI,
 } from '../../shared/api/api';
+
 
 interface StudentProfile {
   id?: number;
@@ -125,6 +120,14 @@ interface Debt {
   due_date?: string;
 }
 
+interface ScheduleItem {
+  room_id: number;
+  room_number: string;
+  day: string;
+  time: string;
+}
+
+
 const StudentPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
@@ -141,6 +144,8 @@ const StudentPortal = () => {
   const [grades, setGrades] = useState<Grade[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [debts, setDebts] = useState<Debt[]>([]);
+  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+
 
   const initials = useMemo(() => {
     const first = user?.first_name?.[0] ?? '';
@@ -148,7 +153,7 @@ const StudentPortal = () => {
     return `${first}${last}` || 'S';
   }, [user]);
 
-  const toArray = (value: any) => (Array.isArray(value?.data || value) ? (value.data || value) : []);
+
 
   const formatDate = (value?: string) => {
     if (!value) return 'Unknown date';
@@ -165,53 +170,23 @@ const StudentPortal = () => {
       setLoading(true);
       setError(null);
       try {
-        const studentRes = await studentAPI.getById(user.id).catch(() => null);
-        const studentData: StudentProfile | null =
-          (studentRes as any)?.data || (studentRes as any) || null;
-
-        const classId = studentData?.class_id || user.class_id;
-        const teacherId = studentData?.teacher_id;
-
-        const requests = [
-          testAPI.getAssignedTests('student', user.id).catch(() => ({ data: [] })),
-          attendanceAPI.getByStudent(user.id).catch(() => ({ data: [] })),
-          gradeAPI.getByStudent(user.id).catch(() => ({ data: [] })),
-          paymentAPI.getByStudent(user.id).catch(() => ({ data: [] })),
-          debtAPI.getByStudent(user.id).catch(() => ({ data: [] })),
-          assignmentAPI.getAll().catch(() => ({ data: [] })),
-          classId ? classAPI.getById(classId).catch(() => null) : Promise.resolve(null),
-          classId ? subjectAPI.getByClass(classId).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
-          teacherId ? teacherAPI.getById(teacherId).catch(() => null) : Promise.resolve(null),
-        ];
-
-        const [
-          testsRes,
-          attendanceRes,
-          gradesRes,
-          paymentsRes,
-          debtsRes,
-          assignmentsRes,
-          classRes,
-          subjectsRes,
-          teacherRes,
-        ] = await Promise.all(requests);
+        const res = await portalAPI.getDashboard();
+        const data = res.data;
 
         if (!isMounted) return;
 
-        setStudent(studentData);
-        setTests(toArray(testsRes));
-        setAttendance(toArray(attendanceRes));
-        setGrades(toArray(gradesRes));
-        setPayments(toArray(paymentsRes));
-        setDebts(toArray(debtsRes));
-        setAssignments(
-          toArray(assignmentsRes).filter((a: any) =>
-            classId ? Number(a?.class_id) === Number(classId) : true
-          )
-        );
-        setClassInfo((classRes as any)?.data || (classRes as any) || null);
-        setSubjects(toArray(subjectsRes));
-        setTeacher((teacherRes as any)?.data || (teacherRes as any) || null);
+        setStudent(data.student);
+        setTests(data.tests || []);
+        setAttendance(data.attendance || []);
+        setGrades(data.grades || []);
+        setPayments(data.payments || []);
+        setDebts(data.debts || []);
+        setAssignments(data.assignments || []);
+        setClassInfo(data.classInfo);
+        setSubjects(data.subjects || []);
+        setTeacher(data.teacher);
+        setSchedule(data.schedule || []);
+
       } catch (err: any) {
         console.error('Error loading student portal:', err);
         if (isMounted) setError('Failed to load student portal data.');
@@ -225,7 +200,8 @@ const StudentPortal = () => {
     return () => {
       isMounted = false;
     };
-  }, [user?.id, user?.class_id]);
+  }, [user?.id]);
+
 
   const attendanceStats = useMemo(() => {
     const total = attendance.length;
@@ -302,6 +278,27 @@ const StudentPortal = () => {
   }, [debts]);
 
   const recentGrades = useMemo(() => grades.slice(0, 4), [grades]);
+
+  const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  const scheduleByDay = useMemo(() => {
+    const map: Record<string, ScheduleItem[]> = {};
+    daysOfWeek.forEach(d => { map[d] = []; });
+    schedule.forEach(item => {
+      if (map[item.day]) map[item.day].push(item);
+    });
+    return map;
+  }, [schedule]);
+
+  const last12Months = useMemo(() => {
+    const months = [];
+    const d = new Date();
+    for (let i = 0; i < 12; i++) {
+      months.push(new Date(d.getFullYear(), d.getMonth() - i, 1));
+    }
+    return months;
+  }, []);
+
 
   if (loading) {
     return (
@@ -499,7 +496,120 @@ const StudentPortal = () => {
               )}
             </CardContent>
           </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                Weekly Class Schedule
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
+                {daysOfWeek.map((day) => {
+                  const daySchedule = scheduleByDay[day] || [];
+                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day;
+
+                  return (
+                    <div
+                      key={day}
+                      className={cn(
+                        "rounded-xl border p-3 flex flex-col gap-2 transition-all",
+                        isToday ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20" : "bg-muted/30 border-transparent"
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase tracking-wider",
+                          isToday ? "text-primary" : "text-muted-foreground"
+                        )}>
+                          {day.substring(0, 3)}
+                        </span>
+                        {isToday && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+                      </div>
+
+                      <div className="space-y-1.5 min-h-[40px]">
+                        {daySchedule.length === 0 ? (
+                          <div className="text-[10px] text-muted-foreground/50 italic py-2">No class</div>
+                        ) : (
+                          daySchedule.map((item, idx) => (
+                            <div
+                              key={idx}
+                              className="bg-background border rounded-lg p-2 shadow-sm"
+                            >
+                              <div className="text-[11px] font-bold text-primary leading-tight">
+                                {item.time}
+                              </div>
+                              <div className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                                <MapPin className="h-2 w-2" />
+                                Room {item.room_number}
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
+        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50/30 overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
+          <CardHeader className="border-b bg-white/50 backdrop-blur-sm pb-4">
+            <CardTitle className="text-lg font-bold flex items-center gap-2 text-indigo-950">
+              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+                <Wallet className="h-5 w-5" />
+              </div>
+              Payment History
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="pt-6 relative z-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
+              {last12Months.map((monthDate) => {
+                const year = monthDate.getFullYear();
+                const month = monthDate.getMonth() + 1;
+                const hasPaid = payments.some((p) => {
+                  if (p.payment_status?.toLowerCase() !== 'completed' && p.status?.toLowerCase() !== 'completed') return false;
+                  const pDate = new Date(p.payment_date || '');
+                  return pDate.getFullYear() === year && (pDate.getMonth() + 1) === month;
+                });
+
+                const monthName = monthDate.toLocaleString('default', { month: 'short' });
+                const yearName = monthDate.toLocaleString('default', { year: '2-digit' });
+
+                return (
+                  <div key={`${monthName}-${yearName}`} className={cn(
+                    "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 hover:-translate-y-1 shadow-sm",
+                    hasPaid
+                      ? "bg-emerald-500/5 border-emerald-200 hover:shadow-emerald-500/20 hover:bg-emerald-500/10"
+                      : "bg-rose-500/5 border-rose-200 hover:shadow-rose-500/20 hover:bg-rose-500/10"
+                  )}>
+                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{monthName} '{yearName}</span>
+                    <div className="mt-3 mb-2">
+                      {hasPaid ? (
+                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                          <CheckCircle className="h-5 w-5" />
+                        </div>
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                          <AlertTriangle className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                    {hasPaid ? (
+                      <span className="text-xs font-bold text-emerald-600">Settled</span>
+                    ) : (
+                      <span className="text-xs font-bold text-rose-600">Unpaid</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
 
         <div className="space-y-4">
           <Card>

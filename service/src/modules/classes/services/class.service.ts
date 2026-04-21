@@ -1,4 +1,5 @@
 const classRepository = require('../repositories/class.repository');
+const attendanceRepository = require('../../attendance/repositories/attendance.repository');
 
 const listClasses = (centerId?: number, teacherId?: number) => classRepository.findAll(centerId, teacherId);
 
@@ -31,7 +32,21 @@ const updateClass = (id: number, body: any, centerId?: number) => {
   return classRepository.update(id, [class_name, level, section, capacity, teacher_id, room_number, payment_amount], centerId);
 };
 
-const deleteClass = (id: number, centerId?: number) => classRepository.remove(id, centerId);
+const deleteClass = async (id: number, centerId?: number, options?: { force?: boolean }) => {
+  const force = Boolean(options?.force);
+  const attendance = await attendanceRepository.findByClass(id, centerId);
+  if (attendance.length > 0 && !force) {
+    return { error: 'has_attendance' as const, attendance };
+  }
+
+  let deletedAttendanceCount = 0;
+  if (attendance.length > 0 && force) {
+    deletedAttendanceCount = await attendanceRepository.removeByClass(id, centerId);
+  }
+
+  const row = await classRepository.remove(id, centerId);
+  return { row, deletedAttendanceCount };
+};
 
 module.exports = { listClasses, getClass, createClass, updateClass, deleteClass };
 

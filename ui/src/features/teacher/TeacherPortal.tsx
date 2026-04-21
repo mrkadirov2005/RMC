@@ -11,6 +11,7 @@ import {
   Clock,
   TrendingUp,
   Loader2,
+  Wallet,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -36,6 +37,7 @@ import TeacherClassesTab from './components/TeacherClassesTab';
 import TeacherAttendanceTab from './components/TeacherAttendanceTab';
 import TeacherGradesTab from './components/TeacherGradesTab';
 import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
+import TeacherPaymentsTab from './components/TeacherPaymentsTab';
 import type { RootState } from '../../store';
 import { testAPI, studentAPI, classAPI, attendanceAPI, assignmentAPI } from '../../shared/api/api';
 
@@ -209,6 +211,7 @@ const TeacherPortal = () => {
     { value: 'attendance', label: 'Attendance', icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'grades', label: 'Grades', icon: <Star className="h-4 w-4" /> },
     { value: 'assignments', label: 'Assignments', icon: <ClipboardList className="h-4 w-4" /> },
+    { value: 'payments', label: 'Payments', icon: <Wallet className="h-4 w-4" /> },
   ];
 
   if (loading) {
@@ -344,6 +347,9 @@ const TeacherPortal = () => {
             </TabsContent>
             <TabsContent value="assignments">
               <TeacherAssignmentsTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="payments">
+              <TeacherPaymentsTab teacherId={user?.id} />
             </TabsContent>
           </CardContent>
         </Tabs>

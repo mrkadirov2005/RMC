@@ -163,5 +163,7 @@ router_grade.get('/student/:studentId', requireAuth, gradeController.getGradesBy
  *         description: Grade not found
  */
 router_grade.delete('/:id', requireAuth, gradeController.deleteGrade);
+router_grade.get('/session/:sessionId', requireAuth, gradeController.getGradesBySession);
+router_grade.post('/session-scores', requireAuth, gradeController.upsertSessionScores);
 
 module.exports = router_grade;

@@ -321,22 +321,23 @@ const TestsPage = () => {
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
                         </button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => navigate(`/tests/${test.test_id}`)}>
+                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}`); }}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/tests/${test.test_id}/edit`)}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}/edit`); }}>
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit Test
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/tests/${test.test_id}/results`)}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}/results`); }}>
                           <BarChart3 className="h-4 w-4 mr-2" />
                           View Results
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           className="text-red-600 focus:text-red-600"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             setSelectedTest(test);
                             setDeleteDialogOpen(true);
                           }}

@@ -44,13 +44,42 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-const insert = (params: any[]) =>
-  pool
+const insert = (params: any[]) => {
+  const sessionId = params[4];
+  if (sessionId) {
+    return pool
+      .query(
+        `INSERT INTO attendance (center_id, student_id, teacher_id, class_id, session_id, attendance_date, status, remarks)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (student_id, session_id) WHERE session_id IS NOT NULL
+         DO UPDATE SET
+           center_id = EXCLUDED.center_id,
+           teacher_id = EXCLUDED.teacher_id,
+           class_id = EXCLUDED.class_id,
+           attendance_date = EXCLUDED.attendance_date,
+           status = EXCLUDED.status,
+           remarks = EXCLUDED.remarks
+         RETURNING *`,
+        params
+      )
+      .then((r: any) => r.rows[0]);
+  }
+
+  return pool
     .query(
-      'INSERT INTO attendance (student_id, teacher_id, class_id, attendance_date, status, remarks) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *',
+      `INSERT INTO attendance (center_id, student_id, teacher_id, class_id, session_id, attendance_date, status, remarks)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+       ON CONFLICT (student_id, class_id, attendance_date) WHERE session_id IS NULL
+       DO UPDATE SET
+         center_id = EXCLUDED.center_id,
+         teacher_id = EXCLUDED.teacher_id,
+         status = EXCLUDED.status,
+         remarks = EXCLUDED.remarks
+       RETURNING *`,
       params
     )
     .then((r: any) => r.rows[0]);
+};
 
 const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
   let query =
@@ -131,6 +160,16 @@ const remove = (id: number, centerId?: number, teacherId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
+const removeByClass = (classId: number, centerId?: number) => {
+  let query = 'DELETE FROM attendance WHERE class_id = $1';
+  const params: any[] = [classId];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  return pool.query(query, params).then((r: any) => r.rowCount || 0);
+};
+
 const studentInCenter = async (studentId: number, centerId: number) => {
   const result = await pool.query('SELECT student_id FROM students WHERE student_id = $1 AND center_id = $2', [
     studentId,
@@ -147,6 +186,38 @@ const classInCenter = async (classId: number, centerId: number) => {
   return result.rows.length > 0;
 };
 
-module.exports = { findAll, findById, insert, update, findByStudent, findByClass, remove, studentInCenter, classInCenter };
+const findBySession = (sessionId: number, centerId?: number, teacherId?: number) => {
+  let query = 'SELECT a.* FROM attendance a';
+  const params: any[] = [sessionId];
+  const conditions: string[] = ['a.session_id = $1'];
+
+  if (centerId) {
+    query += ' JOIN classes c ON c.class_id = a.class_id';
+    params.push(centerId);
+    conditions.push(`c.center_id = $${params.length}`);
+  }
+
+  if (teacherId) {
+    params.push(teacherId);
+    conditions.push(`a.teacher_id = $${params.length}`);
+  }
+
+  query += ` WHERE ${conditions.join(' AND ')}`;
+  return pool.query(query, params).then((r: any) => r.rows);
+};
+
+module.exports = {
+  findAll,
+  findById,
+  insert,
+  update,
+  findByStudent,
+  findByClass,
+  findBySession,
+  remove,
+  removeByClass,
+  studentInCenter,
+  classInCenter,
+};
 
 export {};

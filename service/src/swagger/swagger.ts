@@ -142,6 +142,9 @@ const swaggerOptions = {
             total_marks: { type: 'integer' },
             percentage: { type: 'number', format: 'decimal' },
             grade_letter: { type: 'string' },
+            attendance_score: { type: 'integer' },
+            homework_score: { type: 'integer' },
+            activity_score: { type: 'integer' },
             academic_year: { type: 'integer' },
             term: { type: 'string' },
             created_at: { type: 'string', format: 'date-time' },
@@ -156,7 +159,7 @@ const swaggerOptions = {
             teacher_id: { type: 'integer' },
             class_id: { type: 'integer' },
             attendance_date: { type: 'string', format: 'date' },
-            status: { type: 'string', enum: ['Present', 'Absent', 'Late', 'Half Day'] },
+            status: { type: 'string', enum: ['Present', 'Absent', 'Absent NR', 'Absent R', 'Late', 'Half Day'] },
             remarks: { type: 'string' },
             created_at: { type: 'string', format: 'date-time' }
           }

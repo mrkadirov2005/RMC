@@ -46,7 +46,10 @@ const addTransaction = async (
 
     const currentCoins = Number(student.coins || 0);
     const nextCoins = currentCoins + delta;
-    if (nextCoins < 0) {
+    // Note: Allow coins to go negative (students can lose coins for poor performance)
+    // Only reject if delta would make coins go below a minimum threshold
+    const MIN_COINS = -9999; // Allow significant negative balance
+    if (nextCoins < MIN_COINS) {
       await client.query('ROLLBACK');
       return { error: 'insufficient' as const, balance: currentCoins };
     }

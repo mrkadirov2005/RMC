@@ -42,7 +42,7 @@ apiClient.interceptors.request.use((config) => {
   const activeCenterId = getStoredActiveCenterId() ?? (user?.center_id && user.center_id > 0 ? user.center_id : null);
 
   if (isGlobalSuperuser && activeCenterId) {
-    if (config.method === 'get') {
+    if (config.method === 'get' || config.method === 'delete') {
       const params = (config.params ?? {}) as Record<string, unknown>;
       if (params.center_id == null || params.center_id === 0) {
         config.params = { ...params, center_id: activeCenterId };
@@ -170,10 +170,20 @@ export const teacherAPI = {
 export const classAPI = {
   getAll: () => apiClient.get('/classes'),
   getById: (id: number) => apiClient.get(`/classes/${id}`),
+  getSessions: (id: number) => apiClient.get(`/classes/${id}/sessions`),
   create: (data: any) => apiClient.post('/classes', data),
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/classes/${id}`),
+  delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),
+  generateSessions: (id: number, data: { month: number; year: number; duration_minutes: number }) =>
+    apiClient.post(`/classes/${id}/sessions/generate`, data),
+  deleteSessions: (id: number, params: { from: string; to?: string }) =>
+    apiClient.delete(`/classes/${id}/sessions`, { params }),
+  deleteSessionById: (id: number, sessionId: number) =>
+    apiClient.delete(`/classes/${id}/sessions/${sessionId}`),
+  createSession: (id: number, data: { session_date: string; start_time: string; duration_minutes?: number; teacher_id?: number }) =>
+    apiClient.post(`/classes/${id}/sessions`, data),
 };
+
 
 export const paymentAPI = {
   getAll: () => apiClient.get('/payments'),
@@ -188,17 +198,20 @@ export const gradeAPI = {
   getAll: () => apiClient.get('/grades'),
   getById: (id: number) => apiClient.get(`/grades/${id}`),
   getByStudent: (studentId: number) => apiClient.get(`/grades/student/${studentId}`),
+  getBySession: (sessionId: number) => apiClient.get(`/grades/session/${sessionId}`),
   create: (data: any) => apiClient.post('/grades', data),
   bulkCreate: (grades: any[]) => apiClient.post('/grades/bulk', { grades }),
   update: (id: number, data: any) => apiClient.put(`/grades/${id}`, data),
   delete: (id: number) => apiClient.delete(`/grades/${id}`),
+  upsertSessionScores: (data: any) => apiClient.post('/grades/session-scores', data),
 };
 
 export const attendanceAPI = {
-  getAll: () => apiClient.get('/attendance'),
+  getAll: (params?: { center_id?: number }) => apiClient.get('/attendance', { params }),
   getById: (id: number) => apiClient.get(`/attendance/${id}`),
   getByStudent: (studentId: number) => apiClient.get(`/attendance/student/${studentId}`),
-  getByClass: (classId: number) => apiClient.get(`/attendance/class/${classId}`),
+  getByClass: (classId: number, params?: { center_id?: number }) => apiClient.get(`/attendance/class/${classId}`, { params }),
+  getBySession: (sessionId: number) => apiClient.get(`/attendance/session/${sessionId}`),
   create: (data: any) => apiClient.post('/attendance', data),
   update: (id: number, data: any) => apiClient.put(`/attendance/${id}`, data),
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/attendance/${id}`, { params }),
@@ -209,7 +222,7 @@ export const assignmentAPI = {
   getById: (id: number) => apiClient.get(`/assignments/${id}`),
   create: (data: any) => apiClient.post('/assignments', data),
   update: (id: number, data: any) => apiClient.put(`/assignments/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/assignments/${id}`),
+  delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/assignments/${id}`, { params }),
 };
 
 export const debtAPI = {
@@ -292,7 +305,26 @@ export const superuserAPI = {
   delete: (id: number) => apiClient.delete(`/superusers/${id}`),
 };
 
+export const roomAPI = {
+  getAll: (params?: { center_id?: number }) => apiClient.get('/rooms', { params }),
+  getById: (id: number) => apiClient.get(`/rooms/${id}`),
+  create: (data: any) => apiClient.post('/rooms', data),
+  update: (id: number, data: any) => apiClient.put(`/rooms/${id}`, data),
+  delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/rooms/${id}`, { params }),
+};
+
+export const portalAPI = {
+  getDashboard: () => apiClient.get('/portal/dashboard'),
+  getAttendance: () => apiClient.get('/portal/attendance'),
+  getGrades: () => apiClient.get('/portal/grades'),
+  getTests: () => apiClient.get('/portal/tests'),
+  getSchedule: () => apiClient.get('/portal/schedule'),
+};
+
+
 export const authAPI = {
+
+
   loginSuperuser: (credentials: { username: string; password: string }) =>
     superuserAPI.login(credentials),
   loginTeacher: (credentials: { username: string; password: string }) =>

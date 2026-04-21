@@ -15,8 +15,8 @@ module.exports = {
           created_by_type VARCHAR(20),
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          FOREIGN KEY (student_id) REFERENCES students(student_id),
-          FOREIGN KEY (center_id) REFERENCES edu_centers(center_id)
+          FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE,
+          FOREIGN KEY (center_id) REFERENCES edu_centers(center_id) ON DELETE CASCADE
       );
 
       CREATE INDEX IF NOT EXISTS idx_student_coin_transactions_student_id ON student_coin_transactions(student_id);

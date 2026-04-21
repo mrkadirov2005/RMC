@@ -10,9 +10,9 @@ interface CRUDState<T> {
 interface CRUDActions<T> {
   fetchAll: () => Promise<void>;
   fetchById: (id: string | number) => Promise<T | null>;
-  create: (data: Partial<T>) => Promise<void>;
-  update: (id: string | number, data: Partial<T>) => Promise<void>;
-  delete: (id: string | number) => Promise<void>;
+  create: (data: Partial<T>) => Promise<boolean>;
+  update: (id: string | number, data: Partial<T>) => Promise<boolean>;
+  delete: (id: string | number) => Promise<boolean>;
 }
 
 interface APIService<T> {
@@ -68,54 +68,60 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
   );
 
   const create = useCallback(
-    async (data: Partial<T>) => {
+    async (data: Partial<T>): Promise<boolean> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         await apiService.create(data);
         showToast.success(`${resourceName} created successfully`);
         await fetchAll();
         setState((prev) => ({ ...prev, loading: false }));
+        return true;
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         const message = err.response?.data?.message || `Failed to create ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
+        return false;
       }
     },
     [apiService, resourceName, fetchAll]
   );
 
   const update = useCallback(
-    async (id: string | number, data: Partial<T>) => {
+    async (id: string | number, data: Partial<T>): Promise<boolean> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         await apiService.update(Number(id), data);
         showToast.success(`${resourceName} updated successfully`);
         await fetchAll();
         setState((prev) => ({ ...prev, loading: false }));
+        return true;
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         const message = err.response?.data?.message || `Failed to update ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
+        return false;
       }
     },
     [apiService, resourceName, fetchAll]
   );
 
   const delete_ = useCallback(
-    async (id: string | number) => {
+    async (id: string | number): Promise<boolean> => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         await apiService.delete(Number(id));
         showToast.success(`${resourceName} deleted successfully`);
         await fetchAll();
         setState((prev) => ({ ...prev, loading: false }));
+        return true;
       } catch (error: unknown) {
         const err = error as { response?: { data?: { message?: string } } };
         const message = err.response?.data?.message || `Failed to delete ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
+        return false;
       }
     },
     [apiService, resourceName, fetchAll]

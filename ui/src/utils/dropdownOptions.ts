@@ -176,9 +176,10 @@ export const assignmentStatusOptions: DropdownOption[] = [
 // Attendance Status options
 export const attendanceStatusOptions: DropdownOption[] = [
   { id: 1, label: 'Present', value: 'Present' },
-  { id: 2, label: 'Absent', value: 'Absent' },
-  { id: 3, label: 'Late', value: 'Late' },
-  { id: 4, label: 'Excused', value: 'Excused' },
+  { id: 2, label: 'Absent NR', value: 'Absent NR' },
+  { id: 3, label: 'Absent R', value: 'Absent R' },
+  { id: 4, label: 'Late', value: 'Late' },
+  { id: 5, label: 'Half Day', value: 'Half Day' },
 ];
 
 // Term options

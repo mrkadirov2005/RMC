@@ -62,6 +62,8 @@ export enum PaymentStatus {
 export enum AttendanceStatus {
   PRESENT = 'Present',
   ABSENT = 'Absent',
+  ABSENT_NR = 'Absent NR',
+  ABSENT_R = 'Absent R',
   LATE = 'Late',
   HALF_DAY = 'Half Day'
 }
@@ -98,6 +100,9 @@ export interface Student {
   phone?: string;
   date_of_birth?: Date | string;
   parent_name?: string;
+  attendance_score?: number;
+  homework_score?: number;
+  activity_score?: number;
   parent_phone?: string;
   gender?: StudentGender;
   status?: StudentStatus;

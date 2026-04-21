@@ -1,9 +1,9 @@
 import { useState, useEffect, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, Users, BookOpen, CreditCard, BarChart3,
+  LayoutDashboard, Users, BookOpen, CreditCard, BarChart3, DollarSign,
   ClipboardList, CheckCircle, Building2, AlertTriangle, FileQuestion,
-  LogOut, Sun, Moon, Menu, X, User,
+  LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,12 +24,17 @@ const iconMap: Record<string, React.ElementType> = {
   MdBook: BookOpen,
   MdPayment: CreditCard,
   MdBarChart: BarChart3,
+  Finance: DollarSign,
   MdAssignment: ClipboardList,
   MdChecklist: CheckCircle,
   MdBusiness: Building2,
   MdWarning: AlertTriangle,
   MdQuiz: FileQuestion,
+  Calendar: CalendarDays,
+  Settings: SettingsIcon,
+  Rooms: Building2,
 };
+
 
 const DRAWER_WIDTH = 280;
 
@@ -76,22 +81,29 @@ const Sidebar = memo(() => {
   }, [activeCenterId, isGlobalSuperuser]);
 
   const menuItems = [
-    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser', 'teacher'] },
+    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'] },
     { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', roles: ['teacher'] },
     { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
-    { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser', 'teacher'] },
+    { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser'] },
     { label: 'Teachers', path: '/teachers', iconName: 'MdBook', roles: ['superuser'] },
-    { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser', 'teacher'] },
+    { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser'] },
+    { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'] },
+    { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'teacher', 'student'] },
+
+
+    { label: 'Settings', path: '/settings', iconName: 'Settings', roles: ['superuser'] },
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'] },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser'] },
-    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser', 'teacher'] },
-    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser', 'teacher'] },
-    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', roles: ['superuser', 'teacher'] },
-    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', roles: ['superuser', 'teacher'] },
+    { label: 'Finance', path: '/finance', iconName: 'Finance', roles: ['superuser'] },
+    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'] },
+    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser'] },
+    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', roles: ['superuser'] },
+    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', roles: ['superuser'] },
     { label: 'Debts', path: '/debts', iconName: 'MdWarning', roles: ['superuser'] },
     { label: 'Centers', path: '/centers', iconName: 'MdBusiness', roles: ['superuser'], ownerOnly: true },
   ];
+
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (!user?.userType) return false;

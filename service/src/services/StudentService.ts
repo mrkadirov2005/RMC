@@ -99,7 +99,7 @@ export class StudentService extends BaseService {
         s.first_name,
         s.last_name,
         COUNT(DISTINCT a.id) as attendance_count,
-        COUNT(DISTINCT CASE WHEN a.status = 'Present' THEN a.id END) as present_count,
+        COUNT(DISTINCT CASE WHEN a.status IN ('Present', 'Late') THEN a.id END) as present_count,
         COUNT(DISTINCT g.id) as grade_count,
         AVG(g.percentage) as average_grade,
         COUNT(DISTINCT p.id) as payment_count,

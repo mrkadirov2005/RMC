@@ -1,5 +1,15 @@
 const pool = require('../../../db/pool');
 
+// Safely serialize a value to a JSONB-compatible string for pg
+const toJsonb = (val: any): string | null => {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'string') {
+    // Already a JSON string - validate and return
+    try { JSON.parse(val); return val; } catch { /* fall through to stringify */ }
+  }
+  return JSON.stringify(val);
+};
+
 const findAll = async (conditions: string[] = [], params: any[] = []) => {
   let query = 'SELECT * FROM tests';
   if (conditions.length > 0) {
@@ -11,11 +21,11 @@ const findAll = async (conditions: string[] = [], params: any[] = []) => {
 };
 
 const findById = async (id: number, centerId?: number) => {
-  const params: any[] = [id];
+  const params: any[] = [Number(id)];
   let query = 'SELECT * FROM tests WHERE test_id = $1';
   if (centerId) {
     query += ' AND center_id = $2';
-    params.push(centerId);
+    params.push(Number(centerId));
   }
   const result = await pool.query(query, params);
   return result.rows[0] || null;
@@ -31,13 +41,17 @@ const insertTest = async (params: any[]) => {
     ) VALUES (
       $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
     ) RETURNING *`,
-    params
+    params.map((val, idx) => {
+      if ([0, 1, 6, 7, 8, 14, 16].includes(idx) && val !== null) return Number(val);
+      if (idx === 15) return toJsonb(val) ?? JSON.stringify({}); // test_data JSONB
+      return val;
+    })
   );
   return result.rows[0];
 };
 
 const updateTest = async (params: any[], id: number, centerId?: number) => {
-  const values = [...params, id];
+  const values = [...params, Number(id)];
   let query = `UPDATE tests SET
       subject_id = COALESCE($1, subject_id),
       test_name = COALESCE($2, test_name),
@@ -60,7 +74,7 @@ const updateTest = async (params: any[], id: number, centerId?: number) => {
       updated_at = CURRENT_TIMESTAMP
      WHERE test_id = $19`;
   if (centerId) {
-    values.push(centerId);
+    values.push(Number(centerId));
     query += ' AND center_id = $20';
   }
   query += ' RETURNING *';
@@ -69,11 +83,11 @@ const updateTest = async (params: any[], id: number, centerId?: number) => {
 };
 
 const deleteTest = async (id: number, centerId?: number) => {
-  const params: any[] = [id];
+  const params: any[] = [Number(id)];
   let query = 'DELETE FROM tests WHERE test_id = $1';
   if (centerId) {
     query += ' AND center_id = $2';
-    params.push(centerId);
+    params.push(Number(centerId));
   }
   query += ' RETURNING *';
   const result = await pool.query(query, params);
@@ -81,11 +95,11 @@ const deleteTest = async (id: number, centerId?: number) => {
 };
 
 const findQuestionsByTest = async (testId: number, centerId?: number) => {
-  const params: any[] = [testId];
+  const params: any[] = [Number(testId)];
   let query = 'SELECT * FROM test_questions WHERE test_id = $1';
   if (centerId) {
     query += ' AND center_id = $2';
-    params.push(centerId);
+    params.push(Number(centerId));
   }
   query += ' ORDER BY question_order, question_id';
   const result = await pool.query(query, params);
@@ -93,11 +107,11 @@ const findQuestionsByTest = async (testId: number, centerId?: number) => {
 };
 
 const findPassagesByTest = async (testId: number, centerId?: number) => {
-  const params: any[] = [testId];
+  const params: any[] = [Number(testId)];
   let query = 'SELECT * FROM reading_passages WHERE test_id = $1';
   if (centerId) {
     query += ' AND center_id = $2';
-    params.push(centerId);
+    params.push(Number(centerId));
   }
   query += ' ORDER BY passage_order, passage_id';
   const result = await pool.query(query, params);
@@ -111,13 +125,17 @@ const insertQuestion = async (params: any[]) => {
       question_order, options, correct_answer, explanation, image_url,
       is_required, word_limit
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14) RETURNING *`,
-    params
+    params.map((val, idx) => {
+      if ([0, 1, 2, 5, 6, 7].includes(idx) && val !== null) return Number(val);
+      if (idx === 8 || idx === 9) return toJsonb(val); // options, correct_answer JSONB
+      return val;
+    })
   );
   return result.rows[0];
 };
 
 const updateQuestion = async (params: any[], questionId: number, centerId?: number) => {
-  const values = [...params, questionId];
+  const values = [...params, Number(questionId)];
   let query = `UPDATE test_questions SET
       test_id = COALESCE($1, test_id),
       passage_id = COALESCE($2, passage_id),
@@ -134,23 +152,25 @@ const updateQuestion = async (params: any[], questionId: number, centerId?: numb
       word_limit = COALESCE($13, word_limit)
      WHERE question_id = $14`;
   if (centerId) {
-    values.push(centerId);
+    values.push(Number(centerId));
     query += ' AND center_id = $15';
   }
   query += ' RETURNING *';
-  const result = await pool.query(
-    query,
-    values
-  );
+  // Stringify JSONB fields: options is index 7 (0-based), correct_answer is index 8
+  const safeValues = values.map((val, idx) => {
+    if (idx === 7 || idx === 8) return toJsonb(val);
+    return val;
+  });
+  const result = await pool.query(query, safeValues);
   return result.rows[0] || null;
 };
 
 const deleteQuestion = async (id: number, centerId?: number) => {
-  const params: any[] = [id];
+  const params: any[] = [Number(id)];
   let query = 'DELETE FROM test_questions WHERE question_id = $1';
   if (centerId) {
     query += ' AND center_id = $2';
-    params.push(centerId);
+    params.push(Number(centerId));
   }
   query += ' RETURNING *';
   const result = await pool.query(query, params);
@@ -163,10 +183,11 @@ const insertPassage = async (params: any[]) => {
       center_id, test_id, title, content, word_count, difficulty_level, passage_order,
       audio_url, image_url
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING *`,
-    params
+    params.map((val, idx) => ([0, 1, 4, 6].includes(idx) && val !== null ? Number(val) : val))
   );
   return result.rows[0];
 };
+
 
 const updatePassage = async (params: any[], passageId: number, centerId?: number) => {
   const values = [...params, passageId];
@@ -379,21 +400,60 @@ const upsertResult = async (params: any[]) => {
 };
 
 const findAssignedTests = async (type: string, id: number, centerId?: number) => {
-  const params: any[] = [type, id];
-  let query = (
-    `SELECT t.*, ta.assigned_to_type, ta.assigned_to_id, ta.assigned_by, ta.assigned_at, ta.due_date, ta.is_mandatory, ta.notes
-     FROM tests t
-     JOIN test_assignments ta ON ta.test_id = t.test_id
-     WHERE ta.assigned_to_type = $1 AND ta.assigned_to_id = $2`
-  );
-  if (centerId) {
-    query += ' AND ta.center_id = $3';
-    params.push(centerId);
+  let query: string;
+  if (type === 'student') {
+    const queryParams: any[] = [type, id];
+    let centerCond = '';
+    if (centerId) {
+      queryParams.push(centerId);
+      centerCond = ` AND t.center_id = $${queryParams.length} `;
+    }
+
+    query = `
+      SELECT DISTINCT ON (t.test_id)
+        t.*, 
+        ta.assigned_to_type, 
+        ta.assigned_to_id, 
+        ta.assigned_by, 
+        ta.assigned_at, 
+        ta.due_date, 
+        COALESCE(ta.is_mandatory, t.assignment_type = 'all_students') as is_mandatory,
+        ta.notes
+      FROM tests t
+      LEFT JOIN test_assignments ta ON ta.test_id = t.test_id
+      WHERE t.is_active = true
+      ${centerCond}
+      AND (
+        (ta.assigned_to_type = $1 AND ta.assigned_to_id = $2)
+        OR (ta.assigned_to_type = 'class' AND ta.assigned_to_id = (SELECT class_id FROM students WHERE student_id = $2))
+        OR (t.assignment_type = 'all_students')
+      )
+      ORDER BY t.test_id, ta.assigned_at DESC NULLS LAST
+    `;
+    const result = await pool.query(query, queryParams);
+    return result.rows;
+  } else {
+    const queryParams: any[] = [type, id];
+    let centerCond = '';
+    if (centerId) {
+      queryParams.push(centerId);
+      centerCond = ` AND ta.center_id = $${queryParams.length}`;
+    }
+
+    query = `
+      SELECT t.*, ta.assigned_to_type, ta.assigned_to_id, ta.assigned_by, ta.assigned_at, ta.due_date, ta.is_mandatory, ta.notes
+      FROM tests t
+      JOIN test_assignments ta ON ta.test_id = t.test_id
+      WHERE ta.assigned_to_type = $1 AND ta.assigned_to_id = $2
+      ${centerCond}
+      ORDER BY ta.assigned_at DESC
+    `;
+    const result = await pool.query(query, queryParams);
+    return result.rows;
   }
-  query += ' ORDER BY ta.assigned_at DESC';
-  const result = await pool.query(query, params);
-  return result.rows;
 };
+
+
 
 const insertAssignment = async (params: any[]) => {
   const result = await pool.query(
@@ -460,4 +520,4 @@ module.exports = {
   getQuestionsByIds,
 };
 
-export {};
+export { };

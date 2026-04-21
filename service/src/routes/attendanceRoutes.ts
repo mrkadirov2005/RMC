@@ -41,6 +41,14 @@ router_att.get('/class/:classId', requireAuth, attendanceController.getAttendanc
 
 /**
  * @swagger
+ * /attendance/session/{sessionId}:
+ *   get:
+ *     summary: Get attendance records by session ID
+ */
+router_att.get('/session/:sessionId', requireAuth, attendanceController.getAttendanceBySession);
+
+/**
+ * @swagger
  * /attendance/{id}:
  *   get:
  *     summary: Get attendance record by ID

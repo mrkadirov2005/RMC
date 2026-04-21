@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teacherAPI, classAPI, studentAPI, gradeAPI, subjectAPI, assignmentAPI } from '../../../shared/api/api';
+import { teacherAPI, classAPI, studentAPI, gradeAPI, subjectAPI, assignmentAPI, paymentAPI } from '../../../shared/api/api';
 import { AssignmentSectionTeacher } from './components/AssignmentSectionTeacher';
 import { showToast } from '../../../utils/toast';
 import {
@@ -19,6 +19,7 @@ import {
   FileQuestion,
   Loader2,
   KeyRound,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +56,7 @@ interface Subject {
 interface Teacher {
   teacher_id?: number;
   id?: number;
+  center_id?: number;
   employee_id: string;
   first_name: string;
   last_name: string;
@@ -113,6 +115,7 @@ const TeacherDetailPage = () => {
   const [students, setStudents] = useState<Student[]>([]);
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
@@ -126,10 +129,11 @@ const TeacherDetailPage = () => {
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [resetTempPassword, setResetTempPassword] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [selectedPaymentMonth, setSelectedPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
   useEffect(() => {
     loadTeacherDetails();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [teacherId]);
 
   const loadTeacherDetails = async () => {
@@ -141,18 +145,22 @@ const TeacherDetailPage = () => {
       const teacherData = teacherResponse.data || teacherResponse;
       setTeacher(teacherData);
 
-      // Fetch all classes, students, subjects and assignments
-      const [classesRes, studentsRes, subjectsRes, assignmentRes] = await Promise.all([
+      // Fetch all classes, students, subjects, assignments and payments
+      const [classesRes, studentsRes, subjectsRes, assignmentRes, paymentsRes] = await Promise.all([
         classAPI.getAll(),
         studentAPI.getAll(),
         subjectAPI.getAll(),
         assignmentAPI.getAll(),
+        paymentAPI.getAll(),
       ]);
 
       const classesData = classesRes.data || classesRes;
       const studentsData = studentsRes.data || studentsRes;
       const subjectsData = subjectsRes.data || subjectsRes;
       const assignmentData = assignmentRes.data || assignmentRes;
+      const paymentsData = paymentsRes.data || paymentsRes;
+
+      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
 
       // Filter classes taught by this teacher
       const teacherIdNum = Number(teacherId);
@@ -179,10 +187,10 @@ const TeacherDetailPage = () => {
       );
       setSubjects(teacherSubjects);
 
-      // Get assignments for this teacher's classes
+      // Get assignments scoped to this teacher
       const allAssignments = Array.isArray(assignmentData) ? assignmentData : [];
-      const teacherAssignments = allAssignments.filter((a: Record<string, unknown>) =>
-        teacherClassIds.has(Number((a as any).class_id))
+      const teacherAssignments = allAssignments.filter(
+        (a: Record<string, unknown>) => Number((a as any).teacher_id) === teacherIdNum
       );
       setAssignments(teacherAssignments);
     } catch (err) {
@@ -458,6 +466,10 @@ const TeacherDetailPage = () => {
               <FileQuestion className="h-4 w-4" />
               Tests
             </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-2 text-base font-semibold data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none">
+              <Wallet className="h-4 w-4" />
+              Payments
+            </TabsTrigger>
           </TabsList>
 
           <div className="p-6">
@@ -469,6 +481,13 @@ const TeacherDetailPage = () => {
                     <CardTitle className="text-indigo-600">Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <User className="h-5 w-5 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Username</p>
+                        <p className="text-sm">{teacher.username}</p>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-3">
                       <Mail className="h-5 w-5 text-muted-foreground" />
                       <div>
@@ -547,7 +566,7 @@ const TeacherDetailPage = () => {
                         <button
                           type="button"
                           onClick={() => toggleClassExpanded(classId)}
-                          className="w-full flex items-center gap-4 p-4 bg-indigo-50/60 hover:bg-indigo-50 transition-colors text-left"
+                          className="w-full flex items-center gap-4 p-4  hover:bg-blue-900  transition-colors text-left"
                         >
                           <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
                             <BookOpen className="h-5 w-5" />
@@ -566,7 +585,7 @@ const TeacherDetailPage = () => {
                           <div>
                             <Table>
                               <TableHeader>
-                                <TableRow className="bg-indigo-50/50">
+                                <TableRow className=" hover:text-black">
                                   <TableHead className="font-semibold">Enrollment #</TableHead>
                                   <TableHead className="font-semibold">Name</TableHead>
                                   <TableHead className="font-semibold">Email</TableHead>
@@ -651,6 +670,119 @@ const TeacherDetailPage = () => {
                     Navigate to the Tests section to create, assign, and manage tests for your classes and students.
                   </AlertDescription>
                 </Alert>
+              </div>
+            </TabsContent>
+
+            {/* Tab: Payments */}
+            <TabsContent value="payments">
+              <div className="flex flex-col gap-6">
+                <div className="flex justify-between items-center sm:flex-row flex-col sm:items-center gap-4">
+                  <h3 className="text-lg font-semibold flex items-center gap-2">
+                    <Wallet className="h-5 w-5 text-indigo-500" />
+                    Student Payments
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="payment-month" className="font-semibold whitespace-nowrap">Select Month:</Label>
+                    <div className="relative">
+                      <Input
+                        id="payment-month"
+                        type="month"
+                        value={selectedPaymentMonth}
+                        onChange={(e) => setSelectedPaymentMonth(e.target.value)}
+                        className="w-[180px] pl-10"
+                      />
+                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+
+                {classes.length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Wallet className="h-16 w-16 mx-auto opacity-30 mb-4" />
+                    <h3 className="text-lg font-semibold">No classes assigned to this teacher</h3>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {classes.map((classItem) => {
+                      const classId = classItem.class_id || classItem.id || 0;
+                      const classStudents = getStudentsByClass(classId);
+
+                      return (
+                        <div key={classId} className="rounded-2xl border shadow-sm overflow-hidden bg-card text-card-foreground hover:shadow-md transition-shadow duration-300">
+                          <div className="bg-gradient-to-r from-indigo-50/50 dark:from-indigo-950/30 to-card p-5 border-b relative">
+                            <div className="absolute right-0 top-0 h-full w-32 bg-gradient-to-l from-indigo-100/30 dark:from-indigo-900/20 to-transparent pointer-events-none" />
+                            <h4 className="text-lg font-bold text-foreground flex justify-between items-center relative z-10">
+                              <div className="flex items-center gap-3">
+                                <div className="p-2 bg-background rounded-lg text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-900">
+                                  <BookOpen className="h-5 w-5" />
+                                </div>
+                                <span>{classItem.class_name} <span className="text-muted-foreground text-sm font-normal ml-2 hidden sm:inline">({classItem.level})</span></span>
+                              </div>
+                              <Badge variant="secondary" className="bg-background hover:bg-muted shadow-sm border">{classStudents.length} Students</Badge>
+                            </h4>
+                          </div>
+                          <div className="p-0">
+                            <Table>
+                              <TableHeader className="bg-muted/30">
+                                <TableRow className="border-b-border">
+                                  <TableHead className="font-semibold text-foreground pl-6">Student</TableHead>
+                                  <TableHead className="font-semibold text-foreground hidden sm:table-cell">Enrollment #</TableHead>
+                                  <TableHead className="font-semibold text-foreground text-right pr-6">Payment Status</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {classStudents.length === 0 ? (
+                                  <TableRow>
+                                    <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">No students</TableCell>
+                                  </TableRow>
+                                ) : (
+                                  classStudents.map((student) => {
+                                    const studentId = student.student_id || student.id;
+                                    const [year, month] = selectedPaymentMonth.split('-');
+                                    const hasPaid = payments.some(p => {
+                                      if (p.student_id !== studentId) return false;
+                                      if (p.payment_status?.toLowerCase() !== 'completed') return false;
+                                      const pDate = new Date(p.payment_date);
+                                      return pDate.getFullYear() === parseInt(year) && (pDate.getMonth() + 1) === parseInt(month);
+                                    });
+
+                                    return (
+                                      <TableRow key={studentId} className="hover:bg-muted/50 transition-colors border-b-border">
+                                        <TableCell className="pl-6 font-medium">
+                                          <div className="flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 dark:from-indigo-900/50 to-purple-100 dark:to-purple-900/50 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold shrink-0 border border-indigo-200/50 dark:border-indigo-800/50 shadow-sm">
+                                              {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                                            </div>
+                                            <div>
+                                              <p>{student.first_name} {student.last_name}</p>
+                                              <p className="text-xs text-muted-foreground font-normal sm:hidden">{student.enrollment_number}</p>
+                                            </div>
+                                          </div>
+                                        </TableCell>
+                                        <TableCell className="text-muted-foreground hidden sm:table-cell">{student.enrollment_number}</TableCell>
+                                        <TableCell className="text-right pr-6">
+                                          {hasPaid ? (
+                                            <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-500/20 px-3 py-1 shadow-sm font-semibold">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" /> Paid
+                                            </Badge>
+                                          ) : (
+                                            <Badge className="bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border-rose-200 dark:border-rose-500/20 px-3 py-1 shadow-sm font-semibold">
+                                              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2" /> Unpaid
+                                            </Badge>
+                                          )}
+                                        </TableCell>
+                                      </TableRow>
+                                    );
+                                  })
+                                )}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </TabsContent>
           </div>
