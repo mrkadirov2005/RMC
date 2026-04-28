@@ -1,7 +1,18 @@
+// React hooks for the crm feature.
+
 import { useEffect, useMemo, useState } from 'react';
-import { assignmentAPI, classAPI } from '../../../../shared/api/api';
-import { fetchClasses, assignmentStatusOptions } from '../../../../utils/dropdownOptions';
-import { useCRUD } from '../../hooks/useCRUD';
+import { assignmentStatusOptions } from '../../../../utils/dropdownOptions';
+import { useAppSelector } from '../../hooks';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import {
+  createAssignment,
+  deleteAssignment,
+  fetchAssignments,
+  fetchAssignmentsForce,
+  updateAssignment,
+} from '../../../../slices/assignmentsSlice';
+import { fetchClasses } from '../../../../slices/classesSlice';
+import { selectClassOptions } from '../../../../store/selectors';
 import type {
   Assignment,
   AssignmentFolderSelection,
@@ -15,57 +26,49 @@ import {
   getPersonalAssignments,
 } from '../queries';
 
-interface DropdownOption {
-  id?: number;
-  label: string;
-  value: string | number;
-}
-
+// Provides assignments page.
 export const useAssignmentsPage = () => {
-  const [state, actions] = useCRUD<Assignment>(assignmentAPI, 'Assignment');
-  const [classes, setClasses] = useState<Class[]>([]);
+  const dispatch = useAppDispatch();
+
+  const assignmentItems = useAppSelector((state) => state.assignments.items) as Assignment[];
+  const assignmentsLoading = useAppSelector((state) => state.assignments.loading);
+  const assignmentsError = useAppSelector((state) => state.assignments.error);
+  const classItems = useAppSelector((state) => state.classes.items) as Class[];
+  const classesLoading = useAppSelector((state) => state.classes.loading);
+
+  const state = { items: assignmentItems, loading: assignmentsLoading || classesLoading, error: assignmentsError };
+  const classes = classItems;
+  const classOptions = useAppSelector(selectClassOptions);
+  const isLoadingOptions = useAppSelector((state) => state.classes.loading);
+
   const [activeTab, setActiveTab] = useState<AssignmentTabType>('classes');
   const [selectedFolder, setSelectedFolder] = useState<AssignmentFolderSelection | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Assignment>>({ status: 'Pending' });
-  const [classOptions, setClassOptions] = useState<DropdownOption[]>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
-    actions.fetchAll();
-    loadAllData();
-    loadDropdownOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    dispatch(fetchAssignments());
+    dispatch(fetchClasses());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadAllData = async () => {
-    setLoadingData(true);
-    try {
-      const classesRes = await classAPI.getAll();
-      setClasses(Array.isArray(classesRes.data || classesRes) ? (classesRes.data || classesRes) : []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
+// Runs side effects for this component.
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchAssignmentsForce());
+      dispatch(fetchClasses());
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch]);
 
-  const loadDropdownOptions = async () => {
-    setIsLoadingOptions(true);
-    try {
-      setClassOptions(await fetchClasses());
-    } catch (error) {
-      console.error('Error loading dropdown options:', error);
-    } finally {
-      setIsLoadingOptions(false);
-    }
-  };
-
+// Handles open modal.
   const handleOpenModal = (assignment?: Assignment) => {
     if (assignment) {
       setEditingId(assignment.assignment_id || assignment.id || null);
@@ -77,64 +80,68 @@ export const useAssignmentsPage = () => {
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({ status: 'Pending' });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await actions.update(editingId, formData);
-    } else {
-      await actions.create(formData);
+    try {
+      if (editingId) {
+        await dispatch(updateAssignment({ id: editingId, data: formData })).unwrap();
+      } else {
+        await dispatch(createAssignment(formData)).unwrap();
+      }
+      handleCloseModal();
+    } catch {
+      // Toast feedback is handled in slice thunks.
     }
-    handleCloseModal();
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this assignment?')) {
-      await actions.delete(id);
+      await dispatch(deleteAssignment(id));
     }
   };
 
+// Memoizes the get filtered derived value.
   const getFiltered = useMemo(
-    () => getFilteredAssignments(state.items, classes, selectedFolder),
-    [classes, selectedFolder, state.items]
+    () => getFilteredAssignments(assignmentItems, classes, selectedFolder),
+    [classes, selectedFolder, assignmentItems]
   );
 
+// Memoizes the displayed assignments derived value.
   const displayedAssignments = useMemo(() => {
     let assignments = getFiltered;
-
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       assignments = assignments.filter(
-        (assignment) =>
-          assignment.assignment_title?.toLowerCase().includes(search) ||
-          assignment.description?.toLowerCase().includes(search)
+        (a) => a.assignment_title?.toLowerCase().includes(search) || a.description?.toLowerCase().includes(search)
       );
     }
-
     if (filterStatus) {
-      assignments = assignments.filter((assignment) => assignment.status === filterStatus);
+      assignments = assignments.filter((a) => a.status === filterStatus);
     }
-
     return assignments;
   }, [filterStatus, getFiltered, searchTerm]);
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setFilterStatus('');
-  };
-
+// Handles clear filters.
+  const clearFilters = () => { setSearchTerm(''); setFilterStatus(''); };
   const hasActiveFilters = Boolean(searchTerm || filterStatus);
-  const personalAssignments = useMemo(() => getPersonalAssignments(state.items, classes), [classes, state.items]);
+// Memoizes the personal assignments derived value.
+  const personalAssignments = useMemo(() => getPersonalAssignments(assignmentItems, classes), [classes, assignmentItems]);
 
+// Handles folder click.
   const handleFolderClick = (type: 'class' | 'personal', id: number | undefined, name: string) => {
     setSelectedFolder({ type, id, name });
   };
 
+// Handles back to folders.
   const handleBackToFolders = () => {
     setSelectedFolder(null);
     clearFilters();
@@ -152,7 +159,7 @@ export const useAssignmentsPage = () => {
     setFormData,
     classOptions,
     isLoadingOptions,
-    loadingData,
+    loadingData: classesLoading,
     searchTerm,
     setSearchTerm,
     filterStatus,
@@ -169,9 +176,8 @@ export const useAssignmentsPage = () => {
     handleFolderClick,
     handleBackToFolders,
     clearFilters,
-    getAssignmentCountForClass: (classId: number) => getAssignmentCountForClass(state.items, classId),
-    getCompletedCountForClass: (classId: number) => getCompletedCountForClass(state.items, classId),
+    getAssignmentCountForClass: (classId: number) => getAssignmentCountForClass(assignmentItems, classId),
+    getCompletedCountForClass: (classId: number) => getCompletedCountForClass(assignmentItems, classId),
     assignmentStatusOptions,
   };
 };
-

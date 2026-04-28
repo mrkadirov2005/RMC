@@ -1,3 +1,5 @@
+// Source file for the dashboard area in the crm feature.
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardFocusItem } from '../types';
 
@@ -5,6 +7,7 @@ interface DashboardFocusTodayProps {
   items: DashboardFocusItem[];
 }
 
+// Renders the dashboard focus today module.
 export const DashboardFocusToday = ({ items }: DashboardFocusTodayProps) => {
   return (
     <Card>

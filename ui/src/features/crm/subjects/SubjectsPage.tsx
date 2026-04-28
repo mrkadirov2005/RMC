@@ -1,3 +1,5 @@
+// Page component for the subjects screen in the crm feature.
+
 import { Plus, Pencil, Trash2, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,6 +24,7 @@ import {
 import { SelectField } from '../students/components/SelectField';
 import { useSubjectsPage } from './hooks/useSubjectsPage';
 
+// Renders the subjects page screen.
 const SubjectsPage = () => {
   const {
     state,

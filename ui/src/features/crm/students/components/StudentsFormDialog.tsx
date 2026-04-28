@@ -1,3 +1,5 @@
+// Modal component for the students screen in the crm feature.
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,6 +10,7 @@ import { StudentFormFields } from './StudentFormFields';
 interface Option { id?: number; label: string; value: string | number }
 interface Props { open: boolean; editing: boolean; formData: Partial<Student>; setFormData: (value: Partial<Student>) => void; centerOptions: Option[]; classOptions: Option[]; teacherOptions: Option[]; genderOptions: Option[]; statusOptions: Option[]; onClose: () => void; onSubmit: (e: FormEvent) => void; loading: boolean; showCenterField?: boolean; error?: string | null }
 
+// Renders the students form dialog modal.
 export const StudentsFormDialog = ({ open, editing, formData, setFormData, centerOptions, classOptions, teacherOptions, genderOptions, statusOptions, onClose, onSubmit, loading, showCenterField = true, error }: Props) => (
   <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
     <DialogContent className="max-w-2xl">

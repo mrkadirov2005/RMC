@@ -1,3 +1,5 @@
+// Source file for helpers.
+
 import axios from 'axios';
 
 // Utility functions for localStorage
@@ -9,6 +11,7 @@ export const setStorageItem = (key: string, value: any) => {
   }
 };
 
+// Returns storage item.
 export const getStorageItem = (key: string) => {
   try {
     const item = localStorage.getItem(key);
@@ -19,6 +22,7 @@ export const getStorageItem = (key: string) => {
   }
 };
 
+// Handles remove storage item.
 export const removeStorageItem = (key: string) => {
   try {
     localStorage.removeItem(key);
@@ -27,6 +31,7 @@ export const removeStorageItem = (key: string) => {
   }
 };
 
+// Handles clear storage.
 export const clearStorage = () => {
   try {
     localStorage.clear();

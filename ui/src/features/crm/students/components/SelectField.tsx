@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import {
@@ -19,6 +21,7 @@ interface SelectFieldProps {
   placeholder?: string;
 }
 
+// Renders the select field module.
 export const SelectField: React.FC<SelectFieldProps> = ({
   label,
   name,
@@ -66,6 +69,7 @@ interface DynamicSelectFieldProps {
   placeholder?: string;
 }
 
+// Handles dynamic select field.
 export const DynamicSelectField: React.FC<DynamicSelectFieldProps> = ({
   label,
   name,
@@ -78,7 +82,9 @@ export const DynamicSelectField: React.FC<DynamicSelectFieldProps> = ({
   const [options, setOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
   const [isLoading, setIsLoading] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
+// Loads options.
     const loadOptions = async () => {
       setIsLoading(true);
       try {

@@ -1,3 +1,5 @@
+// View component for the students screen in the crm feature.
+
 import { useState } from 'react';
 import { Coins, Info, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ interface Props {
   onCoinsUpdated?: () => void;
 }
 
+// Renders the students table view view.
 export const StudentsTableView = ({
   students,
   loading,
@@ -32,6 +35,7 @@ export const StudentsTableView = ({
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
+// Opens coins.
   const openCoins = (student: Student) => {
     setSelectedStudent(student);
     setCoinDialogOpen(true);

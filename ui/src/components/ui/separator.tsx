@@ -1,3 +1,5 @@
+// Shared UI primitive used across the application.
+
 import * as React from 'react';
 import * as SeparatorPrimitive from '@radix-ui/react-separator';
 import { cn } from '@/lib/utils';

@@ -33,9 +33,6 @@ const getParentById = async (req: any, res: any) => {
 const createParent = async (req: any, res: any) => {
   try {
     const out = await parentService.createParent(req.body);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'first_name, last_name, username, and password are required' });
-    }
     res.status(201).json({ message: 'Parent created', parent: (out as any).row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -80,9 +77,6 @@ const assignStudent = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Center scope required.' });
     }
     const out = await parentService.assignStudent(req.body, centerId ?? undefined);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'parent_id and student_id are required' });
-    }
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
     }
@@ -96,9 +90,6 @@ const assignStudent = async (req: any, res: any) => {
 const parentLogin = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const result = await parentService.authenticate(username, password);
     if (result.kind === 'inactive') {
       return res.status(403).json({ error: 'Parent account is not active' });

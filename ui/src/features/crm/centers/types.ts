@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Center {
   center_id?: number;
   id?: number;

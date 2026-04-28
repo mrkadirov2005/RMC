@@ -62,10 +62,6 @@ const createInvoice = async (body: any, centerId?: number) => {
 
   const scopedCenterId = centerId ?? center_id;
 
-  if (!student_id || !scopedCenterId || !issue_date || !Array.isArray(items) || items.length === 0) {
-    return { error: 'validation' as const };
-  }
-
   const number = invoice_number || (await generateInvoiceNumber(scopedCenterId));
   const { subtotal, total } = calculateTotals(items, discount_total, tax_total);
 

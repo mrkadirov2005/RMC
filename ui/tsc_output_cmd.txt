@@ -1,0 +1,54 @@
+src/components/ui/dialog.tsx(20,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'onClick' does not exist in type 'Partial<unknown> & Attributes'.
+src/components/ui/dialog.tsx(21,7): error TS18046: 'children.props' is of type 'unknown'.
+src/components/ui/dialog.tsx(30,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'onClick' does not exist in type 'Partial<unknown> & Attributes'.
+src/components/ui/dialog.tsx(31,7): error TS18046: 'children.props' is of type 'unknown'.
+src/features/crm/attendance/AttendancePageOld.tsx(2,1): error TS6192: All imports in import declaration are unused.
+src/features/crm/attendance/AttendancePageOld.tsx(10,3): error TS6133: 'Mail' is declared but its value is never read.
+src/features/crm/attendance/AttendancePageOld.tsx(11,3): error TS6133: 'Phone' is declared but its value is never read.
+src/features/crm/attendance/AttendancePageOld.tsx(24,1): error TS6192: All imports in import declaration are unused.
+src/features/crm/attendance/AttendancePageOld.tsx(51,1): error TS6133: 'cn' is declared but its value is never read.
+src/features/crm/dashboard/queries/dashboardQueries.ts(13,3): error TS2305: Module '"../types"' has no exported member 'DashboardCollections'.
+src/features/crm/dashboard/queries/dashboardQueries.ts(15,3): error TS6196: 'DashboardRole' is declared but never used.
+src/features/crm/dashboard/queries/dashboardQueries.ts(81,6): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(85,6): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(91,6): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(96,14): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(106,14): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(106,19): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(108,53): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(108,58): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(135,36): error TS7006: Parameter 'item' implicitly has an 'any' type.
+src/features/crm/dashboard/queries/dashboardQueries.ts(135,42): error TS7006: Parameter 'index' implicitly has an 'any' type.
+src/features/crm/debts/DebtsPage.tsx(133,161): error TS2339: Property 'target' does not exist on type 'string'.
+src/features/crm/debts/DebtsPage.tsx(134,169): error TS2339: Property 'target' does not exist on type 'string'.
+src/features/crm/grades/GradesPageOld.tsx(2,83): error TS6133: 'Loader2' is declared but its value is never read.
+src/features/crm/grades/GradesPageOld.tsx(8,1): error TS6192: All imports in import declaration are unused.
+src/features/crm/grades/GradesPageOld.tsx(34,1): error TS6133: 'cn' is declared but its value is never read.
+src/features/crm/index.ts(11,15): error TS2307: Cannot find module './teachers' or its corresponding type declarations.
+src/features/crm/index.ts(13,15): error TS2307: Cannot find module './payments' or its corresponding type declarations.
+src/features/crm/index.ts(14,15): error TS2307: Cannot find module './grades' or its corresponding type declarations.
+src/features/crm/index.ts(15,1): error TS2308: Module './classes' has already exported a member named 'Class'. Consider explicitly re-exporting to resolve the ambiguity.
+src/features/crm/index.ts(16,1): error TS2308: Module './classes' has already exported a member named 'Class'. Consider explicitly re-exporting to resolve the ambiguity.
+src/features/crm/index.ts(17,15): error TS2307: Cannot find module './subjects' or its corresponding type declarations.
+src/features/crm/index.ts(19,15): error TS2307: Cannot find module './debts' or its corresponding type declarations.
+src/features/crm/index.ts(20,15): error TS2307: Cannot find module './tests' or its corresponding type declarations.
+src/features/crm/payments/PaymentsPage.tsx(13,132): error TS6133: 'currencyOptions' is declared but its value is never read.
+src/features/crm/payments/PaymentsPage.tsx(119,10): error TS6133: 'teacherOptions' is declared but its value is never read.
+src/features/crm/payments/PaymentsPage.tsx(120,10): error TS6133: 'classOptions' is declared but its value is never read.
+src/features/crm/payments/PaymentsPageOld.tsx(368,22): error TS2304: Cannot find name 'Loader2'.
+src/features/crm/rbac/PermissionGuard.tsx(1,10): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/features/crm/students/components/AttendanceSection.tsx(3,32): error TS6133: 'X' is declared but its value is never read.
+src/features/crm/students/components/GradesSection.tsx(86,9): error TS2353: Object literal may only specify known properties, and 'center_id' does not exist in type 'SetStateAction<Partial<Grade>>'.
+src/features/crm/students/components/GradesSection.tsx(107,29): error TS2339: Property 'center_id' does not exist on type 'Partial<Grade>'.
+src/features/crm/students/hooks/useStudentsPage.ts(8,34): error TS2345: Argument of type '{ fetchAll: () => Promise<PayloadAction<unknown, string, { arg: void; requestId: string; requestStatus: "rejected"; aborted: boolean; condition: boolean; } & ({ rejectedWithValue: true; } | ({ rejectedWithValue: false; } & {})), SerializedError> | PayloadAction<...>> & { ...; } & { ...; }; }' is not assignable to parameter of type 'Actions'.
+  Type '{ fetchAll: () => Promise<PayloadAction<unknown, string, { arg: void; requestId: string; requestStatus: "rejected"; aborted: boolean; condition: boolean; } & ({ rejectedWithValue: true; } | ({ rejectedWithValue: false; } & {})), SerializedError> | PayloadAction<...>> & { ...; } & { ...; }; }' is missing the following properties from type 'Actions': update, create, delete
+src/features/crm/students/StudentDetailPage.tsx(313,27): error TS2719: Type 'Student' is not assignable to type 'Student'. Two different types with this name exist, but they are unrelated.
+  Types of property 'username' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+src/features/crm/students/StudentDetailPage.tsx(341,33): error TS2339: Property 'teacher_id' does not exist on type 'Class'.
+src/features/crm/students/StudentDetailPage.tsx(376,33): error TS2339: Property 'teacher_id' does not exist on type 'Class'.

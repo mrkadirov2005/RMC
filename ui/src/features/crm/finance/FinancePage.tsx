@@ -1,10 +1,12 @@
+// Page component for the finance screen in the crm feature.
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, Search, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useCRUD } from '../hooks/useCRUD';
-import { teacherAPI } from '@/shared/api/api';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { fetchTeachers } from '@/slices/teachersSlice';
 
 interface Teacher {
   teacher_id?: number;
@@ -16,16 +18,22 @@ interface Teacher {
   username?: string;
 }
 
+// Renders the finance page screen.
 const FinancePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
-  const [{ items: teachers, loading: isLoading }, { fetchAll }] = useCRUD(teacherAPI, 'Teachers');
+  const dispatch = useAppDispatch();
+  const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
+  const isLoading = useAppSelector((state) => state.teachers.loading);
 
+// Runs side effects for this component.
   useEffect(() => {
-    fetchAll();
-  }, [fetchAll]);
+    dispatch(fetchTeachers());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+// Memoizes the filtered teachers derived value.
   const filteredTeachers = useMemo(() => {
     if (!searchTerm.trim()) return teachers;
     const term = searchTerm.toLowerCase();

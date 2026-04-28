@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Attendance {
   attendance_id?: number;
   id?: number;
@@ -35,7 +37,7 @@ export interface Student {
   teacher_id?: number;
 }
 
-export type AttendanceTabType = 'students' | 'classes' | 'teachers';
+export type AttendanceTabType = 'students' | 'classes' | 'teachers' | 'statistics';
 export type AttendanceFolderType = 'teacher' | 'class' | 'student';
 
 export interface AttendanceFolderSelection {

@@ -1,3 +1,5 @@
+// Query helpers for the crm feature.
+
 export const getStatusColor = (status: string) => {
   switch (status.toLowerCase()) {
     case 'active':
@@ -11,6 +13,7 @@ export const getStatusColor = (status: string) => {
   }
 };
 
+// Returns initials.
 export const getInitials = (firstName: string, lastName: string) =>
   `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
 

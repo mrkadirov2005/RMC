@@ -1,10 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+// Page component for the StudentProfilePage.tsx screen in the student feature.
+
+import { useEffect, useMemo } from 'react';
 import { Loader2, Mail, Phone, UserRound, Users, GraduationCap, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAppSelector } from '../../crm/hooks';
-import type { RootState } from '../../../store';
-import { studentAPI, classAPI, teacherAPI } from '../../../shared/api/api';
+import { useAppDispatch, useAppSelector } from '../crm/hooks';
+import type { RootState } from '../../store';
+import { fetchStudentDashboard } from '../../slices/studentDashboardSlice';
 
 interface StudentProfile {
   id?: number;
@@ -40,51 +42,31 @@ interface ClassInfo {
   room_number?: string;
 }
 
+// Renders the student profile page screen.
 const StudentProfilePage = () => {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state: RootState) => state.auth);
-  const [loading, setLoading] = useState(true);
-  const [student, setStudent] = useState<StudentProfile | null>(null);
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
+  const { data: dashboardData, loading } = useAppSelector((state) => state.studentDashboard);
+// Handles student.
+  const student = (dashboardData?.student as StudentProfile | null) || null;
+// Handles teacher.
+  const teacher = (dashboardData?.teacher as Teacher | null) || null;
+// Handles class info.
+  const classInfo = (dashboardData?.classInfo as ClassInfo | null) || null;
 
+// Memoizes the initials derived value.
   const initials = useMemo(() => {
     const first = user?.first_name?.[0] ?? '';
     const last = user?.last_name?.[0] ?? '';
     return `${first}${last}` || 'S';
   }, [user]);
 
+// Runs side effects for this component.
   useEffect(() => {
-    let isMounted = true;
-    const loadProfile = async () => {
-      if (!user?.id) return;
-      setLoading(true);
-      try {
-        const studentRes = await studentAPI.getById(user.id).catch(() => null);
-        const studentData: StudentProfile | null =
-          (studentRes as any)?.data || (studentRes as any) || null;
-
-        const classId = studentData?.class_id || user.class_id;
-        const teacherId = studentData?.teacher_id;
-
-        const [classRes, teacherRes] = await Promise.all([
-          classId ? classAPI.getById(classId).catch(() => null) : Promise.resolve(null),
-          teacherId ? teacherAPI.getById(teacherId).catch(() => null) : Promise.resolve(null),
-        ]);
-
-        if (!isMounted) return;
-        setStudent(studentData);
-        setClassInfo((classRes as any)?.data || (classRes as any) || null);
-        setTeacher((teacherRes as any)?.data || (teacherRes as any) || null);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    loadProfile();
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id, user?.class_id]);
+    if (user?.id) {
+      dispatch(fetchStudentDashboard());
+    }
+  }, [dispatch, user?.id]);
 
   if (loading) {
     return (

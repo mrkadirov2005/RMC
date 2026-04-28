@@ -1,3 +1,5 @@
+// Page component for the tests screen in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -21,8 +23,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { testAPI, studentAPI, classAPI } from '../../../shared/api/api';
+import { testAPI } from '../../../shared/api/api';
 import { toast } from 'react-toastify';
+import { fetchClasses } from '../../../slices/classesSlice';
+import { fetchStudents } from '../../../slices/studentsSlice';
+import { selectClassItems, selectStudentItems } from '../../../store/selectors';
+import { useAppDispatch, useAppSelector } from '../hooks';
 
 interface Student {
   student_id: number;
@@ -38,13 +44,16 @@ interface ClassType {
   students_count?: number;
 }
 
+// Renders the test assign page screen.
 const TestAssignPage = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const students = useAppSelector(selectStudentItems) as Student[];
+  const classes = useAppSelector(selectClassItems) as ClassType[];
+  const optionsLoading = useAppSelector((state) => state.students.loading || state.classes.loading);
 
   const [test, setTest] = useState<any>(null);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [classes, setClasses] = useState<ClassType[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,24 +64,22 @@ const TestAssignPage = () => {
   const [dueDate, setDueDate] = useState('');
   const [isMandatory, setIsMandatory] = useState(true);
 
+// Runs side effects for this component.
   useEffect(() => {
+    dispatch(fetchStudents());
+    dispatch(fetchClasses());
     loadData();
-  }, [testId]);
+  }, [testId, dispatch]);
 
+// Loads data.
   const loadData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const [testRes, studentsRes, classesRes] = await Promise.all([
-        testAPI.getById(Number(testId)),
-        studentAPI.getAll(),
-        classAPI.getAll(),
-      ]);
+      const testRes = await testAPI.getById(Number(testId));
 
       setTest(testRes.data);
-      setStudents(studentsRes.data || []);
-      setClasses(classesRes.data || []);
 
       // Pre-fill from test data
       if (testRes.data.assignment_type) {
@@ -86,6 +93,7 @@ const TestAssignPage = () => {
     }
   };
 
+// Handles student toggle.
   const handleStudentToggle = (studentId: number) => {
     setSelectedStudents((prev) =>
       prev.includes(studentId)
@@ -94,6 +102,7 @@ const TestAssignPage = () => {
     );
   };
 
+// Handles class toggle.
   const handleClassToggle = (classId: number) => {
     setSelectedClasses((prev) =>
       prev.includes(classId)
@@ -102,22 +111,33 @@ const TestAssignPage = () => {
     );
   };
 
+// Handles select all students.
   const handleSelectAllStudents = () => {
     if (selectedStudents.length === students.length) {
       setSelectedStudents([]);
     } else {
-      setSelectedStudents(students.map((s) => s.student_id));
+      setSelectedStudents(
+        students
+          .map((s) => Number(s.student_id || (s as any).id || 0))
+          .filter((id) => id > 0)
+      );
     }
   };
 
+// Handles select all classes.
   const handleSelectAllClasses = () => {
     if (selectedClasses.length === classes.length) {
       setSelectedClasses([]);
     } else {
-      setSelectedClasses(classes.map((c) => c.class_id));
+      setSelectedClasses(
+        classes
+          .map((c) => Number(c.class_id || (c as any).id || 0))
+          .filter((id) => id > 0)
+      );
     }
   };
 
+// Handles save.
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -169,7 +189,7 @@ const TestAssignPage = () => {
     }
   };
 
-  if (loading) {
+  if (loading || optionsLoading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />

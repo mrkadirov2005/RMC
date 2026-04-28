@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+// Page component for the tests screen in the crm feature.
+
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -20,7 +22,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { clearSubmissionDetailsError, fetchSubmissionDetails } from '../../../slices/testsSlice';
+import {
+  selectSubmissionDetailsError,
+  selectSubmissionDetailsItem,
+  selectSubmissionDetailsLoading,
+} from '../../../store/selectors';
 
 interface Answer {
   answer_id: number;
@@ -58,31 +66,24 @@ interface Submission {
   answers: Answer[];
 }
 
+// Renders the view submission page screen.
 const ViewSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const submission = useAppSelector(selectSubmissionDetailsItem) as Submission | null;
+  const loading = useAppSelector(selectSubmissionDetailsLoading);
+  const error = useAppSelector(selectSubmissionDetailsError);
 
-  const [submission, setSubmission] = useState<Submission | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+// Runs side effects for this component.
   useEffect(() => {
-    loadSubmission();
-  }, [submissionId]);
-
-  const loadSubmission = async () => {
-    try {
-      setLoading(true);
-      const response = await testAPI.getSubmissionDetails(Number(submissionId));
-      setSubmission(response.data);
-    } catch (err: any) {
-      console.error('Error loading submission:', err);
-      setError('Failed to load submission details');
-    } finally {
-      setLoading(false);
+    if (!submissionId) {
+      return;
     }
-  };
+    dispatch(fetchSubmissionDetails(Number(submissionId)));
+  }, [dispatch, submissionId]);
 
+// Formats answer.
   const formatAnswer = (answer: Answer) => {
     const studentAnswer = answer.student_answer;
     if (!studentAnswer) return <em className="text-gray-400">No answer provided</em>;
@@ -112,6 +113,7 @@ const ViewSubmissionPage = () => {
     }
   };
 
+// Formats correct answer.
   const formatCorrectAnswer = (answer: Answer) => {
     const correct = answer.correct_answer;
     if (!correct) return <em>Not specified</em>;
@@ -134,6 +136,7 @@ const ViewSubmissionPage = () => {
     }
   };
 
+// Returns status badge class.
   const getStatusBadgeClass = (status: string) => {
     switch (status) {
       case 'submitted':
@@ -169,6 +172,7 @@ const ViewSubmissionPage = () => {
     );
   }
 
+// Handles is passing.
   const isPassing = (submission.score || 0) >= (submission.passing_marks || 0);
 
   return (
@@ -198,7 +202,7 @@ const ViewSubmissionPage = () => {
         <Alert variant="destructive" className="mb-6">
           <AlertDescription>{error}</AlertDescription>
           <button
-            onClick={() => setError(null)}
+            onClick={() => dispatch(clearSubmissionDetailsError())}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
           >
             ×

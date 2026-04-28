@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+// Page component for the tests screen in the crm feature.
+
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -41,8 +43,25 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
-import { useAppSelector } from '../hooks';
+import {
+  clearTestsPageError,
+  setTestsPageDeleteDialogOpen,
+  setTestsPageError,
+  setTestsPageFilterType,
+  setTestsPageSearchTerm,
+  setTestsPageSelectedTestId,
+  setTestsPageTabValue,
+} from '../../../slices/pagesUiSlice';
+import { clearTestsError, deleteTest, fetchTests } from '../../../slices/testsSlice';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import {
+  makeSelectFilteredTestsForPageUi,
+  selectTestsPageSelectedTest,
+  selectTestsPageUi,
+  selectTestsError,
+  selectTestsLoading,
+  selectTestsStats,
+} from '../../../store/selectors';
 
 interface Test {
   test_id: number;
@@ -53,56 +72,48 @@ interface Test {
   passing_marks: number;
   duration_minutes: number;
   is_active: boolean;
+  is_private?: boolean;
   question_count?: number;
   submission_count?: number;
   subject_name?: string;
   created_at?: string;
 }
 
+// Renders the tests page screen.
 const TestsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const loading = useAppSelector(selectTestsLoading);
+  const testsError = useAppSelector(selectTestsError);
+  const stats = useAppSelector(selectTestsStats);
+  const testsUi = useAppSelector(selectTestsPageUi);
+  const { pageError, tabValue, searchTerm, filterType, deleteDialogOpen } = testsUi;
+// Memoizes the select filtered tests derived value.
+  const selectFilteredTests = useMemo(makeSelectFilteredTestsForPageUi, []);
+  const filteredTests = useAppSelector((state) => selectFilteredTests(state)) as Test[];
+  const selectedTest = useAppSelector(selectTestsPageSelectedTest) as Test | null;
+  const error = pageError || testsError;
 
-  const [tests, setTests] = useState<Test[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState<string>('all');
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedTest, setSelectedTest] = useState<Test | null>(null);
-
+// Runs side effects for this component.
   useEffect(() => {
-    loadTests();
-  }, []);
+    dispatch(fetchTests());
+  }, [dispatch]);
 
-  const loadTests = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await testAPI.getAll();
-      setTests(response.data || []);
-    } catch (err: any) {
-      console.error('Error loading tests:', err);
-      setError('Failed to load tests. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// Handles delete.
   const handleDelete = async () => {
     if (selectedTest) {
       try {
-        await testAPI.delete(selectedTest.test_id);
-        setTests(tests.filter((t) => t.test_id !== selectedTest.test_id));
-        setDeleteDialogOpen(false);
-        setSelectedTest(null);
-      } catch (err) {
-        console.error('Error deleting test:', err);
+        await dispatch(deleteTest(selectedTest.test_id)).unwrap();
+        dispatch(setTestsPageDeleteDialogOpen(false));
+        dispatch(setTestsPageSelectedTestId(null));
+      } catch (err: any) {
+        dispatch(setTestsPageError(err?.message || 'Failed to delete test.'));
       }
     }
   };
 
+// Returns test type color.
   const getTestTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       multiple_choice: 'bg-indigo-500',
@@ -117,22 +128,10 @@ const TestsPage = () => {
     return colors[type] || 'bg-gray-500';
   };
 
+// Formats test type.
   const formatTestType = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
-
-  const filteredTests = tests.filter((test) => {
-    const matchesSearch =
-      test.test_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      test.description?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || test.test_type === filterType;
-    const matchesTab =
-      tabValue === 'all' ||
-      (tabValue === 'active' && test.is_active) ||
-      (tabValue === 'inactive' && !test.is_active);
-
-    return matchesSearch && matchesType && matchesTab;
-  });
 
   const testTypes = [
     { value: 'all', label: 'All Types' },
@@ -145,13 +144,6 @@ const TestsPage = () => {
     { value: 'writing', label: 'Writing' },
     { value: 'matching', label: 'Matching' },
   ];
-
-  const stats = {
-    total: tests.length,
-    active: tests.filter((t) => t.is_active).length,
-    inactive: tests.filter((t) => !t.is_active).length,
-    totalSubmissions: tests.reduce((sum, t) => sum + (t.submission_count || 0), 0),
-  };
 
   if (loading) {
     return (
@@ -186,7 +178,12 @@ const TestsPage = () => {
         <Alert variant="destructive" className="mb-6">
           <AlertDescription className="flex justify-between items-center">
             {error}
-            <button onClick={() => setError(null)}>
+            <button
+              onClick={() => {
+                dispatch(clearTestsPageError());
+                dispatch(clearTestsError());
+              }}
+            >
               <X className="h-4 w-4" />
             </button>
           </AlertDescription>
@@ -223,7 +220,7 @@ const TestsPage = () => {
 
       {/* Filters and Search */}
       <Card className="mb-6">
-        <Tabs value={tabValue} onValueChange={setTabValue}>
+        <Tabs value={tabValue} onValueChange={(value) => dispatch(setTestsPageTabValue(value as 'all' | 'active' | 'inactive'))}>
           <div className="border-b">
             <TabsList className="bg-transparent h-auto p-0">
               <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
@@ -244,12 +241,12 @@ const TestsPage = () => {
                 <Input
                   placeholder="Search tests..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => dispatch(setTestsPageSearchTerm(e.target.value))}
                   className="pl-9"
                 />
               </div>
               <div className="md:col-span-3">
-                <Select value={filterType} onValueChange={setFilterType}>
+                <Select value={filterType} onValueChange={(value) => dispatch(setTestsPageFilterType(value))}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
@@ -306,6 +303,15 @@ const TestsPage = () => {
                     {formatTestType(test.test_type)}
                   </span>
                   <div className="flex items-center gap-2">
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        'text-xs',
+                        test.is_private ? 'border-amber-300 text-amber-700 bg-amber-50' : 'border-emerald-300 text-emerald-700 bg-emerald-50'
+                      )}
+                    >
+                      {test.is_private ? 'Private' : 'Public'}
+                    </Badge>
                     <Badge variant={test.is_active ? 'default' : 'secondary'} className={cn(test.is_active && 'bg-green-100 text-green-800 border-green-300')}>
                       {test.is_active ? 'Active' : 'Inactive'}
                     </Badge>
@@ -315,7 +321,7 @@ const TestsPage = () => {
                           className="p-1 rounded-md hover:bg-muted"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedTest(test);
+                            dispatch(setTestsPageSelectedTestId(test.test_id));
                           }}
                         >
                           <MoreVertical className="h-4 w-4 text-muted-foreground" />
@@ -338,8 +344,8 @@ const TestsPage = () => {
                           className="text-red-600 focus:text-red-600"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedTest(test);
-                            setDeleteDialogOpen(true);
+                            dispatch(setTestsPageSelectedTestId(test.test_id));
+                            dispatch(setTestsPageDeleteDialogOpen(true));
                           }}
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
@@ -388,7 +394,7 @@ const TestsPage = () => {
       )}
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => dispatch(setTestsPageDeleteDialogOpen(open))}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Test</DialogTitle>
@@ -397,7 +403,7 @@ const TestsPage = () => {
             Are you sure you want to delete "{selectedTest?.test_name}"? This action cannot be undone.
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button variant="outline" onClick={() => dispatch(setTestsPageDeleteDialogOpen(false))}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete}>

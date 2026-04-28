@@ -44,9 +44,6 @@ const importEntity = async (req: any, res: any) => {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
     const out = await importExportService.importEntity(entity, csv, centerId ?? undefined);
-    if (out.error === 'no_csv') {
-      return res.status(400).json({ error: 'csv string is required' });
-    }
     if (out.error === 'unsupported') {
       return res.status(400).json({ error: 'Unsupported import entity' });
     }

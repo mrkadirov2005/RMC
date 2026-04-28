@@ -4,6 +4,7 @@ export {};
  * JWT Authentication & Role-Based Access Control Middleware
  */
 const jwt = require('jsonwebtoken');
+const pool = require('../db/pool');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'crm_jwt_secret_key_2024_change_in_production';
 const JWT_EXPIRES_IN = '24h';
@@ -17,10 +18,13 @@ interface JwtPayload {
   username?: string;
   email?: string;
   userType: UserType;
+  branch_id?: number;
   center_id?: number;
   class_id?: number;
   role?: string;
+  permissions?: string[];
   payment_access?: boolean;
+  is_frozen?: boolean;
 }
 
 /**
@@ -49,7 +53,7 @@ function verifyToken(token: string): JwtPayload {
  * Middleware: Require authentication (any valid JWT)
  * Attaches `req.user` with the decoded token payload
  */
-function requireAuth(req: any, res: any, next: any): void {
+async function requireAuth(req: any, res: any, next: any): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -61,13 +65,31 @@ function requireAuth(req: any, res: any, next: any): void {
 
   try {
     const decoded = verifyToken(token);
+    // Frozen students are view-only: allow reads, block writes.
+    if (
+      decoded.userType === 'student' &&
+      ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(req.method || '').toUpperCase())
+    ) {
+      const result = await pool.query('SELECT is_frozen FROM students WHERE student_id = $1', [decoded.id]);
+      const isFrozen = Boolean(result.rows?.[0]?.is_frozen);
+      if (isFrozen) {
+        res.status(423).json({
+          error: 'Student account is frozen and is currently view-only.',
+          code: 'STUDENT_ACCOUNT_FROZEN',
+        });
+        return;
+      }
+    }
     req.user = decoded;
     next();
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
       res.status(401).json({ error: 'Token expired. Please log in again.' });
-    } else {
+    } else if (err.name === 'JsonWebTokenError') {
       res.status(401).json({ error: 'Invalid token. Please log in again.' });
+    } else {
+      console.error('Authentication middleware error:', err);
+      res.status(500).json({ error: 'Authentication check failed.' });
     }
   }
 }
@@ -84,6 +106,11 @@ function requireRole(...allowedTypes: UserType[]) {
   return (req: any, res: any, next: any): void => {
     if (!req.user) {
       res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+
+    if (req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner') {
+      next();
       return;
     }
 
@@ -116,7 +143,11 @@ function requireSelfOrAdmin(paramName: string, userIdField: string = 'id') {
     }
 
     // Superusers and teachers can access any data
-    if (req.user.userType === 'superuser' || req.user.userType === 'teacher') {
+    if (
+      req.user.userType === 'superuser' ||
+      req.user.userType === 'teacher' ||
+      (req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner')
+    ) {
       next();
       return;
     }
@@ -143,6 +174,17 @@ module.exports = {
   requireAuth,
   requireRole,
   requireSelfOrAdmin,
+  requireOwner: (req: any, res: any, next: any) => {
+    if (!req.user) {
+      res.status(401).json({ error: 'Authentication required.' });
+      return;
+    }
+    if (req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner') {
+      next();
+      return;
+    }
+    res.status(403).json({ error: 'Access denied. Owner privileges required.' });
+  },
   JWT_SECRET,
   JWT_EXPIRES_IN,
   PAYMENT_TOKEN_EXPIRES_IN,

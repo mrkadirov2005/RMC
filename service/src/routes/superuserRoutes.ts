@@ -3,6 +3,8 @@ export {};
 const express_superuser = require('express');
 const router_superuser = express_superuser.Router();
 const superuserController = require('../controllers/superuserController');
+const { validateBody } = require('../middleware/validation');
+const { CredentialsDto, PasswordChangeDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -140,7 +142,7 @@ router_superuser.delete('/:id', superuserController.deleteSuperuser);
  *       403:
  *         description: Account locked or inactive
  */
-router_superuser.post('/auth/login', superuserController.login);
+router_superuser.post('/auth/login', validateBody(CredentialsDto), superuserController.login);
 
 /**
  * @swagger
@@ -176,6 +178,6 @@ router_superuser.post('/auth/login', superuserController.login);
  *       404:
  *         description: Superuser not found
  */
-router_superuser.post('/:id/change-password', superuserController.changePassword);
+router_superuser.post('/:id/change-password', validateBody(PasswordChangeDto), superuserController.changePassword);
 
 module.exports = router_superuser;

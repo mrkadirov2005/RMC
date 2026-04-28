@@ -1,12 +1,14 @@
+// Page component for the calendar screen in the crm feature.
+
 import { useMemo, useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { classAPI, attendanceAPI, gradeAPI, studentAPI, portalAPI } from '@/shared/api/api';
-
-
-
-import { useAppSelector } from '@/features/crm/hooks';
+import { classAPI, portalAPI } from '@/shared/api/api';
+import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
+import { fetchStudents, fetchStudentsForce } from '@/slices/studentsSlice';
+import { fetchGrades, fetchGradesForce } from '@/slices/gradesSlice';
+import { fetchRooms, fetchRoomsForce } from '@/slices/roomsSlice';
 import { showToast } from '@/utils/toast';
 import ClassDetailModal from '@/features/crm/classes/ClassDetailModal';
 import SessionModal from '@/features/crm/classes/SessionModal';
@@ -16,17 +18,21 @@ import { WeekView } from './WeekView';
 import { DayModal } from './DayModal';
 import { DetailsModal } from './DetailsModal';
 import { useCalendarData } from './hooks/useCalendarData';
-import { buildCalendarDays, toLocalDateKey } from './utils';
+import { buildCalendarDays, getConfiguredLessonDurationMinutes, toLocalDateKey } from './utils';
 import type { ClassItem, AttendanceItem, GradeItem, SessionItem, StudentItem } from './types';
-import { getStoredActiveCenterId } from '@/shared/auth/authStorage';
-import { roomAPI } from '@/shared/api/api';
 import { RoomFilter } from './components/RoomFilter';
 import { CalendarPageHeader } from './components/CalendarPageHeader';
 
 
 
+// Renders the calendar page screen.
 const CalendarPage = () => {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const allAttendance = useAppSelector((state) => state.attendance.items) as AttendanceItem[];
+  const allGrades = useAppSelector((state) => state.grades.items) as GradeItem[];
+  const allStudents = useAppSelector((state) => state.students.items) as StudentItem[];
+  const rooms = useAppSelector((state) => state.rooms.items) as any[];
   const [loading, setLoading] = useState(true);
 
   // Calendar navigation state
@@ -70,7 +76,6 @@ const CalendarPage = () => {
   const [lessonAttendance, setLessonAttendance] = useState<AttendanceItem[]>([]);
   const [lessonGrades, setLessonGrades] = useState<GradeItem[]>([]);
   const [lessonStudents, setLessonStudents] = useState<StudentItem[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
   const [selectedRoom, setSelectedRoom] = useState<string>('all');
 
 
@@ -86,21 +91,32 @@ const CalendarPage = () => {
     setStudentAttendanceBySession,
   });
 
-  // Load rooms for filtering
+// Runs side effects for this component.
   useEffect(() => {
-    const loadRooms = async () => {
-      try {
-        const res = await roomAPI.getAll();
-        setRooms(Array.isArray(res) ? res : res.data || []);
-      } catch (error) {
-        console.error('Failed to load rooms:', error);
+    dispatch(fetchRooms());
+    if (user?.userType !== 'student') {
+      dispatch(fetchStudents());
+      dispatch(fetchGrades());
+    }
+  }, [dispatch, user?.userType]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchRoomsForce());
+      if (user?.userType !== 'student') {
+        dispatch(fetchStudentsForce());
+        dispatch(fetchGradesForce());
       }
     };
-    loadRooms();
-  }, []);
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch, user?.userType]);
 
   // Load schedule for student or teacher
   useEffect(() => {
+// Loads schedule.
     const loadSchedule = async () => {
       if (user?.userType === 'student') {
         try {
@@ -142,9 +158,10 @@ const CalendarPage = () => {
   const classToRoomMap = useMemo(() => {
     const map = new Map<number, Set<string>>();
     rooms.forEach(r => {
-      if (r.class_id && r.room_number) {
-        if (!map.has(r.class_id)) map.set(r.class_id, new Set());
-        map.get(r.class_id)?.add(r.room_number);
+      const classId = Number(r.class_id);
+      if (classId && r.room_number) {
+        if (!map.has(classId)) map.set(classId, new Set());
+        map.get(classId)?.add(r.room_number);
       }
     });
     return map;
@@ -166,6 +183,7 @@ const CalendarPage = () => {
     [displayYear, displayMonth]
   );
 
+// Memoizes the weeks derived value.
   const weeks = useMemo(() => {
     const rows: any[][] = [];
     for (let i = 0; i < calendarDays.length; i += 7) {
@@ -174,11 +192,13 @@ const CalendarPage = () => {
     return rows;
   }, [calendarDays]);
 
+// Returns week days.
   const getWeekDays = () => {
     const weekDaysData: any[] = [];
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
+// Handles day index.
       const dayIndex = (date.getDay() + 6) % 7;
       weekDaysData.push({
         date: date.getDate(),
@@ -190,6 +210,7 @@ const CalendarPage = () => {
     return weekDaysData;
   };
 
+// Memoizes the events by date derived value.
   const eventsByDate = useMemo(() => {
     const map = new Map<string, Array<{ cls: ClassItem; session?: SessionItem }>>();
     const classById = new Map<number, ClassItem>();
@@ -228,11 +249,12 @@ const CalendarPage = () => {
     try {
       const cls = classes.find(c => Number(c.class_id || c.id) === classId);
       if (!cls) return;
+      const durationMinutes = getConfiguredLessonDurationMinutes();
 
       const res = await classAPI.createSession(classId, {
         session_date: date,
         start_time: time,
-        duration_minutes: 90, // Default
+        duration_minutes: durationMinutes,
         teacher_id: user?.id ? Number(user.id) : Number(cls.teacher_id)
       });
       
@@ -248,6 +270,7 @@ const CalendarPage = () => {
     }
   };
 
+// Handles delete session.
   const handleDeleteSession = async (classId: number, sessionId: number) => {
 
     if (!window.confirm('Delete this session?')) return;
@@ -271,16 +294,19 @@ const CalendarPage = () => {
     }
   };
 
+// Handles prev month.
   const handlePrevMonth = () => {
     setDisplayMonth((prev) => (prev === 0 ? 11 : prev - 1));
     setDisplayYear((prev) => (displayMonth === 0 ? prev - 1 : prev));
   };
 
+// Handles next month.
   const handleNextMonth = () => {
     setDisplayMonth((prev) => (prev === 11 ? 0 : prev + 1));
     setDisplayYear((prev) => (displayMonth === 11 ? prev + 1 : prev));
   };
 
+// Handles prev week.
   const handlePrevWeek = () => {
     const newDate = new Date(weekStartDate);
     newDate.setDate(newDate.getDate() - 7);
@@ -289,6 +315,7 @@ const CalendarPage = () => {
     setDisplayYear(newDate.getFullYear());
   };
 
+// Handles next week.
   const handleNextWeek = () => {
     const newDate = new Date(weekStartDate);
     newDate.setDate(newDate.getDate() + 7);
@@ -297,6 +324,7 @@ const CalendarPage = () => {
     setDisplayYear(newDate.getFullYear());
   };
 
+// Handles open day.
   const handleOpenDay = (isoDate: string) => {
     const events = eventsByDate.get(isoDate) || [];
     setSelectedDay(isoDate);
@@ -304,6 +332,7 @@ const CalendarPage = () => {
     setDayModalOpen(true);
   };
 
+// Handles open session modal.
   const handleOpenSessionModal = (cls: ClassItem, sid: number, date: string) => {
     setSessionModalClass(cls);
     setSessionModalId(sid);
@@ -311,7 +340,8 @@ const CalendarPage = () => {
     setSessionModalOpen(true);
   };
 
-  const handleOpenDetails = async (cls: ClassItem, isoDate: string) => {
+// Handles open details.
+  const handleOpenDetails = (cls: ClassItem, isoDate: string) => {
     if (!canViewDetails) return;
     setSelectedClass(cls);
     setSelectedDate(isoDate);
@@ -322,37 +352,23 @@ const CalendarPage = () => {
       const sessionIdsForDate = sessions
         .filter((session) => Number(session.class_id) === classId && toLocalDateKey(session.session_date) === isoDate)
         .map((session) => Number(session.session_id));
-      const activeCenterId = getStoredActiveCenterId();
-      const [attendanceRes, gradesRes, studentsRes] = await Promise.all([
-        attendanceAPI.getByClass(classId, activeCenterId ? { center_id: activeCenterId } : undefined).catch(() => ({ data: [] })),
-        gradeAPI.getAll().catch(() => ({ data: [] })),
-        studentAPI.getAll().catch(() => ({ data: [] })),
-      ]);
-      const attendanceData = attendanceRes.data || attendanceRes || [];
-      const gradesData = gradesRes.data || gradesRes || [];
-      const studentsData = studentsRes.data || studentsRes || [];
 
-      const filteredAttendance = Array.isArray(attendanceData)
-        ? attendanceData.filter((a: AttendanceItem) => {
-            if (sessionIdsForDate.length > 0 && a.session_id) {
-              return sessionIdsForDate.includes(Number(a.session_id));
-            }
-            return toLocalDateKey(a.attendance_date) === isoDate;
-          })
-        : [];
-      const filteredGrades = Array.isArray(gradesData)
-        ? gradesData.filter((g: GradeItem) => {
-            if (Number(g.class_id) !== classId) return false;
-            if (sessionIdsForDate.length > 0 && g.session_id) {
-              return sessionIdsForDate.includes(Number(g.session_id));
-            }
-            const gradeDate = g.created_at ? toLocalDateKey(g.created_at) : toLocalDateKey(new Date());
-            return gradeDate === isoDate;
-          })
-        : [];
-      const filteredStudents = Array.isArray(studentsData)
-        ? studentsData.filter((s: StudentItem) => Number(s.class_id) === classId)
-        : [];
+      const filteredAttendance = allAttendance.filter((a: AttendanceItem) => {
+        if (Number(a.class_id) !== classId) return false;
+        if (sessionIdsForDate.length > 0 && a.session_id) {
+          return sessionIdsForDate.includes(Number(a.session_id));
+        }
+        return toLocalDateKey(a.attendance_date) === isoDate;
+      });
+      const filteredGrades = allGrades.filter((g: GradeItem) => {
+        if (Number(g.class_id) !== classId) return false;
+        if (sessionIdsForDate.length > 0 && g.session_id) {
+          return sessionIdsForDate.includes(Number(g.session_id));
+        }
+        const gradeDate = g.created_at ? toLocalDateKey(g.created_at) : toLocalDateKey(new Date());
+        return gradeDate === isoDate;
+      });
+      const filteredStudents = allStudents.filter((s: StudentItem) => Number(s.class_id) === classId);
 
       setLessonAttendance(filteredAttendance);
       setLessonGrades(filteredGrades);

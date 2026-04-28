@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect, useRef } from 'react';
 import {
   ClipboardList,
@@ -60,6 +62,7 @@ interface TeacherAssignmentsTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher assignments tab tab.
 const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabProps) => {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
@@ -89,15 +92,19 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     severity: 'success',
   });
 
+// Runs side effects for this component.
   useEffect(() => {
     loadInitialData();
   }, [teacherId]);
 
+// Runs side effects for this component.
   useEffect(() => {
     loadAssignments();
   }, [selectedClass]);
 
+// Runs side effects for this component.
   useEffect(() => {
+// Handles click outside.
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
@@ -115,6 +122,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     }
   }, [snackbar.open]);
 
+// Loads initial data.
   const loadInitialData = async () => {
     try {
       setLoading(true);
@@ -133,6 +141,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     }
   };
 
+// Loads assignments.
   const loadAssignments = async () => {
     try {
       const response = await assignmentAPI.getAll();
@@ -146,6 +155,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     }
   };
 
+// Handles open dialog.
   const handleOpenDialog = (assignment?: Assignment) => {
     if (assignment) {
       setSelectedAssignment(assignment);
@@ -172,6 +182,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     setMenuOpen(false);
   };
 
+// Handles save assignment.
   const handleSaveAssignment = async () => {
     if (!formData.assignment_title || !formData.class_id || !formData.due_date) {
       setSnackbar({
@@ -220,6 +231,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     }
   };
 
+// Handles delete assignment.
   const handleDeleteAssignment = async () => {
     if (!selectedAssignment) return;
 
@@ -244,14 +256,17 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     }
   };
 
+// Handles menu click.
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>, assignment: Assignment) => {
     event.stopPropagation();
+// Handles rect.
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     setMenuPos({ top: rect.bottom + 4, left: rect.right - 140 });
     setSelectedAssignment(assignment);
     setMenuOpen(true);
   };
 
+// Returns assignment status.
   const getAssignmentStatus = (dueDate: string) => {
     const now = new Date();
     const due = new Date(dueDate);

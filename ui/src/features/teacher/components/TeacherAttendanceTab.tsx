@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect } from 'react';
 import {
   CalendarDays,
@@ -54,6 +56,7 @@ interface TeacherAttendanceTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher attendance tab tab.
 const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProps) => {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<number | ''>('');
@@ -68,10 +71,12 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
   const [success, setSuccess] = useState<string | null>(null);
   const [existingAttendance, setExistingAttendance] = useState<any[]>([]);
 
+// Runs side effects for this component.
   useEffect(() => {
     loadClasses();
   }, [teacherId]);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (selectedClass) {
       loadClassStudents();
@@ -79,6 +84,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     }
   }, [selectedClass, attendanceDate]);
 
+// Loads classes.
   const loadClasses = async () => {
     try {
       setLoading(true);
@@ -91,6 +97,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     }
   };
 
+// Loads class students.
   const loadClassStudents = async () => {
     try {
       setStudentsLoading(true);
@@ -116,10 +123,12 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     }
   };
 
+// Loads existing attendance.
   const loadExistingAttendance = async () => {
     try {
       if (!selectedClass) return;
       const response = await attendanceAPI.getByClass(selectedClass);
+// Handles existing.
       const existing = (response.data || []).filter(
         (a: any) => a.attendance_date?.split('T')[0] === attendanceDate
       );
@@ -139,6 +148,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     }
   };
 
+// Handles status change.
   const handleStatusChange = (studentId: number, status: 'Present' | 'Absent' | 'Late' | 'Half Day') => {
     const current = attendance.get(studentId) || { student_id: studentId, status: 'Present' };
     const updated = new Map(attendance);
@@ -146,6 +156,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     setAttendance(updated);
   };
 
+// Handles notes change.
   const handleNotesChange = (studentId: number, notes: string) => {
     const current = attendance.get(studentId) || { student_id: studentId, status: 'Present' };
     const updated = new Map(attendance);
@@ -153,6 +164,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     setAttendance(updated);
   };
 
+// Handles mark all present.
   const markAllPresent = () => {
     const updated = new Map<number, AttendanceRecord>();
     students.forEach((student) => {
@@ -164,6 +176,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     setAttendance(updated);
   };
 
+// Handles mark all absent.
   const markAllAbsent = () => {
     const updated = new Map<number, AttendanceRecord>();
     students.forEach((student) => {
@@ -175,6 +188,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     setAttendance(updated);
   };
 
+// Handles save attendance.
   const handleSaveAttendance = async () => {
     try {
       setSaving(true);

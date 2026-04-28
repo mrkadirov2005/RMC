@@ -1,3 +1,5 @@
+// Legacy page component for the attendance screen in the crm feature.
+
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCRUD } from '../hooks/useCRUD';
@@ -90,6 +92,7 @@ interface Student {
 type TabType = 'students' | 'classes' | 'teachers';
 type FolderType = 'teacher' | 'class' | 'student';
 
+// Renders the attendance page screen.
 const AttendancePage = () => {
   const [state, actions] = useCRUD<Attendance>(attendanceAPI, 'Attendance');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -115,6 +118,7 @@ const AttendancePage = () => {
   const [filterDate, setFilterDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
     actions.fetchAll();
     loadAllData();
@@ -122,6 +126,7 @@ const AttendancePage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+// Loads all data.
   const loadAllData = async () => {
     setLoadingData(true);
     try {
@@ -140,6 +145,7 @@ const AttendancePage = () => {
     }
   };
 
+// Loads dropdown options.
   const loadDropdownOptions = async () => {
     setIsLoadingOptions(true);
     try {
@@ -158,6 +164,7 @@ const AttendancePage = () => {
     }
   };
 
+// Handles open modal.
   const handleOpenModal = (attendance?: Attendance) => {
     if (attendance) {
       setEditingId(attendance.attendance_id || attendance.id || null);
@@ -169,12 +176,14 @@ const AttendancePage = () => {
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({ status: 'Present' });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
@@ -185,6 +194,7 @@ const AttendancePage = () => {
     handleCloseModal();
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this attendance record?')) {
       await actions.delete(id);
@@ -273,6 +283,7 @@ const AttendancePage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.items, selectedFolder, searchTerm, filterStatus, filterDate, students]);
 
+// Handles clear filters.
   const clearFilters = () => {
     setSearchTerm('');
     setFilterStatus('');
@@ -281,20 +292,24 @@ const AttendancePage = () => {
 
   const hasActiveFilters = searchTerm || filterStatus || filterDate;
 
+// Returns student name.
   const getStudentName = (studentId: number): string => {
     const student = students.find((s) => (s.student_id || s.id) === studentId);
     return student ? `${student.first_name} ${student.last_name}` : `Student #${studentId}`;
   };
 
+// Handles folder click.
   const handleFolderClick = (type: FolderType, id: number, name: string) => {
     setSelectedFolder({ type, id, name });
   };
 
+// Handles back to folders.
   const handleBackToFolders = () => {
     setSelectedFolder(null);
     clearFilters();
   };
 
+// Returns status color.
   const getStatusColor = (status: string) => {
     switch(status?.toLowerCase()) {
       case 'present': return '#4CAF50';
@@ -305,6 +320,7 @@ const AttendancePage = () => {
     }
   };
 
+// Returns status badge classes.
   const getStatusBadgeClasses = (status: string) => {
     switch(status?.toLowerCase()) {
       case 'present': return 'bg-green-100 text-green-800 border-green-300';

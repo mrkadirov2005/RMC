@@ -4,6 +4,8 @@ const express_student = require('express');
 const router_student = express_student.Router();
 const studentController = require('../controllers/studentController');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { CredentialsDto, PasswordChangeDto, SetPasswordDto, StudentCoinTransactionDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -135,7 +137,7 @@ router_student.delete('/:id', requireAuth, requireRole('superuser'), studentCont
  *       401:
  *         description: Invalid credentials
  */
-router_student.post('/auth/login', studentController.studentLogin);
+router_student.post('/auth/login', validateBody(CredentialsDto), studentController.studentLogin);
 
 /**
  * @swagger
@@ -167,7 +169,7 @@ router_student.post('/auth/login', studentController.studentLogin);
  *       200:
  *         description: Password set successfully
  */
-router_student.post('/:id/set-password', requireAuth, requireRole('superuser'), studentController.setStudentPassword);
+router_student.post('/:id/set-password', requireAuth, requireRole('superuser'), validateBody(SetPasswordDto), studentController.setStudentPassword);
 
 /**
  * @swagger
@@ -199,7 +201,7 @@ router_student.post('/:id/set-password', requireAuth, requireRole('superuser'), 
  *       200:
  *         description: Password changed successfully
  */
-router_student.post('/:id/change-password', requireAuth, studentController.changeStudentPassword);
+router_student.post('/:id/change-password', requireAuth, validateBody(PasswordChangeDto), studentController.changeStudentPassword);
 
 /**
  * @swagger
@@ -217,7 +219,7 @@ router_student.get('/:id/coins', requireAuth, studentController.getStudentCoins)
  *     summary: Add or subtract student coins
  *     tags: [Students]
  */
-router_student.post('/:id/coins', requireAuth, studentController.addStudentCoins);
+router_student.post('/:id/coins', requireAuth, validateBody(StudentCoinTransactionDto), studentController.addStudentCoins);
 
 /**
  * @swagger
@@ -226,7 +228,7 @@ router_student.post('/:id/coins', requireAuth, studentController.addStudentCoins
  *     summary: Update a coin transaction
  *     tags: [Students]
  */
-router_student.put('/:id/coins/:transactionId', requireAuth, studentController.updateStudentCoinTransaction);
+router_student.put('/:id/coins/:transactionId', requireAuth, validateBody(StudentCoinTransactionDto), studentController.updateStudentCoinTransaction);
 
 /**
  * @swagger

@@ -1,3 +1,5 @@
+// Tab component for the crm feature.
+
 import { AssignmentSection } from '../components/AssignmentSection';
 
 interface Assignment {
@@ -19,6 +21,7 @@ interface IndividualTasksTabProps {
   onRefresh: () => void;
 }
 
+// Renders the individual tasks tab tab.
 export const IndividualTasksTab = ({ assignments, studentId, centerId, studentClassId, onRefresh }: IndividualTasksTabProps) => {
   const individualTasksAssignments = assignments.filter(
     (a) => Number(a.student_id) === Number(studentId)

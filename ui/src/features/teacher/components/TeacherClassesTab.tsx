@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect } from 'react';
 import { GraduationCap, Users, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -20,16 +22,19 @@ interface TeacherClassesTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher classes tab tab.
 const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesTabProps) => {
   const { user } = useAppSelector((state) => state.auth);
   const effectiveTeacherId = teacherId ?? user?.id;
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [loading, setLoading] = useState(true);
 
+// Runs side effects for this component.
   useEffect(() => {
     loadClasses();
   }, [effectiveTeacherId]);
 
+// Loads classes.
   const loadClasses = async () => {
     try {
       setLoading(true);
@@ -46,6 +51,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
     }
   };
 
+// Returns status variant.
   const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active':

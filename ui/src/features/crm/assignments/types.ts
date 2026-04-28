@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Assignment {
   assignment_id?: number;
   id?: number;

@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Class {
   class_id?: number;
   id?: number;

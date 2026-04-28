@@ -31,15 +31,15 @@ const findById = async (id: number, centerId?: number) => {
   return result.rows[0] || null;
 };
 
-const insertTest = async (params: any[]) => {
-  const result = await pool.query(
+const insertTest = async (params: any[], db: any = pool) => {
+  const result = await db.query(
     `INSERT INTO tests (
       center_id, subject_id, test_name, test_type, description, instructions,
       total_marks, passing_marks, duration_minutes, assignment_type, is_timed,
       shuffle_questions, show_results_immediately, allow_retake, max_retakes,
-      test_data, created_by, created_by_type, is_active, start_date, end_date
+      test_data, created_by, created_by_type, is_active, is_private, start_date, end_date
     ) VALUES (
-      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21
+      $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21,$22
     ) RETURNING *`,
     params.map((val, idx) => {
       if ([0, 1, 6, 7, 8, 14, 16].includes(idx) && val !== null) return Number(val);
@@ -69,13 +69,14 @@ const updateTest = async (params: any[], id: number, centerId?: number) => {
       max_retakes = COALESCE($14, max_retakes),
       test_data = COALESCE($15, test_data),
       is_active = COALESCE($16, is_active),
-      start_date = COALESCE($17, start_date),
-      end_date = COALESCE($18, end_date),
+      is_private = COALESCE($17, is_private),
+      start_date = COALESCE($18, start_date),
+      end_date = COALESCE($19, end_date),
       updated_at = CURRENT_TIMESTAMP
-     WHERE test_id = $19`;
+     WHERE test_id = $20`;
   if (centerId) {
     values.push(Number(centerId));
-    query += ' AND center_id = $20';
+    query += ' AND center_id = $21';
   }
   query += ' RETURNING *';
   const result = await pool.query(query, values);
@@ -118,8 +119,8 @@ const findPassagesByTest = async (testId: number, centerId?: number) => {
   return result.rows;
 };
 
-const insertQuestion = async (params: any[]) => {
-  const result = await pool.query(
+const insertQuestion = async (params: any[], db: any = pool) => {
+  const result = await db.query(
     `INSERT INTO test_questions (
       center_id, test_id, passage_id, question_text, question_type, marks, negative_marks,
       question_order, options, correct_answer, explanation, image_url,
@@ -177,8 +178,8 @@ const deleteQuestion = async (id: number, centerId?: number) => {
   return result.rows[0] || null;
 };
 
-const insertPassage = async (params: any[]) => {
-  const result = await pool.query(
+const insertPassage = async (params: any[], db: any = pool) => {
+  const result = await db.query(
     `INSERT INTO reading_passages (
       center_id, test_id, title, content, word_count, difficulty_level, passage_order,
       audio_url, image_url
@@ -421,12 +422,12 @@ const findAssignedTests = async (type: string, id: number, centerId?: number) =>
         ta.notes
       FROM tests t
       LEFT JOIN test_assignments ta ON ta.test_id = t.test_id
+      LEFT JOIN students s ON s.student_id = $2
       WHERE t.is_active = true
       ${centerCond}
       AND (
-        (ta.assigned_to_type = $1 AND ta.assigned_to_id = $2)
-        OR (ta.assigned_to_type = 'class' AND ta.assigned_to_id = (SELECT class_id FROM students WHERE student_id = $2))
-        OR (t.assignment_type = 'all_students')
+        COALESCE(t.is_private, false) = false
+        OR (COALESCE(t.is_private, false) = true AND t.created_by = s.teacher_id)
       )
       ORDER BY t.test_id, ta.assigned_at DESC NULLS LAST
     `;

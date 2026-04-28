@@ -1,3 +1,5 @@
+// Page component for the attendance screen in the crm feature.
+
 import { SelectField } from '../students/components/SelectField';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,9 +43,12 @@ import {
   Trash2,
   X,
   Loader2,
+  BarChart3,
 } from 'lucide-react';
 import { useAttendancePage } from './hooks/useAttendancePage';
+import { useMemo } from 'react';
 
+// Renders the attendance page screen.
 const AttendancePage = () => {
   const attendanceHelpers = useAttendancePage();
   const {
@@ -89,6 +94,46 @@ const AttendancePage = () => {
     getPresentCountForStudent,
     attendanceStatusOptions,
   } = attendanceHelpers;
+// Memoizes the attendance statistics derived value.
+  const attendanceStatistics = useMemo(() => {
+    const totalRecords = state.items.length;
+    const uniqueStudents = new Set(state.items.map((record) => Number(record.student_id))).size;
+    const counts = {
+      present: 0,
+      late: 0,
+      absent: 0,
+      other: 0,
+    };
+
+    state.items.forEach((record) => {
+      const status = String(record.status || '').trim().toLowerCase();
+      if (status === 'present') {
+        counts.present += 1;
+      } else if (status === 'late') {
+        counts.late += 1;
+      } else if (status.includes('absent')) {
+        counts.absent += 1;
+      } else {
+        counts.other += 1;
+      }
+    });
+
+    const attended = counts.present + counts.late;
+    const attendanceRate = totalRecords > 0 ? Math.round((attended / totalRecords) * 100) : 0;
+
+    return {
+      totalRecords,
+      uniqueStudents,
+      attendanceRate,
+      counts,
+      segments: [
+        { label: 'Present', count: counts.present, percent: totalRecords > 0 ? (counts.present / totalRecords) * 100 : 0, className: 'bg-emerald-500' },
+        { label: 'Late', count: counts.late, percent: totalRecords > 0 ? (counts.late / totalRecords) * 100 : 0, className: 'bg-amber-500' },
+        { label: 'Absent', count: counts.absent, percent: totalRecords > 0 ? (counts.absent / totalRecords) * 100 : 0, className: 'bg-rose-500' },
+        { label: 'Other', count: counts.other, percent: totalRecords > 0 ? (counts.other / totalRecords) * 100 : 0, className: 'bg-slate-400' },
+      ],
+    };
+  }, [state.items]);
   return (
     <div className="container mx-auto p-6">
       {/* Header */}
@@ -139,11 +184,89 @@ const AttendancePage = () => {
                 <User className="h-4 w-4 mr-2" />
                 By Teachers
               </Button>
+              <Button
+                variant={activeTab === 'statistics' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('statistics')}
+                className="rounded-b-none"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Statistics
+              </Button>
             </div>
           </div>
 
           {/* Tab Content */}
           <div>
+            {/* Statistics Tab */}
+            {activeTab === 'statistics' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Total Records</p>
+                      <p className="text-lg font-semibold">{attendanceStatistics.totalRecords}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Attendance Rate</p>
+                      <p className="text-lg font-semibold text-emerald-600">{attendanceStatistics.attendanceRate}%</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Present / Late</p>
+                      <p className="text-lg font-semibold">
+                        {attendanceStatistics.counts.present + attendanceStatistics.counts.late}
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Unique Students</p>
+                      <p className="text-lg font-semibold">{attendanceStatistics.uniqueStudents}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-sm font-medium">Attendance Mix</p>
+                      <p className="text-xs text-muted-foreground">Relative share of attendance statuses</p>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                      <p>{attendanceStatistics.counts.present} present</p>
+                      <p>{attendanceStatistics.counts.late} late</p>
+                      <p>{attendanceStatistics.counts.absent} absent</p>
+                    </div>
+                  </div>
+
+                  <div className="h-4 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+                    <div className="flex h-full w-full">
+                      {attendanceStatistics.segments.map((segment) => (
+                        <div
+                          key={segment.label}
+                          className={`h-full transition-all duration-300 ${segment.className}`}
+                          style={{ width: `${segment.percent}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+                    {attendanceStatistics.segments.map((segment) => (
+                      <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
+                        <p className="text-xs text-muted-foreground">{segment.label}</p>
+                        <p className="font-semibold">{segment.count}</p>
+                        <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* By Students Tab */}
             {activeTab === 'students' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

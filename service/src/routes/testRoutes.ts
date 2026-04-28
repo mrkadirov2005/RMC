@@ -4,6 +4,8 @@ const express_test = require('express');
 const router_test = express_test.Router();
 const testController = require('../controllers/testController');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { CreateTestDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -104,7 +106,7 @@ router_test.get('/:id', requireAuth, testController.getTestById);
  *       201:
  *         description: Test created successfully
  */
-router_test.post('/', requireAuth, requireRole('superuser', 'teacher'), testController.createTest);
+router_test.post('/', requireAuth, requireRole('superuser', 'teacher'), validateBody(CreateTestDto), testController.createTest);
 
 /**
  * @swagger

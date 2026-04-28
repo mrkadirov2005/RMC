@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export type ClassItem = {
   class_id?: number;
   id?: number;

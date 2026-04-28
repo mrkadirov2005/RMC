@@ -1,3 +1,5 @@
+// Source file for the dashboard area in the crm feature.
+
 import {
   AlertTriangle,
   Building2,
@@ -20,10 +22,13 @@ import type {
 
 const todayKey = new Date().toISOString().split('T')[0];
 
+// Formats money.
 const formatMoney = (value: number) => `$${value.toLocaleString()}`;
 
+// Returns record value.
 const getRecordValue = (item: DashboardRecord, key: string) => item[key];
 
+// Returns record string.
 const getRecordString = (item: DashboardRecord, key: string): string | undefined => {
   const value = getRecordValue(item, key);
   if (typeof value === 'string') return value;
@@ -31,6 +36,7 @@ const getRecordString = (item: DashboardRecord, key: string): string | undefined
   return undefined;
 };
 
+// Returns record number.
 const getRecordNumber = (item: DashboardRecord, key: string): number | undefined => {
   const value = getRecordValue(item, key);
   if (typeof value === 'number') return value;
@@ -41,10 +47,12 @@ const getRecordNumber = (item: DashboardRecord, key: string): number | undefined
   return undefined;
 };
 
+// Returns record boolean.
 const getRecordBoolean = (item: DashboardRecord, key: string): boolean => {
   return Boolean(getRecordValue(item, key));
 };
 
+// Creates initial dashboard stats.
 export const createInitialDashboardStats = (): DashboardStats => ({
   totalStudents: 0,
   totalTeachers: 0,
@@ -57,6 +65,7 @@ export const createInitialDashboardStats = (): DashboardStats => ({
   outstandingDebt: 0,
 });
 
+// Returns date value.
 const getDateValue = (item: Record<string, unknown>): string | undefined =>
   (item.created_at as string | undefined) ||
   (item.updated_at as string | undefined) ||
@@ -66,6 +75,7 @@ const getDateValue = (item: Record<string, unknown>): string | undefined =>
   (item.due_date as string | undefined) ||
   (item.date as string | undefined);
 
+// Formats dashboard date.
 export const formatDashboardDate = (value?: string) => {
   if (!value) return 'Unknown date';
   const date = new Date(value);
@@ -73,6 +83,7 @@ export const formatDashboardDate = (value?: string) => {
   return date.toLocaleDateString();
 };
 
+// Builds dashboard stats.
 export const buildDashboardStats = (
   collections: DashboardCollections,
   isSuperuser: boolean
@@ -125,6 +136,7 @@ export const buildDashboardStats = (
   };
 };
 
+// Handles append activity.
 const appendActivity = (
   items: DashboardActivityItem[],
   collection: DashboardCollections[keyof DashboardCollections],
@@ -143,6 +155,7 @@ const appendActivity = (
   });
 };
 
+// Builds dashboard activity.
 export const buildDashboardActivity = (
   collections: DashboardCollections
 ): DashboardActivityItem[] => {
@@ -204,6 +217,7 @@ export const buildDashboardActivity = (
   return activityItems.slice(0, 6);
 };
 
+// Returns dashboard stat cards.
 export const getDashboardStatCards = (
   stats: DashboardStats,
   isSuperuser: boolean
@@ -283,6 +297,7 @@ export const getDashboardStatCards = (
   ];
 };
 
+// Returns dashboard focus items.
 export const getDashboardFocusItems = (
   stats: DashboardStats,
   isSuperuser: boolean

@@ -1,3 +1,5 @@
+// Tab component for the crm feature.
+
 import { PaymentSection } from '../components/PaymentSection';
 
 interface Class {
@@ -42,6 +44,7 @@ interface PaymentsTabProps {
   onRefresh: () => void;
 }
 
+// Renders the payments tab tab.
 export const PaymentsTab = ({ payments, student, classData, onRefresh }: PaymentsTabProps) => {
   return <PaymentSection payments={payments} student={student} classData={classData} onRefresh={onRefresh} />;
 };

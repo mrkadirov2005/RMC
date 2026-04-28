@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -14,6 +16,8 @@ interface Student {
   date_of_birth: string;
   parent_name: string;
   parent_phone: string;
+  school_name?: string | null;
+  school_class?: string | null;
   gender: string;
   status: string;
   class_id?: number;
@@ -25,6 +29,7 @@ interface StudentInfoSectionProps {
   student: Student;
 }
 
+// Returns status variant.
 const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
     case 'active':
@@ -38,6 +43,7 @@ const getStatusVariant = (status: string) => {
   }
 };
 
+// Renders the student info section module.
 export const StudentInfoSection = ({ student }: StudentInfoSectionProps) => {
   return (
     <Card>
@@ -90,6 +96,14 @@ export const StudentInfoSection = ({ student }: StudentInfoSectionProps) => {
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Parent Phone</p>
             <p className="text-sm font-semibold">{student.parent_phone}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">School</p>
+            <p className="text-sm font-semibold">{student.school_name || '-'}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">School Class</p>
+            <p className="text-sm font-semibold">{student.school_class || '-'}</p>
           </div>
         </div>
       </CardContent>

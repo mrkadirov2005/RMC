@@ -150,16 +150,6 @@ const generateClassSessions = async (req: any, res: any) => {
     const year = Number(req.body?.year);
     const durationMinutes = Number(req.body?.duration_minutes ?? 90);
 
-    if (!Number.isFinite(month) || month < 1 || month > 12) {
-      return res.status(400).json({ error: 'month must be between 1 and 12.' });
-    }
-    if (!Number.isFinite(year) || year < 2000) {
-      return res.status(400).json({ error: 'year is invalid.' });
-    }
-    if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
-      return res.status(400).json({ error: 'duration_minutes must be a positive number.' });
-    }
-
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     const out = await sessionService.generateMonthlySessions({
       classId,
@@ -200,10 +190,6 @@ const deleteUpcomingClassSessions = async (req: any, res: any) => {
     const classId = Number(req.params.id);
     const fromDate = String(req.query.from || req.body?.from || '').trim();
     const toDate = req.query.to || req.body?.to ? String(req.query.to || req.body.to).trim() : undefined;
-
-    if (!fromDate) {
-      return res.status(400).json({ error: 'from date is required (YYYY-MM-DD).' });
-    }
 
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     const out = await sessionService.deleteUpcomingSessions({

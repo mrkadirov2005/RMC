@@ -1,10 +1,11 @@
 const { generateToken } = require('../../../middleware/auth');
 const superuserService = require('../services/superuser.service');
-const { isCenterAdmin } = require('../../../shared/tenant');
+const { getScopedCenterId } = require('../../../shared/tenant');
 
 const getAllSuperusers = async (req: any, res: any) => {
   try {
-    res.json(await superuserService.listSuperusers(req.user));
+    const { centerId } = getScopedCenterId(req);
+    res.json(await superuserService.listSuperusers(centerId));
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to fetch superusers', details: error.message || String(error) });
@@ -14,15 +15,8 @@ const getAllSuperusers = async (req: any, res: any) => {
 const getSuperuserById = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
-    if (isCenterAdmin(req.user)) {
-      const existing = await superuserService.getSuperuser(requestedId);
-      if (existing && Number(existing.center_id) !== Number(req.user?.center_id)) {
-        return res.status(403).json({ error: 'Center scope required.' });
-      }
-      if (!existing) return res.status(404).json({ error: 'Superuser not found' });
-      return res.json(existing);
-    }
-    const row = await superuserService.getSuperuser(requestedId, req.user);
+    const { centerId } = getScopedCenterId(req);
+    const row = await superuserService.getSuperuser(requestedId, centerId);
     if (!row) return res.status(404).json({ error: 'Superuser not found' });
     res.json(row);
   } catch (error: any) {
@@ -33,9 +27,10 @@ const getSuperuserById = async (req: any, res: any) => {
 
 const createSuperuser = async (req: any, res: any) => {
   try {
-    const out = await superuserService.createSuperuser(req.body, req.user);
-    if (out.error === 'no_center') {
-      return res.status(400).json({ error: 'No centers available. Please create a center first.' });
+    const { centerId } = getScopedCenterId(req);
+    const out = await superuserService.createSuperuser(req.body, req.user, centerId);
+    if (out.error === 'branch_required') {
+      return res.status(400).json({ error: 'Branch is required. Please select a branch first.' });
     }
     if (out.error === 'username_taken') {
       return res.status(400).json({ error: 'Username already exists' });
@@ -50,14 +45,8 @@ const createSuperuser = async (req: any, res: any) => {
 const updateSuperuser = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
-    if (isCenterAdmin(req.user)) {
-      const existing = await superuserService.getSuperuser(requestedId);
-      if (existing && Number(existing.center_id) !== Number(req.user?.center_id)) {
-        return res.status(403).json({ error: 'Center scope required.' });
-      }
-      if (!existing) return res.status(404).json({ error: 'Superuser not found' });
-    }
-    const row = await superuserService.updateSuperuser(requestedId, req.body, req.user);
+    const { centerId } = getScopedCenterId(req);
+    const row = await superuserService.updateSuperuser(requestedId, req.body, centerId);
     if (!row) return res.status(404).json({ error: 'Superuser not found' });
     res.json(row);
   } catch (error: any) {
@@ -69,14 +58,8 @@ const updateSuperuser = async (req: any, res: any) => {
 const deleteSuperuser = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
-    if (isCenterAdmin(req.user)) {
-      const existing = await superuserService.getSuperuser(requestedId);
-      if (existing && Number(existing.center_id) !== Number(req.user?.center_id)) {
-        return res.status(403).json({ error: 'Center scope required.' });
-      }
-      if (!existing) return res.status(404).json({ error: 'Superuser not found' });
-    }
-    const row = await superuserService.deleteSuperuser(requestedId, req.user);
+    const { centerId } = getScopedCenterId(req);
+    const row = await superuserService.deleteSuperuser(requestedId, centerId);
     if (!row) return res.status(404).json({ error: 'Superuser not found' });
     res.json({ message: 'Superuser deleted successfully', superuser: row });
   } catch (error: any) {
@@ -88,9 +71,6 @@ const deleteSuperuser = async (req: any, res: any) => {
 const login = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const result = await superuserService.authenticate(username, password);
     if (result.kind === 'locked') {
       return res.status(403).json({ error: 'Account is locked' });
@@ -108,6 +88,8 @@ const login = async (req: any, res: any) => {
       email: superuser.email,
       userType: 'superuser',
       role: superuser.role,
+      permissions: superuser.permissions,
+      branch_id: superuser.branch_id,
       center_id: superuser.center_id,
     });
     res.json({
@@ -115,6 +97,8 @@ const login = async (req: any, res: any) => {
       token,
       superuser: {
         superuser_id: superuser.superuser_id,
+        branch_id: superuser.branch_id,
+        permissions: superuser.permissions,
         center_id: superuser.center_id,
         username: superuser.username,
         email: superuser.email,
@@ -132,9 +116,6 @@ const login = async (req: any, res: any) => {
 const changePassword = async (req: any, res: any) => {
   try {
     const { old_password, new_password } = req.body;
-    if (!old_password || !new_password) {
-      return res.status(400).json({ error: 'Old and new password required' });
-    }
     const out = await superuserService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
       if (out.reason === 'not_found') return res.status(404).json({ error: 'Superuser not found' });

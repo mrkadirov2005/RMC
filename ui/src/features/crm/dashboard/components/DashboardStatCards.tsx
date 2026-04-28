@@ -1,3 +1,5 @@
+// Source file for the dashboard area in the crm feature.
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardStatCard } from '../types';
 
@@ -5,6 +7,7 @@ interface DashboardStatCardsProps {
   cards: DashboardStatCard[];
 }
 
+// Renders the dashboard stat cards module.
 export const DashboardStatCards = ({ cards }: DashboardStatCardsProps) => {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

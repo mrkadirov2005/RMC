@@ -32,6 +32,11 @@ module.exports = {
         WHEN duplicate_object THEN NULL;
       END $$;
       DO $$ BEGIN
+        CREATE TYPE owner_status AS ENUM ('Active', 'Inactive', 'Suspended');
+      EXCEPTION
+        WHEN duplicate_object THEN NULL;
+      END $$;
+      DO $$ BEGIN
         CREATE TYPE teacher_status AS ENUM ('Active', 'Inactive', 'Retired');
       EXCEPTION
         WHEN duplicate_object THEN NULL;
@@ -76,6 +81,7 @@ module.exports = {
       DROP TYPE IF EXISTS attendance_status CASCADE;
       DROP TYPE IF EXISTS teacher_gender CASCADE;
       DROP TYPE IF EXISTS teacher_status CASCADE;
+      DROP TYPE IF EXISTS owner_status CASCADE;
       DROP TYPE IF EXISTS superuser_status CASCADE;
       DROP TYPE IF EXISTS student_gender CASCADE;
       DROP TYPE IF EXISTS student_status CASCADE;

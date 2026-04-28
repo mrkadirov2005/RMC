@@ -1,3 +1,5 @@
+// Page component for the students screen in the crm feature.
+
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { StudentsClassCards } from './components/StudentsClassCards';
@@ -8,10 +10,12 @@ import { StudentsHeader } from './components/StudentsHeader';
 import { StudentsTableView } from './components/StudentsTableView';
 import { useStudentsPage } from './hooks/useStudentsPage';
 
+// Renders the students page screen.
 const StudentsPage = () => {
   const navigate = useNavigate();
   const s = useStudentsPage();
   const title = s.selectedClass ? `${s.selectedClass.class_name} - Students` : 'Students by Class';
+// Handles active count.
   const activeCount = (s.filterGender ? 1 : 0) + (s.filterStatus ? 1 : 0);
 
   return (

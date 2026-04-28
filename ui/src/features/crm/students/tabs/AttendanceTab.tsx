@@ -1,3 +1,5 @@
+// Tab component for the crm feature.
+
 import { AttendanceSection } from '../components/AttendanceSection';
 
 interface Attendance {
@@ -17,6 +19,7 @@ interface AttendanceTabProps {
   onRefresh: () => void;
 }
 
+// Renders the attendance tab tab.
 export const AttendanceTab = ({
   attendance,
   studentId,

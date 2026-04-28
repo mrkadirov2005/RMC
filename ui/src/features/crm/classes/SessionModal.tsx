@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+// Modal component for the classes screen in the crm feature.
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +19,10 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { studentAPI, attendanceAPI, gradeAPI } from '../../../shared/api/api';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { fetchStudents } from '../../../slices/studentsSlice';
+import { makeSelectStudentsByClassId } from '../../../store/selectors';
+import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
 
 const ATTENDANCE_POINTS: Record<string, number> = {
@@ -50,6 +55,7 @@ interface SessionModalProps {
   onClose: () => void;
 }
 
+// Renders the session modal modal.
 const SessionModal: React.FC<SessionModalProps> = ({
   open,
   classData,
@@ -57,8 +63,10 @@ const SessionModal: React.FC<SessionModalProps> = ({
   selectedDate,
   onClose,
 }) => {
+  const dispatch = useAppDispatch();
+// Memoizes the select students by class derived value.
+  const selectStudentsByClass = useMemo(makeSelectStudentsByClassId, []);
   const [activeTab, setActiveTab] = useState<'attendance' | 'hometask' | 'activity'>('attendance');
-  const [students, setStudents] = useState<any[]>([]);
   const [submitting, setSubmitting] = useState(false);
   
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
@@ -66,81 +74,93 @@ const SessionModal: React.FC<SessionModalProps> = ({
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
 
   const classId = classData?.class_id || classData?.id;
+  const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
 
+// Runs side effects for this component.
   useEffect(() => {
-    if (open && classId) {
-      loadStudents();
-      if (sessionId) {
-        loadSessionData();
+    if (!open || !classId) return;
+    dispatch(fetchStudents());
+  }, [classId, dispatch, open]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!open || !sessionId) return;
+// Loads session data.
+    const loadSessionData = async () => {
+      try {
+        // Load existing attendance
+        const attRes = await attendanceAPI.getBySession(sessionId);
+        const attList = attRes.data || [];
+        const newAtt = new Map();
+        attList.forEach((a: any) => newAtt.set(a.student_id, a.status));
+        if (newAtt.size > 0) setAttendance(newAtt);
+
+        // Load existing grades/scores
+        const gradeRes = await gradeAPI.getBySession(sessionId);
+        const sessionGrades = gradeRes.data || [];
+        
+        const newH = new Map();
+        const newA = new Map();
+        
+        sessionGrades.forEach((g: any) => {
+          const hLabel = Object.keys(HOMETASK_POINTS).find(k => HOMETASK_POINTS[k] === g.homework_score);
+          const aLabel = Object.keys(ACTIVITY_POINTS).find(k => ACTIVITY_POINTS[k] === g.activity_score);
+          if (hLabel) newH.set(g.student_id, hLabel);
+          if (aLabel) newA.set(g.student_id, aLabel);
+        });
+        
+        if (newH.size > 0) setHomeworkScores(newH);
+        if (newA.size > 0) setActivityScores(newA);
+      } catch (err) {
+        console.error('Failed to load session data:', err);
       }
-    }
-  }, [open, classId, sessionId]);
+    };
+    void loadSessionData();
+  }, [open, sessionId]);
 
-  const loadStudents = async () => {
-    try {
-      const res = await studentAPI.getAll();
-      const allStudents = res.data || [];
-      const classStudents = allStudents.filter((s: any) => Number(s.class_id) === Number(classId));
-      setStudents(classStudents);
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!open) return;
+    const ids = students.map((student) => Number(student.student_id || student.id)).filter(Boolean);
+    setAttendance((prev) => {
+      const next = new Map<number, string>();
+      ids.forEach((id) => next.set(id, prev.get(id) || ''));
+      return next;
+    });
+    setHomeworkScores((prev) => {
+      const next = new Map<number, string>();
+      ids.forEach((id) => next.set(id, prev.get(id) || ''));
+      return next;
+    });
+    setActivityScores((prev) => {
+      const next = new Map<number, string>();
+      ids.forEach((id) => next.set(id, prev.get(id) || ''));
+      return next;
+    });
+  }, [open, students]);
 
-      // Initialize maps
-      setAttendance(new Map(classStudents.map((s: any) => [s.student_id || s.id, ''])));
-      setHomeworkScores(new Map(classStudents.map((s: any) => [s.student_id || s.id, ''])));
-      setActivityScores(new Map(classStudents.map((s: any) => [s.student_id || s.id, ''])));
-    } catch (err) {
-      console.error('Failed to load students:', err);
-    }
-  };
-
-  const loadSessionData = async () => {
-    try {
-      // Load existing attendance
-      const attRes = await attendanceAPI.getBySession(sessionId!);
-      const attList = attRes.data || [];
-      const newAtt = new Map();
-      attList.forEach((a: any) => newAtt.set(a.student_id, a.status));
-      if (newAtt.size > 0) setAttendance(newAtt);
-
-      // Load existing grades/scores
-      const gradeRes = await gradeAPI.getBySession(sessionId!);
-      const sessionGrades = gradeRes.data || [];
-      
-      const newH = new Map();
-      const newA = new Map();
-      
-      sessionGrades.forEach((g: any) => {
-        // Reverse map points to labels
-        const hLabel = Object.keys(HOMETASK_POINTS).find(k => HOMETASK_POINTS[k] === g.homework_score);
-        const aLabel = Object.keys(ACTIVITY_POINTS).find(k => ACTIVITY_POINTS[k] === g.activity_score);
-        if (hLabel) newH.set(g.student_id, hLabel);
-        if (aLabel) newA.set(g.student_id, aLabel);
-      });
-      
-      if (newH.size > 0) setHomeworkScores(newH);
-      if (newA.size > 0) setActivityScores(newA);
-    } catch (err) {
-      console.error('Failed to load session data:', err);
-    }
-  };
-
+// Handles attendance toggle.
   const handleAttendanceToggle = (studentId: number, status: string) => {
     const newMap = new Map(attendance);
     newMap.set(studentId, newMap.get(studentId) === status ? '' : status);
     setAttendance(newMap);
   };
 
+// Handles homework toggle.
   const handleHomeworkToggle = (studentId: number, status: string) => {
     const newMap = new Map(homeworkScores);
     newMap.set(studentId, newMap.get(studentId) === status ? '' : status);
     setHomeworkScores(newMap);
   };
 
+// Handles activity toggle.
   const handleActivityToggle = (studentId: number, status: string) => {
     const newMap = new Map(activityScores);
     newMap.set(studentId, newMap.get(studentId) === status ? '' : status);
     setActivityScores(newMap);
   };
 
+// Handles save.
   const handleSave = async () => {
     if (!sessionId) return;
     try {
@@ -316,6 +336,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                     const aStatus = activityScores.get(sid) || '';
                     const enabled = !!status && !!hStatus;
 
+// Handles total.
                     const total = (ATTENDANCE_POINTS[status] || 0) + 
                                   (HOMETASK_POINTS[hStatus] || 0) + 
                                   (ACTIVITY_POINTS[aStatus] || 0);

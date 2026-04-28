@@ -97,7 +97,6 @@ const exportEntity = async (entity: string, centerId?: number) => {
 };
 
 const importEntity = async (entity: string, csv: string, centerId?: number) => {
-  if (!csv || typeof csv !== 'string') return { error: 'no_csv' as const };
   if (!['students', 'teachers', 'payments'].includes(entity)) {
     return { error: 'unsupported' as const };
   }

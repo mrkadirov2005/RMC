@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,9 +9,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { gradeAPI, subjectAPI } from '../../../../shared/api/api';
 import { showToast } from '../../../../utils/toast';
-import { useAppSelector } from '../../hooks';
+import { fetchSubjects } from '../../../../slices/subjectsSlice';
+import { createGrade, deleteGrade, updateGrade } from '../../../../slices/gradesSlice';
+import { selectSubjectItems } from '../../../../store/selectors';
+import { useAppDispatch, useAppSelector } from '../../hooks';
 
 interface Subject {
   subject_id?: number;
@@ -24,6 +28,7 @@ interface Grade {
   subject?: number | string;
   class_id?: number;
   teacher_id?: number;
+  center_id?: number;
   percentage: number;
   grade_letter: string;
   term: string;
@@ -39,28 +44,22 @@ interface GradesSectionProps {
   centerId?: number;
 }
 
+// Renders the grades section module.
 export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId, centerId }: GradesSectionProps) => {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Grade>>({});
   const [loading, setLoading] = useState(false);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const subjects = useAppSelector(selectSubjectItems) as Subject[];
 
+// Runs side effects for this component.
   useEffect(() => {
-    loadSubjects();
-  }, []);
+    dispatch(fetchSubjects());
+  }, [dispatch]);
 
-  const loadSubjects = async () => {
-    try {
-      const response = await subjectAPI.getAll();
-      const data = response.data || response;
-      setSubjects(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Error loading subjects:', error);
-    }
-  };
-
+// Returns subject name.
   const getSubjectName = (subjectId?: number | string) => {
     if (subjectId == null || subjectId === '') return '-';
     if (typeof subjectId === 'string') {
@@ -73,6 +72,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
     return subject?.subject_name || String(subjectId);
   };
 
+// Handles open modal.
   const handleOpenModal = (grade?: Grade) => {
     if (grade) {
       setEditingId(grade.grade_id || grade.id || null);
@@ -89,12 +89,14 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({});
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -107,11 +109,9 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
         center_id: formData.center_id ?? centerId,
       };
       if (editingId) {
-        await gradeAPI.update(editingId, payload);
-        showToast.success('Grade updated successfully');
+        await dispatch(updateGrade({ id: editingId, data: payload })).unwrap();
       } else {
-        await gradeAPI.create(payload);
-        showToast.success('Grade created successfully');
+        await dispatch(createGrade(payload)).unwrap();
       }
       onRefresh();
       handleCloseModal();
@@ -123,11 +123,11 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
     }
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure?')) {
       try {
-        await gradeAPI.delete(id);
-        showToast.success('Grade deleted successfully');
+        await dispatch(deleteGrade(id)).unwrap();
         onRefresh();
       } catch (error: unknown) {
         const err = error as { message?: string };

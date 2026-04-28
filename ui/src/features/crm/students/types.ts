@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Student {
   student_id?: number;
   id?: number;
@@ -14,6 +16,8 @@ export interface Student {
   status: string;
   teacher_id?: number;
   class_id?: number;
+  school_name?: string | null;
+  school_class?: string | null;
   coins?: number;
   username?: string;
   password?: string;
@@ -27,4 +31,3 @@ export interface Class {
   level: number;
   capacity: number;
 }
-

@@ -1,3 +1,5 @@
+// Page component for the debts screen in the crm feature.
+
 import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,6 +26,7 @@ import { SelectField } from '../students/components/SelectField';
 import DebtAnalyzer from './DebtAnalyzer';
 import { useDebtsPage } from './hooks/useDebtsPage';
 
+// Renders the debts page screen.
 const DebtsPage = () => {
   const {
     state,

@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, DollarSign, CheckCircle, Star } from 'lucide-react';
 
@@ -45,6 +47,7 @@ const statCards = [
   },
 ] as const;
 
+// Renders the statistics section module.
 export const StatisticsSection = ({
   attendanceStats,
   paymentStats,

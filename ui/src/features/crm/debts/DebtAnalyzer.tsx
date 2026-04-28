@@ -1,3 +1,5 @@
+// Source file for the debts area in the crm feature.
+
 import { useState } from 'react';
 import { BarChart3, ChevronDown, ChevronUp, Plus, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -54,6 +56,7 @@ interface AnalysisResponse {
   results: AnalysisResult[];
 }
 
+// Renders the debt analyzer module.
 const DebtAnalyzer = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +67,7 @@ const DebtAnalyzer = () => {
   const [monthlyFee, setMonthlyFee] = useState<string>('100');
   const [generating, setGenerating] = useState(false);
 
+// Handles analyze.
   const handleAnalyze = async () => {
     try {
       setLoading(true);
@@ -78,6 +82,7 @@ const DebtAnalyzer = () => {
     }
   };
 
+// Handles generate debts.
   const handleGenerateDebts = async () => {
     if (selectedStudents.length === 0 || !monthlyFee) return;
 
@@ -99,6 +104,7 @@ const DebtAnalyzer = () => {
     }
   };
 
+// Toggles student selection.
   const toggleStudentSelection = (studentId: number) => {
     setSelectedStudents((prev) =>
       prev.includes(studentId)
@@ -107,6 +113,7 @@ const DebtAnalyzer = () => {
     );
   };
 
+// Selects all students.
   const selectAllStudents = () => {
     if (analysis) {
       setSelectedStudents(analysis.results.map((r) => r.student_id));

@@ -1,9 +1,40 @@
+// Page component for the grades screen in the crm feature.
+
 import { useState, useEffect, useMemo } from 'react';
-import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, Loader2, X, Users } from 'lucide-react';
-import { useCRUD } from '../hooks/useCRUD';
-import { gradeAPI, teacherAPI, classAPI, studentAPI } from '../../../shared/api/api';
+import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, Loader2, X, Users, BarChart3 } from 'lucide-react';
+import {
+  createGrade,
+  deleteGrade,
+  fetchGrades,
+  fetchGradesForce,
+  updateGrade,
+} from '../../../slices/gradesSlice';
+import { fetchTeachers as fetchTeachersThunk } from '../../../slices/teachersSlice';
+import { fetchClasses as fetchClassesThunk } from '../../../slices/classesSlice';
+import { fetchStudents as fetchStudentsThunk } from '../../../slices/studentsSlice';
+import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';
+import {
+  clearGradesFilters,
+  setGradesActiveTab,
+  setGradesEditingId,
+  setGradesFilterGrade,
+  setGradesFilterTerm,
+  setGradesModalOpen,
+  setGradesSearchTerm,
+  setGradesSelectedFolder,
+  setGradesShowFilters,
+} from '../../../slices/pagesUiSlice';
+import { useAppDispatch, useAppSelector } from '../hooks';
 import { SelectField } from '../students/components/SelectField';
-import { fetchStudents, fetchTeachers, fetchClasses, fetchSubjects, termOptions } from '../../../utils/dropdownOptions';
+import { termOptions } from '../../../utils/dropdownOptions';
+import {
+  selectClassOptions,
+  selectGradesHasActiveFilters,
+  selectGradesPageUi,
+  selectStudentOptions,
+  selectSubjectOptions,
+  selectTeacherOptions,
+} from '../../../store/selectors';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -73,100 +104,93 @@ interface Student {
   teacher_id?: number;
 }
 
-type TabType = 'students' | 'classes' | 'teachers';
 type FolderType = 'teacher' | 'class' | 'student';
 
+// Renders the grades page screen.
 const GradesPage = () => {
-  const [state, actions] = useCRUD<Grade>(gradeAPI, 'Grade');
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [activeTab, setActiveTab] = useState<TabType>('students');
-  const [selectedFolder, setSelectedFolder] = useState<{ type: FolderType; id: number; name: string } | null>(null);
-  
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const dispatch = useAppDispatch();
+  const gradeItems = useAppSelector((state) => state.grades.items) as Grade[];
+  const gradesLoading = useAppSelector((state) => state.grades.loading);
+  const gradesError = useAppSelector((state) => state.grades.error);
+  const state = { items: gradeItems, loading: gradesLoading, error: gradesError };
+
+  const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
+  const classes = useAppSelector((state) => state.classes.items) as Class[];
+  const students = useAppSelector((state) => state.students.items) as Student[];
+  const loadingData = useAppSelector(
+    (state) => state.teachers.loading || state.classes.loading || state.students.loading
+  );
+  const studentOptions = useAppSelector(selectStudentOptions);
+  const teacherOptions = useAppSelector(selectTeacherOptions);
+  const subjectOptions = useAppSelector(selectSubjectOptions);
+  const classOptions = useAppSelector(selectClassOptions);
+  const isLoadingOptions = useAppSelector(
+    (state) =>
+      state.students.loading || state.teachers.loading || state.subjects.loading || state.classes.loading
+  );
+  const gradesUi = useAppSelector(selectGradesPageUi);
+  const {
+    activeTab,
+    selectedFolder,
+    isModalOpen,
+    editingId,
+    searchTerm,
+    filterTerm,
+    filterGrade,
+    showFilters,
+  } = gradesUi;
+  const hasActiveFilters = useAppSelector(selectGradesHasActiveFilters);
+
   const [formData, setFormData] = useState<Partial<Grade>>({
     total_marks: 100,
     academic_year: new Date().getFullYear(),
     term: 'First',
   });
-  const [studentOptions, setStudentOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
-  const [teacherOptions, setTeacherOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
-  const [subjectOptions, setSubjectOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
-  const [classOptions, setClassOptions] = useState<Array<{ id?: number; label: string; value: string | number }>>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
 
-  // Search and Filter
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterTerm, setFilterTerm] = useState('');
-  const [filterGrade, setFilterGrade] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-
+// Runs side effects for this component.
   useEffect(() => {
-    actions.fetchAll();
-    loadAllData();
-    loadDropdownOptions();
+    dispatch(fetchGrades());
+    dispatch(fetchTeachersThunk());
+    dispatch(fetchClassesThunk());
+    dispatch(fetchStudentsThunk());
+    dispatch(fetchSubjectsThunk());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadAllData = async () => {
-    setLoadingData(true);
-    try {
-      const [teachersRes, classesRes, studentsRes] = await Promise.all([
-        teacherAPI.getAll(),
-        classAPI.getAll(),
-        studentAPI.getAll(),
-      ]);
-      setTeachers(Array.isArray(teachersRes.data || teachersRes) ? (teachersRes.data || teachersRes) : []);
-      setClasses(Array.isArray(classesRes.data || classesRes) ? (classesRes.data || classesRes) : []);
-      setStudents(Array.isArray(studentsRes.data || studentsRes) ? (studentsRes.data || studentsRes) : []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
+// Runs side effects for this component.
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchGradesForce());
+      dispatch(fetchTeachersThunk());
+      dispatch(fetchClassesThunk());
+      dispatch(fetchStudentsThunk());
+      dispatch(fetchSubjectsThunk());
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch]);
 
-  const loadDropdownOptions = async () => {
-    setIsLoadingOptions(true);
-    try {
-      const [students, teachers, subjects, classes] = await Promise.all([
-        fetchStudents(),
-        fetchTeachers(),
-        fetchSubjects(),
-        fetchClasses(),
-      ]);
-      setStudentOptions(students);
-      setTeacherOptions(teachers);
-      setSubjectOptions(subjects);
-      setClassOptions(classes);
-    } catch (error) {
-      console.error('Error loading dropdown options:', error);
-    } finally {
-      setIsLoadingOptions(false);
-    }
-  };
-
+// Handles open modal.
   const handleOpenModal = (grade?: Grade) => {
     if (grade) {
-      setEditingId(grade.grade_id || grade.id || null);
+      dispatch(setGradesEditingId(grade.grade_id || grade.id || null));
       setFormData(grade);
     } else {
-      setEditingId(null);
+      dispatch(setGradesEditingId(null));
       setFormData({
         total_marks: 100,
         academic_year: new Date().getFullYear(),
         term: 'First',
       });
     }
-    setIsModalOpen(true);
+    dispatch(setGradesModalOpen(true));
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingId(null);
+    dispatch(setGradesModalOpen(false));
+    dispatch(setGradesEditingId(null));
     setFormData({
       total_marks: 100,
       academic_year: new Date().getFullYear(),
@@ -174,8 +198,10 @@ const GradesPage = () => {
     });
   };
 
+// Handles marks change.
   const handleMarksChange = (marks: number) => {
     const total = formData.total_marks || 100;
+// Handles percentage.
     const percentage = (marks / total) * 100;
     let gradeLetter = 'F';
     if (percentage >= 90) gradeLetter = 'A';
@@ -185,19 +211,21 @@ const GradesPage = () => {
     setFormData({ ...formData, marks_obtained: marks, percentage, grade_letter: gradeLetter });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
-      await actions.update(editingId, formData);
+      await dispatch(updateGrade({ id: editingId, data: formData }));
     } else {
-      await actions.create(formData);
+      await dispatch(createGrade(formData));
     }
     handleCloseModal();
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this grade?')) {
-      await actions.delete(id);
+      await dispatch(deleteGrade(id));
     }
   };
 
@@ -291,29 +319,30 @@ const GradesPage = () => {
     return grades;
   }, [searchTerm, filterTerm, filterGrade, selectedFolder, state.items, students]);
 
-  const hasActiveFilters = filterTerm || filterGrade || searchTerm;
-
+// Handles clear filters.
   const clearFilters = () => {
-    setSearchTerm('');
-    setFilterTerm('');
-    setFilterGrade('');
+    dispatch(clearGradesFilters());
   };
 
+// Handles folder click.
   const handleFolderClick = (type: FolderType, id: number, name: string) => {
-    setSelectedFolder({ type, id, name });
+    dispatch(setGradesSelectedFolder({ type, id, name }));
     clearFilters();
   };
 
+// Handles back to folders.
   const handleBackToFolders = () => {
-    setSelectedFolder(null);
+    dispatch(setGradesSelectedFolder(null));
     clearFilters();
   };
 
+// Returns student name.
   const getStudentName = (studentId: number): string => {
     const student = students.find((s) => (s.student_id || s.id) === studentId);
     return student ? `${student.first_name} ${student.last_name}` : 'Unknown Student';
   };
 
+// Returns grade badge classes.
   const getGradeBadgeClasses = (grade: string): string => {
     switch (grade) {
       case 'A':
@@ -331,6 +360,7 @@ const GradesPage = () => {
     }
   };
 
+// Returns grade color.
   const getGradeColor = (grade: string): string => {
     switch (grade) {
       case 'A': return '#10b981';
@@ -341,6 +371,42 @@ const GradesPage = () => {
       default: return '#6b7280';
     }
   };
+
+// Memoizes the grade statistics derived value.
+  const gradeStatistics = useMemo(() => {
+    const totalGrades = state.items.length;
+    const counts = { A: 0, B: 0, C: 0, D: 0, F: 0 };
+    let percentageSum = 0;
+
+    state.items.forEach((grade) => {
+      const letter = String(grade.grade_letter || 'F').toUpperCase() as keyof typeof counts;
+      if (counts[letter] != null) {
+        counts[letter] += 1;
+      } else {
+        counts.F += 1;
+      }
+      percentageSum += Number(grade.percentage || 0);
+    });
+
+    const averagePercentage = totalGrades > 0 ? percentageSum / totalGrades : 0;
+    const passingGrades = state.items.filter((grade) => Number(grade.percentage || 0) >= 60).length;
+    const passRate = totalGrades > 0 ? Math.round((passingGrades / totalGrades) * 100) : 0;
+
+    return {
+      totalGrades,
+      averagePercentage,
+      passingGrades,
+      failingGrades: totalGrades - passingGrades,
+      passRate,
+      segments: [
+        { label: 'A', count: counts.A, percent: totalGrades > 0 ? (counts.A / totalGrades) * 100 : 0, className: 'bg-emerald-500' },
+        { label: 'B', count: counts.B, percent: totalGrades > 0 ? (counts.B / totalGrades) * 100 : 0, className: 'bg-blue-500' },
+        { label: 'C', count: counts.C, percent: totalGrades > 0 ? (counts.C / totalGrades) * 100 : 0, className: 'bg-amber-500' },
+        { label: 'D', count: counts.D, percent: totalGrades > 0 ? (counts.D / totalGrades) * 100 : 0, className: 'bg-orange-500' },
+        { label: 'F', count: counts.F, percent: totalGrades > 0 ? (counts.F / totalGrades) * 100 : 0, className: 'bg-rose-500' },
+      ],
+    };
+  }, [state.items]);
 
   return (
     <div className="container mx-auto p-6">
@@ -370,7 +436,7 @@ const GradesPage = () => {
             <div className="flex space-x-1">
               <Button
                 variant={activeTab === 'students' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('students')}
+                onClick={() => dispatch(setGradesActiveTab('students'))}
                 className="rounded-b-none"
               >
                 <Users className="h-4 w-4 mr-2" />
@@ -378,7 +444,7 @@ const GradesPage = () => {
               </Button>
               <Button
                 variant={activeTab === 'classes' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('classes')}
+                onClick={() => dispatch(setGradesActiveTab('classes'))}
                 className="rounded-b-none"
               >
                 <BookOpen className="h-4 w-4 mr-2" />
@@ -386,17 +452,92 @@ const GradesPage = () => {
               </Button>
               <Button
                 variant={activeTab === 'teachers' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('teachers')}
+                onClick={() => dispatch(setGradesActiveTab('teachers'))}
                 className="rounded-b-none"
               >
                 <User className="h-4 w-4 mr-2" />
                 By Teachers
+              </Button>
+              <Button
+                variant={activeTab === 'statistics' ? 'default' : 'ghost'}
+                onClick={() => dispatch(setGradesActiveTab('statistics'))}
+                className="rounded-b-none"
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Statistics
               </Button>
             </div>
           </div>
 
           {/* Tab Content */}
           <div>
+            {/* Statistics Tab */}
+            {activeTab === 'statistics' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Total Grades</p>
+                      <p className="text-lg font-semibold">{gradeStatistics.totalGrades}</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Average Percentage</p>
+                      <p className="text-lg font-semibold text-indigo-600">{gradeStatistics.averagePercentage.toFixed(1)}%</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Passing Rate</p>
+                      <p className="text-lg font-semibold text-emerald-600">{gradeStatistics.passRate}%</p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Failing Grades</p>
+                      <p className="text-lg font-semibold text-rose-600">{gradeStatistics.failingGrades}</p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <p className="text-sm font-medium">Grade Distribution</p>
+                      <p className="text-xs text-muted-foreground">Relative share of grade letters</p>
+                    </div>
+                    <div className="text-right text-xs text-muted-foreground">
+                      <p>{gradeStatistics.passingGrades} passing</p>
+                      <p>{gradeStatistics.failingGrades} failing</p>
+                    </div>
+                  </div>
+
+                  <div className="h-4 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+                    <div className="flex h-full w-full">
+                      {gradeStatistics.segments.map((segment) => (
+                        <div
+                          key={segment.label}
+                          className={`h-full transition-all duration-300 ${segment.className}`}
+                          style={{ width: `${segment.percent}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
+                    {gradeStatistics.segments.map((segment) => (
+                      <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
+                        <p className="text-xs text-muted-foreground">Grade {segment.label}</p>
+                        <p className="font-semibold">{segment.count}</p>
+                        <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* By Students Tab */}
             {activeTab === 'students' && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -553,7 +694,7 @@ const GradesPage = () => {
                 type="text"
                 placeholder="Search by student or subject..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => dispatch(setGradesSearchTerm(e.target.value))}
                 className="pl-10"
               />
               {searchTerm && (
@@ -561,7 +702,7 @@ const GradesPage = () => {
                   variant="ghost"
                   size="sm"
                   className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
-                  onClick={() => setSearchTerm('')}
+                  onClick={() => dispatch(setGradesSearchTerm(''))}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -570,7 +711,7 @@ const GradesPage = () => {
 
             <Button
               variant={showFilters ? "default" : "outline"}
-              onClick={() => setShowFilters(!showFilters)}
+              onClick={() => dispatch(setGradesShowFilters(!showFilters))}
             >
               <Filter className="h-4 w-4 mr-2" />
               Filters
@@ -597,7 +738,7 @@ const GradesPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
               <div className="space-y-2">
                 <Label>Term</Label>
-                <Select value={filterTerm} onValueChange={setFilterTerm}>
+                <Select value={filterTerm} onValueChange={(value) => dispatch(setGradesFilterTerm(value))}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Terms" />
                   </SelectTrigger>
@@ -611,7 +752,7 @@ const GradesPage = () => {
               </div>
               <div className="space-y-2">
                 <Label>Grade Letter</Label>
-                <Select value={filterGrade} onValueChange={setFilterGrade}>
+                <Select value={filterGrade} onValueChange={(value) => dispatch(setGradesFilterGrade(value))}>
                   <SelectTrigger>
                     <SelectValue placeholder="All Grades" />
                   </SelectTrigger>
@@ -688,7 +829,16 @@ const GradesPage = () => {
       )}
 
       {/* Add/Edit Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (open) {
+            dispatch(setGradesModalOpen(true));
+            return;
+          }
+          handleCloseModal();
+        }}
+      >
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Grade' : 'Add New Grade'}</DialogTitle>

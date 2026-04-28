@@ -1,11 +1,14 @@
+// React hooks for the crm feature.
+
 import { useStudentsData } from './useStudentsData';
 import { useStudentsFilters } from './useStudentsFilters';
 import { useStudentsModal } from './useStudentsModal';
 
+// Provides students page.
 export const useStudentsPage = () => {
   const data = useStudentsData();
   const filters = useStudentsFilters(data.state.items);
-  const modal = useStudentsModal(data.actions, filters.selectedClass);
+  const modal = useStudentsModal(filters.selectedClass);
   return {
     ...data,
     ...filters,

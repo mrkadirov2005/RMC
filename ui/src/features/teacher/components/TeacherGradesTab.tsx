@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect } from 'react';
 import {
   Star,
@@ -74,6 +76,7 @@ interface TeacherGradesTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher grades tab tab.
 const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
@@ -99,16 +102,19 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     severity: 'success',
   });
 
+// Runs side effects for this component.
   useEffect(() => {
     loadInitialData();
   }, [teacherId]);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (selectedClass) {
       loadStudentsAndGrades();
     }
   }, [selectedClass, selectedSubject]);
 
+// Loads initial data.
   const loadInitialData = async () => {
     try {
       setLoading(true);
@@ -125,6 +131,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     }
   };
 
+// Loads students and grades.
   const loadStudentsAndGrades = async () => {
     try {
       setLoading(true);
@@ -155,6 +162,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     }
   };
 
+// Handles open grade dialog.
   const handleOpenGradeDialog = (student: Student) => {
     setSelectedStudent(student);
     setNewGrade({
@@ -166,6 +174,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     setGradeDialogOpen(true);
   };
 
+// Handles save grade.
   const handleSaveGrade = async () => {
     if (!selectedStudent || !selectedSubject) {
       setSnackbar({
@@ -209,6 +218,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     }
   };
 
+// Handles calculate student average.
   const calculateStudentAverage = (studentId: number) => {
     const studentGrades = grades.filter((g) => g.student_id === studentId);
     if (studentGrades.length === 0) return null;
@@ -220,6 +230,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     return (totalPercentage / studentGrades.length).toFixed(1);
   };
 
+// Returns grade color.
   const getGradeColor = (percentage: number) => {
     if (percentage >= 90) return '#43e97b';
     if (percentage >= 80) return '#2196f3';
@@ -228,6 +239,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     return '#f5576c';
   };
 
+// Returns letter grade.
   const getLetterGrade = (percentage: number) => {
     if (percentage >= 90) return 'A';
     if (percentage >= 80) return 'B';
@@ -456,6 +468,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
                 {grades.slice(0, 10).map((grade, idx) => {
                   const student = students.find((s) => s.student_id === grade.student_id);
                   const subject = subjects.find((s) => s.subject_id === grade.subject_id);
+// Handles percentage.
                   const percentage = (grade.grade_value / grade.max_value) * 100;
 
                   return (

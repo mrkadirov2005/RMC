@@ -30,9 +30,6 @@ const getWithInstallments = async (id: number, centerId?: number) => {
 const create = async (body: any, centerId?: number) => {
   const { student_id, center_id, name, total_amount, currency, start_date, end_date, installments = [] } = body;
   const scopedCenterId = centerId ?? center_id;
-  if (!student_id || !scopedCenterId || !name || !total_amount || !start_date) {
-    return { error: 'validation' as const };
-  }
   if (!(await studentInCenter(Number(student_id), Number(scopedCenterId)))) {
     return { error: 'invalid_center' as const };
   }

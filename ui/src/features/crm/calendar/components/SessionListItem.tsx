@@ -1,3 +1,5 @@
+// Source file for the calendar area in the crm feature.
+
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ClassItem, SessionItem } from '../types';
@@ -18,6 +20,7 @@ interface SessionListItemProps {
   index: number;
 }
 
+// Renders the session list item module.
 export const SessionListItem = ({
   cls,
   session,

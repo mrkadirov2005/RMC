@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+// Portal component for the teacher feature.
+
+import { useEffect, useCallback, useMemo } from 'react';
 import {
   Users,
   ClipboardList,
@@ -38,8 +40,15 @@ import TeacherAttendanceTab from './components/TeacherAttendanceTab';
 import TeacherGradesTab from './components/TeacherGradesTab';
 import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
 import TeacherPaymentsTab from './components/TeacherPaymentsTab';
+import { useAppDispatch } from '../crm/hooks';
 import type { RootState } from '../../store';
-import { testAPI, studentAPI, classAPI, attendanceAPI, assignmentAPI } from '../../shared/api/api';
+import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
+import { fetchTests } from '../../slices/testsSlice';
+import { fetchStudents } from '../../slices/studentsSlice';
+import { fetchClasses } from '../../slices/classesSlice';
+import { fetchAttendance } from '../../slices/attendanceSlice';
+import { fetchAssignments } from '../../slices/assignmentsSlice';
+import { selectTeacherPortalUi } from '../../store/selectors';
 
 interface TeacherStats {
   totalStudents: number;
@@ -52,101 +61,99 @@ interface TeacherStats {
   upcomingClasses: number;
 }
 
+// Renders the teacher portal portal.
 const TeacherPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const [tabValue, setTabValue] = useState('students');
-  const [stats, setStats] = useState<TeacherStats>({
-    totalStudents: 0,
-    totalClasses: 0,
-    pendingTests: 0,
-    completedTests: 0,
-    pendingGrading: 0,
-    todayAttendance: 0,
-    pendingAssignments: 0,
-    upcomingClasses: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const teacherPortalUi = useAppSelector(selectTeacherPortalUi);
+  const { tabValue } = teacherPortalUi;
 
-  const loadStats = useCallback(async () => {
-    try {
-      setLoading(true);
+  const testsData = useAppSelector(state => state.tests.items);
+  const studentsData = useAppSelector(state => state.students.items);
+  const classesData = useAppSelector(state => state.classes.items);
+  const attendanceData = useAppSelector(state => state.attendance.items);
+  const assignmentsData = useAppSelector(state => state.assignments.items);
+  
+  const loading = useAppSelector(state => 
+    state.tests.loading || 
+    state.students.loading || 
+    state.classes.loading || 
+    state.attendance.loading || 
+    state.assignments.loading
+  );
+// Memoizes the load stats callback.
+  const loadStats = useCallback(() => {
+    dispatch(fetchTests());
+    dispatch(fetchStudents());
+    dispatch(fetchClasses());
+    dispatch(fetchAttendance());
+    dispatch(fetchAssignments());
+  }, [dispatch]);
 
-      // Load all data in parallel
-      const [testsRes, studentsRes, classesRes, attendanceRes, assignmentsRes] = await Promise.all([
-        testAPI.getAll().catch(() => ({ data: [] })),
-        studentAPI.getAll().catch(() => ({ data: [] })),
-        classAPI.getAll().catch(() => ({ data: [] })),
-        attendanceAPI.getAll().catch(() => ({ data: [] })),
-        assignmentAPI.getAll().catch(() => ({ data: [] })),
-      ]);
-
-      const tests = testsRes.data || [];
-      const students = studentsRes.data || [];
-      const classes = classesRes.data || [];
-      const attendance = attendanceRes.data || [];
-      const assignments = assignmentsRes.data || [];
-
-      const teacherId = user?.id;
-      const scopedClasses = teacherId
-        ? classes.filter((c: any) => Number(c.teacher_id) === Number(teacherId))
-        : classes;
-      const scopedStudents = teacherId
-        ? students.filter((s: any) => Number(s.teacher_id) === Number(teacherId))
-        : students;
-      const scopedAttendance = teacherId
-        ? attendance.filter((a: any) => Number(a.teacher_id) === Number(teacherId))
-        : attendance;
-      const teacherClassIds = new Set(scopedClasses.map((c: any) => Number(c.class_id || c.id)));
-      const scopedAssignments = teacherClassIds.size > 0
-        ? assignments.filter((a: any) => teacherClassIds.has(Number(a.class_id)))
-        : assignments;
-
-      // Calculate stats
-      const today = new Date().toISOString().split('T')[0];
-      const todayAttendance = scopedAttendance.filter(
-        (a: any) => a.attendance_date?.split('T')[0] === today
-      ).length;
-
-      const pendingTests = tests.filter((t: any) => t.is_active).length;
-      const completedTests = tests.length - pendingTests;
-      const pendingGrading = tests.filter((t: any) => (t.submission_count || 0) > 0).length;
-      const pendingAssignments = scopedAssignments.filter((a: any) => a.status === 'Pending').length;
-
-      setStats({
-        totalStudents: scopedStudents.length,
-        totalClasses: scopedClasses.length,
-        pendingTests,
-        completedTests,
-        pendingGrading,
-        todayAttendance,
-        pendingAssignments,
-        upcomingClasses: scopedClasses.filter((c: any) => c.status === 'Active').length,
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
+// Runs side effects for this component.
   useEffect(() => {
     loadStats();
   }, [loadStats]);
 
+  const stats = useMemo<TeacherStats>(() => {
+    const tests = testsData || [];
+    const students = studentsData || [];
+    const classes = classesData || [];
+    const attendance = attendanceData || [];
+    const assignments = assignmentsData || [];
+
+    const teacherId = user?.id;
+    const scopedClasses = teacherId
+      ? classes.filter((c: any) => Number(c.teacher_id) === Number(teacherId))
+      : classes;
+    const scopedStudents = teacherId
+      ? students.filter((s: any) => Number(s.teacher_id) === Number(teacherId))
+      : students;
+    const scopedAttendance = teacherId
+      ? attendance.filter((a: any) => Number(a.teacher_id) === Number(teacherId))
+      : attendance;
+    const teacherClassIds = new Set(scopedClasses.map((c: any) => Number(c.class_id || c.id)));
+    const scopedAssignments = teacherClassIds.size > 0
+      ? assignments.filter((a: any) => teacherClassIds.has(Number(a.class_id)))
+      : assignments;
+
+    const today = new Date().toISOString().split('T')[0];
+    const todayAttendance = scopedAttendance.filter(
+      (a: any) => a.attendance_date?.split('T')[0] === today
+    ).length;
+
+    const pendingTests = tests.filter((t: any) => t.is_active).length;
+    const completedTests = tests.length - pendingTests;
+    const pendingGrading = tests.filter((t: any) => (t.submission_count || 0) > 0).length;
+    const pendingAssignments = scopedAssignments.filter((a: any) => a.status === 'Pending').length;
+
+    return {
+      totalStudents: scopedStudents.length,
+      totalClasses: scopedClasses.length,
+      pendingTests,
+      completedTests,
+      pendingGrading,
+      todayAttendance,
+      pendingAssignments,
+      upcomingClasses: scopedClasses.filter((c: any) => c.status === 'Active').length,
+    };
+  }, [testsData, studentsData, classesData, attendanceData, assignmentsData, user?.id]);
+
+// Handles quick action.
   const handleQuickAction = (action: string) => {
     switch (action) {
       case 'test':
         navigate('/tests/create');
         break;
       case 'attendance':
-        setTabValue('attendance');
+        dispatch(setTeacherPortalTabValue('attendance'));
         break;
       case 'assignment':
         navigate('/assignments');
         break;
       case 'grade':
-        setTabValue('grades');
+        dispatch(setTeacherPortalTabValue('grades'));
         break;
       default:
         break;
@@ -285,7 +292,7 @@ const TeacherPortal = () => {
           <Card
             key={index}
             className="h-full transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-lg"
-            onClick={() => setTabValue(stat.tab)}
+            onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
           >
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
@@ -313,7 +320,7 @@ const TeacherPortal = () => {
 
       {/* Tabs Section */}
       <Card>
-        <Tabs value={tabValue} onValueChange={setTabValue}>
+        <Tabs value={tabValue} onValueChange={(value) => dispatch(setTeacherPortalTabValue(value))}>
           <div className="border-b px-4">
             <TabsList className="bg-transparent h-auto p-0 gap-0">
               {tabs.map((tab) => (

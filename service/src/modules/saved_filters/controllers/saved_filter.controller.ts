@@ -38,9 +38,6 @@ const createFilter = async (req: any, res: any) => {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
     const out = await savedFilterService.create(userType, userId, centerId ?? req.body.center_id, req.body);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'name, entity, and filters_json are required' });
-    }
     res.status(201).json({ message: 'Filter saved', filter: (out as any).row });
   } catch (error: any) {
     console.error('Database error:', error);

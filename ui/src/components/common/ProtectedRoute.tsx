@@ -1,3 +1,5 @@
+// Shared reusable UI component.
+
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAppSelector, useRBAC } from '../../features/crm/hooks';
@@ -10,6 +12,7 @@ interface ProtectedRouteProps {
   requiredPermission?: string;
 }
 
+// Renders the protected route module.
 export const ProtectedRoute = ({
   children,
   requiredUserType,

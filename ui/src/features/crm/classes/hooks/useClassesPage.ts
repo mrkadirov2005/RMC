@@ -1,17 +1,18 @@
+// React hooks for the crm feature.
+
 import { useEffect, useState } from 'react';
 import { classAPI } from '../../../../shared/api/api';
-import { fetchCenters, fetchTeachers, frequencyOptions } from '../../../../utils/dropdownOptions';
+import { frequencyOptions } from '../../../../utils/dropdownOptions';
 import { showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
-import { useCRUD } from '../../hooks/useCRUD';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
+import { fetchTeachers } from '../../../../slices/teachersSlice';
+import { fetchCenters } from '../../../../slices/centersSlice';
+import { selectCenterOptions, selectTeacherOptions } from '../../../../store/selectors';
+import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
-
-interface DropdownOption {
-  id?: number;
-  label: string;
-  value: string | number;
-}
 
 interface AttendanceRecord {
   attendance_id?: number;
@@ -24,20 +25,28 @@ interface AttendanceRecord {
   remarks?: string;
 }
 
+// Provides classes page.
 export const useClassesPage = () => {
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+// Handles is owner.
   const isOwner = (user?.role || '').toLowerCase() === 'owner';
-  const defaultCenterId = user?.center_id ?? 1;
-  const [state, actions] = useCRUD<Class>(classAPI, 'Class');
+  const defaultCenterId = getResolvedCenterId(user) ?? 0;
+
+  const items = useAppSelector((state) => state.classes.items) as Class[];
+  const loading = useAppSelector((state) => state.classes.loading);
+  const error = useAppSelector((state) => state.classes.error);
+  const state = { items, loading, error };
+  const allCenterOptions = useAppSelector(selectCenterOptions);
+  const centerOptions = isOwner ? allCenterOptions : [];
+  const teacherOptions = useAppSelector(selectTeacherOptions);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Class>>({
     center_id: defaultCenterId,
     payment_frequency: 'Monthly',
   });
-  const [centerOptions, setCenterOptions] = useState<DropdownOption[]>([]);
-  const [teacherOptions, setTeacherOptions] = useState<DropdownOption[]>([]);
-  const [, setIsLoadingOptions] = useState(false);
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState('09:00');
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -49,25 +58,31 @@ export const useClassesPage = () => {
   const [deleteAttendance, setDeleteAttendance] = useState<AttendanceRecord[]>([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
-    actions.fetchAll();
-    loadDropdownOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const loadDropdownOptions = async () => {
-    setIsLoadingOptions(true);
-    try {
-      const teachers = await fetchTeachers();
-      setCenterOptions(isOwner ? await fetchCenters() : []);
-      setTeacherOptions(teachers);
-    } catch (error) {
-      console.error('Error loading dropdown options:', error);
-    } finally {
-      setIsLoadingOptions(false);
+    dispatch(fetchClasses());
+    dispatch(fetchTeachers());
+    if (isOwner) {
+      dispatch(fetchCenters());
     }
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOwner]);
 
+// Runs side effects for this component.
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchClassesForce());
+      dispatch(fetchTeachers());
+      if (isOwner) {
+        dispatch(fetchCenters());
+      }
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch, isOwner]);
+
+// Handles open modal.
   const handleOpenModal = (cls?: Class) => {
     if (cls) {
       setEditingId(cls.class_id || cls.id || null);
@@ -84,6 +99,7 @@ export const useClassesPage = () => {
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
@@ -92,40 +108,43 @@ export const useClassesPage = () => {
     setScheduleTime('09:00');
   };
 
+// Handles day change.
   const handleDayChange = (day: string, checked: boolean) => {
     setSelectedDays(
-      checked ? [...selectedDays, day] : selectedDays.filter((value) => value !== day)
+      checked ? [...selectedDays, day] : selectedDays.filter((v) => v !== day)
     );
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const dataToSubmit = {
       ...formData,
       section: JSON.stringify({ days: selectedDays, time: scheduleTime }),
     };
-
     try {
       if (editingId) {
-        await actions.update(editingId, dataToSubmit);
+        await classAPI.update(editingId, dataToSubmit);
         showToast.success('Class updated successfully!');
       } else {
-        await actions.create(dataToSubmit);
+        await classAPI.create(dataToSubmit);
         showToast.success('Class created successfully!');
       }
+      dispatch(fetchClassesForce());
       handleCloseModal();
     } catch {
       showToast.error('Error saving class');
     }
   };
 
+// Handles delete.
   const handleDelete = async (id: number, className?: string) => {
     if (!window.confirm('Are you sure you want to delete this class?')) return;
     setDeleteLoading(true);
     try {
       await classAPI.delete(id);
       showToast.success('Class deleted successfully!');
-      await actions.fetchAll();
+      dispatch(fetchClassesForce());
     } catch (error: any) {
       const status = error?.response?.status;
       const attendance = error?.response?.data?.attendance;
@@ -141,6 +160,7 @@ export const useClassesPage = () => {
     }
   };
 
+// Handles close delete modal.
   const handleCloseDeleteModal = () => {
     if (deleteLoading) return;
     setDeleteModalOpen(false);
@@ -148,32 +168,36 @@ export const useClassesPage = () => {
     setDeleteTarget(null);
   };
 
+// Handles force delete.
   const handleForceDelete = async () => {
     if (!deleteTarget) return;
     setDeleteLoading(true);
     try {
       await classAPI.delete(deleteTarget.id, { force: true });
       showToast.success('Class and attendance records deleted successfully!');
-      await actions.fetchAll();
+      dispatch(fetchClassesForce());
       handleCloseDeleteModal();
-    } catch (error) {
-      console.error('Error forcing class delete:', error);
+    } catch (e) {
+      console.error('Error forcing class delete:', e);
       showToast.error('Failed to delete class');
     } finally {
       setDeleteLoading(false);
     }
   };
 
+// Handles view details.
   const handleViewDetails = (cls: Class) => {
     setSelectedClass(cls);
     setDetailModalOpen(true);
   };
 
+// Handles close detail modal.
   const handleCloseDetailModal = () => {
     setDetailModalOpen(false);
     setSelectedClass(null);
   };
 
+// Reads duration.
   const readDuration = () => {
     try {
       const overrideRaw = localStorage.getItem(overrideDurationKey);
@@ -187,6 +211,7 @@ export const useClassesPage = () => {
     }
   };
 
+// Handles generate sessions.
   const handleGenerateSessions = async (cls: Class) => {
     const classId = Number(cls.class_id || cls.id);
     if (!classId) return;
@@ -195,23 +220,12 @@ export const useClassesPage = () => {
     const year = today.getFullYear();
     const duration = readDuration();
     try {
-      await classAPI.generateSessions(classId, {
-        month,
-        year,
-        duration_minutes: duration,
-      });
+      await classAPI.generateSessions(classId, { month, year, duration_minutes: duration });
       showToast.success('Sessions generated successfully.');
-    } catch (error) {
-      console.error('Failed to generate sessions:', error);
+    } catch (e) {
+      console.error('Failed to generate sessions:', e);
       showToast.error('Failed to generate sessions');
     }
-  };
-
-  const toLocalDateKey = (value: Date) => {
-    const year = value.getFullYear();
-    const month = String(value.getMonth() + 1).padStart(2, '0');
-    const day = String(value.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
   };
 
   return {

@@ -8,7 +8,7 @@ const getAllTests = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
     if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    const rows = await testService.listTests(req.query, centerId ?? undefined);
+    const rows = await testService.listTests(req.query, centerId ?? undefined, req.user);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -21,7 +21,7 @@ const getTestById = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
     if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    const data = await testService.getTestById(Number(req.params.id), centerId ?? undefined);
+    const data = await testService.getTestById(Number(req.params.id), centerId ?? undefined, req.user);
     if (!data) return res.status(404).json({ error: 'Test not found' });
     res.json(data);
   } catch (error: any) {
@@ -35,14 +35,13 @@ const createTest = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
     if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    if (!centerId && isGlobal && !req.body.center_id) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
-    const out = await testService.createTest({ ...req.body, center_id: centerId ?? req.body.center_id });
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'center_id, test_name, test_type, and created_by are required' });
-    }
-    const { test } = out as { test: any };
+    const out = await testService.createTest({
+      ...req.body,
+      center_id: centerId ?? req.body.center_id,
+      created_by: req.body.created_by ?? req.user?.id,
+      created_by_type: req.body.created_by_type ?? req.user?.userType ?? 'superuser',
+    });
+    const { test, questions, passages } = out as { test: any; questions?: any[]; passages?: any[] };
     await logAudit({
       user_type: req.user?.userType || 'system',
       user_id: req.user?.id || 0,
@@ -52,7 +51,7 @@ const createTest = async (req: any, res: any) => {
       details: { test_name: test.test_name, test_type: test.test_type },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Test created', test });
+    res.status(201).json({ message: 'Test created', test, questions, passages });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to create test', details: error.message || String(error) });
@@ -199,7 +198,7 @@ const startTest = async (req: any, res: any) => {
     const row = await testService.startTest(Number(req.params.testId), req.body, {
       ip: req.ip,
       studentId: req.user?.userType === 'student' ? req.user?.id : req.body.student_id,
-    }, centerId ?? req.body.center_id);
+    }, centerId ?? req.body.center_id, req.user);
     if (row?.error === 'validation') {
       return res.status(400).json({ error: 'student_id is required to start a test' });
     }

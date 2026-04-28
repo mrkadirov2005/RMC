@@ -45,9 +45,6 @@ const createInvoice = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
     }
     const out = await invoiceService.createInvoice(req.body, centerId ?? undefined);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'student_id, center_id, issue_date, and items are required' });
-    }
     const { invoice } = out as { invoice: any };
     await logAudit({
       user_type: req.user?.userType || 'system',

@@ -25,6 +25,9 @@ const createStudent = (body: any) => {
     status: body.status,
     teacher_id: body.teacher_id,
     class_id: body.class_id,
+    school_name: body.school_name,
+    school_class: body.school_class,
+    is_frozen: body.is_frozen,
   });
 };
 

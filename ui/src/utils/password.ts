@@ -1,3 +1,5 @@
+// Source file for password.
+
 export const generateTempPassword = (length = 12): string => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@$%';
   let out = '';

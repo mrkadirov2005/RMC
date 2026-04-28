@@ -1,3 +1,5 @@
+// Page component for the classes screen in the crm feature.
+
 import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,6 +39,7 @@ import ClassDetailModal from './ClassDetailModal';
 import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
 
+// Renders the classes page screen.
 const ClassesPage = () => {
   const {
     state,

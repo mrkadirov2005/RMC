@@ -4,6 +4,8 @@ const express_att = require('express');
 const router_att = express_att.Router();
 const attendanceController = require('../controllers/attendanceController');
 const { requireAuth } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { CreateAttendanceDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -89,7 +91,7 @@ router_att.get('/:id', requireAuth, attendanceController.getAttendanceById);
  *       400:
  *         description: Invalid input
  */
-router_att.post('/', requireAuth, attendanceController.createAttendance);
+router_att.post('/', requireAuth, validateBody(CreateAttendanceDto), attendanceController.createAttendance);
 
 /**
  * @swagger

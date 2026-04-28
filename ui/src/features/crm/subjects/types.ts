@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Subject {
   subject_id?: number;
   id?: number;

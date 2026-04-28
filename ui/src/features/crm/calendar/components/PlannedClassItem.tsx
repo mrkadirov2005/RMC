@@ -1,3 +1,5 @@
+// Source file for the calendar area in the crm feature.
+
 import { Button } from '@/components/ui/button';
 import type { ClassItem } from '../types';
 
@@ -13,6 +15,7 @@ interface PlannedClassItemProps {
   index: number;
 }
 
+// Renders the planned class item module.
 export const PlannedClassItem = ({
   item,
   selectedDay,

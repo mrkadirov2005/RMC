@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Teacher {
   teacher_id?: number;
   id?: number;

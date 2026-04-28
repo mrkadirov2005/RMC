@@ -1,3 +1,5 @@
+// React hooks for the system feature.
+
 import { useCallback, useEffect } from 'react';
 import { useAppDispatch } from '../../crm/hooks';
 import {
@@ -11,6 +13,7 @@ import { API_BASE_URL } from '../../../shared/api/api';
 const PING_TIMEOUT_MS = 6000;
 const PING_INTERVAL_MS = 30000;
 
+// Handles ping backend.
 const pingBackend = async () => {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
@@ -29,9 +32,11 @@ const pingBackend = async () => {
   }
 };
 
+// Provides service status.
 export const useServiceStatus = () => {
   const dispatch = useAppDispatch();
 
+// Memoizes the check now callback.
   const checkNow = useCallback(async () => {
     if (!navigator.onLine) {
       dispatch(setOffline());
@@ -51,13 +56,16 @@ export const useServiceStatus = () => {
     }
   }, [dispatch]);
 
+// Runs side effects for this component.
   useEffect(() => {
     checkNow();
 
+// Handles online.
     const handleOnline = () => {
       checkNow();
     };
 
+// Handles offline.
     const handleOffline = () => {
       dispatch(setOffline());
     };

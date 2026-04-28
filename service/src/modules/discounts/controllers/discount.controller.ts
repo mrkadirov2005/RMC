@@ -40,9 +40,6 @@ const createDiscount = async (req: any, res: any) => {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
     const out = await discountService.create(req.body, centerId ?? undefined);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'student_id, center_id, discount_type, and value are required' });
-    }
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
     }

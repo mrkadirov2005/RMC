@@ -1,4 +1,4 @@
-const audit_db = require('../../config/dbcon');
+const audit_db = require('../db/pool');
 
 interface AuditPayload {
   user_type: string;

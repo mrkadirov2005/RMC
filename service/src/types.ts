@@ -108,6 +108,9 @@ export interface Student {
   status?: StudentStatus;
   teacher_id?: number;
   class_id?: number;
+  school_name?: string | null;
+  school_class?: string | null;
+  is_frozen?: boolean;
   coins?: number;
   created_at?: Date | string;
   updated_at?: Date | string;
@@ -301,6 +304,7 @@ export interface Subject {
  */
 export interface Superuser {
   superuser_id?: number;
+  branch_id?: number;
   center_id: number;
   username: string;
   email?: string;
@@ -309,7 +313,7 @@ export interface Superuser {
   first_name?: string;
   last_name?: string;
   role?: string;
-  permissions?: any;
+  permissions?: string[] | Record<string, boolean>;
   status?: SuperuserStatus;
   last_login?: Date | string;
   login_attempts?: number;
@@ -351,6 +355,8 @@ export interface LoginResponse {
   message: string;
   superuser: {
     superuser_id: number;
+    branch_id?: number;
+    permissions?: string[];
     username: string;
     email: string;
     first_name: string;

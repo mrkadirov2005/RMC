@@ -4,6 +4,8 @@ const express_grade = require('express');
 const router_grade = express_grade.Router();
 const gradeController = require('../controllers/gradeController');
 const { requireAuth } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { BulkGradesDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -90,7 +92,7 @@ router_grade.post('/', requireAuth, gradeController.createGrade);
  *       400:
  *         description: Invalid input
  */
-router_grade.post('/bulk', requireAuth, gradeController.createBulkGrades);
+router_grade.post('/bulk', requireAuth, validateBody(BulkGradesDto), gradeController.createBulkGrades);
 
 /**
  * @swagger

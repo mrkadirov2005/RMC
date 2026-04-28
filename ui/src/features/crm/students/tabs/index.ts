@@ -1,3 +1,5 @@
+// Barrel exports for the crm feature.
+
 export { AttendanceTab } from './AttendanceTab';
 export { PaymentsTab } from './PaymentsTab';
 export { AssignmentsTab } from './AssignmentsTab';

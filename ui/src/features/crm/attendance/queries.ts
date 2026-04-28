@@ -1,15 +1,20 @@
+// Query helpers for the crm feature.
+
 import type { Attendance, Student, AttendanceFolderSelection } from './types';
 
+// Returns student ids for teacher.
 export const getStudentIdsForTeacher = (students: Student[], teacherId: number): number[] =>
   students
     .filter((student) => student.teacher_id === teacherId)
     .map((student) => student.student_id || student.id || 0);
 
+// Returns student ids for class.
 export const getStudentIdsForClass = (students: Student[], classId: number): number[] =>
   students
     .filter((student) => student.class_id === classId)
     .map((student) => student.student_id || student.id || 0);
 
+// Returns attendance count for teacher.
 export const getAttendanceCountForTeacher = (
   attendance: Attendance[],
   students: Student[],
@@ -19,6 +24,7 @@ export const getAttendanceCountForTeacher = (
   return attendance.filter((record) => studentIds.includes(record.student_id)).length;
 };
 
+// Returns attendance count for class.
 export const getAttendanceCountForClass = (
   attendance: Attendance[],
   students: Student[],
@@ -28,6 +34,7 @@ export const getAttendanceCountForClass = (
   return attendance.filter((record) => studentIds.includes(record.student_id)).length;
 };
 
+// Returns present count for class.
 export const getPresentCountForClass = (
   attendance: Attendance[],
   students: Student[],
@@ -41,6 +48,7 @@ export const getPresentCountForClass = (
   ).length;
 };
 
+// Returns present count for student.
 export const getPresentCountForStudent = (
   attendance: Attendance[],
   studentId: number
@@ -50,11 +58,13 @@ export const getPresentCountForStudent = (
       record.student_id === studentId && (record.status === 'Present' || record.status === 'Late')
   ).length;
 
+// Returns attendance count for student.
 export const getAttendanceCountForStudent = (
   attendance: Attendance[],
   studentId: number
 ): number => attendance.filter((record) => record.student_id === studentId).length;
 
+// Returns filtered attendance.
 export const getFilteredAttendance = (
   attendance: Attendance[],
   students: Student[],
@@ -74,6 +84,7 @@ export const getFilteredAttendance = (
   return attendance.filter((record) => studentIds.includes(record.student_id));
 };
 
+// Returns status badge classes.
 export const getStatusBadgeClasses = (status: string): string => {
   switch (status) {
     case 'Present':
@@ -91,6 +102,7 @@ export const getStatusBadgeClasses = (status: string): string => {
   }
 };
 
+// Returns student name.
 export const getStudentName = (students: Student[], studentId: number): string => {
   const student = students.find((item) => (item.student_id || item.id) === studentId);
   return student ? `${student.first_name} ${student.last_name}` : 'Unknown Student';

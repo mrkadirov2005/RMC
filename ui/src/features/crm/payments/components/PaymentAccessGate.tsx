@@ -1,3 +1,5 @@
+// Source file for the payments area in the crm feature.
+
 import { useState } from 'react';
 import { ShieldCheck, KeyRound, Loader2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
@@ -13,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
+// Renders the payment access gate module.
 export const PaymentAccessGate = () => {
   const dispatch = useAppDispatch();
   const { loading, error, isAuthenticated } = useAppSelector((state) => state.paymentAccess);
@@ -20,6 +23,7 @@ export const PaymentAccessGate = () => {
   const [username, setUsername] = useState(user?.username || '');
   const [password, setPassword] = useState('');
 
+// Handles login.
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(setPaymentLoading(true));

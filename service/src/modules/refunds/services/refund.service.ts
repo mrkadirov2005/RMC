@@ -31,7 +31,6 @@ const getById = async (id: number, centerId?: number) => {
 
 const create = async (body: any, centerId?: number) => {
   const { payment_id, amount, reason } = body;
-  if (!payment_id || !amount) return { error: 'validation' as const };
   if (centerId) {
     const payment = await paymentRepository.findById(Number(payment_id), centerId);
     if (!payment) return { error: 'invalid_center' as const };

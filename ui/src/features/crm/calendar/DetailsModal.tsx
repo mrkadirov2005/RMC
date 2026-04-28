@@ -1,3 +1,5 @@
+// Modal component for the calendar screen in the crm feature.
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,6 +21,7 @@ interface DetailModalProps {
   onOpenChange: (open: boolean) => void;
 }
 
+// Renders the details modal modal.
 export const DetailsModal = ({
   open,
   loading,
@@ -31,6 +34,7 @@ export const DetailsModal = ({
   user,
   onOpenChange,
 }: DetailModalProps) => {
+// Handles attendance summary.
   const attendanceSummary = (() => {
     const presentIds = new Set<number>();
     const absentIds = new Set<number>();
@@ -49,6 +53,7 @@ export const DetailsModal = ({
     };
   })();
 
+// Handles grade summary.
   const gradeSummary = (() => {
     const gradeRows = lessonGrades
       .map((grade) => {
@@ -76,6 +81,7 @@ export const DetailsModal = ({
     return { gradeRows: filteredRows, topTwo, bottomThree };
   })();
 
+// Handles student by id.
   const studentById = (() => {
     const map = new Map<number, StudentItem>();
     lessonStudents.forEach((student) => {
@@ -85,6 +91,7 @@ export const DetailsModal = ({
     return map;
   })();
 
+// Returns score row class.
   const getScoreRowClass = (percentage: number) => {
     if (percentage === 0) return 'bg-red-100 text-red-900 border-red-200';
     if (percentage >= 85) return 'bg-green-200 text-green-900 border-green-300';

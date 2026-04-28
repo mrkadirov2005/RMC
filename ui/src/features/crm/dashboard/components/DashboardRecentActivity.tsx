@@ -1,3 +1,5 @@
+// Source file for the dashboard area in the crm feature.
+
 import { Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardActivityItem } from '../types';
@@ -7,6 +9,7 @@ interface DashboardRecentActivityProps {
   items: DashboardActivityItem[];
 }
 
+// Renders the dashboard recent activity module.
 export const DashboardRecentActivity = ({ items }: DashboardRecentActivityProps) => {
   return (
     <Card className="lg:col-span-2">

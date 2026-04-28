@@ -1,3 +1,5 @@
+// View component for the calendar screen in the crm feature.
+
 import { CalendarX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ClassItem, CalendarDay, SessionItem } from './types';
@@ -21,6 +23,7 @@ interface MonthViewProps {
   schedule?: any[];
 }
 
+// Renders the month view view.
 export const MonthView: React.FC<MonthViewProps> = ({
   weeks,
   eventsByDate,

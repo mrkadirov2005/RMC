@@ -1,3 +1,5 @@
+// Source file for paymentAccessSlice.
+
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { clearStoredPaymentAuth, getStoredPaymentAuth, setStoredPaymentAuth } from '../shared/auth/paymentAuthStorage';

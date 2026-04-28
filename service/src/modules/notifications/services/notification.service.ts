@@ -5,9 +5,6 @@ const listForUser = (userType: string, userId: number, centerId?: number) =>
 
 const create = (body: any, centerId?: number) => {
   const { user_type, user_id, title, message, type } = body;
-  if (!user_type || !user_id || !title || !message) {
-    return { error: 'validation' as const };
-  }
   if (!centerId) {
     return { error: 'validation' as const };
   }

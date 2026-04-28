@@ -1,3 +1,5 @@
+// Page component for the settings screen in the crm feature.
+
 import { useEffect, useState } from 'react';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +11,7 @@ import { showToast } from '@/utils/toast';
 const DEFAULT_DURATION_KEY = 'lesson_duration_default';
 const OVERRIDE_DURATION_KEY = 'lesson_duration_override';
 
+// Reads stored number.
 const readStoredNumber = (key: string, fallback: number) => {
   try {
     const raw = localStorage.getItem(key);
@@ -20,16 +23,19 @@ const readStoredNumber = (key: string, fallback: number) => {
   }
 };
 
+// Renders the settings page screen.
 const SettingsPage = () => {
   const [defaultDuration, setDefaultDuration] = useState(90);
   const [overrideDuration, setOverrideDuration] = useState<number | ''>('');
 
+// Runs side effects for this component.
   useEffect(() => {
     setDefaultDuration(readStoredNumber(DEFAULT_DURATION_KEY, 90));
     const overrideValue = readStoredNumber(OVERRIDE_DURATION_KEY, 0);
     setOverrideDuration(overrideValue > 0 ? overrideValue : '');
   }, []);
 
+// Handles save.
   const handleSave = () => {
     if (!Number.isFinite(defaultDuration) || defaultDuration <= 0) {
       showToast.error('Lesson length must be a positive number.');
@@ -45,6 +51,7 @@ const SettingsPage = () => {
     showToast.success('Lesson settings saved.');
   };
 
+// Handles clear override.
   const handleClearOverride = () => {
     localStorage.removeItem(OVERRIDE_DURATION_KEY);
     setOverrideDuration('');

@@ -1,3 +1,5 @@
+// Source file for the calendar area in the crm feature.
+
 import { Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,6 +16,7 @@ interface RoomFilterProps {
   uniqueRoomNumbers: string[];
 }
 
+// Renders the room filter module.
 export const RoomFilter = ({
   selectedRoom,
   setSelectedRoom,

@@ -5,25 +5,43 @@ Express.js + TypeScript backend for CRM application with PostgreSQL and pgAdmin.
 ## Installation
 
 ```bash
+cd service
 npm install
 ```
+
+### Troubleshooting
+
+- `Error: Cannot find module 'reflect-metadata'`: dependencies were installed in the wrong folder or are out of date. Run `npm install` from `service/` (not the repo root), then restart `npm run dev`.
 
 ## Database Setup
 
 ### Using Docker Compose (Recommended)
 
-From the repository root, start the full stack with:
+From `service/`, start the databases with:
 
 ```bash
-docker compose up --build
+docker compose up -d
 ```
 
 This starts:
 - PostgreSQL on `localhost:5432`
+- MongoDB on `localhost:27017` (used for request logging)
 - Backend API on `localhost:3000`
-- Frontend SPA on `localhost:8080`
 
 The database initializes automatically from the SQL schema files on first run.
+
+## Request Logging (MongoDB)
+
+Every HTTP request is logged into MongoDB collection `request_logs` with:
+- `method`, `path`, `originalUrl`
+- `ip`, `userAgent`, optional `deviceId` header (`x-device-id`)
+- `userId`, `username`, `userType`, `role` (when authenticated)
+- `statusCode`, `success`, `durationMs`, `aborted`
+
+Environment variables:
+- `MONGO_URI` (example: `mongodb://localhost:27017`)
+- `MONGO_DB` (default: `crm_logs`)
+- `REQUEST_LOG_TTL_DAYS` (0 = keep forever)
 
 ### Create Tables
 

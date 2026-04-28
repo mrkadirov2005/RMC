@@ -1,3 +1,5 @@
+// Legacy page component for the payments screen in the crm feature.
+
 import { useState, useEffect, useMemo } from 'react';
 import { Pencil, Trash2, X, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, DollarSign, CreditCard, Users } from 'lucide-react';
 import { useCRUD } from '../hooks/useCRUD';
@@ -33,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 
 interface Payment {
   payment_id?: number;
@@ -79,6 +82,16 @@ interface Student {
 type TabType = 'students' | 'classes' | 'teachers';
 type FolderType = 'teacher' | 'class' | 'student';
 
+// Returns current user.
+const getCurrentUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || 'null');
+  } catch {
+    return null;
+  }
+};
+
+// Renders the payments page screen.
 const PaymentsPage = () => {
   const [state, actions] = useCRUD<Payment>(paymentAPI, 'Payment');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -90,7 +103,7 @@ const PaymentsPage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Payment>>({
-    center_id: 1,
+    center_id: getResolvedCenterId(getCurrentUser()) ?? 0,
     currency: 'USD',
     payment_status: 'Completed',
     payment_type: 'Tuition',
@@ -106,6 +119,7 @@ const PaymentsPage = () => {
   const [filterMethod, setFilterMethod] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
     actions.fetchAll();
     loadAllData();
@@ -113,6 +127,23 @@ const PaymentsPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      actions.fetchAll();
+      loadAllData();
+      loadDropdownOptions();
+      setFormData((prev) => ({
+        ...prev,
+        center_id: getResolvedCenterId(getCurrentUser()) ?? prev.center_id ?? 0,
+      }));
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, []);
+
+// Loads all data.
   const loadAllData = async () => {
     setLoadingData(true);
     try {
@@ -131,6 +162,7 @@ const PaymentsPage = () => {
     }
   };
 
+// Loads dropdown options.
   const loadDropdownOptions = async () => {
     setIsLoadingOptions(true);
     try {
@@ -232,6 +264,7 @@ const PaymentsPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.items, selectedFolder, searchTerm, filterStatus, filterMethod, students]);
 
+// Handles clear filters.
   const clearFilters = () => {
     setSearchTerm('');
     setFilterStatus('');
@@ -240,11 +273,13 @@ const PaymentsPage = () => {
 
   const hasActiveFilters = searchTerm || filterStatus || filterMethod;
 
+// Returns student name.
   const getStudentName = (studentId: number): string => {
     const student = students.find((s) => (s.student_id || s.id) === studentId);
     return student ? `${student.first_name} ${student.last_name}` : `Student #${studentId}`;
   };
 
+// Handles open modal.
   const handleOpenModal = (payment?: Payment) => {
     if (payment) {
       setEditingId(payment.payment_id || payment.id || null);
@@ -252,7 +287,7 @@ const PaymentsPage = () => {
     } else {
       setEditingId(null);
       setFormData({
-        center_id: 1,
+        center_id: getResolvedCenterId(getCurrentUser()) ?? 0,
         currency: 'USD',
         payment_status: 'Completed',
         payment_type: 'Tuition',
@@ -261,17 +296,19 @@ const PaymentsPage = () => {
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({
-      center_id: 1,
+      center_id: getResolvedCenterId(getCurrentUser()) ?? 0,
       currency: 'USD',
       payment_status: 'Completed',
       payment_type: 'Tuition',
     });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
@@ -282,16 +319,19 @@ const PaymentsPage = () => {
     handleCloseModal();
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this payment?')) {
       await actions.delete(id);
     }
   };
 
+// Handles folder click.
   const handleFolderClick = (type: FolderType, id: number, name: string) => {
     setSelectedFolder({ type, id, name });
   };
 
+// Handles back to folders.
   const handleBackToFolders = () => {
     setSelectedFolder(null);
     clearFilters();

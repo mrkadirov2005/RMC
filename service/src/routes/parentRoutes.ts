@@ -2,6 +2,8 @@ export {};
 
 const express = require('express');
 const { requireRole } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { AssignParentStudentDto, CreateParentDto } = require('../dtos/request.dto');
 const router = express.Router();
 const parentController = require('../modules/parents');
 
@@ -15,8 +17,8 @@ meRouter.get('/students/tests', parentController.getMyStudentTests);
 router.use('/me', requireRole('parent'), meRouter);
 
 router.get('/', requireRole('superuser'), parentController.getAllParents);
-router.post('/', requireRole('superuser'), parentController.createParent);
-router.post('/assign-student', requireRole('superuser'), parentController.assignStudent);
+router.post('/', requireRole('superuser'), validateBody(CreateParentDto), parentController.createParent);
+router.post('/assign-student', requireRole('superuser'), validateBody(AssignParentStudentDto), parentController.assignStudent);
 router.get('/:id', requireRole('superuser'), parentController.getParentById);
 router.put('/:id', requireRole('superuser'), parentController.updateParent);
 router.delete('/:id', requireRole('superuser'), parentController.deleteParent);

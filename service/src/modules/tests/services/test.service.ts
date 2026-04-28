@@ -1,5 +1,7 @@
 const testRepository = require('../repositories/test.repository');
+const pool = require('../../../db/pool');
 const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
+const studentService = require('../../students/services/student.service');
 
 const toBool = (value: any) => {
   if (value === undefined || value === null || value === '') return undefined;
@@ -22,7 +24,54 @@ const normalizeJson = (value: any, fallback: any = null) => {
   return value;
 };
 
-const listTests = async (query: any, centerId?: number) => {
+const isOwnerUser = (user: any) =>
+  Boolean(user && user.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner');
+
+const isCreatorScopedUser = (user: any) =>
+  Boolean(user && (
+    user.userType === 'teacher' ||
+    (user.userType === 'superuser' && String(user.role || '').toLowerCase() !== 'owner')
+  ));
+
+const getStudentTeacherId = async (studentId: number, centerId?: number) => {
+  const student = await studentService.getStudent(studentId, centerId ?? undefined);
+  return student?.teacher_id ?? null;
+};
+
+const canViewTest = async (test: any, user: any, centerId?: number) => {
+  if (!test) return false;
+  if (isOwnerUser(user)) return true;
+  if (!Boolean(test.is_private)) return true;
+  if (!user) return false;
+
+  if (isCreatorScopedUser(user)) {
+    return Number(test.created_by) === Number(user.id);
+  }
+
+  if (user.userType === 'student') {
+    const teacherId = await getStudentTeacherId(Number(user.id), centerId ?? Number(test.center_id));
+    return teacherId !== null && Number(teacherId) === Number(test.created_by);
+  }
+
+  return false;
+};
+
+const withTransaction = async (handler: (db: any) => Promise<any>) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await handler(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const listTests = async (query: any, centerId?: number, user?: any) => {
   const conditions: string[] = [];
   const params: any[] = [];
   const scopedCenterId = centerId ?? query.center_id;
@@ -42,12 +91,26 @@ const listTests = async (query: any, centerId?: number) => {
     params.push(toBool(query.is_active));
     conditions.push(`is_active = $${params.length}`);
   }
+  if (isCreatorScopedUser(user)) {
+    params.push(Number(user.id));
+    conditions.push(`(COALESCE(is_private, false) = false OR created_by = $${params.length})`);
+  } else if (user?.userType === 'student') {
+    const teacherId = await getStudentTeacherId(Number(user.id), scopedCenterId ? Number(scopedCenterId) : undefined);
+    if (teacherId !== null) {
+      params.push(Number(teacherId));
+      conditions.push(`(COALESCE(is_private, false) = false OR created_by = $${params.length})`);
+    } else {
+      conditions.push('COALESCE(is_private, false) = false');
+    }
+  }
   return testRepository.findAll(conditions, params);
 };
 
-const getTestById = async (id: number, centerId?: number) => {
+const getTestById = async (id: number, centerId?: number, user?: any) => {
   const test = await testRepository.findById(id, centerId);
   if (!test) return null;
+  const visible = await canViewTest(test, user, centerId ?? Number(test.center_id));
+  if (!visible) return null;
   const [questions, passages] = await Promise.all([
     testRepository.findQuestionsByTest(id, centerId ?? Number(test.center_id)),
     testRepository.findPassagesByTest(id, centerId ?? Number(test.center_id)),
@@ -76,82 +139,80 @@ const createTest = async (body: any) => {
     created_by,
     created_by_type,
     is_active,
+    is_private,
     start_date,
     end_date,
   } = body;
 
-  if (!center_id || !test_name || !test_type || !created_by) {
-    return { error: 'validation' as const };
-  }
+  return withTransaction(async (db) => {
+    const test = await testRepository.insertTest([
+      center_id,
+      subject_id || null,
+      test_name,
+      test_type,
+      description || null,
+      instructions || null,
+      total_marks ?? 0,
+      passing_marks ?? 0,
+      duration_minutes ?? 60,
+      assignment_type || 'all_students',
+      is_timed ?? true,
+      shuffle_questions ?? false,
+      show_results_immediately ?? true,
+      allow_retake ?? false,
+      max_retakes ?? 1,
+      normalizeJson(test_data, {}),
+      created_by,
+      created_by_type || 'superuser',
+      is_active ?? true,
+      is_private ?? false,
+      start_date || null,
+      end_date || null,
+    ], db);
 
-  const test = await testRepository.insertTest([
-    center_id,
-    subject_id || null,
-    test_name,
-    test_type,
-    description || null,
-    instructions || null,
-    total_marks ?? 0,
-    passing_marks ?? 0,
-    duration_minutes ?? 60,
-    assignment_type || 'all_students',
-    is_timed ?? true,
-    shuffle_questions ?? false,
-    show_results_immediately ?? true,
-    allow_retake ?? false,
-    max_retakes ?? 1,
-    normalizeJson(test_data, {}),
-    created_by,
-    created_by_type || 'superuser',
-    is_active ?? true,
-    start_date || null,
-    end_date || null,
-  ]);
-
-  // Save passages first (for reading_passage tests)
-  const savedPassages: any[] = [];
-  if (body.passages && Array.isArray(body.passages) && body.passages.length > 0) {
-    for (const passage of body.passages) {
-      const savedPassage = await testRepository.insertPassage([
-        Number(test.center_id),
-        Number(test.test_id),
-        passage.title || '',
-        passage.content || '',
-        passage.word_count || null,
-        passage.difficulty_level || 'medium',
-        passage.passage_order || 1,
-        passage.audio_url || null,
-        passage.image_url || null,
-      ]);
-      savedPassages.push(savedPassage);
+    const savedPassages: any[] = [];
+    if (body.passages && Array.isArray(body.passages) && body.passages.length > 0) {
+      for (const passage of body.passages) {
+        const savedPassage = await testRepository.insertPassage([
+          Number(test.center_id),
+          Number(test.test_id),
+          passage.title || '',
+          passage.content || '',
+          passage.word_count || null,
+          passage.difficulty_level || 'medium',
+          passage.passage_order || 1,
+          passage.audio_url || null,
+          passage.image_url || null,
+        ], db);
+        savedPassages.push(savedPassage);
+      }
     }
-  }
 
-  // Save questions
-  const savedQuestions: any[] = [];
-  if (body.questions && Array.isArray(body.questions) && body.questions.length > 0) {
-    for (const q of body.questions) {
-      const savedQ = await testRepository.insertQuestion([
-        Number(test.center_id),
-        Number(test.test_id),
-        q.passage_id ? Number(q.passage_id) : null,
-        q.question_text || '',
-        q.question_type || test.test_type,
-        Number(q.marks ?? 1),
-        Number(q.negative_marks ?? 0),
-        Number(q.question_order ?? 1),
-        q.options ? normalizeJson(q.options, null) : null,
-        q.correct_answer ? normalizeJson(q.correct_answer, null) : null,
-        q.explanation || null,
-        q.image_url || null,
-        toBool(q.is_required) ?? true,
-        q.word_limit ? Number(q.word_limit) : null,
-      ]);
-      savedQuestions.push(savedQ);
+    const savedQuestions: any[] = [];
+    if (body.questions && Array.isArray(body.questions) && body.questions.length > 0) {
+      for (const q of body.questions) {
+        const savedQ = await testRepository.insertQuestion([
+          Number(test.center_id),
+          Number(test.test_id),
+          q.passage_id ? Number(q.passage_id) : null,
+          q.question_text || '',
+          q.question_type || test.test_type,
+          Number(q.marks ?? 1),
+          Number(q.negative_marks ?? 0),
+          Number(q.question_order ?? 1),
+          q.options ? normalizeJson(q.options, null) : null,
+          q.correct_answer ? normalizeJson(q.correct_answer, null) : null,
+          q.explanation || null,
+          q.image_url || null,
+          toBool(q.is_required) ?? true,
+          q.word_limit ? Number(q.word_limit) : null,
+        ], db);
+        savedQuestions.push(savedQ);
+      }
     }
-  }
 
-  return { test, questions: savedQuestions, passages: savedPassages };
+    return { test, questions: savedQuestions, passages: savedPassages };
+  });
 };
 
 const updateTest = async (id: number, body: any, centerId?: number) => {
@@ -174,6 +235,7 @@ const updateTest = async (id: number, body: any, centerId?: number) => {
     body.max_retakes ?? null,
     body.test_data !== undefined ? normalizeJson(body.test_data, null) : null,
     body.is_active !== undefined ? toBool(body.is_active) : null,
+    body.is_private !== undefined ? toBool(body.is_private) : null,
     body.start_date ?? null,
     body.end_date ?? null,
   ], id, Number(existing.center_id));
@@ -254,9 +316,11 @@ const updatePassage = async (passageId: number, body: any, centerId?: number) =>
 
 const deletePassage = async (passageId: number, centerId?: number) => testRepository.deletePassage(passageId, centerId);
 
-const startTest = async (testId: number, body: any, reqMeta: any = {}, centerId?: number) => {
+const startTest = async (testId: number, body: any, reqMeta: any = {}, centerId?: number, user?: any) => {
   const test = await testRepository.findById(testId, centerId);
   if (!test) return null;
+  const visible = await canViewTest(test, user, centerId ?? Number(test.center_id));
+  if (!visible) return null;
   const studentId = body.student_id ?? reqMeta.studentId ?? null;
   if (!studentId) return { error: 'validation' as const };
   if (centerId) {

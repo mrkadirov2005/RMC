@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+// Page component for the tests screen in the crm feature.
+
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Play,
@@ -16,8 +18,20 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
-import { useAppSelector } from '../hooks';
-import type { RootState } from '../../../store';
+import {
+  clearStudentTestsPageError,
+  setStudentTestsPageError,
+  setStudentTestsPageTabValue,
+} from '../../../slices/pagesUiSlice';
+import { clearAssignedTestsError, fetchAssignedTests } from '../../../slices/testsSlice';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import {
+  selectAssignedTestsBuckets,
+  selectAssignedTestsError,
+  selectAssignedTestsLoading,
+  selectStudentTestsPageUi,
+  selectStudentTestsVisibleForPageUi,
+} from '../../../store/selectors';
 
 interface Test {
   test_id: number;
@@ -31,37 +45,28 @@ interface Test {
   is_mandatory?: boolean;
   due_date?: string;
   submission_status?: string;
+  is_private?: boolean;
 }
 
+// Renders the student tests page screen.
 const StudentTestsPage = () => {
   const navigate = useNavigate();
-  const { user } = useAppSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+  const { available, inProgress, completed } = useAppSelector(selectAssignedTestsBuckets);
+  const loading = useAppSelector(selectAssignedTestsLoading);
+  const storeError = useAppSelector(selectAssignedTestsError);
+  const studentTestsUi = useAppSelector(selectStudentTestsPageUi);
+  const { error, tabValue } = studentTestsUi;
+  const visibleTests = useAppSelector(selectStudentTestsVisibleForPageUi) as Test[];
 
-  const [tests, setTests] = useState<Test[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [tabValue, setTabValue] = useState('available');
-
+// Runs side effects for this component.
   useEffect(() => {
-    loadTests();
-  }, []);
+    if (!user?.id) return;
+    dispatch(fetchAssignedTests({ type: 'student', id: Number(user.id) }));
+  }, [dispatch, user?.id]);
 
-  const loadTests = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Get tests assigned to the student (via their ID or class)
-      const response = await testAPI.getAssignedTests('student', user?.id || 0);
-      setTests(response.data || []);
-    } catch (err: any) {
-      console.error('Error loading tests:', err);
-      setError('Failed to load available tests. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// Handles start test.
   const handleStartTest = async (test: Test) => {
     try {
       // Store test ID for the take test page
@@ -75,10 +80,11 @@ const StudentTestsPage = () => {
 
       navigate(`/tests/take/${submissionId}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to start test');
+      dispatch(setStudentTestsPageError(err.response?.data?.error || 'Failed to start test'));
     }
   };
 
+// Returns test type color.
   const getTestTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       multiple_choice: 'bg-indigo-500',
@@ -93,24 +99,14 @@ const StudentTestsPage = () => {
     return colors[type] || 'bg-gray-500';
   };
 
+// Formats test type.
   const formatTestType = (type: string) => {
     return type?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || '';
   };
 
-  const availableTests = tests.filter((t) => !t.submission_status || t.submission_status === 'not_started');
-  const inProgressTests = tests.filter((t) => t.submission_status === 'in_progress');
-  const completedTests = tests.filter((t) => t.submission_status === 'submitted' || t.submission_status === 'graded');
-
-  const getFilteredTests = () => {
-    switch (tabValue) {
-      case 'in_progress':
-        return inProgressTests;
-      case 'completed':
-        return completedTests;
-      default:
-        return availableTests;
-    }
-  };
+  const availableTests = available as Test[];
+  const inProgressTests = inProgress as Test[];
+  const completedTests = completed as Test[];
 
   if (loading) {
     return (
@@ -125,14 +121,19 @@ const StudentTestsPage = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-1">My Tests</h1>
-        <p className="text-muted-foreground">View and take tests assigned to you</p>
+        <p className="text-muted-foreground">View and take tests assigned to you or shared publicly</p>
       </div>
 
-      {error && (
+      {(error || storeError) && (
         <Alert variant="destructive" className="mb-6">
           <AlertDescription className="flex justify-between items-center">
-            {error}
-            <button onClick={() => setError(null)}>
+            {error || storeError}
+            <button
+              onClick={() => {
+                dispatch(clearStudentTestsPageError());
+                dispatch(clearAssignedTestsError());
+              }}
+            >
               <X className="h-4 w-4" />
             </button>
           </AlertDescription>
@@ -162,7 +163,12 @@ const StudentTestsPage = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={tabValue} onValueChange={setTabValue}>
+      <Tabs
+        value={tabValue}
+        onValueChange={(value) =>
+          dispatch(setStudentTestsPageTabValue(value as 'available' | 'in_progress' | 'completed'))
+        }
+      >
         <Card className="mb-6">
           <TabsList className="bg-transparent h-auto p-0 w-full justify-start border-b rounded-none">
             <TabsTrigger value="available" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
@@ -178,7 +184,7 @@ const StudentTestsPage = () => {
         </Card>
 
         {/* Tests Grid */}
-        {getFilteredTests().length === 0 ? (
+        {visibleTests.length === 0 ? (
           <Card>
             <CardContent className="text-center py-12">
               <FileQuestion className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
@@ -193,7 +199,7 @@ const StudentTestsPage = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {getFilteredTests().map((test) => (
+            {visibleTests.map((test) => (
               <Card
                 key={test.test_id}
                 className="h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
@@ -208,11 +214,24 @@ const StudentTestsPage = () => {
                     >
                       {formatTestType(test.test_type)}
                     </span>
-                    {test.is_mandatory && (
-                      <Badge variant="outline" className="border-red-300 text-red-600">
-                        Required
+                    <div className="flex items-center gap-1.5">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'text-xs',
+                          test.is_private
+                            ? 'border-amber-300 text-amber-700 bg-amber-50'
+                            : 'border-emerald-300 text-emerald-700 bg-emerald-50'
+                        )}
+                      >
+                        {test.is_private ? 'Private' : 'Public'}
                       </Badge>
-                    )}
+                      {test.is_mandatory && (
+                        <Badge variant="outline" className="border-red-300 text-red-600">
+                          Required
+                        </Badge>
+                      )}
+                    </div>
                   </div>
 
                   <h3 className="text-lg font-semibold mb-1">{test.test_name}</h3>

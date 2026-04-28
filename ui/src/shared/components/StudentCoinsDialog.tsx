@@ -1,3 +1,5 @@
+// Shared feature-agnostic UI component.
+
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -16,6 +18,7 @@ interface StudentCoinsDialogProps {
   onSaved?: () => void;
 }
 
+// Renders the student coins dialog modal.
 export const StudentCoinsDialog = ({
   open,
   onOpenChange,
@@ -29,6 +32,7 @@ export const StudentCoinsDialog = ({
   const [reason, setReason] = useState('');
   const [saving, setSaving] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (!open) {
       setDirection('add');
@@ -38,6 +42,7 @@ export const StudentCoinsDialog = ({
     }
   }, [open]);
 
+// Handles save.
   const handleSave = async () => {
     if (!studentId) return;
     const numericAmount = Number(amount);

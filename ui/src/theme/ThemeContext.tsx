@@ -1,3 +1,5 @@
+// Source file for ThemeContext.
+
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 
 type ThemeMode = 'light' | 'dark';
@@ -14,8 +16,10 @@ const ThemeContext = createContext<ThemeContextType>({
   isDark: false,
 });
 
+// Provides theme mode.
 export const useThemeMode = () => useContext(ThemeContext);
 
+// Returns stored mode.
 const getStoredMode = (): ThemeMode => {
   try {
     const stored = localStorage.getItem('themeMode');
@@ -27,9 +31,11 @@ const getStoredMode = (): ThemeMode => {
   return 'light';
 };
 
+// Handles theme context provider.
 export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
   const [mode, setMode] = useState<ThemeMode>(getStoredMode);
 
+// Runs side effects for this component.
   useEffect(() => {
     const root = document.documentElement;
     if (mode === 'dark') {
@@ -39,6 +45,7 @@ export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [mode]);
 
+// Memoizes the toggle theme callback.
   const toggleTheme = useCallback(() => {
     setMode((prev) => {
       const next = prev === 'light' ? 'dark' : 'light';
@@ -49,6 +56,7 @@ export const ThemeContextProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
+// Memoizes the value derived value.
   const value = useMemo(
     () => ({
       mode,

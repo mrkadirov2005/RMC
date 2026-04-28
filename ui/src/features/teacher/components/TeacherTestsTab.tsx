@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect, useRef } from 'react';
 import {
   Plus,
@@ -47,6 +49,7 @@ interface Test {
   total_marks: number;
   duration_minutes: number;
   is_active: boolean;
+  is_private?: boolean;
   question_count?: number;
   submission_count?: number;
   subject_name?: string;
@@ -69,6 +72,7 @@ interface TeacherTestsTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher tests tab tab.
 const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
   const navigate = useNavigate();
   const [tests, setTests] = useState<Test[]>([]);
@@ -86,15 +90,19 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
+// Runs side effects for this component.
   useEffect(() => {
     loadTests();
   }, [teacherId]);
 
+// Runs side effects for this component.
   useEffect(() => {
     filterTests();
   }, [tests, searchTerm, filterTab]);
 
+// Runs side effects for this component.
   useEffect(() => {
+// Handles click outside.
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
@@ -104,6 +112,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+// Loads tests.
   const loadTests = async () => {
     try {
       setLoading(true);
@@ -118,6 +127,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     }
   };
 
+// Filters tests.
   const filterTests = () => {
     let filtered = [...tests];
 
@@ -147,18 +157,22 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     setFilteredTests(filtered);
   };
 
+// Handles menu open.
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, test: Test) => {
     event.stopPropagation();
+// Handles rect.
     const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
     setMenuPos({ top: rect.bottom + 4, left: rect.right - 180 });
     setSelectedTest(test);
     setMenuOpen(true);
   };
 
+// Handles menu close.
   const handleMenuClose = () => {
     setMenuOpen(false);
   };
 
+// Handles view submissions.
   const handleViewSubmissions = async () => {
     handleMenuClose();
     if (!selectedTest) return;
@@ -175,6 +189,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     }
   };
 
+// Handles delete test.
   const handleDeleteTest = async () => {
     if (!selectedTest) return;
 
@@ -190,6 +205,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     }
   };
 
+// Returns test type color.
   const getTestTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       multiple_choice: 'bg-indigo-500',
@@ -204,10 +220,12 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     return colors[type] || 'bg-gray-500';
   };
 
+// Formats test type.
   const formatTestType = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
+// Returns status badge class.
   const getStatusBadgeClass = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'graded':
@@ -316,6 +334,9 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className={cn('text-xs', test.is_private ? 'border-amber-300 text-amber-700 bg-amber-50' : 'border-emerald-300 text-emerald-700 bg-emerald-50')}>
+                      {test.is_private ? 'Private' : 'Public'}
+                    </Badge>
                     <Badge variant="outline" className={cn('text-xs', test.is_active ? 'border-green-400 text-green-600' : 'border-gray-300 text-gray-500')}>
                       {test.is_active ? 'Active' : 'Inactive'}
                     </Badge>

@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect } from 'react';
 import {
   Search,
@@ -91,6 +93,7 @@ interface TeacherStudentsTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher students tab tab.
 const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudentsTabProps) => {
   const { user } = useAppSelector((state) => state.auth);
   const effectiveTeacherId = teacherId ?? user?.id;
@@ -113,10 +116,12 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
   const [coinTransactions, setCoinTransactions] = useState<CoinTransaction[]>([]);
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
     loadStudents();
   }, [effectiveTeacherId]);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (searchTerm) {
       const filtered = students.filter(
@@ -132,6 +137,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   }, [searchTerm, students]);
 
+// Loads students.
   const loadStudents = async () => {
     try {
       setLoading(true);
@@ -149,6 +155,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   };
 
+// Loads student details.
   const loadStudentDetails = async (student: Student) => {
     try {
       setDetailsLoading(true);
@@ -168,6 +175,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
         assignments: [],
       });
 
+// Handles coins data.
       const coinsData = (coinsRes as any)?.data || (coinsRes as any) || null;
       if (coinsData) {
         setCoinBalance(Number(coinsData.balance || 0));
@@ -183,10 +191,12 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   };
 
+// Handles refresh coins.
   const refreshCoins = async () => {
     if (!selectedStudent) return;
     try {
       const coinsRes = await studentAPI.getCoins(selectedStudent.student_id).catch(() => null);
+// Handles coins data.
       const coinsData = (coinsRes as any)?.data || (coinsRes as any) || null;
       if (coinsData) {
         setCoinBalance(Number(coinsData.balance || 0));
@@ -197,6 +207,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   };
 
+// Handles delete transaction.
   const handleDeleteTransaction = async (transactionId?: number) => {
     if (!selectedStudent || !transactionId) return;
     try {
@@ -207,6 +218,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   };
 
+// Handles view details.
   const handleViewDetails = (student: Student, tab = 'overview') => {
     setSelectedStudent(student);
     setDetailsDialog(true);
@@ -214,6 +226,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     loadStudentDetails(student);
   };
 
+// Returns status variant.
   const getStatusVariant = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active':
@@ -227,6 +240,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     }
   };
 
+// Handles calculate attendance percentage.
   const calculateAttendancePercentage = () => {
     if (studentDetails.attendance.length === 0) return 0;
     const present = studentDetails.attendance.filter(
@@ -235,6 +249,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
     return Math.round((present / studentDetails.attendance.length) * 100);
   };
 
+// Handles calculate average grade.
   const calculateAverageGrade = () => {
     if (studentDetails.grades.length === 0) return 0;
     const total = studentDetails.grades.reduce((sum, g) => sum + (g.percentage || 0), 0);

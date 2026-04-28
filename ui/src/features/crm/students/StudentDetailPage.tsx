@@ -1,7 +1,9 @@
+// Page component for the students screen in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, Trash2, KeyRound } from 'lucide-react';
-import { studentAPI, attendanceAPI, paymentAPI, assignmentAPI, gradeAPI, classAPI } from '../../../shared/api/api';
+import { studentAPI, classAPI } from '../../../shared/api/api';
 import { StudentInfoSection } from './components/StudentInfoSection';
 import { StatisticsSection } from './components/StatisticsSection';
 import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab } from './tabs';
@@ -16,12 +18,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { showToast } from '@/utils/toast';
 import { generateTempPassword } from '@/utils/password';
+import { useAppDispatch } from '../hooks';
+import { fetchAttendanceForce } from '../../../slices/attendanceSlice';
+import { fetchPaymentsForce } from '../../../slices/paymentsSlice';
+import { fetchAssignmentsForce } from '../../../slices/assignmentsSlice';
+import { fetchGradesForce } from '../../../slices/gradesSlice';
 
 interface Class {
   class_id?: number;
   id?: number;
   payment_amount?: number;
   class_name?: string;
+  teacher_id?: number;
 }
 
 interface Student {
@@ -88,7 +96,9 @@ interface CoinTransaction {
   created_at?: string;
 }
 
+// Renders the student detail page screen.
 const StudentDetailPage = () => {
+  const dispatch = useAppDispatch();
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
   const [student, setStudent] = useState<Student | null>(null);
@@ -107,11 +117,13 @@ const StudentDetailPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('attendance');
 
+// Runs side effects for this component.
   useEffect(() => {
     loadStudentDetails();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [studentId]);
 
+// Loads student details.
   const loadStudentDetails = async () => {
     setLoading(true);
     setError(null);
@@ -133,17 +145,18 @@ const StudentDetailPage = () => {
       }
 
       const [attendanceRes, paymentRes, assignmentRes, gradeRes, coinsRes] = await Promise.all([
-        attendanceAPI.getAll(),
-        paymentAPI.getAll(),
-        assignmentAPI.getAll(),
-        gradeAPI.getAll(),
+        dispatch(fetchAttendanceForce()).unwrap(),
+        dispatch(fetchPaymentsForce()).unwrap(),
+        dispatch(fetchAssignmentsForce()).unwrap(),
+        dispatch(fetchGradesForce()).unwrap(),
         studentAPI.getCoins(Number(studentId)).catch(() => null),
       ]);
 
-      const attendanceData = attendanceRes.data || attendanceRes;
-      const paymentData = paymentRes.data || paymentRes;
-      const assignmentData = assignmentRes.data || assignmentRes;
-      const gradeData = gradeRes.data || gradeRes;
+      const attendanceData = Array.isArray(attendanceRes) ? attendanceRes : [];
+      const paymentData = Array.isArray(paymentRes) ? paymentRes : [];
+      const assignmentData = Array.isArray(assignmentRes) ? assignmentRes : [];
+      const gradeData = Array.isArray(gradeRes) ? gradeRes : [];
+// Handles coins data.
       const coinsData = (coinsRes as any)?.data || (coinsRes as any) || null;
 
       const studentIdNum = Number(studentId);
@@ -161,7 +174,9 @@ const StudentDetailPage = () => {
       );
       setAssignments(
         Array.isArray(assignmentData)
-          ? assignmentData.filter((a: Record<string, unknown>) => Number(a.class_id) === studentClassId || studentId)
+          ? assignmentData.filter((a: Record<string, unknown>) =>
+              Number(a.class_id) === studentClassId || Number(a.student_id) === studentIdNum
+            )
           : []
       );
       setGrades(
@@ -182,9 +197,11 @@ const StudentDetailPage = () => {
     }
   };
 
+// Handles refresh coins.
   const refreshCoins = async () => {
     try {
       const coinsRes = await studentAPI.getCoins(Number(studentId));
+// Handles coins data.
       const coinsData = (coinsRes as any)?.data || coinsRes || null;
       if (coinsData) {
         setCoinBalance(Number(coinsData.balance || 0));
@@ -196,6 +213,7 @@ const StudentDetailPage = () => {
     }
   };
 
+// Handles delete transaction.
   const handleDeleteTransaction = async (transactionId?: number) => {
     if (!transactionId || !studentId) return;
     try {
@@ -206,6 +224,7 @@ const StudentDetailPage = () => {
     }
   };
 
+// Handles reset password.
   const handleResetPassword = async () => {
     if (!studentId || !student) return;
     const username = String(student.username || '').trim() ||
@@ -228,6 +247,7 @@ const StudentDetailPage = () => {
     }
   };
 
+// Handles copy temp password.
   const handleCopyTempPassword = async () => {
     if (!resetTempPassword) return;
     try {

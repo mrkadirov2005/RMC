@@ -4,6 +4,8 @@ const express_teacher = require('express');
 const router_teacher = express_teacher.Router();
 const teacherController = require('../controllers/teacherController');
 const { requireAuth, requireRole } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { CredentialsDto, PasswordChangeDto, PaymentPasswordDto, SetPasswordDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -139,7 +141,7 @@ router_teacher.delete('/:id', requireAuth, requireRole('superuser'), teacherCont
  *       401:
  *         description: Invalid credentials
  */
-router_teacher.post('/auth/login', teacherController.teacherLogin);
+router_teacher.post('/auth/login', validateBody(CredentialsDto), teacherController.teacherLogin);
 
 /**
  * @swagger
@@ -171,7 +173,7 @@ router_teacher.post('/auth/login', teacherController.teacherLogin);
  *       200:
  *         description: Password set successfully
  */
-router_teacher.post('/:id/set-password', requireAuth, requireRole('superuser'), teacherController.setTeacherPassword);
+router_teacher.post('/:id/set-password', requireAuth, requireRole('superuser'), validateBody(SetPasswordDto), teacherController.setTeacherPassword);
 
 /**
  * @swagger
@@ -180,7 +182,7 @@ router_teacher.post('/:id/set-password', requireAuth, requireRole('superuser'), 
  *     summary: Set teacher payment access password (admin operation)
  *     tags: [Teachers]
  */
-router_teacher.post('/:id/payment-password', requireAuth, requireRole('superuser'), teacherController.setTeacherPaymentPassword);
+router_teacher.post('/:id/payment-password', requireAuth, requireRole('superuser'), validateBody(PaymentPasswordDto), teacherController.setTeacherPaymentPassword);
 
 /**
  * @swagger
@@ -212,7 +214,7 @@ router_teacher.post('/:id/payment-password', requireAuth, requireRole('superuser
  *       200:
  *         description: Password changed successfully
  */
-router_teacher.post('/:id/change-password', requireAuth, teacherController.changeTeacherPassword);
+router_teacher.post('/:id/change-password', requireAuth, validateBody(PasswordChangeDto), teacherController.changeTeacherPassword);
 
 module.exports = router_teacher;
 

@@ -1,9 +1,15 @@
+// Page component for the finance screen in the crm feature.
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, DollarSign, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useCRUD } from '../hooks/useCRUD';
-import { teacherAPI, classAPI, paymentAPI, studentAPI } from '@/shared/api/api';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppSelector';
+import { fetchClasses as fetchClassesThunk } from '@/slices/classesSlice';
+import { fetchStudents as fetchStudentsThunk } from '@/slices/studentsSlice';
+import { fetchPayments as fetchPaymentsThunk } from '@/slices/paymentsSlice';
+import { fetchTeachers as fetchTeachersThunk } from '@/slices/teachersSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -42,33 +48,43 @@ interface Payment {
   updated_at?: string;
 }
 
+// Renders the teacher finance detail page screen.
 const TeacherFinanceDetailPage: React.FC = () => {
   const { teacherId } = useParams();
   const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
 
-  const [{ items: classes, loading: isLoadingClasses }, { fetchAll: fetchClasses }] = useCRUD(classAPI, 'Classes');
-  const [{ items: students, loading: isLoadingStudents }, { fetchAll: fetchStudents }] = useCRUD(studentAPI, 'Students');
-  const [{ items: payments, loading: isLoadingPayments }, { fetchAll: fetchPayments }] = useCRUD(paymentAPI, 'Payments');
+  const dispatch = useAppDispatch();
+  const teachers = useAppSelector((state) => state.teachers.items) as Array<{
+    teacher_id?: number;
+    id?: number;
+    first_name?: string;
+    last_name?: string;
+  }>;
+  const isLoadingTeachers = useAppSelector((state) => state.teachers.loading);
+  const classes = useAppSelector((state) => state.classes.items) as Class[];
+  const isLoadingClasses = useAppSelector((state) => state.classes.loading);
+  const students = useAppSelector((state) => state.students.items) as Student[];
+  const isLoadingStudents = useAppSelector((state) => state.students.loading);
+  const payments = useAppSelector((state) => state.payments.items) as Payment[];
+  const isLoadingPayments = useAppSelector((state) => state.payments.loading);
 
-  const [teacher, setTeacher] = useState<any>(null);
+// Memoizes the teacher derived value.
+  const teacher = useMemo(
+    () => teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId)) || null,
+    [teacherId, teachers]
+  );
 
+// Runs side effects for this component.
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const data = await teacherAPI.getById(Number(teacherId));
-        setTeacher(data.data || data);
-      } catch (error) {
-        console.error('Failed to load teacher:', error);
-      }
-      await fetchClasses();
-      await fetchStudents();
-      await fetchPayments();
-    };
     if (teacherId) {
-      loadData();
+      dispatch(fetchTeachersThunk());
+      dispatch(fetchClassesThunk());
+      dispatch(fetchStudentsThunk());
+      dispatch(fetchPaymentsThunk());
     }
-  }, [teacherId, fetchClasses, fetchStudents, fetchPayments]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teacherId]);
 
   // Filter classes taught by this teacher
   const teacherClasses = useMemo(() => {
@@ -136,7 +152,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
     return { classPayments, totalEarnings };
   }, [selectedMonth, teacherClasses, students, payments]);
 
-  if (isLoadingClasses || isLoadingStudents || isLoadingPayments) {
+  if (isLoadingTeachers || isLoadingClasses || isLoadingStudents || isLoadingPayments) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

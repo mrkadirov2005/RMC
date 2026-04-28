@@ -16,6 +16,8 @@ export interface Student {
   status: string;
   teacher_id?: number;
   class_id?: number;
+  school_name?: string | null;
+  school_class?: string | null;
 }
 
 export interface CreateStudentData extends Omit<Student, 'id'> {}

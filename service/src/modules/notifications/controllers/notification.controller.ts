@@ -35,9 +35,6 @@ const createNotification = async (req: any, res: any) => {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
     const out = await notificationService.create(req.body, centerId ?? req.body.center_id);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'user_type, user_id, title, and message are required' });
-    }
     if (centerId) {
       const targetType = String(req.body.user_type || '').toLowerCase();
       const targetId = Number(req.body.user_id);

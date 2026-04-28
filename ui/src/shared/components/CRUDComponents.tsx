@@ -1,3 +1,5 @@
+// Shared feature-agnostic UI component.
+
 import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,12 +38,14 @@ interface CRUDTableProps {
   onAdd: () => void;
   onEdit: (item: any) => void;
   onDelete: (id: number) => void;
+  extraActions?: (item: any) => React.ReactNode;
   isLoading?: boolean;
   error?: string;
 }
 
+// Handles crud table.
 export const CRUDTable: React.FC<CRUDTableProps> = ({
-  title, data, columns, onAdd, onEdit, onDelete, isLoading = false, error,
+  title, data, columns, onAdd, onEdit, onDelete, extraActions, isLoading = false, error,
 }) => {
   if (isLoading) {
     return (
@@ -72,6 +76,7 @@ export const CRUDTable: React.FC<CRUDTableProps> = ({
                 {columns.map((col) => (<TableCell key={col.key}>{col.render ? col.render(item[col.key]) : item[col.key]}</TableCell>))}
                 <TableCell className="text-center">
                   <TooltipProvider>
+                    {extraActions?.(item)}
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onEdit(item)} className="text-primary"><Pencil className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent>Edit</TooltipContent></Tooltip>
                     <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" onClick={() => onDelete(item.id || item.center_id || item.teacher_id)} className="text-destructive"><Trash2 className="h-4 w-4" /></Button></TooltipTrigger><TooltipContent>Delete</TooltipContent></Tooltip>
                   </TooltipProvider>
@@ -98,6 +103,7 @@ interface CRUDFormProps {
   loading?: boolean;
 }
 
+// Handles crud form.
 export const CRUDForm: React.FC<CRUDFormProps> = ({ title, open, onClose, onSubmit, fields, data, setData, loading = false }) => {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>

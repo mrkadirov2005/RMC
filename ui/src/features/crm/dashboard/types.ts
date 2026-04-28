@@ -1,8 +1,22 @@
+// Shared TypeScript types.
+
 import type { LucideIcon } from 'lucide-react';
 
 export type DashboardRole = 'superuser' | 'teacher' | 'student' | string;
 
 export type DashboardRecord = Record<string, unknown>;
+
+export interface DashboardCollections {
+  students: DashboardRecord[];
+  teachers: DashboardRecord[];
+  classes: DashboardRecord[];
+  centers: DashboardRecord[];
+  tests: DashboardRecord[];
+  attendance: DashboardRecord[];
+  assignments: DashboardRecord[];
+  payments: DashboardRecord[];
+  debts: DashboardRecord[];
+}
 
 export interface DashboardStats {
   totalStudents: number;

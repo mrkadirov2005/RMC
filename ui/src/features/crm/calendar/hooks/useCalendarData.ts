@@ -1,7 +1,11 @@
-import { useEffect } from 'react';
-import { attendanceAPI, classAPI, portalAPI } from '@/shared/api/api';
+// React hooks for the crm feature.
 
-import { getStoredActiveCenterId } from '@/shared/auth/authStorage';
+import { useEffect, useMemo } from 'react';
+import { attendanceAPI, classAPI, portalAPI } from '@/shared/api/api';
+import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
+import { fetchClasses, fetchClassesForce } from '@/slices/classesSlice';
+import { fetchAttendance, fetchAttendanceForce } from '@/slices/attendanceSlice';
+import { makeSelectCalendarClassesForUser } from '@/store/selectors';
 import type { ClassItem, AttendanceItem, SessionItem } from '../types';
 
 interface UseCalendarDataProps {
@@ -19,6 +23,7 @@ interface UseCalendarDataProps {
   setStudentAttendanceBySession: (map: Map<number, string>) => void;
 }
 
+// Normalizes date.
 const normalizeDate = (value?: string) => {
   if (!value) return '';
   const date = new Date(value);
@@ -28,6 +33,7 @@ const normalizeDate = (value?: string) => {
   return `${year}-${month}-${day}`;
 };
 
+// Provides calendar data.
 export const useCalendarData = ({
   user,
   setClasses,
@@ -38,96 +44,131 @@ export const useCalendarData = ({
   setStudentAttendanceByDate,
   setStudentAttendanceBySession,
 }: UseCalendarDataProps) => {
-  // Load classes
+  const dispatch = useAppDispatch();
+// Memoizes the select calendar classes derived value.
+  const selectCalendarClasses = useMemo(makeSelectCalendarClassesForUser, []);
+  const classes = useAppSelector((state) => selectCalendarClasses(state, user)) as ClassItem[];
+  const classesLoading = useAppSelector((state) => state.classes.loading);
+  const attendanceItems = useAppSelector((state) => state.attendance.items) as AttendanceItem[];
+  const attendanceLoading = useAppSelector((state) => state.attendance.loading);
+
+// Runs side effects for this component.
   useEffect(() => {
+    if (!user || user?.userType === 'student') return;
+    dispatch(fetchClasses());
+    dispatch(fetchAttendance());
+  }, [dispatch, user]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!user || user?.userType === 'student') return;
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchClassesForce());
+      dispatch(fetchAttendanceForce());
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch, user]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!user || user?.userType === 'student') return;
+    setClasses(classes);
+  }, [classes, setClasses, user]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!user || user?.userType === 'student') return;
+    setLoading(classesLoading || attendanceLoading);
+  }, [attendanceLoading, classesLoading, setLoading, user]);
+
+  // Load student calendar data from portal
+  useEffect(() => {
+    if (!user || user?.userType !== 'student') return;
+
+    let cancelled = false;
+
+// Loads classes.
     const loadClasses = async () => {
       setLoading(true);
       try {
-        if (user?.userType === 'student') {
-          // For students, get data from the secure portal dashboard
-          const response = await portalAPI.getDashboard();
-          const data = response.data || response || {};
-          if (data.classInfo) {
-             setClasses([data.classInfo]);
-          } else {
-             setClasses([]);
-          }
+        const response = await portalAPI.getDashboard();
+        const data = response.data || response || {};
+        if (cancelled) return;
+
+        if (data.classInfo) {
+          setClasses([data.classInfo]);
         } else {
-          const response = await classAPI.getAll();
-          const data = response.data || response || [];
-          const items = Array.isArray(data) ? data : [];
-          if (user?.userType === 'teacher') {
-            const teacherId = Number(user.id);
-            setClasses(items.filter((cls) => Number(cls.teacher_id) === teacherId));
-          } else {
-            setClasses(items);
-          }
+          setClasses([]);
         }
+
+        setSessions(Array.isArray(data.sessions) ? data.sessions : []);
       } catch (error) {
         console.error('Failed to load classes:', error);
-        setClasses([]);
+        if (!cancelled) {
+          setClasses([]);
+          setSessions([]);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    loadClasses();
-  }, [user, setClasses, setLoading]);
+    void loadClasses();
+    return () => {
+      cancelled = true;
+    };
+  }, [setClasses, setLoading, setSessions, user]);
 
-
-  // Load sessions
+  // Load sessions for teacher/superuser
   useEffect(() => {
+    if (!user || user?.userType === 'student') return;
+
+    let cancelled = false;
+
+// Loads sessions.
     const loadSessions = async () => {
-      if (!user) return;
       try {
-        if (user?.userType === 'student') {
-          const response = await portalAPI.getDashboard();
-          const data = response.data || response || {};
-          setSessions(data.sessions || []);
-        } else {
-          const response = await classAPI.getAll();
-          const data = response.data || response || [];
-          const items = Array.isArray(data) ? data : [];
-          
-          let classes: ClassItem[] = [];
-          if (user?.userType === 'teacher') {
-            const teacherId = Number(user.id);
-            classes = items.filter((cls) => Number(cls.teacher_id) === teacherId);
-          } else {
-            classes = items;
-          }
-
-          if (classes.length === 0) {
-            setSessions([]);
-            return;
-          }
-
-          const sessionResults = await Promise.all(
-            classes.map((cls) => classAPI.getSessions(Number(cls.class_id || cls.id)).catch(() => ({ data: [] })))
-          );
-          const merged: SessionItem[] = [];
-          sessionResults.forEach((res) => {
-            const data = res.data || res || [];
-            if (Array.isArray(data)) {
-              merged.push(...data);
-            }
-          });
-          setSessions(merged);
+        if (classes.length === 0) {
+          setSessions([]);
+          return;
         }
+
+        const sessionResults = await Promise.all(
+          classes.map((cls) => classAPI.getSessions(Number(cls.class_id || cls.id)).catch(() => ({ data: [] })))
+        );
+        if (cancelled) return;
+
+        const merged: SessionItem[] = [];
+        sessionResults.forEach((res) => {
+          const data = res.data || res || [];
+          if (Array.isArray(data)) {
+            merged.push(...data);
+          }
+        });
+        setSessions(merged);
       } catch (error) {
         console.error('Failed to load sessions:', error);
-        setSessions([]);
+        if (!cancelled) {
+          setSessions([]);
+        }
       }
     };
 
-    loadSessions();
-  }, [user, setSessions]);
+    void loadSessions();
+    return () => {
+      cancelled = true;
+    };
+  }, [classes, setSessions, user]);
 
   // Load attendance
   useEffect(() => {
+// Loads attendance.
     const loadAttendance = async () => {
       if (!user) return;
-
       try {
         if (user.userType === 'student') {
           const response = await attendanceAPI.getByStudent(Number(user.id)).catch(() => ({ data: [] }));
@@ -152,29 +193,12 @@ export const useCalendarData = ({
           return;
         }
 
-        // Get all classes for superuser/teacher
-        const classResponse = await classAPI.getAll();
-        const classData = classResponse.data || classResponse || [];
-        const classItems = Array.isArray(classData) ? classData : [];
-
-        let classes: ClassItem[] = [];
-        if (user?.userType === 'teacher') {
-          const teacherId = Number(user.id);
-          classes = classItems.filter((cls) => Number(cls.teacher_id) === teacherId);
-        } else {
-          classes = classItems;
-        }
-
-        const activeCenterId = getStoredActiveCenterId();
-        const response = await attendanceAPI.getAll(activeCenterId ? { center_id: activeCenterId } : undefined).catch(
-          () => ({ data: [] })
-        );
-        const data = response.data || response || [];
         const classIds = new Set(classes.map((cls) => Number(cls.class_id || cls.id)));
         const map = new Map<string, { present: number; absent: number }>();
         const sessionMap = new Map<number, { present: number; absent: number }>();
-        if (Array.isArray(data)) {
-          data.forEach((record: AttendanceItem) => {
+
+        if (Array.isArray(attendanceItems)) {
+          attendanceItems.forEach((record: AttendanceItem) => {
             const classId = Number(record.class_id);
             if (!classIds.has(classId)) return;
             const dateKey = normalizeDate(record.attendance_date);
@@ -195,13 +219,24 @@ export const useCalendarData = ({
             }
           });
         }
+
         setAttendanceByKey(map);
         setAttendanceBySession(sessionMap);
+        setStudentAttendanceByDate(new Map());
+        setStudentAttendanceBySession(new Map());
       } catch (error) {
         console.error('Failed to load attendance:', error);
       }
     };
 
-    loadAttendance();
-  }, [user, setAttendanceByKey, setAttendanceBySession, setStudentAttendanceByDate, setStudentAttendanceBySession]);
+    void loadAttendance();
+  }, [
+    attendanceItems,
+    classes,
+    setAttendanceByKey,
+    setAttendanceBySession,
+    setStudentAttendanceByDate,
+    setStudentAttendanceBySession,
+    user,
+  ]);
 };

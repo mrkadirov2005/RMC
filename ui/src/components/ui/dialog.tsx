@@ -1,3 +1,5 @@
+// Shared UI primitive used across the application.
+
 import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
@@ -10,10 +12,12 @@ type DialogContextValue = {
 
 const DialogContext = React.createContext<DialogContextValue | null>(null);
 
+// Renders the dialog modal.
 const Dialog = ({ open, onOpenChange, children }: { open: boolean; onOpenChange?: (open: boolean) => void; children: React.ReactNode }) => {
   return <DialogContext.Provider value={{ open, onOpenChange }}>{children}</DialogContext.Provider>;
 };
 
+// Handles dialog trigger.
 const DialogTrigger = ({ children }: { children: React.ReactElement }) => {
   const ctx = React.useContext(DialogContext);
   return React.cloneElement(children, {
@@ -24,6 +28,7 @@ const DialogTrigger = ({ children }: { children: React.ReactElement }) => {
   });
 };
 
+// Handles dialog close.
 const DialogClose = ({ children }: { children: React.ReactElement }) => {
   const ctx = React.useContext(DialogContext);
   return React.cloneElement(children, {
@@ -34,6 +39,7 @@ const DialogClose = ({ children }: { children: React.ReactElement }) => {
   });
 };
 
+// Handles dialog overlay.
 const DialogOverlay = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
     <div
@@ -48,7 +54,9 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
     const ctx = React.useContext(DialogContext);
     if (!ctx?.open) return null;
 
+// Runs side effects for this component.
     React.useEffect(() => {
+// Handles on key down.
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') ctx?.onOpenChange?.(false);
       };
@@ -86,11 +94,13 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
 );
 DialogContent.displayName = 'DialogContent';
 
+// Handles dialog header.
 const DialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn('flex flex-col space-y-1.5 text-center sm:text-left', className)} {...props} />
 );
 DialogHeader.displayName = 'DialogHeader';
 
+// Handles dialog footer.
 const DialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2', className)} {...props} />
 );
@@ -110,6 +120,7 @@ const DialogDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttri
 );
 DialogDescription.displayName = 'DialogDescription';
 
+// Renders the dialog portal portal.
 const DialogPortal = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
 export {

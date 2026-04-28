@@ -1,15 +1,17 @@
+// Page component for the LoginPage.tsx screen in the auth feature.
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, User, Lock, Eye, EyeOff,
-  GraduationCap, Users, ShieldCheck, Loader2,
+  GraduationCap, Users, ShieldCheck, Shield, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { useAppDispatch, useAppSelector } from '../../features/crm/hooks';
+import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { authAPI } from '../../shared/api/api';
 import { showToast, handleApiError } from '../../utils/toast';
@@ -21,13 +23,23 @@ interface LoginPageProps {
 const roleConfig = {
   superuser: {
     icon: ShieldCheck,
-    title: 'Center Admin',
-    subtitle: 'Manage one center with scoped access',
+    title: 'Branch Admin',
+    subtitle: 'Manage one branch with scoped access',
     gradient: 'from-indigo-500 to-violet-500',
     accentColor: 'text-indigo-400',
     badgeBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
     btnGradient: 'bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600',
     shadow: 'shadow-indigo-500/40',
+  },
+  owner: {
+    icon: Shield,
+    title: 'Owner',
+    subtitle: 'Full access across branches and system settings',
+    gradient: 'from-amber-400 to-red-500',
+    accentColor: 'text-amber-400',
+    badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+    btnGradient: 'bg-gradient-to-r from-amber-400 to-red-500 hover:from-amber-500 hover:to-red-600',
+    shadow: 'shadow-amber-500/40',
   },
   teacher: {
     icon: Users,
@@ -53,19 +65,21 @@ const roleConfig = {
 
 const otherRoles = {
   superuser: [
+    { type: 'owner' as const, label: 'Owner Login', path: '/login/owner' },
     { type: 'teacher' as const, label: 'Teacher Login', path: '/login/teacher' },
     { type: 'student' as const, label: 'Student Login', path: '/login/student' },
   ],
   teacher: [
-    { type: 'superuser' as const, label: 'Center Admin Login', path: '/login/superuser' },
+    { type: 'superuser' as const, label: 'Branch Admin Login', path: '/login/superuser' },
     { type: 'student' as const, label: 'Student Login', path: '/login/student' },
   ],
   student: [
-    { type: 'superuser' as const, label: 'Center Admin Login', path: '/login/superuser' },
+    { type: 'superuser' as const, label: 'Branch Admin Login', path: '/login/superuser' },
     { type: 'teacher' as const, label: 'Teacher Login', path: '/login/teacher' },
   ],
 };
 
+// Renders the login page screen.
 export const LoginPage = ({ userType }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -77,6 +91,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
   const config = roleConfig[userType];
   const RoleIcon = config.icon;
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(setLoading(true));
@@ -96,8 +111,10 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           first_name: superuser.first_name,
           last_name: superuser.last_name,
           role: (superuser.role || 'admin').toLowerCase(),
+          permissions: Array.isArray(superuser.permissions) ? superuser.permissions : [],
           userType: 'superuser' as const,
-          center_id: superuser.center_id || 1,
+          branch_id: Number(superuser.branch_id ?? superuser.center_id ?? 0),
+          center_id: Number(superuser.center_id ?? 0),
         };
         token = response.data.token || `superuser-token-${Date.now()}`;
       } else if (userType === 'teacher') {
@@ -112,7 +129,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           role: 'teacher',
           roles: teacher.roles || ['teacher'],
           userType: 'teacher' as const,
-          center_id: teacher.center_id || 1,
+          center_id: Number(teacher.center_id ?? 0),
         };
         token = response.data.token || `teacher-token-${Date.now()}`;
       } else if (userType === 'student') {
@@ -126,7 +143,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           last_name: student.last_name,
           role: 'student',
           userType: 'student' as const,
-          center_id: student.center_id || 1,
+          center_id: Number(student.center_id ?? 0),
           class_id: student.class_id,
         };
         token = response.data.token || `student-token-${Date.now()}`;
@@ -137,6 +154,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
 
       if (userType === 'student') navigate('/student-portal');
       else if (userType === 'teacher') navigate('/teacher-portal');
+      else if (String(userData?.role || '').toLowerCase() === 'owner') navigate('/owner/manage');
       else navigate('/dashboard');
     } catch (err: any) {
       const errorMessage = handleApiError(err);
@@ -299,6 +317,16 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
               );
             })}
           </div>
+
+          {userType === 'superuser' && (
+            <button
+              type="button"
+              onClick={() => navigate('/owner/register')}
+              className="mt-4 w-full text-sm text-amber-400 hover:text-amber-300 underline underline-offset-4"
+            >
+              No owner account? Create one with the keyword
+            </button>
+          )}
 
           <p className="text-center mt-6 text-white/20 text-[0.7rem]">
             Education CRM &copy; {new Date().getFullYear()}

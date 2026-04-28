@@ -1,3 +1,5 @@
+// Legacy page component for the grades screen in the crm feature.
+
 import { useState, useEffect, useMemo } from 'react';
 import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, Loader2, X, Users } from 'lucide-react';
 import { useCRUD } from '../hooks/useCRUD';
@@ -77,6 +79,7 @@ interface Student {
 type TabType = 'students' | 'classes' | 'teachers';
 type FolderType = 'teacher' | 'class' | 'student';
 
+// Renders the grades page screen.
 const GradesPage = () => {
   const [state, actions] = useCRUD<Grade>(gradeAPI, 'Grade');
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -105,6 +108,7 @@ const GradesPage = () => {
   const [filterGrade, setFilterGrade] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
     actions.fetchAll();
     loadAllData();
@@ -112,6 +116,7 @@ const GradesPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+// Loads all data.
   const loadAllData = async () => {
     setLoadingData(true);
     try {
@@ -130,6 +135,7 @@ const GradesPage = () => {
     }
   };
 
+// Loads dropdown options.
   const loadDropdownOptions = async () => {
     setIsLoadingOptions(true);
     try {
@@ -150,6 +156,7 @@ const GradesPage = () => {
     }
   };
 
+// Handles open modal.
   const handleOpenModal = (grade?: Grade) => {
     if (grade) {
       setEditingId(grade.grade_id || grade.id || null);
@@ -165,6 +172,7 @@ const GradesPage = () => {
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
@@ -175,8 +183,10 @@ const GradesPage = () => {
     });
   };
 
+// Handles marks change.
   const handleMarksChange = (marks: number) => {
     const total = formData.total_marks || 100;
+// Handles percentage.
     const percentage = (marks / total) * 100;
     let gradeLetter = 'F';
     if (percentage >= 90) gradeLetter = 'A';
@@ -277,6 +287,7 @@ const GradesPage = () => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.items, selectedFolder, searchTerm, filterTerm, filterGrade, students]);
 
+// Handles clear filters.
   const clearFilters = () => {
     setSearchTerm('');
     setFilterTerm('');
@@ -285,20 +296,24 @@ const GradesPage = () => {
 
   const hasActiveFilters = searchTerm || filterTerm || filterGrade;
 
+// Returns student name.
   const getStudentName = (studentId: number): string => {
     const student = students.find((s) => (s.student_id || s.id) === studentId);
     return student ? `${student.first_name} ${student.last_name}` : `Student #${studentId}`;
   };
 
+// Handles folder click.
   const handleFolderClick = (type: FolderType, id: number, name: string) => {
     setSelectedFolder({ type, id, name });
   };
 
+// Handles back to folders.
   const handleBackToFolders = () => {
     setSelectedFolder(null);
     clearFilters();
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingId) {
@@ -309,12 +324,14 @@ const GradesPage = () => {
     handleCloseModal();
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this grade?')) {
       await actions.delete(id);
     }
   };
 
+// Returns grade color.
   const getGradeColor = (grade: string) => {
     switch(grade) {
       case 'A': return '#4CAF50';
@@ -326,6 +343,7 @@ const GradesPage = () => {
     }
   };
 
+// Returns grade badge classes.
   const getGradeBadgeClasses = (grade: string) => {
     switch(grade) {
       case 'A': return 'bg-green-100 text-green-800 border-green-300';

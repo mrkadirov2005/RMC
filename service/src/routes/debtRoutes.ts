@@ -4,6 +4,8 @@ const express_debt = require('express');
 const router_debt = express_debt.Router();
 const debtController = require('../controllers/debtController');
 const { requireAuth } = require('../middleware/auth');
+const { validateBody } = require('../middleware/validation');
+const { GenerateDebtsDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -209,7 +211,7 @@ router_debt.get('/analyze', requireAuth, debtController.analyzeUnpaidMonths);
  *       201:
  *         description: Debt records created successfully
  */
-router_debt.post('/generate-from-analysis', requireAuth, debtController.generateDebtsFromAnalysis);
+router_debt.post('/generate-from-analysis', requireAuth, validateBody(GenerateDebtsDto), debtController.generateDebtsFromAnalysis);
 
 /**
  * @swagger

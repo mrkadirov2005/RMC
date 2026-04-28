@@ -1,7 +1,24 @@
+// React hooks for the crm feature.
+
 import { useEffect, useMemo, useState } from 'react';
-import { useCRUD } from '../../hooks/useCRUD';
-import { attendanceAPI, classAPI, studentAPI, teacherAPI } from '../../../../shared/api/api';
-import { fetchClasses, fetchStudents, fetchTeachers, attendanceStatusOptions } from '../../../../utils/dropdownOptions';
+import { attendanceStatusOptions } from '../../../../utils/dropdownOptions';
+import { useAppSelector } from '../../hooks';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import {
+  createAttendance,
+  deleteAttendance,
+  fetchAttendance,
+  fetchAttendanceForce,
+  updateAttendance,
+} from '../../../../slices/attendanceSlice';
+import { fetchTeachers as fetchTeachersThunk } from '../../../../slices/teachersSlice';
+import { fetchClasses as fetchClassesThunk } from '../../../../slices/classesSlice';
+import { fetchStudents as fetchStudentsThunk } from '../../../../slices/studentsSlice';
+import {
+  selectClassOptions,
+  selectStudentOptions,
+  selectTeacherOptions,
+} from '../../../../store/selectors';
 import type {
   Attendance,
   AttendanceFolderSelection,
@@ -23,75 +40,67 @@ import {
   getStudentName,
 } from '../queries';
 
-interface DropdownOption {
-  id?: number;
-  label: string;
-  value: string | number;
-}
-
+// Provides attendance page.
 export const useAttendancePage = () => {
-  const [state, actions] = useCRUD<Attendance>(attendanceAPI, 'Attendance');
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
+  const dispatch = useAppDispatch();
+
+  // Pull from Redux store — avoids redundant API calls if siblings already fetched
+  const attendanceItems = useAppSelector((state) => state.attendance.items) as Attendance[];
+  const attendanceLoading = useAppSelector((state) => state.attendance.loading);
+  const attendanceError = useAppSelector((state) => state.attendance.error);
+  const teacherItems = useAppSelector((state) => state.teachers.items) as Teacher[];
+  const classItems = useAppSelector((state) => state.classes.items) as Class[];
+  const studentItems = useAppSelector((state) => state.students.items) as Student[];
+
+  const state = { items: attendanceItems, loading: attendanceLoading, error: attendanceError };
+  const teachers = teacherItems;
+  const classes = classItems;
+  const students = studentItems;
+  const studentOptions = useAppSelector(selectStudentOptions);
+  const teacherOptions = useAppSelector(selectTeacherOptions);
+  const classOptions = useAppSelector(selectClassOptions);
+
   const [activeTab, setActiveTab] = useState<AttendanceTabType>('students');
   const [selectedFolder, setSelectedFolder] = useState<AttendanceFolderSelection | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Attendance>>({ status: 'Present' });
-  const [studentOptions, setStudentOptions] = useState<DropdownOption[]>([]);
-  const [teacherOptions, setTeacherOptions] = useState<DropdownOption[]>([]);
-  const [classOptions, setClassOptions] = useState<DropdownOption[]>([]);
-  const [isLoadingOptions, setIsLoadingOptions] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
+  const isLoadingOptions = useAppSelector(
+    (state) => state.students.loading || state.teachers.loading || state.classes.loading
+  );
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
+  // loadingData reflects whether supporting entities are being loaded
+  const loadingData = useAppSelector(
+    (state) => state.teachers.loading || state.classes.loading || state.students.loading
+  );
+
+// Runs side effects for this component.
   useEffect(() => {
-    actions.fetchAll();
-    loadAllData();
-    loadDropdownOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    dispatch(fetchAttendance());
+    dispatch(fetchTeachersThunk());
+    dispatch(fetchClassesThunk());
+    dispatch(fetchStudentsThunk());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const loadAllData = async () => {
-    setLoadingData(true);
-    try {
-      const [teachersRes, classesRes, studentsRes] = await Promise.all([
-        teacherAPI.getAll(),
-        classAPI.getAll(),
-        studentAPI.getAll(),
-      ]);
-      setTeachers(Array.isArray(teachersRes.data || teachersRes) ? (teachersRes.data || teachersRes) : []);
-      setClasses(Array.isArray(classesRes.data || classesRes) ? (classesRes.data || classesRes) : []);
-      setStudents(Array.isArray(studentsRes.data || studentsRes) ? (studentsRes.data || studentsRes) : []);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    } finally {
-      setLoadingData(false);
-    }
-  };
+// Runs side effects for this component.
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchAttendanceForce());
+      dispatch(fetchTeachersThunk());
+      dispatch(fetchClassesThunk());
+      dispatch(fetchStudentsThunk());
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch]);
 
-  const loadDropdownOptions = async () => {
-    setIsLoadingOptions(true);
-    try {
-      const [studentOpts, teacherOpts, classOpts] = await Promise.all([
-        fetchStudents(),
-        fetchTeachers(),
-        fetchClasses(),
-      ]);
-      setStudentOptions(studentOpts);
-      setTeacherOptions(teacherOpts);
-      setClassOptions(classOpts);
-    } catch (error) {
-      console.error('Error loading dropdown options:', error);
-    } finally {
-      setIsLoadingOptions(false);
-    }
-  };
-
+// Handles open modal.
   const handleOpenModal = (attendance?: Attendance) => {
     if (attendance) {
       setEditingId(attendance.attendance_id || attendance.id || null);
@@ -103,76 +112,74 @@ export const useAttendancePage = () => {
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({ status: 'Present' });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await actions.update(editingId, formData);
-    } else {
-      await actions.create(formData);
+    try {
+      if (editingId) {
+        await dispatch(updateAttendance({ id: editingId, data: formData })).unwrap();
+      } else {
+        await dispatch(createAttendance(formData)).unwrap();
+      }
+      handleCloseModal();
+    } catch {
+      // Toast feedback is handled in slice thunks.
     }
-    handleCloseModal();
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure you want to delete this attendance record?')) {
-      await actions.delete(id);
+      await dispatch(deleteAttendance(id));
     }
   };
 
+// Memoizes the get filtered derived value.
   const getFiltered = useMemo(
-    () => getFilteredAttendance(state.items, students, selectedFolder),
-    [selectedFolder, state.items, students]
+    () => getFilteredAttendance(attendanceItems, students, selectedFolder),
+    [selectedFolder, attendanceItems, students]
   );
 
+// Memoizes the displayed attendance derived value.
   const displayedAttendance = useMemo(() => {
     let records = getFiltered;
-
     if (searchTerm.trim()) {
       const search = searchTerm.toLowerCase();
       records = records.filter((record) => {
-        const student = students.find((item) => (item.student_id || item.id) === record.student_id);
-        const studentName = student ? `${student.first_name} ${student.last_name}`.toLowerCase() : '';
-        return studentName.includes(search);
+        const student = students.find((s) => (s.student_id || s.id) === record.student_id);
+        const name = student ? `${student.first_name} ${student.last_name}`.toLowerCase() : '';
+        return name.includes(search);
       });
     }
-
-    if (filterStatus) {
-      records = records.filter((record) => record.status === filterStatus);
-    }
-
+    if (filterStatus) records = records.filter((r) => r.status === filterStatus);
     if (filterDate) {
-      records = records.filter((record) => {
-        const attendanceDate = new Date(record.attendance_date).toISOString().split('T')[0];
-        return attendanceDate === filterDate;
+      records = records.filter((r) => {
+        const d = new Date(r.attendance_date).toISOString().split('T')[0];
+        return d === filterDate;
       });
     }
-
     return records;
   }, [filterDate, filterStatus, getFiltered, searchTerm, students]);
 
   const hasActiveFilters = Boolean(filterStatus || filterDate || searchTerm);
+// Handles clear filters.
+  const clearFilters = () => { setSearchTerm(''); setFilterStatus(''); setFilterDate(''); };
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setFilterStatus('');
-    setFilterDate('');
-  };
-
+// Handles folder click.
   const handleFolderClick = (type: 'teacher' | 'class' | 'student', id: number, name: string) => {
     setSelectedFolder({ type, id, name });
     clearFilters();
   };
 
-  const handleBackToFolders = () => {
-    setSelectedFolder(null);
-    clearFilters();
-  };
+// Handles back to folders.
+  const handleBackToFolders = () => { setSelectedFolder(null); clearFilters(); };
 
   return {
     state,
@@ -213,16 +220,15 @@ export const useAttendancePage = () => {
     getStudentIdsForTeacher: (teacherId: number) => getStudentIdsForTeacher(students, teacherId),
     getStudentIdsForClass: (classId: number) => getStudentIdsForClass(students, classId),
     getAttendanceCountForTeacher: (teacherId: number) =>
-      getAttendanceCountForTeacher(state.items, students, teacherId),
+      getAttendanceCountForTeacher(attendanceItems, students, teacherId),
     getAttendanceCountForClass: (classId: number) =>
-      getAttendanceCountForClass(state.items, students, classId),
+      getAttendanceCountForClass(attendanceItems, students, classId),
     getPresentCountForClass: (classId: number) =>
-      getPresentCountForClass(state.items, students, classId),
+      getPresentCountForClass(attendanceItems, students, classId),
     getAttendanceCountForStudent: (studentId: number) =>
-      getAttendanceCountForStudent(state.items, studentId),
+      getAttendanceCountForStudent(attendanceItems, studentId),
     getPresentCountForStudent: (studentId: number) =>
-      getPresentCountForStudent(state.items, studentId),
+      getPresentCountForStudent(attendanceItems, studentId),
     attendanceStatusOptions,
   };
 };
-

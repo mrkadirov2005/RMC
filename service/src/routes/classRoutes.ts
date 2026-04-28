@@ -4,6 +4,8 @@ const express_class = require('express');
 const router_class = express_class.Router();
 const classController = require('../controllers/classController');
 const { requireAuth } = require('../middleware/auth');
+const { validateBody, validateQuery } = require('../middleware/validation');
+const { DeleteUpcomingSessionsDto, GenerateClassSessionsDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -150,7 +152,7 @@ router_class.put('/:id', requireAuth, classController.updateClass);
  *       200:
  *         description: Sessions generated
  */
-router_class.post('/:id/sessions/generate', requireAuth, classController.generateClassSessions);
+router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateClassSessionsDto), classController.generateClassSessions);
 
 /**
  * @swagger
@@ -180,7 +182,7 @@ router_class.post('/:id/sessions/generate', requireAuth, classController.generat
  *       200:
  *         description: Sessions deleted
  */
-router_class.delete('/:id/sessions', requireAuth, classController.deleteUpcomingClassSessions);
+router_class.delete('/:id/sessions', requireAuth, validateQuery(DeleteUpcomingSessionsDto), classController.deleteUpcomingClassSessions);
 
 /**
  * @swagger

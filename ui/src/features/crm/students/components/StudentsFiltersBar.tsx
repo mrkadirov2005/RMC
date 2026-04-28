@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { Filter, Search, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +16,7 @@ interface Props {
   onClearAll: () => void;
 }
 
+// Renders the students filters bar module.
 export const StudentsFiltersBar = ({ searchTerm, onSearchChange, onClearSearch, showFilters, onToggleFilters, hasActiveFilters, activeCount, onClearAll }: Props) => (
   <div className="flex flex-wrap gap-3 mb-5 items-center">
     <div className="relative flex-1 min-w-[250px] max-w-[400px]">

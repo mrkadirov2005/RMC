@@ -1,6 +1,10 @@
+// Page component for the teachers screen in the crm feature.
+
 import { useState, useEffect } from 'react';
+import { useAppDispatch } from '../hooks/useAppDispatch';
+import { useAppSelector } from '../hooks/useAppSelector';
 import { useParams, useNavigate } from 'react-router-dom';
-import { teacherAPI, classAPI, studentAPI, gradeAPI, subjectAPI, assignmentAPI, paymentAPI } from '../../../shared/api/api';
+import { gradeAPI } from '../../../shared/api/api';
 import { AssignmentSectionTeacher } from './components/AssignmentSectionTeacher';
 import { showToast } from '../../../utils/toast';
 import {
@@ -46,60 +50,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { generateTempPassword } from '@/utils/password';
-
-interface Subject {
-  subject_id?: number;
-  id?: number;
-  subject_name: string;
-}
-
-interface Teacher {
-  teacher_id?: number;
-  id?: number;
-  center_id?: number;
-  employee_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone: string;
-  date_of_birth: string;
-  gender: string;
-  qualification: string;
-  specialization: string;
-  status: string;
-  username?: string;
-}
-
-interface Class {
-  class_id?: number;
-  id?: number;
-  class_name: string;
-  teacher_id?: number;
-  level: string;
-  section?: string;
-}
-
-interface Student {
-  student_id?: number;
-  id?: number;
-  enrollment_number: string;
-  first_name: string;
-  last_name: string;
-  class_id: number;
-  email: string;
-  phone: string;
-  status: string;
-}
-
-interface Assignment {
-  assignment_id?: number;
-  id?: number;
-  class_id?: number;
-  assignment_title: string;
-  due_date: string;
-  status: string;
-  grade?: number;
-}
+import { teacherAPI } from '../../../shared/api/api';
 
 interface GradeEntry {
   student_id: number;
@@ -107,17 +58,31 @@ interface GradeEntry {
   grade_letter: string;
 }
 
+// Renders the teacher detail page screen.
 const TeacherDetailPage = () => {
   const { teacherId } = useParams<{ teacherId: string }>();
   const navigate = useNavigate();
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [classes, setClasses] = useState<Class[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [payments, setPayments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  // Redux selectors for business data
+  const teacher = useAppSelector((state) =>
+    state.teachers.items.find((t) => String(t.teacher_id || t.id) === String(teacherId))
+  );
+  const classes = useAppSelector((state) =>
+    state.classes.items.filter((c) => String(c.teacher_id) === String(teacherId))
+  );
+  const students = useAppSelector((state) =>
+    state.students.items.filter((s) => classes.some((c) => (c.class_id || c.id) === s.class_id))
+  );
+  const subjects = useAppSelector((state) =>
+    state.subjects.items.filter((s) => classes.some((c) => (c.class_id || c.id) === s.class_id))
+  );
+  const assignments = useAppSelector((state) =>
+    state.assignments.items.filter((a) => String(a.teacher_id) === String(teacherId))
+  );
+  const payments = useAppSelector((state) => state.payments.items);
+  const loading = useAppSelector((state) => state.teachers.loading || state.classes.loading || state.students.loading || state.subjects.loading || state.assignments.loading || state.payments.loading);
+  const error = useAppSelector((state) => state.teachers.error || state.classes.error || state.students.error || state.subjects.error || state.assignments.error || state.payments.error);
+  // UI state only
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<number | null>(null);
@@ -131,81 +96,25 @@ const TeacherDetailPage = () => {
   const [resettingPassword, setResettingPassword] = useState(false);
   const [selectedPaymentMonth, setSelectedPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
+// Runs side effects for this component.
   useEffect(() => {
-    loadTeacherDetails();
+    // Dispatch thunks to load all required data
+    dispatch({ type: 'teachers/fetchTeachers' });
+    dispatch({ type: 'classes/fetchClasses' });
+    dispatch({ type: 'students/fetchStudents' });
+    dispatch({ type: 'subjects/fetchSubjects' });
+    dispatch({ type: 'assignments/fetchAssignments' });
+    dispatch({ type: 'payments/fetchPayments' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [teacherId]);
+  }, [dispatch, teacherId]);
 
-  const loadTeacherDetails = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Fetch teacher details
-      const teacherResponse = await teacherAPI.getById(Number(teacherId));
-      const teacherData = teacherResponse.data || teacherResponse;
-      setTeacher(teacherData);
-
-      // Fetch all classes, students, subjects, assignments and payments
-      const [classesRes, studentsRes, subjectsRes, assignmentRes, paymentsRes] = await Promise.all([
-        classAPI.getAll(),
-        studentAPI.getAll(),
-        subjectAPI.getAll(),
-        assignmentAPI.getAll(),
-        paymentAPI.getAll(),
-      ]);
-
-      const classesData = classesRes.data || classesRes;
-      const studentsData = studentsRes.data || studentsRes;
-      const subjectsData = subjectsRes.data || subjectsRes;
-      const assignmentData = assignmentRes.data || assignmentRes;
-      const paymentsData = paymentsRes.data || paymentsRes;
-
-      setPayments(Array.isArray(paymentsData) ? paymentsData : []);
-
-      // Filter classes taught by this teacher
-      const teacherIdNum = Number(teacherId);
-      const teacherClasses = Array.isArray(classesData)
-        ? classesData.filter((c: Record<string, unknown>) => Number((c as any).teacher_id) === teacherIdNum)
-        : [];
-      setClasses(teacherClasses);
-
-      const teacherClassIds = new Set(
-        teacherClasses.map((c: Record<string, unknown>) => Number((c as any).class_id || (c as any).id))
-      );
-
-      // Get students assigned to this teacher's classes
-      const allStudents = Array.isArray(studentsData) ? studentsData : [];
-      const teacherStudents = allStudents.filter((s: Record<string, unknown>) =>
-        teacherClassIds.has(Number((s as any).class_id))
-      );
-      setStudents(teacherStudents);
-
-      // Get subjects for this teacher's classes
-      const allSubjects = Array.isArray(subjectsData) ? subjectsData : [];
-      const teacherSubjects = allSubjects.filter((s: Record<string, unknown>) =>
-        teacherClassIds.has(Number((s as any).class_id))
-      );
-      setSubjects(teacherSubjects);
-
-      // Get assignments scoped to this teacher
-      const allAssignments = Array.isArray(assignmentData) ? assignmentData : [];
-      const teacherAssignments = allAssignments.filter(
-        (a: Record<string, unknown>) => Number((a as any).teacher_id) === teacherIdNum
-      );
-      setAssignments(teacherAssignments);
-    } catch (err) {
-      console.error('Error loading teacher details:', err);
-      setError('Failed to load teacher details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// Returns students by class.
   const getStudentsByClass = (classId: number | undefined) => {
     if (!classId) return [];
     return students.filter((s) => s.class_id === classId);
   };
 
+// Handles calculate grade letter.
   const calculateGradeLetter = (percentage: number): string => {
     if (percentage >= 90) return 'A';
     if (percentage >= 80) return 'B';
@@ -214,6 +123,7 @@ const TeacherDetailPage = () => {
     return 'F';
   };
 
+// Handles open grade modal.
   const handleOpenGradeModal = () => {
     setSelectedClassId(null);
     setSelectedSubjectId(null);
@@ -222,6 +132,7 @@ const TeacherDetailPage = () => {
     setIsGradeModalOpen(true);
   };
 
+// Handles close grade modal.
   const handleCloseGradeModal = () => {
     setIsGradeModalOpen(false);
     setSelectedClassId(null);
@@ -229,6 +140,7 @@ const TeacherDetailPage = () => {
     setGradeEntries([]);
   };
 
+// Handles class select.
   const handleClassSelect = (classId: number) => {
     setSelectedClassId(classId);
     const classStudents = getStudentsByClass(classId);
@@ -241,6 +153,7 @@ const TeacherDetailPage = () => {
     );
   };
 
+// Handles percentage change.
   const handlePercentageChange = (index: number, percentage: number) => {
     const newEntries = [...gradeEntries];
     newEntries[index].percentage = percentage;
@@ -248,6 +161,7 @@ const TeacherDetailPage = () => {
     setGradeEntries(newEntries);
   };
 
+// Handles save grades.
   const handleSaveGrades = async () => {
     if (!selectedClassId || !selectedSubjectId) {
       showToast.error('Please select class and subject');
@@ -273,7 +187,13 @@ const TeacherDetailPage = () => {
       await Promise.all(gradePromises);
       showToast.success('Grades saved successfully');
       handleCloseGradeModal();
-      loadTeacherDetails();
+      // Refresh Redux data after saving grades
+      dispatch({ type: 'teachers/fetchTeachers' });
+      dispatch({ type: 'classes/fetchClasses' });
+      dispatch({ type: 'students/fetchStudents' });
+      dispatch({ type: 'subjects/fetchSubjects' });
+      dispatch({ type: 'assignments/fetchAssignments' });
+      dispatch({ type: 'payments/fetchPayments' });
     } catch (error: unknown) {
       const err = error as { message?: string };
       showToast.error(err.message || 'Failed to save grades');
@@ -282,6 +202,7 @@ const TeacherDetailPage = () => {
     }
   };
 
+// Handles reset password.
   const handleResetPassword = async () => {
     if (!teacherId || !teacher) return;
     const username = String(teacher.username || '').trim() ||
@@ -304,6 +225,7 @@ const TeacherDetailPage = () => {
     }
   };
 
+// Handles copy temp password.
   const handleCopyTempPassword = async () => {
     if (!resetTempPassword) return;
     try {
@@ -314,6 +236,7 @@ const TeacherDetailPage = () => {
     }
   };
 
+// Toggles class expanded.
   const toggleClassExpanded = (classId: number) => {
     setExpandedClassIds((prev) => {
       const next = new Set(prev);
@@ -348,10 +271,12 @@ const TeacherDetailPage = () => {
     );
   }
 
+// Returns initials.
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase();
   };
 
+// Returns status classes.
   const getStatusClasses = (status: string) => {
     switch (status?.toLowerCase()) {
       case 'active': return 'bg-green-100 text-green-800 border-green-300';
@@ -361,6 +286,7 @@ const TeacherDetailPage = () => {
     }
   };
 
+// Returns grade badge classes.
   const getGradeBadgeClasses = (letter: string) => {
     switch (letter) {
       case 'A': return 'bg-green-100 text-green-800';
@@ -638,7 +564,14 @@ const TeacherDetailPage = () => {
               <AssignmentSectionTeacher
                 assignments={assignments}
                 teacherId={teacher?.teacher_id || teacher?.id}
-                onRefresh={loadTeacherDetails}
+                onRefresh={() => {
+                  dispatch({ type: 'teachers/fetchTeachers' });
+                  dispatch({ type: 'classes/fetchClasses' });
+                  dispatch({ type: 'students/fetchStudents' });
+                  dispatch({ type: 'subjects/fetchSubjects' });
+                  dispatch({ type: 'assignments/fetchAssignments' });
+                  dispatch({ type: 'payments/fetchPayments' });
+                }}
               />
             </TabsContent>
 

@@ -1,3 +1,5 @@
+// Source file for the classes area in the crm feature.
+
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,6 +13,7 @@ interface ClassCalendarProps {
   schedule: Schedule;
 }
 
+// Renders the class calendar module.
 const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const today = new Date();
@@ -28,6 +31,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
   // Previous month days
   for (let i = firstDay - 1; i >= 0; i--) {
     const date = daysInPrevMonth - i;
+// Handles day index.
     const dayIndex = (firstDay - 1 - i) % 7;
     calendarDays.push({
       date,
@@ -38,6 +42,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
 
   // Current month days
   for (let date = 1; date <= daysInMonth; date++) {
+// Handles day index.
     const dayIndex = (calendarDays.length) % 7;
     calendarDays.push({
       date,
@@ -49,6 +54,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
   // Next month days
   const remainingDays = 42 - calendarDays.length;
   for (let date = 1; date <= remainingDays; date++) {
+// Handles day index.
     const dayIndex = (calendarDays.length) % 7;
     calendarDays.push({
       date,

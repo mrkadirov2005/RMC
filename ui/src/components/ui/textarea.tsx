@@ -1,3 +1,5 @@
+// Shared UI primitive used across the application.
+
 import * as React from 'react';
 import { cn } from '@/lib/utils';
 

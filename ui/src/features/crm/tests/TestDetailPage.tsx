@@ -1,3 +1,5 @@
+// Page component for the tests screen in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -36,6 +38,7 @@ import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 import { useAppSelector } from '../hooks';
 
+// Renders the test detail page screen.
 const TestDetailPage = () => {
   const { testId } = useParams();
   const navigate = useNavigate();
@@ -49,12 +52,14 @@ const TestDetailPage = () => {
   const [startDialogOpen, setStartDialogOpen] = useState(false);
   const [resultsStats, setResultsStats] = useState<any>(null);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (testId) {
       loadTest();
     }
   }, [testId]);
 
+// Loads test.
   const loadTest = async () => {
     try {
       setLoading(true);
@@ -77,6 +82,7 @@ const TestDetailPage = () => {
     }
   };
 
+// Handles start test.
   const handleStartTest = async () => {
     if (!user?.id) {
       setError('User not authenticated');
@@ -93,6 +99,7 @@ const TestDetailPage = () => {
     setStartDialogOpen(false);
   };
 
+// Returns test type color.
   const getTestTypeColor = (type: string) => {
     const colors: { [key: string]: string } = {
       multiple_choice: 'bg-indigo-500',
@@ -107,10 +114,12 @@ const TestDetailPage = () => {
     return colors[type] || 'bg-gray-500';
   };
 
+// Formats test type.
   const formatTestType = (type: string) => {
     return type?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || '';
   };
 
+// Returns status color.
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'graded':
@@ -174,6 +183,17 @@ const TestDetailPage = () => {
             >
               {formatTestType(test.test_type)}
             </span>
+            <Badge
+              variant="outline"
+              className={cn(
+                'text-xs',
+                test.is_private
+                  ? 'border-amber-300 text-amber-700 bg-amber-50'
+                  : 'border-emerald-300 text-emerald-700 bg-emerald-50'
+              )}
+            >
+              {test.is_private ? 'Private' : 'Public'}
+            </Badge>
             <Badge variant={test.is_active ? 'default' : 'secondary'} className={cn(test.is_active && 'bg-green-100 text-green-800 border-green-300')}>
               {test.is_active ? 'Active' : 'Inactive'}
             </Badge>

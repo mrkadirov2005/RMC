@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -48,6 +50,7 @@ interface PaymentSectionProps {
   onRefresh: () => void;
 }
 
+// Returns status badge variant.
 const getStatusBadgeVariant = (status: string) => {
   switch (status.toLowerCase()) {
     case 'completed':
@@ -61,6 +64,7 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+// Renders the payment section module.
 export const PaymentSection = ({ payments, student, classData, onRefresh }: PaymentSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -71,6 +75,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
   });
   const [loading, setLoading] = useState(false);
 
+// Handles open modal.
   const handleOpenModal = (payment?: Payment) => {
     if (payment) {
       setEditingId(payment.payment_id || payment.id || null);
@@ -87,6 +92,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
@@ -98,6 +104,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
     });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -125,6 +132,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
     }
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure?')) {
       try {

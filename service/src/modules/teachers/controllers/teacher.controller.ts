@@ -82,9 +82,6 @@ const deleteTeacher = async (req: any, res: any) => {
 const teacherLogin = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const result = await teacherService.authenticate(username, password);
     if (result.kind === 'inactive') {
       return res.status(403).json({ error: 'Teacher account is not active' });
@@ -119,9 +116,6 @@ const teacherLogin = async (req: any, res: any) => {
 const setTeacherPaymentPassword = async (req: any, res: any) => {
   try {
     const { password } = req.body;
-    if (!password || typeof password !== 'string' || password.length < 6) {
-      return res.status(400).json({ error: 'A valid password is required (min 6 characters).' });
-    }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
@@ -143,9 +137,6 @@ const setTeacherPaymentPassword = async (req: any, res: any) => {
 const teacherPaymentLogin = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const result = await teacherPaymentService.authenticatePaymentAccess(username, password);
     if (result.kind === 'inactive') {
       return res.status(403).json({ error: 'Teacher account is not active' });
@@ -181,9 +172,6 @@ const teacherPaymentLogin = async (req: any, res: any) => {
 const setTeacherPassword = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
@@ -200,9 +188,6 @@ const setTeacherPassword = async (req: any, res: any) => {
 const changeTeacherPassword = async (req: any, res: any) => {
   try {
     const { old_password, new_password } = req.body;
-    if (!old_password || !new_password) {
-      return res.status(400).json({ error: 'Old and new password required' });
-    }
     const out = await teacherService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
       if (out.reason === 'not_found') return res.status(404).json({ error: 'Teacher not found' });

@@ -1,3 +1,5 @@
+// Tab component for the crm feature.
+
 import { GradesSection } from '../components/GradesSection';
 
 interface Grade {
@@ -18,6 +20,7 @@ interface GradesTabProps {
   centerId?: number;
 }
 
+// Renders the grades tab tab.
 export const GradesTab = ({ grades, onRefresh, studentId, classId, teacherId, centerId }: GradesTabProps) => {
   return (
     <GradesSection

@@ -5,7 +5,7 @@ const listMine = (userType: string, userId: number, centerId?: number, entity?: 
 
 const create = (userType: string, userId: number, centerId: number, body: any) => {
   const { name, entity, filters_json } = body;
-  if (!name || !entity || !filters_json || !centerId) return { error: 'validation' as const };
+  if (!centerId) return { error: 'validation' as const };
   return savedFilterRepository
     .insert([centerId, userType, userId, name, entity, JSON.stringify(filters_json)])
     .then((row: any) => ({ row }));

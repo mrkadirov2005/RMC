@@ -47,11 +47,31 @@ module.exports = {
 
       CREATE INDEX IF NOT EXISTS idx_superuser_username ON superusers(username);
       CREATE INDEX IF NOT EXISTS idx_superuser_status ON superusers(status);
+
+        CREATE TABLE IF NOT EXISTS owners (
+          owner_id SERIAL PRIMARY KEY,
+          username VARCHAR(100) NOT NULL UNIQUE,
+          email VARCHAR(100) UNIQUE,
+          password_hash VARCHAR(255) NOT NULL,
+          first_name VARCHAR(100),
+          last_name VARCHAR(100),
+          status owner_status DEFAULT 'Active',
+          last_login TIMESTAMP,
+          login_attempts INT DEFAULT 0,
+          is_locked BOOLEAN DEFAULT FALSE,
+          locked_until TIMESTAMP,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_owner_username ON owners(username);
+      CREATE INDEX IF NOT EXISTS idx_owner_status ON owners(status);
     `);
   },
 
   async down(queryInterface) {
     await queryInterface.sequelize.query(`
+      DROP TABLE IF EXISTS owners CASCADE;
       DROP TABLE IF EXISTS superusers CASCADE;
       DROP TABLE IF EXISTS teachers CASCADE;
     `);

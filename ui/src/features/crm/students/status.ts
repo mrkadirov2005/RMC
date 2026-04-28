@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 export const getStatusVariant = (status: string) => {
   switch (status.toLowerCase()) {
     case 'active':

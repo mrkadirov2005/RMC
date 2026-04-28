@@ -1,9 +1,14 @@
+require('reflect-metadata');
 const express = require('express');
 const cors = require('cors');
 require('dotenv/config');
 const swaggerUI = require('swagger-ui-express');
 const swaggerDocs = require('./swagger/swagger');
-const { requireAuth, requireRole } = require('./middleware/auth');
+const { requireAuth, requireRole, requireOwner } = require('./middleware/auth');
+const { validateBody } = require('./middleware/validation');
+const { CredentialsDto } = require('./dtos/request.dto');
+const { initMongo, closeMongo } = require('./db/mongo');
+const { requestLogger } = require('./middleware/requestLogger');
 
 // Import routes
 const studentRoutes = require('./routes/studentRoutes');
@@ -17,6 +22,7 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const superuserRoutes = require('./routes/superuserRoutes');
+const ownerRoutes = require('./routes/ownerRoutes');
 const testRoutes = require('./routes/testRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
@@ -31,6 +37,7 @@ const parentRoutes = require('./routes/parentRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const portalRoutes = require('./routes/portalRoutes');
 const roomsRoutes = require('./routes/roomsRoutes');
+const requestLogRoutes = require('./routes/requestLogRoutes');
 
 
 
@@ -41,11 +48,13 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-// function to log the coming requests
+// Request logging (MongoDB). Logs once per request on response finish/abort.
+app.use(requestLogger);
 
-app.use((req: any, res: any, next: any): void => {
-  console.log(`Incoming request: ${req.method} ${req.url}`);
-  next();
+// Init Mongo connection + indexes in the background.
+// If Mongo is unavailable, the API will still work; it will just skip request log inserts.
+void initMongo().catch((err: any) => {
+  console.warn('[mongo] init failed:', err?.message || err);
 });
 // Health check
 app.get('/api/health', (req: any, res: any): void => {
@@ -58,11 +67,13 @@ app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs, { explorer: true 
 
 // API Routes
 // Auth routes (public - no authentication required)
-app.post('/api/students/auth/login', require('./controllers/studentController').studentLogin);
-app.post('/api/teachers/auth/login', require('./controllers/teacherController').teacherLogin);
-app.post('/api/teachers/auth/payment-login', require('./controllers/teacherController').teacherPaymentLogin);
-app.post('/api/superusers/auth/login', require('./controllers/superuserController').login);
-app.post('/api/parents/auth/login', require('./modules/parents').parentLogin);
+app.post('/api/students/auth/login', validateBody(CredentialsDto), require('./controllers/studentController').studentLogin);
+app.post('/api/teachers/auth/login', validateBody(CredentialsDto), require('./controllers/teacherController').teacherLogin);
+app.post('/api/teachers/auth/payment-login', validateBody(CredentialsDto), require('./controllers/teacherController').teacherPaymentLogin);
+app.post('/api/superusers/auth/login', validateBody(CredentialsDto), require('./controllers/superuserController').login);
+app.post('/api/owners/auth/login', require('./controllers/ownerController').login);
+app.post('/api/owners/auth/register', require('./controllers/ownerController').register);
+app.post('/api/parents/auth/login', validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
 // Protected routes - require authentication + role-based access
 // Students: superuser and teacher can manage; students can view own data via portal
@@ -98,6 +109,9 @@ app.use('/api/subjects', requireAuth, requireRole('superuser', 'teacher'), subje
 // Superusers: superuser only for management
 app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
 
+// Owners: owner-only management
+app.use('/api/owners', requireAuth, requireOwner, ownerRoutes);
+
 // Tests: authenticated users (role checks are more granular inside routes)
 app.use('/api/tests', requireAuth, testRoutes);
 
@@ -115,6 +129,8 @@ app.use('/api/parents', requireAuth, parentRoutes);
 app.use('/api/reports', requireAuth, requireRole('superuser'), reportRoutes);
 app.use('/api/portal', requireAuth, requireRole('student'), portalRoutes);
 app.use('/api/rooms', requireAuth, requireRole('superuser', 'teacher'), roomsRoutes);
+// Request logs (MongoDB): only superuser/owner.
+app.use('/api/request-logs', requireAuth, requireRole('superuser'), requestLogRoutes);
 
 
 
@@ -137,11 +153,12 @@ const gracefulShutdown = async () => {
   isShuttingDown = true;
   
   console.log('Shutting down gracefully...');
-  const pool = require('../config/dbcon');
+  const pool = require('./db/pool');
   
   server.close(async () => {
     try {
       await pool.end();
+      await closeMongo();
       console.log('Server and database pool closed');
       process.exit(0);
     } catch (err) {

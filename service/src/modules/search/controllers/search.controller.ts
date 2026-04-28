@@ -22,9 +22,6 @@ const search = async (req: any, res: any) => {
       entity = 'students';
     }
     const out = await searchService.runSearch(req.query.q, entity, req.query.limit, centerId ?? undefined, teacherId);
-    if (out.error === 'validation') {
-      return res.status(400).json({ error: 'q (min 2 chars) is required' });
-    }
     res.json((out as any).results);
   } catch (error: any) {
     console.error('Database error:', error);

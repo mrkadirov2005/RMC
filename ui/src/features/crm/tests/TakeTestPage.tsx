@@ -1,3 +1,5 @@
+// Page component for the tests screen in the crm feature.
+
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -25,6 +27,7 @@ import {
 import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 
+// Renders the take test page screen.
 const TakeTestPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
@@ -41,6 +44,7 @@ const TakeTestPage = () => {
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [timeUpDialogOpen, setTimeUpDialogOpen] = useState(false);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (submissionId) {
       loadSubmission();
@@ -65,6 +69,7 @@ const TakeTestPage = () => {
     return () => clearInterval(timer);
   }, [test?.is_timed, timeRemaining]);
 
+// Loads submission.
   const loadSubmission = async () => {
     try {
       setLoading(true);
@@ -109,6 +114,7 @@ const TakeTestPage = () => {
     }
   };
 
+// Memoizes the handle answer change callback.
   const handleAnswerChange = useCallback((questionId: number, value: any) => {
     setAnswers((prev) => ({
       ...prev,
@@ -116,6 +122,7 @@ const TakeTestPage = () => {
     }));
   }, []);
 
+// Toggles flag.
   const toggleFlag = (questionId: number) => {
     setFlagged((prev) => {
       const newSet = new Set(prev);
@@ -128,6 +135,7 @@ const TakeTestPage = () => {
     });
   };
 
+// Handles submit.
   const handleSubmit = async (force: boolean = false) => {
     if (!force) {
       setConfirmDialogOpen(true);
@@ -158,12 +166,14 @@ const TakeTestPage = () => {
     }
   };
 
+// Formats time.
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+// Returns time color class.
   const getTimeColorClass = () => {
     if (timeRemaining === null) return 'bg-indigo-100 text-indigo-800 border-indigo-300';
     if (timeRemaining < 60) return 'bg-red-100 text-red-800 border-red-300 animate-pulse';

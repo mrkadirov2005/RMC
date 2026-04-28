@@ -47,6 +47,7 @@ CREATE TABLE tests (
     created_by INT NOT NULL,
     created_by_type VARCHAR(20) DEFAULT 'superuser',
     is_active BOOLEAN DEFAULT TRUE,
+    is_private BOOLEAN DEFAULT FALSE,
     start_date TIMESTAMP,
     end_date TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

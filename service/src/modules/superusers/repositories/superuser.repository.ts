@@ -3,7 +3,7 @@ const pool = require('../../../db/pool');
 const findAllSafe = (centerId?: number) => {
   const params: any[] = [];
   let query =
-    'SELECT superuser_id, center_id, username, email, first_name, last_name, role, status, last_login, created_at, updated_at FROM superusers';
+    'SELECT superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, last_login, created_at, updated_at FROM superusers';
 
   if (centerId) {
     params.push(centerId);
@@ -38,7 +38,7 @@ const insert = (params: any[]) =>
     .query(
       `INSERT INTO superusers (center_id, username, email, password_hash, first_name, last_name, role, permissions, status)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING superuser_id, center_id, username, email, first_name, last_name, role, status, created_at`,
+       RETURNING superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, created_at`,
       params
     )
     .then((r: any) => r.rows[0]);
@@ -53,7 +53,7 @@ const update = (id: number, params: any[], centerId?: number) => {
     queryParams.push(centerId);
   }
 
-  query += '\n       RETURNING superuser_id, center_id, username, email, first_name, last_name, role, status, updated_at';
+  query += '\n       RETURNING superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, updated_at';
   return pool.query(query, queryParams).then((r: any) => r.rows[0] || null);
 };
 
@@ -73,7 +73,7 @@ const remove = (id: number, centerId?: number) => {
 const findByUsernameForLogin = (username: string) =>
   pool
     .query(
-      'SELECT superuser_id, center_id, username, email, first_name, last_name, role, password_hash, status, is_locked FROM superusers WHERE username = $1',
+      'SELECT superuser_id, center_id, username, email, first_name, last_name, role, permissions, password_hash, status, is_locked FROM superusers WHERE username = $1',
       [username]
     )
     .then((r: any) => r.rows[0] || null);

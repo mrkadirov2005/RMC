@@ -1,3 +1,5 @@
+// Source file for the students area in the crm feature.
+
 import { Plus, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -7,6 +9,7 @@ interface Props {
   onAdd: () => void;
 }
 
+// Renders the students header module.
 export const StudentsHeader = ({ title, onBack, onAdd }: Props) => (
   <div className="flex justify-between items-center mb-8">
     <div className="flex items-center gap-3">

@@ -116,12 +116,6 @@ const generateDebtsFromAnalysis = async (req: any, res: any) => {
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
     if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    if (!student_ids || !Array.isArray(student_ids) || student_ids.length === 0) {
-      return res.status(400).json({ error: 'student_ids array is required' });
-    }
-    if (!monthly_fee || monthly_fee <= 0) {
-      return res.status(400).json({ error: 'valid monthly_fee is required' });
-    }
     const { createdDebts } = await debtService.generateDebtsFromAnalysis(student_ids, monthly_fee, centerId ?? undefined, remarks, teacherId);
     res.status(201).json({
       message: `Created ${createdDebts.length} debt records`,

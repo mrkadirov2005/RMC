@@ -1,3 +1,5 @@
+// Source file for the rbac area in the crm feature.
+
 import { ReactNode } from 'react';
 import { useEnhancedRBAC } from './useEnhancedRBAC';
 
@@ -11,6 +13,7 @@ interface PermissionGuardProps {
   roles?: string[];
 }
 
+// Renders the permission guard module.
 export const PermissionGuard = ({
   children,
   permission,

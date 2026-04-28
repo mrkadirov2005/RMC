@@ -1,3 +1,5 @@
+// Modal component for the calendar screen in the crm feature.
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { ClassItem, SessionItem } from './types';
 import { SessionListItem } from './components/SessionListItem';
@@ -23,6 +25,7 @@ interface DayModalProps {
   schedule?: any[];
 }
 
+// Renders the day modal modal.
 export const DayModal = ({
   open,
   selectedDay,

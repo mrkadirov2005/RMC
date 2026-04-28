@@ -1,3 +1,5 @@
+// Source file for authSlice.
+
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { AuthState, AuthUser } from '../types';

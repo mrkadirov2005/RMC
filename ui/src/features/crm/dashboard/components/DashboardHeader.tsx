@@ -1,3 +1,5 @@
+// Source file for the dashboard area in the crm feature.
+
 import { Badge } from '@/components/ui/badge';
 
 interface DashboardHeaderProps {
@@ -6,6 +8,7 @@ interface DashboardHeaderProps {
   loading: boolean;
 }
 
+// Renders the dashboard header module.
 export const DashboardHeader = ({ firstName, role, loading }: DashboardHeaderProps) => {
   return (
     <div className="rounded-2xl bg-gradient-to-br from-indigo-600 via-sky-600 to-emerald-500 text-white p-6">

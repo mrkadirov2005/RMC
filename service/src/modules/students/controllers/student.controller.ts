@@ -48,7 +48,12 @@ const createStudent = async (req: any, res: any) => {
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
-    const row = await studentService.createStudent({ ...req.body, center_id: centerId });
+    const payload = { ...req.body, center_id: centerId };
+    if (req.user?.userType === 'teacher') {
+      // Teachers should not be able to freeze/unfreeze students.
+      delete payload.is_frozen;
+    }
+    const row = await studentService.createStudent(payload);
     res.status(201).json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -78,7 +83,13 @@ const updateStudent = async (req: any, res: any) => {
     if (req.user?.userType === 'student' && Number(req.params.id) !== req.user?.id) {
       return res.status(403).json({ error: 'Access denied.' });
     }
-    const row = await studentService.updateStudent(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
+    const payload = { ...req.body };
+    if (req.user?.userType === 'teacher') {
+      // Teachers can edit student profile fields, but cannot freeze/unfreeze or reassign teacher ownership.
+      delete payload.is_frozen;
+      delete payload.teacher_id;
+    }
+    const row = await studentService.updateStudent(Number(req.params.id), payload, centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Student not found' });
     res.json(row);
   } catch (error: any) {
@@ -109,9 +120,6 @@ const deleteStudent = async (req: any, res: any) => {
 const studentLogin = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const result = await studentService.authenticate(username, password);
     if (result.kind === 'inactive') {
       return res.status(403).json({ error: 'Student account is not active' });
@@ -126,6 +134,7 @@ const studentLogin = async (req: any, res: any) => {
       userType: 'student',
       class_id: student.class_id,
       center_id: student.center_id,
+      is_frozen: Boolean(student.is_frozen),
     });
     res.json({
       message: 'Login successful',
@@ -137,6 +146,7 @@ const studentLogin = async (req: any, res: any) => {
         email: student.email,
         class_id: student.class_id,
         center_id: student.center_id,
+        is_frozen: Boolean(student.is_frozen),
       },
     });
   } catch (error: any) {
@@ -148,9 +158,6 @@ const studentLogin = async (req: any, res: any) => {
 const setStudentPassword = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
-    if (!username || !password) {
-      return res.status(400).json({ error: 'Username and password required' });
-    }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
@@ -170,9 +177,6 @@ const setStudentPassword = async (req: any, res: any) => {
 const changeStudentPassword = async (req: any, res: any) => {
   try {
     const { old_password, new_password } = req.body;
-    if (!old_password || !new_password) {
-      return res.status(400).json({ error: 'Old and new password required' });
-    }
     if (req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Access denied.' });
     }
@@ -230,9 +234,6 @@ const addStudentCoins = async (req: any, res: any) => {
     }
 
     const rawAmount = Number(req.body?.amount);
-    if (!Number.isFinite(rawAmount) || rawAmount === 0) {
-      return res.status(400).json({ error: 'amount must be a non-zero number.' });
-    }
 
     const direction = String(req.body?.direction || '').toLowerCase();
     const delta = direction === 'subtract' ? -Math.abs(rawAmount) : rawAmount;
@@ -272,9 +273,6 @@ const updateStudentCoinTransaction = async (req: any, res: any) => {
     }
 
     const rawAmount = Number(req.body?.amount);
-    if (!Number.isFinite(rawAmount) || rawAmount === 0) {
-      return res.status(400).json({ error: 'amount must be a non-zero number.' });
-    }
     const direction = String(req.body?.direction || '').toLowerCase();
     const delta = direction === 'subtract' ? -Math.abs(rawAmount) : rawAmount;
     const reason = req.body?.reason ? String(req.body.reason) : null;

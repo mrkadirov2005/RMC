@@ -1,3 +1,5 @@
+// Source file for the calendar area in the crm feature.
+
 import { CalendarDays } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/features/crm/hooks';
@@ -6,6 +8,7 @@ interface CalendarPageHeaderProps {
   today: Date;
 }
 
+// Renders the calendar page header module.
 export const CalendarPageHeader = ({ today }: CalendarPageHeaderProps) => {
   const { user } = useAppSelector((state) => state.auth);
 

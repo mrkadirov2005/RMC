@@ -138,9 +138,6 @@ const deleteGrade = async (req: any, res: any) => {
 const createBulkGrades = async (req: any, res: any) => {
   try {
     const { grades } = req.body;
-    if (!Array.isArray(grades) || grades.length === 0) {
-      return res.status(400).json({ error: 'grades must be a non-empty array' });
-    }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });

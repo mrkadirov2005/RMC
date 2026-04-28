@@ -1,3 +1,5 @@
+// Page component for the tests screen in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -50,6 +52,7 @@ interface Submission {
   answers: Answer[];
 }
 
+// Renders the grade submission page screen.
 const GradeSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
@@ -60,10 +63,12 @@ const GradeSubmissionPage = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+// Runs side effects for this component.
   useEffect(() => {
     loadSubmission();
   }, [submissionId]);
 
+// Loads submission.
   const loadSubmission = async () => {
     try {
       setLoading(true);
@@ -87,6 +92,7 @@ const GradeSubmissionPage = () => {
     }
   };
 
+// Handles grade change.
   const handleGradeChange = (questionId: number, field: 'marks' | 'feedback', value: any) => {
     setGrades((prev) => ({
       ...prev,
@@ -97,6 +103,7 @@ const GradeSubmissionPage = () => {
     }));
   };
 
+// Handles quick grade.
   const handleQuickGrade = (questionId: number, marks: number, _maxMarks: number) => {
     setGrades((prev) => ({
       ...prev,
@@ -107,10 +114,12 @@ const GradeSubmissionPage = () => {
     }));
   };
 
+// Handles calculate total score.
   const calculateTotalScore = () => {
     return Object.values(grades).reduce((sum, g) => sum + (Number(g.marks) || 0), 0);
   };
 
+// Handles save.
   const handleSave = async () => {
     try {
       setSaving(true);
@@ -142,6 +151,7 @@ const GradeSubmissionPage = () => {
     }
   };
 
+// Formats answer.
   const formatAnswer = (answer: Answer) => {
     const studentAnswer = answer.student_answer;
     if (!studentAnswer) return <em>No answer provided</em>;
@@ -171,6 +181,7 @@ const GradeSubmissionPage = () => {
     }
   };
 
+// Formats correct answer.
   const formatCorrectAnswer = (answer: Answer) => {
     const correct = answer.correct_answer;
     if (!correct) return <em>Not specified</em>;

@@ -1,3 +1,5 @@
+// Source file for toast.
+
 import { toast } from 'react-toastify';
 import type { ToastOptions } from 'react-toastify';
 

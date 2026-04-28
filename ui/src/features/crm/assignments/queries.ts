@@ -1,8 +1,12 @@
+// Query helpers for the crm feature.
+
 import type { Assignment, Class, AssignmentFolderSelection } from './types';
 
+// Returns assignments for class.
 export const getAssignmentsForClass = (assignments: Assignment[], classId: number): Assignment[] =>
   assignments.filter((assignment) => assignment.class_id === classId);
 
+// Returns personal assignments.
 export const getPersonalAssignments = (assignments: Assignment[], classes: Class[]): Assignment[] =>
   assignments.filter(
     (assignment) =>
@@ -10,12 +14,15 @@ export const getPersonalAssignments = (assignments: Assignment[], classes: Class
       !classes.find((cls) => (cls.class_id || cls.id) === assignment.class_id)
   );
 
+// Returns assignment count for class.
 export const getAssignmentCountForClass = (assignments: Assignment[], classId: number): number =>
   getAssignmentsForClass(assignments, classId).length;
 
+// Returns completed count for class.
 export const getCompletedCountForClass = (assignments: Assignment[], classId: number): number =>
   getAssignmentsForClass(assignments, classId).filter((assignment) => assignment.status === 'Completed').length;
 
+// Returns filtered assignments.
 export const getFilteredAssignments = (
   assignments: Assignment[],
   classes: Class[],
@@ -28,6 +35,7 @@ export const getFilteredAssignments = (
   return getPersonalAssignments(assignments, classes);
 };
 
+// Returns status color.
 export const getStatusColor = (status: string) => {
   switch (status?.toLowerCase()) {
     case 'completed':

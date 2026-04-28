@@ -1,3 +1,5 @@
+// Page component for the OwnerLoginPage.tsx screen in the auth feature.
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -7,10 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { useAppDispatch, useAppSelector } from '../../features/crm/hooks';
+import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
-import { showToast } from '../../utils/toast';
+import { authAPI } from '../../shared/api/api';
+import { showToast, handleApiError } from '../../utils/toast';
 
+// Renders the owner login page screen.
 export const OwnerLoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -19,39 +23,42 @@ export const OwnerLoginPage = () => {
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     dispatch(setLoading(true));
 
     try {
-      if (username === 'Muzaffar' && password === '123456789') {
-        dispatch(
-          loginSuccess({
-            user: {
-              id: 0,
-              username: 'Muzaffar',
-              email: 'owner@crm.com',
-              first_name: 'Muzaffar',
-              last_name: 'Owner',
-              role: 'owner',
-              userType: 'superuser',
-              center_id: 0,
-            },
-            token: 'owner-token-' + Date.now(),
-          })
-        );
-
-        showToast.success('Owner login successful! Accessing manager panel...');
-        navigate('/owner/manage');
-      } else {
-        const errorMsg = 'Invalid credentials. Please check username and password.';
-        dispatch(loginFailure(errorMsg));
-        showToast.error(errorMsg);
+      const response = await authAPI.loginOwner({ username, password });
+      const owner = response.data.owner || response.data.superuser;
+      if (!owner) {
+        throw new Error('Owner login response was invalid.');
       }
-    } catch {
-      const errorMsg = 'Login failed. Please try again.';
+
+      dispatch(
+        loginSuccess({
+          user: {
+            id: owner.owner_id,
+            username: owner.username,
+            email: owner.email,
+            first_name: owner.first_name,
+            last_name: owner.last_name,
+            role: 'owner',
+            userType: 'superuser',
+            center_id: 0,
+          },
+          token: response.data.token || `owner-token-${Date.now()}`,
+        })
+      );
+
+      showToast.success('Owner login successful! Accessing manager panel...');
+      navigate('/owner/manage');
+    } catch (err: any) {
+      const errorMsg = handleApiError(err);
       dispatch(loginFailure(errorMsg));
       showToast.error(errorMsg);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -85,6 +92,14 @@ export const OwnerLoginPage = () => {
 
         <h2 className="text-3xl font-bold text-white mb-1">Owner Panel</h2>
         <p className="text-white/45 mb-6">System owner & manager access only</p>
+
+        <button
+          type="button"
+          onClick={() => navigate('/owner/register')}
+          className="mb-4 text-sm text-amber-400 hover:text-amber-300 underline underline-offset-4"
+        >
+          No owner account yet? Create one with the keyword
+        </button>
 
         {/* Error */}
         {error && (

@@ -1,3 +1,5 @@
+// Page component for the assignments screen in the crm feature.
+
 import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,6 +27,7 @@ import { SelectField } from '../students/components/SelectField';
 import { useAssignmentsPage } from './hooks/useAssignmentsPage';
 import { getStatusColor } from './queries';
 
+// Renders the assignments page screen.
 const AssignmentsPage = () => {
   const {
     state,

@@ -7,7 +7,9 @@ export interface AuthUser {
   last_name: string;
   role: string;
   roles?: string[]; // For teachers
+  permissions?: string[]; // For superusers/admins
   userType: 'superuser' | 'teacher' | 'student';
+  branch_id?: number;
   center_id: number;
   class_id?: number; // For students
 }
@@ -32,6 +34,8 @@ export interface Student {
   date_of_birth: string;
   parent_name: string;
   parent_phone: string;
+  school_name?: string | null;
+  school_class?: string | null;
   gender: string;
   status: string;
   teacher_id: number;
@@ -175,6 +179,7 @@ export const PERMISSION_CODES = {
   CRUD_STUDENT: 'CRUD_STUDENT',
   CRUD_TEACHER: 'CRUD_TEACHER',
   CRUD_CLASS: 'CRUD_CLASS',
+  CRUD_ROOM: 'CRUD_ROOM',
   CRUD_PAYMENT: 'CRUD_PAYMENT',
   CRUD_GRADE: 'CRUD_GRADE',
   CRUD_ATTENDANCE: 'CRUD_ATTENDANCE',
@@ -182,6 +187,8 @@ export const PERMISSION_CODES = {
   CRUD_SUBJECT: 'CRUD_SUBJECT',
   CRUD_DEBT: 'CRUD_DEBT',
   CRUD_CENTER: 'CRUD_CENTER',
+  VIEW_FINANCE: 'VIEW_FINANCE',
+  MANAGE_TESTS: 'MANAGE_TESTS',
   VIEW_REPORTS: 'VIEW_REPORTS',
   MANAGE_USERS: 'MANAGE_USERS',
 };

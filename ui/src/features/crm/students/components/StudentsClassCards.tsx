@@ -1,7 +1,10 @@
+// Source file for the students area in the crm feature.
+
 import { Folder, FolderOpen, Users } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import type { Class, Student } from '../types';
 
+// Handles to id.
 const toId = (value: unknown) => {
   const normalized = Number(value);
   return Number.isNaN(normalized) ? null : normalized;
@@ -13,6 +16,7 @@ interface Props {
   onClassClick: (cls: Class) => void;
 }
 
+// Renders the students class cards module.
 export const StudentsClassCards = ({ classes, students, onClassClick }: Props) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
     {classes.map((cls) => {

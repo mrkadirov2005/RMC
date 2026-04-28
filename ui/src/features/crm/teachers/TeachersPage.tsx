@@ -1,3 +1,5 @@
+// Page component for the teachers screen in the crm feature.
+
 import { Plus, Pencil, Trash2, Eye, Mail, Phone, GraduationCap, User, X, Loader2 } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
@@ -22,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
+// Renders the teachers page screen.
 const TeachersPage = () => {
   const {
     navigate,

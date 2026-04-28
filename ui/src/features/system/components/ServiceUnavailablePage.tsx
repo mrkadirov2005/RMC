@@ -1,3 +1,5 @@
+// Page component for the components screen in the system feature.
+
 import type { ReactNode } from 'react';
 import { Button } from '../../../components/ui/button';
 import { WifiOff, ServerCrash } from 'lucide-react';
@@ -22,6 +24,7 @@ const variantContent: Record<ServiceUnavailableVariant, { title: string; message
   },
 };
 
+// Renders the service unavailable page screen.
 export const ServiceUnavailablePage = ({ variant, onRetry }: ServiceUnavailablePageProps) => {
   const { title, message, icon } = variantContent[variant];
 

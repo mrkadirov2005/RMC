@@ -1,7 +1,10 @@
+// Query helpers for the crm feature.
+
 import type { Class, ClassSchedule } from './types';
 
 export const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+// Parses schedule.
 export const parseSchedule = (section?: string): ClassSchedule => {
   if (!section) return { days: [], time: '09:00' };
   try {
@@ -15,6 +18,7 @@ export const parseSchedule = (section?: string): ClassSchedule => {
   }
 };
 
+// Formats schedule.
 export const formatSchedule = (cls: Class) => {
   const schedule = parseSchedule(cls.section);
   return schedule.days.length > 0 ? `${schedule.days.join(', ')} at ${schedule.time}` : cls.section || 'Not set';

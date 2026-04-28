@@ -1,3 +1,5 @@
+// Page component for the tests screen in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -17,8 +19,12 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { testAPI, subjectAPI, centerAPI } from '../../../shared/api/api';
-import { useAppSelector } from '../hooks';
+import { fetchCentersForce } from '../../../slices/centersSlice';
+import { fetchSubjects, fetchSubjectsForce } from '../../../slices/subjectsSlice';
+import { createTest } from '../../../slices/testsSlice';
+import { selectCenterOptions, selectSubjectOptions } from '../../../store/selectors';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 
 interface Question {
   id: string;
@@ -38,15 +44,17 @@ interface Passage {
   difficulty_level: string;
 }
 
+// Renders the create test page screen.
 const CreateTestPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const subjectOptions = useAppSelector(selectSubjectOptions);
+  const centerOptions = useAppSelector(selectCenterOptions);
 
   const [activeStep, setActiveStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [centers, setCenters] = useState<any[]>([]);
 
   // Test basic info
   const [testData, setTestData] = useState({
@@ -55,7 +63,7 @@ const CreateTestPage = () => {
     description: '',
     instructions: '',
     subject_id: '',
-    center_id: user?.center_id || 1,
+    center_id: getResolvedCenterId(user) ?? 0,
     total_marks: 0,
     passing_marks: 0,
     duration_minutes: 60,
@@ -65,6 +73,7 @@ const CreateTestPage = () => {
     allow_retake: false,
     max_retakes: 1,
     assignment_type: 'all_students',
+    is_private: false,
   });
 
   // Questions
@@ -86,23 +95,28 @@ const CreateTestPage = () => {
     { value: 'matching', label: 'Matching' },
   ];
 
+// Runs side effects for this component.
   useEffect(() => {
-    loadOptions();
-  }, []);
+    dispatch(fetchSubjects());
+    dispatch(fetchCentersForce());
+  }, [dispatch]);
 
-  const loadOptions = async () => {
-    try {
-      const [subjectsRes, centersRes] = await Promise.all([
-        subjectAPI.getAll(),
-        centerAPI.getAll(),
-      ]);
-      setSubjects(subjectsRes.data || []);
-      setCenters(centersRes.data || []);
-    } catch (err) {
-      console.error('Error loading options:', err);
-    }
-  };
+// Runs side effects for this component.
+  useEffect(() => {
+// Handles active center changed.
+    const handleActiveCenterChanged = () => {
+      dispatch(fetchSubjectsForce());
+      dispatch(fetchCentersForce());
+      setTestData((prev) => ({
+        ...prev,
+        center_id: getResolvedCenterId(user) ?? prev.center_id,
+      }));
+    };
+    window.addEventListener('active-center-changed', handleActiveCenterChanged);
+    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
+  }, [dispatch, user]);
 
+// Handles next.
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
       handleSubmit();
@@ -111,10 +125,12 @@ const CreateTestPage = () => {
     }
   };
 
+// Handles back.
   const handleBack = () => {
     setActiveStep((prev) => prev - 1);
   };
 
+// Handles add question.
   const addQuestion = () => {
     const newQuestion: Question = {
       id: Date.now().toString(),
@@ -126,14 +142,17 @@ const CreateTestPage = () => {
     setQuestions([...questions, newQuestion]);
   };
 
+// Updates question.
   const updateQuestion = (id: string, updates: Partial<Question>) => {
     setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updates } : q)));
   };
 
+// Deletes question.
   const deleteQuestion = (id: string) => {
     setQuestions(questions.filter((q) => q.id !== id));
   };
 
+// Handles add option.
   const addOption = (questionId: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (question && question.options) {
@@ -141,6 +160,7 @@ const CreateTestPage = () => {
     }
   };
 
+// Updates option.
   const updateOption = (questionId: string, index: number, value: string) => {
     const question = questions.find((q) => q.id === questionId);
     if (question && question.options) {
@@ -150,6 +170,7 @@ const CreateTestPage = () => {
     }
   };
 
+// Deletes option.
   const deleteOption = (questionId: string, index: number) => {
     const question = questions.find((q) => q.id === questionId);
     if (question && question.options && question.options.length > 2) {
@@ -158,6 +179,7 @@ const CreateTestPage = () => {
     }
   };
 
+// Handles add passage.
   const addPassage = () => {
     const newPassage: Passage = {
       id: Date.now().toString(),
@@ -168,18 +190,22 @@ const CreateTestPage = () => {
     setPassages([...passages, newPassage]);
   };
 
+// Updates passage.
   const updatePassage = (id: string, updates: Partial<Passage>) => {
     setPassages(passages.map((p) => (p.id === id ? { ...p, ...updates } : p)));
   };
 
+// Deletes passage.
   const deletePassage = (id: string) => {
     setPassages(passages.filter((p) => p.id !== id));
   };
 
+// Handles calculate total marks.
   const calculateTotalMarks = () => {
     return questions.reduce((sum, q) => sum + (q.marks || 0), 0);
   };
 
+// Handles submit.
   const handleSubmit = async () => {
     try {
       setLoading(true);
@@ -214,7 +240,7 @@ const CreateTestPage = () => {
         passages: testData.test_type === 'reading_passage' ? formattedPassages : undefined,
       };
 
-      await testAPI.create(submitData);
+      await dispatch(createTest(submitData)).unwrap();
       navigate('/tests');
     } catch (err: any) {
       console.error('Error creating test:', err);
@@ -224,6 +250,7 @@ const CreateTestPage = () => {
     }
   };
 
+// Renders basic info.
   const renderBasicInfo = () => (
     <div className="grid grid-cols-1 gap-6">
       <div>
@@ -260,9 +287,9 @@ const CreateTestPage = () => {
             className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
             <option value="">No Subject</option>
-            {subjects.map((subject) => (
-              <option key={subject.subject_id} value={subject.subject_id}>
-                {subject.subject_name}
+            {subjectOptions.map((subject) => (
+              <option key={subject.id || subject.value} value={subject.value}>
+                {subject.label}
               </option>
             ))}
           </select>
@@ -318,9 +345,9 @@ const CreateTestPage = () => {
             onChange={(e) => setTestData({ ...testData, center_id: Number(e.target.value) })}
             className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            {centers.map((center) => (
-              <option key={center.center_id} value={center.center_id}>
-                {center.center_name}
+            {centerOptions.map((center) => (
+              <option key={center.id || center.value} value={center.value}>
+                {center.label}
               </option>
             ))}
           </select>
@@ -329,6 +356,7 @@ const CreateTestPage = () => {
     </div>
   );
 
+// Renders questions.
   const renderQuestions = () => (
     <div>
       {/* Reading Passages Section */}
@@ -557,6 +585,7 @@ const CreateTestPage = () => {
     </div>
   );
 
+// Renders settings.
   const renderSettings = () => (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>
@@ -589,6 +618,20 @@ const CreateTestPage = () => {
                 className="h-4 w-4 rounded border-gray-300"
               />
               <span className="text-sm">Show Results Immediately</span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={testData.is_private}
+                onChange={(e) => setTestData({ ...testData, is_private: e.target.checked })}
+                className="mt-1 h-4 w-4 rounded border-gray-300"
+              />
+              <span className="text-sm">
+                Private test
+                <span className="block text-xs text-muted-foreground mt-1">
+                  Private tests are visible only to the creator and, when created by a teacher, that teacher&apos;s students.
+                </span>
+              </span>
             </label>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
@@ -638,6 +681,7 @@ const CreateTestPage = () => {
     </div>
   );
 
+// Renders review.
   const renderReview = () => (
     <div>
       <Alert className="mb-6">
@@ -654,6 +698,7 @@ const CreateTestPage = () => {
               <p><strong>Duration:</strong> {testData.duration_minutes} minutes</p>
               <p><strong>Total Marks:</strong> {calculateTotalMarks()}</p>
               <p><strong>Passing Marks:</strong> {testData.passing_marks || Math.ceil(calculateTotalMarks() * 0.6)}</p>
+              <p><strong>Visibility:</strong> {testData.is_private ? 'Private' : 'Public'}</p>
             </div>
           </CardContent>
         </Card>
@@ -674,6 +719,7 @@ const CreateTestPage = () => {
     </div>
   );
 
+// Returns step content.
   const getStepContent = (step: number) => {
     switch (step) {
       case 0:

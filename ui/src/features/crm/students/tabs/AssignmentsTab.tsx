@@ -1,3 +1,5 @@
+// Tab component for the crm feature.
+
 import { AssignmentSection } from '../components/AssignmentSection';
 
 interface Assignment {
@@ -19,6 +21,7 @@ interface AssignmentsTabProps {
   onRefresh: () => void;
 }
 
+// Renders the assignments tab tab.
 export const AssignmentsTab = ({ assignments, studentClassId, studentId, centerId, onRefresh }: AssignmentsTabProps) => {
   return (
     <AssignmentSection 

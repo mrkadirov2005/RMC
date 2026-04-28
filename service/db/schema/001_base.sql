@@ -7,6 +7,7 @@ CREATE TYPE payment_frequency AS ENUM ('Monthly', 'Quarterly', 'Annual');
 CREATE TYPE student_status AS ENUM ('Active', 'Inactive', 'Graduated', 'Removed');
 CREATE TYPE student_gender AS ENUM ('Male', 'Female', 'Other');
 CREATE TYPE superuser_status AS ENUM ('Active', 'Inactive', 'Suspended');
+CREATE TYPE owner_status AS ENUM ('Active', 'Inactive', 'Suspended');
 CREATE TYPE teacher_status AS ENUM ('Active', 'Inactive', 'Retired');
 CREATE TYPE teacher_gender AS ENUM ('Male', 'Female', 'Other');
 CREATE TYPE attendance_status AS ENUM ('Present', 'Absent', 'Absent NR', 'Absent R', 'Late', 'Half Day');
@@ -74,6 +75,25 @@ CREATE TABLE superusers (
 CREATE INDEX idx_superuser_username ON superusers(username);
 CREATE INDEX idx_superuser_status ON superusers(status);
 
+CREATE TABLE owners (
+    owner_id SERIAL PRIMARY KEY,
+    username VARCHAR(100) NOT NULL UNIQUE,
+    email VARCHAR(100) UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    status owner_status DEFAULT 'Active',
+    last_login TIMESTAMP,
+    login_attempts INT DEFAULT 0,
+    is_locked BOOLEAN DEFAULT FALSE,
+    locked_until TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_owner_username ON owners(username);
+CREATE INDEX idx_owner_status ON owners(status);
+
 CREATE TABLE classes (
     class_id SERIAL PRIMARY KEY,
     center_id INT NOT NULL,
@@ -130,6 +150,8 @@ CREATE TABLE students (
     date_of_birth DATE,
     parent_name VARCHAR(200),
     parent_phone VARCHAR(20),
+    school_name VARCHAR(255),
+    school_class VARCHAR(100),
     gender student_gender,
     status student_status DEFAULT 'Active',
     teacher_id INT,
@@ -145,6 +167,7 @@ CREATE TABLE students (
 CREATE INDEX idx_enrollment_number ON students(enrollment_number);
 CREATE INDEX idx_students_status ON students(status);
 CREATE INDEX idx_students_teacher_id ON students(teacher_id);
+CREATE INDEX idx_students_school_name ON students(school_name);
 
 CREATE TABLE student_coin_transactions (
     transaction_id SERIAL PRIMARY KEY,

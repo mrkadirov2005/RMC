@@ -1,3 +1,5 @@
+// Shared TypeScript types.
+
 export interface Debt {
   debt_id?: number;
   id?: number;

@@ -1,6 +1,8 @@
+// Source file for the students area in the crm feature.
+
 import { useState } from 'react';
 import { useMemo } from 'react';
-import { Pencil, Trash2, Plus, X } from 'lucide-react';
+import { Pencil, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -34,6 +36,7 @@ interface AttendanceSectionProps {
   onRefresh: () => void;
 }
 
+// Returns status badge variant.
 const getStatusBadgeVariant = (status: string) => {
   switch (status.toLowerCase()) {
     case 'present':
@@ -47,6 +50,7 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+// Renders the attendance section module.
 export const AttendanceSection = ({
   attendance,
   studentId,
@@ -62,6 +66,7 @@ export const AttendanceSection = ({
   });
   const [loading, setLoading] = useState(false);
 
+// Handles open modal.
   const handleOpenModal = (record?: Attendance) => {
     if (record) {
       setEditingId(record.attendance_id || record.id || null);
@@ -79,6 +84,7 @@ export const AttendanceSection = ({
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
@@ -91,6 +97,7 @@ export const AttendanceSection = ({
     });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -122,6 +129,7 @@ export const AttendanceSection = ({
     }
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure?')) {
       try {
@@ -138,6 +146,7 @@ export const AttendanceSection = ({
 
   // Filter by day of week
   const [dayFilter, setDayFilter] = useState<string>('');
+// Memoizes the filtered attendance derived value.
   const filteredAttendance = useMemo(() => {
     if (!dayFilter) return attendance;
     return attendance.filter((rec) => {

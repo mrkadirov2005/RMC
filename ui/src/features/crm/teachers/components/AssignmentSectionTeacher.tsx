@@ -1,3 +1,5 @@
+// Source file for the teachers area in the crm feature.
+
 import { useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +30,7 @@ interface AssignmentSectionTeacherProps {
   onRefresh: () => void;
 }
 
+// Returns status badge variant.
 const getStatusBadgeVariant = (status: string) => {
   switch (status.toLowerCase()) {
     case 'pending':
@@ -41,6 +44,7 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+// Renders the assignment section teacher module.
 export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: AssignmentSectionTeacherProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -53,6 +57,7 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
     (assignment) => Number(assignment.teacher_id) === Number(teacherId)
   );
 
+// Handles open modal.
   const handleOpenModal = (assignment?: Assignment) => {
     if (assignment) {
       setEditingId(assignment.assignment_id || assignment.id || null);
@@ -64,12 +69,14 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
     setIsModalOpen(true);
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({ status: 'Pending' });
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -97,6 +104,7 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
     }
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (window.confirm('Are you sure?')) {
       try {

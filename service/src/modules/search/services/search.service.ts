@@ -7,9 +7,6 @@ const runSearch = async (
   centerId?: number,
   teacherId?: number
 ) => {
-  if (!q || String(q).trim().length < 2) {
-    return { error: 'validation' as const };
-  }
   const max = Math.min(parseInt(limit || '20', 10), 100);
   const pattern = `%${q}%`;
   const results: any = {};

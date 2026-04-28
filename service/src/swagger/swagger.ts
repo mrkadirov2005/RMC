@@ -37,6 +37,8 @@ const swaggerOptions = {
             status: { type: 'string', enum: ['Active', 'Inactive', 'Graduated', 'Removed'] },
             teacher_id: { type: 'integer' },
             class_id: { type: 'integer' },
+            school_name: { type: 'string', nullable: true },
+            school_class: { type: 'string', nullable: true },
             created_at: { type: 'string', format: 'date-time' },
             updated_at: { type: 'string', format: 'date-time' }
           }
@@ -196,6 +198,7 @@ const swaggerOptions = {
           type: 'object',
           properties: {
             superuser_id: { type: 'integer' },
+            branch_id: { type: 'integer' },
             center_id: { type: 'integer' },
             username: { type: 'string' },
             email: { type: 'string' },

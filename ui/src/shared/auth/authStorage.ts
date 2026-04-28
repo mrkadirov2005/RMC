@@ -1,3 +1,5 @@
+// Shared authentication helpers and storage utilities.
+
 import type { AuthUser } from '../../types';
 
 const TOKEN_KEY = 'token';
@@ -9,6 +11,7 @@ type StoredAuth = {
   user: AuthUser | null;
 };
 
+// Returns stored auth.
 export const getStoredAuth = (): StoredAuth => {
   try {
     const token = localStorage.getItem(TOKEN_KEY);
@@ -25,11 +28,13 @@ export const getStoredAuth = (): StoredAuth => {
   }
 };
 
+// Sets stored auth.
 export const setStoredAuth = (token: string, user: AuthUser) => {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 };
 
+// Returns stored active center id.
 export const getStoredActiveCenterId = (): number | null => {
   try {
     const raw = localStorage.getItem(ACTIVE_CENTER_KEY);
@@ -41,6 +46,7 @@ export const getStoredActiveCenterId = (): number | null => {
   }
 };
 
+// Sets stored active center id.
 export const setStoredActiveCenterId = (centerId: number | null) => {
   if (centerId && centerId > 0) {
     localStorage.setItem(ACTIVE_CENTER_KEY, String(centerId));
@@ -52,6 +58,7 @@ export const setStoredActiveCenterId = (centerId: number | null) => {
   }
 };
 
+// Handles clear stored auth.
 export const clearStoredAuth = () => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);

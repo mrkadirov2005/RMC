@@ -1,4 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+// Portal component for the student feature.
+
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 
@@ -23,9 +25,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '../crm/hooks';
 import type { RootState } from '../../store';
-import {
-  portalAPI,
-} from '../../shared/api/api';
+import { useAppDispatch } from '../crm/hooks';
+import { fetchStudentDashboard } from '../../slices/studentDashboardSlice';
 
 
 interface StudentProfile {
@@ -128,25 +129,36 @@ interface ScheduleItem {
 }
 
 
+// Renders the student portal portal.
 const StudentPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
+  const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [student, setStudent] = useState<StudentProfile | null>(null);
-  const [teacher, setTeacher] = useState<Teacher | null>(null);
-  const [classInfo, setClassInfo] = useState<ClassInfo | null>(null);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [tests, setTests] = useState<Test[]>([]);
-  const [attendance, setAttendance] = useState<Attendance[]>([]);
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
-  const [grades, setGrades] = useState<Grade[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [debts, setDebts] = useState<Debt[]>([]);
-  const [schedule, setSchedule] = useState<ScheduleItem[]>([]);
+  const { data: dashboardData, loading, error } = useAppSelector((state) => state.studentDashboard);
+  
+  const student = dashboardData?.student as StudentProfile | null;
+  const teacher = dashboardData?.teacher as Teacher | null;
+  const classInfo = dashboardData?.classInfo as ClassInfo | null;
+// Handles subjects.
+  const subjects = (dashboardData?.subjects || []) as Subject[];
+// Handles tests.
+  const tests = (dashboardData?.tests || []) as Test[];
+// Handles attendance.
+  const attendance = (dashboardData?.attendance || []) as Attendance[];
+// Handles assignments.
+  const assignments = (dashboardData?.assignments || []) as Assignment[];
+// Handles grades.
+  const grades = (dashboardData?.grades || []) as Grade[];
+// Handles payments.
+  const payments = (dashboardData?.payments || []) as Payment[];
+// Handles debts.
+  const debts = (dashboardData?.debts || []) as Debt[];
+// Handles schedule.
+  const schedule = (dashboardData?.schedule || []) as ScheduleItem[];
 
 
+// Memoizes the initials derived value.
   const initials = useMemo(() => {
     const first = user?.first_name?.[0] ?? '';
     const last = user?.last_name?.[0] ?? '';
@@ -155,6 +167,7 @@ const StudentPortal = () => {
 
 
 
+// Formats date.
   const formatDate = (value?: string) => {
     if (!value) return 'Unknown date';
     const d = new Date(value);
@@ -162,47 +175,15 @@ const StudentPortal = () => {
     return d.toLocaleDateString();
   };
 
+// Runs side effects for this component.
   useEffect(() => {
-    let isMounted = true;
-
-    const loadPortal = async () => {
-      if (!user?.id) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await portalAPI.getDashboard();
-        const data = res.data;
-
-        if (!isMounted) return;
-
-        setStudent(data.student);
-        setTests(data.tests || []);
-        setAttendance(data.attendance || []);
-        setGrades(data.grades || []);
-        setPayments(data.payments || []);
-        setDebts(data.debts || []);
-        setAssignments(data.assignments || []);
-        setClassInfo(data.classInfo);
-        setSubjects(data.subjects || []);
-        setTeacher(data.teacher);
-        setSchedule(data.schedule || []);
-
-      } catch (err: any) {
-        console.error('Error loading student portal:', err);
-        if (isMounted) setError('Failed to load student portal data.');
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
-
-    loadPortal();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [user?.id]);
+    if (user?.id) {
+      dispatch(fetchStudentDashboard());
+    }
+  }, [dispatch, user?.id]);
 
 
+// Memoizes the attendance stats derived value.
   const attendanceStats = useMemo(() => {
     const total = attendance.length;
     const present = attendance.filter((a) => {
@@ -213,6 +194,7 @@ const StudentPortal = () => {
     return { total, present, rate };
   }, [attendance]);
 
+// Memoizes the average grade derived value.
   const averageGrade = useMemo(() => {
     if (grades.length === 0) return 0;
     const values = grades.map((g) => {
@@ -226,6 +208,7 @@ const StudentPortal = () => {
     return Math.round(total / values.length);
   }, [grades]);
 
+// Memoizes the upcoming tests derived value.
   const upcomingTests = useMemo(() => {
     const now = new Date();
     return tests
@@ -238,6 +221,7 @@ const StudentPortal = () => {
       .slice(0, 4);
   }, [tests]);
 
+// Memoizes the active tests derived value.
   const activeTests = useMemo(() => {
     return tests.filter((t) => {
       const status = String(t.submission_status || '').toLowerCase();
@@ -245,6 +229,7 @@ const StudentPortal = () => {
     }).length;
   }, [tests]);
 
+// Memoizes the assignments due derived value.
   const assignmentsDue = useMemo(() => {
     const now = new Date();
     const soon = new Date();
@@ -259,6 +244,7 @@ const StudentPortal = () => {
       .slice(0, 4);
   }, [assignments]);
 
+// Memoizes the last payment derived value.
   const lastPayment = useMemo(() => {
     const sorted = [...payments].sort((a, b) => {
       const aTime = a.payment_date ? new Date(a.payment_date).getTime() : 0;
@@ -268,6 +254,7 @@ const StudentPortal = () => {
     return sorted[0];
   }, [payments]);
 
+// Memoizes the outstanding debt derived value.
   const outstandingDebt = useMemo(() => {
     return debts.reduce((sum, d) => {
       const debtAmount = Number(d.debt_amount) || 0;
@@ -277,10 +264,12 @@ const StudentPortal = () => {
     }, 0);
   }, [debts]);
 
+// Memoizes the recent grades derived value.
   const recentGrades = useMemo(() => grades.slice(0, 4), [grades]);
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+// Memoizes the schedule by day derived value.
   const scheduleByDay = useMemo(() => {
     const map: Record<string, ScheduleItem[]> = {};
     daysOfWeek.forEach(d => { map[d] = []; });
@@ -290,6 +279,7 @@ const StudentPortal = () => {
     return map;
   }, [schedule]);
 
+// Memoizes the last12 months derived value.
   const last12Months = useMemo(() => {
     const months = [];
     const d = new Date();

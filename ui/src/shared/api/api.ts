@@ -1,3 +1,5 @@
+// Shared API client and endpoint wrappers.
+
 import axios from 'axios';
 import { showToast, handleApiError } from '../../utils/toast';
 import { store } from '../../store';
@@ -6,9 +8,12 @@ import {
   setHealthy,
   setOffline,
 } from '../../slices/serviceStatusSlice';
-import { getStoredActiveCenterId } from '../auth/authStorage';
+import { getResolvedCenterId } from '../auth/centerScope';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
+// Default to relative `/api` so the same frontend build works behind:
+// - Vite dev proxy (local development)
+// - Nginx reverse proxy (Docker/production)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -18,13 +23,43 @@ export const apiClient = axios.create({
   },
 });
 
+const getOrCreateDeviceId = (): string | null => {
+  try {
+    const existing = localStorage.getItem('device_id');
+    if (existing && existing.trim()) return existing.trim();
+
+    const id =
+      (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+        ? crypto.randomUUID()
+        : `${Date.now()}-${Math.random().toString(16).slice(2)}`) || null;
+    if (!id) return null;
+    localStorage.setItem('device_id', id);
+    return id;
+  } catch {
+    return null;
+  }
+};
+
 // Add token to requests
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   const paymentToken = localStorage.getItem('payment_token');
   const userRaw = localStorage.getItem('user');
   const user = userRaw ? JSON.parse(userRaw) : null;
+// Handles headers.
   const headers = (config.headers ?? {}) as any;
+
+  // Stable per-browser device id (NOT a MAC address).
+  const deviceId = getOrCreateDeviceId();
+  if (deviceId && !headers['x-device-id'] && !headers['X-Device-Id']) {
+    headers['x-device-id'] = deviceId;
+  }
+
+  const skipCenterScope = Boolean(
+    headers['x-skip-center-scope'] ||
+      headers['X-Skip-Center-Scope'] ||
+      headers['X-SKIP-CENTER-SCOPE']
+  );
 
   if (config.url?.startsWith('/payments') && paymentToken && user?.userType === 'teacher') {
     headers.Authorization = `Bearer ${paymentToken}`;
@@ -38,11 +73,13 @@ apiClient.interceptors.request.use((config) => {
   }
 
   const normalizedRole = String(user?.role || '').toLowerCase();
-  const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole !== 'admin';
-  const activeCenterId = getStoredActiveCenterId() ?? (user?.center_id && user.center_id > 0 ? user.center_id : null);
+  const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
+  const isOwnerEndpoint = String(config.url || '').startsWith('/owners');
+  const activeCenterId = getResolvedCenterId(user);
 
-  if (isGlobalSuperuser && activeCenterId) {
+  if (!skipCenterScope && isGlobalSuperuser && activeCenterId && !isOwnerEndpoint) {
     if (config.method === 'get' || config.method === 'delete') {
+// Handles params.
       const params = (config.params ?? {}) as Record<string, unknown>;
       if (params.center_id == null || params.center_id === 0) {
         config.params = { ...params, center_id: activeCenterId };
@@ -53,7 +90,8 @@ apiClient.interceptors.request.use((config) => {
   const isMutating = Boolean(config.method && ['post', 'put', 'patch'].includes(config.method));
   const hasBody = config.data && typeof config.data === 'object' && !(config.data instanceof FormData);
   const payload = hasBody ? (config.data as Record<string, unknown>) : undefined;
-  if (isMutating && payload) {
+  if (!skipCenterScope && isMutating && payload && !isOwnerEndpoint) {
+// Handles payload center id.
     const payloadCenterId = (payload as any).center_id;
     if (payloadCenterId == null || payloadCenterId === 0) {
       const scopedCenterId = isGlobalSuperuser ? activeCenterId : (user?.center_id ?? null);
@@ -86,6 +124,7 @@ apiClient.interceptors.response.use(
         store.dispatch(setBackendUnreachable());
       }
     }
+// Handles should suppress access denied toast.
     const shouldSuppressAccessDeniedToast = () => {
       try {
         const path = window.location.pathname;
@@ -138,7 +177,11 @@ apiClient.interceptors.response.use(
 
 // API Services
 export const studentAPI = {
-  getAll: () => apiClient.get('/students'),
+  getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/students', {
+      params,
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
   create: (data: any) => apiClient.post('/students', data),
   update: (id: number, data: any) => apiClient.put(`/students/${id}`, data),
@@ -158,7 +201,11 @@ export const studentAPI = {
 };
 
 export const teacherAPI = {
-  getAll: () => apiClient.get('/teachers'),
+  getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/teachers', {
+      params,
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getById: (id: number) => apiClient.get(`/teachers/${id}`),
   create: (data: any) => apiClient.post('/teachers', data),
   update: (id: number, data: any) => apiClient.put(`/teachers/${id}`, data),
@@ -168,7 +215,11 @@ export const teacherAPI = {
 };
 
 export const classAPI = {
-  getAll: () => apiClient.get('/classes'),
+  getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/classes', {
+      params,
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getById: (id: number) => apiClient.get(`/classes/${id}`),
   getSessions: (id: number) => apiClient.get(`/classes/${id}/sessions`),
   create: (data: any) => apiClient.post('/classes', data),
@@ -186,7 +237,11 @@ export const classAPI = {
 
 
 export const paymentAPI = {
-  getAll: () => apiClient.get('/payments'),
+  getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/payments', {
+      params,
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getById: (id: number) => apiClient.get(`/payments/${id}`),
   getByStudent: (studentId: number) => apiClient.get(`/payments/student/${studentId}`),
   create: (data: any) => apiClient.post('/payments', data),
@@ -305,6 +360,26 @@ export const superuserAPI = {
   delete: (id: number) => apiClient.delete(`/superusers/${id}`),
 };
 
+export const ownerAPI = {
+  login: (credentials: { username: string; password: string }) =>
+    apiClient.post('/owners/auth/login', credentials),
+  register: (data: {
+    username: string;
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    invite_key: string;
+  }) => apiClient.post('/owners/auth/register', data),
+  getAll: () => apiClient.get('/owners'),
+  getById: (id: number) => apiClient.get(`/owners/${id}`),
+  create: (data: any) => apiClient.post('/owners', data),
+  update: (id: number, data: any) => apiClient.put(`/owners/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/owners/${id}`),
+  changePassword: (id: number, data: { old_password: string; new_password: string }) =>
+    apiClient.post(`/owners/${id}/change-password`, data),
+};
+
 export const roomAPI = {
   getAll: (params?: { center_id?: number }) => apiClient.get('/rooms', { params }),
   getById: (id: number) => apiClient.get(`/rooms/${id}`),
@@ -321,12 +396,30 @@ export const portalAPI = {
   getSchedule: () => apiClient.get('/portal/schedule'),
 };
 
+// Mongo-backed request logs (superuser/owner only).
+export const requestLogsAPI = {
+  list: (params?: {
+    kind?: 'owner' | 'superuser' | 'teacher' | 'student';
+    q?: string;
+    limit?: number;
+    skip?: number;
+  }) => apiClient.get('/request-logs', { params }),
+};
+
 
 export const authAPI = {
-
-
   loginSuperuser: (credentials: { username: string; password: string }) =>
     superuserAPI.login(credentials),
+  loginOwner: (credentials: { username: string; password: string }) =>
+    ownerAPI.login(credentials),
+  registerOwner: (data: {
+    username: string;
+    email: string;
+    password: string;
+    first_name: string;
+    last_name: string;
+    invite_key: string;
+  }) => ownerAPI.register(data),
   loginTeacher: (credentials: { username: string; password: string }) =>
     apiClient.post('/teachers/auth/login', credentials),
   loginTeacherPayment: (credentials: { username: string; password: string }) =>

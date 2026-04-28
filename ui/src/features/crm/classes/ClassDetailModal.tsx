@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+// Modal component for the classes screen in the crm feature.
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,9 +22,13 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { studentAPI, attendanceAPI, gradeAPI } from '../../../shared/api/api';
+import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
-import { fetchSubjects } from '../../../utils/dropdownOptions';
+import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';
+import { fetchStudents } from '../../../slices/studentsSlice';
+import { fetchAttendance, fetchAttendanceForce } from '../../../slices/attendanceSlice';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { makeSelectStudentsByClassId, selectSubjectOptions } from '../../../store/selectors';
 import ClassCalendar from './ClassCalendar';
 
 interface Class {
@@ -71,6 +77,7 @@ interface ClassDetailModalProps {
   onClose: () => void;
 }
 
+// Renders the class detail modal modal.
 const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   open,
   classData,
@@ -79,11 +86,17 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   sessionId,
   onClose,
 }) => {
-  const [students, setStudents] = useState<Student[]>([]);
+  const dispatch = useAppDispatch();
+// Memoizes the select students by class derived value.
+  const selectStudentsByClass = useMemo(makeSelectStudentsByClassId, []);
+  const classId = Number(classData?.class_id || classData?.id);
+  const subjectOptions = useAppSelector(selectSubjectOptions);
+  const students = useAppSelector((state) => selectStudentsByClass(state, classId)) as Student[];
+  const studentsLoading = useAppSelector((state) => state.students.loading);
+  const attendanceLoading = useAppSelector((state) => state.attendance.loading);
+  const allAttendance = useAppSelector((state) => state.attendance.items) as Attendance[];
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
-  const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [, setTodayAttendance] = useState<Attendance[]>([]);
   const [activeTab, setActiveTab] = useState<ClassDetailModalProps['initialTab']>('info');
 
   // Bulk Grading State
@@ -93,97 +106,61 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   const [gradeAcademicYear, setGradeAcademicYear] = useState(new Date().getFullYear());
   const [gradeTerm, setGradeTerm] = useState('First');
   const [submittingGrades, setSubmittingGrades] = useState(false);
-  const [subjectOptions, setSubjectOptions] = useState<{ id: number; label: string; value: string | number }[]>([]);
 
+// Normalizes attendance status.
   const normalizeAttendanceStatus = (value?: string) => {
     if (!value) return 'Absent NR';
     return value === 'Absent' ? 'Absent NR' : value;
   };
 
+// Runs side effects for this component.
   useEffect(() => {
     if (open && classData) {
       setActiveTab(initialTab || 'info');
-      loadStudents();
-      loadTodayAttendance();
-      loadSubjects();
+      dispatch(fetchStudents());
+      dispatch(fetchAttendance());
+      dispatch(fetchSubjectsThunk());
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, classData, initialTab, selectedDate, sessionId]);
+  }, [classData, dispatch, initialTab, open, selectedDate, sessionId]);
 
-  const loadSubjects = async () => {
-    try {
-      const subjects = await fetchSubjects();
-      setSubjectOptions(subjects);
-    } catch (error) {
-      console.error('Error loading subjects:', error);
-    }
-  };
-
-  const loadStudents = async () => {
-    setLoading(true);
-    try {
-      const response = await studentAPI.getAll();
-      const allStudents = response.data || response;
-      const classStudents = Array.isArray(allStudents)
-        ? allStudents.filter(
-            (student: Student) =>
-              (student.class_id === classData?.class_id || student.class_id === classData?.id)
-          )
-        : [];
-      setStudents(classStudents);
-      
-      // Initialize all students in attendance map (default to Absent NR)
-      setAttendance((prevMap) => {
-        const newMap = new Map(prevMap);
-        classStudents.forEach((student: Student) => {
-          const sid = student.student_id || student.id || 0;
-          if (!newMap.has(sid)) {
-            newMap.set(sid, ''); // No selection initially
-          }
-        });
-        return newMap;
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!open) return;
+    setAttendance((prevMap) => {
+      const next = new Map<number, string>();
+      students.forEach((student: Student) => {
+        const sid = Number(student.student_id || student.id);
+        if (sid) next.set(sid, prevMap.get(sid) || '');
       });
-    } catch (error) {
-      console.error('Error loading students:', error);
-      showToast.error('Failed to load students');
-    } finally {
-      setLoading(false);
-    }
-  };
+      return next;
+    });
+  }, [open, students]);
 
-  const loadTodayAttendance = async () => {
-    try {
-      if (!classData?.class_id && !classData?.id) return;
-      const response = await attendanceAPI.getByClass(classData?.class_id || classData?.id || 0);
-      const allAttendance = response.data || response;
-      
-      const today = selectedDate || new Date().toISOString().split('T')[0];
-      const todayRecords = Array.isArray(allAttendance)
-        ? allAttendance.filter((record: Attendance) => {
-            if (record.attendance_date.split('T')[0] !== today) return false;
-            if (sessionId) return Number(record.session_id) === Number(sessionId);
-            return true;
-          })
-        : [];
-      setTodayAttendance(todayRecords);
-      
-      // Initialize maps for records already saved today
-      setAttendance((prevMap) => {
-        const newMap = new Map(prevMap);
-        todayRecords.forEach((record: Attendance) => {
-          newMap.set(record.student_id, normalizeAttendanceStatus(record.status));
-        });
-        return newMap;
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!open || !classId) return;
+    const today = selectedDate || new Date().toISOString().split('T')[0];
+    const todayRecords = allAttendance.filter((record: Attendance) => {
+      if (Number(record.class_id) !== classId) return false;
+      if (record.attendance_date.split('T')[0] !== today) return false;
+      if (sessionId) return Number(record.session_id) === Number(sessionId);
+      return true;
+    });
+    setAttendance((prevMap) => {
+      const next = new Map(prevMap);
+      todayRecords.forEach((record: Attendance) => {
+        next.set(record.student_id, normalizeAttendanceStatus(record.status));
       });
-    } catch (error) {
-      console.error('Error loading attendance:', error);
-    }
-  };
+      return next;
+    });
+  }, [allAttendance, classId, open, selectedDate, sessionId]);
 
+// Handles attendance toggle.
   const handleAttendanceToggle = (studentId: number, status: string) => {
     setAttendance(prev => new Map(prev).set(studentId, status));
   };
 
+// Handles mark attendance.
   const handleMarkAttendance = async () => {
     setSubmitting(true);
     try {
@@ -191,7 +168,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       const today = selectedDate || new Date(now.getFullYear(), now.getMonth(), now.getDate())
         .toISOString()
         .split('T')[0];
-      const classId = classData?.class_id || classData?.id;
+      const targetClassId = classData?.class_id || classData?.id;
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
       const centerId = classData?.center_id || user?.center_id;
@@ -207,11 +184,10 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
         return;
       }
 
-      // Fetch fresh attendance data to avoid race conditions
-      const response = await attendanceAPI.getByClass(classId || 0);
-      const allAttendance = response.data || response;
-      const currentTodayRecords = Array.isArray(allAttendance)
-        ? allAttendance.filter((record: Attendance) => {
+      const refreshedAttendance = await dispatch(fetchAttendanceForce()).unwrap();
+      const currentTodayRecords = Array.isArray(refreshedAttendance)
+        ? refreshedAttendance.filter((record: Attendance) => {
+            if (Number(record.class_id) !== Number(targetClassId)) return false;
             if (record.attendance_date.split('T')[0] !== today) return false;
             if (sessionId) return Number(record.session_id) === Number(sessionId);
             return true;
@@ -227,7 +203,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
         const attendanceData = {
           center_id: centerId,
           student_id: studentId,
-          class_id: classId,
+          class_id: targetClassId,
           teacher_id: teacherId,
           attendance_date: today,
           session_id: sessionId ?? undefined,
@@ -243,8 +219,8 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       }
 
       showToast.success('Lesson scores saved successfully!');
-      // Don't refresh - keep the current state
-      setAttendance(new Map()); // Clear attendance marks after successful save
+      dispatch(fetchAttendanceForce());
+      setAttendance(new Map());
     } catch (error) {
       console.error('Error marking attendance:', error);
       showToast.error('Failed to mark attendance');
@@ -253,13 +229,16 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
     }
   };
 
+// Handles grade marks change.
   const handleGradeMarksChange = (studentId: number, value: string) => {
     const newMap = new Map(gradeMarks);
     newMap.set(studentId, value === '' ? '' : Number(value));
     setGradeMarks(newMap);
   };
 
+// Returns grade letter.
   const getGradeLetter = (marks: number, total: number): string => {
+// Handles percentage.
     const percentage = (marks / total) * 100;
     if (percentage >= 90) return 'A';
     if (percentage >= 80) return 'B';
@@ -268,6 +247,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
     return 'F';
   };
 
+// Returns grade color.
   const getGradeColor = (letter: string): string => {
     switch (letter) {
       case 'A': return 'bg-green-500';
@@ -279,6 +259,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
     }
   };
 
+// Handles submit bulk grades.
   const handleSubmitBulkGrades = async () => {
     if (!gradeSubject) {
       showToast.error('Please select a subject');
@@ -299,6 +280,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       if (marks === '' || marks === undefined || marks === null) continue;
       const marksNum = Number(marks);
       if (isNaN(marksNum) || marksNum < 0) continue;
+// Handles percentage.
       const percentage = (marksNum / gradeTotalMarks) * 100;
       const gradeLetter = getGradeLetter(marksNum, gradeTotalMarks);
 
@@ -339,6 +321,8 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       setSubmittingGrades(false);
     }
   };
+
+  const loading = studentsLoading || attendanceLoading;
 
   if (!classData) return null;
   // Parse schedule from section field

@@ -536,7 +536,7 @@ http://localhost:3000/api
 - **Body**:
 ```json
 {
-  "center_id": 1,
+  "branch_id": 1,
   "username": "admin",
   "email": "admin@crm.com",
   "password": "securePassword123",
@@ -581,6 +581,7 @@ http://localhost:3000/api
   "message": "Login successful",
   "superuser": {
     "superuser_id": 1,
+    "branch_id": 1,
     "username": "admin",
     "email": "admin@crm.com",
     "first_name": "Admin",

@@ -1,8 +1,11 @@
+// Source file for the dashboard area in the crm feature.
+
 import { memo } from 'react';
 import { useAppSelector } from '../hooks';
 import { DashboardFocusToday, DashboardHeader, DashboardLoadingState, DashboardRecentActivity, DashboardStatCards } from './components';
 import { useDashboardData } from './hooks/useDashboardData';
 
+// Renders the dashboard module.
 const Dashboard = memo(() => {
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';

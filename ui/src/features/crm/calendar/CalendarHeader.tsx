@@ -1,3 +1,5 @@
+// Source file for the calendar area in the crm feature.
+
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -14,6 +16,7 @@ interface CalendarHeaderProps {
   onNextWeek: () => void;
 }
 
+// Renders the calendar header module.
 export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
   calendarView,
   displayMonth,

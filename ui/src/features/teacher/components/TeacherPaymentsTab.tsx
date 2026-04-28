@@ -1,3 +1,5 @@
+// Tab component for the teacher feature.
+
 import { useState, useEffect } from 'react';
 
 import { Input } from '@/components/ui/input';
@@ -19,6 +21,7 @@ interface TeacherPaymentsTabProps {
   onRefresh?: () => void;
 }
 
+// Renders the teacher payments tab tab.
 export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProps) {
   const [selectedPaymentMonth, setSelectedPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [payments, setPayments] = useState<any[]>([]);
@@ -26,7 +29,9 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+// Runs side effects for this component.
   useEffect(() => {
+// Fetches data.
     const fetchData = async () => {
       setLoading(true);
       try {
@@ -69,6 +74,7 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
     );
   }
 
+// Returns students by class.
   const getStudentsByClass = (classId: number) => {
     return students.filter(s => Number(s.class_id) === Number(classId));
   };

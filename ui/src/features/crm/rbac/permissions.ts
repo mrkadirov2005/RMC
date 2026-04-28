@@ -1,20 +1,11 @@
+// Source file for the rbac area in the crm feature.
+
 import { PERMISSION_CODES, type AuthUser } from '../../../types';
 
 // Role-based permissions configuration
 export const ROLE_PERMISSIONS = {
   owner: Object.values(PERMISSION_CODES),
-  admin: [
-    PERMISSION_CODES.CRUD_STUDENT,
-    PERMISSION_CODES.CRUD_TEACHER,
-    PERMISSION_CODES.CRUD_CLASS,
-    PERMISSION_CODES.CRUD_PAYMENT,
-    PERMISSION_CODES.CRUD_GRADE,
-    PERMISSION_CODES.CRUD_ATTENDANCE,
-    PERMISSION_CODES.CRUD_ASSIGNMENT,
-    PERMISSION_CODES.CRUD_SUBJECT,
-    PERMISSION_CODES.CRUD_DEBT,
-    PERMISSION_CODES.VIEW_REPORTS,
-  ],
+  admin: [],
   teacher: [
     PERMISSION_CODES.CRUD_STUDENT,
     PERMISSION_CODES.CRUD_CLASS,
@@ -38,6 +29,7 @@ export const PERMISSION_DESCRIPTIONS = {
   [PERMISSION_CODES.CRUD_STUDENT]: 'Create, read, update, and delete student records',
   [PERMISSION_CODES.CRUD_TEACHER]: 'Create, read, update, and delete teacher records',
   [PERMISSION_CODES.CRUD_CLASS]: 'Create, read, update, and delete class records',
+  [PERMISSION_CODES.CRUD_ROOM]: 'Create, read, update, and delete room records',
   [PERMISSION_CODES.CRUD_PAYMENT]: 'Create, read, update, and delete payment records',
   [PERMISSION_CODES.CRUD_GRADE]: 'Create, read, update, and delete grade records',
   [PERMISSION_CODES.CRUD_ATTENDANCE]: 'Create, read, update, and delete attendance records',
@@ -45,6 +37,8 @@ export const PERMISSION_DESCRIPTIONS = {
   [PERMISSION_CODES.CRUD_SUBJECT]: 'Create, read, update, and delete subject records',
   [PERMISSION_CODES.CRUD_DEBT]: 'Create, read, update, and delete debt records',
   [PERMISSION_CODES.CRUD_CENTER]: 'Create, read, update, and delete center records',
+  [PERMISSION_CODES.VIEW_FINANCE]: 'View finance dashboard and payment summaries',
+  [PERMISSION_CODES.MANAGE_TESTS]: 'Manage test creation, assignments, and results',
   [PERMISSION_CODES.VIEW_REPORTS]: 'View system reports and analytics',
   [PERMISSION_CODES.MANAGE_USERS]: 'Manage user accounts and permissions',
   'VIEW_OWN_GRADES': 'View own grade records',
@@ -60,13 +54,17 @@ export const ROUTE_PERMISSIONS = {
   '/students': PERMISSION_CODES.CRUD_STUDENT,
   '/teachers': PERMISSION_CODES.CRUD_TEACHER,
   '/classes': PERMISSION_CODES.CRUD_CLASS,
+  '/rooms': PERMISSION_CODES.CRUD_ROOM,
   '/payments': PERMISSION_CODES.CRUD_PAYMENT,
+  '/finance': PERMISSION_CODES.VIEW_FINANCE,
   '/grades': PERMISSION_CODES.CRUD_GRADE,
   '/attendance': PERMISSION_CODES.CRUD_ATTENDANCE,
   '/assignments': PERMISSION_CODES.CRUD_ASSIGNMENT,
   '/subjects': PERMISSION_CODES.CRUD_SUBJECT,
   '/debts': PERMISSION_CODES.CRUD_DEBT,
   '/centers': PERMISSION_CODES.CRUD_CENTER,
+  '/settings': PERMISSION_CODES.MANAGE_USERS,
+  '/tests': PERMISSION_CODES.MANAGE_TESTS,
   '/reports': PERMISSION_CODES.VIEW_REPORTS,
   '/users': PERMISSION_CODES.MANAGE_USERS,
   '/teacher-portal': null, // Teacher specific route
@@ -75,7 +73,11 @@ export const ROUTE_PERMISSIONS = {
 };
 
 // Helper functions
-export const hasPermission = (user: Pick<AuthUser, 'userType' | 'role'> | string | null, userPermissions: string[] = [], requiredPermission: string): boolean => {
+export const hasPermission = (
+  user: Pick<AuthUser, 'userType' | 'role' | 'permissions'> | string | null,
+  userPermissions: string[] = [],
+  requiredPermission: string
+): boolean => {
   if (!user) return false;
 
   const effectiveRole = typeof user === 'string' ? user : (user.role || user.userType);
@@ -89,20 +91,22 @@ export const hasPermission = (user: Pick<AuthUser, 'userType' | 'role'> | string
   return allPermissions.includes(requiredPermission);
 };
 
+// Handles can access route.
 export const canAccessRoute = (user: AuthUser | null, route: string): boolean => {
   if (!user) return false;
-  
+
   const requiredPermission = ROUTE_PERMISSIONS[route as keyof typeof ROUTE_PERMISSIONS];
   
   if (requiredPermission === null) return true; // Route accessible by all authenticated users
   
-  return hasPermission(user, user.roles || [], requiredPermission);
+  return hasPermission(user, user.permissions || user.roles || [], requiredPermission);
 };
 
+// Returns accessible routes.
 export const getAccessibleRoutes = (user: AuthUser | null): string[] => {
   if (!user) return [];
-  
+
   return Object.entries(ROUTE_PERMISSIONS)
-    .filter(([_, permission]) => permission === null || hasPermission(user, user.roles || [], permission))
+    .filter(([_, permission]) => permission === null || hasPermission(user, user.permissions || user.roles || [], permission))
     .map(([route, _]) => route);
 };

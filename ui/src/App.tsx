@@ -1,4 +1,6 @@
-import { useEffect, lazy, Suspense, useState } from 'react';
+// Application router and top-level shell.
+
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
@@ -6,12 +8,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './features/crm/hooks';
 import { initializeAuth } from './slices/authSlice';
+import { fetchCentersForce } from './slices/centersSlice';
+import { setAppCenterReady } from './slices/pagesUiSlice';
 import Layout from './components/layout/Layout';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
-import { LoginPage } from './pages/auth/LoginPage';
-import { OwnerLoginPage } from './pages/auth/OwnerLoginPage';
+import { LoginPage, OwnerLoginPage, OwnerRegisterPage } from './features/auth';
 import Dashboard from './features/crm/dashboard/Dashboard';
-import OwnerManager from './pages/owner/OwnerManager';
+import { OwnerManager } from './features/owner';
 import StudentsPage from './features/crm/students/StudentsPage';
 import StudentDetailPage from './features/crm/students/StudentDetailPage';
 import TeachersPage from './features/crm/teachers/TeachersPage';
@@ -40,12 +43,14 @@ import ViewSubmissionPage from './features/crm/tests/ViewSubmissionPage';
 import TeacherPortal from './features/teacher/TeacherPortal';
 import StudentPortal from './features/student/StudentPortal';
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
+const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage'));
 import { useThemeMode } from './theme/ThemeContext';
 import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
-import { centerAPI } from './shared/api/api';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
+import { PERMISSION_CODES } from './types';
 
+// Handles safe log arg.
 const safeLogArg = (value: unknown) => {
   if (typeof value === 'string') return value;
   if (value instanceof Error) return value.stack || value.message;
@@ -112,47 +117,62 @@ const RoleBasedRedirect = () => {
   }
 };
 
+// Handles app content.
 function AppContent() {
   const dispatch = useAppDispatch();
   const { user, isInitialized } = useAppSelector((state) => state.auth);
-  const [centerReady, setCenterReady] = useState(true);
+  const centerReady = useAppSelector((state) => state.pagesUi.app.centerReady);
 
+// Runs side effects for this component.
   useEffect(() => {
     dispatch(initializeAuth());
   }, [dispatch]);
 
+// Runs side effects for this component.
   useEffect(() => {
+// Handles ensure active center.
     const ensureActiveCenter = async () => {
       if (!isInitialized || !user) {
-        setCenterReady(true);
+        dispatch(setAppCenterReady(true));
         return;
       }
       const normalizedRole = String(user.role || '').toLowerCase();
-      const needsCenterScope = user.userType === 'superuser' && normalizedRole !== 'admin';
+      const needsCenterScope = user.userType === 'superuser' && normalizedRole === 'owner';
       if (!needsCenterScope) {
-        setCenterReady(true);
+        dispatch(setAppCenterReady(true));
         return;
       }
       const existing = getStoredActiveCenterId();
       if (existing) {
-        setCenterReady(true);
+        dispatch(setAppCenterReady(true));
         return;
       }
-      setCenterReady(false);
+      dispatch(setAppCenterReady(false));
       try {
-        const response = await centerAPI.getAll();
-        const centers = Array.isArray(response) ? response : response.data || [];
-        const firstId = centers[0]?.center_id || centers[0]?.id;
+        const centers = await dispatch(fetchCentersForce()).unwrap();
+        const normalizedCenters = Array.isArray(centers)
+          ? centers
+              .map((center: any) => Number(center?.center_id || center?.id || 0))
+              .filter((centerId: number) => Number.isFinite(centerId) && centerId > 0)
+          : [];
+        const firstId = normalizedCenters[0];
+        const storedCenterId = getStoredActiveCenterId();
+        if (storedCenterId && normalizedCenters.includes(storedCenterId)) {
+          dispatch(setAppCenterReady(true));
+          return;
+        }
         if (firstId) {
           setStoredActiveCenterId(Number(firstId));
         }
+      } catch {
+        // Fallback to route rendering; center-dependent pages handle empty-center state.
       } finally {
-        setCenterReady(true);
+        dispatch(setAppCenterReady(true));
       }
     };
 
     ensureActiveCenter();
-  }, [isInitialized, user]);
+  }, [dispatch, isInitialized, user]);
 
   if (!centerReady) {
     return <LoadingSpinner />;
@@ -163,6 +183,7 @@ function AppContent() {
       <Routes>
         {/* Auth Routes */}
         <Route path="/login/owner" element={<OwnerLoginPage />} />
+        <Route path="/owner/register" element={<OwnerRegisterPage />} />
         <Route path="/login/superuser" element={<LoginPage userType="superuser" />} />
         <Route path="/login/teacher" element={<LoginPage userType="teacher" />} />
         <Route path="/login/student" element={<LoginPage userType="student" />} />
@@ -198,7 +219,7 @@ function AppContent() {
         <Route
           path="/students"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -212,7 +233,7 @@ function AppContent() {
         <Route
           path="/student/:studentId"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -226,7 +247,7 @@ function AppContent() {
         <Route
           path="/teachers"
           element={
-            <ProtectedRoute requiredUserType="superuser">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeachersPage />
@@ -239,7 +260,7 @@ function AppContent() {
         <Route
           path="/teacher/:teacherId"
           element={
-            <ProtectedRoute requiredUserType="superuser">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherDetailPage />
@@ -252,7 +273,7 @@ function AppContent() {
         <Route
           path="/payments"
           element={
-            <ProtectedRoute requiredUserType="superuser">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <PaymentsPage />
@@ -265,7 +286,7 @@ function AppContent() {
         <Route
           path="/finance"
           element={
-            <ProtectedRoute requiredUserType="superuser">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.VIEW_FINANCE}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <FinancePage />
@@ -278,7 +299,7 @@ function AppContent() {
         <Route
           path="/finance/teacher/:teacherId"
           element={
-            <ProtectedRoute requiredUserType="superuser">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.VIEW_FINANCE}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherFinanceDetailPage />
@@ -291,7 +312,7 @@ function AppContent() {
         <Route
           path="/grades"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_GRADE}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -305,7 +326,7 @@ function AppContent() {
         <Route
           path="/attendance"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_ATTENDANCE}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -319,7 +340,7 @@ function AppContent() {
         <Route
           path="/classes"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_CLASS}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -333,11 +354,24 @@ function AppContent() {
         <Route
           path="/rooms"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_ROOM}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
                   <RoomsPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/logs"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <RequestLogsPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>
@@ -363,7 +397,7 @@ function AppContent() {
         <Route
           path="/settings"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.MANAGE_USERS}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -390,7 +424,7 @@ function AppContent() {
         <Route
           path="/debts"
           element={
-            <ProtectedRoute requiredUserType="superuser">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_DEBT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <DebtsPage />
@@ -403,7 +437,7 @@ function AppContent() {
         <Route
           path="/assignments"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_ASSIGNMENT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -417,7 +451,7 @@ function AppContent() {
         <Route
           path="/subjects"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_SUBJECT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
 
@@ -445,7 +479,7 @@ function AppContent() {
         <Route
           path="/tests"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -460,7 +494,7 @@ function AppContent() {
         <Route
           path="/tests/create"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -475,7 +509,7 @@ function AppContent() {
         <Route
           path="/tests/:testId"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -490,7 +524,7 @@ function AppContent() {
         <Route
           path="/tests/:testId/edit"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -505,7 +539,7 @@ function AppContent() {
         <Route
           path="/tests/:testId/assign"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -534,7 +568,7 @@ function AppContent() {
         <Route
           path="/tests/submissions/:submissionId/grade"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -549,7 +583,7 @@ function AppContent() {
         <Route
           path="/tests/submissions/:submissionId"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
@@ -597,6 +631,7 @@ function AppContent() {
   );
 }
 
+// Renders the app module.
 function App() {
   return (
     <Provider store={store}>
@@ -608,6 +643,7 @@ function App() {
   );
 }
 
+// Handles themed toast.
 function ThemedToast() {
   const { isDark } = useThemeMode();
   return (

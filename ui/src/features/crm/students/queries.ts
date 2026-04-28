@@ -1,14 +1,19 @@
+// Query helpers for the crm feature.
+
 import type { Class, Student } from './types';
 export { getStatusVariant } from './status';
 
+// Handles to id.
 const toId = (value: unknown) => {
   const normalized = Number(value);
   return Number.isNaN(normalized) ? null : normalized;
 };
 
+// Returns student count.
 export const getStudentCount = (students: Student[], classId: number) =>
   students.filter((student) => toId(student.class_id) === toId(classId)).length;
 
+// Returns filtered students.
 export const getFilteredStudents = (
   students: Student[],
   selectedClass: Class | null,

@@ -69,10 +69,13 @@ const insert = async (payload: Record<string, unknown>) => {
     status,
     teacher_id,
     class_id,
+    school_name,
+    school_class,
+    is_frozen,
   } = payload;
   const result = await pool.query(
-    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class, is_frozen)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18) RETURNING *`,
     [
       center_id,
       enrollment_number,
@@ -89,13 +92,17 @@ const insert = async (payload: Record<string, unknown>) => {
       status || 'Active',
       teacher_id,
       class_id,
+      school_name,
+      school_class,
+      is_frozen ?? false,
     ]
   );
   return result.rows[0];
 };
 
 const update = async (id: number, payload: Record<string, unknown>, centerId?: number, teacherId?: number) => {
-  const { first_name, last_name, email, phone, status, class_id } = payload;
+  const { first_name, last_name, email, phone, status, class_id, teacher_id, is_frozen, school_name, school_class } =
+    payload;
   let query = `UPDATE students SET
       first_name = COALESCE($1, first_name),
       last_name = COALESCE($2, last_name),
@@ -103,9 +110,25 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
       phone = COALESCE($4, phone),
       status = COALESCE($5, status),
       class_id = COALESCE($6, class_id),
+      teacher_id = COALESCE($7, teacher_id),
+      is_frozen = COALESCE($8, is_frozen),
+      school_name = COALESCE($9, school_name),
+      school_class = COALESCE($10, school_class),
       updated_at = CURRENT_TIMESTAMP
-    WHERE student_id = $7`;
-  const params: any[] = [first_name, last_name, email, phone, status, class_id, id];
+    WHERE student_id = $11`;
+  const params: any[] = [
+    first_name,
+    last_name,
+    email,
+    phone,
+    status,
+    class_id,
+    teacher_id,
+    is_frozen,
+    school_name,
+    school_class,
+    id,
+  ];
 
   if (centerId) {
     params.push(centerId);
@@ -141,7 +164,7 @@ const remove = async (id: number, centerId?: number, teacherId?: number) => {
 
 const findByUsername = async (username: string) => {
   const result = await pool.query(
-    'SELECT student_id, first_name, last_name, email, password_hash, status, class_id, center_id FROM students WHERE username = $1',
+    'SELECT student_id, first_name, last_name, email, password_hash, status, class_id, center_id, is_frozen FROM students WHERE username = $1',
     [username]
   );
   return result.rows[0] || null;

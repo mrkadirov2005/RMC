@@ -10,14 +10,22 @@ export const requirePermission = (permission: string) => {
       return;
     }
 
-    // Superusers have all permissions
-    if (user.userType === 'superuser') {
+    // Owners have all permissions.
+    if (user.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner') {
       next();
       return;
     }
 
-    // Check if user has the required permission
-    if (user.userType === 'teacher' && user.roles && user.roles.includes(permission)) {
+    const userPermissions = user.permissions || user.roles || [];
+
+    // Superusers/admins use explicit permissions.
+    if (user.userType === 'superuser' && userPermissions.includes(permission)) {
+      next();
+      return;
+    }
+
+    // Teachers can still use role-based permissions.
+    if (user.userType === 'teacher' && userPermissions.includes(permission)) {
       next();
       return;
     }
@@ -39,12 +47,12 @@ export const requirePermissions = (
       return;
     }
 
-    if (user.userType === 'superuser') {
+    if (user.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner') {
       next();
       return;
     }
 
-    const userPermissions = user.roles || [];
+    const userPermissions = user.permissions || user.roles || [];
     
     const hasPermission = requireAll 
       ? permissions.every(p => userPermissions.includes(p))
@@ -127,6 +135,7 @@ export const PERMISSIONS = {
   CRUD_STUDENT: 'CRUD_STUDENT',
   CRUD_TEACHER: 'CRUD_TEACHER',
   CRUD_CLASS: 'CRUD_CLASS',
+  CRUD_ROOM: 'CRUD_ROOM',
   CRUD_PAYMENT: 'CRUD_PAYMENT',
   CRUD_GRADE: 'CRUD_GRADE',
   CRUD_ATTENDANCE: 'CRUD_ATTENDANCE',
@@ -134,6 +143,8 @@ export const PERMISSIONS = {
   CRUD_SUBJECT: 'CRUD_SUBJECT',
   CRUD_DEBT: 'CRUD_DEBT',
   CRUD_CENTER: 'CRUD_CENTER',
+  VIEW_FINANCE: 'VIEW_FINANCE',
+  MANAGE_TESTS: 'MANAGE_TESTS',
   VIEW_REPORTS: 'VIEW_REPORTS',
   MANAGE_USERS: 'MANAGE_USERS',
   VIEW_OWN_GRADES: 'VIEW_OWN_GRADES',

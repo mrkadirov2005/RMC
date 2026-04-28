@@ -25,9 +25,6 @@ const getById = (id: number, centerId?: number) => discountRepository.findById(i
 const create = async (body: any, centerId?: number) => {
   const { student_id, center_id, discount_type, value, reason, start_date, end_date, active } = body;
   const scopedCenterId = centerId ?? center_id;
-  if (!student_id || !scopedCenterId || !discount_type || !value) {
-    return { error: 'validation' as const };
-  }
   if (!(await studentInCenter(Number(student_id), Number(scopedCenterId)))) {
     return { error: 'invalid_center' as const };
   }

@@ -1,3 +1,5 @@
+// Layout component for the application shell.
+
 import { useState, useEffect, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -13,8 +15,9 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppDispatch, useAppSelector, useRBAC } from '../../features/crm/hooks';
 import { logout } from '../../slices/authSlice';
+import { fetchCentersForce } from '../../slices/centersSlice';
+import { selectCenterOptions } from '../../store/selectors';
 import { useThemeMode } from '../../theme/ThemeContext';
-import { fetchCenters } from '../../utils/dropdownOptions';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
 
 const iconMap: Record<string, React.ElementType> = {
@@ -33,11 +36,13 @@ const iconMap: Record<string, React.ElementType> = {
   Calendar: CalendarDays,
   Settings: SettingsIcon,
   Rooms: Building2,
+  Logs: ClipboardList,
 };
 
 
 const DRAWER_WIDTH = 280;
 
+// Renders the sidebar module.
 const Sidebar = memo(() => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -46,61 +51,81 @@ const Sidebar = memo(() => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { toggleTheme, isDark } = useThemeMode();
-  useRBAC();
+  const { canAccess } = useRBAC();
   const normalizedRole = String(user?.role || '').toLowerCase();
-  const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole !== 'admin';
+  const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
-  const [centerOptions, setCenterOptions] = useState<{ id: number; label: string }[]>([]);
+  const centerOptions = useAppSelector(selectCenterOptions).map((center) => ({
+    id: Number(center.value),
+    label: center.label,
+  }));
 
+// Runs side effects for this component.
   useEffect(() => {
+// Handles check.
     const check = () => setIsMobile(window.innerWidth < 640);
     check();
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (!isGlobalSuperuser) return;
-    const loadCenters = async () => {
-      const centers = await fetchCenters();
-      const options = centers.map((center) => ({
-        id: Number(center.value),
-        label: center.label,
-      }));
-      setCenterOptions(options);
-      if (!activeCenterId && options.length > 0) {
-        setActiveCenterId(options[0].id);
-      }
-    };
-    loadCenters();
+    dispatch(fetchCentersForce());
+  }, [dispatch, isGlobalSuperuser]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!isGlobalSuperuser) return;
+    if (!activeCenterId && centerOptions.length > 0) {
+      setActiveCenterId(centerOptions[0].id);
+    }
+  }, [activeCenterId, centerOptions, isGlobalSuperuser]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!isGlobalSuperuser) return;
+// Handles sync active center.
+    const syncActiveCenter = () => setActiveCenterId(getStoredActiveCenterId());
+    syncActiveCenter();
+    window.addEventListener('active-center-changed', syncActiveCenter);
+    return () => window.removeEventListener('active-center-changed', syncActiveCenter);
   }, [isGlobalSuperuser]);
 
+// Runs side effects for this component.
   useEffect(() => {
     if (!isGlobalSuperuser) return;
     setStoredActiveCenterId(activeCenterId);
   }, [activeCenterId, isGlobalSuperuser]);
+
+  const activeCenterLabel =
+    centerOptions.find((center) => center.id === activeCenterId)?.label ||
+    (activeCenterId ? `Center ${activeCenterId}` : 'Select a branch');
 
   const menuItems = [
     { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'] },
     { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', roles: ['teacher'] },
     { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
-    { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser'] },
-    { label: 'Teachers', path: '/teachers', iconName: 'MdBook', roles: ['superuser'] },
-    { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser'] },
-    { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'] },
+    { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser'], permission: 'CRUD_STUDENT' },
+    { label: 'Teachers', path: '/teachers', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_TEACHER' },
+    { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_CLASS' },
+    { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
+    { label: 'Logs', path: '/logs', iconName: 'Logs', roles: ['superuser'] },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'teacher', 'student'] },
 
 
-    { label: 'Settings', path: '/settings', iconName: 'Settings', roles: ['superuser'] },
-    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'] },
-    { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser'] },
-    { label: 'Finance', path: '/finance', iconName: 'Finance', roles: ['superuser'] },
-    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'] },
-    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser'] },
-    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', roles: ['superuser'] },
-    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', roles: ['superuser'] },
-    { label: 'Debts', path: '/debts', iconName: 'MdWarning', roles: ['superuser'] },
+    { label: 'Settings', path: '/settings', iconName: 'Settings', roles: ['superuser'], permission: 'MANAGE_USERS' },
+    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'], permission: 'MANAGE_TESTS' },
+    { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser'], permission: 'CRUD_PAYMENT' },
+    { label: 'Finance', path: '/finance', iconName: 'Finance', roles: ['superuser'], permission: 'VIEW_FINANCE' },
+    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'], permission: 'CRUD_GRADE' },
+    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser'], permission: 'CRUD_ATTENDANCE' },
+    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
+    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
+    { label: 'Debts', path: '/debts', iconName: 'MdWarning', roles: ['superuser'], permission: 'CRUD_DEBT' },
+    { label: 'Owner Panel', path: '/owner/manage', iconName: 'Settings', roles: ['superuser'], ownerOnly: true },
     { label: 'Centers', path: '/centers', iconName: 'MdBusiness', roles: ['superuser'], ownerOnly: true },
   ];
 
@@ -109,19 +134,23 @@ const Sidebar = memo(() => {
     if (!user?.userType) return false;
     if (!item.roles?.includes(user.userType)) return false;
     if (item.ownerOnly && (user.role || '').toLowerCase() !== 'owner') return false;
+    if (item.permission && !canAccess(item.permission)) return false;
     return true;
   });
 
+// Handles logout.
   const handleLogout = () => {
     dispatch(logout());
     navigate((user?.role || '').toLowerCase() === 'owner' ? '/login/owner' : '/login/superuser');
   };
 
+// Handles navigation.
   const handleNavigation = (path: string) => {
     navigate(path);
     if (isMobile) setIsOpen(false);
   };
 
+// Handles sidebar content.
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white">
       {/* Header */}
@@ -162,15 +191,15 @@ const Sidebar = memo(() => {
       {user && isGlobalSuperuser && (
         <div className="mx-3 mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
           <label htmlFor="active_center_sidebar" className="block text-xs text-white/60 mb-1">
-            Active Center
+            Active Branch
           </label>
+          <p className="mb-2 text-sm font-medium text-white">{activeCenterLabel}</p>
           <select
             id="active_center_sidebar"
             value={activeCenterId ?? ''}
             onChange={(e) => setActiveCenterId(e.target.value ? Number(e.target.value) : null)}
-            className="w-full rounded-md bg-white/5 border border-white/10 text-white text-sm px-2 py-1"
+            className="w-full rounded-md bg-white/5 border border-white/10 text-white text-sm px-2 py-2"
           >
-            <option value="">Select a center</option>
             {centerOptions.map((center) => (
               <option key={center.id} value={center.id}>
                 {center.label}

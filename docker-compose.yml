@@ -1,0 +1,74 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: crm_postgres
+    environment:
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: crm_password
+      POSTGRES_DB: crm_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./service/docker/postgres-init:/docker-entrypoint-initdb.d
+      - ./service/db/schema:/docker-entrypoint-initdb.d/schema:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crm_user -d crm_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - crm_network
+
+  mongo:
+    image: mongo:7
+    container_name: crm_mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "mongodb://localhost:27017/admin", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+    networks:
+      - crm_network
+
+  backend:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: crm_backend
+    environment:
+      PORT: "3000"
+      NODE_ENV: production
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: crm_user
+      DB_PASSWORD: crm_password
+      DB_NAME: crm_db
+      JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: crm_logs
+      REQUEST_LOG_TTL_DAYS: "0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    networks:
+      - crm_network
+
+volumes:
+  postgres_data:
+  mongo_data:
+
+networks:
+  crm_network:
+    driver: bridge

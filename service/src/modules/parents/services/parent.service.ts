@@ -8,9 +8,6 @@ const getParent = (id: number, centerId?: number) => parentRepository.findByIdSa
 
 const createParent = (body: any) => {
   const { first_name, last_name, email, phone, username, password, status } = body;
-  if (!first_name || !last_name || !username || !password) {
-    return { error: 'validation' as const };
-  }
   const password_hash = hashPassword(password);
   return parentRepository
     .insert([first_name, last_name, email || null, phone || null, username, password_hash, status || 'Active'])
@@ -26,7 +23,6 @@ const deleteParent = (id: number, centerId?: number) => parentRepository.remove(
 
 const assignStudent = async (body: any, centerId?: number) => {
   const { parent_id, student_id, relationship, is_primary } = body;
-  if (!parent_id || !student_id) return { error: 'validation' as const };
   if (centerId) {
     const ok = await studentInCenter(Number(student_id), Number(centerId));
     if (!ok) return { error: 'invalid_center' as const };

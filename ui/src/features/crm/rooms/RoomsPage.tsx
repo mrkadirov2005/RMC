@@ -1,3 +1,5 @@
+// Page component for the rooms screen in the crm feature.
+
 import { useState, useEffect } from 'react';
 import { Plus, Pencil, Trash2, Loader2, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,8 +29,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { roomAPI, classAPI } from '@/shared/api/api';
+import { roomAPI } from '@/shared/api/api';
+import {
+  setRoomsPageEditingId,
+  setRoomsPageModalOpen,
+  setRoomsPageSubmitting,
+} from '../../../slices/pagesUiSlice';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { fetchRooms, fetchRoomsForce } from '../../../slices/roomsSlice';
+import { fetchClasses } from '../../../slices/classesSlice';
 import { showToast } from '@/utils/toast';
+import { selectRoomsPageUi } from '../../../store/selectors';
 
 const weekDays = [
   'Monday',
@@ -40,13 +51,15 @@ const weekDays = [
   'Sunday',
 ];
 
+// Renders the rooms page screen.
 const RoomsPage = () => {
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [classes, setClasses] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const dispatch = useAppDispatch();
+  const rooms = useAppSelector(state => state.rooms.items);
+  const classes = useAppSelector(state => state.classes.items);
+  const roomsUi = useAppSelector(selectRoomsPageUi);
+  const { isModalOpen, editingId, submitting } = roomsUi;
+  const loading = useAppSelector(state => state.rooms.loading || state.classes.loading || submitting);
+  const error = useAppSelector(state => state.rooms.error || state.classes.error);
   const [formData, setFormData] = useState({
     room_number: '',
     class_id: '',
@@ -54,31 +67,16 @@ const RoomsPage = () => {
     time: '09:00',
   });
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [roomsRes, classesRes] = await Promise.all([
-        roomAPI.getAll(),
-        classAPI.getAll(),
-      ]);
-      setRooms(Array.isArray(roomsRes) ? roomsRes : roomsRes.data || []);
-      setClasses(Array.isArray(classesRes) ? classesRes : classesRes.data || []);
-      setError(null);
-    } catch (err: any) {
-      setError('Failed to load rooms data');
-      showToast.error('Failed to load rooms');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+// Runs side effects for this component.
   useEffect(() => {
-    loadData();
-  }, []);
+    dispatch(fetchRooms());
+    dispatch(fetchClasses());
+  }, [dispatch]);
 
+// Handles open modal.
   const handleOpenModal = (room?: any) => {
     if (room) {
-      setEditingId(room.room_id);
+      dispatch(setRoomsPageEditingId(room.room_id));
       setFormData({
         room_number: room.room_number,
         class_id: room.class_id ? String(room.class_id) : 'none',
@@ -86,7 +84,7 @@ const RoomsPage = () => {
         time: room.time?.substring(0, 5) || '09:00',
       });
     } else {
-      setEditingId(null);
+      dispatch(setRoomsPageEditingId(null));
       setFormData({
         room_number: '',
         class_id: 'none',
@@ -94,17 +92,19 @@ const RoomsPage = () => {
         time: '09:00',
       });
     }
-    setIsModalOpen(true);
+    dispatch(setRoomsPageModalOpen(true));
   };
 
+// Handles close modal.
   const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingId(null);
+    dispatch(setRoomsPageModalOpen(false));
+    dispatch(setRoomsPageEditingId(null));
   };
 
+// Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    dispatch(setRoomsPageSubmitting(true));
     try {
       const payload = {
         ...formData,
@@ -119,25 +119,26 @@ const RoomsPage = () => {
         showToast.success('Room created successfully');
       }
       handleCloseModal();
-      loadData();
+      dispatch(fetchRoomsForce());
     } catch (err: any) {
       showToast.error(err.response?.data?.error || 'Operation failed');
     } finally {
-      setLoading(false);
+      dispatch(setRoomsPageSubmitting(false));
     }
   };
 
+// Handles delete.
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this room assignment?')) return;
-    setLoading(true);
+    dispatch(setRoomsPageSubmitting(true));
     try {
       await roomAPI.delete(id);
       showToast.success('Room assignment deleted');
-      loadData();
+      dispatch(fetchRoomsForce());
     } catch (err: any) {
       showToast.error('Failed to delete room');
     } finally {
-      setLoading(false);
+      dispatch(setRoomsPageSubmitting(false));
     }
   };
 
@@ -224,7 +225,16 @@ const RoomsPage = () => {
       )}
 
       {/* Add/Edit Room Dialog */}
-      <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
+      <Dialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            handleCloseModal();
+            return;
+          }
+          dispatch(setRoomsPageModalOpen(true));
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingId ? 'Edit Room Assignment' : 'Add New Room Assignment'}</DialogTitle>

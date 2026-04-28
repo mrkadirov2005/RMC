@@ -1,3 +1,5 @@
+// Layout component for the application shell.
+
 import type { ReactNode } from 'react';
 import { memo } from 'react';
 import Sidebar from './Sidebar';
@@ -6,6 +8,7 @@ interface LayoutProps {
   children: ReactNode;
 }
 
+// Renders the layout module.
 const Layout = memo(({ children }: LayoutProps) => {
   return (
     <div className="flex min-h-screen">
