@@ -2,7 +2,7 @@
 
 ## Access Swagger UI
 
-Visit: **http://localhost:3000/docs**
+Visit: **http://localhost:4000/docs**
 
 When you run the server with `npm run dev`, you can access the interactive Swagger UI documentation at the `/docs` endpoint.
 
@@ -118,7 +118,7 @@ All endpoints document:
 
 ### Server Information
 ```
-Development: http://localhost:3000/api
+Development: http://localhost:4000/api
 Production: https://api.crm.com/api (placeholder)
 ```
 
@@ -130,6 +130,6 @@ Production: https://api.crm.com/api (placeholder)
 npm run dev
 ```
 
-Then visit: **http://localhost:3000/docs**
+Then visit: **http://localhost:4000/docs**
 
 Enjoy your interactive API documentation! 🎉

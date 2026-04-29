@@ -42,7 +42,7 @@ const requestLogRoutes = require('./routes/requestLogRoutes');
 
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 4000;
 
 // Middleware
 app.use(cors());

@@ -94,6 +94,9 @@ const TeacherDetailPage = () => {
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [resetTempPassword, setResetTempPassword] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [paymentPasswordOpen, setPaymentPasswordOpen] = useState(false);
+  const [paymentTempPassword, setPaymentTempPassword] = useState('');
+  const [settingPaymentPassword, setSettingPaymentPassword] = useState(false);
   const [selectedPaymentMonth, setSelectedPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
 
 // Runs side effects for this component.
@@ -236,6 +239,38 @@ const TeacherDetailPage = () => {
     }
   };
 
+// Handles set payment password (separate login for payments).
+  const handleSetPaymentPassword = async () => {
+    if (!teacherId || !teacher) return;
+    const password = (paymentTempPassword || '').trim();
+    if (password.length < 6) {
+      showToast.error('Payment password must be at least 6 characters.');
+      return;
+    }
+    setSettingPaymentPassword(true);
+    try {
+      await teacherAPI.setPaymentPassword(Number(teacherId), { password });
+      showToast.success('Payment access password set successfully.');
+      setPaymentPasswordOpen(false);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      showToast.error(err.message || 'Failed to set payment password');
+    } finally {
+      setSettingPaymentPassword(false);
+    }
+  };
+
+// Handles copy payment password.
+  const handleCopyPaymentPassword = async () => {
+    if (!paymentTempPassword) return;
+    try {
+      await navigator.clipboard.writeText(paymentTempPassword);
+      showToast.success('Payment password copied.');
+    } catch {
+      showToast.error('Failed to copy password.');
+    }
+  };
+
 // Toggles class expanded.
   const toggleClassExpanded = (classId: number) => {
     setExpandedClassIds((prev) => {
@@ -324,6 +359,17 @@ const TeacherDetailPage = () => {
           Reset Password
         </Button>
         <Button
+          variant="outline"
+          className="rounded-lg"
+          onClick={() => {
+            setPaymentTempPassword(generateTempPassword());
+            setPaymentPasswordOpen(true);
+          }}
+        >
+          <KeyRound className="mr-2 h-4 w-4" />
+          Set Payment Password
+        </Button>
+        <Button
           className="bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg"
           onClick={handleOpenGradeModal}
         >
@@ -371,6 +417,66 @@ const TeacherDetailPage = () => {
           </div>
         </div>
       </Card>
+
+      {/* Payment Password Dialog */}
+      <Dialog open={paymentPasswordOpen} onOpenChange={setPaymentPasswordOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Set Payment Password</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>
+                This password is used for the teacher&apos;s separate Payments login (required to access the Payments tab).
+              </AlertDescription>
+            </Alert>
+            <div className="space-y-2">
+              <Label htmlFor="payment-password">Payment Password</Label>
+              <Input
+                id="payment-password"
+                type="text"
+                value={paymentTempPassword}
+                onChange={(e) => setPaymentTempPassword(e.target.value)}
+                placeholder="Enter or generate a password"
+                disabled={settingPaymentPassword}
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setPaymentTempPassword(generateTempPassword())}
+                  disabled={settingPaymentPassword}
+                >
+                  Generate
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCopyPaymentPassword}
+                  disabled={!paymentTempPassword || settingPaymentPassword}
+                >
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaymentPasswordOpen(false)} disabled={settingPaymentPassword}>
+              Cancel
+            </Button>
+            <Button onClick={handleSetPaymentPassword} disabled={settingPaymentPassword}>
+              {settingPaymentPassword ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Password'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Tabs */}
       <Card className="rounded-2xl overflow-hidden">

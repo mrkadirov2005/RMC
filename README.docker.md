@@ -10,8 +10,14 @@ From the repo root:
 docker compose up -d --build
 ```
 
+If port `4000` is unavailable on your machine, override the host port:
+
+```bash
+BACKEND_PORT=4001 docker compose up -d --build
+```
+
 Services:
-- Backend: `http://localhost:3000`
+- Backend: `http://localhost:${BACKEND_PORT:-4000}`
 - Postgres: `localhost:5432`
 - Mongo: `localhost:27017`
 

@@ -26,7 +26,7 @@ docker compose up -d
 This starts:
 - PostgreSQL on `localhost:5432`
 - MongoDB on `localhost:27017` (used for request logging)
-- Backend API on `localhost:3000`
+- Backend API on `localhost:4000`
 
 The database initializes automatically from the SQL schema files on first run.
 
@@ -92,7 +92,7 @@ src/
 
 ## Environment Variables
 
-- `PORT` - Server port (default: 3000)
+- `PORT` - Server port (default: 4000)
 - `NODE_ENV` - Environment (development/production)
 - `DB_HOST` - PostgreSQL host (default: localhost)
 - `DB_PORT` - PostgreSQL port (default: 5432)

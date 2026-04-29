@@ -145,6 +145,15 @@ router_teacher.post('/auth/login', validateBody(CredentialsDto), teacherControll
 
 /**
  * @swagger
+ * /teachers/auth/payment-login:
+ *   post:
+ *     summary: Teacher payment access login
+ *     tags: [Teachers]
+ */
+router_teacher.post('/auth/payment-login', validateBody(CredentialsDto), teacherController.teacherPaymentLogin);
+
+/**
+ * @swagger
  * /teachers/{id}/set-password:
  *   post:
  *     summary: Set teacher password (admin operation)

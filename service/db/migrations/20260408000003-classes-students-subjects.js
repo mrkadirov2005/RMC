@@ -7,7 +7,7 @@ module.exports = {
           class_name VARCHAR(100) NOT NULL,
           class_code VARCHAR(50) NOT NULL UNIQUE,
           level INT,
-          section VARCHAR(10),
+          section VARCHAR(50),
           capacity INT,
           teacher_id INT,
           room_number VARCHAR(50),

@@ -8,6 +8,7 @@ import {
   setHealthy,
   setOffline,
 } from '../../slices/serviceStatusSlice';
+import { paymentLogout } from '../../slices/paymentAccessSlice';
 import { getResolvedCenterId } from '../auth/centerScope';
 
 // Default to relative `/api` so the same frontend build works behind:
@@ -144,6 +145,7 @@ apiClient.interceptors.response.use(
       const user = userRaw ? JSON.parse(userRaw) : null;
       if (url.startsWith('/payments') && user?.userType === 'teacher') {
         localStorage.removeItem('payment_token');
+        store.dispatch(paymentLogout());
         showToast.error(error.response?.data?.error || 'Payment access expired. Please re-login.');
         return Promise.reject(error);
       }
@@ -162,7 +164,20 @@ apiClient.interceptors.response.use(
 
     // Handle 403 (forbidden) - insufficient permissions
     if (error.response?.status === 403) {
+      const url = error.config?.url || '';
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : null;
       const errorMessage = error.response?.data?.error || 'Access denied. Insufficient permissions.';
+
+      // Teachers require a separate payment login. If the backend denies access, drop any stale payment auth
+      // so the Payments page can show the PaymentAccessGate again.
+      if (url.startsWith('/payments') && user?.userType === 'teacher') {
+        const requiresPaymentLogin = String(errorMessage).toLowerCase().includes('separate login');
+        if (requiresPaymentLogin) {
+          localStorage.removeItem('payment_token');
+          store.dispatch(paymentLogout());
+        }
+      }
       if (!shouldSuppressAccessDeniedToast()) {
         showToast.error(errorMessage);
       }
@@ -212,6 +227,8 @@ export const teacherAPI = {
   delete: (id: number) => apiClient.delete(`/teachers/${id}`),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/teachers/${id}/set-password`, data),
+  setPaymentPassword: (id: number, data: { password: string }) =>
+    apiClient.post(`/teachers/${id}/payment-password`, data),
 };
 
 export const classAPI = {

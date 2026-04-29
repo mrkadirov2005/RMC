@@ -31,5 +31,5 @@ COPY --from=build /app/.sequelizerc ./.sequelizerc
 COPY --from=build /app/config ./config
 COPY --from=build /app/db ./db
 
-EXPOSE 3000
+EXPOSE 4000
 CMD ["sh", "-lc", "npm run db:migrate && node dist/index.js"]

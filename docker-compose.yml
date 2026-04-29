@@ -43,7 +43,7 @@ services:
       dockerfile: Dockerfile
     container_name: crm_backend
     environment:
-      PORT: "3000"
+      PORT: "4000"
       NODE_ENV: production
       DB_HOST: postgres
       DB_PORT: "5432"
@@ -60,7 +60,8 @@ services:
       mongo:
         condition: service_healthy
     ports:
-      - "3000:3000"
+      # Host port is configurable to avoid conflicts on Windows/WSL (e.g. reserved/excluded ports).
+      - "${BACKEND_PORT:-4000}:4000"
     restart: unless-stopped
     networks:
       - crm_network

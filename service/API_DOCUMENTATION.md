@@ -19,7 +19,7 @@ Complete CRM (Customer Relationship Management) Backend with 11 modules for mana
 
 ## Base URL
 ```
-http://localhost:3000/api
+http://localhost:4000/api
 ```
 
 ## Health Check
@@ -606,7 +606,7 @@ http://localhost:3000/api
 ## SWAGGER/OPENAPI DOCUMENTATION
 
 ### Interactive API Documentation
-- **URL**: `http://localhost:3000/docs`
+- **URL**: `http://localhost:4000/docs`
 - Access the interactive Swagger UI where you can:
   - View all available endpoints
   - See request/response schemas
@@ -650,7 +650,7 @@ http://localhost:3000/api
 ## Environment Variables
 
 ```
-PORT=3000
+PORT=4000
 NODE_ENV=development
 DB_HOST=localhost
 DB_PORT=5432
