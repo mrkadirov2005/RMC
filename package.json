@@ -1,5 +1,15 @@
 {
+  "name": "rmc",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n backend,ui -c cyan,magenta \"npm --prefix service run dev\" \"npm --prefix ui run dev\"",
+    "dev:backend": "npm --prefix service run dev",
+    "dev:ui": "npm --prefix ui run dev",
+    "build": "npm --prefix service run build && npm --prefix ui run build",
+    "start": "npm --prefix service run start"
+  },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "@tailwindcss/postcss": "^4.1.18"
   }
 }
