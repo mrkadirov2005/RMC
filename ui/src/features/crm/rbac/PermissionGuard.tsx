@@ -1,6 +1,6 @@
 // Source file for the rbac area in the crm feature.
 
-import { ReactNode } from 'react';
+import type { ComponentType, ReactNode } from 'react';
 import { useEnhancedRBAC } from './useEnhancedRBAC';
 
 interface PermissionGuardProps {
@@ -57,7 +57,7 @@ export const PermissionGuard = ({
 
 // Higher-order component for route protection
 export const withPermissionGuard = (
-  Component: React.ComponentType<any>,
+  Component: ComponentType<any>,
   requiredPermissions: string[] = [],
   requireAll: boolean = false
 ) => {

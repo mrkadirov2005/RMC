@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 interface Student {
   student_id?: number;
   id?: number;
-  username: string;
+  username?: string;
   enrollment_number: string;
   first_name: string;
   last_name: string;
@@ -58,7 +58,7 @@ export const StudentInfoSection = ({ student }: StudentInfoSectionProps) => {
           </div>
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Username (login)</p>
-            <p className="text-sm font-semibold">{student.username}</p>
+            <p className="text-sm font-semibold">{student.username || '-'}</p>
           </div>
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">Email</p>
