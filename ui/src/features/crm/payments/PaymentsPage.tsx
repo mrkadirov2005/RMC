@@ -1100,40 +1100,7 @@ const PaymentsPage = () => {
             </div>
           </div>
 
-          {!isTeacher && selectedFolder.type === 'teacher' && selectedTeacherStats && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-              <Card>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">Worked</p>
-                  <p className="text-lg font-semibold">${selectedTeacherStats.totalWorked.toLocaleString()}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">Paid Amount</p>
-                  <p className="text-lg font-semibold text-green-700">${selectedTeacherStats.paidAmount.toLocaleString()}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">Unpaid Amount</p>
-                  <p className="text-lg font-semibold text-red-700">${selectedTeacherStats.unpaidAmount.toLocaleString()}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">Students Paid</p>
-                  <p className="text-lg font-semibold">{selectedTeacherStats.paidStudents}</p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">Students Unpaid</p>
-                  <p className="text-lg font-semibold">{selectedTeacherStats.unpaidStudents}</p>
-                </CardContent>
-              </Card>
-            </div>
-          )}
+          {/* Teacher totals are shown in the dedicated teacher view above. */}
 
           {/* Filter Options */}
           {showFilters && (

@@ -133,8 +133,8 @@ const DebtsPage = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <SelectField label="Student" name="student_id" value={formData.student_id || ''} onChange={(e) => setFormData({ ...formData, student_id: Number(e.target.value) })} options={studentOptions} isLoading={isLoadingOptions} required placeholder="Select a student" />
-              {isOwner && <SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(e) => setFormData({ ...formData, center_id: Number(e.target.value) })} options={centerOptions} isLoading={isLoadingOptions} required placeholder="Select a center" />}
+              <SelectField label="Student" name="student_id" value={formData.student_id || ''} onChange={(value) => setFormData({ ...formData, student_id: Number(value) })} options={studentOptions} isLoading={isLoadingOptions} required placeholder="Select a student" />
+              {isOwner && <SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} isLoading={isLoadingOptions} required placeholder="Select a center" />}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

@@ -14,7 +14,6 @@ import type {
   DashboardActivityItem,
   DashboardCollections,
   DashboardFocusItem,
-  DashboardRole,
   DashboardRecord,
   DashboardStatCard,
   DashboardStats,
