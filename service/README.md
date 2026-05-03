@@ -13,22 +13,26 @@ npm install
 
 - `Error: Cannot find module 'reflect-metadata'`: dependencies were installed in the wrong folder or are out of date. Run `npm install` from `service/` (not the repo root), then restart `npm run dev`.
 
-## Database Setup
+## Database Setup (No Docker)
 
-### Using Docker Compose (Recommended)
+Install PostgreSQL locally and ensure you have a user/password that can connect.
 
-From `service/`, start the databases with:
+Backend startup will:
+- Create the database if it does not exist
+- Run all migrations from `db/migrations/` automatically
 
-```bash
-docker compose up -d
-```
+Environment variables (read from `service/.env`):
+- `DB_HOST` (default: `127.0.0.1`)
+- `DB_PORT` (default: `5432`)
+- `DB_USER` / `DB_PASSWORD` (used for normal DB access)
+- `DB_NAME` (database to create/use)
 
-This starts:
-- PostgreSQL on `localhost:5432`
-- MongoDB on `localhost:27017` (used for request logging)
-- Backend API on `localhost:4000`
+Optional admin override (useful when `DB_USER` is not allowed to create databases):
+- `DB_ADMIN_USER`, `DB_ADMIN_PASSWORD`, `DB_ADMIN_DB` (default admin DB: `postgres`)
 
-The database initializes automatically from the SQL schema files on first run.
+Optional flags:
+- `AUTO_CREATE_DB` (default: `true`)
+- `AUTO_MIGRATE` (default: `true`)
 
 ## Request Logging (MongoDB)
 
@@ -43,18 +47,12 @@ Environment variables:
 - `MONGO_DB` (default: `crm_logs`)
 - `REQUEST_LOG_TTL_DAYS` (0 = keep forever)
 
-### Create Tables
+### Migrations
 
-Connect to the database using pgAdmin and run the following SQL:
+You can also run migrations manually:
 
-```sql
-CREATE TABLE users (
-  id SERIAL PRIMARY KEY,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  name VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+```bash
+npm run db:migrate
 ```
 
 ## Development
@@ -64,6 +62,8 @@ Run the development server with auto-reload:
 ```bash
 npm run dev
 ```
+
+Server listens on `PORT` from `.env` (defaults to `4000` if unset).
 
 ## Production
 
