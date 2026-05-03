@@ -43,7 +43,7 @@ import ViewSubmissionPage from './features/crm/tests/ViewSubmissionPage';
 import TeacherPortal from './features/teacher/TeacherPortal';
 import StudentPortal from './features/student/StudentPortal';
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
-const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage'));
+const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage.tsx'));
 import { useThemeMode } from './theme/ThemeContext';
 import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
