@@ -62,7 +62,7 @@ export const CRUDTable: React.FC<CRUDTableProps> = ({
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         <Button onClick={onAdd}><Plus className="mr-2 h-4 w-4" />Add New</Button>
       </div>
-      {error && (
+      {Boolean(error) && (
         <Alert variant="destructive" className="mb-4">
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
         </Alert>
