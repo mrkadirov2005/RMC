@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { fetchCentersForce } from '../../../slices/centersSlice';
@@ -751,7 +752,7 @@ const CreateTestPage = () => {
       {error && (
         <Alert variant="destructive" className="mb-6">
           <AlertDescription className="flex justify-between items-center">
-            {error}
+            {getErrorMessage(error)}
             <button onClick={() => setError(null)}>
               <X className="h-4 w-4" />
             </button>

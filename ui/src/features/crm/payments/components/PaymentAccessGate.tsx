@@ -14,6 +14,7 @@ import { showToast, handleApiError } from '../../../../utils/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 // Renders the payment access gate module.
 export const PaymentAccessGate = () => {
@@ -60,7 +61,7 @@ export const PaymentAccessGate = () => {
 
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           </Alert>
         )}
 

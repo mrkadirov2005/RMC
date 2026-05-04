@@ -3,6 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import type { FormEvent } from 'react';
 import type { Student } from '../types';
 import { StudentFormFields } from './StudentFormFields';
@@ -18,7 +19,7 @@ export const StudentsFormDialog = ({ open, editing, formData, setFormData, cente
       <form onSubmit={onSubmit} className="space-y-4">
         {error && (
           <Alert variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           </Alert>
         )}
         <StudentFormFields {...{ formData, setFormData, centerOptions, classOptions, teacherOptions, genderOptions, statusOptions, showCenterField }} />

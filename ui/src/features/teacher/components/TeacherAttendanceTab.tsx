@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import {
   Dialog,
   DialogContent,
@@ -270,7 +271,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
 
       {error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button onClick={() => setError(null)} className="absolute top-2 right-2 text-sm">✕</button>
         </Alert>
       )}

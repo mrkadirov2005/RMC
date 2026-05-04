@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
@@ -230,7 +231,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           {/* Error */}
           {error && (
             <Alert variant="destructive" className="mb-4 bg-red-500/10 text-red-300 border-red-500/20">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{getErrorMessage(error)}</AlertDescription>
             </Alert>
           )}
 

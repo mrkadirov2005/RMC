@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 type LogKind = 'owner' | 'superuser' | 'teacher' | 'student';
 
@@ -140,7 +141,7 @@ const RequestLogsPage = () => {
               {loading ? 'Loading…' : `Showing ${items.length} of ${total}`}
               {q ? ` • filter: "${q}"` : ''}
             </div>
-            {error ? <span className="text-destructive">{error}</span> : null}
+            {error ? <span className="text-destructive">{getErrorMessage(error)}</span> : null}
           </div>
 
           <div className="border rounded-lg overflow-hidden">

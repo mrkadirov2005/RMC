@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import {
   Table,
   TableBody,
@@ -200,7 +201,7 @@ const ViewSubmissionPage = () => {
 
       {error && (
         <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => dispatch(clearSubmissionDetailsError())}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"

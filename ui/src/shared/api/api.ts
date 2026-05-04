@@ -146,13 +146,13 @@ apiClient.interceptors.response.use(
       if (url.startsWith('/payments') && user?.userType === 'teacher') {
         localStorage.removeItem('payment_token');
         store.dispatch(paymentLogout());
-        showToast.error(error.response?.data?.error || 'Payment access expired. Please re-login.');
+        showToast.error(handleApiError(error) || 'Payment access expired. Please re-login.');
         return Promise.reject(error);
       }
       // Clear auth data and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      const errorMessage = error.response?.data?.error || 'Session expired. Please log in again.';
+      const errorMessage = handleApiError(error) || 'Session expired. Please log in again.';
       showToast.error(errorMessage);
       // Redirect to login page
       if (!window.location.pathname.includes('/login')) {
@@ -167,7 +167,7 @@ apiClient.interceptors.response.use(
       const url = error.config?.url || '';
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
-      const errorMessage = error.response?.data?.error || 'Access denied. Insufficient permissions.';
+      const errorMessage = handleApiError(error) || 'Access denied. Insufficient permissions.';
 
       // Teachers require a separate payment login. If the backend denies access, drop any stale payment auth
       // so the Payments page can show the PaymentAccessGate again.

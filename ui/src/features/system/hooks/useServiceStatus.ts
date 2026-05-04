@@ -25,6 +25,9 @@ const pingBackend = async () => {
       signal: controller.signal,
     });
     clearTimeout(timeoutId);
+    if (!response.ok) {
+      throw new Error(`Health check failed (${response.status})`);
+    }
     return response;
   } catch (error) {
     clearTimeout(timeoutId);

@@ -14,6 +14,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import {
   Table,
   TableBody,
@@ -213,7 +214,7 @@ const TestAssignPage = () => {
 
       {error && (
         <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => setError(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"

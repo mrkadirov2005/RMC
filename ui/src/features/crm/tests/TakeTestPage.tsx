@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import {
   Dialog,
   DialogContent,
@@ -197,7 +198,7 @@ const TakeTestPage = () => {
     return (
       <div className="p-6">
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
         </Alert>
         <Button variant="ghost" onClick={() => navigate('/tests')} className="mt-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
@@ -251,7 +252,7 @@ const TakeTestPage = () => {
 
       {error && (
         <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => setError(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"

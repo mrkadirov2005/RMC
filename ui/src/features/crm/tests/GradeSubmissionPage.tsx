@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 import { toast } from 'react-toastify';
@@ -259,7 +260,7 @@ const GradeSubmissionPage = () => {
 
       {error && (
         <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => setError(null)}
             className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"

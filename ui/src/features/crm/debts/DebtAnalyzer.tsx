@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import {
   Dialog,
   DialogContent,
@@ -142,7 +143,7 @@ const DebtAnalyzer = () => {
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription className="flex justify-between items-center">
-              {error}
+              {getErrorMessage(error)}
               <button onClick={() => setError(null)} className="text-sm underline ml-2">
                 Dismiss
               </button>

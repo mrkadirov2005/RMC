@@ -27,6 +27,7 @@ import { useAppSelector } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { useAppDispatch } from '../crm/hooks';
 import { fetchStudentDashboard } from '../../slices/studentDashboardSlice';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 
 interface StudentProfile {
@@ -340,7 +341,7 @@ const StudentPortal = () => {
       {error && (
         <Card className="border-red-200 bg-red-50">
           <CardContent className="py-4 text-sm text-red-700">
-            {error}
+            {getErrorMessage(error)}
           </CardContent>
         </Card>
       )}

@@ -21,6 +21,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 import {
   Dialog,
   DialogContent,
@@ -175,9 +176,9 @@ const TestsPage = () => {
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
-          <AlertDescription className="flex justify-between items-center">
-            {error}
+          <Alert variant="destructive" className="mb-6">
+            <AlertDescription className="flex justify-between items-center">
+            {getErrorMessage(error)}
             <button
               onClick={() => {
                 dispatch(clearTestsPageError());

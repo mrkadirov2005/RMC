@@ -26,6 +26,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getErrorMessage } from '@/utils/errorMessage';
 
 interface CRUDTableProps {
   title: string;
@@ -40,7 +41,7 @@ interface CRUDTableProps {
   onDelete: (id: number) => void;
   extraActions?: (item: any) => React.ReactNode;
   isLoading?: boolean;
-  error?: string;
+  error?: unknown;
 }
 
 // Handles crud table.
@@ -61,7 +62,11 @@ export const CRUDTable: React.FC<CRUDTableProps> = ({
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         <Button onClick={onAdd}><Plus className="mr-2 h-4 w-4" />Add New</Button>
       </div>
-      {error && <Alert variant="destructive" className="mb-4"><AlertDescription>{error}</AlertDescription></Alert>}
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+        </Alert>
+      )}
       <div className="rounded-xl border bg-card">
         <Table>
           <TableHeader>
