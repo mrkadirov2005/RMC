@@ -1,7 +1,7 @@
 // Application router and top-level shell.
 
 import { useEffect, lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -635,10 +635,10 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <BrowserRouter>
+      <HashRouter>
         <AppContent />
         <ThemedToast />
-      </BrowserRouter>
+      </HashRouter>
     </Provider>
   );
 }
