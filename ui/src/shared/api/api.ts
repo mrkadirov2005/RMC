@@ -11,10 +11,7 @@ import {
 import { paymentLogout } from '../../slices/paymentAccessSlice';
 import { getResolvedCenterId } from '../auth/centerScope';
 
-// Default to relative `/api` so the same frontend build works behind:
-// - Vite dev proxy (local development)
-// - Nginx reverse proxy (Docker/production)
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+export const API_BASE_URL = 'https://temurbek.m-kadirov.uz/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
