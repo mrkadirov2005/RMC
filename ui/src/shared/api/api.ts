@@ -242,7 +242,7 @@ export const classAPI = {
   create: (data: any) => apiClient.post('/classes', data),
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
   delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),
-  generateSessions: (id: number, data: { month: number; year: number; duration_minutes: number }) =>
+  generateSessions: (id: number, data: { month: number; year: number; duration_minutes: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions/generate`, data),
   deleteSessions: (id: number, params: { from: string; to?: string }) =>
     apiClient.delete(`/classes/${id}/sessions`, { params }),

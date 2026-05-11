@@ -13,7 +13,7 @@ export default defineConfig({
     port: 5173, // frontend dev server
     proxy: {
       '/api': {
-        target: 'https://temurbek.m-kadirov.uz', // backend
+        target: 'http://localhost:4000', // local backend
         changeOrigin: true,
       },
     },

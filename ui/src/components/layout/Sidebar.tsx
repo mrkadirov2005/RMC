@@ -41,6 +41,7 @@ const iconMap: Record<string, React.ElementType> = {
 
 
 const DRAWER_WIDTH = 280;
+const COLLAPSED_DRAWER_WIDTH = 72;
 
 // Renders the sidebar module.
 const Sidebar = memo(() => {
@@ -102,6 +103,7 @@ const Sidebar = memo(() => {
   const activeCenterLabel =
     centerOptions.find((center) => center.id === activeCenterId)?.label ||
     (activeCenterId ? `Center ${activeCenterId}` : 'Select a branch');
+  const isExpanded = isMobile || isOpen;
 
   const menuItems = [
     { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'] },
@@ -147,29 +149,34 @@ const Sidebar = memo(() => {
 // Handles navigation.
   const handleNavigation = (path: string) => {
     navigate(path);
-    if (isMobile) setIsOpen(false);
+    setIsOpen(false);
   };
 
 // Handles sidebar content.
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.08]">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/40">
-            <LayoutDashboard className="w-5 h-5 text-white" />
-          </div>
-          <h1 className="text-lg font-bold tracking-tight">EduCRM</h1>
+      <div className={cn('flex items-center border-b border-white/[0.08]', isExpanded ? 'justify-between px-5 py-4' : 'justify-center px-3 py-4')}>
+        <div className={cn('flex items-center', isExpanded ? 'gap-3' : 'gap-0')}>
+          <button
+            type="button"
+            onClick={() => setIsOpen(true)}
+            className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/40"
+            aria-label="Open sidebar"
+          >
+            {isExpanded ? <LayoutDashboard className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+          </button>
+          {isExpanded && <h1 className="text-lg font-bold tracking-tight">EduCRM</h1>}
         </div>
-        {isMobile && (
-          <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition-colors">
+        {isExpanded && (
+          <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition-colors" aria-label="Close sidebar">
             <X className="w-5 h-5" />
           </button>
         )}
       </div>
 
       {/* User Info */}
-      {user && (
+      {user && isExpanded && (
         <div className="mx-3 mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -188,7 +195,7 @@ const Sidebar = memo(() => {
         </div>
       )}
 
-      {user && isGlobalSuperuser && (
+      {user && isGlobalSuperuser && isExpanded && (
         <div className="mx-3 mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
           <label htmlFor="active_center_sidebar" className="block text-xs text-white/60 mb-1">
             Active Branch
@@ -222,17 +229,18 @@ const Sidebar = memo(() => {
                     <button
                       onClick={() => handleNavigation(item.path)}
                       className={cn(
-                        'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-200 border-l-[3px]',
+                        'w-full flex items-center rounded-lg text-sm transition-all duration-200 border-l-[3px]',
+                        isExpanded ? 'gap-3 px-3 py-2' : 'justify-center gap-0 px-0 py-2.5',
                         isActive
                           ? 'bg-gradient-to-r from-indigo-500/30 to-violet-500/20 text-white border-indigo-400 font-semibold'
                           : 'text-white/60 border-transparent hover:bg-white/[0.06] hover:text-white'
                       )}
                     >
                       <Icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-indigo-400' : 'text-white/40')} />
-                      <span>{item.label}</span>
+                      {isExpanded && <span>{item.label}</span>}
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent side="right" className="sm:hidden">
+                  <TooltipContent side="right" className={cn(isExpanded && 'hidden')}>
                     {item.label}
                   </TooltipContent>
                 </Tooltip>
@@ -249,10 +257,13 @@ const Sidebar = memo(() => {
         <Button
           variant="ghost"
           onClick={toggleTheme}
-          className="w-full justify-start gap-2 text-white/70 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]"
+          className={cn(
+            'w-full text-white/70 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]',
+            isExpanded ? 'justify-start gap-2' : 'justify-center px-0'
+          )}
         >
           {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {isDark ? 'Light Mode' : 'Dark Mode'}
+          {isExpanded && (isDark ? 'Light Mode' : 'Dark Mode')}
         </Button>
       </div>
 
@@ -261,10 +272,13 @@ const Sidebar = memo(() => {
         <Button
           variant="ghost"
           onClick={handleLogout}
-          className="w-full justify-start gap-2 text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 border border-rose-500/20"
+          className={cn(
+            'w-full text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 border border-rose-500/20',
+            isExpanded ? 'justify-start gap-2' : 'justify-center px-0'
+          )}
         >
           <LogOut className="w-4 h-4" />
-          Logout
+          {isExpanded && 'Logout'}
         </Button>
       </div>
     </div>
@@ -290,11 +304,11 @@ const Sidebar = memo(() => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'h-screen border-r border-white/[0.06] shrink-0 transition-transform duration-300 z-[1300]',
+          'h-screen border-r border-white/[0.06] shrink-0 transition-all duration-300 z-[1300] overflow-hidden',
           isMobile ? 'fixed top-0 left-0' : 'fixed top-0 left-0',
           isMobile && !isOpen && '-translate-x-full'
         )}
-        style={{ width: DRAWER_WIDTH }}
+        style={{ width: isMobile || isOpen ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH }}
       >
         {sidebarContent}
       </aside>

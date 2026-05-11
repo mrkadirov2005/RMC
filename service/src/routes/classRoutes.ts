@@ -2,11 +2,10 @@ export {};
 
 const express_class = require('express');
 const router_class = express_class.Router();
-const classController = require('../controllers/classController');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody, validateQuery } = require('../middleware/validation');
 const { DeleteUpcomingSessionsDto, GenerateClassSessionsDto } = require('../dtos/request.dto');
-
+const classController=require('../modules/classes/controllers/class.controller');
 /**
  * @swagger
  * /classes:
@@ -142,6 +141,8 @@ router_class.put('/:id', requireAuth, classController.updateClass);
  *           schema:
  *             type: object
  *             properties:
+ *               center_id:
+ *                 type: integer
  *               month:
  *                 type: integer
  *               year:
@@ -152,7 +153,7 @@ router_class.put('/:id', requireAuth, classController.updateClass);
  *       200:
  *         description: Sessions generated
  */
-router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateClassSessionsDto), classController.generateClassSessions);
+router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateClassSessionsDto), GenerateClassSessionsDto);
 
 /**
  * @swagger

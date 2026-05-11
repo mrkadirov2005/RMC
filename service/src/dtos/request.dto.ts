@@ -151,6 +151,12 @@ class GenerateDebtsDto {
 }
 
 class GenerateClassSessionsDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
+
   @Type(() => Number)
   @IsInt()
   @Min(1)
