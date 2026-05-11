@@ -38,6 +38,21 @@ const getOrCreateDeviceId = (): string | null => {
   }
 };
 
+const getHashRoute = () => window.location.hash.replace(/^#/, '') || '/';
+
+const isAuthLoginUrl = (url: string) =>
+  [
+    '/students/auth/login',
+    '/teachers/auth/login',
+    '/teachers/auth/payment-login',
+    '/superusers/auth/login',
+    '/owners/auth/login',
+  ].some((path) => url.startsWith(path));
+
+const redirectToHashRoute = (path: string) => {
+  window.location.hash = path;
+};
+
 // Add token to requests
 apiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
@@ -140,6 +155,9 @@ apiClient.interceptors.response.use(
       const url = error.config?.url || '';
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
+      if (isAuthLoginUrl(url)) {
+        return Promise.reject(error);
+      }
       if (url.startsWith('/payments') && user?.userType === 'teacher') {
         localStorage.removeItem('payment_token');
         store.dispatch(paymentLogout());
@@ -152,9 +170,9 @@ apiClient.interceptors.response.use(
       const errorMessage = handleApiError(error) || 'Session expired. Please log in again.';
       showToast.error(errorMessage);
       // Redirect to login page
-      if (!window.location.pathname.includes('/login')) {
+      if (!getHashRoute().startsWith('/login')) {
         const loginUser = user?.role === 'owner' ? '/login/owner' : '/login/superuser';
-        window.location.href = loginUser;
+        redirectToHashRoute(loginUser);
       }
       return Promise.reject(error);
     }
