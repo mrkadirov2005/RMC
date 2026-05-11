@@ -2,7 +2,7 @@ export {};
 
 const express_owner = require('express');
 const router_owner = express_owner.Router();
-const ownerController = require('../controllers/ownerController');
+const ownerController = require('../modules/owners/controllers/owner.controller');
 
 router_owner.get('/', ownerController.getAllOwners);
 router_owner.get('/:id', ownerController.getOwnerById);

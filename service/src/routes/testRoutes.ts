@@ -2,7 +2,7 @@ export {};
 
 const express_test = require('express');
 const router_test = express_test.Router();
-const testController = require('../controllers/testController');
+const testController = require('../modules/tests/controllers/test.controller');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { CreateTestDto } = require('../dtos/request.dto');

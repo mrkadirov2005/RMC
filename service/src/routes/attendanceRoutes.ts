@@ -2,7 +2,7 @@ export {};
 
 const express_att = require('express');
 const router_att = express_att.Router();
-const attendanceController = require('../controllers/attendanceController');
+const attendanceController = require('../modules/attendance/controllers/attendance.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { CreateAttendanceDto } = require('../dtos/request.dto');

@@ -2,7 +2,7 @@ export {};
 
 const express_debt = require('express');
 const router_debt = express_debt.Router();
-const debtController = require('../controllers/debtController');
+const debtController = require('../modules/debts/controllers/debt.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { GenerateDebtsDto } = require('../dtos/request.dto');

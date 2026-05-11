@@ -2,7 +2,7 @@ export {};
 
 const express_student = require('express');
 const router_student = express_student.Router();
-const studentController = require('../controllers/studentController');
+const studentController = require('../modules/students/controllers/student.controller');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { CredentialsDto, PasswordChangeDto, SetPasswordDto, StudentCoinTransactionDto } = require('../dtos/request.dto');

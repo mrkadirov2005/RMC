@@ -2,7 +2,7 @@ export {};
 
 const express_subject = require('express');
 const router_subject = express_subject.Router();
-const subjectController = require('../controllers/subjectController');
+const subjectController = require('../modules/subjects/controllers/subject.controller');
 const { requireAuth } = require('../middleware/auth');
 
 /**

@@ -71,12 +71,12 @@ async function main() {
 
   // API Routes
   // Auth routes (public - no authentication required)
-  app.post('/api/students/auth/login', validateBody(CredentialsDto), require('./controllers/studentController').studentLogin);
-  app.post('/api/teachers/auth/login', validateBody(CredentialsDto), require('./controllers/teacherController').teacherLogin);
-  app.post('/api/teachers/auth/payment-login', validateBody(CredentialsDto), require('./controllers/teacherController').teacherPaymentLogin);
-  app.post('/api/superusers/auth/login', validateBody(CredentialsDto), require('./controllers/superuserController').login);
-  app.post('/api/owners/auth/login', require('./controllers/ownerController').login);
-  app.post('/api/owners/auth/register', require('./controllers/ownerController').register);
+  app.post('/api/students/auth/login', validateBody(CredentialsDto), require('./modules/students/controllers/student.controller').studentLogin);
+  app.post('/api/teachers/auth/login', validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherLogin);
+  app.post('/api/teachers/auth/payment-login', validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherPaymentLogin);
+  app.post('/api/superusers/auth/login', validateBody(CredentialsDto), require('./modules/superusers/controllers/superuser.controller').login);
+  app.post('/api/owners/auth/login', require('./modules/owners/controllers/owner.controller').login);
+  app.post('/api/owners/auth/register', require('./modules/owners/controllers/owner.controller').register);
   app.post('/api/parents/auth/login', validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
   // Protected routes - require authentication + role-based access

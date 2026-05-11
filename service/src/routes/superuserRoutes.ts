@@ -2,7 +2,7 @@ export {};
 
 const express_superuser = require('express');
 const router_superuser = express_superuser.Router();
-const superuserController = require('../controllers/superuserController');
+const superuserController = require('../modules/superusers/controllers/superuser.controller');
 const { validateBody } = require('../middleware/validation');
 const { CredentialsDto, PasswordChangeDto } = require('../dtos/request.dto');
 

@@ -2,7 +2,7 @@ export {};
 
 const express_payment = require('express');
 const router_payment = express_payment.Router();
-const paymentController = require('../controllers/paymentController');
+const paymentController = require('../modules/payments/controllers/payment.controller');
 const { requireAuth } = require('../middleware/auth');
 
 /**

@@ -2,7 +2,7 @@ export {};
 
 const express_center = require('express');
 const router_center = express_center.Router();
-const centerController = require('../controllers/centerController');
+const centerController = require('../modules/centers/controllers/center.controller');
 
 /**
  * @swagger

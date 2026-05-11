@@ -2,7 +2,7 @@ export {};
 
 const express_grade = require('express');
 const router_grade = express_grade.Router();
-const gradeController = require('../controllers/gradeController');
+const gradeController = require('../modules/grades/controllers/grade.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { BulkGradesDto } = require('../dtos/request.dto');
