@@ -61,6 +61,11 @@ export const createInitialDashboardStats = (): DashboardStats => ({
   pendingAssignments: 0,
   attendanceToday: 0,
   paymentsThisMonth: 0,
+  expectedPaymentsThisMonth: 0,
+  remainingPaymentsThisMonth: 0,
+  paidStudentsThisMonth: 0,
+  unpaidStudentsThisMonth: 0,
+  paymentCollectionRate: 0,
   outstandingDebt: 0,
 });
 
@@ -102,18 +107,64 @@ export const buildDashboardStats = (
   ).length;
 
   const now = new Date();
-  const paymentsThisMonth = collections.payments
-    .filter((item) => {
+  const paymentsCompletedThisMonth = collections.payments.filter((item) => {
       const value = getRecordString(item, 'payment_date');
       const date = value ? new Date(value) : null;
       if (!date || Number.isNaN(date.getTime())) return false;
+      const status = (
+        getRecordString(item, 'status') ||
+        getRecordString(item, 'payment_status') ||
+        ''
+      ).toLowerCase();
       return (
         date.getMonth() === now.getMonth() &&
         date.getFullYear() === now.getFullYear() &&
-        getRecordString(item, 'status')?.toLowerCase() === 'completed'
+        (status === 'completed' || status === 'paid')
       );
-    })
-    .reduce((sum, item) => sum + (getRecordNumber(item, 'amount') || 0), 0);
+    });
+
+  const paymentsThisMonth = paymentsCompletedThisMonth.reduce(
+    (sum, item) => sum + (getRecordNumber(item, 'amount') || 0),
+    0
+  );
+
+  const classesById = new Map<number, DashboardRecord>();
+  collections.classes.forEach((item) => {
+    const classId = getRecordNumber(item, 'class_id') || getRecordNumber(item, 'id');
+    if (classId) classesById.set(classId, item);
+  });
+
+  const expectedByStudent = new Map<number, number>();
+  collections.students.forEach((student) => {
+    const studentId = getRecordNumber(student, 'student_id') || getRecordNumber(student, 'id');
+    const classId = getRecordNumber(student, 'class_id');
+    if (!studentId || !classId) return;
+    const cls = classesById.get(classId);
+    const expectedAmount = cls ? getRecordNumber(cls, 'payment_amount') || 0 : 0;
+    if (expectedAmount > 0) expectedByStudent.set(studentId, expectedAmount);
+  });
+
+  const paidByStudent = new Map<number, number>();
+  paymentsCompletedThisMonth.forEach((payment) => {
+    const studentId = getRecordNumber(payment, 'student_id');
+    if (!studentId) return;
+    paidByStudent.set(studentId, (paidByStudent.get(studentId) || 0) + (getRecordNumber(payment, 'amount') || 0));
+  });
+
+  const expectedPaymentsThisMonth = Array.from(expectedByStudent.values()).reduce((sum, amount) => sum + amount, 0);
+  let paidStudentsThisMonth = 0;
+  let unpaidStudentsThisMonth = 0;
+  expectedByStudent.forEach((expected, studentId) => {
+    const paid = paidByStudent.get(studentId) || 0;
+    if (paid >= expected) {
+      paidStudentsThisMonth += 1;
+    } else {
+      unpaidStudentsThisMonth += 1;
+    }
+  });
+  const remainingPaymentsThisMonth = Math.max(expectedPaymentsThisMonth - paymentsThisMonth, 0);
+  const paymentCollectionRate =
+    expectedPaymentsThisMonth > 0 ? Math.min(Math.round((paymentsThisMonth / expectedPaymentsThisMonth) * 100), 100) : 0;
 
   const outstandingDebt = collections.debts.reduce((sum, item) => {
     const debtAmount = getRecordNumber(item, 'debt_amount') || 0;
@@ -131,6 +182,11 @@ export const buildDashboardStats = (
     pendingAssignments,
     attendanceToday,
     paymentsThisMonth,
+    expectedPaymentsThisMonth,
+    remainingPaymentsThisMonth,
+    paidStudentsThisMonth,
+    unpaidStudentsThisMonth,
+    paymentCollectionRate,
     outstandingDebt,
   };
 };
@@ -248,16 +304,28 @@ export const getDashboardStatCards = (
         accent: 'from-slate-500 to-zinc-500',
       },
       {
-        label: 'Payments (Month)',
-        value: formatMoney(stats.paymentsThisMonth),
+        label: 'Should Pay',
+        value: formatMoney(stats.expectedPaymentsThisMonth),
         icon: CreditCard,
         accent: 'from-cyan-500 to-blue-500',
+        subValue: 'Expected this month',
+        progress: 100,
       },
       {
-        label: 'Outstanding Debt',
-        value: formatMoney(stats.outstandingDebt),
+        label: 'Paid This Month',
+        value: formatMoney(stats.paymentsThisMonth),
+        icon: CreditCard,
+        accent: 'from-emerald-500 to-green-500',
+        subValue: `${stats.paymentCollectionRate}% collected`,
+        progress: stats.paymentCollectionRate,
+      },
+      {
+        label: 'Still Unpaid',
+        value: formatMoney(stats.remainingPaymentsThisMonth),
         icon: AlertTriangle,
         accent: 'from-rose-500 to-red-500',
+        subValue: `${stats.unpaidStudentsThisMonth} students remaining`,
+        progress: stats.expectedPaymentsThisMonth > 0 ? Math.min(Math.round((stats.remainingPaymentsThisMonth / stats.expectedPaymentsThisMonth) * 100), 100) : 0,
       },
     ];
   }
@@ -309,7 +377,9 @@ export const getDashboardFocusItems = (
 
   if (isSuperuser) {
     items.push({ label: 'Outstanding Debt', value: formatMoney(stats.outstandingDebt) });
-    items.push({ label: 'Payments This Month', value: formatMoney(stats.paymentsThisMonth) });
+    items.push({ label: 'Should Pay This Month', value: formatMoney(stats.expectedPaymentsThisMonth) });
+    items.push({ label: 'Paid This Month', value: formatMoney(stats.paymentsThisMonth) });
+    items.push({ label: 'Still Unpaid', value: formatMoney(stats.remainingPaymentsThisMonth) });
   }
 
   return items;

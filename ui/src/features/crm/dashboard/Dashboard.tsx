@@ -2,14 +2,22 @@
 
 import { memo } from 'react';
 import { useAppSelector } from '../hooks';
-import { DashboardFocusToday, DashboardHeader, DashboardLoadingState, DashboardRecentActivity, DashboardStatCards } from './components';
+import {
+  DashboardFocusToday,
+  DashboardHeader,
+  DashboardLoadingState,
+  DashboardPaymentOverview,
+  DashboardRecentActivity,
+  DashboardStatCards,
+} from './components';
 import { useDashboardData } from './hooks/useDashboardData';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';
-  const { loading, statCards, recentActivity, focusItems } = useDashboardData(role);
+  const { loading, stats, statCards, recentActivity, focusItems } = useDashboardData(role);
+  const showPaymentOverview = role === 'superuser';
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -20,6 +28,8 @@ const Dashboard = memo(() => {
       ) : (
         <>
           <DashboardStatCards cards={statCards} />
+
+          {showPaymentOverview && <DashboardPaymentOverview stats={stats} />}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <DashboardRecentActivity items={recentActivity} />

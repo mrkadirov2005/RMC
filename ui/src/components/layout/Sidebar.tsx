@@ -8,7 +8,6 @@ import {
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -42,10 +41,16 @@ const iconMap: Record<string, React.ElementType> = {
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 72;
+const SIDEBAR_OPEN_KEY = 'crm_sidebar_open';
+
+const getStoredSidebarOpen = () => {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(SIDEBAR_OPEN_KEY) === 'true';
+};
 
 // Renders the sidebar module.
 const Sidebar = memo(() => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(getStoredSidebarOpen);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,6 +74,13 @@ const Sidebar = memo(() => {
     window.addEventListener('resize', check);
     return () => window.removeEventListener('resize', check);
   }, []);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!isMobile) {
+      localStorage.setItem(SIDEBAR_OPEN_KEY, String(isOpen));
+    }
+  }, [isMobile, isOpen]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -100,9 +112,6 @@ const Sidebar = memo(() => {
     setStoredActiveCenterId(activeCenterId);
   }, [activeCenterId, isGlobalSuperuser]);
 
-  const activeCenterLabel =
-    centerOptions.find((center) => center.id === activeCenterId)?.label ||
-    (activeCenterId ? `Center ${activeCenterId}` : 'Select a branch');
   const isExpanded = isMobile || isOpen;
 
   const menuItems = [
@@ -149,70 +158,119 @@ const Sidebar = memo(() => {
 // Handles navigation.
   const handleNavigation = (path: string) => {
     navigate(path);
-    setIsOpen(false);
+    if (isMobile) {
+      setIsOpen(false);
+    }
   };
 
 // Handles sidebar content.
   const sidebarContent = (
     <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white">
       {/* Header */}
-      <div className={cn('flex items-center border-b border-white/[0.08]', isExpanded ? 'justify-between px-5 py-4' : 'justify-center px-3 py-4')}>
-        <div className={cn('flex items-center', isExpanded ? 'gap-3' : 'gap-0')}>
-          <button
-            type="button"
-            onClick={() => setIsOpen(true)}
-            className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center shadow-lg shadow-indigo-500/40"
-            aria-label="Open sidebar"
-          >
-            {isExpanded ? <LayoutDashboard className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
-          </button>
-          {isExpanded && <h1 className="text-lg font-bold tracking-tight">EduCRM</h1>}
+      <div className={cn('border-b border-white/[0.08]', isExpanded ? 'px-3 py-3' : 'px-2 py-3')}>
+        <div className={cn('flex items-center', isExpanded ? 'justify-between gap-2' : 'justify-center')}>
+          <div className={cn('flex items-center min-w-0', isExpanded ? 'gap-3' : 'gap-0')}>
+            <button
+              type="button"
+              onClick={() => setIsOpen(true)}
+              className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 flex shrink-0 items-center justify-center shadow-lg shadow-indigo-500/40"
+              aria-label="Open sidebar"
+            >
+              {isExpanded ? <LayoutDashboard className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+            </button>
+            {isExpanded && <h1 className="truncate text-lg font-bold tracking-tight">EduCRM</h1>}
+          </div>
+          {isExpanded && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={toggleTheme}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-white/[0.08] text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              >
+                {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-rose-500/20 text-rose-400 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
+                aria-label="Logout"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                aria-label="Close sidebar"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
-        {isExpanded && (
-          <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white transition-colors" aria-label="Close sidebar">
-            <X className="w-5 h-5" />
-          </button>
+        {!isExpanded && (
+          <div className="mt-3 flex flex-col items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-rose-500/20 text-rose-400 transition-colors hover:bg-rose-500/15 hover:text-rose-300"
+              aria-label="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         )}
       </div>
 
       {/* User Info */}
       {user && isExpanded && (
-        <div className="mx-3 mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
+        <div className="mx-3 mt-3 rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <Avatar className="w-10 h-10">
+              <Avatar className="w-9 h-9">
                 <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-400 text-white text-sm font-semibold">
                   {user.first_name?.[0]}{user.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
               <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-slate-800" />
             </div>
-            <div>
-              <p className="text-sm font-semibold leading-tight">{user.first_name} {user.last_name}</p>
-              <p className="text-[0.7rem] font-medium text-indigo-400 uppercase tracking-wider">{user.role || user.userType}</p>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold leading-tight">{user.first_name} {user.last_name}</p>
+              <p className="truncate text-[0.7rem] font-medium text-indigo-400 uppercase tracking-wider">{user.role || user.userType}</p>
             </div>
           </div>
         </div>
       )}
 
       {user && isGlobalSuperuser && isExpanded && (
-        <div className="mx-3 mt-3 p-3 rounded-xl bg-white/[0.04] border border-white/[0.06]">
-          <label htmlFor="active_center_sidebar" className="block text-xs text-white/60 mb-1">
+        <div className="mx-3 mt-2">
+          <label htmlFor="active_center_sidebar" className="sr-only">
             Active Branch
           </label>
-          <p className="mb-2 text-sm font-medium text-white">{activeCenterLabel}</p>
-          <select
-            id="active_center_sidebar"
-            value={activeCenterId ?? ''}
-            onChange={(e) => setActiveCenterId(e.target.value ? Number(e.target.value) : null)}
-            className="w-full rounded-md bg-white/5 border border-white/10 text-white text-sm px-2 py-2"
-          >
-            {centerOptions.map((center) => (
-              <option key={center.id} value={center.id}>
-                {center.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2">
+            <Building2 className="h-4 w-4 shrink-0 text-white/50" />
+            <select
+              id="active_center_sidebar"
+              value={activeCenterId ?? ''}
+              onChange={(e) => setActiveCenterId(e.target.value ? Number(e.target.value) : null)}
+              className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+            >
+              {centerOptions.map((center) => (
+                <option key={center.id} value={center.id}>
+                  {center.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 
@@ -251,36 +309,6 @@ const Sidebar = memo(() => {
       </ScrollArea>
 
       <Separator className="bg-white/[0.06]" />
-
-      {/* Theme Toggle */}
-      <div className="px-3 pt-3 pb-1.5">
-        <Button
-          variant="ghost"
-          onClick={toggleTheme}
-          className={cn(
-            'w-full text-white/70 hover:text-white hover:bg-white/[0.06] border border-white/[0.08]',
-            isExpanded ? 'justify-start gap-2' : 'justify-center px-0'
-          )}
-        >
-          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          {isExpanded && (isDark ? 'Light Mode' : 'Dark Mode')}
-        </Button>
-      </div>
-
-      {/* Logout */}
-      <div className="px-3 pb-3 pt-1.5">
-        <Button
-          variant="ghost"
-          onClick={handleLogout}
-          className={cn(
-            'w-full text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 border border-rose-500/20',
-            isExpanded ? 'justify-start gap-2' : 'justify-center px-0'
-          )}
-        >
-          <LogOut className="w-4 h-4" />
-          {isExpanded && 'Logout'}
-        </Button>
-      </div>
     </div>
   );
 

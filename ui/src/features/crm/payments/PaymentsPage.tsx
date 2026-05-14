@@ -380,6 +380,54 @@ const PaymentsPage = () => {
     [teachers, students, state.items]
   );
 
+  const rootSearch = searchTerm.trim().toLowerCase();
+
+  const filteredRootStudents = useMemo(() => {
+    if (!rootSearch) return students;
+    return students.filter((student) =>
+      [
+        `${student.first_name || ''} ${student.last_name || ''}`,
+        student.first_name,
+        student.last_name,
+        student.student_id,
+        student.id,
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(rootSearch))
+    );
+  }, [rootSearch, students]);
+
+  const filteredRootClasses = useMemo(() => {
+    if (!rootSearch) return classes;
+    return classes.filter((cls) =>
+      [cls.class_name, cls.class_code, cls.level, cls.class_id, cls.id]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(rootSearch))
+    );
+  }, [classes, rootSearch]);
+
+  const filteredRootTeachers = useMemo(() => {
+    if (!rootSearch) return teachers;
+    return teachers.filter((teacher) =>
+      [
+        `${teacher.first_name || ''} ${teacher.last_name || ''}`,
+        teacher.first_name,
+        teacher.last_name,
+        teacher.employee_id,
+        teacher.teacher_id,
+        teacher.id,
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(rootSearch))
+    );
+  }, [rootSearch, teachers]);
+
+  const filteredTeacherOverallStats = useMemo(() => {
+    if (!rootSearch) return teacherOverallStats;
+    const teacherIds = new Set(filteredRootTeachers.map((teacher) => Number(teacher.teacher_id || teacher.id)));
+    return teacherOverallStats.filter(({ teacherId }) => teacherIds.has(Number(teacherId)));
+  }, [filteredRootTeachers, rootSearch, teacherOverallStats]);
+
 // Memoizes the selected teacher classes derived value.
   const selectedTeacherClasses = useMemo(() => {
     if (!selectedFolder || selectedFolder.type !== 'teacher') return [];
@@ -555,6 +603,34 @@ const PaymentsPage = () => {
 
       {!selectedFolder ? (
         <>
+          <div className="relative mb-4 max-w-xl">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder={
+                activeTab === 'classes'
+                  ? 'Search classes by name, code, level...'
+                  : activeTab === 'teachers' || activeTab === 'statistics'
+                    ? 'Search teachers by name or employee ID...'
+                    : 'Search students by name or ID...'
+              }
+              value={searchTerm}
+              onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
+              className="pl-10 pr-10"
+            />
+            {searchTerm && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                onClick={() => dispatch(setPaymentsSearchTerm(''))}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
           {/* Tab Navigation */}
           <div className="border-b border-border mb-6">
             <div className="flex space-x-1">
@@ -605,12 +681,12 @@ const PaymentsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                     <p className="text-muted-foreground">Loading students...</p>
                   </div>
-                ) : students.length === 0 ? (
+                ) : filteredRootStudents.length === 0 ? (
                   <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No students found</p>
+                    <p className="text-muted-foreground">{searchTerm ? 'No students match your search' : 'No students found'}</p>
                   </div>
                 ) : (
-                  students.map((student) => {
+                  filteredRootStudents.map((student) => {
                     const studentId = student.student_id || student.id || 0;
                     const paymentCount = getPaymentCountForStudent(studentId);
                     const totalAmount = getTotalAmountForStudent(studentId);
@@ -654,12 +730,12 @@ const PaymentsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                     <p className="text-muted-foreground">Loading classes...</p>
                   </div>
-                ) : classes.length === 0 ? (
+                ) : filteredRootClasses.length === 0 ? (
                   <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No classes found</p>
+                    <p className="text-muted-foreground">{searchTerm ? 'No classes match your search' : 'No classes found'}</p>
                   </div>
                 ) : (
-                  classes.map((cls) => {
+                  filteredRootClasses.map((cls) => {
                     const classId = cls.class_id || cls.id || 0;
                     const paymentCount = getPaymentCountForClass(classId);
                     const totalAmount = getTotalAmountForClass(classId);
@@ -703,12 +779,12 @@ const PaymentsPage = () => {
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                     <p className="text-muted-foreground">Loading teachers...</p>
                   </div>
-                ) : teachers.length === 0 ? (
+                ) : filteredRootTeachers.length === 0 ? (
                   <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No teachers found</p>
+                    <p className="text-muted-foreground">{searchTerm ? 'No teachers match your search' : 'No teachers found'}</p>
                   </div>
                 ) : (
-                  teachers.map((teacher) => {
+                  filteredRootTeachers.map((teacher) => {
                     const teacherId = teacher.teacher_id || teacher.id || 0;
                     const paymentCount = getPaymentCountForTeacher(teacherId);
                     const teacherStats = getTeacherPaymentStats(teacherId);
@@ -854,14 +930,14 @@ const PaymentsPage = () => {
                               <p className="text-muted-foreground">Loading statistics...</p>
                             </TableCell>
                           </TableRow>
-                        ) : teacherOverallStats.length === 0 ? (
+                        ) : filteredTeacherOverallStats.length === 0 ? (
                           <TableRow>
                             <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                              No teachers found
+                              {searchTerm ? 'No teachers match your search' : 'No teachers found'}
                             </TableCell>
                           </TableRow>
                         ) : (
-                          teacherOverallStats.map(({ teacher, teacherId, stats }) => (
+                          filteredTeacherOverallStats.map(({ teacher, teacherId, stats }) => (
                             <TableRow
                               key={teacherId}
                               className="cursor-pointer hover:bg-muted/40"

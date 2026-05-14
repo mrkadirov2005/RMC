@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -44,6 +44,7 @@ import { formatSchedule } from './queries';
 // Renders the classes page screen.
 const ClassesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [searchTerm, setSearchTerm] = useState('');
   const {
     state,
     isModalOpen,
@@ -75,6 +76,26 @@ const ClassesPage = () => {
     frequencyOptions,
     isOwner,
   } = useClassesPage();
+  const filteredClasses = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return state.items;
+
+    return state.items.filter((cls) => {
+      const schedule = formatSchedule(cls);
+      return [
+        cls.class_name,
+        cls.class_code,
+        cls.level,
+        cls.capacity,
+        cls.room_number,
+        cls.payment_amount,
+        cls.payment_frequency,
+        schedule,
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(search));
+    });
+  }, [searchTerm, state.items]);
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
@@ -95,6 +116,28 @@ const ClassesPage = () => {
         </Alert>
       )}
 
+      <div className="relative mb-4 max-w-xl">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search classes by name, code, schedule, room..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 pr-10"
+        />
+        {searchTerm && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+            onClick={() => setSearchTerm('')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       {state.loading ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -102,6 +145,10 @@ const ClassesPage = () => {
       ) : state.items.length === 0 ? (
         <Alert className="mb-4">
           <AlertDescription>No classes found. Create your first class to get started!</AlertDescription>
+        </Alert>
+      ) : filteredClasses.length === 0 ? (
+        <Alert className="mb-4">
+          <AlertDescription>No classes match your search.</AlertDescription>
         </Alert>
       ) : viewMode === 'list' ? (
         <Card>
@@ -119,7 +166,7 @@ const ClassesPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {state.items.map((cls) => (
+              {filteredClasses.map((cls) => (
                 <TableRow key={cls.class_id || cls.id}>
                   <TableCell className="font-medium">{cls.class_name}</TableCell>
                   <TableCell className="font-mono text-sm">{cls.class_code}</TableCell>
@@ -151,7 +198,7 @@ const ClassesPage = () => {
         </Card>
       ) : viewMode === 'compact' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {state.items.map((cls) => (
+          {filteredClasses.map((cls) => (
             <Card key={cls.class_id || cls.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => handleViewDetails(cls)}>
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
@@ -170,7 +217,7 @@ const ClassesPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {state.items.map((cls) => (
+          {filteredClasses.map((cls) => (
             <Card
               key={cls.class_id || cls.id}
               className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-2"

@@ -1,9 +1,12 @@
 // Page component for the students screen in the crm feature.
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Search, X } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { StudentsClassCards } from './components/StudentsClassCards';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
@@ -16,10 +19,38 @@ import { useStudentsPage } from './hooks/useStudentsPage';
 const StudentsPage = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [classSearchTerm, setClassSearchTerm] = useState('');
   const s = useStudentsPage();
   const title = s.selectedClass ? `${s.selectedClass.class_name} - Students` : 'Students by Class';
 // Handles active count.
   const activeCount = (s.filterGender ? 1 : 0) + (s.filterStatus ? 1 : 0);
+  const filteredClasses = useMemo(() => {
+    const search = classSearchTerm.trim().toLowerCase();
+    if (!search) return s.classes;
+
+    return s.classes.filter((cls) => {
+      const classId = Number(cls.class_id || cls.id);
+      const classStudents = s.state.items.filter((student) => Number(student.class_id) === classId);
+      const searchableValues = [
+        cls.class_name,
+        cls.class_code,
+        cls.level,
+        (cls as any).section,
+        (cls as any).room_number,
+        ...classStudents.flatMap((student) => [
+          `${student.first_name || ''} ${student.last_name || ''}`,
+          student.email,
+          student.phone,
+          student.enrollment_number,
+          student.parent_name,
+        ]),
+      ];
+
+      return searchableValues
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(search));
+    });
+  }, [classSearchTerm, s.classes, s.state.items]);
 
   return (
     <div className="p-6">
@@ -29,7 +60,36 @@ const StudentsPage = () => {
       </div>
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
       {!s.selectedClass ? (
-        <StudentsClassCards classes={s.classes} students={s.state.items} onClassClick={s.handleClassClick} viewMode={viewMode} />
+        <>
+          <div className="relative mb-4 max-w-xl">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              placeholder="Search classes or students by name, phone, email..."
+              value={classSearchTerm}
+              onChange={(e) => setClassSearchTerm(e.target.value)}
+              className="pl-10 pr-10"
+            />
+            {classSearchTerm && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                onClick={() => setClassSearchTerm('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+          {filteredClasses.length === 0 ? (
+            <Alert className="mb-4">
+              <AlertDescription>No classes or students match your search.</AlertDescription>
+            </Alert>
+          ) : (
+            <StudentsClassCards classes={filteredClasses} students={s.state.items} onClassClick={s.handleClassClick} viewMode={viewMode} />
+          )}
+        </>
       ) : (
         <>
           <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} activeCount={activeCount} onClearAll={s.clearFilters} />

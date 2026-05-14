@@ -28,10 +28,13 @@ export const DashboardStatCards = ({ cards }: DashboardStatCardsProps) => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{card.value}</div>
+              {card.subValue && (
+                <div className="mt-1 text-xs text-muted-foreground">{card.subValue}</div>
+              )}
               <div className="mt-2 h-1.5 rounded-full bg-muted">
                 <div
                   className={`h-1.5 rounded-full bg-gradient-to-r ${card.accent}`}
-                  style={{ width: '60%' }}
+                  style={{ width: `${card.progress ?? 60}%` }}
                 />
               </div>
             </CardContent>
@@ -41,4 +44,3 @@ export const DashboardStatCards = ({ cards }: DashboardStatCardsProps) => {
     </div>
   );
 };
-

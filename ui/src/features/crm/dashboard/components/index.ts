@@ -3,6 +3,6 @@
 export * from './DashboardFocusToday';
 export * from './DashboardHeader';
 export * from './DashboardLoadingState';
+export * from './DashboardPaymentOverview';
 export * from './DashboardRecentActivity';
 export * from './DashboardStatCards';
-

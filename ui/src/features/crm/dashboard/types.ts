@@ -27,6 +27,11 @@ export interface DashboardStats {
   pendingAssignments: number;
   attendanceToday: number;
   paymentsThisMonth: number;
+  expectedPaymentsThisMonth: number;
+  remainingPaymentsThisMonth: number;
+  paidStudentsThisMonth: number;
+  unpaidStudentsThisMonth: number;
+  paymentCollectionRate: number;
   outstandingDebt: number;
 }
 
@@ -43,10 +48,11 @@ export interface DashboardStatCard {
   value: string | number;
   icon: LucideIcon;
   accent: string;
+  subValue?: string;
+  progress?: number;
 }
 
 export interface DashboardFocusItem {
   label: string;
   value: string | number;
 }
-

@@ -1,6 +1,6 @@
 // Page component for the assignments screen in the crm feature.
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -71,6 +71,23 @@ const AssignmentsPage = () => {
       : viewMode === 'compact'
         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
         : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4';
+  const rootSearch = !selectedFolder ? searchTerm.trim().toLowerCase() : '';
+  const filteredClasses = useMemo(() => {
+    if (!rootSearch) return classes;
+    return classes.filter((cls) =>
+      [cls.class_name, cls.class_code, cls.level, (cls as any).section]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(rootSearch))
+    );
+  }, [classes, rootSearch]);
+  const filteredPersonalAssignments = useMemo(() => {
+    if (!rootSearch) return personalAssignments;
+    return personalAssignments.filter((assignment) =>
+      [assignment.assignment_title, assignment.description, assignment.status, assignment.grade]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(rootSearch))
+    );
+  }, [personalAssignments, rootSearch]);
 
   return (
     <div className="p-6 space-y-6">
@@ -104,6 +121,27 @@ const AssignmentsPage = () => {
 
       {!selectedFolder ? (
         <>
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[220px] max-w-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                type="text"
+                placeholder={activeTab === 'classes' ? 'Search classes by name or code...' : 'Search personal tasks...'}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 pr-8"
+              />
+              {searchTerm && (
+                <button
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => setSearchTerm('')}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
           {/* Tab Navigation */}
           <div className="border-b">
             <div className="flex gap-1">
@@ -144,12 +182,12 @@ const AssignmentsPage = () => {
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
                     Loading classes...
                   </div>
-                ) : classes.length === 0 ? (
+                ) : filteredClasses.length === 0 ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
-                    No classes found
+                    {searchTerm ? 'No classes match your search' : 'No classes found'}
                   </div>
                 ) : (
-                  classes.map((cls) => {
+                  filteredClasses.map((cls) => {
                     const classId = cls.class_id || cls.id || 0;
                     const assignmentCount = getAssignmentCountForClass(classId);
                     const completedCount = getCompletedCountForClass(classId);
@@ -200,8 +238,8 @@ const AssignmentsPage = () => {
                   </div>
                 ) : (
                   (() => {
-                    const personalCount = personalAssignments.length;
-                    const personalCompleted = personalAssignments.filter((a) => a.status === 'Completed').length;
+                    const personalCount = filteredPersonalAssignments.length;
+                    const personalCompleted = filteredPersonalAssignments.filter((a) => a.status === 'Completed').length;
                     const completionPercentage = personalCount > 0 ? (personalCompleted / personalCount) * 100 : 0;
 
                     return personalCount > 0 ? (
@@ -234,7 +272,7 @@ const AssignmentsPage = () => {
                       </Card>
                     ) : (
                       <div className="col-span-full text-center py-8 text-muted-foreground">
-                        No personal tasks found
+                        {searchTerm ? 'No personal tasks match your search' : 'No personal tasks found'}
                       </div>
                     );
                   })()

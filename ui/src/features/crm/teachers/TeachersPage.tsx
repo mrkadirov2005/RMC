@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
-import { useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, Mail, Phone, GraduationCap, User, X, Loader2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus, Pencil, Trash2, Eye, Mail, Phone, GraduationCap, User, X, Loader2, Search } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 // Renders the teachers page screen.
 const TeachersPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [searchTerm, setSearchTerm] = useState('');
   const {
     navigate,
     state,
@@ -48,6 +49,26 @@ const TeachersPage = () => {
     teacherStatusOptions,
     isOwner,
   } = useTeachersPage();
+  const filteredTeachers = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return state.items;
+
+    return state.items.filter((teacher) =>
+      [
+        `${teacher.first_name || ''} ${teacher.last_name || ''}`,
+        teacher.first_name,
+        teacher.last_name,
+        teacher.employee_id,
+        teacher.specialization,
+        teacher.qualification,
+        teacher.email,
+        teacher.phone,
+        teacher.status,
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(search))
+    );
+  }, [searchTerm, state.items]);
 
   return (
     <div className="p-6">
@@ -73,6 +94,28 @@ const TeachersPage = () => {
         </Alert>
       )}
 
+      <div className="relative mb-6 max-w-xl">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search teachers by name, ID, subject, email, phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 pr-10"
+        />
+        {searchTerm && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+            onClick={() => setSearchTerm('')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       {state.loading ? (
         <div className="flex justify-center py-16">
           <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
@@ -82,6 +125,12 @@ const TeachersPage = () => {
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
           <h3 className="text-lg font-semibold">No teachers found</h3>
           <p className="text-sm">Click &quot;Add Teacher&quot; to get started</p>
+        </div>
+      ) : filteredTeachers.length === 0 ? (
+        <div className="text-center py-16 text-muted-foreground">
+          <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
+          <h3 className="text-lg font-semibold">No teachers match your search</h3>
+          <p className="text-sm">Try a different name, ID, email, or specialization</p>
         </div>
       ) : viewMode === 'list' ? (
         <Card>
@@ -98,7 +147,7 @@ const TeachersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {state.items.map((teacher) => (
+              {filteredTeachers.map((teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id}>
                   <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
                   <TableCell className="font-mono text-sm">{teacher.employee_id}</TableCell>
@@ -130,7 +179,7 @@ const TeachersPage = () => {
         </Card>
       ) : viewMode === 'compact' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {state.items.map((teacher) => (
+          {filteredTeachers.map((teacher) => (
             <Card key={teacher.teacher_id || teacher.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}>
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
@@ -151,7 +200,7 @@ const TeachersPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {state.items.map((teacher) => (
+          {filteredTeachers.map((teacher) => (
             <Card
               key={teacher.teacher_id || teacher.id}
               className="h-full flex flex-col rounded-2xl transition-all duration-300 border border-border/10 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15"

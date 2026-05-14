@@ -1,6 +1,7 @@
 // Page component for the debts screen in the crm feature.
 
-import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Pencil, Trash2, Plus, Loader2, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +29,7 @@ import { useDebtsPage } from './hooks/useDebtsPage';
 
 // Renders the debts page screen.
 const DebtsPage = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const {
     state,
     isModalOpen,
@@ -44,6 +46,23 @@ const DebtsPage = () => {
     handleDelete,
     getStudentName,
   } = useDebtsPage();
+  const filteredDebts = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return state.items;
+
+    return state.items.filter((debt) =>
+      [
+        getStudentName(debt.student_id),
+        debt.debt_amount,
+        debt.amount_paid,
+        debt.debt_date,
+        debt.due_date,
+        debt.remarks,
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(search))
+    );
+  }, [getStudentName, searchTerm, state.items]);
 
   return (
     <div className="p-6 space-y-6">
@@ -61,6 +80,28 @@ const DebtsPage = () => {
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       )}
+
+      <div className="relative max-w-xl">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search debts by student, amount, date, remarks..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 pr-10"
+        />
+        {searchTerm && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+            onClick={() => setSearchTerm('')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
 
       <Card>
         <CardHeader>
@@ -86,14 +127,14 @@ const DebtsPage = () => {
                       <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
-                ) : state.items.length === 0 ? (
+                ) : filteredDebts.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                      No debt records found
+                      {searchTerm ? 'No debt records match your search' : 'No debt records found'}
                     </TableCell>
                   </TableRow>
                 ) : (
-                  state.items.map((debt) => {
+                  filteredDebts.map((debt) => {
                     const debtAmount = typeof debt.debt_amount === 'string' ? parseFloat(debt.debt_amount) : debt.debt_amount;
                     const amountPaid = typeof debt.amount_paid === 'string' ? parseFloat(debt.amount_paid) : debt.amount_paid;
                     const remaining = debtAmount - amountPaid;

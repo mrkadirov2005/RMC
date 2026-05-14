@@ -1,6 +1,7 @@
 // Page component for the centers screen in the crm feature.
 
-import { Plus, Loader2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Plus, Loader2, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +19,7 @@ import { useCentersPage } from './hooks/useCentersPage';
 
 // Renders the centers page screen.
 const CentersPage = () => {
+  const [searchTerm, setSearchTerm] = useState('');
   const {
     state,
     isModalOpen,
@@ -37,6 +39,24 @@ const CentersPage = () => {
   const activeCenterLabel = activeCenter
     ? `${activeCenter.center_name || 'Center'} (${activeCenter.center_code || activeCenter.center_id || activeCenter.id || 'n/a'})`
     : 'No active branch selected';
+  const filteredCenters = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return state.items;
+
+    return state.items.filter((center) =>
+      [
+        center.center_name,
+        center.center_code,
+        center.email,
+        center.phone,
+        center.address,
+        center.city,
+        center.principal_name,
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(search))
+    );
+  }, [searchTerm, state.items]);
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 space-y-6">
@@ -90,6 +110,28 @@ const CentersPage = () => {
         </Alert>
       )}
 
+      <div className="relative max-w-xl">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          placeholder="Search centers by name, code, city, phone..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 pr-10"
+        />
+        {searchTerm && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+            onClick={() => setSearchTerm('')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+
       {state.loading ? (
         <div className="flex justify-center py-8">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -97,7 +139,7 @@ const CentersPage = () => {
       ) : (
         <CRUDTable
           title=""
-          data={state.items}
+          data={filteredCenters}
           columns={columns}
           onAdd={() => handleOpenModal()}
           onEdit={handleOpenModal}
