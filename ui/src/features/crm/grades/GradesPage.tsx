@@ -37,6 +37,7 @@ import {
 } from '../../../store/selectors';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -146,6 +147,7 @@ const GradesPage = () => {
     academic_year: new Date().getFullYear(),
     term: 'First',
   });
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -407,6 +409,12 @@ const GradesPage = () => {
       ],
     };
   }, [state.items]);
+  const folderGridClass =
+    viewMode === 'list'
+      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.p-4]:p-2.5 [&_.h-9]:h-5 [&_.w-9]:w-5 [&_.mb-3]:mb-1.5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5 [&_.space-y-1]:space-y-0'
+      : viewMode === 'compact'
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
+        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
 
   return (
     <div className="container mx-auto p-6">
@@ -424,9 +432,12 @@ const GradesPage = () => {
               : 'Grades Management'}
           </h1>
         </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" /> Add Grade
-        </Button>
+        <div className="flex items-center gap-2">
+          <ViewModeToggle value={viewMode} onChange={setViewMode} />
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="h-4 w-4 mr-2" /> Add Grade
+          </Button>
+        </div>
       </div>
 
       {!selectedFolder ? (
@@ -540,7 +551,7 @@ const GradesPage = () => {
 
             {/* By Students Tab */}
             {activeTab === 'students' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -588,7 +599,7 @@ const GradesPage = () => {
 
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -636,7 +647,7 @@ const GradesPage = () => {
 
             {/* By Teachers Tab */}
             {activeTab === 'teachers' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />

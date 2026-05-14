@@ -18,7 +18,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
-import { toast } from 'react-toastify';
 
 interface Answer {
   answer_id: number;
@@ -142,7 +141,6 @@ const GradeSubmissionPage = () => {
         graded_by_type: authUser?.userType || 'superuser',
       });
 
-      toast.success('Submission graded successfully!');
       navigate(`/tests/${submission?.test_id}`);
     } catch (err: any) {
       console.error('Error saving grades:', err);

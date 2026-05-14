@@ -1,9 +1,11 @@
 // Page component for the assignments screen in the crm feature.
 
+import { useState } from 'react';
 import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,7 @@ import { getStatusColor } from './queries';
 
 // Renders the assignments page screen.
 const AssignmentsPage = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const {
     state,
     classes,
@@ -62,6 +65,12 @@ const AssignmentsPage = () => {
     getCompletedCountForClass,
     assignmentStatusOptions,
   } = useAssignmentsPage();
+  const folderGridClass =
+    viewMode === 'list'
+      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.pt-4]:pt-2.5 [&_.pb-4]:pb-2.5 [&_.px-4]:px-2.5 [&_.p-2]:p-1.5 [&_.h-8]:h-5 [&_.w-8]:w-5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5'
+      : viewMode === 'compact'
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
+        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4';
 
   return (
     <div className="p-6 space-y-6">
@@ -79,9 +88,12 @@ const AssignmentsPage = () => {
               : 'Assignments Management'}
           </h1>
         </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" /> Add Assignment
-        </Button>
+        <div className="flex items-center gap-2">
+          <ViewModeToggle value={viewMode} onChange={setViewMode} />
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="mr-2 h-4 w-4" /> Add Assignment
+          </Button>
+        </div>
       </div>
 
       {state.error && (
@@ -126,7 +138,7 @@ const AssignmentsPage = () => {
           <div>
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
@@ -180,7 +192,7 @@ const AssignmentsPage = () => {
 
             {/* Personal Tasks Tab */}
             {activeTab === 'personal' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />

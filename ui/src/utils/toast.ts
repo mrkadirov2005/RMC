@@ -1,70 +1,59 @@
-// Source file for toast.
+// Source file for top-of-screen status messages.
 
-import { toast } from 'react-toastify';
-import type { ToastOptions } from 'react-toastify';
+type TopMessageOptions = {
+  autoClose?: number | false;
+};
+
+export const TOP_ERROR_MESSAGE_EVENT = 'app:top-error-message';
+
+const showTopErrorMessage = (message: string, options?: TopMessageOptions) => {
+  if (typeof window === 'undefined') return;
+
+  window.dispatchEvent(
+    new CustomEvent(TOP_ERROR_MESSAGE_EVENT, {
+      detail: {
+        message,
+        autoClose: options?.autoClose,
+      },
+    }),
+  );
+};
 
 export const showToast = {
-  success: (message: string, options?: ToastOptions) => {
-    toast.success(message, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
+  success: (_message: string, _options?: TopMessageOptions) => {
+    // Success feedback is intentionally silent.
   },
 
-  error: (message: string, options?: ToastOptions) => {
-    toast.error(message, {
-      position: 'top-right',
-      autoClose: 4000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
+  error: (message: string, options?: TopMessageOptions) => {
+    showTopErrorMessage(message, options);
   },
 
-  warning: (message: string, options?: ToastOptions) => {
-    toast.warning(message, {
-      position: 'top-right',
-      autoClose: 3500,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
+  warning: (message: string, options?: TopMessageOptions) => {
+    showTopErrorMessage(message, options);
   },
 
-  info: (message: string, options?: ToastOptions) => {
-    toast.info(message, {
-      position: 'top-right',
-      autoClose: 3000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      ...options,
-    });
+  info: (_message: string, _options?: TopMessageOptions) => {
+    // Informational feedback is intentionally silent.
   },
 
-  loading: (message: string, options?: ToastOptions) => {
-    return toast.loading(message, {
-      position: 'top-right',
-      ...options,
-    });
+  loading: (_message: string, _options?: TopMessageOptions) => {
+    return null;
   },
 
-  update: (toastId: any, options: any) => {
-    toast.update(toastId, options);
+  update: (_toastId: any, options: any) => {
+    if (options?.type === 'error' && options?.render) {
+      showTopErrorMessage(String(options.render), options);
+    }
   },
 
-  dismiss: (toastId?: any) => {
-    toast.dismiss(toastId);
+  dismiss: (_toastId?: any) => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent(TOP_ERROR_MESSAGE_EVENT, {
+          detail: { message: '' },
+        }),
+      );
+    }
   },
 };
 

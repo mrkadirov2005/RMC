@@ -29,6 +29,7 @@ import {
 import { getStoredPaymentAuth } from '../../../shared/auth/paymentAuthStorage';
 import { PaymentAccessGate } from './components/PaymentAccessGate';
 import { SelectField } from '../students/components/SelectField';
+import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '../../../utils/dropdownOptions';
 import {
   selectCenterOptions,
@@ -159,6 +160,7 @@ const PaymentsPage = () => {
     status: 'Completed',
   });
   const [teacherDetailView, setTeacherDetailView] = useState<TeacherDetailView>('groups');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -463,6 +465,12 @@ const PaymentsPage = () => {
   }, [searchTerm, filterStatus, filterMethod, selectedFolderPayments, students]);
 
   const totalAmount = displayedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const folderGridClass =
+    viewMode === 'list'
+      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.p-4]:p-2.5 [&_.h-9]:h-5 [&_.w-9]:w-5 [&_.mb-3]:mb-1.5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5 [&_.space-y-1]:space-y-0 [&_.grid-cols-2]:hidden'
+      : viewMode === 'compact'
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
+        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
 
 // Handles clear filters.
   const clearFilters = () => {
@@ -521,11 +529,14 @@ const PaymentsPage = () => {
           )}
           <h1 className="text-2xl font-bold">{pageTitle}</h1>
         </div>
-        {!isTeacher && (
-          <Button onClick={() => handleOpenModal()}>
-            <Plus className="h-4 w-4 mr-2" /> Add Payment
-          </Button>
-        )}
+        <div className="flex items-center gap-2">
+          <ViewModeToggle value={viewMode} onChange={setViewMode} />
+          {!isTeacher && (
+            <Button onClick={() => handleOpenModal()}>
+              <Plus className="h-4 w-4 mr-2" /> Add Payment
+            </Button>
+          )}
+        </div>
       </div>
 
       {isTeacher && (
@@ -588,7 +599,7 @@ const PaymentsPage = () => {
           <div>
             {/* By Students Tab */}
             {activeTab === 'students' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -637,7 +648,7 @@ const PaymentsPage = () => {
 
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -686,7 +697,7 @@ const PaymentsPage = () => {
 
             {/* By Teachers Tab */}
             {activeTab === 'teachers' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={folderGridClass}>
                 {loadingData ? (
                   <div className="col-span-full text-center py-8">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -914,7 +925,7 @@ const PaymentsPage = () => {
           </div>
 
           {teacherDetailView === 'groups' ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className={folderGridClass}>
               {loadingData ? (
                 <div className="col-span-full text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />

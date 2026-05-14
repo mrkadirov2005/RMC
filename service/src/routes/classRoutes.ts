@@ -153,7 +153,7 @@ router_class.put('/:id', requireAuth, classController.updateClass);
  *       200:
  *         description: Sessions generated
  */
-router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateClassSessionsDto), GenerateClassSessionsDto);
+router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateClassSessionsDto), classController.generateClassSessions);
 
 /**
  * @swagger

@@ -1,8 +1,10 @@
 // Page component for the classes screen in the crm feature.
 
+import { useState } from 'react';
 import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -41,6 +43,7 @@ import { formatSchedule } from './queries';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const {
     state,
     isModalOpen,
@@ -75,12 +78,15 @@ const ClassesPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
-      <div className="mb-6 flex justify-between items-center">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-3xl font-bold">Classes Management</h1>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Class
-        </Button>
+        <div className="flex items-center gap-2">
+          <ViewModeToggle value={viewMode} onChange={setViewMode} />
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add Class
+          </Button>
+        </div>
       </div>
 
       {state.error && (
@@ -97,6 +103,71 @@ const ClassesPage = () => {
         <Alert className="mb-4">
           <AlertDescription>No classes found. Create your first class to get started!</AlertDescription>
         </Alert>
+      ) : viewMode === 'list' ? (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Class</TableHead>
+                <TableHead>Code</TableHead>
+                <TableHead>Level</TableHead>
+                <TableHead>Schedule</TableHead>
+                <TableHead>Capacity</TableHead>
+                <TableHead>Room</TableHead>
+                <TableHead>Payment</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {state.items.map((cls) => (
+                <TableRow key={cls.class_id || cls.id}>
+                  <TableCell className="font-medium">{cls.class_name}</TableCell>
+                  <TableCell className="font-mono text-sm">{cls.class_code}</TableCell>
+                  <TableCell>Level {cls.level}</TableCell>
+                  <TableCell>{formatSchedule(cls)}</TableCell>
+                  <TableCell>{cls.capacity}</TableCell>
+                  <TableCell>{cls.room_number}</TableCell>
+                  <TableCell>${cls.payment_amount} ({cls.payment_frequency})</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-600" onClick={() => handleViewDetails(cls)}>
+                        <Info className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSessions(cls)}>
+                        <CalendarDays className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500" onClick={() => handleOpenModal(cls)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : viewMode === 'compact' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {state.items.map((cls) => (
+            <Card key={cls.class_id || cls.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => handleViewDetails(cls)}>
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                    <CalendarDays className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{cls.class_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{cls.class_code} &bull; Level {cls.level}</p>
+                  </div>
+                  <span className="text-xs font-medium text-muted-foreground">{cls.capacity}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {state.items.map((cls) => (

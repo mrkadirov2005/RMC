@@ -1,11 +1,14 @@
 // Page component for the teachers screen in the crm feature.
 
+import { useState } from 'react';
 import { Plus, Pencil, Trash2, Eye, Mail, Phone, GraduationCap, User, X, Loader2 } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +29,7 @@ import { cn } from '@/lib/utils';
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const {
     navigate,
     state,
@@ -47,17 +51,20 @@ const TeachersPage = () => {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-8">
         <h1 className="text-3xl font-bold" style={{ color: 'hsl(var(--foreground))' }}>
           Teachers Management
         </h1>
-        <Button
-          onClick={() => handleOpenModal()}
-          className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold"
-        >
-          <Plus className="w-5 h-5 mr-2" />
-          Add Teacher
-        </Button>
+        <div className="flex items-center gap-2">
+          <ViewModeToggle value={viewMode} onChange={setViewMode} />
+          <Button
+            onClick={() => handleOpenModal()}
+            className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold"
+          >
+            <Plus className="w-5 h-5 mr-2" />
+            Add Teacher
+          </Button>
+        </div>
       </div>
 
       {state.error && (
@@ -75,6 +82,72 @@ const TeachersPage = () => {
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
           <h3 className="text-lg font-semibold">No teachers found</h3>
           <p className="text-sm">Click &quot;Add Teacher&quot; to get started</p>
+        </div>
+      ) : viewMode === 'list' ? (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Teacher</TableHead>
+                <TableHead>Employee ID</TableHead>
+                <TableHead>Specialization</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {state.items.map((teacher) => (
+                <TableRow key={teacher.teacher_id || teacher.id}>
+                  <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
+                  <TableCell className="font-mono text-sm">{teacher.employee_id}</TableCell>
+                  <TableCell>{teacher.specialization}</TableCell>
+                  <TableCell className="text-muted-foreground">{teacher.email}</TableCell>
+                  <TableCell className="text-muted-foreground">{teacher.phone}</TableCell>
+                  <TableCell>
+                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusColor(teacher.status))}>
+                      {teacher.status}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-600" onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-700" onClick={() => handleOpenModal(teacher)}>
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}>
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : viewMode === 'compact' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {state.items.map((teacher) => (
+            <Card key={teacher.teacher_id || teacher.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}>
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 text-sm font-bold text-primary">
+                    {getInitials(teacher.first_name, teacher.last_name)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{teacher.specialization}</p>
+                  </div>
+                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusColor(teacher.status))}>
+                    {teacher.status}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">

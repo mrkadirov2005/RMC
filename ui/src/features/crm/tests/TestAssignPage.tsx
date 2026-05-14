@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
-import { toast } from 'react-toastify';
 import { fetchClasses } from '../../../slices/classesSlice';
 import { fetchStudents } from '../../../slices/studentsSlice';
 import { selectClassItems, selectStudentItems } from '../../../store/selectors';
@@ -180,7 +179,6 @@ const TestAssignPage = () => {
 
       await testAPI.assignTest(Number(testId), assignments, userId);
 
-      toast.success('Test assigned successfully!');
       navigate(`/tests/${testId}`);
     } catch (err: any) {
       console.error('Error assigning test:', err);

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { classAPI } from '../../../../shared/api/api';
 import { frequencyOptions } from '../../../../utils/dropdownOptions';
-import { showToast } from '../../../../utils/toast';
+import { handleApiError, showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
@@ -224,7 +224,7 @@ export const useClassesPage = () => {
       showToast.success('Sessions generated successfully.');
     } catch (e) {
       console.error('Failed to generate sessions:', e);
-      showToast.error('Failed to generate sessions');
+      showToast.error(handleApiError(e));
     }
   };
 

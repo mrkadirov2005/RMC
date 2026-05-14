@@ -2,9 +2,12 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, Search, DollarSign } from 'lucide-react';
+import { Folder, Loader2, Search, DollarSign } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchTeachers } from '@/slices/teachersSlice';
 
@@ -22,6 +25,7 @@ interface Teacher {
 const FinancePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   const dispatch = useAppDispatch();
   const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
@@ -58,6 +62,7 @@ const FinancePage: React.FC = () => {
           <DollarSign className="h-8 w-8 text-green-600" />
           Finance Management
         </h1>
+        <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
 
       {/* Search Bar */}
@@ -73,40 +78,84 @@ const FinancePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Teachers Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredTeachers.map((teacher: Teacher) => (
-          <div
-            key={teacher.teacher_id || teacher.id}
-            className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 shadow hover:shadow-lg transition-shadow p-6 cursor-pointer dark:hover:bg-slate-800"
-            onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}
-          >
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold dark:text-white">
-                  {teacher.first_name} {teacher.last_name}
-                </h3>
-                {teacher.email && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{teacher.email}</p>
-                )}
-                {teacher.phone && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{teacher.phone}</p>
-                )}
+      {viewMode === 'list' ? (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Teacher</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTeachers.map((teacher: Teacher) => (
+                <TableRow key={teacher.teacher_id || teacher.id}>
+                  <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
+                  <TableCell className="text-muted-foreground">{teacher.email || '-'}</TableCell>
+                  <TableCell className="text-muted-foreground">{teacher.phone || '-'}</TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="ghost" size="sm" onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}>
+                      View Finance Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      ) : viewMode === 'compact' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {filteredTeachers.map((teacher: Teacher) => (
+            <Card key={teacher.teacher_id || teacher.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}>
+              <CardContent className="p-3">
+                <div className="flex items-center gap-3">
+                  <Folder className="h-8 w-8 shrink-0 text-green-600" />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{teacher.email || teacher.phone || 'Finance details'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredTeachers.map((teacher: Teacher) => (
+            <div
+              key={teacher.teacher_id || teacher.id}
+              className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 shadow hover:shadow-lg transition-shadow p-6 cursor-pointer dark:hover:bg-slate-800"
+              onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}
+            >
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold dark:text-white">
+                    {teacher.first_name} {teacher.last_name}
+                  </h3>
+                  {teacher.email && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{teacher.email}</p>
+                  )}
+                  {teacher.phone && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{teacher.phone}</p>
+                  )}
+                </div>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`);
+                  }}
+                  className="w-full"
+                  variant="outline"
+                >
+                  View Finance Details
+                </Button>
               </div>
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`);
-                }}
-                className="w-full"
-                variant="outline"
-              >
-                View Finance Details
-              </Button>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {filteredTeachers.length === 0 && (
         <div className="text-center py-12">

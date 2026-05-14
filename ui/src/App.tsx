@@ -1,10 +1,8 @@
 // Application router and top-level shell.
 
-import { useEffect, lazy, Suspense } from 'react';
+import { useEffect, lazy, Suspense, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './features/crm/hooks';
 import { initializeAuth } from './slices/authSlice';
@@ -44,11 +42,11 @@ import TeacherPortal from './features/teacher/TeacherPortal';
 import StudentPortal from './features/student/StudentPortal';
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
 const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage.tsx'));
-import { useThemeMode } from './theme/ThemeContext';
 import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
 import { PERMISSION_CODES } from './types';
+import { TOP_ERROR_MESSAGE_EVENT } from './utils/toast';
 
 // Handles safe log arg.
 const safeLogArg = (value: unknown) => {
@@ -99,7 +97,7 @@ const RoleBasedRedirect = () => {
   }
   
   if (!isAuthenticated || !user) {
-    return <Navigate to="/login/superuser" replace />;
+    return <Navigate to="#/login/superuser" replace />;
   }
   
   switch (user.userType) {
@@ -636,29 +634,50 @@ function App() {
   return (
     <Provider store={store}>
       <HashRouter>
+        <TopErrorLine />
         <AppContent />
-        <ThemedToast />
       </HashRouter>
     </Provider>
   );
 }
 
-// Handles themed toast.
-function ThemedToast() {
-  const { isDark } = useThemeMode();
+// Renders one global error line at the top of the viewport.
+function TopErrorLine() {
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    let timeoutId: number | undefined;
+
+    const handleMessage = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string; autoClose?: number | false }>).detail;
+      const nextMessage = detail?.message?.trim() ?? '';
+
+      window.clearTimeout(timeoutId);
+      setMessage(nextMessage);
+
+      if (!nextMessage || detail?.autoClose === false) return;
+
+      const autoClose = typeof detail?.autoClose === 'number' ? detail.autoClose : 4000;
+      timeoutId = window.setTimeout(() => setMessage(''), autoClose);
+    };
+
+    window.addEventListener(TOP_ERROR_MESSAGE_EVENT, handleMessage);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener(TOP_ERROR_MESSAGE_EVENT, handleMessage);
+    };
+  }, []);
+
+  if (!message) return null;
+
   return (
-    <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-      theme={isDark ? 'dark' : 'light'}
-    />
+    <div
+      role="alert"
+      className="fixed left-0 right-0 top-0 z-[10000] bg-destructive px-4 py-2 text-center text-sm font-medium text-destructive-foreground shadow-sm"
+    >
+      <span className="mx-auto block max-w-screen-xl truncate">{message}</span>
+    </div>
   );
 }
 
