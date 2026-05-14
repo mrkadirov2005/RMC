@@ -4,36 +4,50 @@ type TopMessageOptions = {
   autoClose?: number | false;
 };
 
-export const TOP_ERROR_MESSAGE_EVENT = 'app:top-error-message';
+export type TopMessageVariant = 'success' | 'error' | 'warning' | 'info';
 
-const showTopErrorMessage = (message: string, options?: TopMessageOptions) => {
+export const TOP_STATUS_MESSAGE_EVENT = 'app:top-status-message';
+
+const defaultAutoClose: Record<TopMessageVariant, number> = {
+  success: 3000,
+  error: 4000,
+  warning: 3500,
+  info: 3000,
+};
+
+const showTopStatusMessage = (
+  message: string,
+  variant: TopMessageVariant,
+  options?: TopMessageOptions,
+) => {
   if (typeof window === 'undefined') return;
 
   window.dispatchEvent(
-    new CustomEvent(TOP_ERROR_MESSAGE_EVENT, {
+    new CustomEvent(TOP_STATUS_MESSAGE_EVENT, {
       detail: {
         message,
-        autoClose: options?.autoClose,
+        variant,
+        autoClose: options?.autoClose ?? defaultAutoClose[variant],
       },
     }),
   );
 };
 
 export const showToast = {
-  success: (_message: string, _options?: TopMessageOptions) => {
-    // Success feedback is intentionally silent.
+  success: (message: string, options?: TopMessageOptions) => {
+    showTopStatusMessage(message, 'success', options);
   },
 
   error: (message: string, options?: TopMessageOptions) => {
-    showTopErrorMessage(message, options);
+    showTopStatusMessage(message, 'error', options);
   },
 
   warning: (message: string, options?: TopMessageOptions) => {
-    showTopErrorMessage(message, options);
+    showTopStatusMessage(message, 'warning', options);
   },
 
-  info: (_message: string, _options?: TopMessageOptions) => {
-    // Informational feedback is intentionally silent.
+  info: (message: string, options?: TopMessageOptions) => {
+    showTopStatusMessage(message, 'info', options);
   },
 
   loading: (_message: string, _options?: TopMessageOptions) => {
@@ -41,15 +55,23 @@ export const showToast = {
   },
 
   update: (_toastId: any, options: any) => {
-    if (options?.type === 'error' && options?.render) {
-      showTopErrorMessage(String(options.render), options);
+    if (options?.render) {
+      const variant: TopMessageVariant =
+        options?.type === 'success' ||
+        options?.type === 'error' ||
+        options?.type === 'warning' ||
+        options?.type === 'info'
+          ? options.type
+          : 'info';
+
+      showTopStatusMessage(String(options.render), variant, options);
     }
   },
 
   dismiss: (_toastId?: any) => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(
-        new CustomEvent(TOP_ERROR_MESSAGE_EVENT, {
+        new CustomEvent(TOP_STATUS_MESSAGE_EVENT, {
           detail: { message: '' },
         }),
       );

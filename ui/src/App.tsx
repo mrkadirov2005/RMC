@@ -46,7 +46,7 @@ import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
 import { PERMISSION_CODES } from './types';
-import { TOP_ERROR_MESSAGE_EVENT } from './utils/toast';
+import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
 
 // Handles safe log arg.
 const safeLogArg = (value: unknown) => {
@@ -97,7 +97,7 @@ const RoleBasedRedirect = () => {
   }
   
   if (!isAuthenticated || !user) {
-    return <Navigate to="#/login/superuser" replace />;
+    return <Navigate to="/login/superuser" replace />;
   }
   
   switch (user.userType) {
@@ -634,49 +634,74 @@ function App() {
   return (
     <Provider store={store}>
       <HashRouter>
-        <TopErrorLine />
+        <TopStatusLine />
         <AppContent />
       </HashRouter>
     </Provider>
   );
 }
 
-// Renders one global error line at the top of the viewport.
-function TopErrorLine() {
-  const [message, setMessage] = useState('');
+type TopStatusVariant = 'success' | 'error' | 'warning' | 'info';
+
+const topStatusClasses: Record<TopStatusVariant, string> = {
+  success: 'bg-emerald-600 text-white',
+  error: 'bg-destructive text-destructive-foreground',
+  warning: 'bg-amber-500 text-white',
+  info: 'bg-sky-600 text-white',
+};
+
+const isTopStatusVariant = (value: unknown): value is TopStatusVariant =>
+  value === 'success' || value === 'error' || value === 'warning' || value === 'info';
+
+// Renders one global status line at the top of the viewport.
+function TopStatusLine() {
+  const [status, setStatus] = useState<{ message: string; variant: TopStatusVariant }>({
+    message: '',
+    variant: 'info',
+  });
 
   useEffect(() => {
     let timeoutId: number | undefined;
 
     const handleMessage = (event: Event) => {
-      const detail = (event as CustomEvent<{ message?: string; autoClose?: number | false }>).detail;
+      const detail = (
+        event as CustomEvent<{
+          message?: string;
+          variant?: TopStatusVariant;
+          autoClose?: number | false;
+        }>
+      ).detail;
       const nextMessage = detail?.message?.trim() ?? '';
+      const nextVariant = isTopStatusVariant(detail?.variant) ? detail.variant : 'info';
 
       window.clearTimeout(timeoutId);
-      setMessage(nextMessage);
+      setStatus({ message: nextMessage, variant: nextVariant });
 
       if (!nextMessage || detail?.autoClose === false) return;
 
       const autoClose = typeof detail?.autoClose === 'number' ? detail.autoClose : 4000;
-      timeoutId = window.setTimeout(() => setMessage(''), autoClose);
+      timeoutId = window.setTimeout(
+        () => setStatus((current) => ({ ...current, message: '' })),
+        autoClose,
+      );
     };
 
-    window.addEventListener(TOP_ERROR_MESSAGE_EVENT, handleMessage);
+    window.addEventListener(TOP_STATUS_MESSAGE_EVENT, handleMessage);
 
     return () => {
       window.clearTimeout(timeoutId);
-      window.removeEventListener(TOP_ERROR_MESSAGE_EVENT, handleMessage);
+      window.removeEventListener(TOP_STATUS_MESSAGE_EVENT, handleMessage);
     };
   }, []);
 
-  if (!message) return null;
+  if (!status.message) return null;
 
   return (
     <div
-      role="alert"
-      className="fixed left-0 right-0 top-0 z-[10000] bg-destructive px-4 py-2 text-center text-sm font-medium text-destructive-foreground shadow-sm"
+      role={status.variant === 'error' ? 'alert' : 'status'}
+      className={`fixed left-0 right-0 top-0 z-[10000] px-4 py-2 text-center text-sm font-medium shadow-sm ${topStatusClasses[status.variant]}`}
     >
-      <span className="mx-auto block max-w-screen-xl truncate">{message}</span>
+      <span className="mx-auto block max-w-screen-xl truncate">{status.message}</span>
     </div>
   );
 }
