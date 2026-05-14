@@ -76,7 +76,7 @@ export const useClassesPage = () => {
       dispatch(fetchTeachers());
       if (isOwner) {
         dispatch(fetchCenters());
-      }
+      }.  
     };
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
