@@ -4,11 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { fetchStudents, fetchStudentsForce } from '../../../../slices/studentsSlice';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
-import { fetchTests, fetchTestsForce } from '../../../../slices/testsSlice';
-import { fetchAttendance, fetchAttendanceForce } from '../../../../slices/attendanceSlice';
-import { fetchAssignments, fetchAssignmentsForce } from '../../../../slices/assignmentsSlice';
 import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSlice';
-import { fetchCenters, fetchCentersForce } from '../../../../slices/centersSlice';
 import { fetchPayments, fetchPaymentsForce } from '../../../../slices/paymentsSlice';
 import { fetchDebts, fetchDebtsForce } from '../../../../slices/debtsSlice';
 import {
@@ -16,30 +12,33 @@ import {
   selectDashboardLoadingByRole,
 } from '../../../../store/selectors';
 import type {
-  DashboardActivityItem,
   DashboardCollections,
-  DashboardFocusItem,
+  DashboardFinancialMonth,
   DashboardRole,
+  DashboardSchoolSlice,
   DashboardStatCard,
   DashboardStats,
+  DashboardStudentGrowthPoint,
 } from '../types';
 import {
-  buildDashboardActivity,
+  buildDashboardFinancialMonth,
+  buildDashboardSchoolDistribution,
   buildDashboardStats,
-  getDashboardFocusItems,
+  buildDashboardStudentGrowth,
   getDashboardStatCards,
 } from '../queries/dashboardQueries';
 
 interface UseDashboardDataResult {
   loading: boolean;
   stats: DashboardStats;
-  recentActivity: DashboardActivityItem[];
   statCards: DashboardStatCard[];
-  focusItems: DashboardFocusItem[];
+  finance: DashboardFinancialMonth;
+  schoolDistribution: DashboardSchoolSlice[];
+  studentGrowth: DashboardStudentGrowthPoint[];
 }
 
 // Provides dashboard data.
-export const useDashboardData = (role: DashboardRole): UseDashboardDataResult => {
+export const useDashboardData = (role: DashboardRole, selectedMonth: Date): UseDashboardDataResult => {
   const dispatch = useAppDispatch();
 
   const isSuperuser = role === 'superuser';
@@ -50,12 +49,8 @@ export const useDashboardData = (role: DashboardRole): UseDashboardDataResult =>
   useEffect(() => {
     dispatch(fetchStudents());
     dispatch(fetchClasses());
-    dispatch(fetchTests());
-    dispatch(fetchAttendance());
-    dispatch(fetchAssignments());
     if (isSuperuser) {
       dispatch(fetchTeachers());
-      dispatch(fetchCenters());
       dispatch(fetchPayments());
       dispatch(fetchDebts());
     }
@@ -67,12 +62,8 @@ export const useDashboardData = (role: DashboardRole): UseDashboardDataResult =>
     const handleActiveCenterChanged = () => {
       dispatch(fetchStudentsForce());
       dispatch(fetchClassesForce());
-      dispatch(fetchTestsForce());
-      dispatch(fetchAttendanceForce());
-      dispatch(fetchAssignmentsForce());
       if (isSuperuser) {
         dispatch(fetchTeachersForce());
-        dispatch(fetchCentersForce());
         dispatch(fetchPaymentsForce());
         dispatch(fetchDebtsForce());
       }
@@ -82,26 +73,34 @@ export const useDashboardData = (role: DashboardRole): UseDashboardDataResult =>
   }, [dispatch, isSuperuser]);
 
   const stats = useMemo<DashboardStats>(
-    () => buildDashboardStats(collections, isSuperuser),
-    [collections, isSuperuser]
+    () => buildDashboardStats(collections, isSuperuser, selectedMonth),
+    [collections, isSuperuser, selectedMonth]
   );
 
-  const recentActivity = useMemo<DashboardActivityItem[]>(
-    () => buildDashboardActivity(collections),
+  const finance = useMemo<DashboardFinancialMonth>(
+    () => buildDashboardFinancialMonth(collections, selectedMonth),
+    [collections, selectedMonth]
+  );
+
+  const schoolDistribution = useMemo<DashboardSchoolSlice[]>(
+    () => buildDashboardSchoolDistribution(collections),
+    [collections]
+  );
+
+  const studentGrowth = useMemo<DashboardStudentGrowthPoint[]>(
+    () => buildDashboardStudentGrowth(collections),
     [collections]
   );
 
 // Memoizes the stat cards derived value.
   const statCards = useMemo(() => getDashboardStatCards(stats, isSuperuser), [isSuperuser, stats]);
-// Memoizes the focus items derived value.
-  const focusItems = useMemo(() => getDashboardFocusItems(stats, isSuperuser), [isSuperuser, stats]);
 
   return {
     loading,
     stats,
-    recentActivity,
     statCards,
-    focusItems,
+    finance,
+    schoolDistribution,
+    studentGrowth,
   };
 };
-

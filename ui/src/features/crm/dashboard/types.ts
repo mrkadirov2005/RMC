@@ -23,6 +23,8 @@ export interface DashboardStats {
   totalTeachers: number;
   totalClasses: number;
   totalCenters: number;
+  totalSchools: number;
+  newStudentsThisMonth: number;
   activeTests: number;
   pendingAssignments: number;
   attendanceToday: number;
@@ -33,6 +35,37 @@ export interface DashboardStats {
   unpaidStudentsThisMonth: number;
   paymentCollectionRate: number;
   outstandingDebt: number;
+}
+
+export interface DashboardFinancialBucket {
+  label: string;
+  paid: number;
+}
+
+export interface DashboardFinancialMonth {
+  monthKey: string;
+  monthLabel: string;
+  expectedPayments: number;
+  paidPayments: number;
+  remainingPayments: number;
+  paidStudents: number;
+  unpaidStudents: number;
+  collectionRate: number;
+  outstandingDebt: number;
+  buckets: DashboardFinancialBucket[];
+}
+
+export interface DashboardSchoolSlice {
+  label: string;
+  value: number;
+  percent: number;
+  color: string;
+}
+
+export interface DashboardStudentGrowthPoint {
+  label: string;
+  newStudents: number;
+  totalStudents: number;
 }
 
 export interface DashboardActivityItem {
