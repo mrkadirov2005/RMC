@@ -433,6 +433,21 @@ export const requestLogsAPI = {
   list: (params?: {
     kind?: 'owner' | 'superuser' | 'teacher' | 'student';
     q?: string;
+    method?: string;
+    result?: string;
+    statusCode?: number | string;
+    statusMin?: number | string;
+    statusMax?: number | string;
+    durationMin?: number | string;
+    durationMax?: number | string;
+    username?: string;
+    ip?: string;
+    path?: string;
+    requestId?: string;
+    role?: string;
+    deviceId?: string;
+    from?: string;
+    to?: string;
     limit?: number;
     skip?: number;
   }) => apiClient.get('/request-logs', { params }),

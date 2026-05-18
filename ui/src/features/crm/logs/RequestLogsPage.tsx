@@ -1,7 +1,7 @@
 // Page component for viewing MongoDB-backed request logs.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Filter, Search, X } from 'lucide-react';
 import { requestLogsAPI } from '../../../shared/api/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,9 +9,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 type LogKind = 'owner' | 'superuser' | 'teacher' | 'student';
+
+interface LogFilters {
+  method: string;
+  result: string;
+  statusCode: string;
+  statusMin: string;
+  statusMax: string;
+  durationMin: string;
+  durationMax: string;
+  username: string;
+  ip: string;
+  path: string;
+  requestId: string;
+  role: string;
+  deviceId: string;
+  from: string;
+  to: string;
+}
 
 interface RequestLogItem {
   _id?: string;
@@ -36,6 +56,36 @@ const KINDS: { key: LogKind; label: string }[] = [
   { key: 'teacher', label: 'Teacher' },
   { key: 'student', label: 'Student' },
 ];
+
+const METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
+
+const EMPTY_FILTERS: LogFilters = {
+  method: 'all',
+  result: 'all',
+  statusCode: '',
+  statusMin: '',
+  statusMax: '',
+  durationMin: '',
+  durationMax: '',
+  username: '',
+  ip: '',
+  path: '',
+  requestId: '',
+  role: '',
+  deviceId: '',
+  from: '',
+  to: '',
+};
+
+const cleanParams = (filters: LogFilters) => {
+  const params: Record<string, string> = {};
+  Object.entries(filters).forEach(([key, value]) => {
+    const trimmed = String(value || '').trim();
+    if (!trimmed || trimmed === 'all') return;
+    params[key] = trimmed;
+  });
+  return params;
+};
 
 const formatTs = (value: string) => {
   const d = new Date(value);
@@ -62,12 +112,24 @@ const RequestLogsPage = () => {
   const [kind, setKind] = useState<LogKind>('owner');
   const [q, setQ] = useState('');
   const [pendingQ, setPendingQ] = useState('');
+  const [filters, setFilters] = useState<LogFilters>(EMPTY_FILTERS);
+  const [showFilters, setShowFilters] = useState(true);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(50);
   const [items, setItems] = useState<RequestLogItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const queryKey = useMemo(() => `${kind}::${q}`, [kind, q]);
+  const filterParams = useMemo(() => cleanParams(filters), [filters]);
+  const activeFilterCount = useMemo(() => Object.keys(filterParams).length + (q ? 1 : 0), [filterParams, q]);
+  const queryKey = useMemo(
+    () => JSON.stringify({ kind, q, filterParams, limit, page }),
+    [filterParams, kind, limit, page, q]
+  );
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  const start = total === 0 ? 0 : (page - 1) * limit + 1;
+  const end = Math.min(total, page * limit);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +138,7 @@ const RequestLogsPage = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await requestLogsAPI.list({ kind, q, limit: 100, skip: 0 });
+        const res = await requestLogsAPI.list({ kind, q, ...filterParams, limit, skip: (page - 1) * limit });
         const data = (res as any).data ?? res;
         if (cancelled) return;
         setItems(Array.isArray(data?.items) ? data.items : []);
@@ -95,16 +157,31 @@ const RequestLogsPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [queryKey, kind, q]);
+  }, [filterParams, kind, limit, page, q, queryKey]);
 
-  const applySearch = () => setQ(pendingQ.trim());
+  const applySearch = () => {
+    setPage(1);
+    setQ(pendingQ.trim());
+  };
+
+  const updateFilter = (key: keyof LogFilters, value: string) => {
+    setPage(1);
+    setFilters((current) => ({ ...current, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setPage(1);
+    setPendingQ('');
+    setQ('');
+    setFilters(EMPTY_FILTERS);
+  };
 
   return (
     <div className="p-6 space-y-6">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-xl">Logs</CardTitle>
-          <div className="flex gap-2 items-center w-full max-w-xl">
+          <div className="flex gap-2 items-center w-full max-w-2xl">
             <div className="relative flex-1">
               <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -120,10 +197,19 @@ const RequestLogsPage = () => {
             <Button onClick={applySearch} disabled={loading}>
               Search
             </Button>
+            <Button type="button" variant={showFilters ? 'default' : 'outline'} onClick={() => setShowFilters((value) => !value)}>
+              <Filter className="mr-2 h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 ? (
+                <Badge className="ml-2 h-5 min-w-5 justify-center rounded-full px-1 text-[10px]">
+                  {activeFilterCount}
+                </Badge>
+              ) : null}
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Tabs value={kind} onValueChange={(v) => setKind(v as LogKind)}>
+          <Tabs value={kind} onValueChange={(v) => { setPage(1); setKind(v as LogKind); }}>
             <TabsList>
               {KINDS.map((k) => (
                 <TabsTrigger key={k.key} value={k.key}>
@@ -136,9 +222,98 @@ const RequestLogsPage = () => {
             ))}
           </Tabs>
 
+          {showFilters && (
+            <div className="grid gap-4 rounded-lg border bg-muted/20 p-4 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Method</Label>
+                <Select value={filters.method} onValueChange={(value) => updateFilter('method', value)}>
+                  <SelectTrigger><SelectValue placeholder="All methods" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All methods</SelectItem>
+                    {METHODS.map((method) => <SelectItem key={method} value={method}>{method}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Result</Label>
+                <Select value={filters.result} onValueChange={(value) => updateFilter('result', value)}>
+                  <SelectTrigger><SelectValue placeholder="All results" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All results</SelectItem>
+                    <SelectItem value="success">Success</SelectItem>
+                    <SelectItem value="failed">Failed</SelectItem>
+                    <SelectItem value="aborted">Aborted</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Exact status</Label>
+                <Input value={filters.statusCode} onChange={(e) => updateFilter('statusCode', e.target.value)} placeholder="200" inputMode="numeric" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Status min</Label>
+                  <Input value={filters.statusMin} onChange={(e) => updateFilter('statusMin', e.target.value)} placeholder="400" inputMode="numeric" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Status max</Label>
+                  <Input value={filters.statusMax} onChange={(e) => updateFilter('statusMax', e.target.value)} placeholder="599" inputMode="numeric" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Username</Label>
+                <Input value={filters.username} onChange={(e) => updateFilter('username', e.target.value)} placeholder="username or email" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">IP</Label>
+                <Input value={filters.ip} onChange={(e) => updateFilter('ip', e.target.value)} placeholder="127.0.0.1" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Path</Label>
+                <Input value={filters.path} onChange={(e) => updateFilter('path', e.target.value)} placeholder="/api/students" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Request ID</Label>
+                <Input value={filters.requestId} onChange={(e) => updateFilter('requestId', e.target.value)} placeholder="request id" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Role</Label>
+                <Input value={filters.role} onChange={(e) => updateFilter('role', e.target.value)} placeholder="owner" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Device ID</Label>
+                <Input value={filters.deviceId} onChange={(e) => updateFilter('deviceId', e.target.value)} placeholder="device id" />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Duration min</Label>
+                  <Input value={filters.durationMin} onChange={(e) => updateFilter('durationMin', e.target.value)} placeholder="0" inputMode="numeric" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-semibold">Duration max</Label>
+                  <Input value={filters.durationMax} onChange={(e) => updateFilter('durationMax', e.target.value)} placeholder="1000" inputMode="numeric" />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">From</Label>
+                <Input type="datetime-local" value={filters.from} onChange={(e) => updateFilter('from', e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">To</Label>
+                <Input type="datetime-local" value={filters.to} onChange={(e) => updateFilter('to', e.target.value)} />
+              </div>
+              <div className="flex items-end">
+                <Button type="button" variant="outline" onClick={clearFilters} disabled={activeFilterCount === 0}>
+                  <X className="mr-2 h-4 w-4" />
+                  Clear filters
+                </Button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div>
-              {loading ? 'Loading…' : `Showing ${items.length} of ${total}`}
+              {loading ? 'Loading...' : `Showing ${start}-${end} of ${total}`}
               {q ? ` • filter: "${q}"` : ''}
             </div>
             {error ? <span className="text-destructive">{getErrorMessage(error)}</span> : null}
@@ -202,6 +377,32 @@ const RequestLogsPage = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              Page {page} of {totalPages}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Select value={String(limit)} onValueChange={(value) => { setPage(1); setLimit(Number(value)); }}>
+                <SelectTrigger className="h-9 w-[120px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[25, 50, 100, 200].map((value) => (
+                    <SelectItem key={value} value={String(value)}>{value} / page</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" onClick={() => setPage((value) => Math.max(1, value - 1))} disabled={page <= 1 || loading}>
+                <ChevronLeft className="mr-1 h-4 w-4" />
+                Prev
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage((value) => Math.min(totalPages, value + 1))} disabled={page >= totalPages || loading}>
+                Next
+                <ChevronRight className="ml-1 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
