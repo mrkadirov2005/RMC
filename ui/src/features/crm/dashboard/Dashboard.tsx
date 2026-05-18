@@ -1,14 +1,14 @@
 // Source file for the dashboard area in the crm feature.
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useAppSelector } from '../hooks';
 import {
-  DashboardFocusToday,
+  DashboardFinanceAnalysis,
   DashboardHeader,
   DashboardLoadingState,
-  DashboardPaymentOverview,
-  DashboardRecentActivity,
+  DashboardSchoolsOverview,
   DashboardStatCards,
+  DashboardStudentGrowthChart,
 } from './components';
 import { useDashboardData } from './hooks/useDashboardData';
 
@@ -16,8 +16,16 @@ import { useDashboardData } from './hooks/useDashboardData';
 const Dashboard = memo(() => {
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';
-  const { loading, stats, statCards, recentActivity, focusItems } = useDashboardData(role);
-  const showPaymentOverview = role === 'superuser';
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date());
+  const { loading, statCards, finance, schoolDistribution, studentGrowth } = useDashboardData(role, selectedMonth);
+
+  const goToPreviousMonth = () => {
+    setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1));
+  };
+
+  const goToNextMonth = () => {
+    setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() + 1, 1));
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
@@ -29,11 +37,15 @@ const Dashboard = memo(() => {
         <>
           <DashboardStatCards cards={statCards} />
 
-          {showPaymentOverview && <DashboardPaymentOverview stats={stats} />}
+          <DashboardFinanceAnalysis
+            finance={finance}
+            onPreviousMonth={goToPreviousMonth}
+            onNextMonth={goToNextMonth}
+          />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <DashboardRecentActivity items={recentActivity} />
-            <DashboardFocusToday items={focusItems} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+            <DashboardStudentGrowthChart points={studentGrowth} />
+            <DashboardSchoolsOverview schools={schoolDistribution} />
           </div>
         </>
       )}

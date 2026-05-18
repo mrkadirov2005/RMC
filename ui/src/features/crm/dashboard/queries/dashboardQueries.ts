@@ -1,25 +1,25 @@
 // Source file for the dashboard area in the crm feature.
 
 import {
-  AlertTriangle,
-  Building2,
-  CalendarDays,
   ClipboardList,
-  CreditCard,
-  FileQuestion,
   GraduationCap,
+  UserPlus,
   Users,
 } from 'lucide-react';
 import type {
   DashboardActivityItem,
   DashboardCollections,
+  DashboardFinancialMonth,
   DashboardFocusItem,
   DashboardRecord,
+  DashboardSchoolSlice,
   DashboardStatCard,
   DashboardStats,
+  DashboardStudentGrowthPoint,
 } from '../types';
 
 const todayKey = new Date().toISOString().split('T')[0];
+const schoolColors = ['#38bdf8', '#34d399', '#f59e0b', '#f472b6', '#a78bfa', '#94a3b8'];
 
 // Formats money.
 const formatMoney = (value: number) => `$${value.toLocaleString()}`;
@@ -57,6 +57,8 @@ export const createInitialDashboardStats = (): DashboardStats => ({
   totalTeachers: 0,
   totalClasses: 0,
   totalCenters: 0,
+  totalSchools: 0,
+  newStudentsThisMonth: 0,
   activeTests: 0,
   pendingAssignments: 0,
   attendanceToday: 0,
@@ -68,6 +70,114 @@ export const createInitialDashboardStats = (): DashboardStats => ({
   paymentCollectionRate: 0,
   outstandingDebt: 0,
 });
+
+const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+
+const getMonthLabel = (date: Date) =>
+  date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+
+const getValidDate = (value?: string) => {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+const isSameMonth = (date: Date, month: Date) =>
+  date.getMonth() === month.getMonth() && date.getFullYear() === month.getFullYear();
+
+const getSchoolLabel = (student: DashboardRecord) => {
+  const raw = getRecordString(student, 'school_name')?.trim();
+  return raw && raw.length > 0 ? raw : 'Unknown school';
+};
+
+const getPaymentStatus = (payment: DashboardRecord) =>
+  (
+    getRecordString(payment, 'status') ||
+    getRecordString(payment, 'payment_status') ||
+    ''
+  ).toLowerCase();
+
+const isCompletedPayment = (payment: DashboardRecord) => {
+  const status = getPaymentStatus(payment);
+  return status === 'completed' || status === 'paid';
+};
+
+const getMonthlyCompletedPayments = (collections: DashboardCollections, selectedMonth: Date) =>
+  collections.payments.filter((item) => {
+    const date = getValidDate(getRecordString(item, 'payment_date'));
+    return Boolean(date && isSameMonth(date, selectedMonth) && isCompletedPayment(item));
+  });
+
+const getExpectedByStudent = (collections: DashboardCollections) => {
+  const classesById = new Map<number, DashboardRecord>();
+  collections.classes.forEach((item) => {
+    const classId = getRecordNumber(item, 'class_id') || getRecordNumber(item, 'id');
+    if (classId) classesById.set(classId, item);
+  });
+
+  const expectedByStudent = new Map<number, number>();
+  collections.students.forEach((student) => {
+    const studentId = getRecordNumber(student, 'student_id') || getRecordNumber(student, 'id');
+    const classId = getRecordNumber(student, 'class_id');
+    if (!studentId || !classId) return;
+    const cls = classesById.get(classId);
+    const expectedAmount = cls ? getRecordNumber(cls, 'payment_amount') || 0 : 0;
+    if (expectedAmount > 0) expectedByStudent.set(studentId, expectedAmount);
+  });
+
+  return expectedByStudent;
+};
+
+const getOutstandingDebt = (collections: DashboardCollections) =>
+  collections.debts.reduce((sum, item) => {
+    const debtAmount = getRecordNumber(item, 'debt_amount') || 0;
+    const amountPaid = getRecordNumber(item, 'amount_paid') || 0;
+    const remaining = debtAmount - amountPaid;
+    return remaining > 0 ? sum + remaining : sum;
+  }, 0);
+
+const getFinancialTotals = (collections: DashboardCollections, selectedMonth: Date) => {
+  const paymentsCompletedThisMonth = getMonthlyCompletedPayments(collections, selectedMonth);
+  const paidPayments = paymentsCompletedThisMonth.reduce(
+    (sum, item) => sum + (getRecordNumber(item, 'amount') || 0),
+    0
+  );
+  const expectedByStudent = getExpectedByStudent(collections);
+  const paidByStudent = new Map<number, number>();
+
+  paymentsCompletedThisMonth.forEach((payment) => {
+    const studentId = getRecordNumber(payment, 'student_id');
+    if (!studentId) return;
+    paidByStudent.set(studentId, (paidByStudent.get(studentId) || 0) + (getRecordNumber(payment, 'amount') || 0));
+  });
+
+  const expectedPayments = Array.from(expectedByStudent.values()).reduce((sum, amount) => sum + amount, 0);
+  let paidStudents = 0;
+  let unpaidStudents = 0;
+  expectedByStudent.forEach((expected, studentId) => {
+    const paid = paidByStudent.get(studentId) || 0;
+    if (paid >= expected) {
+      paidStudents += 1;
+    } else {
+      unpaidStudents += 1;
+    }
+  });
+
+  const remainingPayments = Math.max(expectedPayments - paidPayments, 0);
+  const collectionRate =
+    expectedPayments > 0 ? Math.min(Math.round((paidPayments / expectedPayments) * 100), 100) : 0;
+
+  return {
+    paymentsCompletedThisMonth,
+    expectedPayments,
+    paidPayments,
+    remainingPayments,
+    paidStudents,
+    unpaidStudents,
+    collectionRate,
+    outstandingDebt: getOutstandingDebt(collections),
+  };
+};
 
 // Returns date value.
 const getDateValue = (item: Record<string, unknown>): string | undefined =>
@@ -90,7 +200,8 @@ export const formatDashboardDate = (value?: string) => {
 // Builds dashboard stats.
 export const buildDashboardStats = (
   collections: DashboardCollections,
-  isSuperuser: boolean
+  isSuperuser: boolean,
+  selectedMonth = new Date()
 ): DashboardStats => {
   const attendanceToday = collections.attendance.filter(
     (item) => getRecordString(item, 'attendance_date')?.split('T')[0] === todayKey
@@ -106,89 +217,128 @@ export const buildDashboardStats = (
     (item) => getRecordString(item, 'status')?.toLowerCase() === 'pending'
   ).length;
 
-  const now = new Date();
-  const paymentsCompletedThisMonth = collections.payments.filter((item) => {
-      const value = getRecordString(item, 'payment_date');
-      const date = value ? new Date(value) : null;
-      if (!date || Number.isNaN(date.getTime())) return false;
-      const status = (
-        getRecordString(item, 'status') ||
-        getRecordString(item, 'payment_status') ||
-        ''
-      ).toLowerCase();
-      return (
-        date.getMonth() === now.getMonth() &&
-        date.getFullYear() === now.getFullYear() &&
-        (status === 'completed' || status === 'paid')
-      );
-    });
-
-  const paymentsThisMonth = paymentsCompletedThisMonth.reduce(
-    (sum, item) => sum + (getRecordNumber(item, 'amount') || 0),
-    0
+  const schoolNames = new Set(
+    collections.students
+      .map((student) => getRecordString(student, 'school_name')?.trim())
+      .filter((schoolName): schoolName is string => Boolean(schoolName))
   );
-
-  const classesById = new Map<number, DashboardRecord>();
-  collections.classes.forEach((item) => {
-    const classId = getRecordNumber(item, 'class_id') || getRecordNumber(item, 'id');
-    if (classId) classesById.set(classId, item);
-  });
-
-  const expectedByStudent = new Map<number, number>();
-  collections.students.forEach((student) => {
-    const studentId = getRecordNumber(student, 'student_id') || getRecordNumber(student, 'id');
-    const classId = getRecordNumber(student, 'class_id');
-    if (!studentId || !classId) return;
-    const cls = classesById.get(classId);
-    const expectedAmount = cls ? getRecordNumber(cls, 'payment_amount') || 0 : 0;
-    if (expectedAmount > 0) expectedByStudent.set(studentId, expectedAmount);
-  });
-
-  const paidByStudent = new Map<number, number>();
-  paymentsCompletedThisMonth.forEach((payment) => {
-    const studentId = getRecordNumber(payment, 'student_id');
-    if (!studentId) return;
-    paidByStudent.set(studentId, (paidByStudent.get(studentId) || 0) + (getRecordNumber(payment, 'amount') || 0));
-  });
-
-  const expectedPaymentsThisMonth = Array.from(expectedByStudent.values()).reduce((sum, amount) => sum + amount, 0);
-  let paidStudentsThisMonth = 0;
-  let unpaidStudentsThisMonth = 0;
-  expectedByStudent.forEach((expected, studentId) => {
-    const paid = paidByStudent.get(studentId) || 0;
-    if (paid >= expected) {
-      paidStudentsThisMonth += 1;
-    } else {
-      unpaidStudentsThisMonth += 1;
-    }
-  });
-  const remainingPaymentsThisMonth = Math.max(expectedPaymentsThisMonth - paymentsThisMonth, 0);
-  const paymentCollectionRate =
-    expectedPaymentsThisMonth > 0 ? Math.min(Math.round((paymentsThisMonth / expectedPaymentsThisMonth) * 100), 100) : 0;
-
-  const outstandingDebt = collections.debts.reduce((sum, item) => {
-    const debtAmount = getRecordNumber(item, 'debt_amount') || 0;
-    const amountPaid = getRecordNumber(item, 'amount_paid') || 0;
-    const remaining = debtAmount - amountPaid;
-    return remaining > 0 ? sum + remaining : sum;
-  }, 0);
+  const newStudentsThisMonth = collections.students.filter((student) => {
+    const createdAt = getValidDate(getRecordString(student, 'created_at'));
+    return createdAt ? isSameMonth(createdAt, selectedMonth) : false;
+  }).length;
+  const financialTotals = getFinancialTotals(collections, selectedMonth);
 
   return {
     totalStudents: collections.students.length,
     totalTeachers: isSuperuser ? collections.teachers.length : 0,
     totalClasses: collections.classes.length,
     totalCenters: isSuperuser ? collections.centers.length : 0,
+    totalSchools: schoolNames.size,
+    newStudentsThisMonth,
     activeTests,
     pendingAssignments,
     attendanceToday,
-    paymentsThisMonth,
-    expectedPaymentsThisMonth,
-    remainingPaymentsThisMonth,
-    paidStudentsThisMonth,
-    unpaidStudentsThisMonth,
-    paymentCollectionRate,
-    outstandingDebt,
+    paymentsThisMonth: financialTotals.paidPayments,
+    expectedPaymentsThisMonth: financialTotals.expectedPayments,
+    remainingPaymentsThisMonth: financialTotals.remainingPayments,
+    paidStudentsThisMonth: financialTotals.paidStudents,
+    unpaidStudentsThisMonth: financialTotals.unpaidStudents,
+    paymentCollectionRate: financialTotals.collectionRate,
+    outstandingDebt: financialTotals.outstandingDebt,
   };
+};
+
+export const buildDashboardFinancialMonth = (
+  collections: DashboardCollections,
+  selectedMonth: Date
+): DashboardFinancialMonth => {
+  const totals = getFinancialTotals(collections, selectedMonth);
+  const buckets = [
+    { label: '1-7', paid: 0 },
+    { label: '8-14', paid: 0 },
+    { label: '15-21', paid: 0 },
+    { label: '22+', paid: 0 },
+  ];
+
+  totals.paymentsCompletedThisMonth.forEach((payment) => {
+    const date = getValidDate(getRecordString(payment, 'payment_date'));
+    if (!date) return;
+    const day = date.getDate();
+    const index = day <= 7 ? 0 : day <= 14 ? 1 : day <= 21 ? 2 : 3;
+    buckets[index].paid += getRecordNumber(payment, 'amount') || 0;
+  });
+
+  return {
+    monthKey: getMonthKey(selectedMonth),
+    monthLabel: getMonthLabel(selectedMonth),
+    expectedPayments: totals.expectedPayments,
+    paidPayments: totals.paidPayments,
+    remainingPayments: totals.remainingPayments,
+    paidStudents: totals.paidStudents,
+    unpaidStudents: totals.unpaidStudents,
+    collectionRate: totals.collectionRate,
+    outstandingDebt: totals.outstandingDebt,
+    buckets,
+  };
+};
+
+export const buildDashboardSchoolDistribution = (
+  collections: DashboardCollections
+): DashboardSchoolSlice[] => {
+  const counts = new Map<string, number>();
+  collections.students.forEach((student) => {
+    const label = getSchoolLabel(student);
+    counts.set(label, (counts.get(label) || 0) + 1);
+  });
+
+  const total = collections.students.length;
+  const sorted = Array.from(counts.entries()).sort((a, b) => b[1] - a[1]);
+  const topSchools = sorted.slice(0, 5);
+  const otherTotal = sorted.slice(5).reduce((sum, [, value]) => sum + value, 0);
+  const rows = otherTotal > 0 ? [...topSchools, ['Other schools', otherTotal] as [string, number]] : topSchools;
+
+  return rows
+    .map(([label, value], index) => ({
+      label,
+      value,
+      percent: total > 0 ? Math.round((value / total) * 100) : 0,
+      color: schoolColors[index % schoolColors.length],
+    }));
+};
+
+export const buildDashboardStudentGrowth = (
+  collections: DashboardCollections,
+  monthCount = 12
+): DashboardStudentGrowthPoint[] => {
+  const now = new Date();
+  const months = Array.from({ length: monthCount }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (monthCount - 1 - index), 1);
+    return {
+      key: getMonthKey(date),
+      label: date.toLocaleDateString(undefined, { month: 'short' }),
+      newStudents: 0,
+      totalStudents: 0,
+      date,
+    };
+  });
+  const monthMap = new Map(months.map((month) => [month.key, month]));
+
+  collections.students.forEach((student) => {
+    const date = getValidDate(getRecordString(student, 'created_at'));
+    if (!date) return;
+    const key = getMonthKey(new Date(date.getFullYear(), date.getMonth(), 1));
+    const month = monthMap.get(key);
+    if (month) month.newStudents += 1;
+  });
+
+  months.forEach((month) => {
+    month.totalStudents = collections.students.filter((student) => {
+      const createdAt = getValidDate(getRecordString(student, 'created_at'));
+      return createdAt ? createdAt <= new Date(month.date.getFullYear(), month.date.getMonth() + 1, 0, 23, 59, 59) : false;
+    }).length;
+  });
+
+  return months.map(({ label, newStudents, totalStudents }) => ({ label, newStudents, totalStudents }));
 };
 
 // Handles append activity.
@@ -284,48 +434,28 @@ export const getDashboardStatCards = (
         value: stats.totalStudents,
         icon: Users,
         accent: 'from-indigo-500 to-sky-500',
+        progress: 100,
       },
       {
         label: 'Teachers',
         value: stats.totalTeachers,
         icon: GraduationCap,
         accent: 'from-emerald-500 to-teal-500',
-      },
-      {
-        label: 'Classes',
-        value: stats.totalClasses,
-        icon: ClipboardList,
-        accent: 'from-amber-500 to-orange-500',
-      },
-      {
-        label: 'Centers',
-        value: stats.totalCenters,
-        icon: Building2,
-        accent: 'from-slate-500 to-zinc-500',
-      },
-      {
-        label: 'Should Pay',
-        value: formatMoney(stats.expectedPaymentsThisMonth),
-        icon: CreditCard,
-        accent: 'from-cyan-500 to-blue-500',
-        subValue: 'Expected this month',
         progress: 100,
       },
       {
-        label: 'Paid This Month',
-        value: formatMoney(stats.paymentsThisMonth),
-        icon: CreditCard,
-        accent: 'from-emerald-500 to-green-500',
-        subValue: `${stats.paymentCollectionRate}% collected`,
-        progress: stats.paymentCollectionRate,
+        label: 'Schools',
+        value: stats.totalSchools,
+        icon: ClipboardList,
+        accent: 'from-amber-500 to-orange-500',
+        progress: 100,
       },
       {
-        label: 'Still Unpaid',
-        value: formatMoney(stats.remainingPaymentsThisMonth),
-        icon: AlertTriangle,
-        accent: 'from-rose-500 to-red-500',
-        subValue: `${stats.unpaidStudentsThisMonth} students remaining`,
-        progress: stats.expectedPaymentsThisMonth > 0 ? Math.min(Math.round((stats.remainingPaymentsThisMonth / stats.expectedPaymentsThisMonth) * 100), 100) : 0,
+        label: 'New This Month',
+        value: stats.newStudentsThisMonth,
+        icon: UserPlus,
+        accent: 'from-cyan-500 to-blue-500',
+        progress: 100,
       },
     ];
   }
@@ -336,30 +466,14 @@ export const getDashboardStatCards = (
       value: stats.totalStudents,
       icon: Users,
       accent: 'from-indigo-500 to-sky-500',
+      progress: 100,
     },
     {
       label: 'My Classes',
       value: stats.totalClasses,
       icon: GraduationCap,
       accent: 'from-emerald-500 to-teal-500',
-    },
-    {
-      label: 'Active Tests',
-      value: stats.activeTests,
-      icon: FileQuestion,
-      accent: 'from-amber-500 to-orange-500',
-    },
-    {
-      label: 'Attendance Today',
-      value: stats.attendanceToday,
-      icon: CalendarDays,
-      accent: 'from-cyan-500 to-blue-500',
-    },
-    {
-      label: 'Pending Assignments',
-      value: stats.pendingAssignments,
-      icon: ClipboardList,
-      accent: 'from-rose-500 to-red-500',
+      progress: 100,
     },
   ];
 };
