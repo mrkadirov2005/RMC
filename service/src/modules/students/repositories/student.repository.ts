@@ -1,5 +1,101 @@
 const pool = require('../../../db/pool');
 
+interface StudentListFilters {
+  q?: string;
+  school_name?: string;
+  class_id?: number;
+  subject_id?: number;
+  level?: number;
+  address?: string;
+  age?: number;
+  gender?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+const addStudentFilters = (
+  conditions: string[],
+  params: any[],
+  filters: StudentListFilters = {},
+  centerId?: number,
+  teacherId?: number
+) => {
+  if (centerId) {
+    params.push(centerId);
+    conditions.push(`s.center_id = $${params.length}`);
+  }
+
+  if (teacherId) {
+    params.push(teacherId);
+    conditions.push(`s.teacher_id = $${params.length}`);
+  }
+
+  const search = String(filters.q || '').trim();
+  if (search) {
+    params.push(`%${search}%`);
+    conditions.push(`(
+      s.first_name ILIKE $${params.length}
+      OR s.last_name ILIKE $${params.length}
+      OR CONCAT_WS(' ', s.first_name, s.last_name) ILIKE $${params.length}
+      OR s.enrollment_number ILIKE $${params.length}
+      OR s.email ILIKE $${params.length}
+      OR s.phone ILIKE $${params.length}
+      OR s.parent_name ILIKE $${params.length}
+      OR s.school_name ILIKE $${params.length}
+      OR s.school_class ILIKE $${params.length}
+    )`);
+  }
+
+  const schoolName = String(filters.school_name || '').trim();
+  if (schoolName) {
+    params.push(schoolName);
+    conditions.push(`s.school_name = $${params.length}`);
+  }
+
+  if (filters.class_id != null) {
+    if (Number(filters.class_id) === -1) {
+      conditions.push('s.class_id IS NULL');
+    } else {
+      params.push(filters.class_id);
+      conditions.push(`s.class_id = $${params.length}`);
+    }
+  }
+
+  if (filters.subject_id != null) {
+    params.push(filters.subject_id);
+    conditions.push(`sub.subject_id = $${params.length}`);
+  }
+
+  if (filters.level != null) {
+    params.push(filters.level);
+    conditions.push(`c.level = $${params.length}`);
+  }
+
+  const address = String(filters.address || '').trim();
+  if (address) {
+    params.push(address);
+    conditions.push(`ec.address = $${params.length}`);
+  }
+
+  if (filters.age != null) {
+    params.push(filters.age);
+    conditions.push(`DATE_PART('year', AGE(CURRENT_DATE, s.date_of_birth)) = $${params.length}`);
+  }
+
+  const gender = String(filters.gender || '').trim();
+  if (gender) {
+    params.push(gender);
+    conditions.push(`s.gender = $${params.length}`);
+  }
+
+  const status = String(filters.status || '').trim();
+  if (status) {
+    params.push(status);
+    conditions.push(`s.status = $${params.length}`);
+  }
+};
+
 const findAllWithClass = async (centerId?: number, teacherId?: number) => {
   let query = `
     SELECT s.*, c.class_name
@@ -27,6 +123,49 @@ const findAllWithClass = async (centerId?: number, teacherId?: number) => {
 
   const result = await pool.query(query, params);
   return result.rows;
+};
+
+const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
+  const fromClause = `
+    FROM students s
+    LEFT JOIN classes c ON s.class_id = c.class_id
+    LEFT JOIN edu_centers ec ON s.center_id = ec.center_id
+    LEFT JOIN subjects sub ON sub.class_id = c.class_id
+  `;
+  let query = `
+    SELECT DISTINCT s.*, c.class_name, c.level AS class_level, ec.address AS center_address
+    ${fromClause}
+  `;
+  let countQuery = `
+    SELECT COUNT(DISTINCT s.student_id) AS total
+    ${fromClause}
+  `;
+  const params: any[] = [];
+  const conditions: string[] = [];
+
+  addStudentFilters(conditions, params, filters, centerId, teacherId);
+
+  if (conditions.length > 0) {
+    const where = ' WHERE ' + conditions.join(' AND ');
+    query += where;
+    countQuery += where;
+  }
+
+  const countResult = await pool.query(countQuery, params);
+  const total = Number(countResult.rows[0]?.total || 0);
+
+  const page = Math.max(1, Number(filters.page || 1));
+  const limit = Math.min(100, Math.max(1, Number(filters.limit || 20)));
+  const offset = (page - 1) * limit;
+
+  query += ' ORDER BY s.student_id DESC';
+  params.push(limit);
+  query += ` LIMIT $${params.length}`;
+  params.push(offset);
+  query += ` OFFSET $${params.length}`;
+
+  const result = await pool.query(query, params);
+  return { data: result.rows, total, page, limit };
 };
 
 const findByIdWithClass = async (id: number, centerId?: number, teacherId?: number) => {
@@ -210,6 +349,7 @@ const updatePasswordHash = async (id: number, password_hash: string) => {
 
 module.exports = {
   findAllWithClass,
+  findPaginatedWithClass,
   findByIdWithClass,
   insert,
   update,

@@ -207,7 +207,7 @@ apiClient.interceptors.response.use(
 
 // API Services
 export const studentAPI = {
-  getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
+  getAll: (params?: object, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students', {
       params,
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,

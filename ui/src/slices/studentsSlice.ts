@@ -27,11 +27,32 @@ export interface Student {
   password?: string;
 }
 
+export interface StudentListParams {
+  q?: string;
+  school_name?: string;
+  class_id?: number | string;
+  subject_id?: number | string;
+  level?: number | string;
+  address?: string;
+  age?: number | string;
+  gender?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface StudentsMeta {
+  total: number;
+  page: number;
+  limit: number;
+}
+
 interface StudentsState {
   items: Student[];
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  meta: StudentsMeta;
 }
 
 const initialState: StudentsState = {
@@ -39,6 +60,7 @@ const initialState: StudentsState = {
   loading: false,
   error: null,
   lastFetched: null,
+  meta: { total: 0, page: 1, limit: 20 },
 };
 
 const CACHE_TTL_MS = 60_000;
@@ -47,15 +69,24 @@ const CACHE_TTL_MS = 60_000;
 
 export const fetchStudents = createAsyncThunk(
   'students/fetchAll',
-  async (_, { getState, rejectWithValue }) => {
+  async (params: StudentListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { lastFetched } = state.students;
-    if (lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) return null;
+    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) return null;
     try {
-      const res = await studentAPI.getAll();
+      const res = await studentAPI.getAll(params);
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data)
+        ? { items: data, meta: { total: data.length, page: 1, limit: data.length || 20 } }
+        : {
+            items: Array.isArray(data?.data) ? data.data : [],
+            meta: {
+              total: Number(data?.total || 0),
+              page: Number(data?.page || params?.page || 1),
+              limit: Number(data?.limit || params?.limit || 20),
+            },
+          };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch students');
     }
@@ -64,12 +95,21 @@ export const fetchStudents = createAsyncThunk(
 
 export const fetchStudentsForce = createAsyncThunk(
   'students/fetchAllForce',
-  async (_, { rejectWithValue }) => {
+  async (params: StudentListParams | undefined = undefined, { rejectWithValue }) => {
     try {
-      const res = await studentAPI.getAll();
+      const res = await studentAPI.getAll(params);
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data)
+        ? { items: data, meta: { total: data.length, page: 1, limit: data.length || 20 } }
+        : {
+            items: Array.isArray(data?.data) ? data.data : [],
+            meta: {
+              total: Number(data?.total || 0),
+              page: Number(data?.page || params?.page || 1),
+              limit: Number(data?.limit || params?.limit || 20),
+            },
+          };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch students');
     }
@@ -136,16 +176,20 @@ const studentsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchStudents.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchStudents.fulfilled, (state, action: PayloadAction<Student[] | null>) => {
+      .addCase(fetchStudents.fulfilled, (state, action: PayloadAction<{ items: Student[]; meta: StudentsMeta } | null>) => {
         state.loading = false;
-        if (action.payload !== null) { state.items = action.payload; state.lastFetched = Date.now(); }
+        if (action.payload !== null) {
+          state.items = action.payload.items;
+          state.meta = action.payload.meta;
+          state.lastFetched = Date.now();
+        }
       })
       .addCase(fetchStudents.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 
     builder
       .addCase(fetchStudentsForce.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchStudentsForce.fulfilled, (state, action: PayloadAction<Student[]>) => {
-        state.loading = false; state.items = action.payload; state.lastFetched = Date.now();
+      .addCase(fetchStudentsForce.fulfilled, (state, action: PayloadAction<{ items: Student[]; meta: StudentsMeta }>) => {
+        state.loading = false; state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now();
       })
       .addCase(fetchStudentsForce.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 
@@ -175,3 +219,5 @@ export const selectStudents = (state: RootState) => state.students.items;
 export const selectStudentsLoading = (state: RootState) => state.students.loading;
 // Selects students error.
 export const selectStudentsError = (state: RootState) => state.students.error;
+// Selects students pagination metadata.
+export const selectStudentsMeta = (state: RootState) => state.students.meta;

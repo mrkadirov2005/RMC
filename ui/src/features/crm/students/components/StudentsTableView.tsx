@@ -167,6 +167,8 @@ export const StudentsTableView = ({
             <TableHead>Name</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Phone</TableHead>
+            <TableHead>School</TableHead>
+            <TableHead>Class</TableHead>
             <TableHead>Date of Birth</TableHead>
             <TableHead>Gender</TableHead>
             <TableHead>Status</TableHead>
@@ -177,13 +179,13 @@ export const StudentsTableView = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-12">
+              <TableCell colSpan={11} className="text-center py-12">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={9} className="text-center py-12 text-muted-foreground">
+              <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
@@ -196,8 +198,10 @@ export const StudentsTableView = ({
                 </TableCell>
                 <TableCell className="text-muted-foreground">{student.email}</TableCell>
                 <TableCell className="text-muted-foreground">{student.phone}</TableCell>
+                <TableCell className="text-muted-foreground">{student.school_name || '-'}</TableCell>
+                <TableCell className="text-muted-foreground">{student.class_name || student.school_class || '-'}</TableCell>
                 <TableCell className="text-muted-foreground">
-                  {new Date(student.date_of_birth).toLocaleDateString()}
+                  {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString() : '-'}
                 </TableCell>
                 <TableCell>{student.gender}</TableCell>
                 <TableCell>
