@@ -15,7 +15,7 @@ export const DashboardHeader = ({ firstName, role, loading }: DashboardHeaderPro
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Welcome, {firstName || 'User'}!</h1>
-          <p className="text-white/90 mt-1">Here is a live snapshot of your CRM activity.</p>
+          <p className="text-white/90 mt-1">Student, school, and finance analytics in one place.</p>
         </div>
         <div className="flex items-center gap-2">
           <Badge className="bg-white/20 text-white border-none hover:bg-white/30">
@@ -29,4 +29,3 @@ export const DashboardHeader = ({ firstName, role, loading }: DashboardHeaderPro
     </div>
   );
 };
-
