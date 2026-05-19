@@ -150,7 +150,7 @@ export const OwnerManagerDialog = ({
         }
       }}
     >
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto border-white/10 bg-slate-950 text-white">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto border-border bg-background text-foreground">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <CurrentIcon className="h-5 w-5 text-amber-300" />
@@ -162,7 +162,7 @@ export const OwnerManagerDialog = ({
           <div className="grid gap-4 md:grid-cols-2">
             {fields.map((field) => (
               <div key={field.name} className="space-y-2">
-                <Label htmlFor={field.name} className="text-white/75">
+                <Label htmlFor={field.name} className="text-slate-600 dark:text-white/75">
                   {field.label}
                   {field.required ? ' *' : ''}
                 </Label>
@@ -172,10 +172,10 @@ export const OwnerManagerDialog = ({
           </div>
 
           {isSuperuser && (
-            <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+            <div className="space-y-4 rounded-2xl border border-slate-200/70 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
               <div>
-                <h3 className="text-lg font-semibold text-white">Admin permissions</h3>
-                <p className="mt-1 text-sm text-white/60">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Admin permissions</h3>
+                <p className="mt-1 text-sm text-slate-500 dark:text-white/60">
                   Choose which navbar items and sections this branch admin can see.
                 </p>
               </div>
@@ -186,18 +186,18 @@ export const OwnerManagerDialog = ({
                   return (
                     <label
                       key={option.code}
-                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-slate-950/40 p-3 transition-colors hover:border-amber-400/30 hover:bg-slate-950/60"
+                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/70 bg-white p-3 transition-colors hover:border-amber-400/40 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/40 dark:hover:border-amber-400/30 dark:hover:bg-slate-950/60"
                     >
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={(event) => onPermissionToggle(option.code, event.target.checked)}
                         disabled={loading}
-                        className="mt-1 h-4 w-4 rounded border-white/20 bg-transparent text-amber-400 focus:ring-amber-400"
+                        className="mt-1 h-4 w-4 rounded border-slate-300 bg-transparent text-amber-400 focus:ring-amber-400 dark:border-white/20"
                       />
                       <div className="space-y-1">
-                        <p className="font-medium text-white">{option.label}</p>
-                        <p className="text-xs leading-5 text-white/55">
+                        <p className="font-medium text-slate-900 dark:text-white">{option.label}</p>
+                        <p className="text-xs leading-5 text-slate-500 dark:text-white/55">
                           {PERMISSION_DESCRIPTIONS[option.code] || option.code}
                         </p>
                       </div>
@@ -214,7 +214,7 @@ export const OwnerManagerDialog = ({
               variant="outline"
               onClick={onClose}
               disabled={loading}
-              className="border-white/10 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+              className="border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
             >
               Cancel
             </Button>
