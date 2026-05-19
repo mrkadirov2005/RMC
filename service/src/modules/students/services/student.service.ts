@@ -4,6 +4,9 @@ const studentCoinsRepository = require('../repositories/studentCoins.repository'
 
 const listStudents = (centerId?: number, teacherId?: number) => studentRepository.findAllWithClass(centerId, teacherId);
 
+const listStudentsPaginated = (filters: Record<string, unknown>, centerId?: number, teacherId?: number) =>
+  studentRepository.findPaginatedWithClass(filters, centerId, teacherId);
+
 const getStudent = (id: number, centerId?: number, teacherId?: number) =>
   studentRepository.findByIdWithClass(id, centerId, teacherId);
 
@@ -60,6 +63,7 @@ const changePassword = async (id: number, old_password: string, new_password: st
 
 module.exports = {
   listStudents,
+  listStudentsPaginated,
   getStudent,
   createStudent,
   updateStudent,

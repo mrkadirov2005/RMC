@@ -6,14 +6,11 @@ import type { Class, Student } from '../types';
 import { useAppSelector } from '../../hooks';
 
 import { studentAPI } from '../../../../shared/api/api';
-import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { fetchStudentsForce } from '../../../../slices/studentsSlice';
 import { showToast } from '../../../../utils/toast';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 
 // Provides students modal.
-export const useStudentsModal = (selectedClass: Class | null) => {
-  const dispatch = useAppDispatch();
+export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: () => void) => {
   const { user } = useAppSelector((state) => state.auth);
   const defaultCenterId = getResolvedCenterId(user) ?? 0;
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -34,7 +31,7 @@ export const useStudentsModal = (selectedClass: Class | null) => {
         await studentAPI.create(formData);
         showToast.success('Student created successfully!');
       }
-      dispatch(fetchStudentsForce());
+      refreshStudents?.();
       handleCloseModal();
     } catch {
       showToast.error('Error saving student');
@@ -46,7 +43,7 @@ export const useStudentsModal = (selectedClass: Class | null) => {
       try {
         await studentAPI.delete(id);
         showToast.success('Student deleted successfully!');
-        dispatch(fetchStudentsForce());
+        refreshStudents?.();
       } catch {
         showToast.error('Error deleting student');
       }

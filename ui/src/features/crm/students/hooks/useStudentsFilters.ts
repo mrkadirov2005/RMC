@@ -1,8 +1,6 @@
-// React hooks for the crm feature.
-
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { Class, Student } from '../types';
-import { getFilteredStudents, getStudentCount, getStatusVariant } from '../queries';
+import { getStudentCount, getStatusVariant } from '../queries';
 
 // Provides students filters.
 export const useStudentsFilters = (students: Student[]) => {
@@ -10,12 +8,48 @@ export const useStudentsFilters = (students: Student[]) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGender, setFilterGender] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [filterSchool, setFilterSchool] = useState('');
+  const [filterClassId, setFilterClassId] = useState('');
+  const [filterSubjectId, setFilterSubjectId] = useState('');
+  const [filterLevel, setFilterLevel] = useState('');
+  const [filterAddress, setFilterAddress] = useState('');
+  const [filterAge, setFilterAge] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
   const [showFilters, setShowFilters] = useState(false);
-// Memoizes the displayed students derived value.
-  const displayedStudents = useMemo(() => getFilteredStudents(students, selectedClass, searchTerm, filterGender, filterStatus), [students, selectedClass, searchTerm, filterGender, filterStatus]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, limit, searchTerm]);
+
+  const studentParams = useMemo(() => ({
+    q: searchTerm.trim() || undefined,
+    school_name: filterSchool || undefined,
+    class_id: filterClassId || undefined,
+    subject_id: filterSubjectId || undefined,
+    level: filterLevel || undefined,
+    address: filterAddress || undefined,
+    age: filterAge || undefined,
+    gender: filterGender || undefined,
+    status: filterStatus || undefined,
+    page,
+    limit,
+  }), [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, limit, page, searchTerm]);
+
 // Handles clear filters.
-  const clearFilters = () => { setSearchTerm(''); setFilterGender(''); setFilterStatus(''); };
-  const hasActiveFilters = Boolean(searchTerm || filterGender || filterStatus);
+  const clearFilters = () => {
+    setSearchTerm('');
+    setFilterGender('');
+    setFilterStatus('');
+    setFilterSchool('');
+    setFilterClassId('');
+    setFilterSubjectId('');
+    setFilterLevel('');
+    setFilterAddress('');
+    setFilterAge('');
+    setPage(1);
+  };
+  const hasActiveFilters = Boolean(searchTerm || filterGender || filterStatus || filterSchool || filterClassId || filterSubjectId || filterLevel || filterAddress || filterAge);
   return {
     selectedClass,
     setSelectedClass,
@@ -27,9 +61,26 @@ export const useStudentsFilters = (students: Student[]) => {
     setFilterGender,
     filterStatus,
     setFilterStatus,
+    filterSchool,
+    setFilterSchool,
+    filterClassId,
+    setFilterClassId,
+    filterSubjectId,
+    setFilterSubjectId,
+    filterLevel,
+    setFilterLevel,
+    filterAddress,
+    setFilterAddress,
+    filterAge,
+    setFilterAge,
+    page,
+    setPage,
+    limit,
+    setLimit,
+    studentParams,
     showFilters,
     setShowFilters,
-    displayedStudents,
+    displayedStudents: students,
     clearFilters,
     hasActiveFilters,
     getStudentCount: (classId: number) => getStudentCount(students, classId),

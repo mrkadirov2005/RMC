@@ -15,6 +15,12 @@ function escapeRegex(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+function optionalNumber(value: any): number | undefined {
+  if (value === undefined || value === null || value === '') return undefined;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : undefined;
+}
+
 router.get('/', async (req: any, res: any) => {
   try {
     const db = await getMongoDb();
@@ -27,6 +33,21 @@ router.get('/', async (req: any, res: any) => {
     const q = String(req.query.q || '').trim();
     const limit = clampInt(req.query.limit, 50, 1, 200);
     const skip = clampInt(req.query.skip, 0, 0, 1_000_000);
+    const method = String(req.query.method || '').trim().toUpperCase();
+    const result = String(req.query.result || '').trim().toLowerCase();
+    const statusCode = optionalNumber(req.query.statusCode);
+    const statusMin = optionalNumber(req.query.statusMin);
+    const statusMax = optionalNumber(req.query.statusMax);
+    const durationMin = optionalNumber(req.query.durationMin);
+    const durationMax = optionalNumber(req.query.durationMax);
+    const username = String(req.query.username || '').trim();
+    const ip = String(req.query.ip || '').trim();
+    const path = String(req.query.path || '').trim();
+    const requestId = String(req.query.requestId || '').trim();
+    const role = String(req.query.role || '').trim();
+    const deviceId = String(req.query.deviceId || '').trim();
+    const from = String(req.query.from || '').trim();
+    const to = String(req.query.to || '').trim();
 
     const filter: any = {};
 
@@ -57,6 +78,53 @@ router.get('/', async (req: any, res: any) => {
         { role: rx },
       ];
     }
+
+    if (method) filter.method = method;
+
+    if (result === 'success') {
+      filter.success = true;
+      filter.aborted = { $ne: true };
+    } else if (result === 'failed') {
+      filter.success = false;
+      filter.aborted = { $ne: true };
+    } else if (result === 'aborted') {
+      filter.aborted = true;
+    }
+
+    if (statusCode !== undefined) {
+      filter.statusCode = statusCode;
+    } else {
+      const statusRange: any = {};
+      if (statusMin !== undefined) statusRange.$gte = statusMin;
+      if (statusMax !== undefined) statusRange.$lte = statusMax;
+      if (Object.keys(statusRange).length) filter.statusCode = statusRange;
+    }
+
+    const durationRange: any = {};
+    if (durationMin !== undefined) durationRange.$gte = durationMin;
+    if (durationMax !== undefined) durationRange.$lte = durationMax;
+    if (Object.keys(durationRange).length) filter.durationMs = durationRange;
+
+    if (username) filter.username = { $regex: escapeRegex(username), $options: 'i' };
+    if (ip) filter.ip = { $regex: escapeRegex(ip), $options: 'i' };
+    if (path) {
+      const rx = new RegExp(escapeRegex(path), 'i');
+      filter.$and = [...(filter.$and || []), { $or: [{ path: rx }, { originalUrl: rx }] }];
+    }
+    if (requestId) filter.requestId = { $regex: escapeRegex(requestId), $options: 'i' };
+    if (role) filter.$and = [...(filter.$and || []), { role: { $regex: escapeRegex(role), $options: 'i' } }];
+    if (deviceId) filter.deviceId = { $regex: escapeRegex(deviceId), $options: 'i' };
+
+    const tsRange: any = {};
+    if (from) {
+      const fromDate = new Date(from);
+      if (!Number.isNaN(fromDate.getTime())) tsRange.$gte = fromDate;
+    }
+    if (to) {
+      const toDate = new Date(to);
+      if (!Number.isNaN(toDate.getTime())) tsRange.$lte = toDate;
+    }
+    if (Object.keys(tsRange).length) filter.ts = tsRange;
 
     const col = db.collection('request_logs');
     const total = await col.countDocuments(filter);
@@ -93,4 +161,3 @@ router.get('/', async (req: any, res: any) => {
 });
 
 module.exports = router;
-

@@ -119,6 +119,7 @@ router_att.post('/', requireAuth, validateBody(CreateAttendanceDto), attendanceC
  */
 router_att.put('/:id', requireAuth, attendanceController.updateAttendance);
 
+
 /**
  * @swagger
  * /attendance/{id}:

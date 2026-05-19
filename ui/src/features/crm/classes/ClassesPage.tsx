@@ -45,6 +45,7 @@ import { formatSchedule } from './queries';
 const ClassesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [teacherFilter, setTeacherFilter] = useState('all');
   const {
     state,
     isModalOpen,
@@ -78,9 +79,12 @@ const ClassesPage = () => {
   } = useClassesPage();
   const filteredClasses = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
-    if (!search) return state.items;
+    const teacherId = teacherFilter === 'all' ? null : Number(teacherFilter);
 
     return state.items.filter((cls) => {
+      if (teacherId != null && Number(cls.teacher_id) !== teacherId) return false;
+      if (!search) return true;
+
       const schedule = formatSchedule(cls);
       return [
         cls.class_name,
@@ -95,7 +99,7 @@ const ClassesPage = () => {
         .filter((value) => value != null)
         .some((value) => String(value).toLowerCase().includes(search));
     });
-  }, [searchTerm, state.items]);
+  }, [searchTerm, state.items, teacherFilter]);
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
@@ -116,26 +120,41 @@ const ClassesPage = () => {
         </Alert>
       )}
 
-      <div className="relative mb-4 max-w-xl">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search classes by name, code, schedule, room..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 pr-10"
-        />
-        {searchTerm && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-            onClick={() => setSearchTerm('')}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div className="relative max-w-xl flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search classes by name, code, schedule, room..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchTerm && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <Select value={teacherFilter} onValueChange={setTeacherFilter}>
+          <SelectTrigger className="w-full lg:w-[260px]">
+            <SelectValue placeholder="Filter by teacher" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All teachers</SelectItem>
+            {teacherOptions.map((teacher) => (
+              <SelectItem key={teacher.id || teacher.value} value={String(teacher.value)}>
+                {teacher.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {state.loading ? (

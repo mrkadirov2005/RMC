@@ -2,6 +2,39 @@ const { generateToken } = require('../../../middleware/auth');
 const studentService = require('../services/student.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
+const toPositiveInt = (value: unknown) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : undefined;
+};
+
+const toInt = (value: unknown) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : undefined;
+};
+
+const cleanString = (value: unknown) => {
+  const text = String(value ?? '').trim();
+  return text || undefined;
+};
+
+const parseStudentListQuery = (query: Record<string, unknown>) => ({
+  q: cleanString(query.q || query.search || query.name),
+  school_name: cleanString(query.school_name),
+  class_id: toInt(query.class_id),
+  subject_id: toPositiveInt(query.subject_id),
+  level: toInt(query.level),
+  address: cleanString(query.address),
+  age: toPositiveInt(query.age),
+  gender: cleanString(query.gender),
+  status: cleanString(query.status),
+  page: toPositiveInt(query.page) || 1,
+  limit: Math.min(100, toPositiveInt(query.limit) || 20),
+});
+
+const hasStudentListParams = (query: Record<string, unknown>) =>
+  ['q', 'search', 'name', 'school_name', 'class_id', 'subject_id', 'level', 'address', 'age', 'gender', 'status', 'page', 'limit']
+    .some((key) => query[key] !== undefined && query[key] !== '');
+
 const getAllStudents = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -11,6 +44,10 @@ const getAllStudents = async (req: any, res: any) => {
     }
     if (req.user?.userType === 'student') {
       return res.status(403).json({ error: 'Access denied.' });
+    }
+    if (hasStudentListParams(req.query)) {
+      const result = await studentService.listStudentsPaginated(parseStudentListQuery(req.query), centerId ?? undefined, teacherId);
+      return res.json(result);
     }
     const rows = await studentService.listStudents(centerId ?? undefined, teacherId);
     res.json(rows);

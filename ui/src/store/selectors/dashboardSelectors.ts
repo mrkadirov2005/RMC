@@ -55,9 +55,6 @@ export const selectDashboardLoadingByRole = (state: RootState, isSuperuser: bool
   Boolean(
     state.students.loading ||
       state.classes.loading ||
-      state.tests.loading ||
-      state.attendance.loading ||
-      state.assignments.loading ||
       (isSuperuser &&
-        (state.teachers.loading || state.centers.loading || state.payments.loading || state.debts.loading))
+        (state.teachers.loading || state.payments.loading || state.debts.loading))
   );

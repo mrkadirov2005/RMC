@@ -6,13 +6,14 @@ import { useStudentsModal } from './useStudentsModal';
 
 // Provides students page.
 export const useStudentsPage = () => {
-  const data = useStudentsData();
-  const filters = useStudentsFilters(data.state.items);
-  const modal = useStudentsModal(filters.selectedClass);
+  const filters = useStudentsFilters([]);
+  const data = useStudentsData(filters.studentParams);
+  const modal = useStudentsModal(filters.selectedClass, data.actions.fetchAll);
   return {
     ...data,
     ...filters,
     ...modal,
+    displayedStudents: data.state.items,
     genderOptions: [
       { id: 1, label: 'Male', value: 'Male' },
       { id: 2, label: 'Female', value: 'Female' },

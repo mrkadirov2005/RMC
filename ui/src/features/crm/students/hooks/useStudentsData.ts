@@ -3,19 +3,21 @@
 import { useEffect } from 'react';
 import { useAppSelector } from '../../hooks';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { fetchStudents, fetchStudentsForce } from '../../../../slices/studentsSlice';
+import { fetchStudents, fetchStudentsForce, type StudentListParams } from '../../../../slices/studentsSlice';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
 import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSlice';
 import { fetchCenters } from '../../../../slices/centersSlice';
+import { fetchSubjects, fetchSubjectsForce } from '../../../../slices/subjectsSlice';
 import {
   selectCenterOptions,
   selectClassOptions,
+  selectSubjectOptions,
   selectTeacherOptions,
 } from '../../../../store/selectors';
 import type { Class, Student } from '../types';
 
 // Provides students data.
-export const useStudentsData = () => {
+export const useStudentsData = (studentParams?: StudentListParams) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 // Handles is owner.
@@ -25,47 +27,52 @@ export const useStudentsData = () => {
   const students = useAppSelector((state) => state.students.items) as Student[];
   const studentsLoading = useAppSelector((state) => state.students.loading);
   const studentsError = useAppSelector((state) => state.students.error);
+  const studentsMeta = useAppSelector((state) => state.students.meta);
   const classItems = useAppSelector((state) => state.classes.items) as Class[];
   const classesLoading = useAppSelector((state) => state.classes.loading);
   const teacherOptions = useAppSelector(selectTeacherOptions);
   const classOptions = useAppSelector(selectClassOptions);
+  const subjectOptions = useAppSelector(selectSubjectOptions);
   const allCenterOptions = useAppSelector(selectCenterOptions);
+  const centerItems = useAppSelector((state) => state.centers.items);
   const centerOptions = isOwner ? allCenterOptions : [];
   const isLoadingOptions = useAppSelector(
     (state) => state.teachers.loading || state.classes.loading || (isOwner && state.centers.loading)
   );
 
   // Expose shape compatible with what StudentsPage expects
-  const state = { items: students, loading: studentsLoading, error: studentsError };
+  const state = { items: students, loading: studentsLoading, error: studentsError, meta: studentsMeta };
   const actions = {
-    fetchAll: () => dispatch(fetchStudentsForce()),
+    fetchAll: () => dispatch(fetchStudentsForce(studentParams)),
   };
 
 // Runs side effects for this component.
   useEffect(() => {
-    dispatch(fetchStudents());
+    dispatch(fetchStudents(studentParams));
     dispatch(fetchClasses());
     dispatch(fetchTeachers());
+    dispatch(fetchSubjects());
     if (isOwner) {
       dispatch(fetchCenters());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOwner]);
+  }, [isOwner, JSON.stringify(studentParams)]);
 
 // Runs side effects for this component.
   useEffect(() => {
 // Handles active center changed.
     const handleActiveCenterChanged = () => {
-      dispatch(fetchStudentsForce());
+      dispatch(fetchStudentsForce(studentParams));
       dispatch(fetchClassesForce());
       dispatch(fetchTeachersForce());
+      dispatch(fetchSubjectsForce());
       if (isOwner) {
         dispatch(fetchCenters());
       }
     };
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
-  }, [dispatch, isOwner]);
+  }, [dispatch, isOwner, studentParams]);
 
   return {
     state,
@@ -74,6 +81,8 @@ export const useStudentsData = () => {
     teacherOptions,
     centerOptions,
     classOptions,
+    subjectOptions,
+    centerItems,
     loadingClasses: classesLoading,
     isLoadingOptions,
     isOwner,
