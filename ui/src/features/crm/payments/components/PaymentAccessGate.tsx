@@ -47,15 +47,16 @@ export const PaymentAccessGate = () => {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto mt-10">
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5" />
+    <div className="mx-auto mt-10 w-full max-w-md px-4">
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-emerald-50/75 to-sky-50/65 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
+        <div className="mb-4 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-900/10 dark:shadow-none">
+            <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold">Payment Access Required</h3>
-            <p className="text-sm text-slate-500">Enter your payment password provided by admin.</p>
+            <h3 className="text-lg font-semibold text-slate-950 dark:text-foreground">Payment Access Required</h3>
+            <p className="text-sm text-muted-foreground">Enter your payment password provided by admin.</p>
           </div>
         </div>
 
@@ -67,7 +68,7 @@ export const PaymentAccessGate = () => {
 
         <form onSubmit={handleLogin} className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-slate-700">Username</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-foreground">Username</label>
             <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -78,7 +79,7 @@ export const PaymentAccessGate = () => {
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700">Payment Password</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-foreground">Payment Password</label>
             <Input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -89,7 +90,7 @@ export const PaymentAccessGate = () => {
               className="mt-1"
             />
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:from-emerald-600 hover:to-cyan-600" disabled={loading}>
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />

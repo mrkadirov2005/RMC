@@ -10,6 +10,8 @@ import {
   FileQuestion,
   Loader2,
   X,
+  BookOpenCheck,
+  Timer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,6 +34,13 @@ import {
   selectStudentTestsPageUi,
   selectStudentTestsVisibleForPageUi,
 } from '../../../store/selectors';
+import {
+  formatTestType,
+  getTestTypeBadgeClass,
+  getTestTypeTheme,
+  testStatCardClass,
+  testSurfaceClass,
+} from './testVisuals';
 
 interface Test {
   test_id: number;
@@ -84,26 +93,6 @@ const StudentTestsPage = () => {
     }
   };
 
-// Returns test type color.
-  const getTestTypeColor = (type: string) => {
-    const colors: { [key: string]: string } = {
-      multiple_choice: 'bg-indigo-500',
-      essay: 'bg-rose-500',
-      short_answer: 'bg-sky-500',
-      true_false: 'bg-emerald-500',
-      form_filling: 'bg-pink-500',
-      reading_passage: 'bg-purple-500',
-      writing: 'bg-pink-500',
-      matching: 'bg-teal-500',
-    };
-    return colors[type] || 'bg-gray-500';
-  };
-
-// Formats test type.
-  const formatTestType = (type: string) => {
-    return type?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || '';
-  };
-
   const availableTests = available as Test[];
   const inProgressTests = inProgress as Test[];
   const completedTests = completed as Test[];
@@ -117,11 +106,22 @@ const StudentTestsPage = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-1">My Tests</h1>
-        <p className="text-muted-foreground">View and take tests assigned to you or shared publicly</p>
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-amber-100/45 via-fuchsia-100/35 to-transparent dark:hidden" />
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
+            <BookOpenCheck className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">My Tests</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Track assigned tests, continue work in progress, and review completed results.
+            </p>
+          </div>
+        </div>
       </div>
 
       {(error || storeError) && (
@@ -141,22 +141,31 @@ const StudentTestsPage = () => {
       )}
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-primary">{availableTests.length}</p>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <Card className={cn(testStatCardClass, 'border-indigo-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
+              <FileQuestion className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-indigo-700 dark:text-primary">{availableTests.length}</p>
             <p className="text-sm text-muted-foreground">Available</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-amber-500">{inProgressTests.length}</p>
+        <Card className={cn(testStatCardClass, 'border-amber-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-muted dark:text-muted-foreground">
+              <Timer className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-amber-600 dark:text-amber-500">{inProgressTests.length}</p>
             <p className="text-sm text-muted-foreground">In Progress</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-green-600">{completedTests.length}</p>
+        <Card className={cn(testStatCardClass, 'border-emerald-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-emerald-700 dark:text-green-500">{completedTests.length}</p>
             <p className="text-sm text-muted-foreground">Completed</p>
           </CardContent>
         </Card>
@@ -169,8 +178,9 @@ const StudentTestsPage = () => {
           dispatch(setStudentTestsPageTabValue(value as 'available' | 'in_progress' | 'completed'))
         }
       >
-        <Card className="mb-6">
-          <TabsList className="bg-transparent h-auto p-0 w-full justify-start border-b rounded-none">
+        <Card className={testSurfaceClass}>
+          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 p-0 dark:bg-none">
             <TabsTrigger value="available" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
               Available ({availableTests.length})
             </TabsTrigger>
@@ -185,9 +195,9 @@ const StudentTestsPage = () => {
 
         {/* Tests Grid */}
         {visibleTests.length === 0 ? (
-          <Card>
-            <CardContent className="text-center py-12">
-              <FileQuestion className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+          <Card className={testSurfaceClass}>
+            <CardContent className="py-12 text-center">
+              <FileQuestion className="mx-auto mb-4 h-16 w-16 text-indigo-300 dark:text-muted-foreground" />
               <h3 className="text-lg font-medium text-muted-foreground">
                 {tabValue === 'available'
                   ? 'No tests available at the moment'
@@ -198,19 +208,21 @@ const StudentTestsPage = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
             {visibleTests.map((test) => (
               <Card
                 key={test.test_id}
-                className="h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+                className={cn(
+                  'h-full overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm',
+                  getTestTypeTheme(test.test_type).panel,
+                  'dark:bg-none'
+                )}
               >
+                <div className={cn('h-1', getTestTypeTheme(test.test_type).dot)} />
                 <CardContent className="pt-6">
                   <div className="flex justify-between items-start mb-3">
                     <span
-                      className={cn(
-                        'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white',
-                        getTestTypeColor(test.test_type)
-                      )}
+                      className={getTestTypeBadgeClass(test.test_type)}
                     >
                       {formatTestType(test.test_type)}
                     </span>
@@ -234,7 +246,7 @@ const StudentTestsPage = () => {
                     </div>
                   </div>
 
-                  <h3 className="text-lg font-semibold mb-1">{test.test_name}</h3>
+                  <h3 className="mb-1 text-lg font-semibold text-slate-950 dark:text-foreground">{test.test_name}</h3>
 
                   {test.subject_name && (
                     <p className="text-sm text-primary mb-1">{test.subject_name}</p>
@@ -247,7 +259,7 @@ const StudentTestsPage = () => {
                     </p>
                   )}
 
-                  <div className="flex gap-4 mb-3">
+                  <div className="mb-3 flex gap-4 rounded-lg border border-white/70 bg-white/65 p-3 dark:border-border dark:bg-muted/20">
                     <div className="flex items-center gap-1">
                       <Clock className="h-4 w-4 text-muted-foreground" />
                       <span className="text-sm">{test.duration_minutes} min</span>

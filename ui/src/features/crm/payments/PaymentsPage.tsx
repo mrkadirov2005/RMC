@@ -1,7 +1,27 @@
 // Page component for the payments screen in the crm feature.
 
 import { useState, useEffect, useMemo } from 'react';
-import { Pencil, Trash2, X, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, DollarSign, CreditCard, Users, Loader2, BarChart3 } from 'lucide-react';
+import {
+  Pencil,
+  Trash2,
+  X,
+  ArrowLeft,
+  Folder,
+  Search,
+  Filter,
+  User,
+  BookOpen,
+  Plus,
+  DollarSign,
+  CreditCard,
+  Users,
+  Loader2,
+  BarChart3,
+  Wallet,
+  ReceiptText,
+  TrendingUp,
+  ShieldCheck,
+} from 'lucide-react';
 import {
   createPayment,
   deletePayment,
@@ -67,6 +87,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { cn } from '@/lib/utils';
 
 interface Payment {
   payment_id?: number;
@@ -113,6 +134,17 @@ interface Student {
 
 type FolderType = 'teacher' | 'class' | 'student';
 type TeacherDetailView = 'groups' | 'total';
+
+const paymentSurfaceClass =
+  'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
+
+const paymentStatCardClass =
+  'overflow-hidden border-slate-200/80 bg-white shadow-[0_16px_45px_-38px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:shadow-sm';
+
+const folderCardClass =
+  'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm';
+
+const formatMoney = (value: number) => `$${Number(value || 0).toLocaleString()}`;
 
 // Renders the payments page screen.
 const PaymentsPage = () => {
@@ -513,9 +545,11 @@ const PaymentsPage = () => {
   }, [searchTerm, filterStatus, filterMethod, selectedFolderPayments, students]);
 
   const totalAmount = displayedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+  const displayedPaidAmount = displayedPayments.filter(isPaidPayment).reduce((sum, p) => sum + getPaymentAmount(p), 0);
+  const displayedPendingAmount = Math.max(totalAmount - displayedPaidAmount, 0);
   const folderGridClass =
     viewMode === 'list'
-      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.p-4]:p-2.5 [&_.h-9]:h-5 [&_.w-9]:w-5 [&_.mb-3]:mb-1.5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5 [&_.space-y-1]:space-y-0 [&_.grid-cols-2]:hidden'
+      ? 'space-y-2 [&_.folder-icon]:h-8 [&_.folder-icon]:w-8 [&_.folder-card-content]:p-3 [&_.folder-meta-grid]:hidden'
       : viewMode === 'compact'
         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
         : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
@@ -566,24 +600,39 @@ const PaymentsPage = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto space-y-6 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          {selectedFolder && (
-            <Button variant="outline" size="sm" onClick={handleBackToFolders}>
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back
-            </Button>
-          )}
-          <h1 className="text-2xl font-bold">{pageTitle}</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          <ViewModeToggle value={viewMode} onChange={setViewMode} />
-          {!isTeacher && (
-            <Button onClick={() => handleOpenModal()}>
-              <Plus className="h-4 w-4 mr-2" /> Add Payment
-            </Button>
-          )}
+      <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-emerald-50/75 to-sky-50/65 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-amber-100/45 via-fuchsia-100/25 to-transparent dark:hidden" />
+        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center gap-4">
+            {selectedFolder && (
+              <Button variant="outline" size="sm" onClick={handleBackToFolders}>
+                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+              </Button>
+            )}
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-900/10 dark:shadow-none">
+              <Wallet className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">{pageTitle}</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Organize payments by student, class, teacher, and collection status.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            {!isTeacher && (
+              <Button
+                onClick={() => handleOpenModal()}
+                className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:from-emerald-600 hover:to-cyan-600"
+              >
+                <Plus className="mr-2 h-4 w-4" /> Add Payment
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -601,43 +650,84 @@ const PaymentsPage = () => {
         </Alert>
       )}
 
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card className={cn(paymentStatCardClass, 'border-emerald-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
+              <ReceiptText className="h-5 w-5" />
+            </div>
+            <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{overallPaymentStats.totalPayments}</p>
+            <p className="text-sm text-muted-foreground">Payment Records</p>
+          </CardContent>
+        </Card>
+        <Card className={cn(paymentStatCardClass, 'border-sky-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-muted dark:text-muted-foreground">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <p className="text-3xl font-bold text-sky-700 dark:text-sky-400">{formatMoney(overallPaymentStats.totalAmount)}</p>
+            <p className="text-sm text-muted-foreground">Total Amount</p>
+          </CardContent>
+        </Card>
+        <Card className={cn(paymentStatCardClass, 'border-indigo-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <p className="text-3xl font-bold text-indigo-700 dark:text-indigo-400">{overallPaymentStats.paidPercent}%</p>
+            <p className="text-sm text-muted-foreground">Paid Share</p>
+          </CardContent>
+        </Card>
+        <Card className={cn(paymentStatCardClass, 'border-amber-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-muted dark:text-muted-foreground">
+              <ShieldCheck className="h-5 w-5" />
+            </div>
+            <p className="text-3xl font-bold text-amber-700 dark:text-amber-400">{formatMoney(overallPaymentStats.paidAmount)}</p>
+            <p className="text-sm text-muted-foreground">Collected</p>
+          </CardContent>
+        </Card>
+      </div>
+
       {!selectedFolder ? (
         <>
-          <div className="relative mb-4 max-w-xl">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="text"
-              placeholder={
-                activeTab === 'classes'
-                  ? 'Search classes by name, code, level...'
-                  : activeTab === 'teachers' || activeTab === 'statistics'
-                    ? 'Search teachers by name or employee ID...'
-                    : 'Search students by name or ID...'
-              }
-              value={searchTerm}
-              onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
-              className="pl-10 pr-10"
-            />
-            {searchTerm && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-                onClick={() => dispatch(setPaymentsSearchTerm(''))}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
+          <Card className={paymentSurfaceClass}>
+            <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
+            <CardContent className="space-y-4 p-4">
+              <div className="relative max-w-2xl">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  type="text"
+                  placeholder={
+                    activeTab === 'classes'
+                      ? 'Search classes by name, code, level...'
+                      : activeTab === 'teachers' || activeTab === 'statistics'
+                        ? 'Search teachers by name or employee ID...'
+                        : 'Search students by name or ID...'
+                  }
+                  value={searchTerm}
+                  onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
+                  className="pl-10 pr-10"
+                />
+                {searchTerm && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                    onClick={() => dispatch(setPaymentsSearchTerm(''))}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
 
-          {/* Tab Navigation */}
-          <div className="border-b border-border mb-6">
-            <div className="flex space-x-1">
+              {/* Tab Navigation */}
+              <div className="flex flex-wrap gap-2">
               <Button
                 variant={activeTab === 'students' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setPaymentsActiveTab('students'))}
-                className="rounded-b-none"
+                className={cn(activeTab === 'students' && 'bg-emerald-600 text-white hover:bg-emerald-700')}
               >
                 <Users className="h-4 w-4 mr-2" />
                 By Students
@@ -645,7 +735,7 @@ const PaymentsPage = () => {
               <Button
                 variant={activeTab === 'classes' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setPaymentsActiveTab('classes'))}
-                className="rounded-b-none"
+                className={cn(activeTab === 'classes' && 'bg-cyan-600 text-white hover:bg-cyan-700')}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
                 By Classes
@@ -653,7 +743,7 @@ const PaymentsPage = () => {
               <Button
                 variant={activeTab === 'teachers' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setPaymentsActiveTab('teachers'))}
-                className="rounded-b-none"
+                className={cn(activeTab === 'teachers' && 'bg-indigo-600 text-white hover:bg-indigo-700')}
               >
                 <User className="h-4 w-4 mr-2" />
                 By Teachers
@@ -662,14 +752,15 @@ const PaymentsPage = () => {
                 <Button
                   variant={activeTab === 'statistics' ? 'default' : 'ghost'}
                   onClick={() => dispatch(setPaymentsActiveTab('statistics'))}
-                  className="rounded-b-none"
+                  className={cn(activeTab === 'statistics' && 'bg-slate-800 text-white hover:bg-slate-900')}
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
                   Statistics
                 </Button>
               )}
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Tab Content */}
           <div>
@@ -693,25 +784,28 @@ const PaymentsPage = () => {
                     return (
                       <Card
                         key={studentId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        className={cn(folderCardClass, 'border-emerald-100 dark:border-border')}
                         onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
                       >
-                        <CardContent className="p-4">
+                        <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
+                        <CardContent className="folder-card-content p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
+                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
+                              <Folder className="h-5 w-5" />
+                            </div>
                           </div>
                           <div className="space-y-1">
                             <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
                             <p className="text-sm text-muted-foreground">ID: {studentId}</p>
                           </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                          <div className="mt-3 flex items-center justify-between border-t pt-3">
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <CreditCard className="h-3.5 w-3.5" />
                               <span>{paymentCount} payments</span>
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                            <div className="flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-primary">
                               <DollarSign className="h-3.5 w-3.5" />
-                              <span>${totalAmount.toLocaleString()}</span>
+                              <span>{formatMoney(totalAmount)}</span>
                             </div>
                           </div>
                         </CardContent>
@@ -742,25 +836,28 @@ const PaymentsPage = () => {
                     return (
                       <Card
                         key={classId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
                         onClick={() => handleFolderClick('class', classId, cls.class_name)}
                       >
-                        <CardContent className="p-4">
+                        <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
+                        <CardContent className="folder-card-content p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
+                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                              <Folder className="h-5 w-5" />
+                            </div>
                           </div>
                           <div className="space-y-1">
                             <h3 className="font-semibold">{cls.class_name}</h3>
                             <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                           </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                          <div className="mt-3 flex items-center justify-between border-t pt-3">
                             <div className="flex items-center gap-1 text-sm text-muted-foreground">
                               <CreditCard className="h-3.5 w-3.5" />
                               <span>{paymentCount} payments</span>
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                            <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
                               <DollarSign className="h-3.5 w-3.5" />
-                              <span>${totalAmount.toLocaleString()}</span>
+                              <span>{formatMoney(totalAmount)}</span>
                             </div>
                           </div>
                         </CardContent>
@@ -791,12 +888,15 @@ const PaymentsPage = () => {
                     return (
                       <Card
                         key={teacherId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
+                        className={cn(folderCardClass, 'border-indigo-100 dark:border-border')}
                         onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
                       >
-                        <CardContent className="p-4">
+                        <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500 dark:hidden" />
+                        <CardContent className="folder-card-content p-4">
                           <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
+                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
+                              <Folder className="h-5 w-5" />
+                            </div>
                           </div>
                           <div className="space-y-1">
                             <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
@@ -818,15 +918,15 @@ const PaymentsPage = () => {
                               <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t text-xs">
                                 <div className="rounded-md bg-muted/40 p-2">
                                   <p className="text-muted-foreground">Worked</p>
-                                  <p className="font-semibold">${teacherStats.totalWorked.toLocaleString()}</p>
+                                  <p className="font-semibold">{formatMoney(teacherStats.totalWorked)}</p>
                                 </div>
                                 <div className="rounded-md bg-green-50 p-2">
                                   <p className="text-green-700">Paid</p>
-                                  <p className="font-semibold text-green-700">${teacherStats.paidAmount.toLocaleString()}</p>
+                                  <p className="font-semibold text-green-700">{formatMoney(teacherStats.paidAmount)}</p>
                                 </div>
                                 <div className="rounded-md bg-red-50 p-2">
                                   <p className="text-red-700">Unpaid</p>
-                                  <p className="font-semibold text-red-700">${teacherStats.unpaidAmount.toLocaleString()}</p>
+                                  <p className="font-semibold text-red-700">{formatMoney(teacherStats.unpaidAmount)}</p>
                                 </div>
                                 <div className="rounded-md bg-muted/40 p-2">
                                   <p className="text-muted-foreground">Students</p>
@@ -851,31 +951,31 @@ const PaymentsPage = () => {
             {activeTab === 'statistics' && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Payments</p>
                       <p className="text-lg font-semibold">{overallPaymentStats.totalPayments}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Total Amount</p>
-                      <p className="text-lg font-semibold">${overallPaymentStats.totalAmount.toLocaleString()}</p>
+                      <p className="text-lg font-semibold">{formatMoney(overallPaymentStats.totalAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Paid Amount</p>
-                      <p className="text-lg font-semibold text-emerald-700">${overallPaymentStats.paidAmount.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-emerald-700">{formatMoney(overallPaymentStats.paidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Unpaid Amount</p>
-                      <p className="text-lg font-semibold text-rose-700">${overallPaymentStats.unpaidAmount.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-rose-700">{formatMoney(overallPaymentStats.unpaidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Paid Share</p>
                       <p className="text-lg font-semibold">{overallPaymentStats.paidPercent}%</p>
@@ -883,7 +983,7 @@ const PaymentsPage = () => {
                   </Card>
                 </div>
 
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none">
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <div>
                       <p className="text-sm font-medium">Paid vs Unpaid</p>
@@ -909,7 +1009,7 @@ const PaymentsPage = () => {
                 </div>
 
                 {!isTeacher && (
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className={cn(paymentSurfaceClass, 'rounded-lg')}>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -952,9 +1052,9 @@ const PaymentsPage = () => {
                                 </div>
                               </TableCell>
                               <TableCell>{stats.totalStudents}</TableCell>
-                              <TableCell className="font-semibold">${stats.totalWorked.toLocaleString()}</TableCell>
-                              <TableCell className="text-emerald-700 font-medium">${stats.paidAmount.toLocaleString()}</TableCell>
-                              <TableCell className="text-rose-700 font-medium">${stats.unpaidAmount.toLocaleString()}</TableCell>
+                              <TableCell className="font-semibold">{formatMoney(stats.totalWorked)}</TableCell>
+                              <TableCell className="font-medium text-emerald-700">{formatMoney(stats.paidAmount)}</TableCell>
+                              <TableCell className="font-medium text-rose-700">{formatMoney(stats.unpaidAmount)}</TableCell>
                               <TableCell>{stats.paidStudents}</TableCell>
                               <TableCell>{stats.unpaidStudents}</TableCell>
                             </TableRow>
@@ -970,8 +1070,10 @@ const PaymentsPage = () => {
         </>
       ) : selectedFolder.type === 'teacher' ? (
         <>
-          <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 mb-6">
-            <div>
+          <Card className={paymentSurfaceClass}>
+            <div className="h-1 bg-gradient-to-r from-indigo-500 to-cyan-500 dark:hidden" />
+            <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-end lg:justify-between">
+              <div>
               <p className="text-sm text-muted-foreground mb-1">Teacher view</p>
               <h2 className="text-2xl font-bold">
                 {selectedFolder.name}
@@ -981,8 +1083,8 @@ const PaymentsPage = () => {
                   ? `${selectedTeacherClasses.length} groups available`
                   : 'Teacher payment summary'}
               </p>
-            </div>
-            <div className="flex items-center gap-2">
+              </div>
+              <div className="flex items-center gap-2">
               <Button
                 variant={teacherDetailView === 'groups' ? 'default' : 'outline'}
                 onClick={() => setTeacherDetailView('groups')}
@@ -997,8 +1099,9 @@ const PaymentsPage = () => {
                 <DollarSign className="h-4 w-4 mr-2" />
                 Total
               </Button>
-            </div>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {teacherDetailView === 'groups' ? (
             <div className={folderGridClass}>
@@ -1019,12 +1122,15 @@ const PaymentsPage = () => {
                   return (
                     <Card
                       key={classId}
-                      className="cursor-pointer hover:shadow-md transition-shadow"
+                      className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
                       onClick={() => handleFolderClick('class', classId, cls.class_name)}
                     >
-                      <CardContent className="p-4">
+                      <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
+                      <CardContent className="folder-card-content p-4">
                         <div className="flex items-center gap-3 mb-3">
-                          <Folder className="h-9 w-9 text-primary" />
+                          <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                            <Folder className="h-5 w-5" />
+                          </div>
                         </div>
                         <div className="space-y-1">
                           <h3 className="font-semibold">{cls.class_name}</h3>
@@ -1035,9 +1141,9 @@ const PaymentsPage = () => {
                             <CreditCard className="h-3.5 w-3.5" />
                             <span>{paymentCount} payments</span>
                           </div>
-                          <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                          <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
                             <DollarSign className="h-3.5 w-3.5" />
-                            <span>${totalAmount.toLocaleString()}</span>
+                            <span>{formatMoney(totalAmount)}</span>
                           </div>
                         </div>
                       </CardContent>
@@ -1050,31 +1156,31 @@ const PaymentsPage = () => {
             <>
               {selectedTeacherStats && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Groups</p>
                       <p className="text-lg font-semibold">{selectedTeacherClasses.length}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Worked</p>
-                      <p className="text-lg font-semibold">${selectedTeacherStats.totalWorked.toLocaleString()}</p>
+                      <p className="text-lg font-semibold">{formatMoney(selectedTeacherStats.totalWorked)}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Paid Amount</p>
-                      <p className="text-lg font-semibold text-green-700">${selectedTeacherStats.paidAmount.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-green-700">{formatMoney(selectedTeacherStats.paidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Unpaid Amount</p>
-                      <p className="text-lg font-semibold text-red-700">${selectedTeacherStats.unpaidAmount.toLocaleString()}</p>
+                      <p className="text-lg font-semibold text-red-700">{formatMoney(selectedTeacherStats.unpaidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card>
+                  <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Students Paid</p>
                       <p className="text-lg font-semibold">
@@ -1085,7 +1191,7 @@ const PaymentsPage = () => {
                 </div>
               )}
               {selectedTeacherStats && (
-                <div className="rounded-2xl border bg-card p-4 mb-6 shadow-sm">
+                <div className="mb-6 rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none">
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between gap-3">
                       <div>
@@ -1115,13 +1221,13 @@ const PaymentsPage = () => {
                       <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/10">
                         <p className="text-xs text-emerald-700 dark:text-emerald-300">Paid amount</p>
                         <p className="text-lg font-semibold text-emerald-700 dark:text-emerald-300">
-                          ${selectedTeacherStats.paidAmount.toLocaleString()}
+                          {formatMoney(selectedTeacherStats.paidAmount)}
                         </p>
                       </div>
                       <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-500/10">
                         <p className="text-xs text-rose-700 dark:text-rose-300">Unpaid amount</p>
                         <p className="text-lg font-semibold text-rose-700 dark:text-rose-300">
-                          ${selectedTeacherStats.unpaidAmount.toLocaleString()}
+                          {formatMoney(selectedTeacherStats.unpaidAmount)}
                         </p>
                       </div>
                     </div>
@@ -1138,60 +1244,73 @@ const PaymentsPage = () => {
         // PAYMENT LIST VIEW
         <>
           {/* Search and Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search by student, receipt, reference..."
-                value={searchTerm}
-                onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
-                className="pl-10"
-              />
-              {searchTerm && (
+          <Card className={paymentSurfaceClass}>
+            <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
+            <CardContent className="space-y-4 p-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 dark:border-border dark:bg-muted/20">
+                  <p className="text-xs text-emerald-700 dark:text-muted-foreground">Visible Records</p>
+                  <p className="text-xl font-semibold text-emerald-800 dark:text-foreground">{displayedPayments.length}</p>
+                </div>
+                <div className="rounded-xl border border-sky-100 bg-sky-50/70 p-3 dark:border-border dark:bg-muted/20">
+                  <p className="text-xs text-sky-700 dark:text-muted-foreground">Visible Total</p>
+                  <p className="text-xl font-semibold text-sky-800 dark:text-foreground">{formatMoney(totalAmount)}</p>
+                </div>
+                <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-3 dark:border-border dark:bg-muted/20">
+                  <p className="text-xs text-amber-700 dark:text-muted-foreground">Pending or Unpaid</p>
+                  <p className="text-xl font-semibold text-amber-800 dark:text-foreground">{formatMoney(displayedPendingAmount)}</p>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-4 sm:flex-row">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    placeholder="Search by student, receipt, reference..."
+                    value={searchTerm}
+                    onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
+                    className="pl-10"
+                  />
+                  {searchTerm && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0"
+                      onClick={() => dispatch(setPaymentsSearchTerm(''))}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
-                  onClick={() => dispatch(setPaymentsSearchTerm(''))}
+                  variant={showFilters ? 'default' : 'outline'}
+                  onClick={() => dispatch(setPaymentsShowFilters(!showFilters))}
                 >
-                  <X className="h-4 w-4" />
+                  <Filter className="mr-2 h-4 w-4" />
+                  Filters
+                  {hasActiveFilters && (
+                    <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
+                      {(filterStatus ? 1 : 0) + (filterMethod ? 1 : 0)}
+                    </span>
+                  )}
                 </Button>
-              )}
-            </div>
 
-            <Button
-              variant={showFilters ? "default" : "outline"}
-              onClick={() => dispatch(setPaymentsShowFilters(!showFilters))}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-              {hasActiveFilters && (
-                <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-                  {(filterStatus ? 1 : 0) + (filterMethod ? 1 : 0)}
-                </span>
-              )}
-            </Button>
-
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                <X className="h-4 w-4 mr-2" /> Clear All
-              </Button>
-            )}
-
-            <div className="text-sm text-muted-foreground flex items-center gap-4">
-              <span>{displayedPayments.length} payments</span>
-              {!isTeacher && (
-                <span className="font-semibold">Total: ${totalAmount.toLocaleString()}</span>
-              )}
-            </div>
-          </div>
+                {hasActiveFilters && (
+                  <Button variant="outline" size="sm" onClick={clearFilters}>
+                    <X className="mr-2 h-4 w-4" /> Clear All
+                  </Button>
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Teacher totals are shown in the dedicated teacher view above. */}
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
+            <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-border dark:bg-muted/20 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Payment Status</Label>
                 <Select value={filterStatus} onValueChange={(value) => dispatch(setPaymentsFilterStatus(value))}>
@@ -1226,7 +1345,7 @@ const PaymentsPage = () => {
           )}
 
           {/* Payments Table */}
-          <div className="border rounded-lg overflow-hidden">
+          <div className={cn(paymentSurfaceClass, 'rounded-lg')}>
             <Table>
               <TableHeader>
                 <TableRow>

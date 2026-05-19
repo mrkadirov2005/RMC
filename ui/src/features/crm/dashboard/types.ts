@@ -6,6 +6,22 @@ export type DashboardRole = 'superuser' | 'teacher' | 'student' | string;
 
 export type DashboardRecord = Record<string, unknown>;
 
+export type DashboardScopeType = 'all' | 'teacher' | 'class' | 'school' | 'status';
+
+export interface DashboardScope {
+  type: DashboardScopeType;
+  value: string;
+}
+
+export interface DashboardScopeOption {
+  value: string;
+  label: string;
+  count: number;
+  meta?: string;
+}
+
+export type DashboardScopeOptions = Record<Exclude<DashboardScopeType, 'all'>, DashboardScopeOption[]>;
+
 export interface DashboardCollections {
   students: DashboardRecord[];
   teachers: DashboardRecord[];
@@ -83,6 +99,15 @@ export interface DashboardStatCard {
   accent: string;
   subValue?: string;
   progress?: number;
+  detailsType?:
+    | 'students'
+    | 'teachers'
+    | 'schools'
+    | 'newStudents'
+    | 'expectedPayments'
+    | 'collectedPayments'
+    | 'remainingPayments'
+    | 'outstandingDebts';
 }
 
 export interface DashboardFocusItem {

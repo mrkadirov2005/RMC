@@ -1,7 +1,7 @@
 // Page component for the rooms screen in the crm feature.
 
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Building2 } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Pencil, Trash2, Loader2, Building2, CalendarDays, DoorOpen, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -67,6 +67,51 @@ const RoomsPage = () => {
     day: 'Monday',
     time: '09:00',
   });
+  const summaryCards = useMemo(() => {
+    const uniqueRooms = new Set(rooms.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)).size;
+    const assignedRooms = rooms.filter((room: any) => room.class_id || room.class_name).length;
+    const activeDays = new Set(rooms.map((room: any) => String(room.day || '').trim()).filter(Boolean)).size;
+    const scheduledTimes = new Set(rooms.map((room: any) => String(room.time || '').substring(0, 5)).filter(Boolean)).size;
+
+    return [
+      {
+        label: 'Assignments',
+        value: rooms.length.toLocaleString(),
+        detail: `${assignedRooms.toLocaleString()} assigned`,
+        icon: Building2,
+        shell: 'from-indigo-50 via-white to-sky-50 border-indigo-100',
+        iconShell: 'from-indigo-500 to-sky-500',
+        text: 'text-indigo-950',
+      },
+      {
+        label: 'Rooms',
+        value: uniqueRooms.toLocaleString(),
+        detail: 'Physical spaces',
+        icon: DoorOpen,
+        shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
+        iconShell: 'from-emerald-500 to-teal-500',
+        text: 'text-emerald-950',
+      },
+      {
+        label: 'Active days',
+        value: activeDays.toLocaleString(),
+        detail: 'Weekly schedule',
+        icon: CalendarDays,
+        shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
+        iconShell: 'from-amber-500 to-orange-500',
+        text: 'text-amber-950',
+      },
+      {
+        label: 'Time slots',
+        value: scheduledTimes.toLocaleString(),
+        detail: 'Unique starts',
+        icon: Clock,
+        shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
+        iconShell: 'from-cyan-500 to-fuchsia-500',
+        text: 'text-slate-950',
+      },
+    ];
+  }, [rooms]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -144,16 +189,45 @@ const RoomsPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <div className="mb-6 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Room Management</h1>
-          <p className="text-sm text-muted-foreground">Manage class assignments to physical rooms.</p>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
+              <Building2 className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Room Management</h1>
+              <p className="mt-1 text-sm text-muted-foreground">Manage class assignments to physical rooms and schedule slots.</p>
+            </div>
+          </div>
+          <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Room Assignment
+          </Button>
         </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Room Assignment
-        </Button>
+
+        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.label} className={`rounded-lg border bg-gradient-to-br ${card.shell} p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">{card.label}</p>
+                    <p className={`mt-1 text-2xl font-bold ${card.text} dark:text-card-foreground`}>{card.value}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${card.iconShell} text-white shadow-md shadow-slate-900/10 dark:shadow-none`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {error && (
@@ -167,17 +241,20 @@ const RoomsPage = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+          <CardHeader className="bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
             <CardTitle className="text-xl flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-100 to-emerald-100 text-sky-700 dark:bg-muted dark:bg-none dark:text-muted-foreground">
+                <Building2 className="h-5 w-5" />
+              </span>
               Physical Rooms & Schedules
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-md">
+            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-border dark:bg-card">
               <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50/90 dark:bg-transparent">
                   <TableRow>
                     <TableHead>Room Number</TableHead>
                     <TableHead>Class</TableHead>
@@ -195,11 +272,15 @@ const RoomsPage = () => {
                     </TableRow>
                   ) : (
                     rooms.map((room) => (
-                      <TableRow key={room.room_id}>
-                        <TableCell className="font-semibold">{room.room_number}</TableCell>
-                        <TableCell>{room.class_name || 'Unassigned'}</TableCell>
+                      <TableRow key={room.room_id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                        <TableCell className="font-semibold text-slate-950 dark:text-card-foreground">
+                          <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-indigo-700 dark:bg-muted dark:text-card-foreground">
+                            {room.room_number}
+                          </span>
+                        </TableCell>
+                        <TableCell className={room.class_name ? 'font-medium' : 'text-muted-foreground'}>{room.class_name || 'Unassigned'}</TableCell>
                         <TableCell>{room.day}</TableCell>
-                        <TableCell>{room.time?.substring(0, 5)}</TableCell>
+                        <TableCell className="font-mono text-sm text-cyan-700 dark:text-muted-foreground">{room.time?.substring(0, 5)}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="sm" onClick={() => handleOpenModal(room)}>

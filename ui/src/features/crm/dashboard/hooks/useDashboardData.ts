@@ -15,6 +15,8 @@ import type {
   DashboardCollections,
   DashboardFinancialMonth,
   DashboardRole,
+  DashboardScope,
+  DashboardScopeOptions,
   DashboardSchoolSlice,
   DashboardStatCard,
   DashboardStats,
@@ -22,14 +24,18 @@ import type {
 } from '../types';
 import {
   buildDashboardFinancialMonth,
+  buildDashboardScopeOptions,
   buildDashboardSchoolDistribution,
   buildDashboardStats,
   buildDashboardStudentGrowth,
+  filterDashboardCollections,
   getDashboardStatCards,
 } from '../queries/dashboardQueries';
 
 interface UseDashboardDataResult {
   loading: boolean;
+  scopeOptions: DashboardScopeOptions;
+  scopedCollections: DashboardCollections;
   stats: DashboardStats;
   statCards: DashboardStatCard[];
   finance: DashboardFinancialMonth;
@@ -38,7 +44,11 @@ interface UseDashboardDataResult {
 }
 
 // Provides dashboard data.
-export const useDashboardData = (role: DashboardRole, selectedMonth: Date): UseDashboardDataResult => {
+export const useDashboardData = (
+  role: DashboardRole,
+  selectedMonth: Date,
+  scope: DashboardScope
+): UseDashboardDataResult => {
   const dispatch = useAppDispatch();
 
   const isSuperuser = role === 'superuser';
@@ -72,24 +82,34 @@ export const useDashboardData = (role: DashboardRole, selectedMonth: Date): UseD
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
   }, [dispatch, isSuperuser]);
 
+  const scopeOptions = useMemo<DashboardScopeOptions>(
+    () => buildDashboardScopeOptions(collections),
+    [collections]
+  );
+
+  const scopedCollections = useMemo<DashboardCollections>(
+    () => filterDashboardCollections(collections, scope),
+    [collections, scope]
+  );
+
   const stats = useMemo<DashboardStats>(
-    () => buildDashboardStats(collections, isSuperuser, selectedMonth),
-    [collections, isSuperuser, selectedMonth]
+    () => buildDashboardStats(scopedCollections, isSuperuser, selectedMonth),
+    [scopedCollections, isSuperuser, selectedMonth]
   );
 
   const finance = useMemo<DashboardFinancialMonth>(
-    () => buildDashboardFinancialMonth(collections, selectedMonth),
-    [collections, selectedMonth]
+    () => buildDashboardFinancialMonth(scopedCollections, selectedMonth),
+    [scopedCollections, selectedMonth]
   );
 
   const schoolDistribution = useMemo<DashboardSchoolSlice[]>(
-    () => buildDashboardSchoolDistribution(collections),
-    [collections]
+    () => buildDashboardSchoolDistribution(scopedCollections),
+    [scopedCollections]
   );
 
   const studentGrowth = useMemo<DashboardStudentGrowthPoint[]>(
-    () => buildDashboardStudentGrowth(collections),
-    [collections]
+    () => buildDashboardStudentGrowth(scopedCollections),
+    [scopedCollections]
   );
 
 // Memoizes the stat cards derived value.
@@ -97,6 +117,8 @@ export const useDashboardData = (role: DashboardRole, selectedMonth: Date): UseD
 
   return {
     loading,
+    scopeOptions,
+    scopedCollections,
     stats,
     statCards,
     finance,

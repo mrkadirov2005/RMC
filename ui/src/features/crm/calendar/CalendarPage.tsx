@@ -18,7 +18,7 @@ import { WeekView } from './WeekView';
 import { DayModal } from './DayModal';
 import { DetailsModal } from './DetailsModal';
 import { useCalendarData } from './hooks/useCalendarData';
-import { buildCalendarDays, getConfiguredLessonDurationMinutes, toLocalDateKey } from './utils';
+import { buildCalendarDays, CALENDAR_DEFAULT_VIEW_KEY, getConfiguredLessonDurationMinutes, toLocalDateKey } from './utils';
 import type { ClassItem, AttendanceItem, GradeItem, SessionItem, StudentItem } from './types';
 import { RoomFilter } from './components/RoomFilter';
 import { CalendarPageHeader } from './components/CalendarPageHeader';
@@ -39,7 +39,13 @@ const CalendarPage = () => {
   const today = new Date();
   const [displayMonth, setDisplayMonth] = useState(today.getMonth());
   const [displayYear, setDisplayYear] = useState(today.getFullYear());
-  const [calendarView, setCalendarView] = useState<'month' | 'week'>('month');
+  const [calendarView, setCalendarView] = useState<'month' | 'week'>(() => {
+    try {
+      return localStorage.getItem(CALENDAR_DEFAULT_VIEW_KEY) === 'week' ? 'week' : 'month';
+    } catch {
+      return 'month';
+    }
+  });
   const [weekStartDate, setWeekStartDate] = useState(() => {
     const d = new Date(today);
     d.setDate(d.getDate() - d.getDay());
@@ -384,7 +390,7 @@ const CalendarPage = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
+    <div className="mx-auto max-w-7xl px-4 py-6">
       <CalendarPageHeader today={today} />
 
       <RoomFilter
@@ -400,8 +406,9 @@ const CalendarPage = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <Card>
-          <CardHeader>
+        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+          <CardHeader className="bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
             <CalendarHeader
               calendarView={calendarView}
               displayMonth={displayMonth}
@@ -414,7 +421,7 @@ const CalendarPage = () => {
               onNextWeek={handleNextWeek}
             />
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {calendarView === 'month' ? (
               <MonthView
                 weeks={weeks}
@@ -450,7 +457,7 @@ const CalendarPage = () => {
             )}
 
 
-            <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
+            <div className="mt-4 flex flex-wrap gap-4 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-xs text-muted-foreground dark:border-border dark:bg-transparent">
               <div className="flex items-center gap-2">
                 <span className="inline-block h-3 w-3 rounded border border-amber-400/80 bg-amber-50/60" />
                 Today

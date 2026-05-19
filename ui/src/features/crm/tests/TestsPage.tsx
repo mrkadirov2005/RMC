@@ -15,6 +15,8 @@ import {
   CheckCircle,
   X,
   Loader2,
+  ClipboardList,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -63,6 +65,13 @@ import {
   selectTestsLoading,
   selectTestsStats,
 } from '../../../store/selectors';
+import {
+  formatTestType,
+  getTestTypeBadgeClass,
+  getTestTypeTheme,
+  testStatCardClass,
+  testSurfaceClass,
+} from './testVisuals';
 
 interface Test {
   test_id: number;
@@ -114,26 +123,6 @@ const TestsPage = () => {
     }
   };
 
-// Returns test type color.
-  const getTestTypeColor = (type: string) => {
-    const colors: { [key: string]: string } = {
-      multiple_choice: 'bg-indigo-500',
-      essay: 'bg-rose-500',
-      short_answer: 'bg-sky-500',
-      true_false: 'bg-emerald-500',
-      form_filling: 'bg-pink-500',
-      reading_passage: 'bg-purple-500',
-      writing: 'bg-pink-500',
-      matching: 'bg-teal-500',
-    };
-    return colors[type] || 'bg-gray-500';
-  };
-
-// Formats test type.
-  const formatTestType = (type: string) => {
-    return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
   const testTypes = [
     { value: 'all', label: 'All Types' },
     { value: 'multiple_choice', label: 'Multiple Choice' },
@@ -155,24 +144,33 @@ const TestsPage = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Tests Management</h1>
-          <p className="text-sm text-muted-foreground">
-            Create, manage, and grade tests for your students
-          </p>
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
+        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
+              <ClipboardList className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Tests Management</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Create, assign, monitor, and grade student assessments.
+              </p>
+            </div>
+          </div>
+          {(user?.userType === 'superuser' || user?.userType === 'teacher') && (
+            <Button
+              onClick={() => navigate('/tests/create')}
+              className="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-white hover:from-indigo-600 hover:to-purple-600"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Create New Test
+            </Button>
+          )}
         </div>
-        {(user?.userType === 'superuser' || user?.userType === 'teacher') && (
-          <Button
-            onClick={() => navigate('/tests/create')}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white px-6 py-3"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create New Test
-          </Button>
-        )}
       </div>
 
       {error && (
@@ -192,37 +190,50 @@ const TestsPage = () => {
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-primary">{stats.total}</p>
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Card className={cn(testStatCardClass, 'border-indigo-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
+              <FileQuestion className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-indigo-700 dark:text-primary">{stats.total}</p>
             <p className="text-sm text-muted-foreground">Total Tests</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-green-600">{stats.active}</p>
+        <Card className={cn(testStatCardClass, 'border-emerald-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
+              <CheckCircle className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-emerald-700 dark:text-green-500">{stats.active}</p>
             <p className="text-sm text-muted-foreground">Active Tests</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-muted-foreground">{stats.inactive}</p>
+        <Card className={cn(testStatCardClass, 'border-slate-200 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-muted dark:text-muted-foreground">
+              <X className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-slate-700 dark:text-muted-foreground">{stats.inactive}</p>
             <p className="text-sm text-muted-foreground">Inactive Tests</p>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="text-center pt-6">
-            <p className="text-4xl font-bold text-blue-600">{stats.totalSubmissions}</p>
+        <Card className={cn(testStatCardClass, 'border-sky-100 dark:border-border')}>
+          <CardContent className="pt-5">
+            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-muted dark:text-muted-foreground">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <p className="text-4xl font-bold text-sky-700 dark:text-blue-500">{stats.totalSubmissions}</p>
             <p className="text-sm text-muted-foreground">Total Submissions</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Filters and Search */}
-      <Card className="mb-6">
+      <Card className={testSurfaceClass}>
+        <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
         <Tabs value={tabValue} onValueChange={(value) => dispatch(setTestsPageTabValue(value as 'all' | 'active' | 'inactive'))}>
-          <div className="border-b">
+          <div className="border-b bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
             <TabsList className="bg-transparent h-auto p-0">
               <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
                 All Tests ({stats.total})
@@ -267,8 +278,8 @@ const TestsPage = () => {
 
       {/* Tests Grid */}
       {filteredTests.length === 0 ? (
-        <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-border">
-          <FileQuestion className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
+        <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50/80 via-white to-emerald-50/70 py-16 text-center dark:border-border dark:bg-muted/30 dark:bg-none">
+          <FileQuestion className="mx-auto mb-4 h-16 w-16 text-indigo-300 dark:text-muted-foreground/50" />
           <h3 className="text-lg font-medium text-muted-foreground">No tests found</h3>
           <p className="text-sm text-muted-foreground mb-6">
             {searchTerm || filterType !== 'all'
@@ -286,23 +297,25 @@ const TestsPage = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {filteredTests.map((test) => (
-            <Card
-              key={test.test_id}
-              className="h-full cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-              onClick={() => navigate(`/tests/${test.test_id}`)}
-            >
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-3">
-                  <span
-                    className={cn(
-                      'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium text-white',
-                      getTestTypeColor(test.test_type)
-                    )}
-                  >
-                    {formatTestType(test.test_type)}
-                  </span>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
+            {filteredTests.map((test) => (
+              <Card
+                key={test.test_id}
+                className={cn(
+                  'h-full cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm',
+                  getTestTypeTheme(test.test_type).panel,
+                  'dark:bg-none'
+                )}
+                onClick={() => navigate(`/tests/${test.test_id}`)}
+              >
+                <div className={cn('h-1', getTestTypeTheme(test.test_type).dot)} />
+                <CardContent className="pt-6">
+                  <div className="flex justify-between items-start mb-3">
+                    <span
+                      className={getTestTypeBadgeClass(test.test_type)}
+                    >
+                      {formatTestType(test.test_type)}
+                    </span>
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="outline"
@@ -357,7 +370,7 @@ const TestsPage = () => {
                   </div>
                 </div>
 
-                <h3 className="text-lg font-semibold mb-1">{test.test_name}</h3>
+                <h3 className="mb-1 text-lg font-semibold text-slate-950 dark:text-foreground">{test.test_name}</h3>
 
                 {test.subject_name && (
                   <p className="text-sm text-primary mb-1">{test.subject_name}</p>
@@ -369,7 +382,7 @@ const TestsPage = () => {
                   </p>
                 )}
 
-                <div className="flex gap-4 mt-3 flex-wrap">
+                <div className="mt-4 flex flex-wrap gap-2 rounded-lg border border-white/70 bg-white/65 p-3 dark:border-border dark:bg-muted/20">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
                     <span className="text-sm text-muted-foreground">{test.duration_minutes} min</span>
@@ -380,13 +393,19 @@ const TestsPage = () => {
                   </div>
                 </div>
 
-                <div className="flex gap-4 mt-2">
+                <div className="mt-3 flex gap-4">
                   <span className="text-xs text-muted-foreground">
                     {test.question_count || 0} questions
                   </span>
                   <span className="text-xs text-muted-foreground">
                     {test.submission_count || 0} submissions
                   </span>
+                  {Number(test.submission_count || 0) > 0 && (
+                    <span className="inline-flex items-center gap-1 text-xs text-indigo-700 dark:text-primary">
+                      <Sparkles className="h-3 w-3" />
+                      Has activity
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>

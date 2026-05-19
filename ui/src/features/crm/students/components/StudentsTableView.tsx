@@ -98,21 +98,27 @@ export const StudentsTableView = ({
     return (
       <>
         {loading ? (
-          <Card><CardContent className="py-12 text-center">Loading...</CardContent></Card>
+          <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center">Loading...</CardContent></Card>
         ) : students.length === 0 ? (
-          <Card><CardContent className="py-12 text-center text-muted-foreground">{emptyText}</CardContent></Card>
+          <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center text-muted-foreground">{emptyText}</CardContent></Card>
         ) : (
           <div className={viewMode === 'compact' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5'}>
-            {students.map((student) => (
+            {students.map((student, index) => (
               <Card
                 key={student.student_id || student.id}
                 className={cn(
-                  'transition-all hover:shadow-md',
-                  viewMode === 'cards' && 'overflow-hidden border-border/60'
+                  'overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0',
+                  viewMode === 'cards' && 'border-border/60'
                 )}
               >
                 {viewMode === 'cards' && (
-                  <div className="bg-gradient-to-br from-indigo-500 to-violet-500 p-5 text-white">
+                  <div className={cn(
+                    'p-5 text-white',
+                    index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
+                    index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
+                    index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
+                    index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
+                  )}>
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <h3 className="font-semibold text-lg">{student.first_name} {student.last_name}</h3>
@@ -127,7 +133,9 @@ export const StudentsTableView = ({
                 <CardContent className={viewMode === 'compact' ? 'p-3' : 'p-5 space-y-4'}>
                   {viewMode === 'compact' ? (
                     <div className="flex items-center gap-3">
-                      <Folder className="h-8 w-8 shrink-0 text-primary" />
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-100 to-emerald-100 text-sky-700 dark:bg-muted dark:bg-none dark:text-primary">
+                        <Folder className="h-5 w-5" />
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{student.first_name} {student.last_name}</p>
                         <p className="truncate text-xs text-muted-foreground">{student.email || student.phone}</p>
@@ -159,9 +167,10 @@ export const StudentsTableView = ({
   }
 
   return (
-    <Card>
+    <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+      <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-slate-50/90 dark:bg-transparent">
           <TableRow>
             <TableHead>Enrollment #</TableHead>
             <TableHead>Name</TableHead>
@@ -191,10 +200,16 @@ export const StudentsTableView = ({
             </TableRow>
           ) : (
             students.map((student) => (
-              <TableRow key={student.student_id || student.id}>
-                <TableCell className="font-mono text-sm">{student.enrollment_number}</TableCell>
+              <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{student.enrollment_number}</TableCell>
                 <TableCell className="font-medium">
-                  {student.first_name} {student.last_name}
+                  <button
+                    type="button"
+                    className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
+                    onClick={() => onView(student.student_id || student.id || 0)}
+                  >
+                    {student.first_name} {student.last_name}
+                  </button>
                 </TableCell>
                 <TableCell className="text-muted-foreground">{student.email}</TableCell>
                 <TableCell className="text-muted-foreground">{student.phone}</TableCell>

@@ -61,7 +61,8 @@ export const StudentsFilterPanel = ({
   levelOptions,
   addressOptions,
 }: Props) => !open ? null : (
-  <Card className="mb-5">
+  <Card className="mb-5 overflow-hidden border-cyan-100 bg-gradient-to-br from-white via-cyan-50/50 to-amber-50/35 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.55)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+    <div className="h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400 dark:hidden" />
     <CardContent className="py-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>

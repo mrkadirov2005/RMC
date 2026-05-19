@@ -19,13 +19,16 @@ export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthCh
   });
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="overflow-hidden border-indigo-100/80 bg-gradient-to-br from-white via-indigo-50/45 to-cyan-50/55 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm dark:hover:shadow-md">
+      <CardHeader className="relative flex flex-row items-center justify-between">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
         <div>
-          <CardTitle className="text-base">Student Growth</CardTitle>
+          <CardTitle className="text-base text-slate-950 dark:text-card-foreground">Student Growth</CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">Growth according to student registry dates.</p>
         </div>
-        <TrendingUp className="h-5 w-5 text-muted-foreground" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sky-50 text-sky-700 dark:bg-transparent dark:text-muted-foreground">
+          <TrendingUp className="h-5 w-5" />
+        </div>
       </CardHeader>
       <CardContent>
         {!hasData ? (
@@ -34,7 +37,7 @@ export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthCh
           </div>
         ) : (
           <div className="space-y-5">
-            <div className="h-56 rounded-lg border bg-muted/20 p-4">
+            <div className="h-56 rounded-lg border border-indigo-100 bg-gradient-to-b from-white via-cyan-50/60 to-emerald-50/40 p-4 shadow-inner dark:border-border dark:bg-muted/20 dark:bg-none dark:shadow-none">
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="h-full w-full overflow-visible">
                 <polyline
                   points={chartPoints.join(' ')}
@@ -66,8 +69,8 @@ export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthCh
               {points.slice(-6).map((point) => {
                 const height = Math.max((point.newStudents / maxNew) * 100, point.newStudents > 0 ? 8 : 0);
                 return (
-                  <div key={point.label} className="rounded-lg border p-2">
-                    <div className="flex h-16 items-end rounded bg-muted/40 px-2">
+                  <div key={point.label} className="rounded-lg border border-cyan-100 bg-white/85 p-2 shadow-sm dark:border-border dark:bg-card dark:shadow-none">
+                    <div className="flex h-16 items-end rounded bg-gradient-to-b from-sky-50 to-emerald-50 px-2 dark:bg-muted/40 dark:bg-none">
                       <div
                         className="w-full rounded-t bg-emerald-500"
                         style={{ height: `${height}%` }}

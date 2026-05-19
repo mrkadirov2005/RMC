@@ -3,20 +3,67 @@
 import { ChevronLeft, ChevronRight, CreditCard, TrendingUp, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import type { DashboardFinancialMonth } from '../types';
+import type { DashboardFinancialMonth, DashboardStatCard } from '../types';
 
 interface DashboardFinanceAnalysisProps {
   finance: DashboardFinancialMonth;
   onPreviousMonth: () => void;
   onNextMonth: () => void;
+  onMetricClick?: (card: DashboardStatCard) => void;
 }
 
 const formatMoney = (value: number) => `$${value.toLocaleString()}`;
+
+const financeMetrics: Array<{
+  label: string;
+  valueKey: keyof Pick<
+    DashboardFinancialMonth,
+    'expectedPayments' | 'paidPayments' | 'remainingPayments' | 'outstandingDebt'
+  >;
+  detailsType: NonNullable<DashboardStatCard['detailsType']>;
+  labelClass: string;
+  valueClass: string;
+  shellClass: string;
+}> = [
+  {
+    label: 'Expected',
+    valueKey: 'expectedPayments',
+    detailsType: 'expectedPayments',
+    labelClass: 'text-slate-500 dark:text-muted-foreground',
+    valueClass: 'text-slate-950 dark:text-card-foreground',
+    shellClass: 'border-slate-200 bg-white/80 dark:border-border dark:bg-muted/30',
+  },
+  {
+    label: 'Collected',
+    valueKey: 'paidPayments',
+    detailsType: 'collectedPayments',
+    labelClass: 'text-emerald-700 dark:text-emerald-300',
+    valueClass: 'text-emerald-700 dark:text-emerald-300',
+    shellClass: 'border-emerald-100 bg-emerald-50/80 dark:border-border dark:bg-emerald-500/5',
+  },
+  {
+    label: 'Remaining',
+    valueKey: 'remainingPayments',
+    detailsType: 'remainingPayments',
+    labelClass: 'text-rose-700 dark:text-rose-300',
+    valueClass: 'text-rose-700 dark:text-rose-300',
+    shellClass: 'border-rose-100 bg-rose-50/80 dark:border-border dark:bg-rose-500/5',
+  },
+  {
+    label: 'Outstanding debt',
+    valueKey: 'outstandingDebt',
+    detailsType: 'outstandingDebts',
+    labelClass: 'text-amber-700 dark:text-amber-300',
+    valueClass: 'text-amber-700 dark:text-amber-300',
+    shellClass: 'border-amber-100 bg-amber-50/80 dark:border-border dark:bg-amber-500/5',
+  },
+];
 
 export const DashboardFinanceAnalysis = ({
   finance,
   onPreviousMonth,
   onNextMonth,
+  onMetricClick,
 }: DashboardFinanceAnalysisProps) => {
   const maxPaid = Math.max(...finance.buckets.map((bucket) => bucket.paid), 1);
   const unpaidRate = finance.expectedPayments > 0
@@ -24,18 +71,21 @@ export const DashboardFinanceAnalysis = ({
     : 0;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <Card className="overflow-hidden border-cyan-100/80 bg-gradient-to-br from-white via-cyan-50/45 to-emerald-50/45 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm dark:hover:shadow-md">
+      <CardHeader className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400 dark:hidden" />
         <div>
-          <CardTitle className="flex items-center gap-2 text-base">
-            <CreditCard className="h-5 w-5 text-cyan-600" />
+          <CardTitle className="flex items-center gap-2 text-base text-slate-950 dark:text-card-foreground">
+            <span className="flex h-9 w-9 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 dark:h-auto dark:w-auto dark:bg-transparent dark:text-cyan-600">
+              <CreditCard className="h-5 w-5" />
+            </span>
             Financial Analysis
           </CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
             Expected tuition, collected payments, and remaining balance for the selected month.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-1 dark:border-transparent dark:bg-transparent dark:p-0">
           <Button type="button" variant="outline" size="icon" onClick={onPreviousMonth} aria-label="Previous month">
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -47,28 +97,28 @@ export const DashboardFinanceAnalysis = ({
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <div className="rounded-lg border bg-muted/30 p-3">
-            <p className="text-xs text-muted-foreground">Expected</p>
-            <p className="mt-1 text-xl font-bold">{formatMoney(finance.expectedPayments)}</p>
-          </div>
-          <div className="rounded-lg border bg-emerald-500/5 p-3">
-            <p className="text-xs text-emerald-700 dark:text-emerald-300">Collected</p>
-            <p className="mt-1 text-xl font-bold text-emerald-700 dark:text-emerald-300">
-              {formatMoney(finance.paidPayments)}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-rose-500/5 p-3">
-            <p className="text-xs text-rose-700 dark:text-rose-300">Remaining</p>
-            <p className="mt-1 text-xl font-bold text-rose-700 dark:text-rose-300">
-              {formatMoney(finance.remainingPayments)}
-            </p>
-          </div>
-          <div className="rounded-lg border bg-amber-500/5 p-3">
-            <p className="text-xs text-amber-700 dark:text-amber-300">Outstanding debt</p>
-            <p className="mt-1 text-xl font-bold text-amber-700 dark:text-amber-300">
-              {formatMoney(finance.outstandingDebt)}
-            </p>
-          </div>
+          {financeMetrics.map((metric) => (
+            <button
+              key={metric.detailsType}
+              type="button"
+              className={`rounded-lg border p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-none dark:hover:translate-y-0 dark:hover:shadow-none ${metric.shellClass}`}
+              onClick={() =>
+                onMetricClick?.({
+                  label: metric.label,
+                  value: formatMoney(Number(finance[metric.valueKey]) || 0),
+                  icon: CreditCard,
+                  accent: 'from-cyan-500 to-emerald-500',
+                  detailsType: metric.detailsType,
+                })
+              }
+            >
+              <p className={`text-xs ${metric.labelClass}`}>{metric.label}</p>
+              <p className={`mt-1 text-xl font-bold ${metric.valueClass}`}>
+                {formatMoney(Number(finance[metric.valueKey]) || 0)}
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-sky-700 dark:text-muted-foreground">View details</p>
+            </button>
+          ))}
         </div>
 
         <div>
@@ -83,7 +133,7 @@ export const DashboardFinanceAnalysis = ({
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1fr_280px]">
-          <div className="rounded-lg border p-4">
+          <div className="rounded-lg border border-cyan-100 bg-gradient-to-b from-white via-sky-50/70 to-emerald-50/45 p-4 shadow-sm dark:border-border dark:bg-none dark:shadow-none">
             <div className="mb-4 flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold">Collections by month segment</p>
@@ -96,7 +146,7 @@ export const DashboardFinanceAnalysis = ({
                 const height = Math.max((bucket.paid / maxPaid) * 100, bucket.paid > 0 ? 8 : 0);
                 return (
                   <div key={bucket.label} className="flex h-full flex-col justify-end gap-2">
-                    <div className="flex flex-1 items-end rounded-md bg-muted/50 px-2">
+                    <div className="flex flex-1 items-end rounded-md bg-white/80 px-2 shadow-inner dark:bg-muted/50 dark:shadow-none">
                       <div
                         className="w-full rounded-t-md bg-gradient-to-t from-cyan-600 to-emerald-500 transition-all"
                         style={{ height: `${height}%` }}
@@ -114,8 +164,8 @@ export const DashboardFinanceAnalysis = ({
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <div className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-500/10 text-emerald-600">
+            <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50/70 p-3 shadow-sm dark:border-border dark:bg-transparent dark:shadow-none">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-600">
                 <Users className="h-4 w-4" />
               </div>
               <div>
@@ -123,8 +173,8 @@ export const DashboardFinanceAnalysis = ({
                 <p className="text-xs text-muted-foreground">Covered their expected monthly amount</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 rounded-lg border p-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-rose-500/10 text-rose-600">
+            <div className="flex items-center gap-3 rounded-lg border border-rose-100 bg-rose-50/70 p-3 shadow-sm dark:border-border dark:bg-transparent dark:shadow-none">
+              <div className="flex h-9 w-9 items-center justify-center rounded-md bg-rose-100 text-rose-700 dark:bg-rose-500/10 dark:text-rose-600">
                 <Users className="h-4 w-4" />
               </div>
               <div>

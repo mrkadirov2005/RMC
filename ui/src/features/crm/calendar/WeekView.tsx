@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import type { ClassItem, CalendarDay, SessionItem } from './types';
 import {
   getConfiguredLessonDurationMinutes,
+  getCalendarGroupColorTheme,
   getTimeSlots,
   parseTimeToMinutes,
   toLocalDateKey,
@@ -107,10 +108,10 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
   return (
     <>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
         <div className="inline-block min-w-full">
-          <div className="flex gap-0 border-b">
-            <div className="w-20 flex-shrink-0 border-r bg-muted/50 p-2 text-center text-xs font-semibold">
+          <div className="flex gap-0 border-b border-slate-200 dark:border-border">
+            <div className="w-20 flex-shrink-0 border-r border-slate-200 bg-slate-50/90 p-2 text-center text-xs font-semibold dark:border-border dark:bg-muted/50">
               Time
             </div>
             {weekDays.map((day) => {
@@ -123,9 +124,9 @@ export const WeekView: React.FC<WeekViewProps> = ({
                 <div
                   key={day.isoDate}
                   className={cn(
-                    'flex-1 min-w-[140px] border-r p-3 text-center',
-                    isToday ? 'bg-amber-50/60' : 'bg-background',
-                    !day.isCurrentMonth && 'bg-muted/30'
+                    'flex-1 min-w-[140px] border-r border-slate-200 p-3 text-center dark:border-border',
+                    isToday ? 'bg-gradient-to-br from-amber-50 to-white dark:bg-amber-950/20 dark:bg-none' : 'bg-white dark:bg-background',
+                    !day.isCurrentMonth && 'bg-slate-50/70 dark:bg-muted/30'
                   )}
                 >
                   <div className="text-xs font-semibold uppercase text-muted-foreground">
@@ -144,8 +145,8 @@ export const WeekView: React.FC<WeekViewProps> = ({
             const slotEndMinutes = slotStartMinutes + SLOT_MINUTES;
 
             return (
-              <div key={timeSlot} className="flex gap-0 border-b">
-                <div className="w-20 flex-shrink-0 border-r bg-muted/50 p-2 text-center text-xs font-medium">
+              <div key={timeSlot} className="flex gap-0 border-b border-slate-200 dark:border-border">
+                <div className="w-20 flex-shrink-0 border-r border-slate-200 bg-slate-50/90 p-2 text-center text-xs font-medium dark:border-border dark:bg-muted/50">
                   {timeSlot}
                 </div>
 
@@ -180,9 +181,9 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     <div
                       key={`${day.isoDate}-${timeSlot}`}
                       className={cn(
-                        'flex-1 min-w-[140px] border-r p-2 relative h-20 overflow-visible',
-                        isToday ? 'bg-amber-50/30' : 'bg-background',
-                        !day.isCurrentMonth && 'bg-muted/30',
+                        'flex-1 min-w-[140px] border-r border-slate-200 p-2 relative h-20 overflow-visible transition-colors dark:border-border',
+                        isToday ? 'bg-amber-50/40 dark:bg-amber-950/20' : 'bg-white hover:bg-sky-50/50 dark:bg-background dark:hover:bg-muted/40',
+                        !day.isCurrentMonth && 'bg-slate-50/70 dark:bg-muted/30',
                         hasSessions && 'cursor-pointer'
                       )}
                       onClick={() => {
@@ -195,7 +196,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                         {recurringItems.map((item, idx) => (
                           <div
                             key={`recurring-${day.isoDate}-${timeSlot}-${idx}`}
-                            className="mb-1 rounded-md border border-amber-200 bg-amber-50/50 px-2 py-1 text-[0.6rem] font-semibold leading-tight text-amber-900"
+                            className="mb-1 rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1 text-[0.6rem] font-semibold leading-tight text-amber-900 shadow-sm dark:bg-amber-500/10 dark:text-amber-300"
                           >
                             <div className="font-bold">Regular Class</div>
                             <div>{item.room_number}</div>
@@ -210,16 +211,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
                           return (
                             <div
                               key={session.session_id}
-                              className={cn(
-                                'pointer-events-none relative z-20 rounded-md border p-1 text-[0.65rem] font-semibold shadow-sm',
-                                isSuperuser
-                                  ? 'border-sky-300 bg-sky-100 text-sky-900'
-                                  : 'border-primary/30 bg-primary/10 text-primary'
-                              )}
+                              className={cn('pointer-events-none relative z-20 rounded-md border p-1 text-[0.65rem] font-semibold shadow-sm', getCalendarGroupColorTheme(cls.class_id || cls.id).light, getCalendarGroupColorTheme(cls.class_id || cls.id).dark)}
                               style={{ minHeight: blockHeight }}
                               title={`${cls.class_name} - ${session.start_time} to ${session.end_time}`}
                             >
-                              <div className="truncate font-bold">{cls.class_name}</div>
+                              <div className="flex items-center gap-1.5 truncate font-bold">
+                                <span className={cn('h-2 w-2 shrink-0 rounded-full', getCalendarGroupColorTheme(cls.class_id || cls.id).dot)} />
+                                <span className="truncate">{cls.class_name}</span>
+                              </div>
                               <div className="text-[0.6rem] opacity-80">
                                 {session.start_time} - {session.end_time}
                               </div>

@@ -1,23 +1,38 @@
 // Source file for the dashboard area in the crm feature.
 
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useAppSelector } from '../hooks';
 import {
   DashboardFinanceAnalysis,
   DashboardHeader,
   DashboardLoadingState,
   DashboardSchoolsOverview,
+  DashboardScopeSelector,
+  DashboardStatDetailsDialog,
   DashboardStatCards,
   DashboardStudentGrowthChart,
 } from './components';
 import { useDashboardData } from './hooks/useDashboardData';
+import type { DashboardScope, DashboardStatCard } from './types';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';
   const [selectedMonth, setSelectedMonth] = useState(() => new Date());
-  const { loading, statCards, finance, schoolDistribution, studentGrowth } = useDashboardData(role, selectedMonth);
+  const [scope, setScope] = useState<DashboardScope>({ type: 'all', value: 'all' });
+  const [detailsCard, setDetailsCard] = useState<DashboardStatCard | null>(null);
+  const { loading, scopeOptions, scopedCollections, statCards, finance, schoolDistribution, studentGrowth } = useDashboardData(
+    role,
+    selectedMonth,
+    scope
+  );
+
+  useEffect(() => {
+    if (scope.type === 'all' || scope.value === 'all') return;
+    const stillAvailable = scopeOptions[scope.type].some((option) => option.value === scope.value);
+    if (!stillAvailable) setScope({ type: scope.type, value: 'all' });
+  }, [scope, scopeOptions]);
 
   const goToPreviousMonth = () => {
     setSelectedMonth((current) => new Date(current.getFullYear(), current.getMonth() - 1, 1));
@@ -28,19 +43,32 @@ const Dashboard = memo(() => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
       <DashboardHeader firstName={user?.first_name} role={role} loading={loading} />
 
       {loading ? (
         <DashboardLoadingState />
       ) : (
         <>
-          <DashboardStatCards cards={statCards} />
+          <DashboardScopeSelector scope={scope} options={scopeOptions} onScopeChange={setScope} />
+
+          <DashboardStatCards cards={statCards} onCardClick={setDetailsCard} />
+
+          <DashboardStatDetailsDialog
+            card={detailsCard}
+            collections={scopedCollections}
+            selectedMonth={selectedMonth}
+            open={Boolean(detailsCard)}
+            onOpenChange={(open) => {
+              if (!open) setDetailsCard(null);
+            }}
+          />
 
           <DashboardFinanceAnalysis
             finance={finance}
             onPreviousMonth={goToPreviousMonth}
             onNextMonth={goToNextMonth}
+            onMetricClick={setDetailsCard}
           />
 
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">

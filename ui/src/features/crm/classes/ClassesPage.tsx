@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal, Search, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal, Search, X, BookOpen, Users, MapPin, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -100,17 +100,93 @@ const ClassesPage = () => {
         .some((value) => String(value).toLowerCase().includes(search));
     });
   }, [searchTerm, state.items, teacherFilter]);
+  const totalCapacity = filteredClasses.reduce((sum, cls) => sum + (Number(cls.capacity) || 0), 0);
+  const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
+  const monthlyTuition = filteredClasses.reduce((sum, cls) => sum + (Number(cls.payment_amount) || 0), 0);
+  const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
+  const summaryCards = [
+    {
+      label: 'Classes shown',
+      value: filteredClasses.length.toLocaleString(),
+      detail: `${scheduledClasses.toLocaleString()} scheduled`,
+      icon: BookOpen,
+      shell: 'from-indigo-50 via-white to-sky-50 border-indigo-100',
+      iconShell: 'from-indigo-500 to-sky-500',
+      text: 'text-indigo-950',
+    },
+    {
+      label: 'Capacity',
+      value: totalCapacity.toLocaleString(),
+      detail: 'Total seats',
+      icon: Users,
+      shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
+      iconShell: 'from-emerald-500 to-teal-500',
+      text: 'text-emerald-950',
+    },
+    {
+      label: 'Rooms',
+      value: roomsInView.toLocaleString(),
+      detail: 'In current view',
+      icon: MapPin,
+      shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
+      iconShell: 'from-amber-500 to-orange-500',
+      text: 'text-amber-950',
+    },
+    {
+      label: 'Monthly tuition',
+      value: `$${monthlyTuition.toLocaleString()}`,
+      detail: 'Listed amounts',
+      icon: DollarSign,
+      shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
+      iconShell: 'from-cyan-500 to-fuchsia-500',
+      text: 'text-slate-950',
+    },
+  ];
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-3xl font-bold">Classes Management</h1>
-        <div className="flex items-center gap-2">
-          <ViewModeToggle value={viewMode} onChange={setViewMode} />
-          <Button onClick={() => handleOpenModal()}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Class
-          </Button>
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
+        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Classes Management</h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Organize class groups, schedules, rooms, tuition, and session generation.
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
+            <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-5 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Class
+            </Button>
+          </div>
+        </div>
+
+        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {summaryCards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.label} className={`rounded-lg border bg-gradient-to-br ${card.shell} p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">{card.label}</p>
+                    <p className={`mt-1 text-2xl font-bold ${card.text} dark:text-card-foreground`}>{card.value}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${card.iconShell} text-white shadow-md shadow-slate-900/10 dark:shadow-none`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -120,7 +196,7 @@ const ClassesPage = () => {
         </Alert>
       )}
 
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 rounded-lg border border-sky-100 bg-gradient-to-r from-white via-sky-50/60 to-emerald-50/40 p-3 shadow-sm lg:flex-row lg:items-center dark:border-border dark:bg-card dark:bg-none dark:shadow-none">
         <div className="relative max-w-xl flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -128,7 +204,7 @@ const ClassesPage = () => {
             placeholder="Search classes by name, code, schedule, room..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-10"
+            className="border-white/80 bg-white/90 pl-10 pr-10 shadow-sm dark:border-input dark:bg-background dark:shadow-none"
           />
           {searchTerm && (
             <Button
@@ -143,7 +219,7 @@ const ClassesPage = () => {
           )}
         </div>
         <Select value={teacherFilter} onValueChange={setTeacherFilter}>
-          <SelectTrigger className="w-full lg:w-[260px]">
+          <SelectTrigger className="w-full border-white/80 bg-white/90 shadow-sm lg:w-[260px] dark:border-input dark:bg-background dark:shadow-none">
             <SelectValue placeholder="Filter by teacher" />
           </SelectTrigger>
           <SelectContent>
@@ -170,9 +246,10 @@ const ClassesPage = () => {
           <AlertDescription>No classes match your search.</AlertDescription>
         </Alert>
       ) : viewMode === 'list' ? (
-        <Card>
+        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
           <Table>
-            <TableHeader>
+            <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
                 <TableHead>Class</TableHead>
                 <TableHead>Code</TableHead>
@@ -186,9 +263,17 @@ const ClassesPage = () => {
             </TableHeader>
             <TableBody>
               {filteredClasses.map((cls) => (
-                <TableRow key={cls.class_id || cls.id}>
-                  <TableCell className="font-medium">{cls.class_name}</TableCell>
-                  <TableCell className="font-mono text-sm">{cls.class_code}</TableCell>
+                <TableRow key={cls.class_id || cls.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                  <TableCell className="font-medium">
+                    <button
+                      type="button"
+                      className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
+                      onClick={() => handleViewDetails(cls)}
+                    >
+                      {cls.class_name}
+                    </button>
+                  </TableCell>
+                  <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{cls.class_code}</TableCell>
                   <TableCell>Level {cls.level}</TableCell>
                   <TableCell>{formatSchedule(cls)}</TableCell>
                   <TableCell>{cls.capacity}</TableCell>
@@ -218,11 +303,15 @@ const ClassesPage = () => {
       ) : viewMode === 'compact' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {filteredClasses.map((cls) => (
-            <Card key={cls.class_id || cls.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => handleViewDetails(cls)}>
+            <Card
+              key={cls.class_id || cls.id}
+              className="cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
+              onClick={() => handleViewDetails(cls)}
+            >
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10">
-                    <CalendarDays className="h-5 w-5 text-primary" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
+                    <CalendarDays className="h-5 w-5" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{cls.class_name}</p>
@@ -236,14 +325,19 @@ const ClassesPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClasses.map((cls) => (
+          {filteredClasses.map((cls, index) => (
             <Card
               key={cls.class_id || cls.id}
-              className="flex flex-col h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-2"
+              className="flex h-full flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
             >
-              <CardHeader className="bg-primary text-primary-foreground rounded-t-lg">
+              <CardHeader className={
+                index % 4 === 0 ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white' :
+                index % 4 === 1 ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white' :
+                index % 4 === 2 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' :
+                'bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-white'
+              }>
                 <CardTitle className="text-lg">{cls.class_name}</CardTitle>
-                <p className="text-sm text-primary-foreground/80">{cls.class_code}</p>
+                <p className="text-sm text-white/80">{cls.class_code}</p>
               </CardHeader>
               <CardContent className="flex-1 pt-4 space-y-3">
                 <div>
@@ -269,7 +363,7 @@ const ClassesPage = () => {
                   </p>
                 </div>
               </CardContent>
-              <div className="px-4 pb-4 pt-0 flex justify-between items-center">
+              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
                 <Button variant="ghost" size="sm" onClick={() => handleViewDetails(cls)}>
                   <Info className="mr-1 h-4 w-4" />
                   Details

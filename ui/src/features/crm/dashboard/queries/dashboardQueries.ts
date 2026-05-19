@@ -12,6 +12,9 @@ import type {
   DashboardFinancialMonth,
   DashboardFocusItem,
   DashboardRecord,
+  DashboardScope,
+  DashboardScopeOption,
+  DashboardScopeOptions,
   DashboardSchoolSlice,
   DashboardStatCard,
   DashboardStats,
@@ -88,6 +91,182 @@ const isSameMonth = (date: Date, month: Date) =>
 const getSchoolLabel = (student: DashboardRecord) => {
   const raw = getRecordString(student, 'school_name')?.trim();
   return raw && raw.length > 0 ? raw : 'Unknown school';
+};
+
+const getStudentId = (student: DashboardRecord) => getRecordNumber(student, 'student_id') || getRecordNumber(student, 'id');
+
+const getTeacherId = (item: DashboardRecord) => getRecordNumber(item, 'teacher_id') || getRecordNumber(item, 'id');
+
+const getClassId = (item: DashboardRecord) => getRecordNumber(item, 'class_id') || getRecordNumber(item, 'id');
+
+const getFullName = (item: DashboardRecord, fallback: string) => {
+  const firstName = getRecordString(item, 'first_name')?.trim();
+  const lastName = getRecordString(item, 'last_name')?.trim();
+  const name = [firstName, lastName].filter(Boolean).join(' ');
+  return name || getRecordString(item, 'name') || fallback;
+};
+
+const getClassLabel = (item: DashboardRecord) =>
+  getRecordString(item, 'class_name') ||
+  getRecordString(item, 'name') ||
+  `Class ${getClassId(item) || ''}`.trim();
+
+const sortScopeOptions = (options: DashboardScopeOption[]) =>
+  [...options].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+
+const countByValue = (items: DashboardRecord[], getValue: (item: DashboardRecord) => string | undefined) => {
+  const counts = new Map<string, number>();
+  items.forEach((item) => {
+    const value = getValue(item);
+    if (value) counts.set(value, (counts.get(value) || 0) + 1);
+  });
+  return counts;
+};
+
+const createIdSet = (items: DashboardRecord[], getId: (item: DashboardRecord) => number | undefined) => {
+  const ids = new Set<number>();
+  items.forEach((item) => {
+    const id = getId(item);
+    if (id) ids.add(id);
+  });
+  return ids;
+};
+
+const filterRelatedRecords = (
+  items: DashboardRecord[],
+  studentIds: Set<number>,
+  classIds: Set<number>,
+  teacherIds: Set<number>
+) =>
+  items.filter((item) => {
+    const studentId = getRecordNumber(item, 'student_id');
+    const classId = getRecordNumber(item, 'class_id');
+    const teacherId = getRecordNumber(item, 'teacher_id');
+    return Boolean(
+      (studentId && studentIds.has(studentId)) ||
+      (classId && classIds.has(classId)) ||
+      (teacherId && teacherIds.has(teacherId))
+    );
+  });
+
+// Builds dashboard scope options from the loaded collections.
+export const buildDashboardScopeOptions = (collections: DashboardCollections): DashboardScopeOptions => {
+  const studentsByTeacher = countByValue(collections.students, (student) => {
+    const teacherId = getRecordNumber(student, 'teacher_id');
+    return teacherId ? String(teacherId) : undefined;
+  });
+  const classesByTeacher = countByValue(collections.classes, (cls) => {
+    const teacherId = getRecordNumber(cls, 'teacher_id');
+    return teacherId ? String(teacherId) : undefined;
+  });
+  const studentsByClass = countByValue(collections.students, (student) => {
+    const classId = getRecordNumber(student, 'class_id');
+    return classId ? String(classId) : undefined;
+  });
+  const studentsBySchool = countByValue(collections.students, (student) => getSchoolLabel(student));
+  const studentsByStatus = countByValue(collections.students, (student) => getRecordString(student, 'status') || 'Unknown');
+
+  const teacherOptions: DashboardScopeOption[] = collections.teachers
+    .map<DashboardScopeOption | null>((teacher) => {
+      const id = getTeacherId(teacher);
+      if (!id) return null;
+      const value = String(id);
+      const studentCount = studentsByTeacher.get(value) || 0;
+      const classCount = classesByTeacher.get(value) || 0;
+      return {
+        value,
+        label: getFullName(teacher, `Teacher ${id}`),
+        count: studentCount,
+        meta: `${classCount} classes`,
+      };
+    })
+    .filter((option): option is DashboardScopeOption => option !== null);
+
+  const classOptions: DashboardScopeOption[] = collections.classes
+    .map<DashboardScopeOption | null>((cls) => {
+      const id = getClassId(cls);
+      if (!id) return null;
+      const value = String(id);
+      return {
+        value,
+        label: getClassLabel(cls),
+        count: studentsByClass.get(value) || 0,
+        meta: getRecordString(cls, 'section') || getRecordString(cls, 'class_code'),
+      };
+    })
+    .filter((option): option is DashboardScopeOption => option !== null);
+
+  const schoolOptions = Array.from(studentsBySchool.entries()).map(([value, count]) => ({
+    value,
+    label: value,
+    count,
+  }));
+
+  const statusOptions = Array.from(studentsByStatus.entries()).map(([value, count]) => ({
+    value,
+    label: value,
+    count,
+  }));
+
+  return {
+    teacher: sortScopeOptions(teacherOptions),
+    class: sortScopeOptions(classOptions),
+    school: sortScopeOptions(schoolOptions),
+    status: sortScopeOptions(statusOptions),
+  };
+};
+
+// Filters every dashboard collection to match the selected statistics scope.
+export const filterDashboardCollections = (
+  collections: DashboardCollections,
+  scope: DashboardScope
+): DashboardCollections => {
+  if (scope.type === 'all' || scope.value === 'all') return collections;
+
+  const selectedNumber = Number(scope.value);
+  const selectedValue = scope.value.toLowerCase();
+
+  const students = collections.students.filter((student) => {
+    if (scope.type === 'teacher') return getRecordNumber(student, 'teacher_id') === selectedNumber;
+    if (scope.type === 'class') return getRecordNumber(student, 'class_id') === selectedNumber;
+    if (scope.type === 'school') return getSchoolLabel(student).toLowerCase() === selectedValue;
+    if (scope.type === 'status') return (getRecordString(student, 'status') || 'Unknown').toLowerCase() === selectedValue;
+    return true;
+  });
+
+  const studentIds = createIdSet(students, getStudentId);
+  const studentClassIds = createIdSet(students, (student) => getRecordNumber(student, 'class_id'));
+  const classes = collections.classes.filter((cls) => {
+    const classId = getClassId(cls);
+    const teacherId = getRecordNumber(cls, 'teacher_id');
+    if (scope.type === 'teacher') return teacherId === selectedNumber || Boolean(classId && studentClassIds.has(classId));
+    if (scope.type === 'class') return classId === selectedNumber;
+    return Boolean(classId && studentClassIds.has(classId));
+  });
+  const classIds = createIdSet(classes, getClassId);
+  studentClassIds.forEach((id) => classIds.add(id));
+
+  const studentTeacherIds = createIdSet(students, (student) => getRecordNumber(student, 'teacher_id'));
+  const classTeacherIds = createIdSet(classes, (cls) => getRecordNumber(cls, 'teacher_id'));
+  classTeacherIds.forEach((id) => studentTeacherIds.add(id));
+  if (scope.type === 'teacher' && selectedNumber) studentTeacherIds.add(selectedNumber);
+
+  const teachers = collections.teachers.filter((teacher) => {
+    const teacherId = getTeacherId(teacher);
+    return Boolean(teacherId && studentTeacherIds.has(teacherId));
+  });
+
+  return {
+    ...collections,
+    students,
+    teachers,
+    classes,
+    attendance: filterRelatedRecords(collections.attendance, studentIds, classIds, studentTeacherIds),
+    assignments: filterRelatedRecords(collections.assignments, studentIds, classIds, studentTeacherIds),
+    payments: filterRelatedRecords(collections.payments, studentIds, classIds, studentTeacherIds),
+    debts: filterRelatedRecords(collections.debts, studentIds, classIds, studentTeacherIds),
+    tests: filterRelatedRecords(collections.tests, studentIds, classIds, studentTeacherIds),
+  };
 };
 
 const getPaymentStatus = (payment: DashboardRecord) =>
@@ -435,6 +614,7 @@ export const getDashboardStatCards = (
         icon: Users,
         accent: 'from-indigo-500 to-sky-500',
         progress: 100,
+        detailsType: 'students',
       },
       {
         label: 'Teachers',
@@ -442,6 +622,7 @@ export const getDashboardStatCards = (
         icon: GraduationCap,
         accent: 'from-emerald-500 to-teal-500',
         progress: 100,
+        detailsType: 'teachers',
       },
       {
         label: 'Schools',
@@ -449,6 +630,7 @@ export const getDashboardStatCards = (
         icon: ClipboardList,
         accent: 'from-amber-500 to-orange-500',
         progress: 100,
+        detailsType: 'schools',
       },
       {
         label: 'New This Month',
@@ -456,6 +638,7 @@ export const getDashboardStatCards = (
         icon: UserPlus,
         accent: 'from-cyan-500 to-blue-500',
         progress: 100,
+        detailsType: 'newStudents',
       },
     ];
   }
@@ -463,13 +646,14 @@ export const getDashboardStatCards = (
   return [
     {
       label: 'My Students',
-      value: stats.totalStudents,
-      icon: Users,
-      accent: 'from-indigo-500 to-sky-500',
-      progress: 100,
-    },
-    {
-      label: 'My Classes',
+    value: stats.totalStudents,
+    icon: Users,
+    accent: 'from-indigo-500 to-sky-500',
+    progress: 100,
+    detailsType: 'students',
+  },
+  {
+    label: 'My Classes',
       value: stats.totalClasses,
       icon: GraduationCap,
       accent: 'from-emerald-500 to-teal-500',
