@@ -60,19 +60,19 @@ export const OwnerManagerTable = ({
   onResetPassword,
 }: OwnerManagerTableProps) => {
   return (
-    <Card className="border-white/10 bg-white/[0.03] shadow-xl shadow-black/10 backdrop-blur">
+    <Card className="border-slate-200/60 bg-white/80 shadow-xl shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/10">
       <CardContent className="space-y-4 p-0">
         {loading && !showForm ? (
           <div className="flex justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-amber-300" />
           </div>
         ) : data.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-white/50">
-            <div className="rounded-full border border-white/10 bg-white/5 p-4">
+          <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-slate-500 dark:text-white/50">
+            <div className="rounded-full border border-slate-200/70 bg-slate-100/70 p-4 dark:border-white/10 dark:bg-white/5">
               <Database className="h-6 w-6 text-amber-300" />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-medium text-white/80">No records found</p>
+              <p className="text-base font-medium text-slate-800 dark:text-white/80">No records found</p>
               <p className="text-sm">{isScopedAndMissingCenter ? 'Choose a branch to load data.' : 'Use the Add button to create the first record.'}</p>
             </div>
           </div>
@@ -80,22 +80,22 @@ export const OwnerManagerTable = ({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-white/10 bg-white/5 hover:bg-white/5">
+                <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/5">
                   {columns.map((column) => (
-                    <TableHead key={column.key} className="whitespace-nowrap font-semibold text-white/70">
+                    <TableHead key={column.key} className="whitespace-nowrap font-semibold text-slate-600 dark:text-white/70">
                       {column.label}
                     </TableHead>
                   ))}
-                  <TableHead className="w-[120px] text-right font-semibold text-white/70">Actions</TableHead>
+                  <TableHead className="w-[120px] text-right font-semibold text-slate-600 dark:text-white/70">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((item) => {
                   const rowId = getOwnerManagerRowId(item);
                   return (
-                    <TableRow key={rowId} className="border-white/5 hover:bg-white/5">
+                    <TableRow key={rowId} className="border-slate-200/60 hover:bg-slate-100/70 dark:border-white/5 dark:hover:bg-white/5">
                       {columns.map((column) => (
-                        <TableCell key={column.key} className="whitespace-nowrap text-white/85">
+                        <TableCell key={column.key} className="whitespace-nowrap text-slate-800 dark:text-white/85">
                           {column.render
                             ? column.render(item)
                             : column.key === 'status'
