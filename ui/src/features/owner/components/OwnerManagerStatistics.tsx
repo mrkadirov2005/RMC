@@ -140,25 +140,25 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
   }, [collections.students, schoolDistribution.otherSchoolLabels, selectedSchoolLabel]);
 
   const genderRows = [
-    { label: 'Male', count: summary.maleStudents, className: 'bg-sky-500/15 text-sky-200 border-sky-400/20' },
-    { label: 'Female', count: summary.femaleStudents, className: 'bg-rose-500/15 text-rose-200 border-rose-400/20' },
-    { label: 'Other', count: summary.otherStudents, className: 'bg-amber-500/15 text-amber-200 border-amber-400/20' },
+    { label: 'Male', count: summary.maleStudents, className: 'bg-sky-500/15 text-sky-700 border-sky-400/40 dark:text-sky-200 dark:border-sky-400/20' },
+    { label: 'Female', count: summary.femaleStudents, className: 'bg-rose-500/15 text-rose-700 border-rose-400/40 dark:text-rose-200 dark:border-rose-400/20' },
+    { label: 'Other', count: summary.otherStudents, className: 'bg-amber-500/15 text-amber-700 border-amber-400/40 dark:text-amber-200 dark:border-amber-400/20' },
   ];
 
   return (
     <div className="space-y-6">
-      <Card className="border-white/10 bg-white/[0.03] shadow-xl shadow-black/10 backdrop-blur">
+      <Card className="border-slate-200/60 bg-white/80 shadow-xl shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/10">
         <CardHeader className="space-y-3">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-amber-300" />
-            <CardTitle className="text-xl text-white">Total Student Statistics</CardTitle>
+            <CardTitle className="text-xl text-slate-900 dark:text-white">Total Student Statistics</CardTitle>
           </div>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-slate-500 dark:text-white/60">
             Combined numbers from every center, shown only in the owner panel.
           </CardDescription>
 
-          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3">
-            <label className="flex items-center gap-2 text-sm text-white/70">
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-slate-200/70 bg-white/70 px-4 py-3 dark:border-white/10 dark:bg-slate-950/40">
+            <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-white/70">
               <CalendarDays className="h-4 w-4 text-amber-300" />
               Selected month
             </label>
@@ -166,15 +166,15 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               type="month"
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="h-10 rounded-lg border border-white/10 bg-white/5 px-3 text-sm text-white outline-none ring-0 placeholder:text-white/30"
+              className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 dark:border-white/10 dark:bg-white/5 dark:text-white dark:placeholder:text-white/30"
             />
-            <span className="text-sm text-white/50">{monthLabel}</span>
+            <span className="text-sm text-slate-500 dark:text-white/50">{monthLabel}</span>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
           <Tabs value={activeSection} onValueChange={(value) => setActiveSection(value as OwnerManagerStatisticsSection)}>
-            <TabsList className="h-auto w-max gap-1 bg-white/5 p-1 text-white/70">
+            <TabsList className="h-auto w-max gap-1 bg-slate-100 p-1 text-slate-600 dark:bg-white/5 dark:text-white/70">
               {sectionTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
@@ -202,12 +202,12 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   return (
                     <div
                       key={card.key}
-                      className="rounded-2xl border border-white/10 bg-slate-950/40 p-4 shadow-lg shadow-black/10"
+                      className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 shadow-lg shadow-slate-200/40 dark:border-white/10 dark:bg-slate-950/40 dark:shadow-black/10"
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div>
-                          <p className="text-xs uppercase tracking-[0.24em] text-white/45">{card.label}</p>
-                          <p className="mt-2 text-3xl font-semibold text-white">
+                          <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">{card.label}</p>
+                          <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">
                             {loading ? '...' : value.toLocaleString()}
                           </p>
                         </div>
@@ -221,16 +221,16 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               </div>
 
               <div className="grid gap-4 xl:grid-cols-2">
-                <Card className="border-white/10 bg-slate-950/40">
+                <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-white">Gender Breakdown</CardTitle>
-                    <CardDescription className="text-white/55">
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">Gender Breakdown</CardTitle>
+                    <CardDescription className="text-slate-500 dark:text-white/55">
                       How the total student body is distributed.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {loading ? (
-                      <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-8 text-center text-sm text-white/55">
+                      <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/55">
                         Loading student demographics...
                       </div>
                     ) : (
@@ -243,11 +243,11 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                                 <Badge variant="outline" className={cn('font-medium', row.className)}>
                                   {row.label}
                                 </Badge>
-                                <span className="text-white/70">{row.count.toLocaleString()} students</span>
+                                <span className="text-slate-600 dark:text-white/70">{row.count.toLocaleString()} students</span>
                               </div>
-                              <span className="text-white/45">{percent}%</span>
+                              <span className="text-slate-500 dark:text-white/45">{percent}%</span>
                             </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-white/5">
+                            <div className="h-2 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/5">
                               <div
                                 className={cn(
                                   'h-full rounded-full',
@@ -263,38 +263,38 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   </CardContent>
                 </Card>
 
-                <Card className="border-white/10 bg-slate-950/40">
+                <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-white">Center Breakdown</CardTitle>
-                    <CardDescription className="text-white/55">
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">Center Breakdown</CardTitle>
+                    <CardDescription className="text-slate-500 dark:text-white/55">
                       Top centers by total student count.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto p-0">
                     {loading ? (
-                      <div className="px-6 pb-6 pt-2 text-sm text-white/55">Loading combined student data...</div>
+                      <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">Loading combined student data...</div>
                     ) : summary.centerBreakdown.length === 0 ? (
-                      <div className="px-6 pb-6 text-sm text-white/55">No students found yet.</div>
+                      <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">No students found yet.</div>
                     ) : (
                       <Table>
                         <TableHeader>
-                          <TableRow className="border-white/10 bg-white/[0.03] hover:bg-white/[0.03]">
-                            <TableHead className="text-white/70">Center</TableHead>
-                            <TableHead className="text-right text-white/70">Students</TableHead>
-                            <TableHead className="text-right text-white/70">Active</TableHead>
+                          <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
+                            <TableHead className="text-slate-600 dark:text-white/70">Center</TableHead>
+                            <TableHead className="text-right text-slate-600 dark:text-white/70">Students</TableHead>
+                            <TableHead className="text-right text-slate-600 dark:text-white/70">Active</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {summary.centerBreakdown.slice(0, 6).map((center) => (
-                            <TableRow key={center.centerId} className="border-white/5">
-                              <TableCell className="text-white/85">
+                            <TableRow key={center.centerId} className="border-slate-200/60 dark:border-white/5">
+                              <TableCell className="text-slate-800 dark:text-white/85">
                                 <div className="flex flex-col gap-1">
                                   <span className="font-medium">{center.centerName}</span>
-                                  <span className="text-xs text-white/45">Center #{center.centerId}</span>
+                                  <span className="text-xs text-slate-500 dark:text-white/45">Center #{center.centerId}</span>
                                 </div>
                               </TableCell>
-                              <TableCell className="text-right text-white/80">{center.totalStudents.toLocaleString()}</TableCell>
-                              <TableCell className="text-right text-white/80">{center.activeStudents.toLocaleString()}</TableCell>
+                              <TableCell className="text-right text-slate-700 dark:text-white/80">{center.totalStudents.toLocaleString()}</TableCell>
+                              <TableCell className="text-right text-slate-700 dark:text-white/80">{center.activeStudents.toLocaleString()}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -305,13 +305,13 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               </div>
 
               <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="border-white/10 bg-white/5 text-white/70">
+                <Badge variant="outline" className="border-slate-200/70 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
                   {summary.inactiveStudents.toLocaleString()} inactive students
                 </Badge>
-                <Badge variant="outline" className="border-white/10 bg-white/5 text-white/70">
+                <Badge variant="outline" className="border-slate-200/70 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
                   {summary.activeStudents.toLocaleString()} active students
                 </Badge>
-                <Badge variant="outline" className="border-white/10 bg-white/5 text-white/70">
+                <Badge variant="outline" className="border-slate-200/70 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
                   {summary.totalStudents.toLocaleString()} total students
                 </Badge>
               </div>
@@ -319,43 +319,43 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
             <TabsContent value="payments" className="mt-6 space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Students total</p>
-                  <p className="mt-2 text-3xl font-semibold text-white">{paymentStats.totalStudents.toLocaleString()}</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Students total</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{paymentStats.totalStudents.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Paid students</p>
-                  <p className="mt-2 text-3xl font-semibold text-emerald-300">{paymentStats.paidStudents.toLocaleString()}</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Paid students</p>
+                  <p className="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-300">{paymentStats.paidStudents.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Unpaid students</p>
-                  <p className="mt-2 text-3xl font-semibold text-rose-300">{paymentStats.unpaidStudents.toLocaleString()}</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Unpaid students</p>
+                  <p className="mt-2 text-3xl font-semibold text-rose-600 dark:text-rose-300">{paymentStats.unpaidStudents.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Paid share</p>
-                  <p className="mt-2 text-3xl font-semibold text-white">{paymentStats.paidPercent}%</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Paid share</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{paymentStats.paidPercent}%</p>
                 </div>
               </div>
 
-              <Card className="border-white/10 bg-slate-950/40">
+              <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>
-                  <CardTitle className="text-lg text-white">Paid vs Unpaid Students</CardTitle>
-                  <CardDescription className="text-white/55">
+                  <CardTitle className="text-lg text-slate-900 dark:text-white">Paid vs Unpaid Students</CardTitle>
+                  <CardDescription className="text-slate-500 dark:text-white/55">
                     Student count for {monthLabel}.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {loading ? (
-                    <div className="rounded-xl border border-dashed border-white/10 bg-white/[0.03] px-4 py-8 text-center text-sm text-white/55">
+                    <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/55">
                       Loading payment statistics...
                     </div>
                   ) : (
                     <>
-                      <div className="flex items-center justify-between text-sm text-white/70">
+                      <div className="flex items-center justify-between text-sm text-slate-600 dark:text-white/70">
                         <span>{paymentStats.paidStudents} paid</span>
                         <span>{paymentStats.unpaidStudents} unpaid</span>
                       </div>
-                      <div className="h-4 w-full overflow-hidden rounded-full bg-white/5 shadow-inner">
+                      <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200/70 shadow-inner dark:bg-white/5">
                         <div className="flex h-full w-full">
                           <div
                             className="h-full bg-emerald-500 transition-all duration-300"
@@ -369,12 +369,12 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.24em] text-emerald-200/70">Paid students</p>
-                          <p className="mt-2 text-2xl font-semibold text-emerald-100">{paymentStats.paidStudents}</p>
+                          <p className="text-xs uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-200/70">Paid students</p>
+                          <p className="mt-2 text-2xl font-semibold text-emerald-800 dark:text-emerald-100">{paymentStats.paidStudents}</p>
                         </div>
                         <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.24em] text-rose-200/70">Unpaid students</p>
-                          <p className="mt-2 text-2xl font-semibold text-rose-100">{paymentStats.unpaidStudents}</p>
+                          <p className="text-xs uppercase tracking-[0.24em] text-rose-700 dark:text-rose-200/70">Unpaid students</p>
+                          <p className="mt-2 text-2xl font-semibold text-rose-800 dark:text-rose-100">{paymentStats.unpaidStudents}</p>
                         </div>
                       </div>
                     </>
@@ -385,67 +385,67 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
             <TabsContent value="teachers" className="mt-6 space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Teachers</p>
-                  <p className="mt-2 text-3xl font-semibold text-white">{teacherEarnings.length.toLocaleString()}</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Teachers</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{teacherEarnings.length.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Earned total</p>
-                  <p className="mt-2 text-3xl font-semibold text-emerald-300">${totalEarned.toLocaleString()}</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Earned total</p>
+                  <p className="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-300">${totalEarned.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Top teacher</p>
-                  <p className="mt-2 text-lg font-semibold text-white">
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Top teacher</p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
                     {teacherEarnings[0]?.teacherName || 'No data'}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-4">
-                  <p className="text-xs uppercase tracking-[0.24em] text-white/45">Selected month</p>
-                  <p className="mt-2 text-lg font-semibold text-white">{monthLabel}</p>
+                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Selected month</p>
+                  <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{monthLabel}</p>
                 </div>
               </div>
 
-              <Card className="border-white/10 bg-slate-950/40">
+              <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>
-                  <CardTitle className="text-lg text-white">Teacher Earnings</CardTitle>
-                  <CardDescription className="text-white/55">
+                  <CardTitle className="text-lg text-slate-900 dark:text-white">Teacher Earnings</CardTitle>
+                  <CardDescription className="text-slate-500 dark:text-white/55">
                     Earnings for {monthLabel}, sorted from highest to lowest.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto p-0">
                   {loading ? (
-                    <div className="px-6 pb-6 pt-2 text-sm text-white/55">Loading teacher earnings...</div>
+                    <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">Loading teacher earnings...</div>
                   ) : teacherEarnings.length === 0 ? (
-                    <div className="px-6 pb-6 text-sm text-white/55">No teachers found yet.</div>
+                    <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">No teachers found yet.</div>
                   ) : (
                     <Table>
                       <TableHeader>
-                        <TableRow className="border-white/10 bg-white/[0.03] hover:bg-white/[0.03]">
-                          <TableHead className="text-white/70">Teacher</TableHead>
-                          <TableHead className="text-right text-white/70">Classes</TableHead>
-                          <TableHead className="text-right text-white/70">Students</TableHead>
-                          <TableHead className="text-right text-white/70">Paid</TableHead>
-                          <TableHead className="text-right text-white/70">Unpaid</TableHead>
-                          <TableHead className="text-right text-white/70">Earnings</TableHead>
+                        <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
+                          <TableHead className="text-slate-600 dark:text-white/70">Teacher</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">Classes</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">Students</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">Paid</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">Unpaid</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">Earnings</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {teacherEarnings.map((row, index) => (
-                          <TableRow key={row.teacherId} className="border-white/5">
-                            <TableCell className="text-white/85">
+                          <TableRow key={row.teacherId} className="border-slate-200/60 dark:border-white/5">
+                            <TableCell className="text-slate-800 dark:text-white/85">
                               <div className="flex items-center gap-2">
-                                <span className="text-xs text-white/40">{index + 1}.</span>
+                                <span className="text-xs text-slate-500 dark:text-white/40">{index + 1}.</span>
                                 <div className="flex flex-col gap-1">
                                   <span className="font-medium">{row.teacherName}</span>
-                                  <span className="text-xs text-white/45">Teacher #{row.teacherId}</span>
+                                  <span className="text-xs text-slate-500 dark:text-white/45">Teacher #{row.teacherId}</span>
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell className="text-right text-white/80">{row.classCount.toLocaleString()}</TableCell>
-                            <TableCell className="text-right text-white/80">{row.totalStudents.toLocaleString()}</TableCell>
-                            <TableCell className="text-right text-emerald-300">{row.paidStudents.toLocaleString()}</TableCell>
-                            <TableCell className="text-right text-rose-300">{row.unpaidStudents.toLocaleString()}</TableCell>
-                            <TableCell className="text-right font-semibold text-white">
+                            <TableCell className="text-right text-slate-700 dark:text-white/80">{row.classCount.toLocaleString()}</TableCell>
+                            <TableCell className="text-right text-slate-700 dark:text-white/80">{row.totalStudents.toLocaleString()}</TableCell>
+                            <TableCell className="text-right text-emerald-600 dark:text-emerald-300">{row.paidStudents.toLocaleString()}</TableCell>
+                            <TableCell className="text-right text-rose-600 dark:text-rose-300">{row.unpaidStudents.toLocaleString()}</TableCell>
+                            <TableCell className="text-right font-semibold text-slate-900 dark:text-white">
                               ${row.earnedAmount.toLocaleString()}
                             </TableCell>
                           </TableRow>
@@ -458,10 +458,10 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
             </TabsContent>
 
             <TabsContent value="statistics" className="mt-6 space-y-6">
-              <Card className="border-white/10 bg-slate-950/40">
+              <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>
-                  <CardTitle className="text-lg text-white">Students by school</CardTitle>
-                  <CardDescription className="text-white/55">
+                  <CardTitle className="text-lg text-slate-900 dark:text-white">Students by school</CardTitle>
+                  <CardDescription className="text-slate-500 dark:text-white/55">
                     Distribution based on the optional student school fields.
                   </CardDescription>
                 </CardHeader>
@@ -471,9 +471,9 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   </div>
                   <div className="space-y-3">
                     {loading ? (
-                      <div className="text-sm text-white/55">Loading school breakdown...</div>
+                      <div className="text-sm text-slate-500 dark:text-white/55">Loading school breakdown...</div>
                     ) : schoolDistribution.slices.length === 0 ? (
-                      <div className="text-sm text-white/55">
+                      <div className="text-sm text-slate-500 dark:text-white/55">
                         No students found yet. Add optional `school_name` on student records to populate this chart.
                       </div>
                     ) : (
@@ -483,7 +483,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                             key={slice.label}
                             type="button"
                             onClick={() => setSelectedSchoolLabel(slice.label)}
-                            className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-left transition-colors hover:border-amber-400/25 hover:bg-white/[0.06]"
+                            className="flex items-center justify-between rounded-xl border border-slate-200/70 bg-slate-50 px-4 py-3 text-left transition-colors hover:border-amber-400/40 hover:bg-slate-100 dark:border-white/10 dark:bg-white/[0.03] dark:hover:border-amber-400/25 dark:hover:bg-white/[0.06]"
                           >
                             <div className="flex items-center gap-3">
                               <span
@@ -491,9 +491,9 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                                 style={{ backgroundColor: slice.color }}
                                 aria-hidden="true"
                               />
-                              <span className="text-sm font-medium text-white">{slice.label}</span>
+                              <span className="text-sm font-medium text-slate-900 dark:text-white">{slice.label}</span>
                             </div>
-                            <span className="text-sm font-semibold text-white/80">{slice.value.toLocaleString()}</span>
+                            <span className="text-sm font-semibold text-slate-700 dark:text-white/80">{slice.value.toLocaleString()}</span>
                           </button>
                         ))}
                       </div>
@@ -508,9 +508,9 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   if (!open) setSelectedSchoolLabel(null);
                 }}
               >
-                <DialogContent className="max-h-[85vh] overflow-y-auto border-white/10 bg-slate-950 text-white sm:max-w-3xl">
+                <DialogContent className="max-h-[85vh] overflow-y-auto border-border bg-background text-foreground sm:max-w-3xl">
                   <DialogHeader>
-                    <DialogTitle className="text-white">
+                    <DialogTitle className="text-slate-900 dark:text-white">
                       {selectedSchoolLabel === 'Other'
                         ? 'Students from other schools'
                         : selectedSchoolLabel === 'Unknown'
@@ -520,18 +520,18 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   </DialogHeader>
 
                   {loading ? (
-                    <div className="text-sm text-white/55">Loading students...</div>
+                    <div className="text-sm text-slate-500 dark:text-white/55">Loading students...</div>
                   ) : selectedSchoolStudents.length === 0 ? (
-                    <div className="text-sm text-white/55">No students found for this selection.</div>
+                    <div className="text-sm text-slate-500 dark:text-white/55">No students found for this selection.</div>
                   ) : (
-                    <div className="overflow-x-auto rounded-xl border border-white/10">
+                    <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-white/10">
                       <Table>
                         <TableHeader>
-                          <TableRow className="border-white/10 bg-white/[0.03] hover:bg-white/[0.03]">
-                            <TableHead className="text-white/70">Student</TableHead>
-                            <TableHead className="text-white/70">Enrollment</TableHead>
-                            <TableHead className="text-white/70">Center</TableHead>
-                            <TableHead className="text-white/70">Class</TableHead>
+                          <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
+                            <TableHead className="text-slate-600 dark:text-white/70">Student</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">Enrollment</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">Center</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">Class</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -541,16 +541,16 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                               [student?.first_name, student?.last_name].filter(Boolean).join(' ').trim() ||
                               (studentId ? `Student #${studentId}` : 'Student');
                             return (
-                              <TableRow key={studentId || `${student?.enrollment_number || name}`} className="border-white/5">
-                                <TableCell className="text-white/85">
+                              <TableRow key={studentId || `${student?.enrollment_number || name}`} className="border-slate-200/60 dark:border-white/5">
+                                <TableCell className="text-slate-800 dark:text-white/85">
                                   <div className="flex flex-col gap-1">
                                     <span className="font-medium">{name}</span>
-                                    {studentId ? <span className="text-xs text-white/45">#{studentId}</span> : null}
+                                    {studentId ? <span className="text-xs text-slate-500 dark:text-white/45">#{studentId}</span> : null}
                                   </div>
                                 </TableCell>
-                                <TableCell className="text-white/75">{student?.enrollment_number || '-'}</TableCell>
-                                <TableCell className="text-white/75">{student?.center_id ? `#${student.center_id}` : '-'}</TableCell>
-                                <TableCell className="text-white/75">{student?.class_id ? `#${student.class_id}` : '-'}</TableCell>
+                                <TableCell className="text-slate-600 dark:text-white/75">{student?.enrollment_number || '-'}</TableCell>
+                                <TableCell className="text-slate-600 dark:text-white/75">{student?.center_id ? `#${student.center_id}` : '-'}</TableCell>
+                                <TableCell className="text-slate-600 dark:text-white/75">{student?.class_id ? `#${student.class_id}` : '-'}</TableCell>
                               </TableRow>
                             );
                           })}

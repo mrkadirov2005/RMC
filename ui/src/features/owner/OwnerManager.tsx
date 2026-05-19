@@ -12,7 +12,7 @@ const OwnerManager = memo(() => {
   const vm = useOwnerManager();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white">
+    <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <OwnerManagerHeader
           currentMeta={vm.currentMeta}

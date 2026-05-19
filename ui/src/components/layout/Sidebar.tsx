@@ -165,9 +165,9 @@ const Sidebar = memo(() => {
 
 // Handles sidebar content.
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-gradient-to-b from-slate-900 to-slate-800 text-white">
+    <div className="flex flex-col h-full bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-800 text-slate-800 dark:text-white">
       {/* Header */}
-      <div className={cn('border-b border-white/[0.08]', isExpanded ? 'px-3 py-3' : 'px-2 py-3')}>
+      <div className={cn('border-b border-slate-200 dark:border-white/[0.08]', isExpanded ? 'px-3 py-3' : 'px-2 py-3')}>
         <div className={cn('flex items-center', isExpanded ? 'justify-between gap-2' : 'justify-center')}>
           <div className={cn('flex items-center min-w-0', isExpanded ? 'gap-3' : 'gap-0')}>
             <button
@@ -178,14 +178,14 @@ const Sidebar = memo(() => {
             >
               {isExpanded ? <LayoutDashboard className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
             </button>
-            {isExpanded && <h1 className="truncate text-lg font-bold tracking-tight">EduCRM</h1>}
+            {isExpanded && <h1 className="truncate text-lg font-bold tracking-tight text-slate-800 dark:text-white">EduCRM</h1>}
           </div>
           {isExpanded && (
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={toggleTheme}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-white/[0.08] text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-white/70 transition-colors hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-800 dark:hover:text-white"
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -201,7 +201,7 @@ const Sidebar = memo(() => {
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+                className="flex h-8 w-8 items-center justify-center rounded-md text-slate-500 dark:text-white/70 transition-colors hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-800 dark:hover:text-white"
                 aria-label="Close sidebar"
               >
                 <X className="w-4 h-4" />
@@ -214,7 +214,7 @@ const Sidebar = memo(() => {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] text-white/70 transition-colors hover:bg-white/[0.06] hover:text-white"
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-white/70 transition-colors hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-800 dark:hover:text-white"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
@@ -233,7 +233,7 @@ const Sidebar = memo(() => {
 
       {/* User Info */}
       {user && isExpanded && (
-        <div className="mx-3 mt-3 rounded-lg border border-white/[0.06] bg-white/[0.04] px-3 py-2">
+        <div className="mx-3 mt-3 rounded-lg border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.04] px-3 py-2">
           <div className="flex items-center gap-3">
             <div className="relative">
               <Avatar className="w-9 h-9">
@@ -241,10 +241,10 @@ const Sidebar = memo(() => {
                   {user.first_name?.[0]}{user.last_name?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-slate-800" />
+              <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-slate-800" />
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold leading-tight">{user.first_name} {user.last_name}</p>
+              <p className="truncate text-sm font-semibold leading-tight text-slate-800 dark:text-white">{user.first_name} {user.last_name}</p>
               <p className="truncate text-[0.7rem] font-medium text-indigo-400 uppercase tracking-wider">{user.role || user.userType}</p>
             </div>
           </div>
@@ -256,13 +256,13 @@ const Sidebar = memo(() => {
           <label htmlFor="active_center_sidebar" className="sr-only">
             Active Branch
           </label>
-          <div className="flex h-9 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2">
-            <Building2 className="h-4 w-4 shrink-0 text-white/50" />
+          <div className="flex h-9 items-center gap-2 rounded-lg border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-white/[0.04] px-2">
+            <Building2 className="h-4 w-4 shrink-0 text-slate-400 dark:text-white/50" />
             <select
               id="active_center_sidebar"
               value={activeCenterId ?? ''}
               onChange={(e) => setActiveCenterId(e.target.value ? Number(e.target.value) : null)}
-              className="min-w-0 flex-1 bg-transparent text-sm text-white outline-none"
+              className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 dark:text-white outline-none"
             >
               {centerOptions.map((center) => (
                 <option key={center.id} value={center.id}>
@@ -290,11 +290,11 @@ const Sidebar = memo(() => {
                         'w-full flex items-center rounded-lg text-sm transition-all duration-200 border-l-[3px]',
                         isExpanded ? 'gap-3 px-3 py-2' : 'justify-center gap-0 px-0 py-2.5',
                         isActive
-                          ? 'bg-gradient-to-r from-indigo-500/30 to-violet-500/20 text-white border-indigo-400 font-semibold'
-                          : 'text-white/60 border-transparent hover:bg-white/[0.06] hover:text-white'
+                          ? 'bg-gradient-to-r from-indigo-500/30 to-violet-500/20 text-slate-900 dark:text-white border-indigo-400 font-semibold'
+                          : 'text-slate-500 dark:text-white/60 border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.06] hover:text-slate-800 dark:hover:text-white'
                       )}
                     >
-                      <Icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-indigo-400' : 'text-white/40')} />
+                      <Icon className={cn('w-5 h-5 shrink-0', isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-slate-400 dark:text-white/40')} />
                       {isExpanded && <span>{item.label}</span>}
                     </button>
                   </TooltipTrigger>
@@ -308,7 +308,7 @@ const Sidebar = memo(() => {
         </TooltipProvider>
       </ScrollArea>
 
-      <Separator className="bg-white/[0.06]" />
+      <Separator className="bg-slate-200 dark:bg-white/[0.06]" />
     </div>
   );
 
@@ -332,7 +332,7 @@ const Sidebar = memo(() => {
       {/* Sidebar */}
       <aside
         className={cn(
-          'h-screen border-r border-white/[0.06] shrink-0 transition-all duration-300 z-[1300] overflow-hidden',
+          'h-screen border-r border-slate-200 dark:border-white/[0.06] shrink-0 transition-all duration-300 z-[1300] overflow-hidden',
           isMobile ? 'fixed top-0 left-0' : 'fixed top-0 left-0',
           isMobile && !isOpen && '-translate-x-full'
         )}
