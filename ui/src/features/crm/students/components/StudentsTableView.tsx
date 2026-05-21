@@ -199,9 +199,9 @@ export const StudentsTableView = ({
               </TableCell>
             </TableRow>
           ) : (
-            students.map((student) => (
+            students.map((student, index) => (
               <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
-                <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{student.enrollment_number}</TableCell>
+                <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{index + 1}</TableCell>
                 <TableCell className="font-medium">
                   <button
                     type="button"
