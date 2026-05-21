@@ -2,7 +2,8 @@
   "name": "rmc",
   "private": true,
   "scripts": {
-    "dev": "concurrently -n backend,ui -c cyan,magenta \"npm --prefix service run dev\" \"npm --prefix ui run dev\"",
+    "dev": "npm --prefix ui run dev",
+    "dev:full": "concurrently -n backend,ui -c cyan,magenta \"npm --prefix service run dev\" \"npm --prefix ui run dev\"",
     "dev:backend": "npm --prefix service run dev",
     "dev:ui": "npm --prefix ui run dev",
     "build": "npm --prefix service run build && npm --prefix ui run build",

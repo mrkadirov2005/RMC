@@ -1,5 +1,21 @@
 const importExportRepository = require('../repositories/import_export.repository');
 const { studentInCenter } = require('../../../shared/tenantDb');
+const crypto = require('crypto');
+
+const createStudentSpecialId = () => {
+  if (typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID().replace(/-/g, '');
+  }
+  return crypto.randomBytes(16).toString('hex');
+};
+
+const createGeneratedStudentIdentity = () => {
+  const specialId = createStudentSpecialId();
+  return {
+    enrollmentNumber: specialId,
+    email: `temurbekschool${specialId}@gmail.com`,
+  };
+};
 
 const escapeCsv = (value: any) => {
   if (value === null || value === undefined) return '';
@@ -17,11 +33,49 @@ const toCsv = (rows: any[], columns: string[]) => {
 };
 
 const parseCsv = (csv: string) => {
-  const lines = csv.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map((h) => h.trim());
-  return lines.slice(1).map((line) => {
-    const values = line.split(',').map((v) => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+  const rows: string[][] = [];
+  let field = '';
+  let row: string[] = [];
+  let inQuotes = false;
+
+  for (let i = 0; i < csv.length; i += 1) {
+    const char = csv[i];
+    const next = csv[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && next === '"') {
+        field += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      row.push(field.trim());
+      field = '';
+      continue;
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && next === '\n') i += 1;
+      row.push(field.trim());
+      if (row.some((value) => value !== '')) rows.push(row);
+      field = '';
+      row = [];
+      continue;
+    }
+
+    field += char;
+  }
+
+  row.push(field.trim());
+  if (row.some((value) => value !== '')) rows.push(row);
+  if (rows.length < 2) return [];
+
+  const headers = rows[0].map((h) => h.trim());
+  return rows.slice(1).map((values) => {
     const obj: any = {};
     headers.forEach((h, i) => {
       obj[h] = values[i] ?? '';
@@ -104,16 +158,17 @@ const importEntity = async (entity: string, csv: string, centerId?: number) => {
   let created = 0;
   for (const row of rows) {
     if (entity === 'students') {
+      const identity = createGeneratedStudentIdentity();
       const rowCenterId = centerId ?? Number(row.center_id);
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
         return { error: 'invalid_center' as const };
       }
       await importExportRepository.insertStudent([
         rowCenterId,
-        row.enrollment_number,
+        identity.enrollmentNumber,
         row.first_name,
         row.last_name,
-        row.email,
+        identity.email,
         row.phone,
         row.date_of_birth || null,
         row.parent_name || null,

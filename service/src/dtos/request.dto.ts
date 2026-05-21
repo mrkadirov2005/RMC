@@ -194,6 +194,12 @@ class ImportCsvDto {
   @IsString()
   @IsNotEmpty()
   csv!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
 }
 
 class CreateDiscountDto {

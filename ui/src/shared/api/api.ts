@@ -11,7 +11,7 @@ import {
 import { paymentLogout } from '../../slices/paymentAccessSlice';
 import { getResolvedCenterId } from '../auth/centerScope';
 
-export const API_BASE_URL = 'https://temurbek.m-kadirov.uz/api';
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://temurbek.m-kadirov.uz/api';
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -228,6 +228,13 @@ export const studentAPI = {
   ) => apiClient.put(`/students/${id}/coins/${transactionId}`, data),
   deleteCoinTransaction: (id: number, transactionId: number) =>
     apiClient.delete(`/students/${id}/coins/${transactionId}`),
+};
+
+export const dataAPI = {
+  importEntity: (entity: 'students' | 'teachers' | 'payments', csv: string) =>
+    apiClient.post(`/data/import/${entity}`, { csv }),
+  exportEntity: (entity: 'students' | 'teachers' | 'payments') =>
+    apiClient.get(`/data/export/${entity}`, { responseType: 'blob' }),
 };
 
 export const teacherAPI = {

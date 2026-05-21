@@ -86,5 +86,6 @@ export const useStudentsData = (studentParams?: StudentListParams) => {
     loadingClasses: classesLoading,
     isLoadingOptions,
     isOwner,
+    user,
   };
 };

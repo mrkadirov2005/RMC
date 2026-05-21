@@ -1,14 +1,14 @@
 // Page component for the students screen in the crm feature.
 
-import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Coins, GraduationCap, Plus, School, Users } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Coins, GraduationCap, Plus, School, Upload, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { studentAPI } from '@/shared/api/api';
+import { dataAPI, studentAPI } from '@/shared/api/api';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentsFormDialog } from './components/StudentsFormDialog';
@@ -17,6 +17,7 @@ import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
 import { StudentsTableView } from './components/StudentsTableView';
 import { useStudentsPage } from './hooks/useStudentsPage';
 import type { Student } from './types';
+import { showToast } from '@/utils/toast';
 
 // Renders the students page screen.
 const StudentsPage = () => {
@@ -25,8 +26,11 @@ const StudentsPage = () => {
   const [activeTab, setActiveTab] = useState('students');
   const [statisticsStudents, setStatisticsStudents] = useState<Student[]>([]);
   const [statisticsLoading, setStatisticsLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const s = useStudentsPage();
   const title = 'Students';
+  const canImportStudents = s.user?.userType === 'superuser';
 // Handles active count.
   const activeCount = [
     s.searchTerm,
@@ -132,6 +136,31 @@ const StudentsPage = () => {
     };
   }, [activeTab]);
 
+  const handleImportStudents = async (file?: File) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      showToast.error('Please choose a CSV file.');
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const csv = await file.text();
+      await dataAPI.importEntity('students', csv);
+      s.actions.fetchAll();
+      if (activeTab === 'statistics') {
+        const response = await studentAPI.getAll();
+        const data = (response as any).data ?? response;
+        setStatisticsStudents(Array.isArray(data) ? data : []);
+      }
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import students.');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
@@ -146,6 +175,26 @@ const StudentsPage = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
+            {canImportStudents && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(event) => handleImportStudents(event.target.files?.[0])}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+                >
+                  <Upload className="w-5 h-5 mr-2" /> {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+              </>
+            )}
             <Button onClick={() => s.handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="w-5 h-5 mr-2" /> Add Student
             </Button>
