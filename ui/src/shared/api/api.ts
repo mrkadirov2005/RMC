@@ -235,6 +235,10 @@ export const dataAPI = {
     apiClient.post(`/data/import/${entity}`, { csv }),
   exportEntity: (entity: 'students' | 'teachers' | 'payments') =>
     apiClient.get(`/data/export/${entity}`, { responseType: 'blob' }),
+  pushEntityToSheets: (entity: 'students' | 'teachers' | 'payments') =>
+    apiClient.post(`/data/sheets/push/${entity}`, {}),
+  pullEntityFromSheets: (entity: 'students' | 'teachers' | 'payments') =>
+    apiClient.post(`/data/sheets/pull/${entity}`, {}),
 };
 
 export const teacherAPI = {

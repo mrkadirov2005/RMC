@@ -131,8 +131,54 @@ const PAYMENT_COLS = [
   'notes',
 ];
 
+const ENTITY_CONFIG: Record<string, { columns: string[]; idColumn: string; table: string }> = {
+  students: { columns: STUDENT_COLS, idColumn: 'student_id', table: 'students' },
+  teachers: { columns: TEACHER_COLS, idColumn: 'teacher_id', table: 'teachers' },
+  payments: { columns: PAYMENT_COLS, idColumn: 'payment_id', table: 'payments' },
+};
+
+const getAppsScriptUrl = () => process.env.GOOGLE_APPS_SCRIPT_URL || process.env.APPS_SCRIPT_URL || '';
+
+const getAppsScriptSecret = () => process.env.GOOGLE_APPS_SCRIPT_SECRET || process.env.APPS_SCRIPT_SECRET || '';
+
+const normalizeSheetRows = (payload: any, columns: string[]) => {
+  if (typeof payload?.csv === 'string') return parseCsv(payload.csv);
+  const rawRows = Array.isArray(payload?.rows) ? payload.rows : Array.isArray(payload?.data) ? payload.data : [];
+  return rawRows.map((row: any) => {
+    if (!Array.isArray(row)) return row;
+    const obj: any = {};
+    columns.forEach((column, index) => {
+      obj[column] = row[index] ?? '';
+    });
+    return obj;
+  });
+};
+
+const callAppsScript = async (payload: any) => {
+  const url = getAppsScriptUrl();
+  if (!url) return { error: 'missing_config' as const };
+
+  const secret = getAppsScriptSecret();
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(secret ? { ...payload, secret } : payload),
+  });
+  const text = await response.text();
+  let data: any = {};
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { raw: text };
+  }
+  if (!response.ok || data?.ok === false || data?.error) {
+    return { error: 'apps_script_failed' as const, status: response.status, details: data?.error || data?.raw || text };
+  }
+  return { data };
+};
+
 const exportEntity = async (entity: string, centerId?: number) => {
-  if (!['students', 'teachers', 'payments'].includes(entity)) {
+  if (!ENTITY_CONFIG[entity]) {
     return { error: 'unsupported' as const };
   }
   let rows: any[] = [];
@@ -151,10 +197,18 @@ const exportEntity = async (entity: string, centerId?: number) => {
 };
 
 const importEntity = async (entity: string, csv: string, centerId?: number) => {
-  if (!['students', 'teachers', 'payments'].includes(entity)) {
+  if (!ENTITY_CONFIG[entity]) {
     return { error: 'unsupported' as const };
   }
   const rows = parseCsv(csv);
+  return importRows(entity, rows, centerId, false);
+};
+
+const importRows = async (entity: string, rows: any[], centerId?: number, upsert = false) => {
+  const config = ENTITY_CONFIG[entity];
+  if (!config) {
+    return { error: 'unsupported' as const };
+  }
   let created = 0;
   for (const row of rows) {
     if (entity === 'students') {
@@ -163,12 +217,14 @@ const importEntity = async (entity: string, csv: string, centerId?: number) => {
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
         return { error: 'invalid_center' as const };
       }
-      await importExportRepository.insertStudent([
+      const studentId = Number(row.student_id);
+      const hasStudentId = upsert && Number.isFinite(studentId) && studentId > 0;
+      const params = [
         rowCenterId,
-        identity.enrollmentNumber,
+        row.enrollment_number || identity.enrollmentNumber,
         row.first_name,
         row.last_name,
-        identity.email,
+        row.email || identity.email,
         row.phone,
         row.date_of_birth || null,
         row.parent_name || null,
@@ -177,13 +233,16 @@ const importEntity = async (entity: string, csv: string, centerId?: number) => {
         row.status || 'Active',
         row.teacher_id || null,
         row.class_id || null,
-      ]);
+      ];
+      await (upsert ? importExportRepository.upsertStudent(hasStudentId ? [studentId, ...params] : params, hasStudentId) : importExportRepository.insertStudent(params));
     } else if (entity === 'teachers') {
       const rowCenterId = centerId ?? Number(row.center_id);
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
         return { error: 'invalid_center' as const };
       }
-      await importExportRepository.insertTeacher([
+      const teacherId = Number(row.teacher_id);
+      const hasTeacherId = upsert && Number.isFinite(teacherId) && teacherId > 0;
+      const params = [
         rowCenterId,
         row.employee_id,
         row.first_name,
@@ -195,7 +254,8 @@ const importEntity = async (entity: string, csv: string, centerId?: number) => {
         row.qualification || null,
         row.specialization || null,
         row.status || 'Active',
-      ]);
+      ];
+      await (upsert ? importExportRepository.upsertTeacher(hasTeacherId ? [teacherId, ...params] : params, hasTeacherId) : importExportRepository.insertTeacher(params));
     } else {
       const rowCenterId = centerId ?? Number(row.center_id);
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
@@ -205,7 +265,7 @@ const importEntity = async (entity: string, csv: string, centerId?: number) => {
         const belongs = await studentInCenter(Number(row.student_id), Number(centerId));
         if (!belongs) return { error: 'invalid_center' as const };
       }
-      await importExportRepository.insertPayment([
+      const params = [
         row.student_id,
         rowCenterId,
         row.payment_date,
@@ -217,13 +277,53 @@ const importEntity = async (entity: string, csv: string, centerId?: number) => {
         row.payment_status || 'Completed',
         row.payment_type || null,
         row.notes || null,
-      ]);
+      ];
+      const paymentId = Number(row.payment_id);
+      const hasPaymentId = upsert && Number.isFinite(paymentId) && paymentId > 0;
+      await (upsert ? importExportRepository.upsertPayment(hasPaymentId ? [paymentId, ...params] : params, hasPaymentId) : importExportRepository.insertPayment(params));
     }
     created += 1;
+  }
+  if (upsert) {
+    await importExportRepository.syncSerialSequence(config.table, config.idColumn);
   }
   return { created, entity };
 };
 
-module.exports = { exportEntity, importEntity };
+const pushEntityToSheets = async (entity: string, centerId?: number) => {
+  const config = ENTITY_CONFIG[entity];
+  if (!config) return { error: 'unsupported' as const };
+  const exported = await exportEntity(entity, centerId);
+  if ('error' in exported) return exported;
+  const rows = parseCsv(exported.csv);
+  const result = await callAppsScript({
+    action: 'push',
+    entity,
+    columns: config.columns,
+    rows,
+    csv: exported.csv,
+    center_id: centerId ?? null,
+  });
+  if ('error' in result) return result;
+  return { entity, rows: exported.rows, response: result.data };
+};
+
+const pullEntityFromSheets = async (entity: string, centerId?: number) => {
+  const config = ENTITY_CONFIG[entity];
+  if (!config) return { error: 'unsupported' as const };
+  const result = await callAppsScript({
+    action: 'pull',
+    entity,
+    columns: config.columns,
+    center_id: centerId ?? null,
+  });
+  if ('error' in result) return result;
+  const rows = normalizeSheetRows(result.data, config.columns);
+  const imported = await importRows(entity, rows, centerId, true);
+  if ('error' in imported) return imported;
+  return { entity, rows: imported.created, response: result.data };
+};
+
+module.exports = { exportEntity, importEntity, pushEntityToSheets, pullEntityFromSheets };
 
 export {};

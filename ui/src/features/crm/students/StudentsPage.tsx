@@ -1,7 +1,7 @@
 // Page component for the students screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Coins, GraduationCap, Plus, School, Upload, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Coins, Download, FileSpreadsheet, GraduationCap, Plus, School, Upload, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -27,6 +27,8 @@ const StudentsPage = () => {
   const [statisticsStudents, setStatisticsStudents] = useState<Student[]>([]);
   const [statisticsLoading, setStatisticsLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [isSheetsPushing, setIsSheetsPushing] = useState(false);
+  const [isSheetsPulling, setIsSheetsPulling] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const s = useStudentsPage();
   const title = 'Students';
@@ -161,6 +163,38 @@ const StudentsPage = () => {
     }
   };
 
+  const refreshStudents = async () => {
+    s.actions.fetchAll();
+    if (activeTab === 'statistics') {
+      const response = await studentAPI.getAll();
+      const data = (response as any).data ?? response;
+      setStatisticsStudents(Array.isArray(data) ? data : []);
+    }
+  };
+
+  const handlePushStudentsToSheets = async () => {
+    try {
+      setIsSheetsPushing(true);
+      await dataAPI.pushEntityToSheets('students');
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update Google Sheets.');
+    } finally {
+      setIsSheetsPushing(false);
+    }
+  };
+
+  const handlePullStudentsFromSheets = async () => {
+    try {
+      setIsSheetsPulling(true);
+      await dataAPI.pullEntityFromSheets('students');
+      await refreshStudents();
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import from Google Sheets.');
+    } finally {
+      setIsSheetsPulling(false);
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
@@ -192,6 +226,24 @@ const StudentsPage = () => {
                   className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
                 >
                   <Upload className="w-5 h-5 mr-2" /> {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePushStudentsToSheets}
+                  disabled={isSheetsPushing || isSheetsPulling}
+                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+                >
+                  <FileSpreadsheet className="w-5 h-5 mr-2" /> {isSheetsPushing ? 'Updating...' : 'Update Sheets'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handlePullStudentsFromSheets}
+                  disabled={isSheetsPushing || isSheetsPulling}
+                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+                >
+                  <Download className="w-5 h-5 mr-2" /> {isSheetsPulling ? 'Importing...' : 'Import Sheets'}
                 </Button>
               </>
             )}

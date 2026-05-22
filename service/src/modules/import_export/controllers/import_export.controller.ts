@@ -67,6 +67,80 @@ const importEntity = async (req: any, res: any) => {
   }
 };
 
-module.exports = { exportEntity, importEntity };
+const pushEntityToSheets = async (req: any, res: any) => {
+  try {
+    const { entity } = req.params;
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    const out = await importExportService.pushEntityToSheets(entity, centerId ?? undefined);
+    if (out.error === 'unsupported') {
+      return res.status(400).json({ error: 'Unsupported Google Sheets entity' });
+    }
+    if (out.error === 'missing_config') {
+      return res.status(400).json({ error: 'GOOGLE_APPS_SCRIPT_URL is not configured.' });
+    }
+    if (out.error === 'apps_script_failed') {
+      return res.status(502).json({ error: 'Google Apps Script sync failed.', details: out.details });
+    }
+    const { rows } = out as { rows: number; entity: string };
+    await logAudit({
+      user_type: req.user?.userType || 'system',
+      user_id: req.user?.id || 0,
+      action: 'GOOGLE_SHEETS_PUSH',
+      entity_type: entity,
+      center_id: centerId ?? undefined,
+      details: { rows },
+      ip_address: req.ip,
+    });
+    res.json({ message: `Updated Google Sheets with ${rows} ${entity}`, rows });
+  } catch (error: any) {
+    console.error('Google Sheets push error:', error);
+    res.status(500).json({ error: 'Failed to update Google Sheets', details: error.message || String(error) });
+  }
+};
+
+const pullEntityFromSheets = async (req: any, res: any) => {
+  try {
+    const { entity } = req.params;
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    const out = await importExportService.pullEntityFromSheets(entity, centerId ?? undefined);
+    if (out.error === 'unsupported') {
+      return res.status(400).json({ error: 'Unsupported Google Sheets entity' });
+    }
+    if (out.error === 'missing_config') {
+      return res.status(400).json({ error: 'GOOGLE_APPS_SCRIPT_URL is not configured.' });
+    }
+    if (out.error === 'apps_script_failed') {
+      return res.status(502).json({ error: 'Google Apps Script import failed.', details: out.details });
+    }
+    if (out.error === 'invalid_center') {
+      return res.status(400).json({ error: 'Google Sheet rows must belong to this center.' });
+    }
+    const { rows } = out as { rows: number; entity: string };
+    await logAudit({
+      user_type: req.user?.userType || 'system',
+      user_id: req.user?.id || 0,
+      action: 'GOOGLE_SHEETS_PULL',
+      entity_type: entity,
+      center_id: centerId ?? undefined,
+      details: { rows },
+      ip_address: req.ip,
+    });
+    res.json({ message: `Imported ${rows} ${entity} from Google Sheets`, rows });
+  } catch (error: any) {
+    console.error('Google Sheets pull error:', error);
+    res.status(500).json({ error: 'Failed to import from Google Sheets', details: error.message || String(error) });
+  }
+};
+
+module.exports = { exportEntity, importEntity, pushEntityToSheets, pullEntityFromSheets };
 
 export {};
