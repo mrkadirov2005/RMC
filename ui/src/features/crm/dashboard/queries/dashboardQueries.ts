@@ -1,7 +1,6 @@
 // Source file for the dashboard area in the crm feature.
 
 import {
-  ClipboardList,
   GraduationCap,
   UserPlus,
   Users,
@@ -623,14 +622,6 @@ export const getDashboardStatCards = (
         accent: 'from-emerald-500 to-teal-500',
         progress: 100,
         detailsType: 'teachers',
-      },
-      {
-        label: 'Schools',
-        value: stats.totalSchools,
-        icon: ClipboardList,
-        accent: 'from-amber-500 to-orange-500',
-        progress: 100,
-        detailsType: 'schools',
       },
       {
         label: 'New This Month',

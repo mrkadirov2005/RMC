@@ -50,9 +50,13 @@ const Dashboard = memo(() => {
         <DashboardLoadingState />
       ) : (
         <>
-          <DashboardScopeSelector scope={scope} options={scopeOptions} onScopeChange={setScope} />
+          <div className="animate-slide-up animation-delay-100">
+            <DashboardScopeSelector scope={scope} options={scopeOptions} onScopeChange={setScope} />
+          </div>
 
-          <DashboardStatCards cards={statCards} onCardClick={setDetailsCard} />
+          <div className="animate-slide-up animation-delay-200">
+            <DashboardStatCards cards={statCards} onCardClick={setDetailsCard} />
+          </div>
 
           <DashboardStatDetailsDialog
             card={detailsCard}
@@ -64,14 +68,14 @@ const Dashboard = memo(() => {
             }}
           />
 
-          <DashboardFinanceAnalysis
+          <div className="animate-fade-in animation-delay-300"><DashboardFinanceAnalysis
             finance={finance}
             onPreviousMonth={goToPreviousMonth}
             onNextMonth={goToNextMonth}
             onMetricClick={setDetailsCard}
-          />
+          /></div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_380px]">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_380px] animate-fade-in animation-delay-400">
             <DashboardStudentGrowthChart points={studentGrowth} />
             <DashboardSchoolsOverview schools={schoolDistribution} />
           </div>

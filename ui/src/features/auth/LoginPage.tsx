@@ -167,14 +167,14 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
   };
 
   return (
-    <div className="min-h-screen flex relative overflow-hidden bg-slate-900">
+    <div className="flex min-h-screen relative overflow-hidden bg-slate-900">
       {/* Background effects */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(99,102,241,0.12)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.12)_0%,transparent_50%)]" />
 
       {/* Left side - branding */}
-      <div className="flex-1 hidden md:flex flex-col justify-center items-center relative p-12">
+      <div className="flex-1 hidden lg:flex flex-col justify-center items-center relative p-12">
         <div className={cn('absolute inset-0 bg-gradient-to-br opacity-[0.08]', config.gradient)} />
-        <div className="text-center relative z-10 max-w-[480px] animate-in fade-in slide-in-from-left-4 duration-700">
+        <div className="text-center relative z-10 max-w-[480px] animate-slide-left">
           {/* Logo */}
           <div className={cn(
             'w-24 h-24 rounded-[28px] mx-auto mb-8 flex items-center justify-center shadow-2xl',
@@ -207,10 +207,10 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
       </div>
 
       {/* Right side - form */}
-      <div className="flex-1 md:flex-none md:w-[520px] flex flex-col justify-center items-center p-6 sm:p-12 relative z-10">
-        <div className="w-full max-w-[420px] animate-in fade-in slide-in-from-right-4 duration-500">
+      <div className="flex-1 lg:flex-none lg:w-[520px] flex flex-col justify-center items-center p-6 sm:p-12 relative z-10">
+        <div className="w-full max-w-[420px] animate-slide-right">
           {/* Mobile logo */}
-          <div className="flex md:hidden justify-center mb-8">
+          <div className="flex lg:hidden justify-center mb-8">
             <div className={cn(
               'w-16 h-16 rounded-[18px] flex items-center justify-center shadow-2xl',
               `bg-gradient-to-br ${config.gradient} ${config.shadow}`
@@ -228,14 +228,12 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           <h2 className="text-3xl font-bold text-white mb-1">Welcome back</h2>
           <p className="text-white/45 mb-6">{config.subtitle}</p>
 
-          {/* Error */}
           {error && (
             <Alert variant="destructive" className="mb-4 bg-red-500/10 text-red-300 border-red-500/20">
               <AlertDescription>{getErrorMessage(error)}</AlertDescription>
             </Alert>
           )}
 
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-3">
             <div className="relative">
               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
@@ -274,7 +272,10 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             <Button
               type="submit"
               disabled={loading}
-              className={cn('w-full h-12 text-[0.95rem] font-semibold text-white shadow-2xl transition-all duration-300 hover:-translate-y-0.5', config.btnGradient, config.shadow)}
+              className={cn(
+                'w-full h-12 text-[0.95rem] font-semibold text-white shadow-2xl transition-all duration-300 hover:-translate-y-0.5',
+                config.btnGradient, config.shadow
+              )}
             >
               {loading ? (
                 <>
@@ -307,10 +308,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
                   variant="outline"
                   size="sm"
                   onClick={() => navigate(role.path)}
-                  className={cn(
-                    'flex-1 text-white/50 border-white/10 bg-transparent hover:border-current',
-                    `hover:${roleConfig[role.type].accentColor}`
-                  )}
+                  className="flex-1 text-white/50 border-white/10 bg-transparent hover:bg-white/5 hover:text-white/80 hover:border-white/20"
                 >
                   <OtherIcon className="w-4 h-4 mr-1.5" />
                   {role.label}

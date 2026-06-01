@@ -6,6 +6,9 @@ import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MetricCard } from '@/components/common/MetricCard';
+import { PageToolbar } from '@/components/common/PageToolbar';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -80,89 +83,59 @@ const TeachersPage = () => {
       value: filteredTeachers.length.toLocaleString(),
       detail: `${activeTeachers.toLocaleString()} active`,
       icon: Users,
-      shell: 'from-indigo-50 via-white to-sky-50 border-indigo-100',
-      iconShell: 'from-indigo-500 to-sky-500',
-      text: 'text-indigo-950',
+      tone: 'blue' as const,
     },
     {
       label: 'Specializations',
       value: specializations.toLocaleString(),
       detail: 'Across current view',
       icon: GraduationCap,
-      shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
-      iconShell: 'from-emerald-500 to-teal-500',
-      text: 'text-emerald-950',
+      tone: 'green' as const,
     },
     {
       label: 'Qualified',
       value: qualifiedTeachers.toLocaleString(),
       detail: 'With qualification',
       icon: Award,
-      shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
-      iconShell: 'from-amber-500 to-orange-500',
-      text: 'text-amber-950',
+      tone: 'amber' as const,
     },
     {
       label: 'Status health',
       value: filteredTeachers.length > 0 ? `${Math.round((activeTeachers / filteredTeachers.length) * 100)}%` : '0%',
       detail: 'Active ratio',
       icon: ShieldCheck,
-      shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
-      iconShell: 'from-cyan-500 to-fuchsia-500',
-      text: 'text-slate-950',
+      tone: 'neutral' as const,
     },
   ];
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
-              <GraduationCap className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">
-                Teachers Management
-              </h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Manage instructors, specializations, access, and profile details in one place.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
-            <Button
-              onClick={() => handleOpenModal()}
-              className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none"
-            >
+    <div className="space-y-6">
+      <PageHeader
+        title="Teachers"
+        description="Manage instructors, specializations, access, and profile details in one place."
+        icon={GraduationCap}
+        actions={
+          <>
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            <Button onClick={() => handleOpenModal()}>
               <Plus className="w-5 h-5 mr-2" />
               Add Teacher
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className={`rounded-lg border bg-gradient-to-br ${card.shell} p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{card.label}</p>
-                    <p className={`mt-1 text-2xl font-bold ${card.text} dark:text-card-foreground`}>{card.value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
-                  </div>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${card.iconShell} text-white shadow-md shadow-slate-900/10 dark:shadow-none`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {summaryCards.map((card) => (
+          <MetricCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            detail={card.detail}
+            icon={card.icon}
+            tone={card.tone}
+          />
+        ))}
       </div>
 
       {state.error && (
@@ -171,7 +144,7 @@ const TeachersPage = () => {
         </Alert>
       )}
 
-      <div className="rounded-lg border border-sky-100 bg-gradient-to-r from-white via-sky-50/60 to-emerald-50/40 p-3 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none">
+      <PageToolbar>
         <div className="relative max-w-xl">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -193,7 +166,7 @@ const TeachersPage = () => {
             </Button>
           )}
         </div>
-      </div>
+      </PageToolbar>
 
       {state.loading ? (
         <div className="flex justify-center py-16">

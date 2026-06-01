@@ -284,8 +284,8 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
       )}
 
       {!selectedClass ? (
-        <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-          <CalendarDays className="h-14 w-14 text-gray-400 mx-auto mb-3" />
+        <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-border">
+          <CalendarDays className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-muted-foreground">Select a class to take attendance</h3>
           <p className="text-sm text-muted-foreground">Choose a class from the dropdown above</p>
         </div>
@@ -340,7 +340,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
             <div className="flex-1" />
             <Button
               onClick={() => setShowSaveDialog(true)}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              className=""
             >
               <Save className="h-4 w-4 mr-2" />
               Save Attendance
@@ -359,7 +359,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
           <div className="border rounded-md overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-gray-50">
+                <TableRow className="bg-muted/50">
                   <TableHead className="w-12">#</TableHead>
                   <TableHead>Student</TableHead>
                   <TableHead>Enrollment #</TableHead>
@@ -371,7 +371,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                 {students.map((student, index) => {
                   const record = attendance.get(student.student_id);
                   return (
-                    <TableRow key={student.student_id} className="hover:bg-gray-50">
+                    <TableRow key={student.student_id} className="hover:bg-muted/50">
                       <TableCell>{index + 1}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -402,7 +402,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                                     : status === 'Late'
                                     ? 'bg-amber-500 text-white border-amber-500'
                                     : 'bg-blue-500 text-white border-blue-500'
-                                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                  : 'bg-card text-muted-foreground border-border hover:bg-muted'
                               )}
                             >
                               {status === 'Present' && <CheckCircle className="h-3 w-3 inline mr-1" />}
@@ -456,7 +456,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
             <Button
               onClick={handleSaveAttendance}
               disabled={saving}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500"
+              className=""
             >
               {saving ? (
                 <>
