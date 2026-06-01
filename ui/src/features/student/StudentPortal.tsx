@@ -162,12 +162,6 @@ const StudentPortal = () => {
   const schedule = (dashboardData?.schedule || []) as ScheduleItem[];
 
 
-// Memoizes the initials derived value.
-  const initials = useMemo(() => {
-    const first = user?.first_name?.[0] ?? '';
-    const last = user?.last_name?.[0] ?? '';
-    return `${first}${last}` || 'S';
-  }, [user]);
 
 
 
