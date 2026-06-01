@@ -84,8 +84,6 @@ const FinancePage: React.FC = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Teacher</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -93,8 +91,6 @@ const FinancePage: React.FC = () => {
               {filteredTeachers.map((teacher: Teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id}>
                   <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
-                  <TableCell className="text-muted-foreground">{teacher.email || '-'}</TableCell>
-                  <TableCell className="text-muted-foreground">{teacher.phone || '-'}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}>
                       View Finance Details
@@ -114,7 +110,7 @@ const FinancePage: React.FC = () => {
                   <Folder className="h-8 w-8 shrink-0 text-green-600" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{teacher.email || teacher.phone || 'Finance details'}</p>
+                    <p className="sr-only">{teacher.email || teacher.phone || 'Finance details'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -134,12 +130,6 @@ const FinancePage: React.FC = () => {
                   <h3 className="text-lg font-semibold dark:text-white">
                     {teacher.first_name} {teacher.last_name}
                   </h3>
-                  {teacher.email && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{teacher.email}</p>
-                  )}
-                  {teacher.phone && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{teacher.phone}</p>
-                  )}
                 </div>
                 <Button
                   onClick={(e) => {

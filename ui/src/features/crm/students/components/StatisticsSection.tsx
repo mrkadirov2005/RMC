@@ -1,7 +1,8 @@
 // Source file for the students area in the crm feature.
 
-import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, DollarSign, CheckCircle, Star } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface StatisticsSectionProps {
   attendanceStats: {
@@ -28,22 +29,26 @@ const statCards = [
   {
     key: 'attendance',
     icon: Calendar,
-    color: 'text-blue-600 bg-blue-100',
+    shell: 'border-sky-100 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-[0_16px_42px_-34px_rgba(14,165,233,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
+    iconShell: 'bg-gradient-to-br from-sky-500 to-cyan-500 text-white dark:bg-sky-500 dark:bg-none',
   },
   {
     key: 'payments',
     icon: DollarSign,
-    color: 'text-green-600 bg-green-100',
+    shell: 'border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 shadow-[0_16px_42px_-34px_rgba(16,185,129,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
+    iconShell: 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white dark:bg-emerald-500 dark:bg-none',
   },
   {
     key: 'assignments',
     icon: CheckCircle,
-    color: 'text-purple-600 bg-purple-100',
+    shell: 'border-amber-100 bg-gradient-to-br from-amber-50 via-white to-orange-50 shadow-[0_16px_42px_-34px_rgba(245,158,11,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
+    iconShell: 'bg-gradient-to-br from-amber-500 to-orange-500 text-white dark:bg-amber-500 dark:bg-none',
   },
   {
     key: 'grades',
     icon: Star,
-    color: 'text-yellow-600 bg-yellow-100',
+    shell: 'border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 shadow-[0_16px_42px_-34px_rgba(99,102,241,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
+    iconShell: 'bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white dark:bg-indigo-500 dark:bg-none',
   },
 ] as const;
 
@@ -72,25 +77,25 @@ export const StatisticsSection = ({
     },
     {
       label: 'Average Grade',
-      value: `${gradeAverage}%`,
+      value: gradeAverage === 'N/A' ? 'N/A' : `${gradeAverage}%`,
       sub: 'Overall',
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {data.map((item, index) => {
         const config = statCards[index];
         const Icon = config.icon;
         return (
-          <Card key={config.key}>
-            <CardContent className="flex items-center gap-4 pt-6">
-              <div className={`flex items-center justify-center h-12 w-12 rounded-lg ${config.color}`}>
-                <Icon className="h-6 w-6" />
+          <Card key={config.key} className={cn('rounded-lg shadow-sm', config.shell)}>
+            <CardContent className="flex min-h-[116px] items-center gap-4 p-5">
+              <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-lg', config.iconShell)}>
+                <Icon className="h-5 w-5" />
               </div>
-              <div className="space-y-0.5">
-                <p className="text-sm text-muted-foreground">{item.label}</p>
-                <p className="text-2xl font-bold">{item.value}</p>
+              <div className="min-w-0 space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">{item.label}</p>
+                <p className="truncate text-2xl font-bold text-foreground">{item.value}</p>
                 <p className="text-xs text-muted-foreground">{item.sub}</p>
               </div>
             </CardContent>

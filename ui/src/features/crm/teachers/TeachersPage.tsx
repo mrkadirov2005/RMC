@@ -1,13 +1,18 @@
 // Page component for the teachers screen in the crm feature.
 
-import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, Mail, Phone, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
@@ -26,9 +31,65 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import type { Teacher } from './types';
+import { teacherAPI } from '@/shared/api/api';
+import { useAppDispatch } from '../hooks';
+import { patchTeacher } from '@/slices/teachersSlice';
+
+const UsernameField = ({
+  teacher,
+  onSave,
+}: {
+  teacher: Teacher;
+  onSave: (teacher: Teacher, username: string) => Promise<void> | void;
+}) => {
+  const [value, setValue] = useState(teacher.username || '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setValue(teacher.username || '');
+  }, [teacher.username]);
+
+  const save = async () => {
+    const next = value.trim();
+    const current = String(teacher.username || '').trim();
+    if (next === current || saving) return;
+
+    setSaving(true);
+    try {
+      await onSave(teacher, next);
+    } catch {
+      setValue(current);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-[220px]">
+      <Input
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={save}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            setValue(teacher.username || '');
+            event.currentTarget.blur();
+          }
+        }}
+        disabled={saving}
+        placeholder="username"
+        className="h-8 bg-white/80 text-sm dark:bg-background"
+      />
+      {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
+    </div>
+  );
+};
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
+  const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const {
@@ -43,7 +104,6 @@ const TeachersPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
-    getStatusColor,
     getInitials,
     genderOptions,
     teacherStatusOptions,
@@ -63,6 +123,7 @@ const TeachersPage = () => {
         teacher.qualification,
         teacher.email,
         teacher.phone,
+        teacher.username,
         teacher.status,
       ]
         .filter((value) => value != null)
@@ -112,6 +173,52 @@ const TeachersPage = () => {
       text: 'text-slate-950',
     },
   ];
+  const renderTeacherActions = (teacher: Teacher) => (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
+            aria-label="Open teacher actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)} className="gap-2">
+            <Eye className="h-4 w-4 text-cyan-600" />
+            View
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleOpenModal(teacher)} className="gap-2">
+            <Pencil className="h-4 w-4 text-blue-500" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
+            className="gap-2 text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+  const handleUsernameUpdate = async (teacher: Teacher, username: string) => {
+    const id = teacher.teacher_id || teacher.id;
+    if (!id) throw new Error('Teacher ID is missing.');
+    dispatch(patchTeacher({ id, changes: { username } }));
+    try {
+      const response = await teacherAPI.update(id, { username });
+      const updated = (response as any).data ?? response;
+      dispatch(patchTeacher({ id, changes: { username: updated?.username ?? username } }));
+    } catch (error) {
+      dispatch(patchTeacher({ id, changes: { username: teacher.username } }));
+      throw error;
+    }
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -218,11 +325,7 @@ const TeachersPage = () => {
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
                 <TableHead>Teacher</TableHead>
-                <TableHead>Employee ID</TableHead>
-                <TableHead>Specialization</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Username</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -238,27 +341,11 @@ const TeachersPage = () => {
                       {teacher.first_name} {teacher.last_name}
                     </button>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{teacher.employee_id}</TableCell>
-                  <TableCell>{teacher.specialization}</TableCell>
-                  <TableCell className="text-muted-foreground">{teacher.email}</TableCell>
-                  <TableCell className="text-muted-foreground">{teacher.phone}</TableCell>
                   <TableCell>
-                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusColor(teacher.status))}>
-                      {teacher.status}
-                    </span>
+                    <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-600" onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}>
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-700" onClick={() => handleOpenModal(teacher)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {renderTeacherActions(teacher)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -280,11 +367,10 @@ const TeachersPage = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{teacher.specialization}</p>
+                    <div className="mt-2">
+                      <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                    </div>
                   </div>
-                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusColor(teacher.status))}>
-                    {teacher.status}
-                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -310,65 +396,19 @@ const TeachersPage = () => {
                 <h3 className="text-white font-semibold text-lg text-center">
                   {teacher.first_name} {teacher.last_name}
                 </h3>
-                <span className="text-white/80 text-xs font-medium">{teacher.employee_id}</span>
-                <span
-                  className={cn(
-                    'absolute top-3 right-3 px-2 py-0.5 rounded-full text-xs font-semibold border',
-                    getStatusColor(teacher.status)
-                  )}
-                >
-                  {teacher.status}
-                </span>
               </div>
 
               <CardContent className="flex-grow p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <GraduationCap className="w-4 h-4 text-indigo-500" />
-                  <span className="text-sm font-semibold">{teacher.specialization}</span>
-                </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground truncate">{teacher.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{teacher.phone}</span>
-                </div>
-                <div className="mt-4">
-                  <Badge variant="outline" className="text-[0.7rem]">
-                    {teacher.qualification}
-                  </Badge>
+                <p className="text-center font-semibold text-slate-950 dark:text-card-foreground">
+                  {teacher.first_name} {teacher.last_name}
+                </p>
+                <div className="mx-auto mt-3 flex justify-center">
+                  <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
                 </div>
               </CardContent>
 
-              <div className="flex justify-between items-center border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
-                  className="text-sm"
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  View
-                </Button>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-blue-500 hover:text-blue-700"
-                    onClick={() => handleOpenModal(teacher)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:text-red-700"
-                    onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+              <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
+                {renderTeacherActions(teacher)}
               </div>
             </Card>
           ))}
@@ -445,12 +485,12 @@ const TeachersPage = () => {
                     </Select>
                   </div>
                 )}
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input id="username" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
+                </div>
                 {!editingId && (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input id="username" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <Input id="password" type="password" required value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />

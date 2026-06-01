@@ -1,10 +1,16 @@
 // View component for the students screen in the crm feature.
 
-import { useState } from 'react';
-import { Coins, Folder, Info, Pencil, Trash2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Coins, Folder, Info, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
@@ -18,10 +24,63 @@ interface Props {
   onView: (id: number) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: number) => void;
-  statusClass: (status: string) => string;
+  onUsernameUpdate?: (student: Student, username: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   viewMode?: ViewMode;
 }
+
+const UsernameField = ({
+  student,
+  onUsernameUpdate,
+}: {
+  student: Student;
+  onUsernameUpdate?: (student: Student, username: string) => Promise<void> | void;
+}) => {
+  const [value, setValue] = useState(student.username || '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setValue(student.username || '');
+  }, [student.username]);
+
+  const save = async () => {
+    const next = value.trim();
+    const current = String(student.username || '').trim();
+    if (!onUsernameUpdate || next === current || saving) return;
+
+    setSaving(true);
+    try {
+      await onUsernameUpdate(student, next);
+    } catch {
+      setValue(current);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-[220px]">
+      <Input
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={save}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.currentTarget.blur();
+          }
+          if (event.key === 'Escape') {
+            setValue(student.username || '');
+            event.currentTarget.blur();
+          }
+        }}
+        disabled={saving}
+        placeholder="username"
+        className="h-8 bg-white/80 text-sm dark:bg-background"
+      />
+      {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
+    </div>
+  );
+};
 
 // Renders the students table view view.
 export const StudentsTableView = ({
@@ -31,7 +90,7 @@ export const StudentsTableView = ({
   onView,
   onEdit,
   onDelete,
-  statusClass,
+  onUsernameUpdate,
   onCoinsUpdated,
   viewMode = 'list',
 }: Props) => {
@@ -45,39 +104,40 @@ export const StudentsTableView = ({
   };
 
   const renderActions = (student: Student) => (
-    <div className="flex justify-end gap-1">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-amber-600"
-        onClick={() => openCoins(student)}
-      >
-        <Coins className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-cyan-600"
-        onClick={() => onView(student.student_id || student.id || 0)}
-      >
-        <Info className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-blue-500"
-        onClick={() => onEdit(student)}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-8 w-8 text-red-500"
-        onClick={() => onDelete(student.student_id || student.id || 0)}
-      >
-        <Trash2 className="h-4 w-4" />
-      </Button>
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
+            aria-label="Open student actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={() => openCoins(student)} className="gap-2">
+            <Coins className="h-4 w-4 text-amber-600" />
+            Coins
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onView(student.student_id || student.id || 0)} className="gap-2">
+            <Info className="h-4 w-4 text-cyan-600" />
+            View
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => onEdit(student)} className="gap-2">
+            <Pencil className="h-4 w-4 text-blue-500" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => onDelete(student.student_id || student.id || 0)}
+            className="gap-2 text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 
@@ -122,11 +182,7 @@ export const StudentsTableView = ({
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <h3 className="font-semibold text-lg">{student.first_name} {student.last_name}</h3>
-                        <p className="text-xs text-white/80">{student.enrollment_number}</p>
                       </div>
-                      <Badge variant="outline" className={cn('border-white/40 bg-white/15 text-white', statusClass(student.status))}>
-                        {student.status}
-                      </Badge>
                     </div>
                   </div>
                 )}
@@ -138,20 +194,20 @@ export const StudentsTableView = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{student.first_name} {student.last_name}</p>
-                        <p className="truncate text-xs text-muted-foreground">{student.email || student.phone}</p>
+                        <div className="mt-2">
+                          <UsernameField student={student} onUsernameUpdate={onUsernameUpdate} />
+                        </div>
                       </div>
-                      <Badge variant="outline" className={cn('text-xs', statusClass(student.status))}>
-                        {student.status}
-                      </Badge>
                     </div>
                   ) : (
-                    <>
-                      <div className="grid gap-2 text-sm">
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Email</span><span className="truncate">{student.email}</span></div>
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Phone</span><span>{student.phone}</span></div>
-                        <div className="flex justify-between gap-3"><span className="text-muted-foreground">Coins</span><span className="font-semibold">{Number(student.coins || 0).toLocaleString()}</span></div>
+                    <div>
+                      <h3 className="font-semibold text-lg text-slate-950 dark:text-card-foreground">
+                        {student.first_name} {student.last_name}
+                      </h3>
+                      <div className="mt-3">
+                        <UsernameField student={student} onUsernameUpdate={onUsernameUpdate} />
                       </div>
-                    </>
+                    </div>
                   )}
                   <div className={viewMode === 'compact' ? 'mt-3 flex justify-end border-t pt-2' : 'border-t pt-3'}>
                     {renderActions(student)}
@@ -172,36 +228,27 @@ export const StudentsTableView = ({
       <Table>
         <TableHeader className="bg-slate-50/90 dark:bg-transparent">
           <TableRow>
-            <TableHead>Enrollment #</TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Phone</TableHead>
-            <TableHead>School</TableHead>
-            <TableHead>Class</TableHead>
-            <TableHead>Date of Birth</TableHead>
-            <TableHead>Gender</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Coins</TableHead>
+            <TableHead>Username</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={11} className="text-center py-12">
+              <TableCell colSpan={3} className="text-center py-12">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={11} className="text-center py-12 text-muted-foreground">
+              <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
           ) : (
-            students.map((student, index) => (
+            students.map((student) => (
               <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
-                <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{index + 1}</TableCell>
                 <TableCell className="font-medium">
                   <button
                     type="button"
@@ -211,21 +258,8 @@ export const StudentsTableView = ({
                     {student.first_name} {student.last_name}
                   </button>
                 </TableCell>
-                <TableCell className="text-muted-foreground">{student.email}</TableCell>
-                <TableCell className="text-muted-foreground">{student.phone}</TableCell>
-                <TableCell className="text-muted-foreground">{student.school_name || '-'}</TableCell>
-                <TableCell className="text-muted-foreground">{student.class_name || student.school_class || '-'}</TableCell>
-                <TableCell className="text-muted-foreground">
-                  {student.date_of_birth ? new Date(student.date_of_birth).toLocaleDateString() : '-'}
-                </TableCell>
-                <TableCell>{student.gender}</TableCell>
                 <TableCell>
-                  <Badge variant="outline" className={cn('text-xs font-semibold border', statusClass(student.status))}>
-                    {student.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="font-semibold">
-                  {Number(student.coins || 0).toLocaleString()}
+                  <UsernameField student={student} onUsernameUpdate={onUsernameUpdate} />
                 </TableCell>
                 <TableCell className="text-right">
                   {renderActions(student)}

@@ -106,37 +106,27 @@ const SubjectsPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Subject Code</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Class ID</TableHead>
-                  <TableHead>Total Marks</TableHead>
-                  <TableHead>Passing Marks</TableHead>
-                  <TableHead>Teacher ID</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {state.loading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8">
+                    <TableCell colSpan={2} className="text-center py-8">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto" />
                     </TableCell>
                   </TableRow>
                 ) : filteredSubjects.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
                       {searchTerm ? 'No subjects match your search' : 'No subjects found'}
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredSubjects.map((subject) => (
                     <TableRow key={subject.subject_id || subject.id}>
-                      <TableCell className="font-mono text-sm">{subject.subject_code}</TableCell>
                       <TableCell className="font-medium">{subject.subject_name}</TableCell>
-                      <TableCell>{subject.class_id}</TableCell>
-                      <TableCell>{subject.total_marks}</TableCell>
-                      <TableCell>{subject.passing_marks}</TableCell>
-                      <TableCell>{subject.teacher_id || '-'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
                           <Button variant="ghost" size="icon" onClick={() => handleOpenModal(subject)} className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50">

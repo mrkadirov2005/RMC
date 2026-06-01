@@ -1,7 +1,7 @@
 // Modal component for the classes screen in the crm feature.
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +25,7 @@ import { cn } from '@/lib/utils';
 import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
 import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';
-import { fetchStudents } from '../../../slices/studentsSlice';
+import { fetchStudentsForce } from '../../../slices/studentsSlice';
 import { fetchAttendance, fetchAttendanceForce } from '../../../slices/attendanceSlice';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { makeSelectStudentsByClassId, selectSubjectOptions } from '../../../store/selectors';
@@ -117,7 +117,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   useEffect(() => {
     if (open && classData) {
       setActiveTab(initialTab || 'info');
-      dispatch(fetchStudents());
+      dispatch(fetchStudentsForce());
       dispatch(fetchAttendance());
       dispatch(fetchSubjectsThunk());
     }
@@ -413,25 +413,21 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 <AlertDescription>No students enrolled in this class</AlertDescription>
               </Alert>
             ) : (
-              <div className="border rounded-lg">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-primary">
-                      <TableHead className="text-primary-foreground font-semibold">Enrollment #</TableHead>
-                      <TableHead className="text-primary-foreground font-semibold">Name</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.student_id || student.id}>
-                        <TableCell>{student.enrollment_number}</TableCell>
-                        <TableCell>
-                          {student.first_name} {student.last_name}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {students.map((student) => (
+                  <div
+                    key={student.student_id || student.id}
+                    className="flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 dark:border-border dark:bg-background/70"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-muted dark:text-primary">
+                      {student.first_name?.charAt(0) || <User className="h-4 w-4" />}
+                      {student.last_name?.charAt(0)}
+                    </div>
+                    <span className="truncate text-sm font-semibold">
+                      {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
+                    </span>
+                  </div>
+                ))}
               </div>
             )}
           </TabsContent>

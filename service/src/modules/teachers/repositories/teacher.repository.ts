@@ -43,10 +43,10 @@ const countByUsername = (username: string) =>
 
 const update = (id: number, fields: any[], centerId?: number) => {
   let query =
-    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), email = COALESCE($3, email), phone = COALESCE($4, phone), status = COALESCE($5, status), roles = COALESCE($6, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $7';
+    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), status = COALESCE($6, status), roles = COALESCE($7, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $8';
   const params: any[] = [...fields, id];
   if (centerId) {
-    query += ' AND center_id = $8';
+    query += ' AND center_id = $9';
     params.push(centerId);
   }
   query += ' RETURNING *';

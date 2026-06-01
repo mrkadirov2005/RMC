@@ -136,6 +136,10 @@ const teachersSlice = createSlice({
     invalidateTeachers(state) {
       state.lastFetched = null;
     },
+    patchTeacher(state, action: PayloadAction<{ id: number; changes: Partial<Teacher> }>) {
+      const teacher = state.items.find((item) => Number(item.teacher_id || item.id) === action.payload.id);
+      if (teacher) Object.assign(teacher, action.payload.changes);
+    },
   },
   extraReducers: (builder) => {
     // fetchTeachers
@@ -184,7 +188,7 @@ const teachersSlice = createSlice({
   },
 });
 
-export const { clearTeachersError, invalidateTeachers } = teachersSlice.actions;
+export const { clearTeachersError, invalidateTeachers, patchTeacher } = teachersSlice.actions;
 export default teachersSlice.reducer;
 
 // ── Selectors ────────────────────────────────────────────────────────────────

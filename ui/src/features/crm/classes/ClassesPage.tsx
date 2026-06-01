@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal, Search, X, BookOpen, Users, MapPin, DollarSign } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -142,6 +142,43 @@ const ClassesPage = () => {
       text: 'text-slate-950',
     },
   ];
+  const renderClassActions = (cls: any) => (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
+            aria-label="Open class actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => handleViewDetails(cls)} className="gap-2">
+            <Info className="h-4 w-4 text-cyan-600" />
+            Details
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleGenerateSessions(cls)} className="gap-2">
+            <CalendarDays className="h-4 w-4 text-indigo-600" />
+            Generate Sessions
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleOpenModal(cls)} className="gap-2">
+            <Pencil className="h-4 w-4 text-blue-500" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
+            className="gap-2 text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
@@ -252,12 +289,6 @@ const ClassesPage = () => {
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
                 <TableHead>Class</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Schedule</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Room</TableHead>
-                <TableHead>Payment</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -273,27 +304,8 @@ const ClassesPage = () => {
                       {cls.class_name}
                     </button>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{cls.class_code}</TableCell>
-                  <TableCell>Level {cls.level}</TableCell>
-                  <TableCell>{formatSchedule(cls)}</TableCell>
-                  <TableCell>{cls.capacity}</TableCell>
-                  <TableCell>{cls.room_number}</TableCell>
-                  <TableCell>${cls.payment_amount} ({cls.payment_frequency})</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-600" onClick={() => handleViewDetails(cls)}>
-                        <Info className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSessions(cls)}>
-                        <CalendarDays className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500" onClick={() => handleOpenModal(cls)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {renderClassActions(cls)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -315,9 +327,8 @@ const ClassesPage = () => {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold">{cls.class_name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{cls.class_code} &bull; Level {cls.level}</p>
+                    <p className="sr-only">{cls.class_code || 'Class details'}</p>
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground">{cls.capacity}</span>
                 </div>
               </CardContent>
             </Card>
@@ -337,61 +348,12 @@ const ClassesPage = () => {
                 'bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-white'
               }>
                 <CardTitle className="text-lg">{cls.class_name}</CardTitle>
-                <p className="text-sm text-white/80">{cls.class_code}</p>
               </CardHeader>
-              <CardContent className="flex-1 pt-4 space-y-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Level</p>
-                  <p className="text-sm font-semibold">Level {cls.level}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Schedule</p>
-                  <p className="text-sm font-semibold">{formatSchedule(cls)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Capacity</p>
-                  <p className="text-sm font-semibold">{cls.capacity} students</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Room Number</p>
-                  <p className="text-sm font-semibold">{cls.room_number}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Payment</p>
-                  <p className="text-sm font-semibold">
-                    ${cls.payment_amount} ({cls.payment_frequency})
-                  </p>
-                </div>
+              <CardContent className="flex-1 pt-4">
+                <p className="font-semibold text-slate-950 dark:text-card-foreground">{cls.class_name}</p>
               </CardContent>
-              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
-                <Button variant="ghost" size="sm" onClick={() => handleViewDetails(cls)}>
-                  <Info className="mr-1 h-4 w-4" />
-                  Details
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => handleGenerateSessions(cls)}>
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      Generate Sessions
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleOpenModal(cls)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+              <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
+                {renderClassActions(cls)}
               </div>
             </Card>
           ))}

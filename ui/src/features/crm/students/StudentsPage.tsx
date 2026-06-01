@@ -18,10 +18,13 @@ import { StudentsTableView } from './components/StudentsTableView';
 import { useStudentsPage } from './hooks/useStudentsPage';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
+import { useAppDispatch } from '../hooks';
+import { patchStudent } from '@/slices/studentsSlice';
 
 // Renders the students page screen.
 const StudentsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [activeTab, setActiveTab] = useState('students');
   const [statisticsStudents, setStatisticsStudents] = useState<Student[]>([]);
@@ -195,6 +198,25 @@ const StudentsPage = () => {
     }
   };
 
+  const handleUsernameUpdate = async (student: Student, username: string) => {
+    const id = student.student_id || student.id;
+    if (!id) {
+      showToast.error('Student ID is missing.');
+      throw new Error('Student ID is missing.');
+    }
+
+    try {
+      dispatch(patchStudent({ id, changes: { username } }));
+      const response = await studentAPI.update(id, { username });
+      const updated = (response as any).data ?? response;
+      dispatch(patchStudent({ id, changes: { username: updated?.username ?? username } }));
+    } catch (error: any) {
+      dispatch(patchStudent({ id, changes: { username: student.username } }));
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update username.');
+      throw error;
+    }
+  };
+
   return (
     <div className="space-y-6 p-6">
       <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
@@ -314,7 +336,7 @@ const StudentsPage = () => {
             onView={(id) => navigate(`/student/${id}`)}
             onEdit={s.handleOpenModal}
             onDelete={s.handleDelete}
-            statusClass={s.getStatusVariant}
+            onUsernameUpdate={handleUsernameUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             viewMode={viewMode}
           />

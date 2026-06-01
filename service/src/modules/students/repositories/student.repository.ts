@@ -240,24 +240,26 @@ const insert = async (payload: Record<string, unknown>) => {
 };
 
 const update = async (id: number, payload: Record<string, unknown>, centerId?: number, teacherId?: number) => {
-  const { first_name, last_name, email, phone, status, class_id, teacher_id, is_frozen, school_name, school_class } =
+  const { first_name, last_name, username, email, phone, status, class_id, teacher_id, is_frozen, school_name, school_class } =
     payload;
   let query = `UPDATE students SET
       first_name = COALESCE($1, first_name),
       last_name = COALESCE($2, last_name),
-      email = COALESCE($3, email),
-      phone = COALESCE($4, phone),
-      status = COALESCE($5, status),
-      class_id = COALESCE($6, class_id),
-      teacher_id = COALESCE($7, teacher_id),
-      is_frozen = COALESCE($8, is_frozen),
-      school_name = COALESCE($9, school_name),
-      school_class = COALESCE($10, school_class),
+      username = COALESCE($3, username),
+      email = COALESCE($4, email),
+      phone = COALESCE($5, phone),
+      status = COALESCE($6, status),
+      class_id = COALESCE($7, class_id),
+      teacher_id = COALESCE($8, teacher_id),
+      is_frozen = COALESCE($9, is_frozen),
+      school_name = COALESCE($10, school_name),
+      school_class = COALESCE($11, school_class),
       updated_at = CURRENT_TIMESTAMP
-    WHERE student_id = $11`;
+    WHERE student_id = $12`;
   const params: any[] = [
     first_name,
     last_name,
+    username,
     email,
     phone,
     status,

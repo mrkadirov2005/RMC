@@ -65,6 +65,9 @@ const initialState: StudentsState = {
 
 const CACHE_TTL_MS = 60_000;
 
+const hasFullStudentList = (state: StudentsState) =>
+  state.items.length > 0 && state.meta.total <= state.items.length;
+
 // ── Thunks ──────────────────────────────────────────────────────────────────
 
 export const fetchStudents = createAsyncThunk(
@@ -72,7 +75,7 @@ export const fetchStudents = createAsyncThunk(
   async (params: StudentListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { lastFetched } = state.students;
-    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) return null;
+    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS && hasFullStudentList(state.students)) return null;
     try {
       const res = await studentAPI.getAll(params);
 // Handles data.
@@ -172,6 +175,10 @@ const studentsSlice = createSlice({
   reducers: {
     clearStudentsError(state) { state.error = null; },
     invalidateStudents(state) { state.lastFetched = null; },
+    patchStudent(state, action: PayloadAction<{ id: number; changes: Partial<Student> }>) {
+      const student = state.items.find((item) => Number(item.student_id || item.id) === action.payload.id);
+      if (student) Object.assign(student, action.payload.changes);
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -210,7 +217,7 @@ const studentsSlice = createSlice({
   },
 });
 
-export const { clearStudentsError, invalidateStudents } = studentsSlice.actions;
+export const { clearStudentsError, invalidateStudents, patchStudent } = studentsSlice.actions;
 export default studentsSlice.reducer;
 
 // Selects students.

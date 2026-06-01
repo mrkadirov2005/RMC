@@ -55,8 +55,8 @@ const createTeacher = async (body: any) => {
 };
 
 const updateTeacher = (id: number, body: any, centerId?: number) => {
-  const { first_name, last_name, email, phone, status, roles } = body;
-  return teacherRepository.update(id, [first_name, last_name, email, phone, status, roles ? JSON.stringify(roles) : null], centerId);
+  const { first_name, last_name, username, email, phone, status, roles } = body;
+  return teacherRepository.update(id, [first_name, last_name, username, email, phone, status, roles ? JSON.stringify(roles) : null], centerId);
 };
 
 const deleteTeacher = (id: number, centerId?: number) => teacherRepository.remove(id, centerId);

@@ -139,8 +139,6 @@ const ENTITY_CONFIG: Record<string, { columns: string[]; idColumn: string; table
 
 const getAppsScriptUrl = () => process.env.GOOGLE_APPS_SCRIPT_URL || process.env.APPS_SCRIPT_URL || '';
 
-const getAppsScriptSecret = () => process.env.GOOGLE_APPS_SCRIPT_SECRET || process.env.APPS_SCRIPT_SECRET || '';
-
 const normalizeSheetRows = (payload: any, columns: string[]) => {
   if (typeof payload?.csv === 'string') return parseCsv(payload.csv);
   const rawRows = Array.isArray(payload?.rows) ? payload.rows : Array.isArray(payload?.data) ? payload.data : [];
@@ -158,11 +156,10 @@ const callAppsScript = async (payload: any) => {
   const url = getAppsScriptUrl();
   if (!url) return { error: 'missing_config' as const };
 
-  const secret = getAppsScriptSecret();
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(secret ? { ...payload, secret } : payload),
+    body: JSON.stringify(payload),
   });
   const text = await response.text();
   let data: any = {};

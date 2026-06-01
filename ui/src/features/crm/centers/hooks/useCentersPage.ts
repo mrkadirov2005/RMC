@@ -124,12 +124,7 @@ export const useCentersPage = () => {
   };
 
   const columns = [
-    { key: 'center_code', label: 'Code' },
     { key: 'center_name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'city', label: 'City' },
-    { key: 'principal_name', label: 'Principal' },
   ];
 
   return {
