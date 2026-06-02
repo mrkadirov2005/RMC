@@ -74,7 +74,15 @@ const parseCsv = (csv: string) => {
   if (row.some((value) => value !== '')) rows.push(row);
   if (rows.length < 2) return [];
 
-  const headers = rows[0].map((h) => h.trim());
+  const normalizeHeader = (header: string) =>
+    header
+      .trim()
+      .toLowerCase()
+      .replace(/^\uFEFF/, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+  const headers = rows[0].map((h) => normalizeHeader(h));
   return rows.slice(1).map((values) => {
     const obj: any = {};
     headers.forEach((h, i) => {
@@ -99,6 +107,10 @@ const STUDENT_COLS = [
   'status',
   'teacher_id',
   'class_id',
+  'class_name',
+  'class_code',
+  'school_name',
+  'school_class',
 ];
 
 const TEACHER_COLS = [
@@ -138,6 +150,37 @@ const ENTITY_CONFIG: Record<string, { columns: string[]; idColumn: string; table
 };
 
 const getAppsScriptUrl = () => process.env.GOOGLE_APPS_SCRIPT_URL || process.env.APPS_SCRIPT_URL || '';
+
+const cleanValue = (value: any) => {
+  const str = String(value ?? '').trim();
+  return str || null;
+};
+
+const getRowValue = (row: any, aliases: string[]) => {
+  for (const alias of aliases) {
+    const value = cleanValue(row?.[alias]);
+    if (value != null) return value;
+  }
+  return null;
+};
+
+const toOptionalNumber = (value: any) => {
+  const cleaned = cleanValue(value);
+  if (cleaned == null) return null;
+  const number = Number(cleaned);
+  return Number.isFinite(number) && number > 0 ? number : null;
+};
+
+const resolveClassId = async (row: any, centerId?: number) => {
+  const classId = toOptionalNumber(getRowValue(row, ['class_id', 'group_id']));
+  if (classId != null) return classId;
+
+  const className = getRowValue(row, ['class_name', 'group_name', 'group', 'class']);
+  const classCode = getRowValue(row, ['class_code', 'group_code']) || className;
+  if (!className && !classCode) return null;
+
+  return importExportRepository.findClassIdByNameOrCode(className, classCode, centerId);
+};
 
 const normalizeSheetRows = (payload: any, columns: string[]) => {
   if (typeof payload?.csv === 'string') return parseCsv(payload.csv);
@@ -216,20 +259,23 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       }
       const studentId = Number(row.student_id);
       const hasStudentId = upsert && Number.isFinite(studentId) && studentId > 0;
+      const classId = await resolveClassId(row, rowCenterId);
       const params = [
         rowCenterId,
-        row.enrollment_number || identity.enrollmentNumber,
-        row.first_name,
-        row.last_name,
-        row.email || identity.email,
-        row.phone,
-        row.date_of_birth || null,
-        row.parent_name || null,
-        row.parent_phone || null,
-        row.gender || null,
-        row.status || 'Active',
-        row.teacher_id || null,
-        row.class_id || null,
+        getRowValue(row, ['enrollment_number']) || identity.enrollmentNumber,
+        getRowValue(row, ['first_name', 'firstname', 'name']) || '',
+        getRowValue(row, ['last_name', 'lastname', 'surname']) || '',
+        getRowValue(row, ['email']) || identity.email,
+        getRowValue(row, ['phone']),
+        getRowValue(row, ['date_of_birth', 'birth_date', 'dob']),
+        getRowValue(row, ['parent_name']),
+        getRowValue(row, ['parent_phone']),
+        getRowValue(row, ['gender']),
+        getRowValue(row, ['status']) || 'Active',
+        toOptionalNumber(getRowValue(row, ['teacher_id'])),
+        classId,
+        getRowValue(row, ['school_name', 'school']),
+        getRowValue(row, ['school_class', 'school_grade', 'school_group']),
       ];
       await (upsert ? importExportRepository.upsertStudent(hasStudentId ? [studentId, ...params] : params, hasStudentId) : importExportRepository.insertStudent(params));
     } else if (entity === 'teachers') {

@@ -1,13 +1,13 @@
 const pool = require('../../../db/pool');
 
 const selectAllStudents = (centerId?: number) => {
-  let query = 'SELECT * FROM students';
+  let query = 'SELECT s.*, c.class_name, c.class_code FROM students s LEFT JOIN classes c ON s.class_id = c.class_id';
   const params: any[] = [];
   if (centerId) {
-    query += ' WHERE center_id = $1';
+    query += ' WHERE s.center_id = $1';
     params.push(centerId);
   }
-  query += ' ORDER BY student_id DESC';
+  query += ' ORDER BY s.student_id DESC';
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
@@ -33,10 +33,34 @@ const selectAllPayments = (centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const findClassIdByNameOrCode = (className?: string | null, classCode?: string | null, centerId?: number) => {
+  const params: any[] = [];
+  const conditions: string[] = [];
+
+  if (className) {
+    params.push(className);
+    conditions.push(`LOWER(class_name) = LOWER($${params.length})`);
+  }
+  if (classCode) {
+    params.push(classCode);
+    conditions.push(`LOWER(class_code) = LOWER($${params.length})`);
+  }
+  if (!conditions.length) return Promise.resolve(null);
+
+  let query = `SELECT class_id FROM classes WHERE (${conditions.join(' OR ')})`;
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  query += ' ORDER BY class_id LIMIT 1';
+
+  return pool.query(query, params).then((r: any) => r.rows[0]?.class_id || null);
+};
+
 const insertStudent = (params: any[]) =>
   pool.query(
-    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
+    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
     params
   );
 
@@ -57,8 +81,8 @@ const insertPayment = (params: any[]) =>
 const upsertStudent = (params: any[], hasStudentId: boolean) => {
   if (hasStudentId) {
     return pool.query(
-      `INSERT INTO students (student_id, center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      `INSERT INTO students (student_id, center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
        ON CONFLICT (student_id) DO UPDATE SET
          center_id = EXCLUDED.center_id,
          enrollment_number = EXCLUDED.enrollment_number,
@@ -73,6 +97,8 @@ const upsertStudent = (params: any[], hasStudentId: boolean) => {
          status = EXCLUDED.status,
          teacher_id = EXCLUDED.teacher_id,
          class_id = EXCLUDED.class_id,
+         school_name = EXCLUDED.school_name,
+         school_class = EXCLUDED.school_class,
          updated_at = CURRENT_TIMESTAMP`,
       params
     );
@@ -138,6 +164,7 @@ module.exports = {
   selectAllStudents,
   selectAllTeachers,
   selectAllPayments,
+  findClassIdByNameOrCode,
   insertStudent,
   insertTeacher,
   insertPayment,

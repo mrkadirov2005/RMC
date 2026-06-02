@@ -1,4 +1,4 @@
-first_name,last_name,phone,date_of_birth,parent_name,parent_phone,gender,status,teacher_id,class_id
-Ali,Valiyev,+998901234567,2010-01-20,Vali Valiyev,+998901111111,Male,Active,1,2
-Malika,Karimova,+998902345678,2011-04-15,Karim Karimov,+998902222222,Female,Active,1,2
-Jasur,Ahmedov,+998903456789,2009-09-08,Ahmed Ahmedov,+998903333333,Male,Active,2,3
+first_name,last_name,phone,date_of_birth,parent_name,parent_phone,gender,status,teacher_id,class_name,class_code,school_name,school_class
+Ali,Valiyev,+998901234567,2010-01-20,Vali Valiyev,+998901111111,Male,Active,1,IELTS Morning,IELTS-MOR,Temurbek School,7-A
+Malika,Karimova,+998902345678,2011-04-15,Karim Karimov,+998902222222,Female,Active,1,IELTS Morning,IELTS-MOR,Temurbek School,7-A
+Jasur,Ahmedov,+998903456789,2009-09-08,Ahmed Ahmedov,+998903333333,Male,Active,2,SAT Evening,SAT-EVE,President School,8-B
