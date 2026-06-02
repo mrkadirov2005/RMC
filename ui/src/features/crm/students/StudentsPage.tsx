@@ -153,6 +153,7 @@ const StudentsPage = () => {
       const csv = await file.text();
       await dataAPI.importEntity('students', csv);
       s.actions.fetchAll();
+      s.actions.fetchClasses();
       if (activeTab === 'statistics') {
         const response = await studentAPI.getAll();
         const data = (response as any).data ?? response;
@@ -168,6 +169,7 @@ const StudentsPage = () => {
 
   const refreshStudents = async () => {
     s.actions.fetchAll();
+    s.actions.fetchClasses();
     if (activeTab === 'statistics') {
       const response = await studentAPI.getAll();
       const data = (response as any).data ?? response;

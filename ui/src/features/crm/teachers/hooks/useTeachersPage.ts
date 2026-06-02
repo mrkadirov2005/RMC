@@ -116,5 +116,6 @@ export const useTeachersPage = () => {
     genderOptions,
     teacherStatusOptions,
     isOwner,
+    user,
   };
 };

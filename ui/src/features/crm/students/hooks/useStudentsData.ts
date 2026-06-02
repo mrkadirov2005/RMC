@@ -44,6 +44,7 @@ export const useStudentsData = (studentParams?: StudentListParams) => {
   const state = { items: students, loading: studentsLoading, error: studentsError, meta: studentsMeta };
   const actions = {
     fetchAll: () => dispatch(fetchStudentsForce(studentParams)),
+    fetchClasses: () => dispatch(fetchClassesForce()),
   };
 
 // Runs side effects for this component.

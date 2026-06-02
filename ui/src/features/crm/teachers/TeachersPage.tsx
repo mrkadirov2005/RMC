@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
-import { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,9 +32,10 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { Teacher } from './types';
-import { teacherAPI } from '@/shared/api/api';
+import { dataAPI, teacherAPI } from '@/shared/api/api';
 import { useAppDispatch } from '../hooks';
 import { patchTeacher } from '@/slices/teachersSlice';
+import { showToast } from '@/utils/toast';
 
 const UsernameField = ({
   teacher,
@@ -92,6 +93,8 @@ const TeachersPage = () => {
   const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const {
     navigate,
     state,
@@ -104,11 +107,14 @@ const TeachersPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    refresh,
     getInitials,
     genderOptions,
     teacherStatusOptions,
     isOwner,
+    user,
   } = useTeachersPage();
+  const canImportTeachers = isOwner || user?.userType === 'superuser';
   const filteredTeachers = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     if (!search) return state.items;
@@ -219,6 +225,25 @@ const TeachersPage = () => {
       throw error;
     }
   };
+  const handleImportTeachers = async (file?: File) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      showToast.error('Please choose a CSV file.');
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const csv = await file.text();
+      await dataAPI.importEntity('teachers', csv);
+      await refresh();
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import teachers.');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -241,6 +266,27 @@ const TeachersPage = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
+            {canImportTeachers && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(event) => handleImportTeachers(event.target.files?.[0])}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+                >
+                  {isImporting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Upload className="mr-2 h-5 w-5" />}
+                  {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+              </>
+            )}
             <Button
               onClick={() => handleOpenModal()}
               className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none"

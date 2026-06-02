@@ -33,17 +33,29 @@ const selectAllPayments = (centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const normalizeClassText = (value?: string | null) => String(value || '').trim().replace(/\s+/g, ' ');
+
+const normalizeClassCode = (value?: string | null) => {
+  const code = normalizeClassText(value)
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return code || 'CLASS';
+};
+
 const findClassIdByNameOrCode = (className?: string | null, classCode?: string | null, centerId?: number) => {
   const params: any[] = [];
   const conditions: string[] = [];
+  const normalizedClassName = normalizeClassText(className);
+  const normalizedClassCode = normalizeClassText(classCode);
 
-  if (className) {
-    params.push(className);
-    conditions.push(`LOWER(class_name) = LOWER($${params.length})`);
+  if (normalizedClassName) {
+    params.push(normalizedClassName);
+    conditions.push(`LOWER(TRIM(class_name)) = LOWER($${params.length})`);
   }
-  if (classCode) {
-    params.push(classCode);
-    conditions.push(`LOWER(class_code) = LOWER($${params.length})`);
+  if (normalizedClassCode) {
+    params.push(normalizedClassCode);
+    conditions.push(`LOWER(TRIM(class_code)) = LOWER($${params.length})`);
   }
   if (!conditions.length) return Promise.resolve(null);
 
@@ -55,6 +67,36 @@ const findClassIdByNameOrCode = (className?: string | null, classCode?: string |
   query += ' ORDER BY class_id LIMIT 1';
 
   return pool.query(query, params).then((r: any) => r.rows[0]?.class_id || null);
+};
+
+const findOrCreateClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number) => {
+  const existingClassId = await findClassIdByNameOrCode(className, classCode, centerId);
+  if (existingClassId || !centerId) return existingClassId;
+
+  const normalizedClassName = normalizeClassText(className) || normalizeClassText(classCode);
+  if (!normalizedClassName) return null;
+
+  const baseCode = normalizeClassCode(classCode || normalizedClassName);
+  const candidates = [baseCode, `${baseCode}-${centerId}`];
+  for (let index = 2; index <= 99; index += 1) {
+    candidates.push(`${baseCode}-${centerId}-${index}`);
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const result = await pool.query(
+        `INSERT INTO classes (center_id, class_name, class_code, payment_frequency)
+         VALUES ($1, $2, $3, 'Monthly')
+         RETURNING class_id`,
+        [centerId, normalizedClassName, candidate]
+      );
+      return result.rows[0]?.class_id || null;
+    } catch (error: any) {
+      if (error?.code !== '23505') throw error;
+    }
+  }
+
+  return findClassIdByNameOrCode(normalizedClassName, null, centerId);
 };
 
 const insertStudent = (params: any[]) =>
@@ -165,6 +207,7 @@ module.exports = {
   selectAllTeachers,
   selectAllPayments,
   findClassIdByNameOrCode,
+  findOrCreateClassIdByNameOrCode,
   insertStudent,
   insertTeacher,
   insertPayment,

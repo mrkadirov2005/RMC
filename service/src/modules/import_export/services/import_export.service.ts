@@ -171,7 +171,7 @@ const toOptionalNumber = (value: any) => {
   return Number.isFinite(number) && number > 0 ? number : null;
 };
 
-const resolveClassId = async (row: any, centerId?: number) => {
+const resolveClassId = async (row: any, centerId?: number, classIdCache?: Map<string, number | null>) => {
   const classId = toOptionalNumber(getRowValue(row, ['class_id', 'group_id']));
   if (classId != null) return classId;
 
@@ -179,7 +179,12 @@ const resolveClassId = async (row: any, centerId?: number) => {
   const classCode = getRowValue(row, ['class_code', 'group_code']) || className;
   if (!className && !classCode) return null;
 
-  return importExportRepository.findClassIdByNameOrCode(className, classCode, centerId);
+  const cacheKey = [centerId ?? '', className ?? '', classCode ?? ''].map((value) => String(value).trim().toLowerCase()).join('|');
+  if (classIdCache?.has(cacheKey)) return classIdCache.get(cacheKey) ?? null;
+
+  const resolvedClassId = await importExportRepository.findOrCreateClassIdByNameOrCode(className, classCode, centerId);
+  classIdCache?.set(cacheKey, resolvedClassId);
+  return resolvedClassId;
 };
 
 const normalizeSheetRows = (payload: any, columns: string[]) => {
@@ -250,6 +255,7 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
     return { error: 'unsupported' as const };
   }
   let created = 0;
+  const classIdCache = new Map<string, number | null>();
   for (const row of rows) {
     if (entity === 'students') {
       const identity = createGeneratedStudentIdentity();
@@ -259,7 +265,7 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       }
       const studentId = Number(row.student_id);
       const hasStudentId = upsert && Number.isFinite(studentId) && studentId > 0;
-      const classId = await resolveClassId(row, rowCenterId);
+      const classId = await resolveClassId(row, rowCenterId, classIdCache);
       const params = [
         rowCenterId,
         getRowValue(row, ['enrollment_number']) || identity.enrollmentNumber,
@@ -287,16 +293,16 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       const hasTeacherId = upsert && Number.isFinite(teacherId) && teacherId > 0;
       const params = [
         rowCenterId,
-        row.employee_id,
-        row.first_name,
-        row.last_name,
-        row.email,
-        row.phone,
-        row.date_of_birth || null,
-        row.gender || null,
-        row.qualification || null,
-        row.specialization || null,
-        row.status || 'Active',
+        getRowValue(row, ['employee_id', 'staff_id', 'teacher_code']),
+        getRowValue(row, ['first_name', 'firstname', 'name']) || '',
+        getRowValue(row, ['last_name', 'lastname', 'surname']) || '',
+        getRowValue(row, ['email']),
+        getRowValue(row, ['phone', 'phone_number']),
+        getRowValue(row, ['date_of_birth', 'birth_date', 'dob']),
+        getRowValue(row, ['gender']),
+        getRowValue(row, ['qualification', 'degree']),
+        getRowValue(row, ['specialization', 'subject', 'subjects']),
+        getRowValue(row, ['status']) || 'Active',
       ];
       await (upsert ? importExportRepository.upsertTeacher(hasTeacherId ? [teacherId, ...params] : params, hasTeacherId) : importExportRepository.insertTeacher(params));
     } else {
