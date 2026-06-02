@@ -59,7 +59,24 @@ const updateTeacher = (id: number, body: any, centerId?: number) => {
   return teacherRepository.update(id, [first_name, last_name, username, email, phone, status, roles ? JSON.stringify(roles) : null], centerId);
 };
 
-const deleteTeacher = (id: number, centerId?: number) => teacherRepository.remove(id, centerId);
+const deleteTeacher = async (id: number, centerId?: number, options?: { force?: boolean }) => {
+  const teacher = await teacherRepository.findById(id, centerId);
+  if (!teacher) return { kind: 'not_found' as const };
+
+  const dependencies = await teacherRepository.getDeleteDependencies(id, centerId);
+  const hasHistory = dependencies.attendance_count > 0 || dependencies.grades_count > 0;
+  if (hasHistory) {
+    return { kind: 'blocked' as const, reason: 'history', dependencies };
+  }
+
+  if (teacherRepository.hasDeleteDependencies(dependencies)) {
+    if (!options?.force) return { kind: 'has_dependencies' as const, dependencies };
+    await teacherRepository.unassignDeleteDependencies(id, centerId);
+  }
+
+  const row = await teacherRepository.remove(id, centerId);
+  return { kind: 'deleted' as const, row, dependencies };
+};
 
 const authenticate = async (username: string, password: string) => {
   const teacher = await teacherRepository.findByUsername(username);

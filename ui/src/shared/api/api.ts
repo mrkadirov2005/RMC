@@ -250,7 +250,8 @@ export const teacherAPI = {
   getById: (id: number) => apiClient.get(`/teachers/${id}`),
   create: (data: any) => apiClient.post('/teachers', data),
   update: (id: number, data: any) => apiClient.put(`/teachers/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/teachers/${id}`),
+  delete: (id: number, options?: { force?: boolean }) =>
+    apiClient.delete(`/teachers/${id}`, { params: options?.force ? { force: 'true' } : undefined }),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/teachers/${id}/set-password`, data),
   setPaymentPassword: (id: number, data: { password: string }) =>

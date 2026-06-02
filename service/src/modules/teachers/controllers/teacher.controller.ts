@@ -70,11 +70,34 @@ const deleteTeacher = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
-    const row = await teacherService.deleteTeacher(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Teacher not found' });
-    res.json({ message: 'Teacher deleted successfully', teacher: row });
+    const force = String(req.query.force || req.body?.force || '').toLowerCase() === 'true';
+    const result = await teacherService.deleteTeacher(Number(req.params.id), centerId ?? undefined, { force });
+    if (result?.kind === 'not_found') return res.status(404).json({ error: 'Teacher not found', message: 'Teacher not found' });
+    if (result?.kind === 'blocked') {
+      return res.status(409).json({
+        error: 'Teacher has attendance or grade records',
+        message: 'Teacher cannot be deleted because attendance or grade records still reference this teacher.',
+        reason: result.reason,
+        dependencies: result.dependencies,
+      });
+    }
+    if (result?.kind === 'has_dependencies') {
+      return res.status(409).json({
+        error: 'Teacher is assigned to active records',
+        message: 'Teacher is assigned to classes, students, subjects, assignments, or sessions. Reassign them first or retry with force=true to unassign them.',
+        dependencies: result.dependencies,
+      });
+    }
+    res.json({ message: 'Teacher deleted successfully', teacher: result.row, unassigned: result.dependencies });
   } catch (error: any) {
     console.error('Database error:', error);
+    if (error?.code === '23503') {
+      return res.status(409).json({
+        error: 'Teacher is still referenced by other records',
+        message: 'Teacher is still referenced by other records. Reassign related records before deleting.',
+        details: error.detail,
+      });
+    }
     res.status(500).json({ error: 'Failed to delete teacher', details: error.message || String(error) });
   }
 };

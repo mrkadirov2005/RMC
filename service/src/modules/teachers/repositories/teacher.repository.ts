@@ -53,6 +53,64 @@ const update = (id: number, fields: any[], centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
+const getDeleteDependencies = async (id: number, centerId?: number) => {
+  const params: any[] = [id];
+  const scoped = centerId ? ' AND center_id = $2' : '';
+  if (centerId) params.push(centerId);
+
+  const [classes, students, subjects, assignments, sessions, attendance, grades] = await Promise.all([
+    pool.query(`SELECT class_id, class_name, class_code FROM classes WHERE teacher_id = $1${scoped} ORDER BY class_id`, params),
+    pool.query(`SELECT student_id, first_name, last_name FROM students WHERE teacher_id = $1${scoped} ORDER BY student_id`, params),
+    pool.query(`SELECT subject_id, subject_name, subject_code FROM subjects WHERE teacher_id = $1${scoped} ORDER BY subject_id`, params),
+    pool.query(`SELECT assignment_id, assignment_title FROM assignments WHERE teacher_id = $1 ORDER BY assignment_id`, [id]),
+    pool.query(`SELECT session_id, class_id, session_date FROM sessions WHERE teacher_id = $1${scoped} ORDER BY session_id`, params),
+    pool.query(`SELECT COUNT(*)::int AS count FROM attendance WHERE teacher_id = $1${scoped}`, params),
+    pool.query(`SELECT COUNT(*)::int AS count FROM grades WHERE teacher_id = $1${scoped}`, params),
+  ]);
+
+  return {
+    classes: classes.rows,
+    students: students.rows,
+    subjects: subjects.rows,
+    assignments: assignments.rows,
+    sessions: sessions.rows,
+    attendance_count: Number(attendance.rows[0]?.count || 0),
+    grades_count: Number(grades.rows[0]?.count || 0),
+  };
+};
+
+const hasDeleteDependencies = (dependencies: any) =>
+  dependencies.classes.length > 0 ||
+  dependencies.students.length > 0 ||
+  dependencies.subjects.length > 0 ||
+  dependencies.assignments.length > 0 ||
+  dependencies.sessions.length > 0 ||
+  dependencies.attendance_count > 0 ||
+  dependencies.grades_count > 0;
+
+const unassignDeleteDependencies = async (id: number, centerId?: number) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const params: any[] = [id];
+    const scoped = centerId ? ' AND center_id = $2' : '';
+    if (centerId) params.push(centerId);
+
+    await client.query(`UPDATE students SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped}`, params);
+    await client.query(`UPDATE classes SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped}`, params);
+    await client.query(`UPDATE subjects SET teacher_id = NULL WHERE teacher_id = $1${scoped}`, params);
+    await client.query('UPDATE assignments SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1', [id]);
+    await client.query(`UPDATE sessions SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped}`, params);
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const remove = (id: number, centerId?: number) => {
   let query = 'DELETE FROM teachers WHERE teacher_id = $1';
   const params: any[] = [id];
@@ -92,6 +150,9 @@ module.exports = {
   insert,
   countByUsername,
   update,
+  getDeleteDependencies,
+  hasDeleteDependencies,
+  unassignDeleteDependencies,
   remove,
   findPasswordHash,
   setCredentials,
