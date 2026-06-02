@@ -8,7 +8,6 @@ const databaseConfig = {
   port: Number(process.env.DB_PORT || 5432),
   dialect: 'postgres',
 };
-
 module.exports = {
   development: databaseConfig,
   test: databaseConfig,
