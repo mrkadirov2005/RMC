@@ -22,6 +22,17 @@ const selectAllTeachers = (centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const selectAllClasses = (centerId?: number) => {
+  let query = 'SELECT * FROM classes';
+  const params: any[] = [];
+  if (centerId) {
+    query += ' WHERE center_id = $1';
+    params.push(centerId);
+  }
+  query += ' ORDER BY class_id DESC';
+  return pool.query(query, params).then((r: any) => r.rows);
+};
+
 const selectAllPayments = (centerId?: number) => {
   let query = 'SELECT * FROM payments';
   const params: any[] = [];
@@ -41,6 +52,21 @@ const normalizeClassCode = (value?: string | null) => {
     .replace(/[^A-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return code || 'CLASS';
+};
+
+const findTeacherIdByEmployeeId = (employeeId?: string | null, centerId?: number) => {
+  const normalizedEmployeeId = normalizeClassText(employeeId);
+  if (!normalizedEmployeeId) return Promise.resolve(null);
+
+  let query = 'SELECT teacher_id FROM teachers WHERE LOWER(TRIM(employee_id)) = LOWER($1)';
+  const params: any[] = [normalizedEmployeeId];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  query += ' ORDER BY teacher_id LIMIT 1';
+
+  return pool.query(query, params).then((r: any) => r.rows[0]?.teacher_id || null);
 };
 
 const findClassIdByNameOrCode = (className?: string | null, classCode?: string | null, centerId?: number) => {
@@ -110,6 +136,24 @@ const insertTeacher = (params: any[]) =>
   pool.query(
     `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+    params
+  );
+
+const upsertClassByCode = (params: any[]) =>
+  pool.query(
+    `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, payment_amount, payment_frequency)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+     ON CONFLICT (class_code) DO UPDATE SET
+       center_id = EXCLUDED.center_id,
+       class_name = EXCLUDED.class_name,
+       level = EXCLUDED.level,
+       section = EXCLUDED.section,
+       capacity = EXCLUDED.capacity,
+       teacher_id = EXCLUDED.teacher_id,
+       room_number = EXCLUDED.room_number,
+       payment_amount = EXCLUDED.payment_amount,
+       payment_frequency = EXCLUDED.payment_frequency,
+       updated_at = CURRENT_TIMESTAMP`,
     params
   );
 
@@ -205,11 +249,14 @@ const syncSerialSequence = (table: string, idColumn: string) =>
 module.exports = {
   selectAllStudents,
   selectAllTeachers,
+  selectAllClasses,
   selectAllPayments,
+  findTeacherIdByEmployeeId,
   findClassIdByNameOrCode,
   findOrCreateClassIdByNameOrCode,
   insertStudent,
   insertTeacher,
+  upsertClassByCode,
   insertPayment,
   upsertStudent,
   upsertTeacher,

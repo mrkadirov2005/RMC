@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
-import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -46,6 +46,7 @@ const ClassesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const {
     state,
     isModalOpen,
@@ -74,6 +75,8 @@ const ClassesPage = () => {
     handleViewDetails,
     handleCloseDetailModal,
     handleGenerateSessions,
+    handleImportClasses,
+    isImporting,
     frequencyOptions,
     isOwner,
   } = useClassesPage();
@@ -199,6 +202,23 @@ const ClassesPage = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(event) => handleImportClasses(event.target.files?.[0])}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+            >
+              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </Button>
             <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-5 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="mr-2 h-4 w-4" />
               Add Class

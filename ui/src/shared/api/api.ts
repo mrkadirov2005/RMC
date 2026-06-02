@@ -231,13 +231,13 @@ export const studentAPI = {
 };
 
 export const dataAPI = {
-  importEntity: (entity: 'students' | 'teachers' | 'payments', csv: string) =>
+  importEntity: (entity: 'students' | 'teachers' | 'classes' | 'payments', csv: string) =>
     apiClient.post(`/data/import/${entity}`, { csv }),
-  exportEntity: (entity: 'students' | 'teachers' | 'payments') =>
+  exportEntity: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
     apiClient.get(`/data/export/${entity}`, { responseType: 'blob' }),
-  pushEntityToSheets: (entity: 'students' | 'teachers' | 'payments') =>
+  pushEntityToSheets: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
     apiClient.post(`/data/sheets/push/${entity}`, {}),
-  pullEntityFromSheets: (entity: 'students' | 'teachers' | 'payments') =>
+  pullEntityFromSheets: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
     apiClient.post(`/data/sheets/pull/${entity}`, {}),
 };
 

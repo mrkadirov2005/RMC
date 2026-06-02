@@ -1,0 +1,54 @@
+class_name,class_code,teacher_employee_id,level,section,capacity,room_number,payment_amount,payment_frequency
+Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,TCH-001,,"Dush, Chor, Juma 16:00",11,,,Monthly
+Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,TCH-001,,"Dush, Chor, Juma 16:00",8,,,Monthly
+Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,TCH-001,,"Dush, Chor, Juma 16:00",11,,,Monthly
+Kids Farangiz,TCH-003-KIDS-FARANGIZ,TCH-003,,"Sesh, Pay, Shanba 10:00",24,,,Monthly
+A2 flyers,TCH-004-A2-FLYERS,TCH-004,,"Sesh, Pay, Shan 14:00",22,,,Monthly
+A2 Plus new,TCH-004-A2-PLUS-NEW,TCH-004,,"Sesh, Pay, Shan 15:30",16,,,Monthly
+Individual,TCH-004-INDIVIDUAL,TCH-004,,"Sesh, Pay, Shan 15:30",9,,,Monthly
+starter,TCH-004-STARTER,TCH-004,,sesh pay shan 14:00 250000,28,,,Monthly
+A2 plus,TCH-005-A2-PLUS,TCH-005,,"Dush, Chor, Juma 16:00",15,,,Monthly
+A1 plus new,TCH-005-A1-PLUS-NEW,TCH-005,,"Se, Pay, Shan 16:00",15,,,Monthly
+Sentabr oyidan yangi guruhlari,TCH-006-SENTABR-OYIDAN-YANGI-GURUHLARI,TCH-006,,A2 FLYERS afternoon 14:00,86,,,Monthly
+Starter 1,TCH-006-STARTER-1,TCH-006,,Sesh Pay Shanba 10:30,20,,,Monthly
+Starter 2,TCH-006-STARTER-2,TCH-006,,Sesh Pay Shanba 12:30,20,,,Monthly
+Grammar special,TCH-006-GRAMMAR-SPECIAL,TCH-006,,Sesh Pay Shanba,16,,,Monthly
+B1 plus,TCH-006-B1-PLUS,TCH-006,,Sesh Pay Shanba 16:00,12,,,Monthly
+Kids Farangiz,TCH-007-KIDS-FARANGIZ,TCH-007,,"Sesh, Pay, Shanba 10:00",16,,,Monthly
+Starters New (Fazliyev Ramziddin),TCH-008-STARTERS-NEW-FAZLIYEV-RAMZIDDIN,TCH-008,,"Dush, Chor, Juma 15:30",13,,,Monthly
+Individual Speaking by Fazliyev,TCH-008-INDIVIDUAL-SPEAKING-BY-FAZLIYEV,TCH-008,,"Du, Chor, Juma",2,,,Monthly
+Kids Zubayda,TCH-009-KIDS-ZUBAYDA,TCH-009,,"Dush, Chor, Juma 10:00",14,,,Monthly
+Arab tili 1.0 New 60,TCH-010-ARAB-TILI-1-0-NEW-60,TCH-010,,"Sesh, Pay, Shan 08:00",33,,,Monthly
+Arab tili 2,TCH-010-ARAB-TILI-2,TCH-010,,Sesh Pay Shan 15:30,20,,,Monthly
+Arab tili 1,TCH-010-ARAB-TILI-1,TCH-010,,Sesh Pay Shan 14:00,20,,,Monthly
+Sentabr oyidan yangi guruhlari,TCH-011-SENTABR-OYIDAN-YANGI-GURUHLARI,TCH-011,,A1 Movers morning 08:00,21,,,Monthly
+KIDS English,TCH-012-KIDS-ENGLISH,TCH-012,,"Sesh, Pay, Shan 08:00",21,,,Monthly
+KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,TCH-012,,"Sesh, Pay, Shan 10:00",12,,,Monthly
+Sentabr oyidan yangi guruhlari,TCH-013-SENTABR-OYIDAN-YANGI-GURUHLARI,TCH-013,,Matematika 1 8:00,61,,,Monthly
+Meliyev Ramazon 280 k,TCH-013-MELIYEV-RAMAZON-280-K,TCH-013,,Matematika 3 16:00,32,,,Monthly
+Matematika 1,TCH-013-MATEMATIKA-1,TCH-013,,Sesh Pay Shanba 08:00,17,,,Monthly
+Matematika 2,TCH-013-MATEMATIKA-2,TCH-013,,Sesh Pay Shanba 10:00,16,,,Monthly
+Matematika 3,TCH-013-MATEMATIKA-3,TCH-013,,Sesh Pay Shanba 12:00,10,,,Monthly
+Turk tili (Shaydo),TCH-014-TURK-TILI-SHAYDO,TCH-014,,"Dush,sesh,chor,pay,juma 14:00",6,,,Monthly
+Rus tili morning Dinora,TCH-015-RUS-TILI-MORNING-DINORA,TCH-015,,Sesh pay Shanba 10:00,12,,,Monthly
+Rus tili Afternoon Shoxsanam,TCH-015-RUS-TILI-AFTERNOON-SHOXSANAM,TCH-015,,Sesh Pay Shanba 13:30,17,,,Monthly
+Sentabr oyidan yangi guruhlari,TCH-016-SENTABR-OYIDAN-YANGI-GURUHLARI,TCH-016,,A2 FLYERS morning 08:00,63,,,Monthly
+A1 movers morning,TCH-016-A1-MOVERS-MORNING,TCH-016,,"Sesh, Pay, Shan 5-Xona",27,,,Monthly
+Sentabr oyidan yangi guruhlari 50% Sentabr oyidan yangi guruhlari,TCH-018-SENTABR-OYIDAN-YANGI-GURUHLARI-50-SENTABR-,TCH-018,,A2 Flyers14:00,94,,,Monthly
+Starter teens,TCH-018-STARTER-TEENS,TCH-018,,Dush Chor Juma 08:00 260000,23,,,Monthly
+Grammatika,TCH-018-GRAMMATIKA,TCH-018,,Dush Chor Juma 10:00 260000,15,,,Monthly
+B1 Plus,TCH-018-B1-PLUS,TCH-018,,Sesh Pay Shanba 10:00 260000,19,,,Monthly
+Starters New,TCH-018-STARTERS-NEW,TCH-018,,Sesh Pay Shanba 14:00,29,,,Monthly
+B1 plus Morning,TCH-019-B1-PLUS-MORNING,TCH-019,,Sesh Pay Shanba B1 plus 320,22,,,Monthly
+ISMI FAMILIYASI,TCH-019-ISMI-FAMILIYASI,TCH-019,,Sesh Pay Shanba B1 plus 320,60,,,Monthly
+B2 Multilevel December,TCH-019-B2-MULTILEVEL-DECEMBER,TCH-019,,Sesh Pay Shaba 14,44,,,Monthly
+A1 Plus morning (movers),TCH-019-A1-PLUS-MORNING-MOVERS,TCH-019,,B2 Multilevel Afternoon 15.00,37,,,Monthly
+B1 Inntroduction,TCH-019-B1-INNTRODUCTION,TCH-019,,Dush chor Juma 13.3,48,,,Monthly
+IELTS 7.0 Premier,TCH-019-IELTS-7-0-PREMIER,TCH-019,,Sesh Pay shanba 16:00,38,,,Monthly
+Movers Yangi (Islomjon ustoz),TCH-020-MOVERS-YANGI-ISLOMJON-USTOZ,TCH-020,,"Dush, Chor, Juma 13:30 45%",20,,,Monthly
+Flyers (Islomjon ustoz),TCH-020-FLYERS-ISLOMJON-USTOZ,TCH-020,,"Dush, Chor, Juma 15:00",16,,,Monthly
+A2 flyers Afternoon (Javhar Ustoz),TCH-020-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,TCH-020,,"Sesh, Pay, Shan 13:30",23,,,Monthly
+Starter (Islomjon ustoz),TCH-020-STARTER-ISLOMJON-USTOZ,TCH-020,,Starter sesh 15:30,25,,,Monthly
+Individual (Islomjon ustoz),TCH-020-INDIVIDUAL-ISLOMJON-USTOZ,TCH-020,,"Dush, Chor, Juma 15:00",21,,,Monthly
+Kids Shamsiya,TCH-022-KIDS-SHAMSIYA,TCH-022,,"Du, Chor, Juma 14:00",16,,,Monthly
+Kids English (Shamsiyabegim),TCH-022-KIDS-ENGLISH-SHAMSIYABEGIM,TCH-022,,Sesh pay shan 14:00,18,,,Monthly

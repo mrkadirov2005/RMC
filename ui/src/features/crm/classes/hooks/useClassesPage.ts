@@ -1,7 +1,7 @@
 // React hooks for the crm feature.
 
 import { useEffect, useState } from 'react';
-import { classAPI } from '../../../../shared/api/api';
+import { classAPI, dataAPI } from '../../../../shared/api/api';
 import { frequencyOptions } from '../../../../utils/dropdownOptions';
 import { handleApiError, showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
@@ -57,6 +57,7 @@ export const useClassesPage = () => {
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; name?: string } | null>(null);
   const [deleteAttendance, setDeleteAttendance] = useState<AttendanceRecord[]>([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -228,6 +229,27 @@ export const useClassesPage = () => {
     }
   };
 
+// Handles CSV import.
+  const handleImportClasses = async (file?: File) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      showToast.error('Please choose a CSV file.');
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const csv = await file.text();
+      await dataAPI.importEntity('classes', csv);
+      showToast.success('Classes imported successfully.');
+      dispatch(fetchClassesForce());
+    } catch (error) {
+      showToast.error(handleApiError(error) || 'Failed to import classes.');
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return {
     state,
     isModalOpen,
@@ -256,6 +278,8 @@ export const useClassesPage = () => {
     handleViewDetails,
     handleCloseDetailModal,
     handleGenerateSessions,
+    handleImportClasses,
+    isImporting,
     frequencyOptions,
     isOwner,
   };
