@@ -4,6 +4,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT, 'docs', 'data');
 const OUT_DIR = path.join(ROOT, 'docs', 'normalized');
+const DEFAULT_PASSWORD = '012345678';
 
 const parseCsv = (text) => {
   const rows = [];
@@ -69,6 +70,25 @@ const slug = (value) => {
     .replace(/[^A-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
   return base || 'ITEM';
+};
+
+const usernameBase = (value) =>
+  compact(value)
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '') || 'user';
+
+const createUsername = (firstName, usedNames) => {
+  const base = usernameBase(firstName);
+  let username = base;
+  let suffix = 2;
+  while (usedNames.has(username)) {
+    username = `${base}${suffix}`;
+    suffix += 1;
+  }
+  usedNames.add(username);
+  return username;
 };
 
 const teacherNameFromFile = (fileName) =>
@@ -137,9 +157,11 @@ fs.mkdirSync(OUT_DIR, { recursive: true });
 const files = fs.readdirSync(DATA_DIR).filter((file) => file.toLowerCase().endsWith('.csv')).sort();
 const teachers = [];
 const teacherByName = new Map();
+const teacherUsernames = new Set();
 const classes = [];
 const classByCode = new Map();
 const students = [];
+const studentUsernames = new Set();
 
 for (const file of files) {
   const teacherName = teacherNameFromFile(file);
@@ -159,6 +181,8 @@ for (const file of files) {
       specialization: '',
       status: 'Active',
     };
+    teacher.username = createUsername(teacher.first_name, teacherUsernames);
+    teacher.password = DEFAULT_PASSWORD;
     teachers.push(teacher);
     teacherByName.set(teacherName.toLowerCase(), teacher);
   }
@@ -219,7 +243,7 @@ for (const file of files) {
       const studentName = splitPersonName(fullName);
       const studentNumber = students.length + 1;
       const phone = phoneIndex >= 0 ? normalizePhone(dataRow[phoneIndex]) : '';
-      students.push({
+      const student = {
         enrollment_number: `STU-${String(studentNumber).padStart(5, '0')}`,
         first_name: studentName.first_name || fullName,
         last_name: studentName.last_name,
@@ -235,7 +259,10 @@ for (const file of files) {
         class_code: classRow.class_code,
         school_name: schoolNameIndex >= 0 ? compact(dataRow[schoolNameIndex]) : '',
         school_class: schoolClassIndex >= 0 ? compact(dataRow[schoolClassIndex]) : '',
-      });
+      };
+      student.username = createUsername(student.first_name, studentUsernames);
+      student.password = DEFAULT_PASSWORD;
+      students.push(student);
       classRow.capacity += 1;
     }
   }
@@ -252,6 +279,8 @@ writeCsv(path.join(OUT_DIR, 'teachers_import.csv'), teachers, [
   'qualification',
   'specialization',
   'status',
+  'username',
+  'password',
 ]);
 
 writeCsv(path.join(OUT_DIR, 'classes_import.csv'), classes, [
@@ -277,6 +306,8 @@ writeCsv(path.join(OUT_DIR, 'students_import.csv'), students, [
   'parent_phone',
   'gender',
   'status',
+  'username',
+  'password',
   'teacher_employee_id',
   'class_name',
   'class_code',

@@ -37,6 +37,15 @@ import { useAppDispatch } from '../hooks';
 import { patchTeacher } from '@/slices/teachersSlice';
 import { showToast } from '@/utils/toast';
 
+const buildTeacherUsername = (value: string) => {
+  const cleaned = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+  if (!cleaned) return '';
+  return cleaned.length >= 3 ? cleaned : cleaned.padEnd(3, '0');
+};
+
 const UsernameField = ({
   teacher,
   onSave,
@@ -95,6 +104,7 @@ const TeachersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<number>>(new Set());
   const {
     navigate,
     state,
@@ -115,6 +125,7 @@ const TeachersPage = () => {
     user,
   } = useTeachersPage();
   const canImportTeachers = isOwner || user?.userType === 'superuser';
+  const getTeacherId = (teacher: Teacher) => Number(teacher.teacher_id || teacher.id || 0);
   const filteredTeachers = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     if (!search) return state.items;
@@ -136,6 +147,27 @@ const TeachersPage = () => {
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [searchTerm, state.items]);
+  const visibleTeacherIds = filteredTeachers.map(getTeacherId).filter((id) => id > 0);
+  const selectedVisibleTeacherCount = visibleTeacherIds.filter((id) => selectedTeacherIds.has(id)).length;
+  const allVisibleTeachersSelected = visibleTeacherIds.length > 0 && selectedVisibleTeacherCount === visibleTeacherIds.length;
+  const toggleTeacher = (id: number, checked: boolean) => {
+    setSelectedTeacherIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAllVisibleTeachers = (checked: boolean) => {
+    setSelectedTeacherIds((current) => {
+      const next = new Set(current);
+      for (const id of visibleTeacherIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  };
   const activeTeachers = filteredTeachers.filter((teacher) => String(teacher.status || '').toLowerCase() === 'active').length;
   const specializations = new Set(
     filteredTeachers.map((teacher) => String(teacher.specialization || '').trim()).filter(Boolean)
@@ -243,6 +275,41 @@ const TeachersPage = () => {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
+  };
+  const handleBulkDeleteTeachers = async () => {
+    const ids = Array.from(selectedTeacherIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} selected teacher${ids.length === 1 ? '' : 's'}?`)) return;
+
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await teacherAPI.delete(id);
+      } catch {
+        failed += 1;
+      }
+    }
+    await refresh();
+    setSelectedTeacherIds(new Set());
+    if (failed > 0) {
+      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+    } else {
+      showToast.success(`Deleted ${ids.length} teacher${ids.length === 1 ? '' : 's'}.`);
+    }
+  };
+  const handleFirstNameChange = (value: string) => {
+    setFormData((current) => {
+      if (editingId) return { ...current, first_name: value };
+
+      const previousAutoUsername = buildTeacherUsername(String(current.first_name || ''));
+      const currentUsername = String(current.username || '').trim();
+      const shouldUpdateUsername = !currentUsername || currentUsername === previousAutoUsername;
+      return {
+        ...current,
+        first_name: value,
+        username: shouldUpdateUsername ? buildTeacherUsername(value) : current.username,
+      };
+    });
   };
 
   return (
@@ -367,9 +434,35 @@ const TeachersPage = () => {
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+          {selectedTeacherIds.size > 0 && (
+            <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
+              <span className="font-medium">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
           <Table>
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleTeachersSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = selectedVisibleTeacherCount > 0 && !allVisibleTeachersSelected;
+                    }}
+                    onChange={(event) => toggleAllVisibleTeachers(event.target.checked)}
+                    aria-label="Select all visible teachers"
+                    className="h-4 w-4"
+                  />
+                </TableHead>
                 <TableHead>Teacher</TableHead>
                 <TableHead>Username</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -378,6 +471,15 @@ const TeachersPage = () => {
             <TableBody>
               {filteredTeachers.map((teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                      onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                      aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                      className="h-4 w-4"
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <button
                       type="button"
@@ -399,66 +501,116 @@ const TeachersPage = () => {
           </Table>
         </Card>
       ) : viewMode === 'compact' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredTeachers.map((teacher) => (
-            <Card
-              key={teacher.teacher_id || teacher.id}
-              className="cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
-              onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-sm font-bold text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
-                    {getInitials(teacher.first_name, teacher.last_name)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                    <div className="mt-2">
-                      <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+        <>
+          {selectedTeacherIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+              <span className="font-medium">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {filteredTeachers.map((teacher) => (
+              <Card
+                key={teacher.teacher_id || teacher.id}
+                className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
+                onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
+              >
+                <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                    onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                    aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                    className="h-4 w-4"
+                  />
+                </div>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-sm font-bold text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
+                      {getInitials(teacher.first_name, teacher.last_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
+                      <div className="mt-2">
+                        <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredTeachers.map((teacher, index) => (
-            <Card
-              key={teacher.teacher_id || teacher.id}
-              className="h-full flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
-            >
-              <div className={cn(
-                'p-6 flex flex-col items-center relative text-white',
-                index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
-                index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
-                index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
-              )}>
-                <div className="w-20 h-20 rounded-full bg-white/20 border-[3px] border-white/40 flex items-center justify-center text-white text-xl font-bold mb-2">
-                  {getInitials(teacher.first_name, teacher.last_name)}
-                </div>
-                <h3 className="text-white font-semibold text-lg text-center">
-                  {teacher.first_name} {teacher.last_name}
-                </h3>
+        <>
+          {selectedTeacherIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+              <span className="font-medium">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                  Clear
+                </Button>
               </div>
-
-              <CardContent className="flex-grow p-5">
-                <p className="text-center font-semibold text-slate-950 dark:text-card-foreground">
-                  {teacher.first_name} {teacher.last_name}
-                </p>
-                <div className="mx-auto mt-3 flex justify-center">
-                  <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredTeachers.map((teacher, index) => (
+              <Card
+                key={teacher.teacher_id || teacher.id}
+                className="relative h-full flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
+              >
+                <div className="absolute right-3 top-3 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                    onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                    aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                    className="h-4 w-4"
+                  />
                 </div>
-              </CardContent>
+                <div className={cn(
+                  'p-6 flex flex-col items-center relative text-white',
+                  index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
+                  index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
+                  index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
+                  index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
+                )}>
+                  <div className="w-20 h-20 rounded-full bg-white/20 border-[3px] border-white/40 flex items-center justify-center text-white text-xl font-bold mb-2">
+                    {getInitials(teacher.first_name, teacher.last_name)}
+                  </div>
+                  <h3 className="text-white font-semibold text-lg text-center">
+                    {teacher.first_name} {teacher.last_name}
+                  </h3>
+                </div>
 
-              <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
-                {renderTeacherActions(teacher)}
-              </div>
-            </Card>
-          ))}
-        </div>
+                <CardContent className="flex-grow p-5">
+                  <p className="text-center font-semibold text-slate-950 dark:text-card-foreground">
+                    {teacher.first_name} {teacher.last_name}
+                  </p>
+                  <div className="mx-auto mt-3 flex justify-center">
+                    <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                  </div>
+                </CardContent>
+
+                <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
+                  {renderTeacherActions(teacher)}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
@@ -478,7 +630,7 @@ const TeachersPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="first_name">First Name</Label>
-                  <Input id="first_name" required value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
+                  <Input id="first_name" required value={formData.first_name || ''} onChange={(e) => handleFirstNameChange(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="last_name">Last Name</Label>

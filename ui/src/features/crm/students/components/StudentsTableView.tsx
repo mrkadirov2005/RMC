@@ -24,6 +24,7 @@ interface Props {
   onView: (id: number) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: number) => void;
+  onBulkDelete?: (ids: number[]) => Promise<void> | void;
   onUsernameUpdate?: (student: Student, username: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   viewMode?: ViewMode;
@@ -90,12 +91,45 @@ export const StudentsTableView = ({
   onView,
   onEdit,
   onDelete,
+  onBulkDelete,
   onUsernameUpdate,
   onCoinsUpdated,
   viewMode = 'list',
 }: Props) => {
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
+  const visibleIds = students.map(getStudentId).filter((id) => id > 0);
+  const selectedVisibleCount = visibleIds.filter((id) => selectedIds.has(id)).length;
+  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
+
+  const toggleStudent = (id: number, checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+
+  const toggleAllVisible = (checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      for (const id of visibleIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  };
+  const deleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0 || !onBulkDelete) return;
+    await onBulkDelete(ids);
+    setSelectedIds(new Set());
+  };
 
 // Opens coins.
   const openCoins = (student: Student) => {
@@ -157,6 +191,22 @@ export const StudentsTableView = ({
   if (viewMode !== 'list') {
     return (
       <>
+        {selectedIds.size > 0 && (
+          <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+            <span className="font-medium">{selectedIds.size} selected</span>
+            <div className="flex items-center gap-2">
+              {onBulkDelete && (
+                <Button type="button" variant="outline" size="sm" onClick={deleteSelected}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+              )}
+              <Button type="button" variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+                Clear
+              </Button>
+            </div>
+          </div>
+        )}
         {loading ? (
           <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center">Loading...</CardContent></Card>
         ) : students.length === 0 ? (
@@ -167,10 +217,19 @@ export const StudentsTableView = ({
               <Card
                 key={student.student_id || student.id}
                 className={cn(
-                  'overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0',
+                  'relative overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0',
                   viewMode === 'cards' && 'border-border/60'
                 )}
               >
+                <div className="absolute right-3 top-3 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(getStudentId(student))}
+                    onChange={(event) => toggleStudent(getStudentId(student), event.target.checked)}
+                    className="h-4 w-4"
+                    aria-label={`Select ${student.first_name} ${student.last_name}`}
+                  />
+                </div>
                 {viewMode === 'cards' && (
                   <div className={cn(
                     'p-5 text-white',
@@ -225,9 +284,37 @@ export const StudentsTableView = ({
   return (
     <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
       <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
+          <span className="font-medium">{selectedIds.size} selected</span>
+          <div className="flex items-center gap-2">
+            {onBulkDelete && (
+              <Button type="button" variant="outline" size="sm" onClick={deleteSelected}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </Button>
+            )}
+            <Button type="button" variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
       <Table>
         <TableHeader className="bg-slate-50/90 dark:bg-transparent">
           <TableRow>
+            <TableHead className="w-10">
+              <input
+                type="checkbox"
+                checked={allVisibleSelected}
+                ref={(input) => {
+                  if (input) input.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected;
+                }}
+                onChange={(event) => toggleAllVisible(event.target.checked)}
+                aria-label="Select all visible students"
+                className="h-4 w-4"
+              />
+            </TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Username</TableHead>
             <TableHead className="text-right">Actions</TableHead>
@@ -236,19 +323,28 @@ export const StudentsTableView = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center py-12">
+              <TableCell colSpan={4} className="text-center py-12">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="text-center py-12 text-muted-foreground">
+              <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
           ) : (
             students.map((student) => (
               <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                <TableCell>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.has(getStudentId(student))}
+                    onChange={(event) => toggleStudent(getStudentId(student), event.target.checked)}
+                    aria-label={`Select ${student.first_name} ${student.last_name}`}
+                    className="h-4 w-4"
+                  />
+                </TableCell>
                 <TableCell className="font-medium">
                   <button
                     type="button"

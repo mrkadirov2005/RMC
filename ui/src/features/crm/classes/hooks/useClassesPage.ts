@@ -250,6 +250,27 @@ export const useClassesPage = () => {
     }
   };
 
+// Handles bulk delete.
+  const handleBulkDelete = async (ids: number[]) => {
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} selected class${ids.length === 1 ? '' : 'es'}?`)) return;
+
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await classAPI.delete(id);
+      } catch {
+        failed += 1;
+      }
+    }
+    dispatch(fetchClassesForce());
+    if (failed > 0) {
+      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+    } else {
+      showToast.success(`Deleted ${ids.length} class${ids.length === 1 ? '' : 'es'}.`);
+    }
+  };
+
   return {
     state,
     isModalOpen,
@@ -279,6 +300,7 @@ export const useClassesPage = () => {
     handleCloseDetailModal,
     handleGenerateSessions,
     handleImportClasses,
+    handleBulkDelete,
     isImporting,
     frequencyOptions,
     isOwner,

@@ -218,6 +218,25 @@ const StudentsPage = () => {
       throw error;
     }
   };
+  const handleBulkDeleteStudents = async (ids: number[]) => {
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} selected student${ids.length === 1 ? '' : 's'}?`)) return;
+
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await studentAPI.delete(id);
+      } catch {
+        failed += 1;
+      }
+    }
+    await refreshStudents();
+    if (failed > 0) {
+      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+    } else {
+      showToast.success(`Deleted ${ids.length} student${ids.length === 1 ? '' : 's'}.`);
+    }
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -338,6 +357,7 @@ const StudentsPage = () => {
             onView={(id) => navigate(`/student/${id}`)}
             onEdit={s.handleOpenModal}
             onDelete={s.handleDelete}
+            onBulkDelete={handleBulkDeleteStudents}
             onUsernameUpdate={handleUsernameUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             viewMode={viewMode}

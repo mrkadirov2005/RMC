@@ -127,15 +127,47 @@ const findOrCreateClassIdByNameOrCode = async (className?: string | null, classC
 
 const insertStudent = (params: any[]) =>
   pool.query(
-    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
+     ON CONFLICT (enrollment_number) DO UPDATE SET
+       center_id = EXCLUDED.center_id,
+       first_name = EXCLUDED.first_name,
+       last_name = EXCLUDED.last_name,
+       username = EXCLUDED.username,
+       password_hash = EXCLUDED.password_hash,
+       email = EXCLUDED.email,
+       phone = EXCLUDED.phone,
+       date_of_birth = EXCLUDED.date_of_birth,
+       parent_name = EXCLUDED.parent_name,
+       parent_phone = EXCLUDED.parent_phone,
+       gender = EXCLUDED.gender,
+       status = EXCLUDED.status,
+       teacher_id = EXCLUDED.teacher_id,
+       class_id = EXCLUDED.class_id,
+       school_name = EXCLUDED.school_name,
+       school_class = EXCLUDED.school_class,
+       updated_at = CURRENT_TIMESTAMP`,
     params
   );
 
 const insertTeacher = (params: any[]) =>
   pool.query(
-    `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+    `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, username, password_hash)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+     ON CONFLICT (employee_id) DO UPDATE SET
+       center_id = EXCLUDED.center_id,
+       first_name = EXCLUDED.first_name,
+       last_name = EXCLUDED.last_name,
+       email = EXCLUDED.email,
+       phone = EXCLUDED.phone,
+       date_of_birth = EXCLUDED.date_of_birth,
+       gender = EXCLUDED.gender,
+       qualification = EXCLUDED.qualification,
+       specialization = EXCLUDED.specialization,
+       status = EXCLUDED.status,
+       username = EXCLUDED.username,
+       password_hash = EXCLUDED.password_hash,
+       updated_at = CURRENT_TIMESTAMP`,
     params
   );
 
@@ -167,13 +199,15 @@ const insertPayment = (params: any[]) =>
 const upsertStudent = (params: any[], hasStudentId: boolean) => {
   if (hasStudentId) {
     return pool.query(
-      `INSERT INTO students (student_id, center_id, enrollment_number, first_name, last_name, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
+      `INSERT INTO students (student_id, center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
        ON CONFLICT (student_id) DO UPDATE SET
          center_id = EXCLUDED.center_id,
          enrollment_number = EXCLUDED.enrollment_number,
          first_name = EXCLUDED.first_name,
          last_name = EXCLUDED.last_name,
+         username = EXCLUDED.username,
+         password_hash = EXCLUDED.password_hash,
          email = EXCLUDED.email,
          phone = EXCLUDED.phone,
          date_of_birth = EXCLUDED.date_of_birth,
@@ -195,8 +229,8 @@ const upsertStudent = (params: any[], hasStudentId: boolean) => {
 const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
   if (hasTeacherId) {
     return pool.query(
-      `INSERT INTO teachers (teacher_id, center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      `INSERT INTO teachers (teacher_id, center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, username, password_hash)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
        ON CONFLICT (teacher_id) DO UPDATE SET
          center_id = EXCLUDED.center_id,
          employee_id = EXCLUDED.employee_id,
@@ -209,6 +243,8 @@ const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
          qualification = EXCLUDED.qualification,
          specialization = EXCLUDED.specialization,
          status = EXCLUDED.status,
+         username = EXCLUDED.username,
+         password_hash = EXCLUDED.password_hash,
          updated_at = CURRENT_TIMESTAMP`,
       params
     );

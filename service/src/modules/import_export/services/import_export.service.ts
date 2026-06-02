@@ -1,5 +1,6 @@
 const importExportRepository = require('../repositories/import_export.repository');
 const { studentInCenter } = require('../../../shared/tenantDb');
+const { hashPassword } = require('../../../shared/password');
 const crypto = require('crypto');
 
 const createStudentSpecialId = () => {
@@ -98,6 +99,8 @@ const STUDENT_COLS = [
   'enrollment_number',
   'first_name',
   'last_name',
+  'username',
+  'password',
   'email',
   'phone',
   'date_of_birth',
@@ -127,6 +130,8 @@ const TEACHER_COLS = [
   'qualification',
   'specialization',
   'status',
+  'username',
+  'password',
 ];
 
 const CLASS_COLS = [
@@ -308,6 +313,8 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         getRowValue(row, ['enrollment_number']) || identity.enrollmentNumber,
         getRowValue(row, ['first_name', 'firstname', 'name']) || '',
         getRowValue(row, ['last_name', 'lastname', 'surname']) || '',
+        getRowValue(row, ['username']),
+        getRowValue(row, ['password']) ? hashPassword(getRowValue(row, ['password'])) : null,
         getRowValue(row, ['email']) || identity.email,
         getRowValue(row, ['phone']),
         getRowValue(row, ['date_of_birth', 'birth_date', 'dob']),
@@ -340,6 +347,8 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         getRowValue(row, ['qualification', 'degree']),
         getRowValue(row, ['specialization', 'subject', 'subjects']),
         getRowValue(row, ['status']) || 'Active',
+        getRowValue(row, ['username']),
+        getRowValue(row, ['password']) ? hashPassword(getRowValue(row, ['password'])) : null,
       ];
       await (upsert ? importExportRepository.upsertTeacher(hasTeacherId ? [teacherId, ...params] : params, hasTeacherId) : importExportRepository.insertTeacher(params));
     } else if (entity === 'classes') {
