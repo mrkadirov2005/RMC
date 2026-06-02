@@ -48,10 +48,11 @@ async function main() {
 
   const app = express();
   const PORT = process.env.PORT || 4000;
+  const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
 
   app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: BODY_LIMIT }));
+  app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
   // Request logging (MongoDB). Logs once per request on response finish/abort.
   app.use(requestLogger);
 
