@@ -397,327 +397,285 @@ const StudentPortal = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
-        <div className="animate-slide-up animation-delay-200"><MetricCard label="Active Tests" value={activeTests} detail="Ready to take" icon={FileQuestion} tone="blue" onClick={() => navigate('/my-tests')} /></div>
-        <div className="animate-slide-up animation-delay-300"><MetricCard label="Attendance Rate" value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} present`} icon={CalendarDays} tone="green" /></div>
-        <div className="animate-slide-up animation-delay-400"><MetricCard label="Average Grade" value={`${averageGrade}%`} detail="Across posted grades" icon={CheckCircle} tone="neutral" /></div>
-        <div className="animate-slide-up animation-delay-500"><MetricCard label="Outstanding Debt" value={`$${outstandingDebt.toLocaleString()}`} detail="Remaining balance" icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} /></div>
-        <div className="animate-slide-up animation-delay-600"><MetricCard label="Coins" value={Number(student?.coins || 0).toLocaleString()} detail="Current balance" icon={Coins} tone="amber" /></div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <MetricCard className="animate-slide-up animation-delay-200" label="Active Tests" value={activeTests} detail="Ready to take" icon={FileQuestion} tone="blue" onClick={() => navigate('/my-tests')} />
+        <MetricCard className="animate-slide-up animation-delay-300" label="Attendance Rate" value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} present`} icon={CalendarDays} tone="green" />
+        <MetricCard className="animate-slide-up animation-delay-400" label="Average Grade" value={`${averageGrade}%`} detail="Across posted grades" icon={CheckCircle} tone="neutral" />
+        <MetricCard className="animate-slide-up animation-delay-500" label="Outstanding Debt" value={`$${outstandingDebt.toLocaleString()}`} detail="Remaining balance" icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} />
+        <MetricCard className="animate-slide-up animation-delay-600" label="Coins" value={Number(student?.coins || 0).toLocaleString()} detail="Current balance" icon={Coins} tone="amber" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in animation-delay-400">
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Upcoming Tests</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => navigate('/my-tests')}>
-                View all
-              </Button>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {upcomingTests.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tests scheduled soon.</p>
-              ) : (
-                upcomingTests.map((test) => (
-                  <div key={test.test_id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
-                    <div>
-                      <p className="text-sm font-medium">{test.test_name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {test.test_type?.replace(/_/g, ' ')} - {test.total_marks || 0} marks
-                      </p>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{formatDate(test.due_date)}</div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Assignments Due Soon</CardTitle>
-              <Badge variant="outline">{assignmentsDue.length} due</Badge>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {assignmentsDue.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No assignments due this week.</p>
-              ) : (
-                assignmentsDue.map((assignment) => (
-                  <div key={assignment.assignment_id || assignment.id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
-                    <div>
-                      <p className="text-sm font-medium">{assignment.assignment_title || assignment.title || 'Assignment'}</p>
-                      <p className="text-xs text-muted-foreground">Status: {assignment.status || 'Pending'}</p>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{formatDate(assignment.due_date)}</div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Recent Grades</CardTitle>
-              <Badge variant="outline">{grades.length} total</Badge>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {recentGrades.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No grades posted yet.</p>
-              ) : (
-                recentGrades.map((grade) => (
-                  <div key={grade.grade_id || grade.id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
-                    <div>
-                      <p className="text-sm font-medium">{grade.subject || 'Subject'}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {grade.marks_obtained ?? 0}/{grade.total_marks ?? 0} - {grade.grade_letter || 'N/A'}
-                      </p>
-                    </div>
-                    <div className="text-xs text-muted-foreground">{grade.percentage ? `${Math.round(grade.percentage)}%` : 'N/A'}</div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-primary" />
-                Weekly Class Schedule
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-7 gap-2">
-                {daysOfWeek.map((day) => {
-                  const daySchedule = scheduleByDay[day] || [];
-                  const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day;
-
-                  return (
-                    <div
-                      key={day}
-                      className={cn(
-                        "rounded-xl border p-3 flex flex-col gap-2 transition-all",
-                        isToday ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20" : "bg-muted/30 border-transparent"
-                      )}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className={cn(
-                          "text-[10px] font-bold uppercase tracking-wider",
-                          isToday ? "text-primary" : "text-muted-foreground"
-                        )}>
-                          {day.substring(0, 3)}
-                        </span>
-                        {isToday && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-                      </div>
-
-                      <div className="space-y-1.5 min-h-[40px]">
-                        {daySchedule.length === 0 ? (
-                          <div className="text-[10px] text-muted-foreground/50 italic py-2">No class</div>
-                        ) : (
-                          daySchedule.map((item, idx) => (
-                            <div
-                              key={idx}
-                              className="bg-background border rounded-lg p-2 shadow-sm"
-                            >
-                              <div className="text-[11px] font-bold text-primary leading-tight">
-                                {item.time}
-                              </div>
-                              <div className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
-                                <MapPin className="h-2 w-2" />
-                                Room {item.room_number}
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b pb-4">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <div className="rounded-md bg-muted p-2 text-primary">
-                <Wallet className="h-5 w-5" />
-              </div>
-              Payment History
-            </CardTitle>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in animation-delay-400">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Student Profile</CardTitle>
           </CardHeader>
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
-              {last12Months.map((monthDate) => {
-                const year = monthDate.getFullYear();
-                const month = monthDate.getMonth() + 1;
-                const hasPaid = payments.some((p) => {
-                  if (p.payment_status?.toLowerCase() !== 'completed' && p.status?.toLowerCase() !== 'completed') return false;
-                  const pDate = new Date(p.payment_date || '');
-                  return pDate.getFullYear() === year && (pDate.getMonth() + 1) === month;
-                });
-
-                const monthName = monthDate.toLocaleString('default', { month: 'short' });
-                const yearName = monthDate.toLocaleString('default', { year: '2-digit' });
-
-                return (
-                  <div key={`${monthName}-${yearName}`} className={cn(
-                    "flex flex-col items-center justify-center rounded-lg border p-4 transition-colors",
-                    hasPaid
-                      ? "border-emerald-200 bg-emerald-500/5"
-                      : "border-rose-200 bg-rose-500/5"
-                  )}>
-                    <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{monthName} '{yearName}</span>
-                    <div className="mt-3 mb-2">
-                      {hasPaid ? (
-                        <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                          <CheckCircle className="h-5 w-5" />
-                        </div>
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
-                          <AlertTriangle className="h-5 w-5" />
-                        </div>
-                      )}
-                    </div>
-                    {hasPaid ? (
-                      <span className="text-xs font-bold text-emerald-600">Settled</span>
-                    ) : (
-                      <span className="text-xs font-bold text-rose-600">Unpaid</span>
-                    )}
-                  </div>
-                );
-              })}
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex items-center gap-2">
+              <UserRound className="h-4 w-4 text-muted-foreground" />
+              <span>{user?.first_name} {user?.last_name}</span>
             </div>
+            {student?.enrollment_number && (
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span>Enrollment: {student.enrollment_number}</span>
+              </div>
+            )}
+            {student?.phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span>Phone: {student.phone}</span>
+              </div>
+            )}
+            {student?.parent_name && (
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4 text-muted-foreground" />
+                <span>Guardian: {student.parent_name}</span>
+              </div>
+            )}
+            {student?.parent_phone && (
+              <div className="flex items-center gap-2">
+                <Phone className="h-4 w-4 text-muted-foreground" />
+                <span>Guardian Phone: {student.parent_phone}</span>
+              </div>
+            )}
           </CardContent>
         </Card>
 
-
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Student Profile</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Class Snapshot</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex items-center gap-2">
+              <GraduationCap className="h-4 w-4 text-muted-foreground" />
+              <span>{classInfo?.class_name || 'Class not assigned'}</span>
+            </div>
+            {classInfo?.class_code && (
+              <div className="flex items-center gap-2">
+                <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                <span>Code: {classInfo.class_code}</span>
+              </div>
+            )}
+            {classInfo?.room_number && (
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-muted-foreground" />
+                <span>Room: {classInfo.room_number}</span>
+              </div>
+            )}
+            {teacher?.first_name && (
               <div className="flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-muted-foreground" />
-                <span>{user?.first_name} {user?.last_name}</span>
+                <span>Teacher: {teacher.first_name} {teacher.last_name}</span>
               </div>
-              {student?.enrollment_number && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>Enrollment: {student.enrollment_number}</span>
-                </div>
-              )}
-              {student?.phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>Phone: {student.phone}</span>
-                </div>
-              )}
-              {student?.parent_name && (
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span>Guardian: {student.parent_name}</span>
-                </div>
-              )}
-              {student?.parent_phone && (
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-muted-foreground" />
-                  <span>Guardian Phone: {student.parent_phone}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            )}
+          </CardContent>
+        </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Class Snapshot</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                <span>{classInfo?.class_name || 'Class not assigned'}</span>
-              </div>
-              {classInfo?.class_code && (
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                  <span>Code: {classInfo.class_code}</span>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Subjects</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm">
+            {subjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No subjects assigned yet.</p>
+            ) : (
+              subjects.slice(0, 6).map((subject) => (
+                <div key={subject.subject_id || subject.id} className="flex items-center justify-between">
+                  <span>{subject.subject_name}</span>
+                  <Badge variant="outline">Active</Badge>
                 </div>
-              )}
-              {classInfo?.room_number && (
-                <div className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                  <span>Room: {classInfo.room_number}</span>
-                </div>
-              )}
-              {teacher?.first_name && (
-                <div className="flex items-center gap-2">
-                  <UserRound className="h-4 w-4 text-muted-foreground" />
-                  <span>Teacher: {teacher.first_name} {teacher.last_name}</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Subjects</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              {subjects.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No subjects assigned yet.</p>
-              ) : (
-                subjects.slice(0, 6).map((subject) => (
-                  <div key={subject.subject_id || subject.id} className="flex items-center justify-between">
-                    <span>{subject.subject_name}</span>
-                    <Badge variant="outline">Active</Badge>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Payments and Debts</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Last payment</span>
-                <span>{lastPayment ? formatDate(lastPayment.payment_date) : 'No payments yet'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Last receipt</span>
-                <span>{lastPayment?.receipt_number || '-'}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Outstanding</span>
-                <span className="font-semibold">${outstandingDebt.toLocaleString()}</span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Attendance Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Total sessions</span>
-                <span>{attendanceStats.total}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Present</span>
-                <span>{attendanceStats.present}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Attendance rate</span>
-                <span className="font-semibold">{attendanceStats.rate}%</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in animation-delay-400">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Upcoming Tests</CardTitle>
+            <Button variant="outline" size="sm" onClick={() => navigate('/my-tests')}>
+              View all
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {upcomingTests.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No tests scheduled soon.</p>
+            ) : (
+              upcomingTests.map((test) => (
+                <div key={test.test_id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
+                  <div>
+                    <p className="text-sm font-medium">{test.test_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {test.test_type?.replace(/_/g, ' ')} - {test.total_marks || 0} marks
+                    </p>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{formatDate(test.due_date)}</div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-base">Assignments Due Soon</CardTitle>
+            <Badge variant="outline">{assignmentsDue.length} due</Badge>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {assignmentsDue.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No assignments due this week.</p>
+            ) : (
+              assignmentsDue.map((assignment) => (
+                <div key={assignment.assignment_id || assignment.id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
+                  <div>
+                    <p className="text-sm font-medium">{assignment.assignment_title || assignment.title || 'Assignment'}</p>
+                    <p className="text-xs text-muted-foreground">Status: {assignment.status || 'Pending'}</p>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{formatDate(assignment.due_date)}</div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="animate-fade-in animation-delay-400">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Recent Grades</CardTitle>
+          <Badge variant="outline">{grades.length} total</Badge>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {recentGrades.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No grades posted yet.</p>
+          ) : (
+            recentGrades.map((grade) => (
+              <div key={grade.grade_id || grade.id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
+                <div>
+                  <p className="text-sm font-medium">{grade.subject || 'Subject'}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {grade.marks_obtained ?? 0}/{grade.total_marks ?? 0} - {grade.grade_letter || 'N/A'}
+                  </p>
+                </div>
+                <div className="text-xs text-muted-foreground">{grade.percentage ? `${Math.round(grade.percentage)}%` : 'N/A'}</div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden animate-fade-in animation-delay-400">
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-primary" />
+            Weekly Class Schedule
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
+            {daysOfWeek.map((day) => {
+              const daySchedule = scheduleByDay[day] || [];
+              const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day;
+
+              return (
+                <div
+                  key={day}
+                  className={cn(
+                    "rounded-xl border p-3 flex flex-col gap-2 transition-all",
+                    isToday ? "bg-primary/5 border-primary/30 ring-1 ring-primary/20" : "bg-muted/30 border-transparent"
+                  )}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider",
+                      isToday ? "text-primary" : "text-muted-foreground"
+                    )}>
+                      {day.substring(0, 3)}
+                    </span>
+                    {isToday && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+                  </div>
+
+                  <div className="space-y-1.5 min-h-[40px]">
+                    {daySchedule.length === 0 ? (
+                      <div className="text-[10px] text-muted-foreground/50 italic py-2">No class</div>
+                    ) : (
+                      daySchedule.map((item, idx) => (
+                        <div
+                          key={idx}
+                          className="bg-background border rounded-lg p-2 shadow-sm"
+                        >
+                          <div className="text-[11px] font-bold text-primary leading-tight">
+                            {item.time}
+                          </div>
+                          <div className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                            <MapPin className="h-2 w-2" />
+                            Room {item.room_number}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="overflow-hidden animate-fade-in animation-delay-400">
+        <CardHeader className="border-b pb-4">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <div className="rounded-md bg-muted p-2 text-primary">
+              <Wallet className="h-5 w-5" />
+            </div>
+            Payment History
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
+            {last12Months.map((monthDate) => {
+              const year = monthDate.getFullYear();
+              const month = monthDate.getMonth() + 1;
+              const hasPaid = payments.some((p) => {
+                if (p.payment_status?.toLowerCase() !== 'completed' && p.status?.toLowerCase() !== 'completed') return false;
+                const pDate = new Date(p.payment_date || '');
+                return pDate.getFullYear() === year && (pDate.getMonth() + 1) === month;
+              });
+
+              const monthName = monthDate.toLocaleString('default', { month: 'short' });
+              const yearName = monthDate.toLocaleString('default', { year: '2-digit' });
+
+              return (
+                <div key={`${monthName}-${yearName}`} className={cn(
+                  "flex flex-col items-center justify-center rounded-lg border p-4 transition-colors",
+                  hasPaid
+                    ? "border-emerald-200 bg-emerald-500/5"
+                    : "border-rose-200 bg-rose-500/5"
+                )}>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{monthName} '{yearName}</span>
+                  <div className="mt-3 mb-2">
+                    {hasPaid ? (
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+                        <CheckCircle className="h-5 w-5" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600">
+                        <AlertTriangle className="h-5 w-5" />
+                      </div>
+                    )}
+                  </div>
+                  {hasPaid ? (
+                    <span className="text-xs font-bold text-emerald-600">Settled</span>
+                  ) : (
+                    <span className="text-xs font-bold text-rose-600">Unpaid</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
