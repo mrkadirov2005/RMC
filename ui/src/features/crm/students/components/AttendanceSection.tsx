@@ -169,7 +169,7 @@ export const AttendanceSection = ({
             <label htmlFor="day-filter" className="font-medium">Filter by Day:</label>
             <select
               id="day-filter"
-              className="border bg-gray-500 rounded px-2 py-1 text-sm"
+              className="rounded-lg border border-sky-200 bg-white px-3 py-1.5 text-sm text-slate-900 shadow-sm outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400/30 dark:border-border dark:bg-background dark:text-foreground"
               value={dayFilter}
               onChange={e => setDayFilter(e.target.value)}
             >
