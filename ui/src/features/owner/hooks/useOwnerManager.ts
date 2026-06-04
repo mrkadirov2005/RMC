@@ -72,6 +72,7 @@ export const useOwnerManager = () => {
     classes: [] as any[],
     payments: [] as any[],
   });
+  const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
 
   const needsCenterScope = activeTab === 'superusers' || activeTab === 'teachers' || activeTab === 'students';
 
@@ -116,6 +117,22 @@ export const useOwnerManager = () => {
         return;
       }
 
+      if (activeTab === 'centers') {
+        const [centersRes, studentsRes, teachersRes, classesRes] = await Promise.all([
+          ownerManagerApi.centers.getAll(),
+          ownerManagerApi.students.getAllAcrossCenters(),
+          ownerManagerApi.teachers.getAllAcrossCenters(),
+          ownerManagerApi.classes.getAllAcrossCenters(),
+        ]);
+        const centers = Array.isArray(centersRes) ? centersRes : centersRes.data || [];
+        const students = Array.isArray(studentsRes) ? studentsRes : studentsRes.data || [];
+        const teachers = Array.isArray(teachersRes) ? teachersRes : teachersRes.data || [];
+        const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
+        setCrossCounts({ students: students.length, teachers: teachers.length, classes: classes.length });
+        dispatch(setOwnerManagerData(centers));
+        return;
+      }
+
       if (activeTab === 'statistics') {
         const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
           ownerManagerApi.students.getAllAcrossCenters(),
@@ -134,19 +151,29 @@ export const useOwnerManager = () => {
         return;
       }
 
+      if (activeTab === 'teachers') {
+        const [teachersRes, studentsRes, classesRes, paymentsRes] = await Promise.all([
+          ownerManagerApi.teachers.getAll(),
+          ownerManagerApi.students.getAllAcrossCenters(),
+          ownerManagerApi.classes.getAllAcrossCenters(),
+          ownerManagerApi.payments.getAllAcrossCenters(),
+        ]);
+        const teachers = Array.isArray(teachersRes) ? teachersRes : teachersRes.data || [];
+        const students = Array.isArray(studentsRes) ? studentsRes : studentsRes.data || [];
+        const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
+        const payments = Array.isArray(paymentsRes) ? paymentsRes : paymentsRes.data || [];
+        setStatisticsCollections({ students, teachers, classes, payments });
+        dispatch(setOwnerManagerData(teachers));
+        return;
+      }
+
       let response: any = { data: [] };
       switch (activeTab) {
-        case 'centers':
-          response = await ownerManagerApi.centers.getAll();
-          break;
         case 'owners':
           response = await ownerManagerApi.owners.getAll();
           break;
         case 'superusers':
           response = await ownerManagerApi.superusers.getAll();
-          break;
-        case 'teachers':
-          response = await ownerManagerApi.teachers.getAll();
           break;
         case 'students':
           response = await ownerManagerApi.students.getAll();
@@ -451,6 +478,7 @@ export const useOwnerManager = () => {
     isScopedAndMissingCenter,
     statisticsCollections,
     statistics,
+    crossCounts,
     selectedPermissions,
     formData,
     handleInputChange,

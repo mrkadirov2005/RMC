@@ -3,88 +3,86 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, User, Lock, Eye, EyeOff,
-  GraduationCap, Users, ShieldCheck, Shield, Loader2,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  GraduationCap,
+  Loader2,
+  Lock,
+  Shield,
+  ShieldCheck,
+  User,
+  Users,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getErrorMessage } from '@/utils/errorMessage';
 import { Badge } from '@/components/ui/badge';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { authAPI } from '../../shared/api/api';
+import { setAuthPersistencePreference } from '../../shared/auth/authStorage';
 import { showToast, handleApiError } from '../../utils/toast';
 
 interface LoginPageProps {
   userType: 'superuser' | 'teacher' | 'student';
 }
 
+const logoSrc = '/temurbek-school-logo.jpg';
+
 const roleConfig = {
   superuser: {
     icon: ShieldCheck,
     title: 'Branch Admin',
-    subtitle: 'Manage one branch with scoped access',
-    gradient: 'from-indigo-500 to-violet-500',
-    accentColor: 'text-indigo-400',
-    badgeBg: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-    btnGradient: 'bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600',
-    shadow: 'shadow-indigo-500/40',
+    eyebrow: 'Administration',
+    subtitle: 'Sign in to manage students, teachers, payments, and branch operations.',
   },
   owner: {
     icon: Shield,
     title: 'Owner',
-    subtitle: 'Full access across branches and system settings',
-    gradient: 'from-amber-400 to-red-500',
-    accentColor: 'text-amber-400',
-    badgeBg: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    btnGradient: 'bg-gradient-to-r from-amber-400 to-red-500 hover:from-amber-500 hover:to-red-600',
-    shadow: 'shadow-amber-500/40',
+    eyebrow: 'Owner access',
+    subtitle: 'Full access across branches and system settings.',
   },
   teacher: {
     icon: Users,
     title: 'Teacher',
-    subtitle: 'Manage classes, grades & students',
-    gradient: 'from-pink-400 to-rose-500',
-    accentColor: 'text-rose-400',
-    badgeBg: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
-    btnGradient: 'bg-gradient-to-r from-pink-400 to-rose-500 hover:from-pink-500 hover:to-rose-600',
-    shadow: 'shadow-rose-500/40',
+    eyebrow: 'Teaching staff',
+    subtitle: 'Open your classes, attendance, assignments, tests, and grading workspace.',
   },
   student: {
     icon: GraduationCap,
     title: 'Student',
-    subtitle: 'Access your tests, grades & portal',
-    gradient: 'from-sky-400 to-cyan-400',
-    accentColor: 'text-sky-400',
-    badgeBg: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
-    btnGradient: 'bg-gradient-to-r from-sky-400 to-cyan-400 hover:from-sky-500 hover:to-cyan-500',
-    shadow: 'shadow-sky-500/40',
+    eyebrow: 'Student portal',
+    subtitle: 'View your schedule, tests, assignments, grades, payments, and progress.',
   },
 };
 
 const otherRoles = {
   superuser: [
-    { type: 'owner' as const, label: 'Owner Login', path: '/login/owner' },
-    { type: 'teacher' as const, label: 'Teacher Login', path: '/login/teacher' },
-    { type: 'student' as const, label: 'Student Login', path: '/login/student' },
+    { type: 'owner' as const, label: 'Owner', path: '/login/owner' },
+    { type: 'teacher' as const, label: 'Teacher', path: '/login/teacher' },
+    { type: 'student' as const, label: 'Student', path: '/login/student' },
   ],
   teacher: [
-    { type: 'superuser' as const, label: 'Branch Admin Login', path: '/login/superuser' },
-    { type: 'student' as const, label: 'Student Login', path: '/login/student' },
+    { type: 'superuser' as const, label: 'Admin', path: '/login/superuser' },
+    { type: 'student' as const, label: 'Student', path: '/login/student' },
   ],
   student: [
-    { type: 'superuser' as const, label: 'Branch Admin Login', path: '/login/superuser' },
-    { type: 'teacher' as const, label: 'Teacher Login', path: '/login/teacher' },
+    { type: 'superuser' as const, label: 'Admin', path: '/login/superuser' },
+    { type: 'teacher' as const, label: 'Teacher', path: '/login/teacher' },
   ],
 };
+
+const inputClass =
+  'h-12 rounded-md border-[#d8e4f1] bg-white pl-11 text-[#21116a] placeholder:text-slate-400 focus-visible:border-[#16a7e2] focus-visible:ring-[#16a7e2]/25';
 
 // Renders the login page screen.
 export const LoginPage = ({ userType }: LoginPageProps) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
@@ -117,7 +115,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           branch_id: Number(superuser.branch_id ?? superuser.center_id ?? 0),
           center_id: Number(superuser.center_id ?? 0),
         };
-        token = response.data.token || `superuser-token-${Date.now()}`;
+        token = response.data.token;
       } else if (userType === 'teacher') {
         response = await authAPI.loginTeacher({ username, password });
         const { teacher } = response.data;
@@ -132,7 +130,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           userType: 'teacher' as const,
           center_id: Number(teacher.center_id ?? 0),
         };
-        token = response.data.token || `teacher-token-${Date.now()}`;
+        token = response.data.token;
       } else if (userType === 'student') {
         response = await authAPI.loginStudent({ username, password });
         const { student } = response.data;
@@ -147,10 +145,15 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
           center_id: Number(student.center_id ?? 0),
           class_id: student.class_id,
         };
-        token = response.data.token || `student-token-${Date.now()}`;
+        token = response.data.token;
       }
 
-      dispatch(loginSuccess({ user: userData!, token }));
+      if (!userData || !token) {
+        throw new Error('Authentication failed. Please try again.');
+      }
+
+      setAuthPersistencePreference(rememberMe);
+      dispatch(loginSuccess({ user: userData, token }));
       showToast.success('Login successful! Redirecting...');
 
       if (userType === 'student') navigate('/student-portal');
@@ -166,172 +169,196 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
     }
   };
 
-  return (
-    <div className="flex min-h-screen relative overflow-hidden bg-slate-900">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(99,102,241,0.12)_0%,transparent_50%),radial-gradient(circle_at_80%_20%,rgba(139,92,246,0.12)_0%,transparent_50%)]" />
+  const handleForgotPassword = () => {
+    showToast.info('Please contact Temurbek School administration to reset your access.');
+  };
 
-      {/* Left side - branding */}
-      <div className="flex-1 hidden lg:flex flex-col justify-center items-center relative p-12">
-        <div className={cn('absolute inset-0 bg-gradient-to-br opacity-[0.08]', config.gradient)} />
-        <div className="text-center relative z-10 max-w-[480px] animate-slide-left">
-          {/* Logo */}
-          <div className={cn(
-            'w-24 h-24 rounded-[28px] mx-auto mb-8 flex items-center justify-center shadow-2xl',
-            `bg-gradient-to-br ${config.gradient} ${config.shadow}`,
-            '-rotate-[5deg] hover:rotate-0 hover:scale-105 transition-transform duration-300'
-          )}>
-            <RoleIcon className="w-12 h-12 text-white" />
+  return (
+    <main className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
+      <section className="relative overflow-hidden border-b border-[#d8e4f1] bg-[#fbfdff] px-5 py-4 lg:min-h-screen lg:border-b-0 lg:border-r lg:px-12 lg:py-10">
+        <div className="flex items-center justify-between gap-4">
+          <img src={logoSrc} alt="Temurbek School" className="h-14 w-auto object-contain sm:h-20 lg:h-24" />
+          <Badge className="border-[#16a7e2]/30 bg-[#16a7e2]/10 text-[#21116a] hover:bg-[#16a7e2]/10">
+            {config.eyebrow}
+          </Badge>
+        </div>
+
+        <div className="mt-6 grid gap-5 sm:mt-10 lg:mt-24 lg:max-w-2xl lg:gap-8">
+          <div>
+            <div className="mb-5 h-1 w-16 rounded-full bg-[#16a7e2]" aria-hidden="true" />
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
+            <h1 className="mt-3 max-w-xl text-3xl font-semibold leading-tight tracking-normal text-[#21116a] sm:mt-4 sm:text-4xl lg:text-5xl">
+              A focused workspace for learning center operations.
+            </h1>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
+              Secure access for administrators, teachers, and students of Temurbek School.
+            </p>
           </div>
 
-          <h1 className="text-5xl font-extrabold text-white mb-4 tracking-tight leading-tight">
-            Education<br />
-            <span className={cn('bg-gradient-to-r bg-clip-text text-transparent', config.gradient)}>CRM System</span>
-          </h1>
-
-          <p className="text-lg text-white/50 leading-relaxed mb-8">
-            Manage students, classes, attendance, grades, and payments — all in one powerful platform.
-          </p>
-
-          <div className="flex gap-2 flex-wrap justify-center">
-            {['Classes', 'Attendance', 'Grades', 'Tests', 'Payments'].map((feat) => (
-              <span
-                key={feat}
-                className="px-3 py-1 text-xs font-medium rounded-full bg-white/[0.08] text-white/60 border border-white/10"
-              >
-                {feat}
-              </span>
+          <div className="hidden max-w-xl grid-cols-2 gap-3 sm:grid">
+            {[
+              ['Branch control', 'Students, teachers, classes'],
+              ['Learning flow', 'Tests, grades, attendance'],
+              ['Finance view', 'Payments and debts'],
+              ['Portals', 'Teacher and student access'],
+            ].map(([label, detail]) => (
+              <div key={label} className="rounded-lg border border-[#cbe8f8] bg-white p-4 shadow-sm shadow-[#16a7e2]/5">
+                <p className="text-sm font-semibold text-[#21116a]">{label}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
+              </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Right side - form */}
-      <div className="flex-1 lg:flex-none lg:w-[520px] flex flex-col justify-center items-center p-6 sm:p-12 relative z-10">
-        <div className="w-full max-w-[420px] animate-slide-right">
-          {/* Mobile logo */}
-          <div className="flex lg:hidden justify-center mb-8">
-            <div className={cn(
-              'w-16 h-16 rounded-[18px] flex items-center justify-center shadow-2xl',
-              `bg-gradient-to-br ${config.gradient} ${config.shadow}`
-            )}>
-              <RoleIcon className="w-9 h-9 text-white" />
+        <div className="mt-8 hidden text-xs text-slate-500 lg:absolute lg:bottom-8 lg:block">
+          Temurbek School CRM &copy; {new Date().getFullYear()}
+        </div>
+      </section>
+
+      <section className="flex items-start bg-[#eef8ff] px-5 py-7 sm:px-8 lg:min-h-screen lg:items-center lg:px-12">
+        <div className="w-full max-w-[430px]">
+          <div className="mb-6 h-1 w-14 rounded-full bg-[#16a7e2]" aria-hidden="true" />
+          <div className="mb-8 flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#16a7e2]/25 bg-[#16a7e2]/10 text-[#16a7e2]">
+              <RoleIcon className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#16a7e2]">{config.eyebrow}</p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-normal text-[#21116a]">
+                {config.title} sign in
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">{config.subtitle}</p>
             </div>
           </div>
 
-          {/* Role badge */}
-          <Badge variant="outline" className={cn('mb-4', config.badgeBg)}>
-            <RoleIcon className="w-4 h-4 mr-1.5" />
-            {config.title}
-          </Badge>
-
-          <h2 className="text-3xl font-bold text-white mb-1">Welcome back</h2>
-          <p className="text-white/45 mb-6">{config.subtitle}</p>
-
           {error && (
-            <Alert variant="destructive" className="mb-4 bg-red-500/10 text-red-300 border-red-500/20">
+            <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
               <AlertDescription>{getErrorMessage(error)}</AlertDescription>
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <Input
-                placeholder="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                disabled={loading}
-                autoComplete="username"
-                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-indigo-500 h-11"
-              />
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <div className="space-y-2">
+              <label htmlFor={`${userType}-username`} className="text-sm font-semibold text-[#21116a]">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <Input
+                  id={`${userType}-username`}
+                  placeholder="Enter username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  aria-invalid={Boolean(error)}
+                  disabled={loading}
+                  autoComplete="username"
+                  className={inputClass}
+                />
+              </div>
             </div>
 
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-              <Input
-                placeholder="Password"
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-                autoComplete="current-password"
-                className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-indigo-500 h-11"
-              />
+            <div className="space-y-2">
+              <label htmlFor={`${userType}-password`} className="text-sm font-semibold text-[#21116a]">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <Input
+                  id={`${userType}-password`}
+                  placeholder="Enter password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  aria-invalid={Boolean(error)}
+                  disabled={loading}
+                  autoComplete="current-password"
+                  className={`${inputClass} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 rounded p-1 text-slate-500 transition-colors hover:text-[#21116a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor={`${userType}-remember`} className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+                <input
+                  id={`${userType}-remember`}
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#b9cee2] text-[#16a7e2] focus:ring-[#16a7e2]/30"
+                />
+                Remember me
+              </label>
               <button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
+                onClick={handleForgotPassword}
+                className="text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 transition-colors hover:text-[#16a7e2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                Forgot password?
               </button>
             </div>
 
             <Button
               type="submit"
               disabled={loading}
-              className={cn(
-                'w-full h-12 text-[0.95rem] font-semibold text-white shadow-2xl transition-all duration-300 hover:-translate-y-0.5',
-                config.btnGradient, config.shadow
-              )}
+              className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d] focus-visible:ring-[#16a7e2]/40"
             >
               {loading ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Signing in...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in
                 </>
               ) : (
                 <>
-                  Sign In
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  Continue to {config.title}
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}
             </Button>
           </form>
 
-          {/* Divider */}
-          <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px bg-white/[0.08]" />
-            <span className="text-[0.65rem] text-white/25 uppercase tracking-widest">switch role</span>
-            <div className="flex-1 h-px bg-white/[0.08]" />
-          </div>
-
-          {/* Other role buttons */}
-          <div className="flex gap-2">
-            {otherRoles[userType].map((role) => {
-              const OtherIcon = roleConfig[role.type].icon;
-              return (
-                <Button
-                  key={role.type}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(role.path)}
-                  className="flex-1 text-white/50 border-white/10 bg-transparent hover:bg-white/5 hover:text-white/80 hover:border-white/20"
-                >
-                  <OtherIcon className="w-4 h-4 mr-1.5" />
-                  {role.label}
-                </Button>
-              );
-            })}
+          <div className="mt-8 border-t border-[#d8e4f1] pt-5">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Switch workspace</p>
+            <div className="flex flex-wrap gap-2">
+              {otherRoles[userType].map((role) => {
+                const OtherIcon = roleConfig[role.type].icon;
+                return (
+                  <Button
+                    key={role.type}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(role.path)}
+                    className="border-[#d8e4f1] bg-white text-[#21116a] hover:border-[#16a7e2] hover:bg-[#16a7e2]/5 hover:text-[#21116a] focus-visible:ring-[#16a7e2]/35"
+                  >
+                    <OtherIcon className="mr-1.5 h-4 w-4" />
+                    {role.label}
+                  </Button>
+                );
+              })}
+            </div>
           </div>
 
           {userType === 'superuser' && (
             <button
               type="button"
               onClick={() => navigate('/owner/register')}
-              className="mt-4 w-full text-sm text-amber-400 hover:text-amber-300 underline underline-offset-4"
+              className="mt-5 text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 hover:text-[#16a7e2]"
             >
-              No owner account? Create one with the keyword
+              Create owner account with keyword
             </button>
           )}
-
-          <p className="text-center mt-6 text-white/20 text-[0.7rem]">
-            Education CRM &copy; {new Date().getFullYear()}
-          </p>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 };

@@ -3,23 +3,36 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  User, Lock, Eye, EyeOff, Shield, ArrowRight, ArrowLeft, Loader2,
+  ArrowLeft,
+  ArrowRight,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  Shield,
+  User,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getErrorMessage } from '@/utils/errorMessage';
 import { Badge } from '@/components/ui/badge';
+import { getErrorMessage } from '@/utils/errorMessage';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { authAPI } from '../../shared/api/api';
+import { setAuthPersistencePreference } from '../../shared/auth/authStorage';
 import { showToast, handleApiError } from '../../utils/toast';
+
+const logoSrc = '/temurbek-school-logo.jpg';
+const inputClass =
+  'h-12 rounded-md border-[#d8e4f1] bg-white pl-11 text-[#21116a] placeholder:text-slate-400 focus-visible:border-[#16a7e2] focus-visible:ring-[#16a7e2]/25';
 
 // Renders the owner login page screen.
 export const OwnerLoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { loading, error } = useAppSelector((state) => state.auth);
@@ -36,6 +49,12 @@ export const OwnerLoginPage = () => {
         throw new Error('Owner login response was invalid.');
       }
 
+      const token = response.data.token;
+      if (!token) {
+        throw new Error('Authentication failed. Please try again.');
+      }
+
+      setAuthPersistencePreference(rememberMe);
       dispatch(
         loginSuccess({
           user: {
@@ -48,7 +67,7 @@ export const OwnerLoginPage = () => {
             userType: 'superuser',
             center_id: 0,
           },
-          token: response.data.token || `owner-token-${Date.now()}`,
+          token,
         })
       );
 
@@ -63,111 +82,163 @@ export const OwnerLoginPage = () => {
     }
   };
 
+  const handleForgotPassword = () => {
+    showToast.info('Please contact Temurbek School administration to reset owner access.');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-slate-900">
-      {/* Background */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(245,175,25,0.12)_0%,transparent_50%),radial-gradient(circle_at_70%_30%,rgba(241,39,17,0.12)_0%,transparent_50%)]" />
-
-      <div className="relative z-10 w-full max-w-[440px] px-4 sm:px-6 animate-slide-up">
-        {/* Back button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/login/superuser')}
-          className="mb-6 text-white/40 hover:text-white/70 hover:bg-white/5"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1.5" />
-          Back to Login
-        </Button>
-
-        {/* Icon */}
-        <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-amber-400 to-red-500 flex items-center justify-center mb-6 shadow-2xl shadow-amber-500/40 -rotate-[5deg] hover:rotate-0 hover:scale-105 transition-transform duration-300">
-          <Shield className="w-11 h-11 text-white" />
+    <main className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
+      <section className="relative flex flex-col overflow-hidden border-b border-[#d8e4f1] bg-[#21116a] px-5 py-6 text-white lg:min-h-screen lg:border-b-0 lg:px-12 lg:py-10">
+        <div className="flex items-center justify-between gap-4">
+          <div className="rounded-lg bg-white p-2.5">
+            <img src={logoSrc} alt="Temurbek School" className="h-12 w-auto object-contain lg:h-16" />
+          </div>
+          <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">Owner access</Badge>
         </div>
 
-        {/* Badge */}
-        <Badge variant="outline" className="mb-4 bg-amber-500/10 text-amber-400 border-amber-500/20">
-          <Shield className="w-3.5 h-3.5 mr-1.5" />
-          Restricted Access
-        </Badge>
+        <div className="mt-8 max-w-xl lg:mt-auto">
+          <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
+          <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-normal sm:text-4xl lg:mt-4 lg:text-5xl">
+            System-level access for the learning center owner.
+          </h1>
+          <p className="mt-3 text-sm leading-6 text-white/75 sm:mt-5 sm:text-base sm:leading-7">
+            Use this entry only for owner management, branch oversight, and global CRM settings.
+          </p>
+        </div>
 
-        <h2 className="text-3xl font-bold text-white mb-1">Owner Panel</h2>
-        <p className="text-white/45 mb-6">System owner & manager access only</p>
+        <div className="mt-8 hidden rounded-lg border border-white/15 bg-white/10 p-4 text-sm text-white/80 lg:mt-auto lg:block">
+          Owner accounts can create and manage branch-level access. Keep these credentials separate from daily admin accounts.
+        </div>
+      </section>
 
-        <button
-          type="button"
-          onClick={() => navigate('/owner/register')}
-          className="mb-4 text-sm text-amber-400 hover:text-amber-300 underline underline-offset-4"
-        >
-          No owner account yet? Create one with the keyword
-        </button>
-
-        {/* Error */}
-        {error && (
-          <Alert variant="destructive" className="mb-4 bg-red-500/10 text-red-300 border-red-500/20">
-            <AlertDescription>{getErrorMessage(error)}</AlertDescription>
-          </Alert>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-            <Input
-              placeholder="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-              disabled={loading}
-              autoComplete="username"
-              className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500 h-11"
-            />
-          </div>
-
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
-            <Input
-              placeholder="Password"
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-              autoComplete="current-password"
-              className="pl-10 pr-10 bg-white/5 border-white/10 text-white placeholder:text-white/30 focus-visible:ring-amber-500 h-11"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/60 transition-colors"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-
+      <section className="flex items-start justify-center bg-[#eef8ff] px-5 py-7 sm:px-8 lg:min-h-screen lg:items-center lg:px-14">
+        <div className="w-full max-w-[430px]">
           <Button
-            type="submit"
-            disabled={loading}
-            className="w-full h-12 text-[0.95rem] font-semibold text-white bg-gradient-to-r from-amber-400 to-red-500 hover:from-amber-500 hover:to-red-600 shadow-2xl shadow-amber-500/35 transition-all duration-300 hover:-translate-y-0.5"
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/login/superuser')}
+            className="mb-7 px-0 text-[#21116a] hover:bg-transparent hover:text-[#16a7e2]"
           >
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Signing in...
-              </>
-            ) : (
-              <>
-                Access Manager Panel
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </>
-            )}
+            <ArrowLeft className="mr-1.5 h-4 w-4" />
+            Back to admin login
           </Button>
-        </form>
 
-        <p className="text-center mt-6 text-white/20 text-[0.7rem]">
-          Education CRM &copy; {new Date().getFullYear()}
-        </p>
-      </div>
-    </div>
+          <div className="mb-6 h-1 w-14 rounded-full bg-[#16a7e2]" aria-hidden="true" />
+          <div className="mb-8 flex items-start gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#16a7e2]/25 bg-[#16a7e2]/10 text-[#16a7e2]">
+              <Shield className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#16a7e2]">Restricted access</p>
+              <h2 className="mt-1 text-2xl font-semibold tracking-normal text-[#21116a]">Owner sign in</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">Access the Temurbek School manager panel.</p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/owner/register')}
+            className="mb-5 text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 hover:text-[#16a7e2]"
+          >
+            Create owner account with keyword
+          </button>
+
+          {error && (
+            <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
+              <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+            </Alert>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+            <div className="space-y-2">
+              <label htmlFor="owner-username" className="text-sm font-semibold text-[#21116a]">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <Input
+                  id="owner-username"
+                  placeholder="Enter owner username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  aria-invalid={Boolean(error)}
+                  disabled={loading}
+                  autoComplete="username"
+                  className={inputClass}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="owner-password" className="text-sm font-semibold text-[#21116a]">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <Input
+                  id="owner-password"
+                  placeholder="Enter password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  aria-invalid={Boolean(error)}
+                  disabled={loading}
+                  autoComplete="current-password"
+                  className={`${inputClass} pr-11`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 rounded p-1 text-slate-500 transition-colors hover:text-[#21116a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <label htmlFor="owner-remember" className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+                <input
+                  id="owner-remember"
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="h-4 w-4 rounded border-[#b9cee2] text-[#16a7e2] focus:ring-[#16a7e2]/30"
+                />
+                Remember me
+              </label>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                className="text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 transition-colors hover:text-[#16a7e2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d] focus-visible:ring-[#16a7e2]/40"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in
+                </>
+              ) : (
+                <>
+                  Access Manager Panel
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+        </div>
+      </section>
+    </main>
   );
 };

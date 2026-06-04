@@ -2,10 +2,11 @@
 
 import { memo } from 'react';
 import { useOwnerManager } from './hooks/useOwnerManager';
-import { OwnerManagerHeader } from './components/OwnerManagerHeader';
+import { OwnerManagerContentHeader } from './components/OwnerManagerContentHeader';
 import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerManagerStatistics } from './components/OwnerManagerStatistics';
+import { OwnerManagerTabStats } from './components/OwnerManagerTabStats';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -14,11 +15,10 @@ const OwnerManager = memo(() => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-        <OwnerManagerHeader
+        <OwnerManagerContentHeader
           currentMeta={vm.currentMeta}
           activeTab={vm.activeTab}
           dataCount={vm.dataCount}
-          centerCount={vm.centerCount}
           activeCenterLabel={vm.activeCenterLabel}
           scopedMessage={vm.scopedMessage}
           needsCenterScope={vm.needsCenterScope}
@@ -35,17 +35,31 @@ const OwnerManager = memo(() => {
             loading={vm.loading}
           />
         ) : (
-          <OwnerManagerTable
-            activeTab={vm.activeTab}
-            columns={vm.columns}
-            data={vm.data}
-            loading={vm.loading}
-            showForm={vm.showForm}
-            isScopedAndMissingCenter={vm.isScopedAndMissingCenter}
-            onEdit={vm.handleEdit}
-            onDelete={vm.handleDelete}
-            onResetPassword={vm.handleResetPassword}
-          />
+          <>
+            <OwnerManagerTabStats
+              activeTab={vm.activeTab}
+              data={vm.data}
+              loading={vm.loading}
+              crossCounts={vm.crossCounts}
+              collections={vm.statisticsCollections}
+              onEdit={vm.handleEdit}
+              onDelete={vm.handleDelete}
+              onResetPassword={vm.handleResetPassword}
+            />
+            {vm.activeTab !== 'teachers' && (
+              <OwnerManagerTable
+                activeTab={vm.activeTab}
+                columns={vm.columns}
+                data={vm.data}
+                loading={vm.loading}
+                showForm={vm.showForm}
+                isScopedAndMissingCenter={vm.isScopedAndMissingCenter}
+                onEdit={vm.handleEdit}
+                onDelete={vm.handleDelete}
+                onResetPassword={vm.handleResetPassword}
+              />
+            )}
+          </>
         )}
 
         {vm.activeTab !== 'statistics' && (
