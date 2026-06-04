@@ -218,7 +218,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       writing: 'bg-pink-500',
       matching: 'bg-teal-500',
     };
-    return colors[type] || 'bg-gray-500';
+    return colors[type] || 'bg-muted-foreground';
   };
 
 // Formats test type.
@@ -250,47 +250,33 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
 
   return (
     <div>
-      {/* Header with Create Button and Search */}
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        <h3 className="text-lg font-semibold">
-          My Tests ({filteredTests.length})
-        </h3>
-        <div className="flex gap-3 items-center">
-          <div className="relative min-w-[250px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search tests..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          <Button
-            onClick={() => navigate('/tests/create')}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Create Test
-          </Button>
+      {/* Filter Tabs + Search */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <Tabs value={filterTab} onValueChange={setFilterTab}>
+          <TabsList>
+            <TabsTrigger value="all">All ({tests.length})</TabsTrigger>
+            <TabsTrigger value="active">Active ({tests.filter((t) => t.is_active).length})</TabsTrigger>
+            <TabsTrigger value="inactive">Inactive ({tests.filter((t) => !t.is_active).length})</TabsTrigger>
+            <TabsTrigger value="submissions">
+              With Submissions
+              {tests.filter((t) => (t.submission_count || 0) > 0).length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-xs w-5 h-5">
+                  {tests.filter((t) => (t.submission_count || 0) > 0).length}
+                </span>
+              )}
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <div className="relative min-w-[220px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search tests..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
         </div>
       </div>
-
-      {/* Filter Tabs */}
-      <Tabs value={filterTab} onValueChange={setFilterTab} className="mb-6">
-        <TabsList>
-          <TabsTrigger value="all">All ({tests.length})</TabsTrigger>
-          <TabsTrigger value="active">Active ({tests.filter((t) => t.is_active).length})</TabsTrigger>
-          <TabsTrigger value="inactive">Inactive ({tests.filter((t) => !t.is_active).length})</TabsTrigger>
-          <TabsTrigger value="submissions">
-            With Submissions
-            {tests.filter((t) => (t.submission_count || 0) > 0).length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-xs w-5 h-5">
-                {tests.filter((t) => (t.submission_count || 0) > 0).length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
 
       {error && (
         <Alert variant="destructive" className="mb-4">
@@ -300,8 +286,8 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
 
       {/* Tests Grid */}
       {filteredTests.length === 0 ? (
-        <div className="text-center py-16 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-          <FileQuestion className="h-14 w-14 text-gray-400 mx-auto mb-3" />
+        <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-border">
+          <FileQuestion className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-muted-foreground">No tests found</h3>
           <p className="text-sm text-muted-foreground mb-4">
             {searchTerm ? 'Try adjusting your search' : 'Create your first test to get started'}
@@ -309,7 +295,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
           {!searchTerm && (
             <Button
               onClick={() => navigate('/tests/create')}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+              className=""
             >
               <Plus className="h-4 w-4 mr-2" />
               Create Test
@@ -338,11 +324,11 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                     <Badge variant="outline" className={cn('text-xs', test.is_private ? 'border-amber-300 text-amber-700 bg-amber-50' : 'border-emerald-300 text-emerald-700 bg-emerald-50')}>
                       {test.is_private ? 'Private' : 'Public'}
                     </Badge>
-                    <Badge variant="outline" className={cn('text-xs', test.is_active ? 'border-green-400 text-green-600' : 'border-gray-300 text-gray-500')}>
+                    <Badge variant="outline" className={cn('text-xs', test.is_active ? 'border-green-400 text-green-600' : 'border-border text-muted-foreground')}>
                       {test.is_active ? 'Active' : 'Inactive'}
                     </Badge>
                     <button
-                      className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                      className="p-1 rounded hover:bg-muted text-muted-foreground"
                       onClick={(e) => handleMenuOpen(e, test)}
                     >
                       <MoreVertical className="h-4 w-4" />
@@ -392,29 +378,29 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       {menuOpen && (
         <div
           ref={menuRef}
-          className="fixed z-50 w-48 bg-white rounded-md shadow-lg border py-1"
+          className="fixed z-50 w-48 bg-card rounded-md shadow-lg border py-1"
           style={{ top: menuPos.top, left: menuPos.left }}
         >
           <button
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}`); }}
           >
             <Eye className="h-4 w-4" /> View Details
           </button>
           <button
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/edit`); }}
           >
             <Edit className="h-4 w-4" /> Edit Test
           </button>
           <button
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/assign`); }}
           >
             <ClipboardList className="h-4 w-4" /> Assign Test
           </button>
           <button
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={handleViewSubmissions}
           >
             <Users className="h-4 w-4" />
@@ -457,7 +443,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
             <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className="bg-muted/50">
                     <TableHead>Student</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Score</TableHead>
@@ -482,7 +468,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                       </TableCell>
                       <TableCell className="text-right">
                         <button
-                          className="p-1.5 rounded hover:bg-gray-100 text-gray-600"
+                          className="p-1.5 rounded hover:bg-muted text-muted-foreground"
                           title="View Submission"
                           onClick={() => navigate(`/tests/submissions/${sub.submission_id}`)}
                         >

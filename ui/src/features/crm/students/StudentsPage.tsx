@@ -5,6 +5,8 @@ import { ChevronLeft, ChevronRight, Coins, Download, FileSpreadsheet, Graduation
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MetricCard } from '@/components/common/MetricCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,7 +14,6 @@ import { dataAPI, studentAPI } from '@/shared/api/api';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentsFormDialog } from './components/StudentsFormDialog';
-import { StudentsHeader } from './components/StudentsHeader';
 import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
 import { StudentsTableView } from './components/StudentsTableView';
 import { useStudentsPage } from './hooks/useStudentsPage';
@@ -91,36 +92,28 @@ const StudentsPage = () => {
       value: pageStudents.length.toLocaleString(),
       detail: `${activeStudents.toLocaleString()} active`,
       icon: Users,
-      shell: 'from-indigo-50 via-white to-sky-50 border-indigo-100',
-      iconShell: 'from-indigo-500 to-sky-500',
-      text: 'text-indigo-950',
+      tone: 'blue' as const,
     },
     {
       label: 'Schools',
       value: schoolsOnPage.toLocaleString(),
       detail: 'In current view',
       icon: School,
-      shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
-      iconShell: 'from-emerald-500 to-teal-500',
-      text: 'text-emerald-950',
+      tone: 'green' as const,
     },
     {
       label: 'Classes',
       value: classesOnPage.toLocaleString(),
       detail: 'Assigned groups',
       icon: GraduationCap,
-      shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
-      iconShell: 'from-amber-500 to-orange-500',
-      text: 'text-amber-950',
+      tone: 'amber' as const,
     },
     {
       label: 'Coins',
       value: coinsOnPage.toLocaleString(),
       detail: 'Visible students',
       icon: Coins,
-      shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
-      iconShell: 'from-cyan-500 to-fuchsia-500',
-      text: 'text-slate-950',
+      tone: 'neutral' as const,
     },
   ];
 
@@ -239,19 +232,14 @@ const StudentsPage = () => {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="relative overflow-hidden rounded-2xl border border-sky-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/50 via-amber-100/40 to-transparent dark:hidden" />
-        <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-3">
-            <StudentsHeader title={title} />
-            <p className="max-w-2xl text-sm text-muted-foreground">
-              Browse, filter, and manage student profiles with quick access to classes, schools, status, and coin balances.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
+    <div className="space-y-6">
+      <PageHeader
+        title={title}
+        description="Browse, filter, and manage student profiles with quick access to classes, schools, status, and coin balances."
+        icon={Users}
+        actions={
+          <>
+            <ViewModeToggle value={viewMode} onChange={setViewMode} />
             {canImportStudents && (
               <>
                 <input
@@ -266,7 +254,6 @@ const StudentsPage = () => {
                   variant="outline"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isImporting}
-                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
                 >
                   <Upload className="w-5 h-5 mr-2" /> {isImporting ? 'Importing...' : 'Import CSV'}
                 </Button>
@@ -275,7 +262,6 @@ const StudentsPage = () => {
                   variant="outline"
                   onClick={handlePushStudentsToSheets}
                   disabled={isSheetsPushing || isSheetsPulling}
-                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
                 >
                   <FileSpreadsheet className="w-5 h-5 mr-2" /> {isSheetsPushing ? 'Updating...' : 'Update Sheets'}
                 </Button>
@@ -284,40 +270,32 @@ const StudentsPage = () => {
                   variant="outline"
                   onClick={handlePullStudentsFromSheets}
                   disabled={isSheetsPushing || isSheetsPulling}
-                  className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
                 >
                   <Download className="w-5 h-5 mr-2" /> {isSheetsPulling ? 'Importing...' : 'Import Sheets'}
                 </Button>
               </>
             )}
-            <Button onClick={() => s.handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-6 py-3 rounded-lg font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
+            <Button onClick={() => s.handleOpenModal()}>
               <Plus className="w-5 h-5 mr-2" /> Add Student
             </Button>
-          </div>
-        </div>
+          </>
+        }
+      />
 
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className={`rounded-lg border bg-gradient-to-br ${card.shell} p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{card.label}</p>
-                    <p className={`mt-1 text-2xl font-bold ${card.text} dark:text-card-foreground`}>{card.value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
-                  </div>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${card.iconShell} text-white shadow-md shadow-slate-900/10 dark:shadow-none`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {summaryCards.map((card) => (
+          <MetricCard
+            key={card.label}
+            label={card.label}
+            value={card.value}
+            detail={card.detail}
+            icon={card.icon}
+            tone={card.tone}
+          />
+        ))}
       </div>
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-transparent dark:bg-transparent dark:p-0 dark:shadow-none">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
         <TabsList className="mb-5 bg-slate-100/80 dark:bg-muted">
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="statistics">Statistics</TabsTrigger>

@@ -68,13 +68,13 @@ export const OwnerLoginPage = () => {
       {/* Background */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_70%,rgba(245,175,25,0.12)_0%,transparent_50%),radial-gradient(circle_at_70%_30%,rgba(241,39,17,0.12)_0%,transparent_50%)]" />
 
-      <div className="relative z-10 w-full max-w-[440px] px-4 sm:px-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="relative z-10 w-full max-w-[440px] px-4 sm:px-6 animate-slide-up">
         {/* Back button */}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => navigate('/login/superuser')}
-          className="mb-6 text-white/40 hover:text-white/70"
+          className="mb-6 text-white/40 hover:text-white/70 hover:bg-white/5"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Login

@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { CalendarDays, Clock, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { showToast } from '@/utils/toast';
+import { PageHeader } from '@/components/common/PageHeader';
+import { SectionPanel } from '@/components/common/SectionPanel';
 import {
   CALENDAR_DAY_END_HOUR_KEY,
   CALENDAR_DAY_START_HOUR_KEY,
@@ -121,34 +122,36 @@ const SettingsPage = () => {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
-        <div className="relative flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
-            <SettingsIcon className="h-6 w-6" />
+      <PageHeader
+        title="Settings"
+        description="Configure lesson generation, calendar defaults, and local workspace preferences."
+        icon={SettingsIcon}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Settings
+            </Button>
+            <Button variant="outline" onClick={handleResetAll}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Reset All
+            </Button>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Settings</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Configure lesson generation, calendar defaults, and local workspace preferences.
-            </p>
-          </div>
-        </div>
-      </div>
+        }
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-indigo-500 to-sky-500 dark:hidden" />
-          <CardHeader className="bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
-            <CardTitle className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-100 to-emerald-100 text-sky-700 dark:bg-muted dark:bg-none dark:text-muted-foreground">
-                <Timer className="h-5 w-5" />
+        <SectionPanel
+          title={
+            <span className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-sm">
+                <Timer className="h-4 w-4" />
               </span>
               Lesson Length
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
+            </span>
+          }
+        >
+          <div className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="defaultDuration">Default lesson length (minutes)</Label>
               <Input
@@ -181,20 +184,20 @@ const SettingsPage = () => {
             <Button variant="outline" onClick={handleClearOverride}>
               Clear Override
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </SectionPanel>
 
-        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
-          <CardHeader className="bg-gradient-to-r from-emerald-50/80 via-white to-cyan-50/70 dark:bg-none">
-            <CardTitle className="flex items-center gap-2">
-              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-100 to-cyan-100 text-emerald-700 dark:bg-muted dark:bg-none dark:text-muted-foreground">
-                <CalendarDays className="h-5 w-5" />
+        <SectionPanel
+          title={
+            <span className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm">
+                <CalendarDays className="h-4 w-4" />
               </span>
               Calendar Defaults
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6 pt-6">
+            </span>
+          }
+        >
+          <div className="space-y-5">
             <div className="space-y-2">
               <Label>Default calendar view</Label>
               <Select value={calendarDefaultView} onValueChange={(value) => setCalendarDefaultView(value as 'month' | 'week')}>
@@ -244,19 +247,8 @@ const SettingsPage = () => {
               <RotateCcw className="mr-2 h-4 w-4" />
               Reset Calendar Defaults
             </Button>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="flex flex-wrap gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-4 dark:border-border dark:bg-transparent">
-        <Button onClick={handleSave}>
-          <Save className="mr-2 h-4 w-4" />
-          Save Settings
-        </Button>
-        <Button variant="outline" onClick={handleResetAll}>
-          <RotateCcw className="mr-2 h-4 w-4" />
-          Reset All
-        </Button>
+          </div>
+        </SectionPanel>
       </div>
     </div>
   );
