@@ -139,7 +139,7 @@ const ClassDetailPage = () => {
         session_date: todayKey,
         start_time: schedule.time || new Date().toTimeString().slice(0, 5),
         duration_minutes: 90,
-        teacher_id: user?.id ? Number(user.id) : Number(classData.teacher_id),
+        teacher_id: user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData.teacher_id || 0) || undefined,
       });
       const nextSession = response?.data ?? response;
       setSessions((current) => [...current, nextSession]);
