@@ -111,7 +111,7 @@ export const OwnerManagerTable = ({
                               size="icon"
                               onClick={() => onResetPassword(item)}
                               disabled={loading}
-                              className="text-amber-300 hover:bg-amber-400/10 hover:text-amber-200"
+                              className="text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
                               title="Reset password"
                             >
                               <KeyRound className="h-4 w-4" />
@@ -121,7 +121,7 @@ export const OwnerManagerTable = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(item)}
-                            className="text-sky-300 hover:bg-sky-400/10 hover:text-sky-200"
+                            className="text-sky-600 hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
                             title="Edit"
                           >
                             <Pencil className="h-4 w-4" />
@@ -130,7 +130,7 @@ export const OwnerManagerTable = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(Number(rowId))}
-                            className="text-rose-300 hover:bg-rose-400/10 hover:text-rose-200"
+                            className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
                             title="Delete"
                           >
                             <Trash2 className="h-4 w-4" />

@@ -1,6 +1,7 @@
 // Barrel exports for the owner feature.
 
-export { OwnerManagerHeader } from './OwnerManagerHeader';
+export { OwnerManagerContentHeader } from './OwnerManagerContentHeader';
 export { OwnerManagerTable } from './OwnerManagerTable';
 export { OwnerManagerDialog } from './OwnerManagerDialog';
 export { OwnerManagerStatistics } from './OwnerManagerStatistics';
+export { OwnerManagerTabStats } from './OwnerManagerTabStats';
