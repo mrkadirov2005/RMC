@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, Loader2, MapPin, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, Loader2, MapPin, PlayCircle, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { classAPI, studentAPI, subjectAPI } from '@/shared/api/api';
+import { showToast } from '@/utils/toast';
+import SessionModal from './SessionModal';
 
 type ClassItem = {
   class_id?: number;
   id?: number;
   class_name?: string;
   class_code?: string;
+  center_id?: number;
   level?: number;
   capacity?: number;
   teacher_id?: number;
@@ -62,6 +65,10 @@ const ClassDetailPage = () => {
   const [students, setStudents] = useState<StudentItem[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionModalOpen, setSessionModalOpen] = useState(false);
+  const [sessionModalId, setSessionModalId] = useState<number | null>(null);
+  const [sessionModalDate, setSessionModalDate] = useState('');
+  const [startingLesson, setStartingLesson] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -101,6 +108,49 @@ const ClassDetailPage = () => {
   const activeStudents = students.filter((student) => String(student.status || '').toLowerCase() === 'active').length;
   const capacity = Number(classData?.capacity || 0);
   const fillRate = capacity > 0 ? Math.min(100, Math.round((students.length / capacity) * 100)) : 0;
+  const todayKey = new Date().toISOString().split('T')[0];
+
+  const openSessionWorkflow = (session: any) => {
+    const nextSessionId = Number(session.session_id || session.id);
+    if (!nextSessionId) return;
+    setSessionModalId(nextSessionId);
+    setSessionModalDate(session.session_date ? new Date(session.session_date).toISOString().split('T')[0] : todayKey);
+    setSessionModalOpen(true);
+  };
+
+  const handleStartLesson = async () => {
+    if (!classData || !classId) return;
+    const targetClassId = Number(classData.class_id || classData.id || classId);
+    const existingTodaySession = sessions.find((session) => {
+      if (!session.session_date) return false;
+      return new Date(session.session_date).toISOString().split('T')[0] === todayKey;
+    });
+
+    if (existingTodaySession) {
+      openSessionWorkflow(existingTodaySession);
+      return;
+    }
+
+    setStartingLesson(true);
+    try {
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : null;
+      const response = await classAPI.createSession(targetClassId, {
+        session_date: todayKey,
+        start_time: schedule.time || new Date().toTimeString().slice(0, 5),
+        duration_minutes: 90,
+        teacher_id: user?.id ? Number(user.id) : Number(classData.teacher_id),
+      });
+      const nextSession = response?.data ?? response;
+      setSessions((current) => [...current, nextSession]);
+      openSessionWorkflow(nextSession);
+    } catch (err) {
+      console.error('Failed to start lesson:', err);
+      showToast.error('Failed to start lesson.');
+    } finally {
+      setStartingLesson(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -146,6 +196,14 @@ const ClassDetailPage = () => {
                 <Badge variant="outline" className="border-white/30 bg-white/15 text-white">Level {classData.level || '-'}</Badge>
                 <Badge variant="outline" className="border-white/30 bg-white/15 text-white">{classData.teacher_name || 'No teacher assigned'}</Badge>
               </div>
+              <Button
+                onClick={handleStartLesson}
+                disabled={startingLesson}
+                className="mt-2 bg-white text-indigo-700 hover:bg-white/90"
+              >
+                {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+                Start Lesson
+              </Button>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:w-[460px]">
               <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
@@ -265,7 +323,15 @@ const ClassDetailPage = () => {
                     <TableCell>{session.session_date ? new Date(session.session_date).toLocaleDateString() : '-'}</TableCell>
                     <TableCell>{session.start_time || '-'}</TableCell>
                     <TableCell>{session.duration_minutes ? `${session.duration_minutes} min` : '-'}</TableCell>
-                    <TableCell>{session.status || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center justify-between gap-3">
+                        <span>{session.status || '-'}</span>
+                        <Button variant="outline" size="sm" onClick={() => openSessionWorkflow(session)}>
+                          <PlayCircle className="mr-2 h-4 w-4" />
+                          Open
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -273,6 +339,18 @@ const ClassDetailPage = () => {
           </TabsContent>
         </div>
       </Tabs>
+
+      <SessionModal
+        open={sessionModalOpen}
+        classData={classData}
+        sessionId={sessionModalId}
+        selectedDate={sessionModalDate}
+        onClose={() => {
+          setSessionModalOpen(false);
+          setSessionModalId(null);
+          setSessionModalDate('');
+        }}
+      />
     </div>
   );
 };
