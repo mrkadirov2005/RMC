@@ -169,9 +169,6 @@ export const useOwnerManager = () => {
 
       let response: any = { data: [] };
       switch (activeTab) {
-        case 'centers':
-          response = await ownerManagerApi.centers.getAll();
-          break;
         case 'owners':
           response = await ownerManagerApi.owners.getAll();
           break;

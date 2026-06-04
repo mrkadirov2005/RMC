@@ -42,7 +42,7 @@ export const OwnerManagerContentHeader = ({
   dataCount,
   activeCenterLabel,
   scopedMessage,
-  needsCenterScope,
+  needsCenterScope: _needsCenterScope,
   isScopedAndMissingCenter,
   onAdd,
   onTabChange,

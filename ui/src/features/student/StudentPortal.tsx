@@ -242,16 +242,6 @@ const StudentPortal = () => {
       .slice(0, 4);
   }, [assignments]);
 
-// Memoizes the last payment derived value.
-  const lastPayment = useMemo(() => {
-    const sorted = [...payments].sort((a, b) => {
-      const aTime = a.payment_date ? new Date(a.payment_date).getTime() : 0;
-      const bTime = b.payment_date ? new Date(b.payment_date).getTime() : 0;
-      return bTime - aTime;
-    });
-    return sorted[0];
-  }, [payments]);
-
 // Memoizes the outstanding debt derived value.
   const outstandingDebt = useMemo(() => {
     return debts.reduce((sum, d) => {
