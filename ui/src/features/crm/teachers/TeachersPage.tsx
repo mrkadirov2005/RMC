@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload, KeyRound } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -36,8 +36,6 @@ import {
 import { cn } from '@/lib/utils';
 import type { Teacher } from './types';
 import { dataAPI, teacherAPI } from '@/shared/api/api';
-import { useAppDispatch } from '../hooks';
-import { patchTeacher } from '@/slices/teachersSlice';
 import { showToast } from '@/utils/toast';
 
 const buildTeacherUsername = (value: string) => {
@@ -49,52 +47,56 @@ const buildTeacherUsername = (value: string) => {
   return cleaned.length >= 3 ? cleaned : cleaned.padEnd(3, '0');
 };
 
-const UsernameField = ({
+const PasswordField = ({
   teacher,
   onSave,
 }: {
   teacher: Teacher;
-  onSave: (teacher: Teacher, username: string) => Promise<void> | void;
+  onSave: (teacher: Teacher, password: string) => Promise<void> | void;
 }) => {
-  const [value, setValue] = useState(teacher.username || '');
+  const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setValue(teacher.username || '');
-  }, [teacher.username]);
+    setValue('');
+  }, [teacher.teacher_id, teacher.id]);
 
   const save = async () => {
     const next = value.trim();
-    const current = String(teacher.username || '').trim();
-    if (next === current || saving) return;
+    if (!next || saving) return;
 
     setSaving(true);
     try {
       await onSave(teacher, next);
+      setValue('');
     } catch {
-      setValue(current);
+      setValue('');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="max-w-[220px]">
-      <Input
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onBlur={save}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') event.currentTarget.blur();
-          if (event.key === 'Escape') {
-            setValue(teacher.username || '');
-            event.currentTarget.blur();
-          }
-        }}
-        disabled={saving}
-        placeholder="username"
-        className="h-8 bg-white/80 text-sm dark:bg-background"
-      />
+    <div className="max-w-[240px]">
+      <div className="relative">
+        <KeyRound className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="password"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onBlur={save}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') event.currentTarget.blur();
+            if (event.key === 'Escape') {
+              setValue('');
+              event.currentTarget.blur();
+            }
+          }}
+          disabled={saving}
+          placeholder="New password"
+          className="h-8 bg-white/80 pl-8 text-sm dark:bg-background"
+        />
+      </div>
       {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
     </div>
   );
@@ -102,7 +104,6 @@ const UsernameField = ({
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
-  const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [isImporting, setIsImporting] = useState(false);
@@ -239,16 +240,19 @@ const TeachersPage = () => {
       </DropdownMenu>
     </div>
   );
-  const handleUsernameUpdate = async (teacher: Teacher, username: string) => {
+  const handlePasswordUpdate = async (teacher: Teacher, password: string) => {
     const id = teacher.teacher_id || teacher.id;
     if (!id) throw new Error('Teacher ID is missing.');
-    dispatch(patchTeacher({ id, changes: { username } }));
+    const username = String(teacher.username || '').trim();
+    if (!username) {
+      showToast.error('Teacher username is required before setting a password.');
+      throw new Error('Teacher username is missing.');
+    }
+
     try {
-      const response = await teacherAPI.update(id, { username });
-      const updated = (response as any).data ?? response;
-      dispatch(patchTeacher({ id, changes: { username: updated?.username ?? username } }));
-    } catch (error) {
-      dispatch(patchTeacher({ id, changes: { username: teacher.username } }));
+      await teacherAPI.setPassword(id, { username, password });
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update password.');
       throw error;
     }
   };
@@ -436,7 +440,7 @@ const TeachersPage = () => {
                   />
                 </TableHead>
                 <TableHead>Teacher</TableHead>
-                <TableHead>Username</TableHead>
+                <TableHead>Password</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -462,7 +466,7 @@ const TeachersPage = () => {
                     </button>
                   </TableCell>
                   <TableCell>
-                    <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                    <PasswordField teacher={teacher} onSave={handlePasswordUpdate} />
                   </TableCell>
                   <TableCell className="text-right">
                     {renderTeacherActions(teacher)}
@@ -512,7 +516,7 @@ const TeachersPage = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
                       <div className="mt-2">
-                        <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                        <PasswordField teacher={teacher} onSave={handlePasswordUpdate} />
                       </div>
                     </div>
                   </div>
@@ -572,7 +576,7 @@ const TeachersPage = () => {
                     {teacher.first_name} {teacher.last_name}
                   </p>
                   <div className="mx-auto mt-3 flex justify-center">
-                    <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                    <PasswordField teacher={teacher} onSave={handlePasswordUpdate} />
                   </div>
                 </CardContent>
 

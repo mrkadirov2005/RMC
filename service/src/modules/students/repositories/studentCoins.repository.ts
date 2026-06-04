@@ -76,6 +76,72 @@ const addTransaction = async (
   }
 };
 
+const upsertSourceTransaction = async (
+  studentId: number,
+  delta: number,
+  reason: string | null,
+  sourceType: string,
+  sourceId: number,
+  createdBy: number | null,
+  createdByType: string | null
+) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const student = await findStudentForUpdate(client, studentId);
+    if (!student) {
+      await client.query('ROLLBACK');
+      return { error: 'not_found' as const };
+    }
+
+    const existingRes = await client.query(
+      `SELECT transaction_id, delta
+       FROM student_coin_transactions
+       WHERE student_id = $1 AND source_type = $2 AND source_id = $3
+       FOR UPDATE`,
+      [studentId, sourceType, sourceId]
+    );
+    const existing = existingRes.rows[0];
+    const previousDelta = Number(existing?.delta || 0);
+    const currentCoins = Number(student.coins || 0);
+    const nextCoins = currentCoins + (delta - previousDelta);
+    const MIN_COINS = -9999;
+    if (nextCoins < MIN_COINS) {
+      await client.query('ROLLBACK');
+      return { error: 'insufficient' as const, balance: currentCoins };
+    }
+
+    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2', [
+      nextCoins,
+      studentId,
+    ]);
+
+    const tx = existing
+      ? await client.query(
+          `UPDATE student_coin_transactions
+           SET delta = $1, reason = $2, created_by = $3, created_by_type = $4, updated_at = CURRENT_TIMESTAMP
+           WHERE transaction_id = $5
+           RETURNING *`,
+          [delta, reason, createdBy, createdByType, existing.transaction_id]
+        )
+      : await client.query(
+          `INSERT INTO student_coin_transactions
+             (student_id, center_id, delta, reason, created_by, created_by_type, source_type, source_id)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+           RETURNING *`,
+          [studentId, student.center_id, delta, reason, createdBy, createdByType, sourceType, sourceId]
+        );
+
+    await client.query('COMMIT');
+    return { balance: nextCoins, transaction: tx.rows[0] };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const updateTransaction = async (
   studentId: number,
   transactionId: number,
@@ -175,6 +241,7 @@ const deleteTransaction = async (studentId: number, transactionId: number) => {
 module.exports = {
   listTransactions,
   addTransaction,
+  upsertSourceTransaction,
   updateTransaction,
   deleteTransaction,
 };

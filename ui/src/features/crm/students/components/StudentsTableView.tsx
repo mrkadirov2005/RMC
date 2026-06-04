@@ -1,7 +1,7 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { Coins, Folder, Info, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Coins, Folder, Info, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,59 +25,63 @@ interface Props {
   onEdit: (student: Student) => void;
   onDelete: (id: number) => void;
   onBulkDelete?: (ids: number[]) => Promise<void> | void;
-  onUsernameUpdate?: (student: Student, username: string) => Promise<void> | void;
+  onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   viewMode?: ViewMode;
 }
 
-const UsernameField = ({
+const PasswordField = ({
   student,
-  onUsernameUpdate,
+  onPasswordUpdate,
 }: {
   student: Student;
-  onUsernameUpdate?: (student: Student, username: string) => Promise<void> | void;
+  onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
 }) => {
-  const [value, setValue] = useState(student.username || '');
+  const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    setValue(student.username || '');
-  }, [student.username]);
+    setValue('');
+  }, [student.student_id, student.id]);
 
   const save = async () => {
     const next = value.trim();
-    const current = String(student.username || '').trim();
-    if (!onUsernameUpdate || next === current || saving) return;
+    if (!onPasswordUpdate || !next || saving) return;
 
     setSaving(true);
     try {
-      await onUsernameUpdate(student, next);
+      await onPasswordUpdate(student, next);
+      setValue('');
     } catch {
-      setValue(current);
+      setValue('');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="max-w-[220px]">
-      <Input
-        value={value}
-        onChange={(event) => setValue(event.target.value)}
-        onBlur={save}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.currentTarget.blur();
-          }
-          if (event.key === 'Escape') {
-            setValue(student.username || '');
-            event.currentTarget.blur();
-          }
-        }}
-        disabled={saving}
-        placeholder="username"
-        className="h-8 bg-white/80 text-sm dark:bg-background"
-      />
+    <div className="max-w-[240px]">
+      <div className="relative">
+        <KeyRound className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="password"
+          value={value}
+          onChange={(event) => setValue(event.target.value)}
+          onBlur={save}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.currentTarget.blur();
+            }
+            if (event.key === 'Escape') {
+              setValue('');
+              event.currentTarget.blur();
+            }
+          }}
+          disabled={saving}
+          placeholder="New password"
+          className="h-8 bg-white/80 pl-8 text-sm dark:bg-background"
+        />
+      </div>
       {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
     </div>
   );
@@ -92,7 +96,7 @@ export const StudentsTableView = ({
   onEdit,
   onDelete,
   onBulkDelete,
-  onUsernameUpdate,
+  onPasswordUpdate,
   onCoinsUpdated,
   viewMode = 'list',
 }: Props) => {
@@ -254,7 +258,7 @@ export const StudentsTableView = ({
                       <div className="min-w-0 flex-1">
                         <p className="truncate font-semibold">{student.first_name} {student.last_name}</p>
                         <div className="mt-2">
-                          <UsernameField student={student} onUsernameUpdate={onUsernameUpdate} />
+                          <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                         </div>
                       </div>
                     </div>
@@ -264,7 +268,7 @@ export const StudentsTableView = ({
                         {student.first_name} {student.last_name}
                       </h3>
                       <div className="mt-3">
-                        <UsernameField student={student} onUsernameUpdate={onUsernameUpdate} />
+                        <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                       </div>
                     </div>
                   )}
@@ -316,7 +320,7 @@ export const StudentsTableView = ({
               />
             </TableHead>
             <TableHead>Name</TableHead>
-            <TableHead>Username</TableHead>
+            <TableHead>Password</TableHead>
             <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
@@ -355,7 +359,7 @@ export const StudentsTableView = ({
                   </button>
                 </TableCell>
                 <TableCell>
-                  <UsernameField student={student} onUsernameUpdate={onUsernameUpdate} />
+                  <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                 </TableCell>
                 <TableCell className="text-right">
                   {renderActions(student)}

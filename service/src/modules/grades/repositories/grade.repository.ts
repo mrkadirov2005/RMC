@@ -191,6 +191,20 @@ const findBySession = (sessionId: number, centerId?: number, teacherId?: number)
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const updateLessonCoins = (gradeId: number, baseCoin: number, totalDailyCoin: number, coinComment: string) =>
+  pool
+    .query(
+      `UPDATE grades
+       SET base_coin = $1,
+           total_daily_coin = $2,
+           coin_comment = $3,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE grade_id = $4
+       RETURNING *`,
+      [baseCoin, totalDailyCoin, coinComment, gradeId]
+    )
+    .then((r: any) => r.rows[0]);
+
 const remove = (id: number, centerId?: number, teacherId?: number) => {
   let query = 'DELETE FROM grades WHERE grade_id = $1';
   const params: any[] = [id];
@@ -210,6 +224,6 @@ const remove = (id: number, centerId?: number, teacherId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-module.exports = { findAll, findById, insert, update, findByStudent, findBySession, remove, upsertSessionScores };
+module.exports = { findAll, findById, insert, update, findByStudent, findBySession, updateLessonCoins, remove, upsertSessionScores };
 
 export {};

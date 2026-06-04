@@ -1,7 +1,7 @@
 // Modal component for the classes screen in the crm feature.
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, Save } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -26,25 +26,25 @@ import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
 
 const ATTENDANCE_POINTS: Record<string, number> = {
-  'Present': 50,
+  'On time': 50,
   'Late': 40,
-  'Absent R': 30,
-  'Absent NR': 0
+  'Excused': 30,
+  'Absent': 0
 };
 
 const HOMETASK_POINTS: Record<string, number> = {
   'Full': 20,
-  'Half-full': 15,
+  'Missing part': 15,
   'Half': 10,
-  'Unacceptable': 5,
-  'No': 0
+  'Very weak': 5,
+  'No homework': 0
 };
 
 const ACTIVITY_POINTS: Record<string, number> = {
-  'Active': 30,
-  'Awesome': 30,
+  'Very active': 30,
   'Average': 20,
-  'BAD': 10
+  'Weak': 10,
+  'No activity': 0
 };
 
 interface SessionModalProps {
@@ -70,15 +70,18 @@ const SessionModal: React.FC<SessionModalProps> = ({
   const [submitting, setSubmitting] = useState(false);
   
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
+  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
 
   const classId = classData?.class_id || classData?.id;
+  const centerId = Number(classData?.center_id || 0) || undefined;
   const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
 
 // Runs side effects for this component.
   useEffect(() => {
     if (!open || !classId) return;
+    setActiveTab('attendance');
     dispatch(fetchStudents());
   }, [classId, dispatch, open]);
 
@@ -89,14 +92,22 @@ const SessionModal: React.FC<SessionModalProps> = ({
     const loadSessionData = async () => {
       try {
         // Load existing attendance
-        const attRes = await attendanceAPI.getBySession(sessionId);
+        const attRes = await attendanceAPI.getBySession(sessionId, centerId ? { center_id: centerId } : undefined);
         const attList = attRes.data || [];
+        setAttendanceRecords(Array.isArray(attList) ? attList : []);
         const newAtt = new Map();
-        attList.forEach((a: any) => newAtt.set(a.student_id, a.status));
+        attList.forEach((a: any) => {
+          const statusMap: Record<string, string> = {
+            Present: 'On time',
+            'Absent R': 'Excused',
+            'Absent NR': 'Absent',
+          };
+          newAtt.set(a.student_id, statusMap[a.status] || a.status);
+        });
         if (newAtt.size > 0) setAttendance(newAtt);
 
         // Load existing grades/scores
-        const gradeRes = await gradeAPI.getBySession(sessionId);
+        const gradeRes = await gradeAPI.getBySession(sessionId, centerId ? { center_id: centerId } : undefined);
         const sessionGrades = gradeRes.data || [];
         
         const newH = new Map();
@@ -160,12 +171,52 @@ const SessionModal: React.FC<SessionModalProps> = ({
     setActivityScores(newMap);
   };
 
+  const markedAttendanceCount = Array.from(attendance.values()).filter(Boolean).length;
+  const markedHomeworkCount = Array.from(homeworkScores.values()).filter(Boolean).length;
+  const markedActivityCount = Array.from(activityScores.values()).filter(Boolean).length;
+  const totalStudents = students.length;
+  const allAttendanceMarked = totalStudents > 0 && markedAttendanceCount === totalStudents;
+  const allHomeworkMarked = totalStudents > 0 && markedHomeworkCount === totalStudents;
+  const allActivityMarked = totalStudents > 0 && markedActivityCount === totalStudents;
+
+  const getTotalScore = (studentId: number) => {
+    const status = attendance.get(studentId) || '';
+    const hStatus = homeworkScores.get(studentId) || '';
+    const aStatus = activityScores.get(studentId) || '';
+    return (ATTENDANCE_POINTS[status] || 0) + (HOMETASK_POINTS[hStatus] || 0) + (ACTIVITY_POINTS[aStatus] || 0);
+  };
+
+  const goToHomework = () => {
+    if (!allAttendanceMarked) {
+      showToast.error('Mark attendance for every student first.');
+      return;
+    }
+    setActiveTab('hometask');
+  };
+
+  const goToActivity = () => {
+    if (!allHomeworkMarked) {
+      showToast.error('Add homework score for every student first.');
+      return;
+    }
+    setActiveTab('activity');
+  };
+
 // Handles save.
   const handleSave = async () => {
     if (!sessionId) return;
     try {
       setSubmitting(true);
       const today = selectedDate || new Date().toISOString().split('T')[0];
+      const userRaw = localStorage.getItem('user');
+      const user = userRaw ? JSON.parse(userRaw) : null;
+      const teacherId = user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData?.teacher_id);
+      const targetCenterId = centerId || user?.center_id;
+
+      if (!allAttendanceMarked || !allHomeworkMarked || !allActivityMarked) {
+        showToast.error('Complete attendance, homework, and activity for every student.');
+        return;
+      }
 
       for (const student of students) {
         const studentId = student.student_id || student.id;
@@ -173,16 +224,29 @@ const SessionModal: React.FC<SessionModalProps> = ({
         
         if (!status) continue;
 
-        // 1. Save Attendance
-        await attendanceAPI.create({
+        const apiStatusMap: Record<string, string> = {
+          'On time': 'Present',
+          Late: 'Late',
+          Excused: 'Excused',
+          Absent: 'Absent',
+        };
+        const attendancePayload = {
+          center_id: targetCenterId,
           student_id: studentId,
           class_id: classId,
           session_id: sessionId,
           attendance_date: today,
-          status: status,
+          status: apiStatusMap[status] || status,
           remarks: 'Daily Session Grading',
-          teacher_id: classData?.teacher_id || 1,
-        });
+          teacher_id: teacherId || 1,
+        };
+
+        const existingAttendance = attendanceRecords.find((record) => Number(record.student_id) === Number(studentId));
+        if (existingAttendance?.attendance_id || existingAttendance?.id) {
+          await attendanceAPI.update(Number(existingAttendance.attendance_id || existingAttendance.id), attendancePayload);
+        } else {
+          await attendanceAPI.create(attendancePayload);
+        }
 
         // 2. Save Scores
         const hStatus = homeworkScores.get(studentId);
@@ -190,14 +254,15 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
         await gradeAPI.upsertSessionScores({
           student_id: studentId,
-          teacher_id: classData?.teacher_id || 1,
+          teacher_id: teacherId || 1,
           class_id: classId,
           session_id: sessionId,
           attendance_score: ATTENDANCE_POINTS[status] || 0,
           homework_score: hStatus ? (HOMETASK_POINTS[hStatus] ?? 0) : 0,
           activity_score: aStatus ? (ACTIVITY_POINTS[aStatus] ?? 0) : 0,
           subject: classData?.class_name || 'Class Session',
-          total_marks: 100
+          total_marks: 100,
+          center_id: targetCenterId,
         });
       }
 
@@ -213,19 +278,34 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-6xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto p-0">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center pr-8">
-            <span>Session: {classData?.class_name}</span>
-            {selectedDate && <span className="text-sm font-normal text-muted-foreground mr-4">Date: {selectedDate}</span>}
+          <DialogTitle className="flex flex-col gap-2 border-b bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-5 pr-12 text-white sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xl">Take Lesson: {classData?.class_name}</span>
+            {selectedDate && <span className="text-sm font-normal text-white/70">Date: {selectedDate}</span>}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="attendance">1. Attendance</TabsTrigger>
-            <TabsTrigger value="hometask">2. Hometask</TabsTrigger>
-            <TabsTrigger value="activity">3. Activity & Finalize</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full p-5 pt-4">
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
+            <div className={cn('rounded-lg border p-3', activeTab === 'attendance' ? 'border-emerald-300 bg-emerald-50' : 'bg-muted/30')}>
+              <p className="text-sm font-semibold">1. Attendance</p>
+              <p className="text-xs text-muted-foreground">{markedAttendanceCount}/{totalStudents} marked</p>
+            </div>
+            <div className={cn('rounded-lg border p-3', activeTab === 'hometask' ? 'border-sky-300 bg-sky-50' : 'bg-muted/30')}>
+              <p className="text-sm font-semibold">2. Homework</p>
+              <p className="text-xs text-muted-foreground">{markedHomeworkCount}/{totalStudents} checked</p>
+            </div>
+            <div className={cn('rounded-lg border p-3', activeTab === 'activity' ? 'border-violet-300 bg-violet-50' : 'bg-muted/30')}>
+              <p className="text-sm font-semibold">3. Activity & Coins</p>
+              <p className="text-xs text-muted-foreground">{markedActivityCount}/{totalStudents} scored</p>
+            </div>
+          </div>
+
+          <TabsList className="grid h-auto w-full grid-cols-3">
+            <TabsTrigger value="attendance" className="py-2">Attendance</TabsTrigger>
+            <TabsTrigger value="hometask" disabled={!allAttendanceMarked} className="py-2">Homework</TabsTrigger>
+            <TabsTrigger value="activity" disabled={!allAttendanceMarked || !allHomeworkMarked} className="py-2">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance" className="pt-4">
@@ -233,8 +313,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
-                    <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Status</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">Attendance score / 50</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -245,19 +325,19 @@ const SessionModal: React.FC<SessionModalProps> = ({
                       <TableRow key={sid}>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {Object.keys(ATTENDANCE_POINTS).map((s) => (
                               <Button
                                 key={s}
                                 size="sm"
                                 variant={status === s ? 'default' : 'outline'}
                                 className={cn(
-                                  'text-[10px] h-8 px-2 min-w-[70px]',
-                                  status === s && (s.includes('Present') ? 'bg-green-600' : s.includes('Late') ? 'bg-yellow-600' : 'bg-red-600')
+                                  'text-[11px] h-8 px-2 min-w-[92px]',
+                                  status === s && (s === 'On time' ? 'bg-green-600' : s === 'Late' ? 'bg-yellow-600' : 'bg-red-600')
                                 )}
                                 onClick={() => handleAttendanceToggle(sid, s)}
                               >
-                                {s}
+                                {s} ({ATTENDANCE_POINTS[s]})
                               </Button>
                             ))}
                           </div>
@@ -268,7 +348,10 @@ const SessionModal: React.FC<SessionModalProps> = ({
                 </TableBody>
               </Table>
               <div className="flex justify-end p-4 border-t">
-                <Button onClick={() => setActiveTab('hometask')}>Next: Hometask</Button>
+                <Button onClick={goToHomework}>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Complete Attendance
+                </Button>
               </div>
             </div>
           </TabsContent>
@@ -278,8 +361,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
-                    <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Hometask Score</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">Homework score / 20</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -291,17 +374,17 @@ const SessionModal: React.FC<SessionModalProps> = ({
                       <TableRow key={sid} className={cn(!enabled && "opacity-40 grayscale")}>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {Object.keys(HOMETASK_POINTS).map((s) => (
                               <Button
                                 key={s}
                                 size="sm"
                                 disabled={!enabled}
                                 variant={hStatus === s ? 'default' : 'outline'}
-                                className={cn('text-[10px] h-8 px-2 min-w-[70px]', hStatus === s && 'bg-blue-600')}
+                                className={cn('text-[11px] h-8 px-2 min-w-[108px]', hStatus === s && 'bg-blue-600')}
                                 onClick={() => handleHomeworkToggle(sid, s)}
                               >
-                                {s}
+                                {s} ({HOMETASK_POINTS[s]})
                               </Button>
                             ))}
                           </div>
@@ -313,7 +396,10 @@ const SessionModal: React.FC<SessionModalProps> = ({
               </Table>
               <div className="flex justify-end p-4 border-t gap-2">
                 <Button variant="outline" onClick={() => setActiveTab('attendance')}>Back</Button>
-                <Button onClick={() => setActiveTab('activity')}>Next: Activity</Button>
+                <Button onClick={goToActivity}>
+                  <ClipboardCheck className="mr-2 h-4 w-4" />
+                  Complete Homework
+                </Button>
               </div>
             </div>
           </TabsContent>
@@ -323,9 +409,9 @@ const SessionModal: React.FC<SessionModalProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
-                    <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Activity Score</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Total Points</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">Class activity / 30</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">Combined Score</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -337,25 +423,23 @@ const SessionModal: React.FC<SessionModalProps> = ({
                     const enabled = !!status && !!hStatus;
 
 // Handles total.
-                    const total = (ATTENDANCE_POINTS[status] || 0) + 
-                                  (HOMETASK_POINTS[hStatus] || 0) + 
-                                  (ACTIVITY_POINTS[aStatus] || 0);
+                    const total = getTotalScore(sid);
 
                     return (
                       <TableRow key={sid} className={cn(!enabled && "opacity-40 grayscale")}>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {Object.keys(ACTIVITY_POINTS).map((s) => (
                               <Button
                                 key={s}
                                 size="sm"
                                 disabled={!enabled}
                                 variant={aStatus === s ? 'default' : 'outline'}
-                                className={cn('text-[10px] h-8 px-2 min-w-[70px]', aStatus === s && 'bg-purple-600')}
+                                className={cn('text-[11px] h-8 px-2 min-w-[108px]', aStatus === s && 'bg-purple-600')}
                                 onClick={() => handleActivityToggle(sid, s)}
                               >
-                                {s}
+                                {s} ({ACTIVITY_POINTS[s]})
                               </Button>
                             ))}
                           </div>
@@ -371,7 +455,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
               <div className="flex justify-end p-4 border-t gap-2">
                 <Button variant="outline" onClick={() => setActiveTab('hometask')}>Back</Button>
                 <Button onClick={handleSave} disabled={submitting}>
-                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><Save className="mr-2 h-4 w-4" /> Save All Session Data</>}
+                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><Save className="mr-2 h-4 w-4" /> Save Scores & Generate Coins</>}
                 </Button>
               </div>
             </div>

@@ -79,6 +79,15 @@ module.exports = {
   },
   addCoins: (studentId: number, delta: number, reason: string | null, createdBy: number | null, createdByType: string | null) =>
     studentCoinsRepository.addTransaction(studentId, delta, reason, createdBy, createdByType),
+  upsertSourceCoins: (
+    studentId: number,
+    delta: number,
+    reason: string | null,
+    sourceType: string,
+    sourceId: number,
+    createdBy: number | null,
+    createdByType: string | null
+  ) => studentCoinsRepository.upsertSourceTransaction(studentId, delta, reason, sourceType, sourceId, createdBy, createdByType),
   updateCoinTransaction: (studentId: number, transactionId: number, delta: number, reason: string | null) =>
     studentCoinsRepository.updateTransaction(studentId, transactionId, delta, reason),
   deleteCoinTransaction: (studentId: number, transactionId: number) =>

@@ -148,6 +148,8 @@ const StudentDetailPage = () => {
   const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
   const [resetTempPassword, setResetTempPassword] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [settingPassword, setSettingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('attendance');
@@ -279,6 +281,33 @@ const StudentDetailPage = () => {
       showToast.error(err.message || 'Failed to reset password');
     } finally {
       setResettingPassword(false);
+    }
+  };
+
+// Handles set password.
+  const handleSetPassword = async () => {
+    if (!studentId || !student) return;
+    const username = String(student.username || '').trim();
+    const password = newPassword.trim();
+    if (!username) {
+      showToast.error('Username is required to update the password.');
+      return;
+    }
+    if (password.length < 6) {
+      showToast.error('Password must be at least 6 characters.');
+      return;
+    }
+
+    setSettingPassword(true);
+    try {
+      await studentAPI.setPassword(Number(studentId), { username, password });
+      setNewPassword('');
+      showToast.success('Password updated successfully.');
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      showToast.error(err.message || 'Failed to update password');
+    } finally {
+      setSettingPassword(false);
     }
   };
 
@@ -446,6 +475,35 @@ const StudentDetailPage = () => {
       </Card>
 
       <StudentInfoSection student={student} />
+
+      <Card className="rounded-lg border-emerald-100 bg-white/90 shadow-sm dark:border-border dark:bg-card">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+            <KeyRound className="h-5 w-5" />
+            Account Password
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="space-y-2">
+            <Label htmlFor="student-new-password">New Password</Label>
+            <Input
+              id="student-new-password"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') handleSetPassword();
+              }}
+              placeholder="Enter new password"
+              disabled={settingPassword}
+            />
+          </div>
+          <Button onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
+            {settingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+            Update Password
+          </Button>
+        </CardContent>
+      </Card>
 
       <StatisticsSection
         attendanceStats={attendanceStats}

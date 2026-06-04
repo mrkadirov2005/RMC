@@ -17,33 +17,33 @@ import type {
 
 export const OWNER_MANAGER_TAB_META: Record<OwnerManagerTabType, OwnerManagerMeta> = {
   centers: {
-    label: 'Centers',
-    description: 'Manage branches, codes, and contact details.',
+    label: 'Branches',
+    description: 'Branch locations, contact details, and operating status.',
     icon: Building2,
   },
   owners: {
     label: 'Owners',
-    description: 'Manage owner accounts and access status.',
+    description: 'Owner access and executive account status.',
     icon: Shield,
   },
   superusers: {
-    label: 'Superusers',
-    description: 'Manage center admins for a selected branch.',
+    label: 'Admins',
+    description: 'Branch administrators for day-to-day operations.',
     icon: CircleUserRound,
   },
   teachers: {
     label: 'Teachers',
-    description: 'Manage teacher profiles inside the active branch.',
+    description: 'Teacher coverage, staffing, and active profiles.',
     icon: Users,
   },
   students: {
     label: 'Students',
-    description: 'Manage student records and their assignment data.',
+    description: 'Student enrollment and assignment coverage.',
     icon: GraduationCap,
   },
   statistics: {
-    label: 'Statistics',
-    description: 'View combined stats and charts across every branch.',
+    label: 'Analytics',
+    description: 'Combined performance charts across every branch.',
     icon: BarChart3,
   },
 };

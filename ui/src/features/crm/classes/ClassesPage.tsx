@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -37,12 +38,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import ClassDetailModal from './ClassDetailModal';
 import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
@@ -71,10 +72,6 @@ const ClassesPage = () => {
     deleteLoading,
     handleCloseDeleteModal,
     handleForceDelete,
-    detailModalOpen,
-    selectedClass,
-    handleViewDetails,
-    handleCloseDetailModal,
     handleGenerateSessions,
     handleImportClasses,
     handleBulkDelete,
@@ -187,7 +184,7 @@ const ClassesPage = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => handleViewDetails(cls)} className="gap-2">
+          <DropdownMenuItem onClick={() => navigate(`/classes/${getClassId(cls)}`)} className="gap-2">
             <Info className="h-4 w-4 text-cyan-600" />
             Details
           </DropdownMenuItem>
@@ -382,7 +379,7 @@ const ClassesPage = () => {
                     <button
                       type="button"
                       className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
-                      onClick={() => handleViewDetails(cls)}
+                      onClick={() => navigate(`/classes/${getClassId(cls)}`)}
                     >
                       {cls.class_name}
                     </button>
@@ -416,7 +413,7 @@ const ClassesPage = () => {
               <Card
                 key={cls.class_id || cls.id}
                 className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
-                onClick={() => handleViewDetails(cls)}
+                onClick={() => navigate(`/classes/${getClassId(cls)}`)}
               >
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
                   <input
@@ -731,12 +728,6 @@ const ClassesPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Class Detail Modal with Tabs */}
-      <ClassDetailModal
-        open={detailModalOpen}
-        classData={selectedClass}
-        onClose={handleCloseDetailModal}
-      />
     </div>
   );
 };

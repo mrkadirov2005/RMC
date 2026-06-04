@@ -1,0 +1,7 @@
+1.now single class is being opened as a modal -> convert to page with visually appealing UI
+2. Owner account is extremely simple:
+    2.1 owner account is about statistics totally not just about viewing studetns, it should support bar chart based statistics, line chart statistics and all in all statistics ok
+3. Owner account is of the highest importance
+4. In teacher profile, access for test is blocked why it should be open in teacher account not single teacher admin panel profile in teacher account
+5. in students many account many things are not working it is sayign access denied check 
+6. in teachers page in payments tab, it should not ask for any additional payment for now but in the database this field should stay for future references

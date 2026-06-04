@@ -1,6 +1,6 @@
 // Source file for the components area in the owner feature.
 
-import { Database, KeyRound, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { BarChart3, KeyRound, Loader2, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -69,11 +69,11 @@ export const OwnerManagerTable = ({
         ) : data.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-16 text-center text-slate-500 dark:text-white/50">
             <div className="rounded-full border border-slate-200/70 bg-slate-100/70 p-4 dark:border-white/10 dark:bg-white/5">
-              <Database className="h-6 w-6 text-amber-300" />
+              <BarChart3 className="h-6 w-6 text-emerald-500" />
             </div>
             <div className="space-y-1">
-              <p className="text-base font-medium text-slate-800 dark:text-white/80">No records found</p>
-              <p className="text-sm">{isScopedAndMissingCenter ? 'Choose a branch to load data.' : 'Use the Add button to create the first record.'}</p>
+              <p className="text-base font-medium text-slate-800 dark:text-white/80">No data in this view</p>
+              <p className="text-sm">{isScopedAndMissingCenter ? 'Choose a branch to load this section.' : 'Add the first item when you are ready.'}</p>
             </div>
           </div>
         ) : (
