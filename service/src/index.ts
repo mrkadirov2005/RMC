@@ -83,7 +83,7 @@ async function main() {
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);
   app.use('/api/teachers', requireAuth, requireRole('superuser'), teacherRoutes);
-  app.use('/api/classes', requireAuth, requireRole('superuser', 'teacher'), classRoutes);
+  app.use('/api/classes', requireAuth, requireRole('superuser', 'teacher', 'student'), classRoutes);
   app.use('/api/centers', requireAuth, requireRole('superuser'), centerRoutes);
   app.use('/api/payments', requireAuth, paymentRoutes);
   app.use('/api/debts', requireAuth, requireRole('superuser'), debtRoutes);

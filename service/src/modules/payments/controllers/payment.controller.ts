@@ -7,10 +7,6 @@ const ensurePaymentAccess = (req: any, res: any) => {
     res.status(403).json({ error: 'Access denied.' });
     return false;
   }
-  if (req.user?.userType === 'teacher' && !req.user?.payment_access) {
-    res.status(403).json({ error: 'Payment access requires a separate login.' });
-    return false;
-  }
   return true;
 };
 
