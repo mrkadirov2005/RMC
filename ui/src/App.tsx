@@ -21,6 +21,7 @@ import PaymentsPage from './features/crm/payments/PaymentsPage';
 import GradesPage from './features/crm/grades/GradesPage';
 import AttendancePage from './features/crm/attendance/AttendancePage';
 import ClassesPage from './features/crm/classes/ClassesPage';
+import ClassDetailPage from './features/crm/classes/ClassDetailPage';
 import CentersPage from './features/crm/centers/CentersPage';
 import DebtsPage from './features/crm/debts/DebtsPage';
 import FinancePage from './features/crm/finance/FinancePage';
@@ -271,7 +272,7 @@ function AppContent() {
         <Route
           path="/payments"
           element={
-            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <PaymentsPage />
@@ -343,6 +344,19 @@ function AppContent() {
                 <Suspense fallback={<LoadingSpinner />}>
 
                   <ClassesPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/classes/:classId"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_CLASS}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ClassDetailPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

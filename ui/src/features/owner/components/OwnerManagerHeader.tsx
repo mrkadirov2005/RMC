@@ -1,6 +1,6 @@
-// Source file for the components area in the owner feature.
+// Header for the owner analytics workspace.
 
-import { Database, Plus } from 'lucide-react';
+import { BarChart3, Building2, CircleUserRound, GraduationCap, Plus, Shield, Sparkles, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,16 +22,20 @@ interface OwnerManagerHeaderProps {
   loading: boolean;
 }
 
-const tabs: { value: OwnerManagerTabType; label: string }[] = [
-  { value: 'centers', label: 'Centers' },
-  { value: 'owners', label: 'Owners' },
-  { value: 'superusers', label: 'Superusers' },
-  { value: 'teachers', label: 'Teachers' },
-  { value: 'students', label: 'Students' },
-  { value: 'statistics', label: 'Statistics' },
+const operationsTabs: { value: OwnerManagerTabType; label: string; icon: typeof Building2 }[] = [
+  { value: 'centers', label: 'Branches', icon: Building2 },
+  { value: 'owners', label: 'Owners', icon: Shield },
+  { value: 'superusers', label: 'Admins', icon: CircleUserRound },
+  { value: 'teachers', label: 'Teachers', icon: Users },
+  { value: 'students', label: 'Students', icon: GraduationCap },
 ];
 
-// Renders the owner manager header module.
+const getEntityName = (label: string) => {
+  if (label === 'Branches') return 'Branch';
+  if (label.endsWith('s')) return label.slice(0, -1);
+  return label;
+};
+
 export const OwnerManagerHeader = ({
   currentMeta,
   activeTab,
@@ -45,97 +49,104 @@ export const OwnerManagerHeader = ({
   onTabChange,
   loading,
 }: OwnerManagerHeaderProps) => {
-  const CurrentIcon = currentMeta.icon;
+  const isAnalytics = activeTab === 'statistics';
+  const activeOperation = operationsTabs.find((tab) => tab.value === activeTab);
+  const addLabel = getEntityName(activeOperation?.label || currentMeta.label);
 
   return (
-    <Card className="overflow-hidden border-slate-200/60 bg-white/80 shadow-xl shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/20">
-      <CardContent className="p-6 sm:p-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-4 max-w-2xl">
-            <Badge variant="outline" className="w-fit border-amber-500/40 bg-amber-400/10 text-amber-700 dark:border-amber-400/30 dark:text-amber-300">
-              <Database className="mr-1.5 h-3.5 w-3.5" />
-              Owner Console
-            </Badge>
-            <div className="space-y-2">
-              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Database Manager</h1>
-              <p className="max-w-2xl text-sm leading-6 text-slate-600 dark:text-white/65 sm:text-base">
-                Manage centers, owners, superusers, teachers, and students from one polished control panel.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-sm text-slate-600 dark:text-white/70">
-              <span className="rounded-full border border-slate-200/70 bg-slate-100/70 px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
-                {dataCount} records in {currentMeta.label}
-              </span>
-              <span className="rounded-full border border-slate-200/70 bg-slate-100/70 px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
-                {centerCount} branches available
-              </span>
-              <span className="rounded-full border border-slate-200/70 bg-slate-100/70 px-3 py-1.5 dark:border-white/10 dark:bg-white/5">
-                {needsCenterScope || activeTab === 'statistics' ? `Scope: ${scopedMessage}` : 'Scope: System wide'}
-              </span>
-            </div>
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[360px]">
-            <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">Active Branch</p>
-                <p className="mt-2 text-lg font-semibold">{activeCenterLabel}</p>
-                <p className="mt-1 text-sm text-slate-500 dark:text-white/55">Used for scoped management and new records.</p>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">Current Section</p>
-                <p className="mt-2 text-lg font-semibold">{currentMeta.label}</p>
-                <p className="mt-1 text-sm text-slate-500 dark:text-white/55">{currentMeta.description}</p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-1">
-            <h2 className="flex items-center gap-2 text-2xl font-semibold">
-              <CurrentIcon className="h-5 w-5 text-amber-300" />
-              {currentMeta.label}
-            </h2>
-            <p className="text-slate-600 dark:text-white/55">{currentMeta.description}</p>
-          </div>
-
-          {activeTab !== 'statistics' && (
-            <Button
-              onClick={onAdd}
-              disabled={loading || isScopedAndMissingCenter}
-              className={cn('bg-amber-400 text-slate-950 hover:bg-amber-300', isScopedAndMissingCenter && 'opacity-70')}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add {currentMeta.label.slice(0, -1)}
-            </Button>
-          )}
-        </div>
-
-        {isScopedAndMissingCenter && (
-          <p className="mt-4 rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-700 dark:border-amber-400/20 dark:text-amber-100">
-            {scopedMessage}
-          </p>
-        )}
-
-        <div className="mt-6 overflow-x-auto">
-          <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as OwnerManagerTabType)}>
-            <TabsList className="h-auto w-max gap-1 bg-slate-100 p-1 text-slate-600 dark:bg-white/5 dark:text-white/70">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="px-4 py-2 data-[state=active]:bg-amber-400 data-[state=active]:text-slate-950"
+    <div className="space-y-4">
+      <Card className="overflow-hidden border-slate-200/70 bg-white shadow-[0_20px_60px_-42px_rgba(15,23,42,0.55)] dark:border-border dark:bg-card dark:shadow-sm">
+        <CardContent className="p-0">
+          <div className="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_360px] lg:p-8">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+            <div className="space-y-5">
+              <Badge variant="outline" className="w-fit border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200">
+                <Sparkles className="mr-1.5 h-3.5 w-3.5" />
+                Owner Analytics
+              </Badge>
+              <div className="space-y-2">
+                <h1 className="max-w-3xl text-3xl font-bold tracking-normal text-slate-950 dark:text-foreground sm:text-4xl">
+                  School performance command center
+                </h1>
+                <p className="max-w-3xl text-sm leading-6 text-slate-600 dark:text-muted-foreground sm:text-base">
+                  Track students, branches, payments, teacher performance, and growth from one owner-only statistics workspace.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  onClick={() => onTabChange('statistics')}
+                  className={cn(
+                    'rounded-lg',
+                    isAnalytics
+                      ? 'bg-slate-950 text-white hover:bg-slate-800 dark:bg-primary dark:text-primary-foreground'
+                      : 'bg-white text-slate-800 hover:bg-slate-50 dark:bg-background dark:text-foreground'
+                  )}
+                  variant={isAnalytics ? 'default' : 'outline'}
                 >
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Analytics
+                </Button>
+                <Tabs value={activeTab} onValueChange={(value) => onTabChange(value as OwnerManagerTabType)}>
+                  <TabsList className="h-10 gap-1 rounded-lg bg-slate-100 p-1 dark:bg-muted">
+                    {operationsTabs.map((tab) => {
+                      const Icon = tab.icon;
+                      return (
+                        <TabsTrigger key={tab.value} value={tab.value} className="h-8 gap-1.5 rounded-md px-3">
+                          <Icon className="h-3.5 w-3.5" />
+                          {tab.label}
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                </Tabs>
+              </div>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+              <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 dark:border-border dark:bg-background/70">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Branches</p>
+                <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-foreground">{centerCount.toLocaleString()}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 dark:border-border dark:bg-background/70">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">Scope</p>
+                <p className="mt-2 truncate text-sm font-semibold text-slate-950 dark:text-foreground">
+                  {needsCenterScope ? activeCenterLabel : 'All branches'}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-4 dark:border-border dark:bg-background/70">
+                <p className="text-xs font-semibold uppercase text-muted-foreground">{isAnalytics ? 'Mode' : 'Records'}</p>
+                <p className="mt-2 text-sm font-semibold text-slate-950 dark:text-foreground">
+                  {isAnalytics ? 'Statistics first' : `${dataCount.toLocaleString()} in ${currentMeta.label}`}
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {!isAnalytics && (
+        <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-950 dark:text-foreground">{currentMeta.label}</h2>
+            <p className="text-sm text-muted-foreground">{scopedMessage}</p>
+          </div>
+          <Button
+            onClick={onAdd}
+            disabled={loading || isScopedAndMissingCenter}
+            className={cn('rounded-lg bg-slate-950 text-white hover:bg-slate-800 dark:bg-primary dark:text-primary-foreground', isScopedAndMissingCenter && 'opacity-70')}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add {addLabel}
+          </Button>
         </div>
-      </CardContent>
-    </Card>
+      )}
+
+      {isScopedAndMissingCenter && (
+        <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
+          {scopedMessage}
+        </p>
+      )}
+    </div>
   );
 };

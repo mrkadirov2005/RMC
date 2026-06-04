@@ -129,7 +129,7 @@ const Sidebar = memo(() => {
 
     { label: 'Settings', path: '/settings', iconName: 'Settings', roles: ['superuser'], permission: 'MANAGE_USERS' },
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'], permission: 'MANAGE_TESTS' },
-    { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser'], permission: 'CRUD_PAYMENT' },
+    { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Finance', path: '/finance', iconName: 'Finance', roles: ['superuser'], permission: 'VIEW_FINANCE' },
     { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'], permission: 'CRUD_GRADE' },
     { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser'], permission: 'CRUD_ATTENDANCE' },

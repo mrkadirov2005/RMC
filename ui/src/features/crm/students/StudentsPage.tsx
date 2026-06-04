@@ -18,13 +18,10 @@ import { StudentsTableView } from './components/StudentsTableView';
 import { useStudentsPage } from './hooks/useStudentsPage';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
-import { useAppDispatch } from '../hooks';
-import { patchStudent } from '@/slices/studentsSlice';
 
 // Renders the students page screen.
 const StudentsPage = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [activeTab, setActiveTab] = useState('students');
   const [statisticsStudents, setStatisticsStudents] = useState<Student[]>([]);
@@ -200,21 +197,22 @@ const StudentsPage = () => {
     }
   };
 
-  const handleUsernameUpdate = async (student: Student, username: string) => {
+  const handlePasswordUpdate = async (student: Student, password: string) => {
     const id = student.student_id || student.id;
     if (!id) {
       showToast.error('Student ID is missing.');
       throw new Error('Student ID is missing.');
     }
+    const username = String(student.username || '').trim();
+    if (!username) {
+      showToast.error('Student username is required before setting a password.');
+      throw new Error('Student username is missing.');
+    }
 
     try {
-      dispatch(patchStudent({ id, changes: { username } }));
-      const response = await studentAPI.update(id, { username });
-      const updated = (response as any).data ?? response;
-      dispatch(patchStudent({ id, changes: { username: updated?.username ?? username } }));
+      await studentAPI.setPassword(id, { username, password });
     } catch (error: any) {
-      dispatch(patchStudent({ id, changes: { username: student.username } }));
-      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update username.');
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update password.');
       throw error;
     }
   };
@@ -358,7 +356,7 @@ const StudentsPage = () => {
             onEdit={s.handleOpenModal}
             onDelete={s.handleDelete}
             onBulkDelete={handleBulkDeleteStudents}
-            onUsernameUpdate={handleUsernameUpdate}
+            onPasswordUpdate={handlePasswordUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             viewMode={viewMode}
           />

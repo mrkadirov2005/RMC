@@ -34,7 +34,6 @@ import { fetchClasses as fetchClassesThunk } from '../../../slices/classesSlice'
 import { fetchStudents as fetchStudentsThunk } from '../../../slices/studentsSlice';
 import { fetchCenters as fetchCentersThunk } from '../../../slices/centersSlice';
 import { useAppDispatch, useAppSelector } from '../hooks';
-import { initializePaymentAccess, paymentLogout } from '../../../slices/paymentAccessSlice';
 import {
   clearPaymentsFilters,
   setPaymentsActiveTab,
@@ -46,8 +45,6 @@ import {
   setPaymentsSelectedFolder,
   setPaymentsShowFilters,
 } from '../../../slices/pagesUiSlice';
-import { getStoredPaymentAuth } from '../../../shared/auth/paymentAuthStorage';
-import { PaymentAccessGate } from './components/PaymentAccessGate';
 import { SelectField } from '../students/components/SelectField';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '../../../utils/dropdownOptions';
@@ -150,7 +147,6 @@ const formatMoney = (value: number) => `$${Number(value || 0).toLocaleString()}`
 const PaymentsPage = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const paymentAccess = useAppSelector((state) => state.paymentAccess);
   const isTeacher = user?.userType === 'teacher';
 // Handles is owner.
   const isOwner = (user?.role || '').toLowerCase() === 'owner';
@@ -196,22 +192,6 @@ const PaymentsPage = () => {
 
 // Runs side effects for this component.
   useEffect(() => {
-    dispatch(initializePaymentAccess());
-  }, [dispatch]);
-
-// Runs side effects for this component.
-  useEffect(() => {
-    if (paymentAccess.isAuthenticated && !getStoredPaymentAuth().token) {
-      dispatch(paymentLogout());
-    }
-  }, [paymentAccess.isAuthenticated, dispatch]);
-
-// Runs side effects for this component.
-  useEffect(() => {
-    const isTeacher = user?.userType === 'teacher';
-    if (isTeacher && !paymentAccess.isAuthenticated) {
-      return;
-    }
     dispatch(fetchPayments());
     dispatch(fetchTeachersThunk());
     dispatch(fetchClassesThunk());
@@ -220,7 +200,7 @@ const PaymentsPage = () => {
       dispatch(fetchCentersThunk());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.userType, paymentAccess.isAuthenticated, isOwner]);
+  }, [dispatch, isOwner]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -594,10 +574,6 @@ const PaymentsPage = () => {
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
-
-  if (isTeacher && !paymentAccess.isAuthenticated) {
-    return <PaymentAccessGate />;
-  }
 
   return (
     <div className="container mx-auto space-y-6 p-6">
