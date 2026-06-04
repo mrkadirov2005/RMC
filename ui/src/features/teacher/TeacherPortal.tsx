@@ -11,14 +11,15 @@ import {
   Plus,
   Bell,
   Clock,
-  TrendingUp,
   Loader2,
   Wallet,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MetricCard } from '@/components/common/MetricCard';
+import { SectionPanel } from '@/components/common/SectionPanel';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -161,54 +162,12 @@ const TeacherPortal = () => {
   };
 
   const statsCards = [
-    {
-      title: 'My Students',
-      value: stats.totalStudents,
-      icon: <Users className="h-10 w-10" />,
-      color: '#6366f1',
-      trend: '+5%',
-      tab: 'students',
-    },
-    {
-      title: 'My Classes',
-      value: stats.totalClasses,
-      icon: <GraduationCap className="h-10 w-10" />,
-      color: '#8b5cf6',
-      trend: null,
-      tab: 'classes',
-    },
-    {
-      title: 'Active Tests',
-      value: stats.pendingTests,
-      icon: <FileQuestion className="h-10 w-10" />,
-      color: '#f5576c',
-      trend: null,
-      tab: 'tests',
-    },
-    {
-      title: 'Pending Grading',
-      value: stats.pendingGrading,
-      icon: <Star className="h-10 w-10" />,
-      color: '#4facfe',
-      trend: stats.pendingGrading > 0 ? 'Needs attention' : null,
-      tab: 'grades',
-    },
-    {
-      title: "Today's Attendance",
-      value: stats.todayAttendance,
-      icon: <CalendarDays className="h-10 w-10" />,
-      color: '#43e97b',
-      trend: null,
-      tab: 'attendance',
-    },
-    {
-      title: 'Pending Assignments',
-      value: stats.pendingAssignments,
-      icon: <ClipboardList className="h-10 w-10" />,
-      color: '#fa709a',
-      trend: stats.pendingAssignments > 0 ? `${stats.pendingAssignments} to review` : null,
-      tab: 'assignments',
-    },
+    { title: 'My Students', value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: 'Assigned to you', tab: 'students' },
+    { title: 'My Classes', value: stats.totalClasses, icon: GraduationCap, tone: 'green' as const, detail: `${stats.upcomingClasses} active`, tab: 'classes' },
+    { title: 'Active Tests', value: stats.pendingTests, icon: FileQuestion, tone: 'amber' as const, detail: 'Open test work', tab: 'tests' },
+    { title: 'Pending Grading', value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? 'Needs attention' : 'Nothing pending', tab: 'grades' },
+    { title: "Today's Attendance", value: stats.todayAttendance, icon: CalendarDays, tone: 'neutral' as const, detail: 'Records today', tab: 'attendance' },
+    { title: 'Assignments', value: stats.pendingAssignments, icon: ClipboardList, tone: 'amber' as const, detail: stats.pendingAssignments > 0 ? 'To review' : 'Clear', tab: 'assignments' },
   ];
 
   const tabs = [
@@ -230,104 +189,93 @@ const TeacherPortal = () => {
   }
 
   return (
-    <div className="p-6 relative">
-      {/* Header with teacher info */}
-      <div className="mb-6 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-500 text-white relative overflow-hidden">
-        <div className="absolute -right-12 -top-12 w-[200px] h-[200px] rounded-full bg-white/10" />
-        <div className="absolute right-24 -bottom-20 w-[150px] h-[150px] rounded-full bg-white/5" />
-        <div className="py-6 px-6 relative z-10">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold bg-white/20 border-[3px] border-white/30">
-                {user?.first_name?.[0]}{user?.last_name?.[0]}
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold">
-                  Welcome back, {user?.first_name}!
-                </h2>
-                <p className="text-white/90 mt-1">
-                  Teacher Portal - Manage your classes, students, and tests
-                </p>
-                <div className="flex gap-2 mt-2">
-                  <Badge className="bg-white/20 text-white border-none hover:bg-white/30">
-                    Teacher
-                  </Badge>
-                  {user?.roles && user.roles.length > 0 && user.roles.map((role: string) => (
-                    <Badge key={role} className="bg-white/15 text-white border-none hover:bg-white/25">
-                      {role}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="p-2 rounded-lg hover:bg-white/20 text-white transition-colors">
-                      <Bell className="h-5 w-5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Notifications</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="p-2 rounded-lg hover:bg-white/20 text-white transition-colors">
-                      <Clock className="h-5 w-5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>Schedule</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="relative space-y-6">
+      <PageHeader
+        className="animate-slide-up"
+        variant="hero"
+        heroGradient="from-slate-600 via-slate-700 to-slate-800"
+        title={`Welcome back, ${user?.first_name || 'Teacher'}!`}
+        description="Teacher Portal - Manage your classes, students, and tests"
+        icon={GraduationCap}
+        meta={
+          <>
+            <Badge className="bg-white/20 text-white border-none hover:bg-white/30">Teacher</Badge>
+            {user?.roles && user.roles.length > 0 && user.roles.map((role: string) => (
+              <Badge key={role} className="bg-white/10 text-white border-none hover:bg-white/20">{role}</Badge>
+            ))}
+          </>
+        }
+        actions={
+          <>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" variant="outline" size="icon" aria-label="Notifications" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Notifications</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" variant="outline" size="icon" aria-label="Schedule" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                    <Clock className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Schedule</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </>
+        }
+      />
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
         {statsCards.map((stat, index) => (
-          <Card
-            key={index}
-            className="h-full transition-all duration-200 cursor-pointer hover:-translate-y-1 hover:shadow-lg"
-            onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
-          >
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="text-xs text-muted-foreground">{stat.title}</p>
-                  <p className="text-3xl font-bold mt-1">{stat.value}</p>
-                  {stat.trend && (
-                    <div className="flex items-center mt-1">
-                      <TrendingUp className="h-3.5 w-3.5 text-emerald-500 mr-1" />
-                      <span className="text-xs text-emerald-500">{stat.trend}</span>
-                    </div>
-                  )}
-                </div>
-                <div
-                  className="p-2 rounded-lg"
-                  style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
-                >
-                  {stat.icon}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div key={index} className={`animate-slide-up animation-delay-${(index + 1) * 100}`}>
+            <MetricCard
+              label={stat.title}
+              value={stat.value}
+              detail={stat.detail}
+              icon={stat.icon}
+              tone={stat.tone}
+              onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
+            />
+          </div>
         ))}
       </div>
 
-      {/* Tabs Section */}
-      <Card>
+      <SectionPanel
+        className="animate-slide-up animation-delay-500"
+        title="Teaching Workspace"
+        description="Switch between the daily tools you use most."
+        actions={
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => handleQuickAction('test')}>
+              <FileQuestion className="mr-2 h-4 w-4" />
+              Create Test
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => handleQuickAction('attendance')}>
+              <CalendarDays className="mr-2 h-4 w-4" />
+              Attendance
+            </Button>
+            <Button type="button" size="sm" onClick={() => handleQuickAction('assignment')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Assignment
+            </Button>
+          </div>
+        }
+        contentClassName="p-0"
+      >
         <Tabs value={tabValue} onValueChange={(value) => dispatch(setTeacherPortalTabValue(value))}>
-          <div className="border-b px-4">
-            <TabsList className="bg-transparent h-auto p-0 gap-0">
+          <div className="overflow-x-auto border-b px-4">
+            <TabsList className="h-auto gap-0 bg-transparent p-0">
               {tabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none px-4 py-3 gap-2 text-sm font-semibold"
+                  className="gap-2 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
                 >
                   {tab.icon}
                   {tab.label}
@@ -336,7 +284,7 @@ const TeacherPortal = () => {
             </TabsList>
           </div>
 
-          <CardContent className="pt-4">
+          <div className="p-4">
             <TabsContent value="students">
               <TeacherStudentsTab teacherId={user?.id} onRefresh={loadStats} />
             </TabsContent>
@@ -358,16 +306,16 @@ const TeacherPortal = () => {
             <TabsContent value="payments">
               <TeacherPaymentsTab teacherId={user?.id} />
             </TabsContent>
-          </CardContent>
+          </div>
         </Tabs>
-      </Card>
+      </SectionPanel>
 
-      {/* Quick Add FAB */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             size="icon"
-            className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+            className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg"
+            aria-label="Quick add"
           >
             <Plus className="h-6 w-6" />
           </Button>

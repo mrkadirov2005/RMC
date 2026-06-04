@@ -47,6 +47,9 @@ import {
 } from '../../../slices/pagesUiSlice';
 import { SelectField } from '../students/components/SelectField';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MetricCard } from '@/components/common/MetricCard';
+import { PageToolbar } from '@/components/common/PageToolbar';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '../../../utils/dropdownOptions';
 import {
   selectCenterOptions,
@@ -136,7 +139,7 @@ const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
 
 const paymentStatCardClass =
-  'overflow-hidden border-slate-200/80 bg-white shadow-[0_16px_45px_-38px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:shadow-sm';
+  'overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card';
 
 const folderCardClass =
   'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm';
@@ -576,41 +579,27 @@ const PaymentsPage = () => {
   };
 
   return (
-    <div className="container mx-auto space-y-6 p-6">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-white via-emerald-50/75 to-sky-50/65 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-amber-100/45 via-fuchsia-100/25 to-transparent dark:hidden" />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-center gap-4">
+    <div className="container mx-auto space-y-6">
+      <PageHeader
+        title={pageTitle}
+        description="Organize payments by student, class, teacher, and collection status."
+        icon={Wallet}
+        actions={
+          <>
             {selectedFolder && (
               <Button variant="outline" size="sm" onClick={handleBackToFolders}>
                 <ArrowLeft className="mr-2 h-4 w-4" /> Back
               </Button>
             )}
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-900/10 dark:shadow-none">
-              <Wallet className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">{pageTitle}</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Organize payments by student, class, teacher, and collection status.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
             {!isTeacher && (
-              <Button
-                onClick={() => handleOpenModal()}
-                className="bg-gradient-to-r from-emerald-500 to-cyan-500 text-white hover:from-emerald-600 hover:to-cyan-600"
-              >
+              <Button onClick={() => handleOpenModal()}>
                 <Plus className="mr-2 h-4 w-4" /> Add Payment
               </Button>
             )}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {isTeacher && (
         <Alert className="mb-4">
@@ -626,50 +615,17 @@ const PaymentsPage = () => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card className={cn(paymentStatCardClass, 'border-emerald-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-              <ReceiptText className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-400">{overallPaymentStats.totalPayments}</p>
-            <p className="text-sm text-muted-foreground">Payment Records</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(paymentStatCardClass, 'border-sky-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-muted dark:text-muted-foreground">
-              <DollarSign className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-sky-700 dark:text-sky-400">{formatMoney(overallPaymentStats.totalAmount)}</p>
-            <p className="text-sm text-muted-foreground">Total Amount</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(paymentStatCardClass, 'border-indigo-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-indigo-700 dark:text-indigo-400">{overallPaymentStats.paidPercent}%</p>
-            <p className="text-sm text-muted-foreground">Paid Share</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(paymentStatCardClass, 'border-amber-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-muted dark:text-muted-foreground">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-amber-700 dark:text-amber-400">{formatMoney(overallPaymentStats.paidAmount)}</p>
-            <p className="text-sm text-muted-foreground">Collected</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <MetricCard label="Payment Records" value={overallPaymentStats.totalPayments} detail="All visible records" icon={ReceiptText} tone="green" />
+        <MetricCard label="Total Amount" value={formatMoney(overallPaymentStats.totalAmount)} detail="Across current scope" icon={DollarSign} tone="blue" />
+        <MetricCard label="Paid Share" value={`${overallPaymentStats.paidPercent}%`} detail="Completed payments" icon={TrendingUp} tone="neutral" />
+        <MetricCard label="Collected" value={formatMoney(overallPaymentStats.paidAmount)} detail="Completed amount" icon={ShieldCheck} tone="amber" />
       </div>
 
       {!selectedFolder ? (
         <>
-          <Card className={paymentSurfaceClass}>
-            <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
-            <CardContent className="space-y-4 p-4">
+          <PageToolbar>
+            <div className="space-y-4">
               <div className="relative max-w-2xl">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -735,8 +691,8 @@ const PaymentsPage = () => {
                 </Button>
               )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </PageToolbar>
 
           {/* Tab Content */}
           <div>

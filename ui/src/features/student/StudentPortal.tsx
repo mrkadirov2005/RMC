@@ -23,6 +23,9 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MetricCard } from '@/components/common/MetricCard';
+import { SectionPanel } from '@/components/common/SectionPanel';
 import { useAppSelector } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { useAppDispatch } from '../crm/hooks';
@@ -159,12 +162,6 @@ const StudentPortal = () => {
   const schedule = (dashboardData?.schedule || []) as ScheduleItem[];
 
 
-// Memoizes the initials derived value.
-  const initials = useMemo(() => {
-    const first = user?.first_name?.[0] ?? '';
-    const last = user?.last_name?.[0] ?? '';
-    return `${first}${last}` || 'S';
-  }, [user]);
 
 
 
@@ -290,6 +287,10 @@ const StudentPortal = () => {
     return months;
   }, []);
 
+  const todayName = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+  const todaySchedule = scheduleByDay[todayName] || [];
+  const nextTest = upcomingTests[0];
+  const nextAssignment = assignmentsDue[0];
 
   if (loading) {
     return (
@@ -300,43 +301,93 @@ const StudentPortal = () => {
   }
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500 text-white relative overflow-hidden">
-        <div className="absolute -right-12 -top-12 w-[200px] h-[200px] rounded-full bg-white/10" />
-        <div className="absolute right-24 -bottom-20 w-[150px] h-[150px] rounded-full bg-white/5" />
-        <div className="py-6 px-6 relative z-10">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 rounded-full flex items-center justify-center text-3xl font-bold bg-white/20 border-[3px] border-white/30">
-                {initials}
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold">Welcome back, {user?.first_name || 'Student'}!</h2>
-                <p className="text-white/90 mt-1">
-                  Your student hub - track progress, tests, and updates in one place.
-                </p>
-                <div className="flex flex-wrap gap-2 mt-2">
-                  <Badge className="bg-white/20 text-white border-none hover:bg-white/30">Student</Badge>
-                  {classInfo?.class_name && (
-                    <Badge className="bg-white/10 text-white border-none hover:bg-white/20">
-                      {classInfo.class_name}
-                    </Badge>
-                  )}
-                </div>
-              </div>
+    <div className="space-y-6">
+      <PageHeader
+        className="animate-slide-up"
+        variant="hero"
+        heroGradient="from-sky-500 via-cyan-500 to-teal-400"
+        title={`Welcome back, ${user?.first_name || 'Student'}!`}
+        description="Student Portal - Your schedule, tests, assignments, grades, and payments"
+        icon={GraduationCap}
+        meta={
+          <>
+            <Badge className="bg-white/20 text-white border-none hover:bg-white/30">Student</Badge>
+            {classInfo?.class_name && <Badge className="bg-white/10 text-white border-none hover:bg-white/20">{classInfo.class_name}</Badge>}
+          </>
+        }
+        actions={
+          <>
+            <Button variant="outline" onClick={() => navigate('/my-tests')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+              <FileQuestion className="mr-2 h-4 w-4" />
+              My Tests
+            </Button>
+            <Button variant="outline" size="icon" aria-label="Notifications" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+              <Bell className="h-4 w-4" />
+            </Button>
+          </>
+        }
+      />
+
+      <SectionPanel
+        className="animate-slide-up animation-delay-100"
+        title="Today"
+        description="The most important student work for the next school day."
+        contentClassName="grid gap-3 md:grid-cols-3"
+      >
+        <div className="rounded-lg border bg-background p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
+              <CalendarDays className="h-5 w-5" />
             </div>
-            <div className="flex gap-2">
-              <Button className="bg-white/20 hover:bg-white/30 text-white" onClick={() => navigate('/my-tests')}>
-                <FileQuestion className="h-4 w-4 mr-2" />
-                My Tests
-              </Button>
-              <button className="p-2 rounded-lg hover:bg-white/20 text-white transition-colors" aria-label="Notifications">
-                <Bell className="h-5 w-5" />
-              </button>
-            </div>
+            <Badge variant="outline">{todaySchedule.length} classes</Badge>
           </div>
+          <h3 className="mt-4 text-sm font-semibold text-foreground">Today’s schedule</h3>
+          {todaySchedule.length === 0 ? (
+            <p className="mt-1 text-sm text-muted-foreground">No classes scheduled today.</p>
+          ) : (
+            <div className="mt-3 space-y-2">
+              {todaySchedule.slice(0, 2).map((item, index) => (
+                <div key={`${item.room_id}-${index}`} className="flex items-center justify-between rounded-md bg-muted/60 px-3 py-2 text-sm">
+                  <span className="font-medium">{item.time}</span>
+                  <span className="text-muted-foreground">Room {item.room_number}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
-      </div>
+
+        <div className="rounded-lg border bg-background p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+            <FileQuestion className="h-5 w-5" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold text-foreground">Next test</h3>
+          {nextTest ? (
+            <>
+              <p className="mt-1 truncate text-sm text-muted-foreground">{nextTest.test_name}</p>
+              <p className="mt-2 text-xs font-medium text-foreground">{formatDate(nextTest.due_date)}</p>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">No upcoming tests.</p>
+          )}
+        </div>
+
+        <div className="rounded-lg border bg-background p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
+          <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
+            <ClipboardList className="h-5 w-5" />
+          </div>
+          <h3 className="mt-4 text-sm font-semibold text-foreground">Next assignment</h3>
+          {nextAssignment ? (
+            <>
+              <p className="mt-1 truncate text-sm text-muted-foreground">
+                {nextAssignment.assignment_title || nextAssignment.title || 'Assignment'}
+              </p>
+              <p className="mt-2 text-xs font-medium text-foreground">{formatDate(nextAssignment.due_date)}</p>
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">No assignments due this week.</p>
+          )}
+        </div>
+      </SectionPanel>
 
       {error && (
         <Card className="border-red-200 bg-red-50">
@@ -346,75 +397,15 @@ const StudentPortal = () => {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Active Tests</p>
-                <p className="text-2xl font-semibold mt-1">{activeTests}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-600">
-                <FileQuestion className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Attendance Rate</p>
-                <p className="text-2xl font-semibold mt-1">{attendanceStats.rate}%</p>
-              </div>
-              <div className="p-2 rounded-lg bg-teal-500/10 text-teal-600">
-                <CalendarDays className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Average Grade</p>
-                <p className="text-2xl font-semibold mt-1">{averageGrade}%</p>
-              </div>
-              <div className="p-2 rounded-lg bg-cyan-500/10 text-cyan-600">
-                <CheckCircle className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Outstanding Debt</p>
-                <p className="text-2xl font-semibold mt-1">${outstandingDebt.toLocaleString()}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-rose-500/10 text-rose-600">
-                <AlertTriangle className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Coins</p>
-                <p className="text-2xl font-semibold mt-1">{Number(student?.coins || 0).toLocaleString()}</p>
-              </div>
-              <div className="p-2 rounded-lg bg-amber-500/10 text-amber-600">
-                <Coins className="h-6 w-6" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="animate-slide-up animation-delay-200"><MetricCard label="Active Tests" value={activeTests} detail="Ready to take" icon={FileQuestion} tone="blue" onClick={() => navigate('/my-tests')} /></div>
+        <div className="animate-slide-up animation-delay-300"><MetricCard label="Attendance Rate" value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} present`} icon={CalendarDays} tone="green" /></div>
+        <div className="animate-slide-up animation-delay-400"><MetricCard label="Average Grade" value={`${averageGrade}%`} detail="Across posted grades" icon={CheckCircle} tone="neutral" /></div>
+        <div className="animate-slide-up animation-delay-500"><MetricCard label="Outstanding Debt" value={`$${outstandingDebt.toLocaleString()}`} detail="Remaining balance" icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} /></div>
+        <div className="animate-slide-up animation-delay-600"><MetricCard label="Coins" value={Number(student?.coins || 0).toLocaleString()} detail="Current balance" icon={Coins} tone="amber" /></div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 animate-fade-in animation-delay-400">
         <div className="lg:col-span-2 space-y-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
@@ -546,17 +537,16 @@ const StudentPortal = () => {
             </CardContent>
           </Card>
         </div>
-        <Card className="border-0 shadow-lg bg-gradient-to-br from-white to-indigo-50/30 overflow-hidden relative">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-          <CardHeader className="border-b bg-white/50 backdrop-blur-sm pb-4">
-            <CardTitle className="text-lg font-bold flex items-center gap-2 text-indigo-950">
-              <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b pb-4">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <div className="rounded-md bg-muted p-2 text-primary">
                 <Wallet className="h-5 w-5" />
               </div>
               Payment History
             </CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 relative z-10">
+          <CardContent className="pt-6">
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 text-sm">
               {last12Months.map((monthDate) => {
                 const year = monthDate.getFullYear();
@@ -572,10 +562,10 @@ const StudentPortal = () => {
 
                 return (
                   <div key={`${monthName}-${yearName}`} className={cn(
-                    "flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 hover:-translate-y-1 shadow-sm",
+                    "flex flex-col items-center justify-center rounded-lg border p-4 transition-colors",
                     hasPaid
-                      ? "bg-emerald-500/5 border-emerald-200 hover:shadow-emerald-500/20 hover:bg-emerald-500/10"
-                      : "bg-rose-500/5 border-rose-200 hover:shadow-rose-500/20 hover:bg-rose-500/10"
+                      ? "border-emerald-200 bg-emerald-500/5"
+                      : "border-rose-200 bg-rose-500/5"
                   )}>
                     <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{monthName} '{yearName}</span>
                     <div className="mt-3 mb-2">

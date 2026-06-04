@@ -331,7 +331,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
           </select>
           <Button
             onClick={() => handleOpenDialog()}
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600"
+            className=""
           >
             <Plus className="h-4 w-4 mr-2" />
             New Assignment
@@ -374,8 +374,8 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
 
       {/* Assignment Cards */}
       {currentList.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
-          <ClipboardList className="h-14 w-14 text-gray-400 mx-auto mb-3" />
+        <div className="text-center py-12 bg-muted/50 rounded-lg border-2 border-dashed border-border">
+          <ClipboardList className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
           <h3 className="text-lg font-semibold text-muted-foreground">No assignments found</h3>
           <p className="text-sm text-muted-foreground mb-3">
             {tabValue === 'active' ? 'Create a new assignment to get started' : 'No past due assignments'}
@@ -403,7 +403,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
                       {status.label}
                     </span>
                     <button
-                      className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                      className="p-1 rounded hover:bg-muted text-muted-foreground"
                       onClick={(e) => handleMenuClick(e, assignment)}
                     >
                       <MoreVertical className="h-4 w-4" />
@@ -447,11 +447,11 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       {menuOpen && (
         <div
           ref={menuRef}
-          className="fixed z-50 w-36 bg-white rounded-md shadow-lg border py-1"
+          className="fixed z-50 w-36 bg-card rounded-md shadow-lg border py-1"
           style={{ top: menuPos.top, left: menuPos.left }}
         >
           <button
-            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-gray-100"
+            className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => handleOpenDialog(selectedAssignment!)}
           >
             <Edit className="h-4 w-4" /> Edit
@@ -545,7 +545,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             <Button
               onClick={handleSaveAssignment}
               disabled={saving}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500"
+              className=""
             >
               {saving ? (
                 <>
