@@ -226,8 +226,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
         const apiStatusMap: Record<string, string> = {
           'On time': 'Present',
           Late: 'Late',
-          Excused: 'Absent R',
-          Absent: 'Absent NR',
+          Excused: 'Excused',
+          Absent: 'Absent',
         };
         const attendancePayload = {
           center_id: centerId,
@@ -277,19 +277,34 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-6xl overflow-y-auto max-h-[90vh]">
+      <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto p-0">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center pr-8">
-            <span>Take Lesson: {classData?.class_name}</span>
-            {selectedDate && <span className="text-sm font-normal text-muted-foreground mr-4">Date: {selectedDate}</span>}
+          <DialogTitle className="flex flex-col gap-2 border-b bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-5 pr-12 text-white sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-xl">Take Lesson: {classData?.class_name}</span>
+            {selectedDate && <span className="text-sm font-normal text-white/70">Date: {selectedDate}</span>}
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="attendance">1. Attendance</TabsTrigger>
-            <TabsTrigger value="hometask" disabled={!allAttendanceMarked}>2. Homework</TabsTrigger>
-            <TabsTrigger value="activity" disabled={!allAttendanceMarked || !allHomeworkMarked}>3. Activity & Coins</TabsTrigger>
+        <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full p-5 pt-4">
+          <div className="mb-4 grid gap-3 md:grid-cols-3">
+            <div className={cn('rounded-lg border p-3', activeTab === 'attendance' ? 'border-emerald-300 bg-emerald-50' : 'bg-muted/30')}>
+              <p className="text-sm font-semibold">1. Attendance</p>
+              <p className="text-xs text-muted-foreground">{markedAttendanceCount}/{totalStudents} marked</p>
+            </div>
+            <div className={cn('rounded-lg border p-3', activeTab === 'hometask' ? 'border-sky-300 bg-sky-50' : 'bg-muted/30')}>
+              <p className="text-sm font-semibold">2. Homework</p>
+              <p className="text-xs text-muted-foreground">{markedHomeworkCount}/{totalStudents} checked</p>
+            </div>
+            <div className={cn('rounded-lg border p-3', activeTab === 'activity' ? 'border-violet-300 bg-violet-50' : 'bg-muted/30')}>
+              <p className="text-sm font-semibold">3. Activity & Coins</p>
+              <p className="text-xs text-muted-foreground">{markedActivityCount}/{totalStudents} scored</p>
+            </div>
+          </div>
+
+          <TabsList className="grid h-auto w-full grid-cols-3">
+            <TabsTrigger value="attendance" className="py-2">Attendance</TabsTrigger>
+            <TabsTrigger value="hometask" disabled={!allAttendanceMarked} className="py-2">Homework</TabsTrigger>
+            <TabsTrigger value="activity" disabled={!allAttendanceMarked || !allHomeworkMarked} className="py-2">Activity</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance" className="pt-4">
@@ -309,7 +324,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                       <TableRow key={sid}>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {Object.keys(ATTENDANCE_POINTS).map((s) => (
                               <Button
                                 key={s}
@@ -358,7 +373,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                       <TableRow key={sid} className={cn(!enabled && "opacity-40 grayscale")}>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {Object.keys(HOMETASK_POINTS).map((s) => (
                               <Button
                                 key={s}
@@ -413,7 +428,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                       <TableRow key={sid} className={cn(!enabled && "opacity-40 grayscale")}>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
-                          <div className="flex gap-2 justify-center">
+                          <div className="flex flex-wrap justify-center gap-2">
                             {Object.keys(ACTIVITY_POINTS).map((s) => (
                               <Button
                                 key={s}
