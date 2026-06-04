@@ -1,10 +1,10 @@
 // Page component for the teachers screen in the crm feature.
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { useParams, useNavigate } from 'react-router-dom';
-import { gradeAPI } from '../../../shared/api/api';
+import { gradeAPI, studentAPI, teacherAPI } from '../../../shared/api/api';
 import { AssignmentSectionTeacher } from './components/AssignmentSectionTeacher';
 import { showToast } from '../../../utils/toast';
 import {
@@ -51,12 +51,30 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { generateTempPassword } from '@/utils/password';
-import { teacherAPI } from '../../../shared/api/api';
+import { fetchTeachers, fetchTeachersForce } from '@/slices/teachersSlice';
+import { fetchClasses, fetchClassesForce } from '@/slices/classesSlice';
+import { fetchStudents, fetchStudentsForce } from '@/slices/studentsSlice';
+import { fetchSubjects, fetchSubjectsForce } from '@/slices/subjectsSlice';
+import { fetchAssignments, fetchAssignmentsForce } from '@/slices/assignmentsSlice';
+import { fetchPayments, fetchPaymentsForce } from '@/slices/paymentsSlice';
 
 interface GradeEntry {
   student_id: number;
   percentage: number;
   grade_letter: string;
+}
+
+interface TeacherStudent {
+  student_id?: number;
+  id?: number;
+  teacher_id?: number;
+  class_id?: number;
+  enrollment_number?: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  status?: string;
 }
 
 // Renders the teacher detail page screen.
@@ -71,9 +89,7 @@ const TeacherDetailPage = () => {
   const classes = useAppSelector((state) =>
     state.classes.items.filter((c) => String(c.teacher_id) === String(teacherId))
   );
-  const students = useAppSelector((state) =>
-    state.students.items.filter((s) => classes.some((c) => (c.class_id || c.id) === s.class_id))
-  );
+  const storeStudents = useAppSelector((state) => state.students.items as TeacherStudent[]);
   const subjects = useAppSelector((state) =>
     state.subjects.items.filter((s) => classes.some((c) => (c.class_id || c.id) === s.class_id))
   );
@@ -81,7 +97,7 @@ const TeacherDetailPage = () => {
     state.assignments.items.filter((a) => String(a.teacher_id) === String(teacherId))
   );
   const payments = useAppSelector((state) => state.payments.items);
-  const loading = useAppSelector((state) => state.teachers.loading || state.classes.loading || state.students.loading || state.subjects.loading || state.assignments.loading || state.payments.loading);
+  const dataLoading = useAppSelector((state) => state.teachers.loading || state.classes.loading || state.students.loading || state.subjects.loading || state.assignments.loading || state.payments.loading);
   const error = useAppSelector((state) => state.teachers.error || state.classes.error || state.students.error || state.subjects.error || state.assignments.error || state.payments.error);
   // UI state only
   const [isGradeModalOpen, setIsGradeModalOpen] = useState(false);
@@ -99,23 +115,90 @@ const TeacherDetailPage = () => {
   const [paymentTempPassword, setPaymentTempPassword] = useState('');
   const [settingPaymentPassword, setSettingPaymentPassword] = useState(false);
   const [selectedPaymentMonth, setSelectedPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
+  const [detailStudents, setDetailStudents] = useState<TeacherStudent[]>([]);
+  const [detailStudentsLoading, setDetailStudentsLoading] = useState(false);
+  const loading = dataLoading;
+  const teacherIdNum = Number(teacherId);
+  const studentsSource = useMemo(() => {
+    const byId = new Map<number, TeacherStudent>();
+    for (const student of storeStudents) {
+      const id = Number(student.student_id || student.id);
+      if (id) byId.set(id, student);
+    }
+    for (const student of detailStudents) {
+      const id = Number(student.student_id || student.id);
+      if (id) byId.set(id, { ...byId.get(id), ...student });
+    }
+    return Array.from(byId.values());
+  }, [detailStudents, storeStudents]);
+  const teacherStudents = useMemo(() => {
+    const classIds = new Set(classes.map((c) => Number(c.class_id || c.id)).filter(Boolean));
+    return studentsSource.filter((student) =>
+      Number(student.teacher_id) === teacherIdNum ||
+      (student.class_id != null && classIds.has(Number(student.class_id)))
+    );
+  }, [classes, studentsSource, teacherIdNum]);
+  const classStudentsByClassId = useMemo(() => {
+    const map = new Map<number, TeacherStudent[]>();
+    for (const student of studentsSource) {
+      const classId = Number(student.class_id);
+      if (!classId) continue;
+      if (!map.has(classId)) map.set(classId, []);
+      map.get(classId)?.push(student);
+    }
+    for (const list of map.values()) {
+      list.sort((a, b) =>
+        `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`)
+      );
+    }
+    return map;
+  }, [studentsSource]);
 
 // Runs side effects for this component.
   useEffect(() => {
-    // Dispatch thunks to load all required data
-    dispatch({ type: 'teachers/fetchTeachers' });
-    dispatch({ type: 'classes/fetchClasses' });
-    dispatch({ type: 'students/fetchStudents' });
-    dispatch({ type: 'subjects/fetchSubjects' });
-    dispatch({ type: 'assignments/fetchAssignments' });
-    dispatch({ type: 'payments/fetchPayments' });
+    dispatch(fetchTeachers());
+    dispatch(fetchClasses());
+    dispatch(fetchStudents());
+    dispatch(fetchSubjects());
+    dispatch(fetchAssignments());
+    dispatch(fetchPayments());
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, teacherId]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    let cancelled = false;
+    setDetailStudentsLoading(true);
+    studentAPI.getAll()
+      .then((response) => {
+        const payload = (response as any).data ?? response;
+        const rows = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : [];
+        if (!cancelled) {
+          setDetailStudents(rows);
+        }
+      })
+      .catch((error) => {
+        console.error('Error loading all students for teacher detail:', error);
+        if (!cancelled) {
+          setDetailStudents([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setDetailStudentsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [teacherId]);
 
 // Returns students by class.
   const getStudentsByClass = (classId: number | undefined) => {
     if (!classId) return [];
-    return students.filter((s) => s.class_id === classId);
+    return classStudentsByClassId.get(Number(classId)) || [];
   };
 
 // Handles calculate grade letter.
@@ -192,12 +275,12 @@ const TeacherDetailPage = () => {
       showToast.success('Grades saved successfully');
       handleCloseGradeModal();
       // Refresh Redux data after saving grades
-      dispatch({ type: 'teachers/fetchTeachers' });
-      dispatch({ type: 'classes/fetchClasses' });
-      dispatch({ type: 'students/fetchStudents' });
-      dispatch({ type: 'subjects/fetchSubjects' });
-      dispatch({ type: 'assignments/fetchAssignments' });
-      dispatch({ type: 'payments/fetchPayments' });
+      dispatch(fetchTeachersForce());
+      dispatch(fetchClassesForce());
+      dispatch(fetchStudentsForce());
+      dispatch(fetchSubjectsForce());
+      dispatch(fetchAssignmentsForce());
+      dispatch(fetchPaymentsForce());
     } catch (error: unknown) {
       const err = error as { message?: string };
       showToast.error(err.message || 'Failed to save grades');
@@ -334,89 +417,123 @@ const TeacherDetailPage = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="min-h-full space-y-6 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-6 dark:bg-none">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <Button
           variant="outline"
-          className="rounded-lg"
+          className="w-fit rounded-lg border-indigo-200 bg-white/80 text-indigo-900 shadow-sm hover:bg-indigo-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
           onClick={() => navigate('/teachers')}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
+          Back to Teachers
         </Button>
-        <h1 className="text-3xl font-bold flex-grow">Teacher Details</h1>
-        <Button
-          variant="outline"
-          className="rounded-lg"
-          onClick={handleResetPassword}
-          disabled={resettingPassword}
-        >
-          {resettingPassword ? (
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            className="rounded-lg border-sky-200 bg-white/80 text-sky-900 shadow-sm hover:bg-sky-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+            onClick={handleResetPassword}
+            disabled={resettingPassword}
+          >
+            {resettingPassword ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <KeyRound className="mr-2 h-4 w-4" />
+            )}
+            Reset Password
+          </Button>
+          <Button
+            variant="outline"
+            className="rounded-lg border-emerald-200 bg-white/80 text-emerald-900 shadow-sm hover:bg-emerald-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+            onClick={() => {
+              setPaymentTempPassword(generateTempPassword());
+              setPaymentPasswordOpen(true);
+            }}
+          >
             <KeyRound className="mr-2 h-4 w-4" />
-          )}
-          Reset Password
-        </Button>
-        <Button
-          variant="outline"
-          className="rounded-lg"
-          onClick={() => {
-            setPaymentTempPassword(generateTempPassword());
-            setPaymentPasswordOpen(true);
-          }}
-        >
-          <KeyRound className="mr-2 h-4 w-4" />
-          Set Payment Password
-        </Button>
-        <Button
-          className="bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg"
-          onClick={handleOpenGradeModal}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Add Grades
-        </Button>
+            Set Payment Password
+          </Button>
+          <Button
+            className="rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 hover:from-indigo-600 hover:to-sky-600 dark:shadow-none"
+            onClick={handleOpenGradeModal}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Add Grades
+          </Button>
+        </div>
       </div>
 
       {error && (
-        <Alert variant="destructive" className="mb-6">
+        <Alert variant="destructive">
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
         </Alert>
       )}
 
       {/* Teacher Profile Card */}
-      <Card className="mb-6 rounded-2xl overflow-hidden shadow-lg border-0">
-        <div className="bg-gradient-to-br from-indigo-500 to-purple-500 p-8 flex items-center gap-6">
-          {/* Avatar */}
-          <div className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold text-white bg-white/20 border-4 border-white/40 shrink-0">
-            {getInitials(teacher.first_name, teacher.last_name)}
-          </div>
-          <div className="flex-grow">
-            <h2 className="text-3xl font-bold text-white">
-              {teacher.first_name} {teacher.last_name}
-            </h2>
-            <p className="text-white/80 mt-1">{teacher.specialization}</p>
-            <div className="flex gap-2 mt-3">
-              <span className={cn('inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border', getStatusClasses(teacher.status))}>
-                {teacher.status}
-              </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border border-white/50 text-white bg-white/10">
-                {teacher.employee_id}
-              </span>
+      <Card className="overflow-hidden rounded-lg border-0 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-500 text-white shadow-[0_24px_70px_-35px_rgba(99,102,241,0.9)] dark:border dark:border-border dark:bg-slate-950 dark:bg-none dark:shadow-lg">
+        <CardContent className="relative p-0">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-white/80 to-fuchsia-300 dark:hidden" />
+          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-amber-300/35 via-white/10 to-transparent dark:from-cyan-500/20 dark:via-emerald-500/10" />
+          <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between lg:p-8">
+            <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-white/40 bg-white/20 text-3xl font-bold shadow-inner">
+                {getInitials(teacher.first_name, teacher.last_name)}
+              </div>
+              <div className="min-w-0 space-y-3">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-white/70">Teacher Profile</p>
+                  <h1 className="break-words text-3xl font-bold tracking-normal text-white md:text-4xl">
+                    {teacher.first_name} {teacher.last_name}
+                  </h1>
+                  <p className="text-sm font-medium text-white/80">{teacher.specialization || 'No specialization'}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <span className={cn('inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold', getStatusClasses(teacher.status))}>
+                    {teacher.status}
+                  </span>
+                  <span className="inline-flex items-center rounded-lg border border-white/30 bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
+                    {teacher.employee_id || 'No employee ID'}
+                  </span>
+                  <span className="inline-flex items-center rounded-lg border border-white/30 bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
+                    Username: {teacher.username || '-'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2 md:w-[360px]">
+              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <BookOpen className="h-4 w-4" />
+                  Classes
+                </div>
+                <p className="mt-2 text-2xl font-bold text-white">{classes.length}</p>
+              </div>
+              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <User className="h-4 w-4" />
+                  Students
+                </div>
+                <p className="mt-2 text-2xl font-bold text-white">
+                  {teacherStudents.length}
+                </p>
+              </div>
+              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </div>
+                <p className="mt-2 truncate text-sm font-semibold text-white">{teacher.email || '-'}</p>
+              </div>
+              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
+                <div className="flex items-center gap-2 text-sm text-white/70">
+                  <Phone className="h-4 w-4" />
+                  Phone
+                </div>
+                <p className="mt-2 truncate text-sm font-semibold text-white">{teacher.phone || '-'}</p>
+              </div>
             </div>
           </div>
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white bg-white/20">
-              <BookOpen className="h-4 w-4" />
-              {classes.length} Classes
-            </span>
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold text-white bg-white/20">
-              <User className="h-4 w-4" />
-              {students.filter(s => classes.some(c => (c.class_id || c.id) === s.class_id)).length} Students
-            </span>
-          </div>
-        </div>
+        </CardContent>
       </Card>
 
       {/* Payment Password Dialog */}
@@ -480,26 +597,26 @@ const TeacherDetailPage = () => {
       </Dialog>
 
       {/* Tabs */}
-      <Card className="rounded-2xl overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-indigo-100 bg-white/90 shadow-[0_20px_55px_-40px_rgba(99,102,241,0.7)] dark:border-border dark:bg-card dark:shadow-sm">
         <Tabs value={tabValue} onValueChange={setTabValue}>
-          <TabsList className="w-full justify-start rounded-none border-b bg-transparent h-14 px-2">
-            <TabsTrigger value="info" className="gap-2 text-base font-semibold data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none">
+          <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-emerald-50 px-3 py-2 dark:border-border dark:bg-muted/40 dark:bg-none">
+            <TabsTrigger value="info" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <User className="h-4 w-4" />
               Information
             </TabsTrigger>
-            <TabsTrigger value="classes" className="gap-2 text-base font-semibold data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none">
+            <TabsTrigger value="classes" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <BookOpen className="h-4 w-4" />
               Classes & Students
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="gap-2 text-base font-semibold data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none">
+            <TabsTrigger value="assignments" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <ClipboardList className="h-4 w-4" />
               Assignments
             </TabsTrigger>
-            <TabsTrigger value="tests" className="gap-2 text-base font-semibold data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none">
+            <TabsTrigger value="tests" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <FileQuestion className="h-4 w-4" />
               Tests
             </TabsTrigger>
-            <TabsTrigger value="payments" className="gap-2 text-base font-semibold data-[state=active]:border-b-2 data-[state=active]:border-indigo-500 rounded-none">
+            <TabsTrigger value="payments" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <Wallet className="h-4 w-4" />
               Payments
             </TabsTrigger>
@@ -509,67 +626,67 @@ const TeacherDetailPage = () => {
             {/* Tab: Information */}
             <TabsContent value="info">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="border rounded-lg h-full">
+                <Card className="h-full rounded-lg border-sky-100 bg-gradient-to-br from-white via-sky-50/60 to-cyan-50/50 shadow-sm dark:border-border dark:bg-card dark:bg-none">
                   <CardHeader>
-                    <CardTitle className="text-indigo-600">Contact Information</CardTitle>
+                    <CardTitle className="text-indigo-700 dark:text-indigo-300">Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <User className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <User className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Username</p>
-                        <p className="text-sm">{teacher.username}</p>
+                        <p className="text-sm font-semibold">{teacher.username || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Mail className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <Mail className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Email</p>
-                        <p className="text-sm">{teacher.email}</p>
+                        <p className="break-all text-sm font-semibold">{teacher.email || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Phone className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <Phone className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Phone</p>
-                        <p className="text-sm">{teacher.phone}</p>
+                        <p className="text-sm font-semibold">{teacher.phone || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <Calendar className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Date of Birth</p>
-                        <p className="text-sm">
+                        <p className="text-sm font-semibold">
                           {teacher.date_of_birth ? new Date(teacher.date_of_birth).toLocaleDateString() : 'N/A'}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border rounded-lg h-full">
+                <Card className="h-full rounded-lg border-emerald-100 bg-gradient-to-br from-white via-emerald-50/60 to-teal-50/50 shadow-sm dark:border-border dark:bg-card dark:bg-none">
                   <CardHeader>
-                    <CardTitle className="text-indigo-600">Professional Details</CardTitle>
+                    <CardTitle className="text-emerald-700 dark:text-emerald-300">Professional Details</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <BadgeCheck className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <BadgeCheck className="h-5 w-5 text-emerald-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Employee ID</p>
-                        <p className="text-sm">{teacher.employee_id}</p>
+                        <p className="text-sm font-semibold">{teacher.employee_id || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Qualification</p>
-                        <p className="text-sm">{teacher.qualification}</p>
+                        <p className="text-sm font-semibold">{teacher.qualification || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
+                      <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-muted-foreground" />
                       <div>
                         <p className="text-xs text-muted-foreground">Specialization</p>
-                        <p className="text-sm">{teacher.specialization}</p>
+                        <p className="text-sm font-semibold">{teacher.specialization || '-'}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -593,15 +710,15 @@ const TeacherDetailPage = () => {
                     return (
                       <div
                         key={classId}
-                        className="rounded-xl border shadow-sm overflow-hidden"
+                        className="overflow-hidden rounded-lg border border-indigo-100 bg-white shadow-sm dark:border-border dark:bg-card"
                       >
                         {/* Accordion Header */}
                         <button
                           type="button"
                           onClick={() => toggleClassExpanded(classId)}
-                          className="w-full flex items-center gap-4 p-4  hover:bg-blue-900  transition-colors text-left"
+                          className="flex w-full items-center gap-4 bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-4 text-left transition-colors hover:from-indigo-100 hover:to-sky-100 dark:bg-muted/40 dark:bg-none dark:hover:bg-muted/60"
                         >
-                          <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center shrink-0">
+                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-sm">
                             <BookOpen className="h-5 w-5" />
                           </div>
                           <div className="flex-grow">
@@ -615,48 +732,28 @@ const TeacherDetailPage = () => {
                         </button>
                         {/* Accordion Content */}
                         {isExpanded && (
-                          <div>
-                            <Table>
-                              <TableHeader>
-                                <TableRow className=" hover:text-black">
-                                  <TableHead className="font-semibold">Enrollment #</TableHead>
-                                  <TableHead className="font-semibold">Name</TableHead>
-                                  <TableHead className="font-semibold">Email</TableHead>
-                                  <TableHead className="font-semibold">Phone</TableHead>
-                                  <TableHead className="font-semibold">Status</TableHead>
-                                </TableRow>
-                              </TableHeader>
-                              <TableBody>
-                                {classStudents.length === 0 ? (
-                                  <TableRow>
-                                    <TableCell colSpan={5} className="text-center py-6">
-                                      No students in this class
-                                    </TableCell>
-                                  </TableRow>
-                                ) : (
-                                  classStudents.map((student) => (
-                                    <TableRow key={student.student_id || student.id} className="hover:bg-muted/50">
-                                      <TableCell>{student.enrollment_number}</TableCell>
-                                      <TableCell>
-                                        <div className="flex items-center gap-2">
-                                          <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs font-semibold shrink-0">
-                                            {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
-                                          </div>
-                                          {student.first_name} {student.last_name}
-                                        </div>
-                                      </TableCell>
-                                      <TableCell>{student.email}</TableCell>
-                                      <TableCell>{student.phone}</TableCell>
-                                      <TableCell>
-                                        <span className={cn('inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusClasses(student.status))}>
-                                          {student.status}
-                                        </span>
-                                      </TableCell>
-                                    </TableRow>
-                                  ))
-                                )}
-                              </TableBody>
-                            </Table>
+                          <div className="border-t border-indigo-100 bg-white p-4 dark:border-border dark:bg-card">
+                            {detailStudentsLoading && classStudents.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">Loading students...</div>
+                            ) : classStudents.length === 0 ? (
+                              <div className="py-6 text-center text-sm text-muted-foreground">No students in this class</div>
+                            ) : (
+                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                {classStudents.map((student) => (
+                                  <div
+                                    key={student.student_id || student.id}
+                                    className="flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 dark:border-border dark:bg-background/70"
+                                  >
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-muted dark:text-primary">
+                                      {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                                    </div>
+                                    <span className="truncate text-sm font-semibold">
+                                      {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>
@@ -672,12 +769,12 @@ const TeacherDetailPage = () => {
                 assignments={assignments}
                 teacherId={teacher?.teacher_id || teacher?.id}
                 onRefresh={() => {
-                  dispatch({ type: 'teachers/fetchTeachers' });
-                  dispatch({ type: 'classes/fetchClasses' });
-                  dispatch({ type: 'students/fetchStudents' });
-                  dispatch({ type: 'subjects/fetchSubjects' });
-                  dispatch({ type: 'assignments/fetchAssignments' });
-                  dispatch({ type: 'payments/fetchPayments' });
+                  dispatch(fetchTeachersForce());
+                  dispatch(fetchClassesForce());
+                  dispatch(fetchStudentsForce());
+                  dispatch(fetchSubjectsForce());
+                  dispatch(fetchAssignmentsForce());
+                  dispatch(fetchPaymentsForce());
                 }}
               />
             </TabsContent>
@@ -827,7 +924,7 @@ const TeacherDetailPage = () => {
             </TabsContent>
           </div>
         </Tabs>
-      </Card>
+      </div>
 
       <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
         <DialogContent className="rounded-2xl">
@@ -932,7 +1029,7 @@ const TeacherDetailPage = () => {
                     </TableHeader>
                     <TableBody>
                       {gradeEntries.map((entry, index) => {
-                        const student = students.find((s) => (s.student_id || s.id) === entry.student_id);
+                        const student = teacherStudents.find((s) => (s.student_id || s.id) === entry.student_id);
                         return (
                           <TableRow key={entry.student_id} className="hover:bg-muted/50">
                             <TableCell>{student?.enrollment_number}</TableCell>

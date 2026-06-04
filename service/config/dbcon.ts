@@ -10,7 +10,7 @@ const pool = new Pool({
   password: process.env.DB_PASSWORD || 'crm_password',
   database: process.env.DB_NAME || 'crm_db',
 });
-
+ 
 const db = drizzle(pool);
 
 pool.on('error', (err: any) => {

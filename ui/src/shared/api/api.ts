@@ -231,13 +231,13 @@ export const studentAPI = {
 };
 
 export const dataAPI = {
-  importEntity: (entity: 'students' | 'teachers' | 'payments', csv: string) =>
+  importEntity: (entity: 'students' | 'teachers' | 'classes' | 'payments', csv: string) =>
     apiClient.post(`/data/import/${entity}`, { csv }),
-  exportEntity: (entity: 'students' | 'teachers' | 'payments') =>
+  exportEntity: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
     apiClient.get(`/data/export/${entity}`, { responseType: 'blob' }),
-  pushEntityToSheets: (entity: 'students' | 'teachers' | 'payments') =>
+  pushEntityToSheets: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
     apiClient.post(`/data/sheets/push/${entity}`, {}),
-  pullEntityFromSheets: (entity: 'students' | 'teachers' | 'payments') =>
+  pullEntityFromSheets: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
     apiClient.post(`/data/sheets/pull/${entity}`, {}),
 };
 
@@ -250,7 +250,8 @@ export const teacherAPI = {
   getById: (id: number) => apiClient.get(`/teachers/${id}`),
   create: (data: any) => apiClient.post('/teachers', data),
   update: (id: number, data: any) => apiClient.put(`/teachers/${id}`, data),
-  delete: (id: number) => apiClient.delete(`/teachers/${id}`),
+  delete: (id: number, options?: { force?: boolean }) =>
+    apiClient.delete(`/teachers/${id}`, { params: options?.force ? { force: 'true' } : undefined }),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/teachers/${id}/set-password`, data),
   setPaymentPassword: (id: number, data: { password: string }) =>

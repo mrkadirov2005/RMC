@@ -2,6 +2,8 @@ const { z } = require('zod');
 const { hashPassword } = require('../../../shared/password');
 const teacherRepository = require('../repositories/teacher.repository');
 
+const DEFAULT_TEACHER_PASSWORD = '012345678';
+
 const createTeacherSchema = z.object({
   center_id: z.number(),
   employee_id: z.string().min(1, 'Employee ID is required'),
@@ -19,12 +21,38 @@ const createTeacherSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
+const buildUsername = (name: string) => {
+  const cleaned = String(name || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+  if (!cleaned) return 'teacher';
+  return cleaned.length >= 3 ? cleaned : cleaned.padEnd(3, '0');
+};
+
+const getAvailableUsername = async (base: string) => {
+  let candidate = base;
+  let suffix = 2;
+  while ((await teacherRepository.countByUsername(candidate)) > 0) {
+    candidate = `${base}${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+};
+
 const listTeachers = (centerId?: number) => teacherRepository.findAll(centerId);
 
 const getTeacher = (id: number, centerId?: number) => teacherRepository.findById(id, centerId);
 
 const createTeacher = async (body: any) => {
-  const validationResult = createTeacherSchema.safeParse(body);
+  const defaultUsername = buildUsername(body?.first_name);
+  const explicitUsername = String(body?.username || '').trim();
+  const bodyWithDefaults = {
+    ...body,
+    username: explicitUsername || defaultUsername,
+    password: body?.password || DEFAULT_TEACHER_PASSWORD,
+  };
+  const validationResult = createTeacherSchema.safeParse(bodyWithDefaults);
   if (!validationResult.success) {
     return {
       error: 'validation',
@@ -32,8 +60,10 @@ const createTeacher = async (body: any) => {
     };
   }
   const d = validationResult.data;
-  const exists = await teacherRepository.countByUsername(d.username);
-  if (exists > 0) return { error: 'username_taken' };
+  const shouldAutoResolveUsername = !explicitUsername || explicitUsername === defaultUsername;
+  const username = shouldAutoResolveUsername ? await getAvailableUsername(d.username) : d.username;
+  const exists = await teacherRepository.countByUsername(username);
+  if (!shouldAutoResolveUsername && exists > 0) return { error: 'username_taken' };
   const password_hash = hashPassword(d.password);
   const row = await teacherRepository.insert([
     d.center_id,
@@ -48,18 +78,35 @@ const createTeacher = async (body: any) => {
     d.specialization,
     d.status,
     JSON.stringify(d.roles || []),
-    d.username,
+    username,
     password_hash,
   ]);
   return { row };
 };
 
 const updateTeacher = (id: number, body: any, centerId?: number) => {
-  const { first_name, last_name, email, phone, status, roles } = body;
-  return teacherRepository.update(id, [first_name, last_name, email, phone, status, roles ? JSON.stringify(roles) : null], centerId);
+  const { first_name, last_name, username, email, phone, status, roles } = body;
+  return teacherRepository.update(id, [first_name, last_name, username, email, phone, status, roles ? JSON.stringify(roles) : null], centerId);
 };
 
-const deleteTeacher = (id: number, centerId?: number) => teacherRepository.remove(id, centerId);
+const deleteTeacher = async (id: number, centerId?: number, options?: { force?: boolean }) => {
+  const teacher = await teacherRepository.findById(id, centerId);
+  if (!teacher) return { kind: 'not_found' as const };
+
+  const dependencies = await teacherRepository.getDeleteDependencies(id, centerId);
+  const hasHistory = dependencies.attendance_count > 0 || dependencies.grades_count > 0;
+  if (hasHistory) {
+    return { kind: 'blocked' as const, reason: 'history', dependencies };
+  }
+
+  if (teacherRepository.hasDeleteDependencies(dependencies)) {
+    if (!options?.force) return { kind: 'has_dependencies' as const, dependencies };
+    await teacherRepository.unassignDeleteDependencies(id, centerId);
+  }
+
+  const row = await teacherRepository.remove(id, centerId);
+  return { kind: 'deleted' as const, row, dependencies };
+};
 
 const authenticate = async (username: string, password: string) => {
   const teacher = await teacherRepository.findByUsername(username);

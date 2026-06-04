@@ -1,5 +1,6 @@
 const importExportRepository = require('../repositories/import_export.repository');
 const { studentInCenter } = require('../../../shared/tenantDb');
+const { hashPassword } = require('../../../shared/password');
 const crypto = require('crypto');
 
 const createStudentSpecialId = () => {
@@ -74,7 +75,15 @@ const parseCsv = (csv: string) => {
   if (row.some((value) => value !== '')) rows.push(row);
   if (rows.length < 2) return [];
 
-  const headers = rows[0].map((h) => h.trim());
+  const normalizeHeader = (header: string) =>
+    header
+      .trim()
+      .toLowerCase()
+      .replace(/^\uFEFF/, '')
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+
+  const headers = rows[0].map((h) => normalizeHeader(h));
   return rows.slice(1).map((values) => {
     const obj: any = {};
     headers.forEach((h, i) => {
@@ -90,6 +99,8 @@ const STUDENT_COLS = [
   'enrollment_number',
   'first_name',
   'last_name',
+  'username',
+  'password',
   'email',
   'phone',
   'date_of_birth',
@@ -98,7 +109,12 @@ const STUDENT_COLS = [
   'gender',
   'status',
   'teacher_id',
+  'teacher_employee_id',
   'class_id',
+  'class_name',
+  'class_code',
+  'school_name',
+  'school_class',
 ];
 
 const TEACHER_COLS = [
@@ -114,6 +130,23 @@ const TEACHER_COLS = [
   'qualification',
   'specialization',
   'status',
+  'username',
+  'password',
+];
+
+const CLASS_COLS = [
+  'class_id',
+  'center_id',
+  'class_name',
+  'class_code',
+  'level',
+  'section',
+  'capacity',
+  'teacher_id',
+  'teacher_employee_id',
+  'room_number',
+  'payment_amount',
+  'payment_frequency',
 ];
 
 const PAYMENT_COLS = [
@@ -134,12 +167,62 @@ const PAYMENT_COLS = [
 const ENTITY_CONFIG: Record<string, { columns: string[]; idColumn: string; table: string }> = {
   students: { columns: STUDENT_COLS, idColumn: 'student_id', table: 'students' },
   teachers: { columns: TEACHER_COLS, idColumn: 'teacher_id', table: 'teachers' },
+  classes: { columns: CLASS_COLS, idColumn: 'class_id', table: 'classes' },
   payments: { columns: PAYMENT_COLS, idColumn: 'payment_id', table: 'payments' },
 };
 
 const getAppsScriptUrl = () => process.env.GOOGLE_APPS_SCRIPT_URL || process.env.APPS_SCRIPT_URL || '';
 
-const getAppsScriptSecret = () => process.env.GOOGLE_APPS_SCRIPT_SECRET || process.env.APPS_SCRIPT_SECRET || '';
+const cleanValue = (value: any) => {
+  const str = String(value ?? '').trim();
+  return str || null;
+};
+
+const getRowValue = (row: any, aliases: string[]) => {
+  for (const alias of aliases) {
+    const value = cleanValue(row?.[alias]);
+    if (value != null) return value;
+  }
+  return null;
+};
+
+const toOptionalNumber = (value: any) => {
+  const cleaned = cleanValue(value);
+  if (cleaned == null) return null;
+  const number = Number(cleaned);
+  return Number.isFinite(number) && number > 0 ? number : null;
+};
+
+const resolveClassId = async (row: any, centerId?: number, classIdCache?: Map<string, number | null>) => {
+  const classId = toOptionalNumber(getRowValue(row, ['class_id', 'group_id']));
+  if (classId != null) return classId;
+
+  const className = getRowValue(row, ['class_name', 'group_name', 'group', 'class']);
+  const classCode = getRowValue(row, ['class_code', 'group_code']) || className;
+  if (!className && !classCode) return null;
+
+  const cacheKey = [centerId ?? '', className ?? '', classCode ?? ''].map((value) => String(value).trim().toLowerCase()).join('|');
+  if (classIdCache?.has(cacheKey)) return classIdCache.get(cacheKey) ?? null;
+
+  const resolvedClassId = await importExportRepository.findOrCreateClassIdByNameOrCode(className, classCode, centerId);
+  classIdCache?.set(cacheKey, resolvedClassId);
+  return resolvedClassId;
+};
+
+const resolveTeacherId = async (row: any, centerId?: number, teacherIdCache?: Map<string, number | null>) => {
+  const teacherId = toOptionalNumber(getRowValue(row, ['teacher_id']));
+  if (teacherId != null) return teacherId;
+
+  const employeeId = getRowValue(row, ['teacher_employee_id', 'employee_id', 'staff_id', 'teacher_code']);
+  if (!employeeId) return null;
+
+  const cacheKey = [centerId ?? '', employeeId].map((value) => String(value).trim().toLowerCase()).join('|');
+  if (teacherIdCache?.has(cacheKey)) return teacherIdCache.get(cacheKey) ?? null;
+
+  const resolvedTeacherId = await importExportRepository.findTeacherIdByEmployeeId(employeeId, centerId);
+  teacherIdCache?.set(cacheKey, resolvedTeacherId);
+  return resolvedTeacherId;
+};
 
 const normalizeSheetRows = (payload: any, columns: string[]) => {
   if (typeof payload?.csv === 'string') return parseCsv(payload.csv);
@@ -158,11 +241,10 @@ const callAppsScript = async (payload: any) => {
   const url = getAppsScriptUrl();
   if (!url) return { error: 'missing_config' as const };
 
-  const secret = getAppsScriptSecret();
   const response = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(secret ? { ...payload, secret } : payload),
+    body: JSON.stringify(payload),
   });
   const text = await response.text();
   let data: any = {};
@@ -189,6 +271,9 @@ const exportEntity = async (entity: string, centerId?: number) => {
   } else if (entity === 'teachers') {
     rows = await importExportRepository.selectAllTeachers(centerId);
     columns = TEACHER_COLS;
+  } else if (entity === 'classes') {
+    rows = await importExportRepository.selectAllClasses(centerId);
+    columns = CLASS_COLS;
   } else {
     rows = await importExportRepository.selectAllPayments(centerId);
     columns = PAYMENT_COLS;
@@ -210,6 +295,8 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
     return { error: 'unsupported' as const };
   }
   let created = 0;
+  const classIdCache = new Map<string, number | null>();
+  const teacherIdCache = new Map<string, number | null>();
   for (const row of rows) {
     if (entity === 'students') {
       const identity = createGeneratedStudentIdentity();
@@ -219,20 +306,26 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       }
       const studentId = Number(row.student_id);
       const hasStudentId = upsert && Number.isFinite(studentId) && studentId > 0;
+      const classId = await resolveClassId(row, rowCenterId, classIdCache);
+      const teacherId = await resolveTeacherId(row, rowCenterId, teacherIdCache);
       const params = [
         rowCenterId,
-        row.enrollment_number || identity.enrollmentNumber,
-        row.first_name,
-        row.last_name,
-        row.email || identity.email,
-        row.phone,
-        row.date_of_birth || null,
-        row.parent_name || null,
-        row.parent_phone || null,
-        row.gender || null,
-        row.status || 'Active',
-        row.teacher_id || null,
-        row.class_id || null,
+        getRowValue(row, ['enrollment_number']) || identity.enrollmentNumber,
+        getRowValue(row, ['first_name', 'firstname', 'name']) || '',
+        getRowValue(row, ['last_name', 'lastname', 'surname']) || '',
+        getRowValue(row, ['username']),
+        getRowValue(row, ['password']) ? hashPassword(getRowValue(row, ['password'])) : null,
+        getRowValue(row, ['email']) || identity.email,
+        getRowValue(row, ['phone']),
+        getRowValue(row, ['date_of_birth', 'birth_date', 'dob']),
+        getRowValue(row, ['parent_name']),
+        getRowValue(row, ['parent_phone']),
+        getRowValue(row, ['gender']),
+        getRowValue(row, ['status']) || 'Active',
+        teacherId,
+        classId,
+        getRowValue(row, ['school_name', 'school']),
+        getRowValue(row, ['school_class', 'school_grade', 'school_group']),
       ];
       await (upsert ? importExportRepository.upsertStudent(hasStudentId ? [studentId, ...params] : params, hasStudentId) : importExportRepository.insertStudent(params));
     } else if (entity === 'teachers') {
@@ -244,18 +337,41 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       const hasTeacherId = upsert && Number.isFinite(teacherId) && teacherId > 0;
       const params = [
         rowCenterId,
-        row.employee_id,
-        row.first_name,
-        row.last_name,
-        row.email,
-        row.phone,
-        row.date_of_birth || null,
-        row.gender || null,
-        row.qualification || null,
-        row.specialization || null,
-        row.status || 'Active',
+        getRowValue(row, ['employee_id', 'staff_id', 'teacher_code']),
+        getRowValue(row, ['first_name', 'firstname', 'name']) || '',
+        getRowValue(row, ['last_name', 'lastname', 'surname']) || '',
+        getRowValue(row, ['email']),
+        getRowValue(row, ['phone', 'phone_number']),
+        getRowValue(row, ['date_of_birth', 'birth_date', 'dob']),
+        getRowValue(row, ['gender']),
+        getRowValue(row, ['qualification', 'degree']),
+        getRowValue(row, ['specialization', 'subject', 'subjects']),
+        getRowValue(row, ['status']) || 'Active',
+        getRowValue(row, ['username']),
+        getRowValue(row, ['password']) ? hashPassword(getRowValue(row, ['password'])) : null,
       ];
       await (upsert ? importExportRepository.upsertTeacher(hasTeacherId ? [teacherId, ...params] : params, hasTeacherId) : importExportRepository.insertTeacher(params));
+    } else if (entity === 'classes') {
+      const rowCenterId = centerId ?? Number(row.center_id);
+      if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
+        return { error: 'invalid_center' as const };
+      }
+      const className = getRowValue(row, ['class_name', 'group_name', 'group', 'class']) || '';
+      const classCode = getRowValue(row, ['class_code', 'group_code']) || className;
+      const teacherId = await resolveTeacherId(row, rowCenterId, teacherIdCache);
+      const params = [
+        rowCenterId,
+        className,
+        classCode,
+        toOptionalNumber(getRowValue(row, ['level'])),
+        getRowValue(row, ['section', 'schedule']),
+        toOptionalNumber(getRowValue(row, ['capacity'])),
+        teacherId,
+        getRowValue(row, ['room_number', 'room']),
+        getRowValue(row, ['payment_amount', 'price', 'tuition']),
+        getRowValue(row, ['payment_frequency']) || 'Monthly',
+      ];
+      await importExportRepository.upsertClassByCode(params);
     } else {
       const rowCenterId = centerId ?? Number(row.center_id);
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {

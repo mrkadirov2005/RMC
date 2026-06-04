@@ -19,10 +19,13 @@ import { StudentsTableView } from './components/StudentsTableView';
 import { useStudentsPage } from './hooks/useStudentsPage';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
+import { useAppDispatch } from '../hooks';
+import { patchStudent } from '@/slices/studentsSlice';
 
 // Renders the students page screen.
 const StudentsPage = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [activeTab, setActiveTab] = useState('students');
   const [statisticsStudents, setStatisticsStudents] = useState<Student[]>([]);
@@ -143,6 +146,7 @@ const StudentsPage = () => {
       const csv = await file.text();
       await dataAPI.importEntity('students', csv);
       s.actions.fetchAll();
+      s.actions.fetchClasses();
       if (activeTab === 'statistics') {
         const response = await studentAPI.getAll();
         const data = (response as any).data ?? response;
@@ -158,6 +162,7 @@ const StudentsPage = () => {
 
   const refreshStudents = async () => {
     s.actions.fetchAll();
+    s.actions.fetchClasses();
     if (activeTab === 'statistics') {
       const response = await studentAPI.getAll();
       const data = (response as any).data ?? response;
@@ -185,6 +190,44 @@ const StudentsPage = () => {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import from Google Sheets.');
     } finally {
       setIsSheetsPulling(false);
+    }
+  };
+
+  const handleUsernameUpdate = async (student: Student, username: string) => {
+    const id = student.student_id || student.id;
+    if (!id) {
+      showToast.error('Student ID is missing.');
+      throw new Error('Student ID is missing.');
+    }
+
+    try {
+      dispatch(patchStudent({ id, changes: { username } }));
+      const response = await studentAPI.update(id, { username });
+      const updated = (response as any).data ?? response;
+      dispatch(patchStudent({ id, changes: { username: updated?.username ?? username } }));
+    } catch (error: any) {
+      dispatch(patchStudent({ id, changes: { username: student.username } }));
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update username.');
+      throw error;
+    }
+  };
+  const handleBulkDeleteStudents = async (ids: number[]) => {
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} selected student${ids.length === 1 ? '' : 's'}?`)) return;
+
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await studentAPI.delete(id);
+      } catch {
+        failed += 1;
+      }
+    }
+    await refreshStudents();
+    if (failed > 0) {
+      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+    } else {
+      showToast.success(`Deleted ${ids.length} student${ids.length === 1 ? '' : 's'}.`);
     }
   };
 
@@ -292,7 +335,8 @@ const StudentsPage = () => {
             onView={(id) => navigate(`/student/${id}`)}
             onEdit={s.handleOpenModal}
             onDelete={s.handleDelete}
-            statusClass={s.getStatusVariant}
+            onBulkDelete={handleBulkDeleteStudents}
+            onUsernameUpdate={handleUsernameUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             viewMode={viewMode}
           />

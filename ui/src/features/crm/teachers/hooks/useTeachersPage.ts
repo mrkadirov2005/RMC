@@ -12,6 +12,16 @@ import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Teacher } from '../types';
 import { getInitials, getStatusColor } from '../queries';
 
+const DEFAULT_TEACHER_PASSWORD = '012345678';
+
+const getEmptyTeacherForm = (centerId: number): Partial<Teacher> => ({
+  center_id: centerId,
+  gender: 'Male',
+  status: 'Active',
+  roles: ['teacher'],
+  password: DEFAULT_TEACHER_PASSWORD,
+});
+
 // Provides teachers page.
 export const useTeachersPage = () => {
   const navigate = useNavigate();
@@ -26,12 +36,7 @@ export const useTeachersPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Partial<Teacher>>({
-    center_id: defaultCenterId,
-    gender: 'Male',
-    status: 'Active',
-    roles: ['teacher'],
-  });
+  const [formData, setFormData] = useState<Partial<Teacher>>(getEmptyTeacherForm(defaultCenterId));
 
   // Expose state shape compatible with useCRUD for UI pages that read state.items / state.loading / state.error
   const state = { items, loading, error };
@@ -65,7 +70,7 @@ export const useTeachersPage = () => {
       setFormData(teacher);
     } else {
       setEditingId(null);
-      setFormData({ center_id: defaultCenterId, gender: 'Male', status: 'Active', roles: ['teacher'] });
+      setFormData(getEmptyTeacherForm(defaultCenterId));
     }
     setIsModalOpen(true);
   };
@@ -74,7 +79,7 @@ export const useTeachersPage = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({ center_id: defaultCenterId, gender: 'Male', status: 'Active', roles: ['teacher'] });
+    setFormData(getEmptyTeacherForm(defaultCenterId));
   };
 
 // Handles submit.
@@ -116,5 +121,6 @@ export const useTeachersPage = () => {
     genderOptions,
     teacherStatusOptions,
     isOwner,
+    user,
   };
 };

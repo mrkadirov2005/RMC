@@ -22,7 +22,7 @@ import { buildOwnerStudentStatistics, createInitialFormState, getOwnerManagerRow
 import { ownerManagerApi } from '../api';
 
 // Builds columns.
-const buildColumns = (activeTab: OwnerManagerTabType, centerLookup: Map<number, string>): OwnerManagerColumnDef[] => {
+const buildColumns = (activeTab: OwnerManagerTabType): OwnerManagerColumnDef[] => {
 // Handles name value.
   const nameValue = (item: any) => [item.first_name, item.last_name].filter(Boolean).join(' ') || '-';
 
@@ -30,67 +30,22 @@ const buildColumns = (activeTab: OwnerManagerTabType, centerLookup: Map<number, 
     case 'centers':
       return [
         { key: 'center_name', label: 'Center' },
-        { key: 'center_code', label: 'Code' },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'city', label: 'City' },
-        { key: 'principal_name', label: 'Principal' },
       ];
     case 'owners':
       return [
-        { key: 'username', label: 'Username' },
-        { key: 'email', label: 'Email' },
         { key: 'name', label: 'Name', render: (item) => nameValue(item) },
-        { key: 'status', label: 'Status' },
       ];
     case 'superusers':
       return [
-        {
-          key: 'branch_id',
-          label: 'Branch',
-          render: (item) => centerLookup.get(Number(item.branch_id ?? item.center_id)) || `Center ${item.branch_id || item.center_id || '-'}`,
-        },
-        { key: 'username', label: 'Username' },
-        { key: 'email', label: 'Email' },
         { key: 'name', label: 'Name', render: (item) => nameValue(item) },
-        { key: 'role', label: 'Role' },
-        {
-          key: 'permissions',
-          label: 'Permissions',
-          render: (item) =>
-            Array.isArray(item.permissions) && item.permissions.length > 0
-              ? `${item.permissions.length} allowed`
-              : '-',
-        },
-        { key: 'status', label: 'Status' },
       ];
     case 'teachers':
       return [
-        {
-          key: 'center_id',
-          label: 'Center',
-          render: (item) => centerLookup.get(Number(item.center_id)) || `Center ${item.center_id || '-'}`,
-        },
-        { key: 'employee_id', label: 'Employee ID' },
         { key: 'name', label: 'Name', render: (item) => nameValue(item) },
-        { key: 'email', label: 'Email' },
-        { key: 'phone', label: 'Phone' },
-        { key: 'status', label: 'Status' },
       ];
     case 'students':
       return [
-        {
-          key: 'center_id',
-          label: 'Center',
-          render: (item) => centerLookup.get(Number(item.center_id)) || `Center ${item.center_id || '-'}`,
-        },
-        { key: 'enrollment_number', label: 'Enrollment' },
         { key: 'name', label: 'Name', render: (item) => nameValue(item) },
-        { key: 'school_name', label: 'School', render: (item) => item.school_name || '-' },
-        { key: 'school_class', label: 'School Class', render: (item) => item.school_class || '-' },
-        { key: 'teacher_id', label: 'Teacher', render: (item) => (item.teacher_id ? `#${item.teacher_id}` : '-') },
-        { key: 'class_id', label: 'Class', render: (item) => (item.class_id ? `#${item.class_id}` : '-') },
-        { key: 'status', label: 'Status' },
       ];
     default:
       return [];
@@ -133,7 +88,7 @@ export const useOwnerManager = () => {
 
   const currentMeta = OWNER_MANAGER_TAB_META[activeTab];
 // Memoizes the columns derived value.
-  const columns = useMemo(() => buildColumns(activeTab, centerLookup), [activeTab, centerLookup]);
+  const columns = useMemo(() => buildColumns(activeTab), [activeTab]);
   const activeCenterLabel =
     activeTab === 'statistics'
       ? 'All centers'

@@ -117,7 +117,24 @@ export const deleteTeacher = createAsyncThunk(
       dispatch(fetchTeachersForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to delete teacher';
+      const status = err?.response?.status;
+      const data = err?.response?.data;
+      if (status === 409 && data?.dependencies && data?.reason !== 'history') {
+        const ok = window.confirm(`${data.message || 'Teacher is assigned to active records.'}\n\nUnassign related records and delete this teacher?`);
+        if (ok) {
+          try {
+            await teacherAPI.delete(id, { force: true });
+            showToast.success('Teacher deleted successfully');
+            dispatch(fetchTeachersForce());
+            return true;
+          } catch (forceErr: any) {
+            const forceMsg = forceErr?.response?.data?.message ?? forceErr?.response?.data?.error ?? 'Failed to delete teacher';
+            showToast.error(forceMsg);
+            return rejectWithValue(forceMsg);
+          }
+        }
+      }
+      const msg = data?.message ?? data?.error ?? 'Failed to delete teacher';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -135,6 +152,10 @@ const teachersSlice = createSlice({
     },
     invalidateTeachers(state) {
       state.lastFetched = null;
+    },
+    patchTeacher(state, action: PayloadAction<{ id: number; changes: Partial<Teacher> }>) {
+      const teacher = state.items.find((item) => Number(item.teacher_id || item.id) === action.payload.id);
+      if (teacher) Object.assign(teacher, action.payload.changes);
     },
   },
   extraReducers: (builder) => {
@@ -184,7 +205,7 @@ const teachersSlice = createSlice({
   },
 });
 
-export const { clearTeachersError, invalidateTeachers } = teachersSlice.actions;
+export const { clearTeachersError, invalidateTeachers, patchTeacher } = teachersSlice.actions;
 export default teachersSlice.reducer;
 
 // ── Selectors ────────────────────────────────────────────────────────────────

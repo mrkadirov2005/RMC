@@ -1,13 +1,8 @@
-const SPREADSHEET_ID = 'PASTE_SPREADSHEET_ID_HERE';
-const SECRET = 'change-this-secret';
+const SPREADSHEET_ID = '1jzMnQzvq5R1NgZUejRK-iaJId6zICYcclOhHmN3fRPM';
 
 function doPost(e) {
   try {
     const payload = JSON.parse((e && e.postData && e.postData.contents) || '{}');
-    if (SECRET && payload.secret !== SECRET) {
-      return json({ ok: false, error: 'Invalid secret' });
-    }
-
     const entity = String(payload.entity || '').trim();
     const columns = Array.isArray(payload.columns) ? payload.columns : [];
     if (!entity || columns.length === 0) {

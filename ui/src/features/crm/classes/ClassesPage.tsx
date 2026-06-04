@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
-import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreHorizontal, Search, X, BookOpen, Users, MapPin, DollarSign } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -46,6 +46,8 @@ const ClassesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedClassIds, setSelectedClassIds] = useState<Set<number>>(new Set());
   const {
     state,
     isModalOpen,
@@ -74,6 +76,9 @@ const ClassesPage = () => {
     handleViewDetails,
     handleCloseDetailModal,
     handleGenerateSessions,
+    handleImportClasses,
+    handleBulkDelete,
+    isImporting,
     frequencyOptions,
     isOwner,
   } = useClassesPage();
@@ -100,6 +105,32 @@ const ClassesPage = () => {
         .some((value) => String(value).toLowerCase().includes(search));
     });
   }, [searchTerm, state.items, teacherFilter]);
+  const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
+  const visibleClassIds = filteredClasses.map(getClassId).filter((id) => id > 0);
+  const selectedVisibleClassCount = visibleClassIds.filter((id) => selectedClassIds.has(id)).length;
+  const allVisibleClassesSelected = visibleClassIds.length > 0 && selectedVisibleClassCount === visibleClassIds.length;
+  const toggleClass = (id: number, checked: boolean) => {
+    setSelectedClassIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAllVisibleClasses = (checked: boolean) => {
+    setSelectedClassIds((current) => {
+      const next = new Set(current);
+      for (const id of visibleClassIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  };
+  const deleteSelectedClasses = async () => {
+    await handleBulkDelete(Array.from(selectedClassIds));
+    setSelectedClassIds(new Set());
+  };
   const totalCapacity = filteredClasses.reduce((sum, cls) => sum + (Number(cls.capacity) || 0), 0);
   const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
   const monthlyTuition = filteredClasses.reduce((sum, cls) => sum + (Number(cls.payment_amount) || 0), 0);
@@ -142,6 +173,43 @@ const ClassesPage = () => {
       text: 'text-slate-950',
     },
   ];
+  const renderClassActions = (cls: any) => (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
+            aria-label="Open class actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuItem onClick={() => handleViewDetails(cls)} className="gap-2">
+            <Info className="h-4 w-4 text-cyan-600" />
+            Details
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleGenerateSessions(cls)} className="gap-2">
+            <CalendarDays className="h-4 w-4 text-indigo-600" />
+            Generate Sessions
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleOpenModal(cls)} className="gap-2">
+            <Pencil className="h-4 w-4 text-blue-500" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
+            className="gap-2 text-destructive focus:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
@@ -162,6 +230,23 @@ const ClassesPage = () => {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <ViewModeToggle value={viewMode} onChange={setViewMode} className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none" />
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(event) => handleImportClasses(event.target.files?.[0])}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+            >
+              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </Button>
             <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-5 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="mr-2 h-4 w-4" />
               Add Class
@@ -248,22 +333,51 @@ const ClassesPage = () => {
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+          {selectedClassIds.size > 0 && (
+            <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
+              <span className="font-medium">{selectedClassIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={deleteSelectedClasses}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClassIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
           <Table>
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleClassesSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = selectedVisibleClassCount > 0 && !allVisibleClassesSelected;
+                    }}
+                    onChange={(event) => toggleAllVisibleClasses(event.target.checked)}
+                    aria-label="Select all visible classes"
+                    className="h-4 w-4"
+                  />
+                </TableHead>
                 <TableHead>Class</TableHead>
-                <TableHead>Code</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Schedule</TableHead>
-                <TableHead>Capacity</TableHead>
-                <TableHead>Room</TableHead>
-                <TableHead>Payment</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredClasses.map((cls) => (
                 <TableRow key={cls.class_id || cls.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedClassIds.has(getClassId(cls))}
+                      onChange={(event) => toggleClass(getClassId(cls), event.target.checked)}
+                      aria-label={`Select ${cls.class_name}`}
+                      className="h-4 w-4"
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <button
                       type="button"
@@ -273,27 +387,8 @@ const ClassesPage = () => {
                       {cls.class_name}
                     </button>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{cls.class_code}</TableCell>
-                  <TableCell>Level {cls.level}</TableCell>
-                  <TableCell>{formatSchedule(cls)}</TableCell>
-                  <TableCell>{cls.capacity}</TableCell>
-                  <TableCell>{cls.room_number}</TableCell>
-                  <TableCell>${cls.payment_amount} ({cls.payment_frequency})</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-600" onClick={() => handleViewDetails(cls)}>
-                        <Info className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleGenerateSessions(cls)}>
-                        <CalendarDays className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500" onClick={() => handleOpenModal(cls)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    {renderClassActions(cls)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -301,101 +396,101 @@ const ClassesPage = () => {
           </Table>
         </Card>
       ) : viewMode === 'compact' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredClasses.map((cls) => (
-            <Card
-              key={cls.class_id || cls.id}
-              className="cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
-              onClick={() => handleViewDetails(cls)}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
-                    <CalendarDays className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{cls.class_name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{cls.class_code} &bull; Level {cls.level}</p>
-                  </div>
-                  <span className="text-xs font-medium text-muted-foreground">{cls.capacity}</span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClasses.map((cls, index) => (
-            <Card
-              key={cls.class_id || cls.id}
-              className="flex h-full flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
-            >
-              <CardHeader className={
-                index % 4 === 0 ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white' :
-                index % 4 === 1 ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white' :
-                index % 4 === 2 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' :
-                'bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-white'
-              }>
-                <CardTitle className="text-lg">{cls.class_name}</CardTitle>
-                <p className="text-sm text-white/80">{cls.class_code}</p>
-              </CardHeader>
-              <CardContent className="flex-1 pt-4 space-y-3">
-                <div>
-                  <p className="text-xs text-muted-foreground">Level</p>
-                  <p className="text-sm font-semibold">Level {cls.level}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Schedule</p>
-                  <p className="text-sm font-semibold">{formatSchedule(cls)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Capacity</p>
-                  <p className="text-sm font-semibold">{cls.capacity} students</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Room Number</p>
-                  <p className="text-sm font-semibold">{cls.room_number}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">Payment</p>
-                  <p className="text-sm font-semibold">
-                    ${cls.payment_amount} ({cls.payment_frequency})
-                  </p>
-                </div>
-              </CardContent>
-              <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
-                <Button variant="ghost" size="sm" onClick={() => handleViewDetails(cls)}>
-                  <Info className="mr-1 h-4 w-4" />
-                  Details
+        <>
+          {selectedClassIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+              <span className="font-medium">{selectedClassIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={deleteSelectedClasses}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
                 </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => handleGenerateSessions(cls)}>
-                      <CalendarDays className="mr-2 h-4 w-4" />
-                      Generate Sessions
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleOpenModal(cls)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive focus:text-destructive"
-                      onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClassIds(new Set())}>
+                  Clear
+                </Button>
               </div>
-            </Card>
-          ))}
-        </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {filteredClasses.map((cls) => (
+              <Card
+                key={cls.class_id || cls.id}
+                className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
+                onClick={() => handleViewDetails(cls)}
+              >
+                <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedClassIds.has(getClassId(cls))}
+                    onChange={(event) => toggleClass(getClassId(cls), event.target.checked)}
+                    aria-label={`Select ${cls.class_name}`}
+                    className="h-4 w-4"
+                  />
+                </div>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
+                      <CalendarDays className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{cls.class_name}</p>
+                      <p className="sr-only">{cls.class_code || 'Class details'}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          {selectedClassIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+              <span className="font-medium">{selectedClassIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={deleteSelectedClasses}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClassIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClasses.map((cls, index) => (
+              <Card
+                key={cls.class_id || cls.id}
+                className="relative flex h-full flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
+              >
+                <div className="absolute right-3 top-3 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedClassIds.has(getClassId(cls))}
+                    onChange={(event) => toggleClass(getClassId(cls), event.target.checked)}
+                    aria-label={`Select ${cls.class_name}`}
+                    className="h-4 w-4"
+                  />
+                </div>
+                <CardHeader className={
+                  index % 4 === 0 ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white' :
+                  index % 4 === 1 ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white' :
+                  index % 4 === 2 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' :
+                  'bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-white'
+                }>
+                  <CardTitle className="text-lg">{cls.class_name}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 pt-4">
+                  <p className="font-semibold text-slate-950 dark:text-card-foreground">{cls.class_name}</p>
+                </CardContent>
+                <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
+                  {renderClassActions(cls)}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Add/Edit Class Dialog */}

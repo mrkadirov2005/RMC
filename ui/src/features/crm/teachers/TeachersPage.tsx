@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
-import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, Mail, Phone, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,7 +10,12 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PageToolbar } from '@/components/common/PageToolbar';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
@@ -29,11 +34,80 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
+import type { Teacher } from './types';
+import { dataAPI, teacherAPI } from '@/shared/api/api';
+import { useAppDispatch } from '../hooks';
+import { patchTeacher } from '@/slices/teachersSlice';
+import { showToast } from '@/utils/toast';
+
+const buildTeacherUsername = (value: string) => {
+  const cleaned = value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '');
+  if (!cleaned) return '';
+  return cleaned.length >= 3 ? cleaned : cleaned.padEnd(3, '0');
+};
+
+const UsernameField = ({
+  teacher,
+  onSave,
+}: {
+  teacher: Teacher;
+  onSave: (teacher: Teacher, username: string) => Promise<void> | void;
+}) => {
+  const [value, setValue] = useState(teacher.username || '');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setValue(teacher.username || '');
+  }, [teacher.username]);
+
+  const save = async () => {
+    const next = value.trim();
+    const current = String(teacher.username || '').trim();
+    if (next === current || saving) return;
+
+    setSaving(true);
+    try {
+      await onSave(teacher, next);
+    } catch {
+      setValue(current);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="max-w-[220px]">
+      <Input
+        value={value}
+        onChange={(event) => setValue(event.target.value)}
+        onBlur={save}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') event.currentTarget.blur();
+          if (event.key === 'Escape') {
+            setValue(teacher.username || '');
+            event.currentTarget.blur();
+          }
+        }}
+        disabled={saving}
+        placeholder="username"
+        className="h-8 bg-white/80 text-sm dark:bg-background"
+      />
+      {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
+    </div>
+  );
+};
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
+  const dispatch = useAppDispatch();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<number>>(new Set());
   const {
     navigate,
     state,
@@ -46,12 +120,15 @@ const TeachersPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
-    getStatusColor,
+    refresh,
     getInitials,
     genderOptions,
     teacherStatusOptions,
     isOwner,
+    user,
   } = useTeachersPage();
+  const canImportTeachers = isOwner || user?.userType === 'superuser';
+  const getTeacherId = (teacher: Teacher) => Number(teacher.teacher_id || teacher.id || 0);
   const filteredTeachers = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     if (!search) return state.items;
@@ -66,12 +143,34 @@ const TeachersPage = () => {
         teacher.qualification,
         teacher.email,
         teacher.phone,
+        teacher.username,
         teacher.status,
       ]
         .filter((value) => value != null)
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [searchTerm, state.items]);
+  const visibleTeacherIds = filteredTeachers.map(getTeacherId).filter((id) => id > 0);
+  const selectedVisibleTeacherCount = visibleTeacherIds.filter((id) => selectedTeacherIds.has(id)).length;
+  const allVisibleTeachersSelected = visibleTeacherIds.length > 0 && selectedVisibleTeacherCount === visibleTeacherIds.length;
+  const toggleTeacher = (id: number, checked: boolean) => {
+    setSelectedTeacherIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const toggleAllVisibleTeachers = (checked: boolean) => {
+    setSelectedTeacherIds((current) => {
+      const next = new Set(current);
+      for (const id of visibleTeacherIds) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  };
   const activeTeachers = filteredTeachers.filter((teacher) => String(teacher.status || '').toLowerCase() === 'active').length;
   const specializations = new Set(
     filteredTeachers.map((teacher) => String(teacher.specialization || '').trim()).filter(Boolean)
@@ -107,6 +206,106 @@ const TeachersPage = () => {
       tone: 'neutral' as const,
     },
   ];
+  const renderTeacherActions = (teacher: Teacher) => (
+    <div className="flex justify-end">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
+            aria-label="Open teacher actions"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuItem onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)} className="gap-2">
+            <Eye className="h-4 w-4 text-cyan-600" />
+            View
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleOpenModal(teacher)} className="gap-2">
+            <Pencil className="h-4 w-4 text-blue-500" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
+            className="gap-2 text-red-600 focus:text-red-600"
+          >
+            <Trash2 className="h-4 w-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+  const handleUsernameUpdate = async (teacher: Teacher, username: string) => {
+    const id = teacher.teacher_id || teacher.id;
+    if (!id) throw new Error('Teacher ID is missing.');
+    dispatch(patchTeacher({ id, changes: { username } }));
+    try {
+      const response = await teacherAPI.update(id, { username });
+      const updated = (response as any).data ?? response;
+      dispatch(patchTeacher({ id, changes: { username: updated?.username ?? username } }));
+    } catch (error) {
+      dispatch(patchTeacher({ id, changes: { username: teacher.username } }));
+      throw error;
+    }
+  };
+  const handleImportTeachers = async (file?: File) => {
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      showToast.error('Please choose a CSV file.');
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const csv = await file.text();
+      await dataAPI.importEntity('teachers', csv);
+      await refresh();
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import teachers.');
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+  const handleBulkDeleteTeachers = async () => {
+    const ids = Array.from(selectedTeacherIds);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} selected teacher${ids.length === 1 ? '' : 's'}?`)) return;
+
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await teacherAPI.delete(id);
+      } catch {
+        failed += 1;
+      }
+    }
+    await refresh();
+    setSelectedTeacherIds(new Set());
+    if (failed > 0) {
+      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+    } else {
+      showToast.success(`Deleted ${ids.length} teacher${ids.length === 1 ? '' : 's'}.`);
+    }
+  };
+  const handleFirstNameChange = (value: string) => {
+    setFormData((current) => {
+      if (editingId) return { ...current, first_name: value };
+
+      const previousAutoUsername = buildTeacherUsername(String(current.first_name || ''));
+      const currentUsername = String(current.username || '').trim();
+      const shouldUpdateUsername = !currentUsername || currentUsername === previousAutoUsername;
+      return {
+        ...current,
+        first_name: value,
+        username: shouldUpdateUsername ? buildTeacherUsername(value) : current.username,
+      };
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -117,6 +316,26 @@ const TeachersPage = () => {
         actions={
           <>
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
+            {canImportTeachers && (
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(event) => handleImportTeachers(event.target.files?.[0])}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                >
+                  {isImporting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Upload className="mr-2 h-5 w-5" />}
+                  {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+              </>
+            )}
             <Button onClick={() => handleOpenModal()}>
               <Plus className="w-5 h-5 mr-2" />
               Add Teacher
@@ -187,21 +406,52 @@ const TeachersPage = () => {
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+          {selectedTeacherIds.size > 0 && (
+            <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
+              <span className="font-medium">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
           <Table>
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
+                <TableHead className="w-10">
+                  <input
+                    type="checkbox"
+                    checked={allVisibleTeachersSelected}
+                    ref={(input) => {
+                      if (input) input.indeterminate = selectedVisibleTeacherCount > 0 && !allVisibleTeachersSelected;
+                    }}
+                    onChange={(event) => toggleAllVisibleTeachers(event.target.checked)}
+                    aria-label="Select all visible teachers"
+                    className="h-4 w-4"
+                  />
+                </TableHead>
                 <TableHead>Teacher</TableHead>
-                <TableHead>Employee ID</TableHead>
-                <TableHead>Specialization</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>Username</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredTeachers.map((teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                  <TableCell>
+                    <input
+                      type="checkbox"
+                      checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                      onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                      aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                      className="h-4 w-4"
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <button
                       type="button"
@@ -211,27 +461,11 @@ const TeachersPage = () => {
                       {teacher.first_name} {teacher.last_name}
                     </button>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-indigo-700 dark:text-muted-foreground">{teacher.employee_id}</TableCell>
-                  <TableCell>{teacher.specialization}</TableCell>
-                  <TableCell className="text-muted-foreground">{teacher.email}</TableCell>
-                  <TableCell className="text-muted-foreground">{teacher.phone}</TableCell>
                   <TableCell>
-                    <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusColor(teacher.status))}>
-                      {teacher.status}
-                    </span>
+                    <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-cyan-600" onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}>
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-500 hover:text-blue-700" onClick={() => handleOpenModal(teacher)}>
-                        <Pencil className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
+                    {renderTeacherActions(teacher)}
                   </TableCell>
                 </TableRow>
               ))}
@@ -239,113 +473,116 @@ const TeachersPage = () => {
           </Table>
         </Card>
       ) : viewMode === 'compact' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredTeachers.map((teacher) => (
-            <Card
-              key={teacher.teacher_id || teacher.id}
-              className="cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
-              onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
-            >
-              <CardContent className="p-3">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-sm font-bold text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
+        <>
+          {selectedTeacherIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+              <span className="font-medium">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+            {filteredTeachers.map((teacher) => (
+              <Card
+                key={teacher.teacher_id || teacher.id}
+                className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
+                onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
+              >
+                <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                    onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                    aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                    className="h-4 w-4"
+                  />
+                </div>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-sm font-bold text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
+                      {getInitials(teacher.first_name, teacher.last_name)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
+                      <div className="mt-2">
+                        <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          {selectedTeacherIds.size > 0 && (
+            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
+              <span className="font-medium">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                  Clear
+                </Button>
+              </div>
+            </div>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {filteredTeachers.map((teacher, index) => (
+              <Card
+                key={teacher.teacher_id || teacher.id}
+                className="relative h-full flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
+              >
+                <div className="absolute right-3 top-3 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                    onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                    aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                    className="h-4 w-4"
+                  />
+                </div>
+                <div className={cn(
+                  'p-6 flex flex-col items-center relative text-white',
+                  index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
+                  index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
+                  index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
+                  index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
+                )}>
+                  <div className="w-20 h-20 rounded-full bg-white/20 border-[3px] border-white/40 flex items-center justify-center text-white text-xl font-bold mb-2">
                     {getInitials(teacher.first_name, teacher.last_name)}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{teacher.specialization}</p>
+                  <h3 className="text-white font-semibold text-lg text-center">
+                    {teacher.first_name} {teacher.last_name}
+                  </h3>
+                </div>
+
+                <CardContent className="flex-grow p-5">
+                  <p className="text-center font-semibold text-slate-950 dark:text-card-foreground">
+                    {teacher.first_name} {teacher.last_name}
+                  </p>
+                  <div className="mx-auto mt-3 flex justify-center">
+                    <UsernameField teacher={teacher} onSave={handleUsernameUpdate} />
                   </div>
-                  <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold border', getStatusColor(teacher.status))}>
-                    {teacher.status}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredTeachers.map((teacher, index) => (
-            <Card
-              key={teacher.teacher_id || teacher.id}
-              className="h-full flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
-            >
-              <div className={cn(
-                'p-6 flex flex-col items-center relative text-white',
-                index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
-                index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
-                index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
-              )}>
-                <div className="w-20 h-20 rounded-full bg-white/20 border-[3px] border-white/40 flex items-center justify-center text-white text-xl font-bold mb-2">
-                  {getInitials(teacher.first_name, teacher.last_name)}
-                </div>
-                <h3 className="text-white font-semibold text-lg text-center">
-                  {teacher.first_name} {teacher.last_name}
-                </h3>
-                <span className="text-white/80 text-xs font-medium">{teacher.employee_id}</span>
-                <span
-                  className={cn(
-                    'absolute top-3 right-3 px-2 py-0.5 rounded-full text-xs font-semibold border',
-                    getStatusColor(teacher.status)
-                  )}
-                >
-                  {teacher.status}
-                </span>
-              </div>
+                </CardContent>
 
-              <CardContent className="flex-grow p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <GraduationCap className="w-4 h-4 text-indigo-500" />
-                  <span className="text-sm font-semibold">{teacher.specialization}</span>
+                <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
+                  {renderTeacherActions(teacher)}
                 </div>
-                <div className="flex items-center gap-2 mb-3">
-                  <Mail className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground truncate">{teacher.email}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-sm text-muted-foreground">{teacher.phone}</span>
-                </div>
-                <div className="mt-4">
-                  <Badge variant="outline" className="text-[0.7rem]">
-                    {teacher.qualification}
-                  </Badge>
-                </div>
-              </CardContent>
-
-              <div className="flex justify-between items-center border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
-                  className="text-sm"
-                >
-                  <Eye className="w-4 h-4 mr-1" />
-                  View
-                </Button>
-                <div className="flex gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-blue-500 hover:text-blue-700"
-                    onClick={() => handleOpenModal(teacher)}
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-red-500 hover:text-red-700"
-                    onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+              </Card>
+            ))}
+          </div>
+        </>
       )}
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
@@ -365,7 +602,7 @@ const TeachersPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="first_name">First Name</Label>
-                  <Input id="first_name" required value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} />
+                  <Input id="first_name" required value={formData.first_name || ''} onChange={(e) => handleFirstNameChange(e.target.value)} />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="last_name">Last Name</Label>
@@ -418,12 +655,12 @@ const TeachersPage = () => {
                     </Select>
                   </div>
                 )}
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input id="username" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
+                </div>
                 {!editingId && (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input id="username" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
-                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <Input id="password" type="password" required value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
