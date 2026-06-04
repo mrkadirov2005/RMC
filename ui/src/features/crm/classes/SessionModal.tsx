@@ -75,6 +75,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
 
   const classId = classData?.class_id || classData?.id;
+  const centerId = Number(classData?.center_id || 0) || undefined;
   const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
 
 // Runs side effects for this component.
@@ -91,7 +92,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
     const loadSessionData = async () => {
       try {
         // Load existing attendance
-        const attRes = await attendanceAPI.getBySession(sessionId);
+        const attRes = await attendanceAPI.getBySession(sessionId, centerId ? { center_id: centerId } : undefined);
         const attList = attRes.data || [];
         setAttendanceRecords(Array.isArray(attList) ? attList : []);
         const newAtt = new Map();
@@ -106,7 +107,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
         if (newAtt.size > 0) setAttendance(newAtt);
 
         // Load existing grades/scores
-        const gradeRes = await gradeAPI.getBySession(sessionId);
+        const gradeRes = await gradeAPI.getBySession(sessionId, centerId ? { center_id: centerId } : undefined);
         const sessionGrades = gradeRes.data || [];
         
         const newH = new Map();
@@ -209,8 +210,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
       const today = selectedDate || new Date().toISOString().split('T')[0];
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
-      const teacherId = user?.id || classData?.teacher_id;
-      const centerId = classData?.center_id || user?.center_id;
+      const teacherId = user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData?.teacher_id);
+      const targetCenterId = centerId || user?.center_id;
 
       if (!allAttendanceMarked || !allHomeworkMarked || !allActivityMarked) {
         showToast.error('Complete attendance, homework, and activity for every student.');
@@ -230,7 +231,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
           Absent: 'Absent',
         };
         const attendancePayload = {
-          center_id: centerId,
+          center_id: targetCenterId,
           student_id: studentId,
           class_id: classId,
           session_id: sessionId,
@@ -261,7 +262,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
           activity_score: aStatus ? (ACTIVITY_POINTS[aStatus] ?? 0) : 0,
           subject: classData?.class_name || 'Class Session',
           total_marks: 100,
-          center_id: centerId,
+          center_id: targetCenterId,
         });
       }
 
