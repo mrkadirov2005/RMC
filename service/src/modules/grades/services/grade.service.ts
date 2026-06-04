@@ -167,7 +167,7 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
 
   console.log('✅ [SessionScore] Session scores upserted:', { gradeId: row?.grade_id, student_id: row?.student_id, marks_obtained: row?.marks_obtained, total_marks: row?.total_marks, percentage: row?.percentage });
 
-  // Add coins to student if session scores were created/updated successfully
+  // Add/update academic coins from the combined session score.
   if (row && !row.error) {
     console.log('💰 [Coins-Session] Attempting to add coins...', { hasMarksObtained: row.marks_obtained !== null, hasTotalMarks: row.total_marks !== null });
     if (row.marks_obtained !== null && row.total_marks !== null) {
@@ -177,20 +177,19 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
         const percentageNum = Number(row.percentage);
         const coinsToAdd = calculateCoins(marksNum, totalNum);
         console.log(`💰 [Coins-Session] Calculated: ${coinsToAdd} coins for ${marksNum}/${totalNum} (${percentageNum?.toFixed(1)}%)`);
-        
-        if (coinsToAdd !== 0) {
-          console.log(`💳 [Coins-Session] Calling addCoins with:`, { studentId: row.student_id, delta: coinsToAdd, reason: `Session grade awarded: ${percentageNum?.toFixed(1)}% in ${row.subject}` });
-          const coinResult = await studentService.addCoins(
-            row.student_id,
-            coinsToAdd,
-            `Session grade awarded: ${percentageNum?.toFixed(1)}% in ${row.subject}`,
-            null,
-            'system'
-          );
-          console.log(`✅ [Coins-Session] Added successfully:`, coinResult);
-        } else {
-          console.log(`⭕ [Coins-Session] No coins to add (0 coins) for ${percentageNum?.toFixed(1)}%`);
-        }
+
+        const reason = `Academic performance: ${marksNum}/${totalNum} in ${row.subject}`;
+        const coinResult = await studentService.upsertSourceCoins(
+          row.student_id,
+          coinsToAdd,
+          reason,
+          'lesson_session',
+          Number(row.session_id),
+          row.teacher_id ?? null,
+          'teacher'
+        );
+        await gradeRepository.updateLessonCoins(row.grade_id, coinsToAdd, coinsToAdd, reason);
+        console.log(`✅ [Coins-Session] Upserted successfully:`, coinResult);
       } catch (coinError) {
         console.error('❌ [Coins-Session] Error adding coins for session score:', coinError);
       }

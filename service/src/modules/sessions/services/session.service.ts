@@ -142,8 +142,7 @@ const createSession = async (params: {
 }) => {
   const { classId, centerId, teacherId, sessionDate, startTime, durationMinutes } = params;
   
-  // Get class details if centerId/teacherId missing
-  const cls = await classRepository.findById(classId, centerId, teacherId);
+  const cls = await classRepository.findById(classId, centerId);
   if (!cls) throw new Error('Class not found');
 
   return sessionRepository.create({

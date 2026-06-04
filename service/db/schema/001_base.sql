@@ -177,6 +177,8 @@ CREATE TABLE student_coin_transactions (
     reason TEXT,
     created_by INT,
     created_by_type VARCHAR(20),
+    source_type VARCHAR(50),
+    source_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (student_id) REFERENCES students(student_id),
@@ -185,6 +187,9 @@ CREATE TABLE student_coin_transactions (
 
 CREATE INDEX idx_student_coin_transactions_student_id ON student_coin_transactions(student_id);
 CREATE INDEX idx_student_coin_transactions_center_id ON student_coin_transactions(center_id);
+CREATE UNIQUE INDEX uniq_student_coin_source
+    ON student_coin_transactions (student_id, source_type, source_id)
+    WHERE source_type IS NOT NULL AND source_id IS NOT NULL;
 
 CREATE TABLE subjects (
     subject_id SERIAL PRIMARY KEY,
@@ -286,6 +291,9 @@ CREATE TABLE grades (
     attendance_score INT DEFAULT 0,
     homework_score INT DEFAULT 0,
     activity_score INT DEFAULT 0,
+    base_coin INT DEFAULT 0,
+    total_daily_coin INT DEFAULT 0,
+    coin_comment TEXT,
     academic_year INT,
     term VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
