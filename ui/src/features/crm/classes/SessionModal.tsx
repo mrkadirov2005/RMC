@@ -92,8 +92,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
   useEffect(() => {
     if (!open || !classId) return;
     setActiveTab('attendance');
-    dispatch(fetchStudents());
-  }, [classId, dispatch, open]);
+    dispatch(fetchStudents(centerId ? { class_id: Number(classId), center_id: centerId } : { class_id: Number(classId) }));
+  }, [centerId, classId, dispatch, open]);
 
 // Runs side effects for this component.
   useEffect(() => {

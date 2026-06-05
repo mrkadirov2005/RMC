@@ -47,9 +47,6 @@ const getSubjectsByClass = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
     const classId = Number(req.params.classId);
     if (req.user?.userType === 'student' && Number(req.user?.class_id) !== classId) {
       return res.status(403).json({ error: 'Access denied.' });

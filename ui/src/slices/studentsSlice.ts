@@ -31,6 +31,7 @@ export interface StudentListParams {
   q?: string;
   school_name?: string;
   class_id?: number | string;
+  center_id?: number | string;
   subject_id?: number | string;
   level?: number | string;
   address?: string;
