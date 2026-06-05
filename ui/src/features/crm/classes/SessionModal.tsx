@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchStudents } from '../../../slices/studentsSlice';
 import { makeSelectStudentsByClassId } from '../../../store/selectors';
 import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
+import { getStoredActiveCenterId } from '../../../shared/auth/authStorage';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { showToast } from '../../../utils/toast';
 
@@ -52,6 +53,7 @@ interface SessionModalProps {
   open: boolean;
   classData: any;
   sessionId: number | null;
+  sessionCenterId?: number;
   selectedDate?: string;
   onClose: () => void;
 }
@@ -61,6 +63,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
   open,
   classData,
   sessionId,
+  sessionCenterId,
   selectedDate,
   onClose,
 }) => {
@@ -77,7 +80,12 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
   const classId = classData?.class_id || classData?.id;
   const authUser = useAppSelector((state) => state.auth.user);
-  const centerId = Number(classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
+  const centerId =
+    Number(sessionCenterId || 0) ||
+    Number(classData?.center_id || 0) ||
+    getResolvedCenterId(authUser) ||
+    getStoredActiveCenterId() ||
+    undefined;
   const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
 
 // Runs side effects for this component.
@@ -210,10 +218,11 @@ const SessionModal: React.FC<SessionModalProps> = ({
     try {
       setSubmitting(true);
       const today = selectedDate || new Date().toISOString().split('T')[0];
-      const userRaw = localStorage.getItem('user');
+      const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
       const teacherId = user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData?.teacher_id);
-      const targetCenterId = centerId || getResolvedCenterId(authUser) || getResolvedCenterId(user) || user?.center_id;
+      const targetCenterId =
+        centerId || getResolvedCenterId(authUser) || getResolvedCenterId(user) || getStoredActiveCenterId() || user?.center_id;
 
       if (!allAttendanceMarked || !allHomeworkMarked || !allActivityMarked) {
         showToast.error('Complete attendance, homework, and activity for every student.');

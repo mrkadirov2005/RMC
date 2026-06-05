@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { classAPI, studentAPI, subjectAPI } from '@/shared/api/api';
+import { getStoredActiveCenterId } from '@/shared/auth/authStorage';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import SessionModal from './SessionModal';
@@ -69,6 +70,7 @@ const ClassDetailPage = () => {
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
   const [sessionModalId, setSessionModalId] = useState<number | null>(null);
   const [sessionModalDate, setSessionModalDate] = useState('');
+  const [sessionModalCenterId, setSessionModalCenterId] = useState<number | undefined>(undefined);
   const [startingLesson, setStartingLesson] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -80,11 +82,14 @@ const ClassDetailPage = () => {
       setLoading(true);
       setError('');
       try {
+        const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
+        const user = userRaw ? JSON.parse(userRaw) : null;
+        const scopedCenterId = getResolvedCenterId(user) || getStoredActiveCenterId() || undefined;
         const [classResponse, studentsResponse, subjectsResponse, sessionsResponse] = await Promise.all([
-          classAPI.getById(Number(classId)),
+          classAPI.getById(Number(classId), scopedCenterId ? { center_id: scopedCenterId } : undefined),
           studentAPI.getAll().catch(() => ({ data: [] })),
-          subjectAPI.getByClass(Number(classId)).catch(() => ({ data: [] })),
-          classAPI.getSessions(Number(classId)).catch(() => ({ data: [] })),
+          subjectAPI.getByClass(Number(classId), scopedCenterId ? { center_id: scopedCenterId } : undefined).catch(() => ({ data: [] })),
+          classAPI.getSessions(Number(classId), scopedCenterId ? { center_id: scopedCenterId } : undefined).catch(() => ({ data: [] })),
         ]);
         if (cancelled) return;
         const nextClass = classResponse?.data ?? classResponse;
@@ -116,6 +121,7 @@ const ClassDetailPage = () => {
     if (!nextSessionId) return;
     setSessionModalId(nextSessionId);
     setSessionModalDate(session.session_date ? new Date(session.session_date).toISOString().split('T')[0] : todayKey);
+    setSessionModalCenterId(Number(session.center_id || classData?.center_id || 0) || getStoredActiveCenterId() || undefined);
     setSessionModalOpen(true);
   };
 
@@ -134,9 +140,9 @@ const ClassDetailPage = () => {
 
     setStartingLesson(true);
     try {
-      const userRaw = localStorage.getItem('user');
+      const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
-      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(user) || undefined;
+      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(user) || getStoredActiveCenterId() || undefined;
       if (!targetCenterId) {
         showToast.error('Please select an active center before starting a lesson.');
         return;
@@ -356,7 +362,9 @@ const ClassDetailPage = () => {
           setSessionModalOpen(false);
           setSessionModalId(null);
           setSessionModalDate('');
+          setSessionModalCenterId(undefined);
         }}
+        sessionCenterId={sessionModalCenterId}
       />
     </div>
   );

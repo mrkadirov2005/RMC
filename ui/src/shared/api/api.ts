@@ -55,9 +55,9 @@ const redirectToHashRoute = (path: string) => {
 
 // Add token to requests
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
   const paymentToken = localStorage.getItem('payment_token');
-  const userRaw = localStorage.getItem('user');
+  const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
   const user = userRaw ? JSON.parse(userRaw) : null;
 // Handles headers.
   const headers = (config.headers ?? {}) as any;
@@ -266,8 +266,8 @@ export const classAPI = {
       params,
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
-  getById: (id: number) => apiClient.get(`/classes/${id}`),
-  getSessions: (id: number) => apiClient.get(`/classes/${id}/sessions`),
+  getById: (id: number, params?: { center_id?: number }) => apiClient.get(`/classes/${id}`, { params }),
+  getSessions: (id: number, params?: { center_id?: number }) => apiClient.get(`/classes/${id}/sessions`, { params }),
   create: (data: any) => apiClient.post('/classes', data),
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
   delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),
@@ -390,7 +390,7 @@ export const centerAPI = {
 export const subjectAPI = {
   getAll: () => apiClient.get('/subjects'),
   getById: (id: number) => apiClient.get(`/subjects/${id}`),
-  getByClass: (classId: number) => apiClient.get(`/subjects/class/${classId}`),
+  getByClass: (classId: number, params?: { center_id?: number }) => apiClient.get(`/subjects/class/${classId}`, { params }),
   create: (data: any) => apiClient.post('/subjects', data),
   update: (id: number, data: any) => apiClient.put(`/subjects/${id}`, data),
   delete: (id: number) => apiClient.delete(`/subjects/${id}`),
