@@ -145,9 +145,6 @@ const getAttendanceBySession = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
     res.json(await attendanceService.bySession(Number(req.params.sessionId), centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
