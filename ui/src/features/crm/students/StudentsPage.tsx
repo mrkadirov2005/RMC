@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { dataAPI, studentAPI } from '@/shared/api/api';
+import { exportCsvEntity } from '@/shared/dataCsv';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentsFormDialog } from './components/StudentsFormDialog';
@@ -228,6 +229,7 @@ const StudentsPage = () => {
       showToast.success(`Deleted ${ids.length} student${ids.length === 1 ? '' : 's'}.`);
     }
   };
+  const handleExportStudents = () => exportCsvEntity('students', 'Students');
 
   return (
     <div className="space-y-6">
@@ -254,6 +256,13 @@ const StudentsPage = () => {
                   disabled={isImporting}
                 >
                   <Upload className="w-5 h-5 mr-2" /> {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleExportStudents}
+                >
+                  <Download className="w-5 h-5 mr-2" /> Export CSV
                 </Button>
                 <Button
                   type="button"

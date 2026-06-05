@@ -1,7 +1,7 @@
 // Page component for the assignments screen in the crm feature.
 
-import { useMemo, useState } from 'react';
-import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2 } from 'lucide-react';
+import { useMemo, useRef, useState } from 'react';
+import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2, Upload, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,6 +32,7 @@ import { getStatusColor } from './queries';
 // Renders the assignments page screen.
 const AssignmentsPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const {
     state,
     classes,
@@ -58,6 +59,9 @@ const AssignmentsPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handleImportAssignments,
+    handleExportAssignments,
+    isImporting,
     handleFolderClick,
     handleBackToFolders,
     clearFilters,
@@ -107,6 +111,29 @@ const AssignmentsPage = () => {
         </div>
         <div className="flex items-center gap-2">
           <ViewModeToggle value={viewMode} onChange={setViewMode} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(event) => {
+              handleImportAssignments(event.target.files?.[0]);
+              if (fileInputRef.current) fileInputRef.current.value = '';
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isImporting}
+          >
+            {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            {isImporting ? 'Importing...' : 'Import CSV'}
+          </Button>
+          <Button type="button" variant="outline" onClick={handleExportAssignments}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
           <Button onClick={() => handleOpenModal()}>
             <Plus className="mr-2 h-4 w-4" /> Add Assignment
           </Button>

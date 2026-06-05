@@ -230,14 +230,16 @@ export const studentAPI = {
     apiClient.delete(`/students/${id}/coins/${transactionId}`),
 };
 
+export type DataEntity = 'students' | 'teachers' | 'classes' | 'payments' | 'rooms' | 'assignments';
+
 export const dataAPI = {
-  importEntity: (entity: 'students' | 'teachers' | 'classes' | 'payments', csv: string) =>
+  importEntity: (entity: DataEntity, csv: string) =>
     apiClient.post(`/data/import/${entity}`, { csv }),
-  exportEntity: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
+  exportEntity: (entity: DataEntity) =>
     apiClient.get(`/data/export/${entity}`, { responseType: 'blob' }),
-  pushEntityToSheets: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
+  pushEntityToSheets: (entity: DataEntity) =>
     apiClient.post(`/data/sheets/push/${entity}`, {}),
-  pullEntityFromSheets: (entity: 'students' | 'teachers' | 'classes' | 'payments') =>
+  pullEntityFromSheets: (entity: DataEntity) =>
     apiClient.post(`/data/sheets/pull/${entity}`, {}),
 };
 
@@ -275,7 +277,7 @@ export const classAPI = {
     apiClient.delete(`/classes/${id}/sessions`, { params }),
   deleteSessionById: (id: number, sessionId: number) =>
     apiClient.delete(`/classes/${id}/sessions/${sessionId}`),
-  createSession: (id: number, data: { session_date: string; start_time: string; duration_minutes?: number; teacher_id?: number }) =>
+  createSession: (id: number, data: { session_date: string; start_time: string; duration_minutes?: number; teacher_id?: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions`, data),
 };
 

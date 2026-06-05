@@ -1,6 +1,6 @@
 // Page component for the payments screen in the crm feature.
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Pencil,
   Trash2,
@@ -21,6 +21,8 @@ import {
   ReceiptText,
   TrendingUp,
   ShieldCheck,
+  Upload,
+  Download,
 } from 'lucide-react';
 import {
   createPayment,
@@ -88,6 +90,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
 
 interface Payment {
   payment_id?: number;
@@ -192,6 +195,8 @@ const PaymentsPage = () => {
   });
   const [teacherDetailView, setTeacherDetailView] = useState<TeacherDetailView>('groups');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -280,6 +285,16 @@ const PaymentsPage = () => {
       await dispatch(deletePayment(id));
     }
   };
+
+  const handleImportPayments = async (file?: File) => {
+    setIsImporting(true);
+    const imported = await importCsvEntity('payments', 'Payments', file);
+    if (imported) await dispatch(fetchPaymentsForce());
+    setIsImporting(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleExportPayments = () => exportCsvEntity('payments', 'Payments');
 
 // Returns normalized status.
   const getNormalizedStatus = (payment: Payment): string =>
@@ -593,9 +608,31 @@ const PaymentsPage = () => {
             )}
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
             {!isTeacher && (
-              <Button onClick={() => handleOpenModal()}>
-                <Plus className="mr-2 h-4 w-4" /> Add Payment
-              </Button>
+              <>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(event) => handleImportPayments(event.target.files?.[0])}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isImporting}
+                >
+                  {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                  {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleExportPayments}>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export CSV
+                </Button>
+                <Button onClick={() => handleOpenModal()}>
+                  <Plus className="mr-2 h-4 w-4" /> Add Payment
+                </Button>
+              </>
             )}
           </>
         }

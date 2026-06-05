@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload, KeyRound } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload, KeyRound, Download } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,6 +37,7 @@ import { cn } from '@/lib/utils';
 import type { Teacher } from './types';
 import { dataAPI, teacherAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
+import { exportCsvEntity } from '@/shared/dataCsv';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -296,6 +297,7 @@ const TeachersPage = () => {
       showToast.success(`Deleted ${ids.length} teacher${ids.length === 1 ? '' : 's'}.`);
     }
   };
+  const handleExportTeachers = () => exportCsvEntity('teachers', 'Teachers');
   const handleFirstNameChange = (value: string) => {
     setFormData((current) => {
       if (editingId) return { ...current, first_name: value };
@@ -337,6 +339,10 @@ const TeachersPage = () => {
                 >
                   {isImporting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Upload className="mr-2 h-5 w-5" />}
                   {isImporting ? 'Importing...' : 'Import CSV'}
+                </Button>
+                <Button type="button" variant="outline" onClick={handleExportTeachers}>
+                  <Download className="mr-2 h-5 w-5" />
+                  Export CSV
                 </Button>
               </>
             )}

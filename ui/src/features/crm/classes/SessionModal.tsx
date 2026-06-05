@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchStudents } from '../../../slices/studentsSlice';
 import { makeSelectStudentsByClassId } from '../../../store/selectors';
 import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
+import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { showToast } from '../../../utils/toast';
 
 const ATTENDANCE_POINTS: Record<string, number> = {
@@ -75,7 +76,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
 
   const classId = classData?.class_id || classData?.id;
-  const centerId = Number(classData?.center_id || 0) || undefined;
+  const authUser = useAppSelector((state) => state.auth.user);
+  const centerId = Number(classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
   const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
 
 // Runs side effects for this component.
@@ -127,7 +129,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
       }
     };
     void loadSessionData();
-  }, [open, sessionId]);
+  }, [centerId, open, sessionId]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -211,10 +213,15 @@ const SessionModal: React.FC<SessionModalProps> = ({
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
       const teacherId = user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData?.teacher_id);
-      const targetCenterId = centerId || user?.center_id;
+      const targetCenterId = centerId || getResolvedCenterId(authUser) || getResolvedCenterId(user) || user?.center_id;
 
       if (!allAttendanceMarked || !allHomeworkMarked || !allActivityMarked) {
         showToast.error('Complete attendance, homework, and activity for every student.');
+        return;
+      }
+
+      if (!targetCenterId) {
+        showToast.error('Please select an active center before saving this lesson.');
         return;
       }
 

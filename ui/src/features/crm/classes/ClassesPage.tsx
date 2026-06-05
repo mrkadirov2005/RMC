@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
 import { useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +40,7 @@ import {
 import { Switch } from '@/components/ui/switch';
 import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
+import { exportCsvEntity } from '@/shared/dataCsv';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
@@ -128,6 +129,7 @@ const ClassesPage = () => {
     await handleBulkDelete(Array.from(selectedClassIds));
     setSelectedClassIds(new Set());
   };
+  const handleExportClasses = () => exportCsvEntity('classes', 'Classes');
   const totalCapacity = filteredClasses.reduce((sum, cls) => sum + (Number(cls.capacity) || 0), 0);
   const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
   const monthlyTuition = filteredClasses.reduce((sum, cls) => sum + (Number(cls.payment_amount) || 0), 0);
@@ -243,6 +245,15 @@ const ClassesPage = () => {
             >
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               {isImporting ? 'Importing...' : 'Import CSV'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExportClasses}
+              className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
             </Button>
             <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-5 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="mr-2 h-4 w-4" />

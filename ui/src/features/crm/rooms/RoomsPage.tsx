@@ -1,7 +1,7 @@
 // Page component for the rooms screen in the crm feature.
 
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Building2, CalendarDays, DoorOpen, Clock } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Pencil, Trash2, Loader2, Building2, CalendarDays, DoorOpen, Clock, Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,7 @@ import { fetchRooms, fetchRoomsForce } from '../../../slices/roomsSlice';
 import { fetchClasses } from '../../../slices/classesSlice';
 import { showToast } from '@/utils/toast';
 import { selectRoomsPageUi } from '../../../store/selectors';
+import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
 
 const weekDays = [
   'Monday',
@@ -67,6 +68,8 @@ const RoomsPage = () => {
     day: 'Monday',
     time: '09:00',
   });
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const summaryCards = useMemo(() => {
     const uniqueRooms = new Set(rooms.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)).size;
     const assignedRooms = rooms.filter((room: any) => room.class_id || room.class_name).length;
@@ -188,6 +191,16 @@ const RoomsPage = () => {
     }
   };
 
+  const handleImportRooms = async (file?: File) => {
+    setIsImporting(true);
+    const imported = await importCsvEntity('rooms', 'Rooms', file);
+    if (imported) dispatch(fetchRoomsForce());
+    setIsImporting(false);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleExportRooms = () => exportCsvEntity('rooms', 'Rooms');
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
       <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
@@ -203,10 +216,38 @@ const RoomsPage = () => {
               <p className="mt-1 text-sm text-muted-foreground">Manage class assignments to physical rooms and schedule slots.</p>
             </div>
           </div>
-          <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
-            <Plus className="mr-2 h-4 w-4" />
-            Add Room Assignment
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv,text/csv"
+              className="hidden"
+              onChange={(event) => handleImportRooms(event.target.files?.[0])}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isImporting}
+              className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+            >
+              {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+              {isImporting ? 'Importing...' : 'Import CSV'}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleExportRooms}
+              className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export CSV
+            </Button>
+            <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
+              <Plus className="mr-2 h-4 w-4" />
+              Add Room Assignment
+            </Button>
+          </div>
         </div>
 
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

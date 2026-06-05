@@ -25,6 +25,7 @@ import {
   getFilteredAssignments,
   getPersonalAssignments,
 } from '../queries';
+import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
 
 // Provides assignments page.
 export const useAssignmentsPage = () => {
@@ -49,6 +50,7 @@ export const useAssignmentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showFilters, setShowFilters] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -108,6 +110,15 @@ export const useAssignmentsPage = () => {
       await dispatch(deleteAssignment(id));
     }
   };
+
+  const handleImportAssignments = async (file?: File) => {
+    setIsImporting(true);
+    const imported = await importCsvEntity('assignments', 'Assignments', file);
+    if (imported) await dispatch(fetchAssignmentsForce());
+    setIsImporting(false);
+  };
+
+  const handleExportAssignments = () => exportCsvEntity('assignments', 'Assignments');
 
 // Memoizes the get filtered derived value.
   const getFiltered = useMemo(
@@ -173,6 +184,9 @@ export const useAssignmentsPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handleImportAssignments,
+    handleExportAssignments,
+    isImporting,
     handleFolderClick,
     handleBackToFolders,
     clearFilters,

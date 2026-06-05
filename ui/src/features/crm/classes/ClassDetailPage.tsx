@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { classAPI, studentAPI, subjectAPI } from '@/shared/api/api';
+import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import SessionModal from './SessionModal';
 
@@ -135,7 +136,13 @@ const ClassDetailPage = () => {
     try {
       const userRaw = localStorage.getItem('user');
       const user = userRaw ? JSON.parse(userRaw) : null;
+      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(user) || undefined;
+      if (!targetCenterId) {
+        showToast.error('Please select an active center before starting a lesson.');
+        return;
+      }
       const response = await classAPI.createSession(targetClassId, {
+        center_id: targetCenterId,
         session_date: todayKey,
         start_time: schedule.time || new Date().toTimeString().slice(0, 5),
         duration_minutes: 90,

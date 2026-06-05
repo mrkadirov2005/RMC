@@ -44,6 +44,36 @@ const selectAllPayments = (centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const selectAllRooms = (centerId?: number) => {
+  let query = `
+    SELECT r.*, c.class_name, c.class_code
+    FROM rooms r
+    LEFT JOIN classes c ON r.class_id = c.class_id
+  `;
+  const params: any[] = [];
+  if (centerId) {
+    query += ' WHERE r.center_id = $1';
+    params.push(centerId);
+  }
+  query += ' ORDER BY r.room_id DESC';
+  return pool.query(query, params).then((r: any) => r.rows);
+};
+
+const selectAllAssignments = (centerId?: number) => {
+  let query = `
+    SELECT a.*, c.class_name, c.class_code
+    FROM assignments a
+    LEFT JOIN classes c ON a.class_id = c.class_id
+  `;
+  const params: any[] = [];
+  if (centerId) {
+    query += ' WHERE a.center_id = $1';
+    params.push(centerId);
+  }
+  query += ' ORDER BY a.assignment_id DESC';
+  return pool.query(query, params).then((r: any) => r.rows);
+};
+
 const normalizeClassText = (value?: string | null) => String(value || '').trim().replace(/\s+/g, ' ');
 
 const normalizeClassCode = (value?: string | null) => {
@@ -196,6 +226,20 @@ const insertPayment = (params: any[]) =>
     params
   );
 
+const insertRoom = (params: any[]) =>
+  pool.query(
+    `INSERT INTO rooms (center_id, room_number, class_id, day, time)
+     VALUES ($1,$2,$3,$4,$5)`,
+    params
+  );
+
+const insertAssignment = (params: any[]) =>
+  pool.query(
+    `INSERT INTO assignments (center_id, class_id, student_id, teacher_id, assignment_title, description, due_date, submission_date, status, grade)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+    params
+  );
+
 const upsertStudent = (params: any[], hasStudentId: boolean) => {
   if (hasStudentId) {
     return pool.query(
@@ -276,6 +320,47 @@ const upsertPayment = (params: any[], hasPaymentId: boolean) => {
   return insertPayment(params);
 };
 
+const upsertRoom = (params: any[], hasRoomId: boolean) => {
+  if (hasRoomId) {
+    return pool.query(
+      `INSERT INTO rooms (room_id, center_id, room_number, class_id, day, time)
+       VALUES ($1,$2,$3,$4,$5,$6)
+       ON CONFLICT (room_id) DO UPDATE SET
+         center_id = EXCLUDED.center_id,
+         room_number = EXCLUDED.room_number,
+         class_id = EXCLUDED.class_id,
+         day = EXCLUDED.day,
+         time = EXCLUDED.time,
+         updated_at = CURRENT_TIMESTAMP`,
+      params
+    );
+  }
+  return insertRoom(params);
+};
+
+const upsertAssignment = (params: any[], hasAssignmentId: boolean) => {
+  if (hasAssignmentId) {
+    return pool.query(
+      `INSERT INTO assignments (assignment_id, center_id, class_id, student_id, teacher_id, assignment_title, description, due_date, submission_date, status, grade)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+       ON CONFLICT (assignment_id) DO UPDATE SET
+         center_id = EXCLUDED.center_id,
+         class_id = EXCLUDED.class_id,
+         student_id = EXCLUDED.student_id,
+         teacher_id = EXCLUDED.teacher_id,
+         assignment_title = EXCLUDED.assignment_title,
+         description = EXCLUDED.description,
+         due_date = EXCLUDED.due_date,
+         submission_date = EXCLUDED.submission_date,
+         status = EXCLUDED.status,
+         grade = EXCLUDED.grade,
+         updated_at = CURRENT_TIMESTAMP`,
+      params
+    );
+  }
+  return insertAssignment(params);
+};
+
 const syncSerialSequence = (table: string, idColumn: string) =>
   pool.query(`SELECT setval(pg_get_serial_sequence($1, $2), COALESCE((SELECT MAX(${idColumn}) FROM ${table}), 1), true)`, [
     table,
@@ -287,6 +372,8 @@ module.exports = {
   selectAllTeachers,
   selectAllClasses,
   selectAllPayments,
+  selectAllRooms,
+  selectAllAssignments,
   findTeacherIdByEmployeeId,
   findClassIdByNameOrCode,
   findOrCreateClassIdByNameOrCode,
@@ -294,9 +381,13 @@ module.exports = {
   insertTeacher,
   upsertClassByCode,
   insertPayment,
+  insertRoom,
+  insertAssignment,
   upsertStudent,
   upsertTeacher,
   upsertPayment,
+  upsertRoom,
+  upsertAssignment,
   syncSerialSequence,
 };
 
