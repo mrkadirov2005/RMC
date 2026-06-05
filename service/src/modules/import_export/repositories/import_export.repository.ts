@@ -257,7 +257,19 @@ const upsertClassByCode = (params: any[]) =>
 const insertPayment = (params: any[]) =>
   pool.query(
     `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+     ON CONFLICT (receipt_number) DO UPDATE SET
+       student_id = EXCLUDED.student_id,
+       center_id = EXCLUDED.center_id,
+       payment_date = EXCLUDED.payment_date,
+       amount = EXCLUDED.amount,
+       currency = EXCLUDED.currency,
+       payment_method = EXCLUDED.payment_method,
+       transaction_reference = EXCLUDED.transaction_reference,
+       payment_status = EXCLUDED.payment_status,
+       payment_type = EXCLUDED.payment_type,
+       notes = EXCLUDED.notes,
+       updated_at = CURRENT_TIMESTAMP`,
     params
   );
 
