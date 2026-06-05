@@ -23,7 +23,6 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchStudents } from '../../../slices/studentsSlice';
 import { makeSelectStudentsByClassId } from '../../../store/selectors';
 import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
-import { getStoredActiveCenterId } from '../../../shared/auth/authStorage';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { showToast } from '../../../utils/toast';
 
@@ -84,7 +83,6 @@ const SessionModal: React.FC<SessionModalProps> = ({
     Number(sessionCenterId || 0) ||
     Number(classData?.center_id || 0) ||
     getResolvedCenterId(authUser) ||
-    getStoredActiveCenterId() ||
     undefined;
   const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
 
@@ -92,7 +90,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
   useEffect(() => {
     if (!open || !classId) return;
     setActiveTab('attendance');
-    dispatch(fetchStudents(centerId ? { class_id: Number(classId), center_id: centerId } : { class_id: Number(classId) }));
+    dispatch(fetchStudents({ class_id: Number(classId) }));
   }, [centerId, classId, dispatch, open]);
 
 // Runs side effects for this component.
@@ -218,11 +216,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
     try {
       setSubmitting(true);
       const today = selectedDate || new Date().toISOString().split('T')[0];
-      const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
-      const user = userRaw ? JSON.parse(userRaw) : null;
-      const teacherId = user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData?.teacher_id);
-      const targetCenterId =
-        centerId || getResolvedCenterId(authUser) || getResolvedCenterId(user) || getStoredActiveCenterId() || user?.center_id;
+      const teacherId = authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id);
+      const targetCenterId = centerId || getResolvedCenterId(authUser);
 
       if (!allAttendanceMarked || !allHomeworkMarked || !allActivityMarked) {
         showToast.error('Complete attendance, homework, and activity for every student.');

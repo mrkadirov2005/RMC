@@ -8,23 +8,43 @@ const isCenterAdmin = (user: any) => {
   return String(user.role || '').toLowerCase() === 'admin';
 };
 
+const CENTER_SCOPE_KEYS = [
+  'center_id',
+  'branch_id',
+  'centerId',
+  'branchId',
+  'x-center-id',
+  'x-branch-id',
+  'centerid',
+  'branchid',
+];
+
+const toCenterId = (value: unknown) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+const firstCenterScopeValue = (...sources: Array<Record<string, any> | undefined | null>) => {
+  for (const source of sources) {
+    if (!source) continue;
+    for (const key of CENTER_SCOPE_KEYS) {
+      const value = source[key];
+      if (value !== undefined && value !== null && value !== '') return value;
+    }
+  }
+  return null;
+};
+
 const getScopedCenterId = (req: any) => {
   if (!req || !req.user) return { centerId: null, isGlobal: false };
 
   if (isGlobalUser(req.user)) {
-    const raw =
-      req.query?.branch_id ??
-      req.query?.center_id ??
-      req.body?.branch_id ??
-      req.body?.center_id ??
-      req.params?.branch_id ??
-      req.params?.center_id;
-    const parsed = raw === undefined || raw === null || raw === '' ? null : Number(raw);
-    return { centerId: Number.isFinite(parsed) ? parsed : null, isGlobal: parsed == null };
+    const centerId = toCenterId(firstCenterScopeValue(req.query, req.body, req.params, req.headers));
+    return { centerId, isGlobal: centerId == null };
   }
 
-  const centerId = req.user.branch_id ?? req.user.center_id;
-  return { centerId: typeof centerId === 'number' ? centerId : null, isGlobal: false };
+  const centerId = toCenterId(firstCenterScopeValue(req.user, req.headers));
+  return { centerId, isGlobal: false };
 };
 
 const requireCenterId = (res: any, centerId: number | null) => {

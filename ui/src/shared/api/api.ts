@@ -9,7 +9,8 @@ import {
   setOffline,
 } from '../../slices/serviceStatusSlice';
 import { paymentLogout } from '../../slices/paymentAccessSlice';
-import { getResolvedCenterId } from '../auth/centerScope';
+import { getCenterScopeHeaders, isGlobalSuperuser, withCenterScopeParams, withCenterScopePayload } from '../auth/centerScope';
+import { getStoredAuth } from '../auth/authStorage';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://temurbek.m-kadirov.uz/api';
 
@@ -55,10 +56,8 @@ const redirectToHashRoute = (path: string) => {
 
 // Add token to requests
 apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+  const { token, user } = getStoredAuth();
   const paymentToken = localStorage.getItem('payment_token');
-  const userRaw = localStorage.getItem('user') || sessionStorage.getItem('user');
-  const user = userRaw ? JSON.parse(userRaw) : null;
 // Handles headers.
   const headers = (config.headers ?? {}) as any;
 
@@ -85,18 +84,18 @@ apiClient.interceptors.request.use((config) => {
     config.headers = headers;
   }
 
-  const normalizedRole = String(user?.role || '').toLowerCase();
-  const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const isOwnerEndpoint = String(config.url || '').startsWith('/owners');
-  const activeCenterId = getResolvedCenterId(user);
 
-  if (!skipCenterScope && isGlobalSuperuser && activeCenterId && !isOwnerEndpoint) {
+  if (!skipCenterScope && !isOwnerEndpoint) {
+    Object.assign(headers, getCenterScopeHeaders(user));
+    config.headers = headers;
+  }
+
+  if (!skipCenterScope && isGlobalSuperuser(user) && !isOwnerEndpoint) {
     if (config.method === 'get' || config.method === 'delete') {
 // Handles params.
       const params = (config.params ?? {}) as Record<string, unknown>;
-      if (params.center_id == null || params.center_id === 0) {
-        config.params = { ...params, center_id: activeCenterId };
-      }
+      config.params = withCenterScopeParams(params, user);
     }
   }
 
@@ -105,13 +104,7 @@ apiClient.interceptors.request.use((config) => {
   const payload = hasBody ? (config.data as Record<string, unknown>) : undefined;
   if (!skipCenterScope && isMutating && payload && !isOwnerEndpoint) {
 // Handles payload center id.
-    const payloadCenterId = (payload as any).center_id;
-    if (payloadCenterId == null || payloadCenterId === 0) {
-      const scopedCenterId = isGlobalSuperuser ? activeCenterId : (user?.center_id ?? null);
-      if (scopedCenterId) {
-        config.data = { ...payload, center_id: scopedCenterId };
-      }
-    }
+    config.data = withCenterScopePayload(payload, user);
   }
   return config;
 });
