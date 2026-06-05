@@ -283,29 +283,29 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
         <CardContent className="space-y-6">
           <div className="grid gap-4 xl:grid-cols-[minmax(0,1.35fr)_minmax(360px,0.65fr)]">
-            <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-950 text-white shadow-[0_24px_80px_-50px_rgba(15,23,42,0.9)] dark:border-white/10">
+            <div className="overflow-hidden rounded-xl border border-slate-200/70 bg-gradient-to-br from-white to-sky-50 shadow-sm dark:border-white/10 dark:from-slate-950/40 dark:to-slate-950/40">
               <div className="relative p-5 sm:p-6">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-300" />
                 <div className="grid gap-5 lg:grid-cols-[1fr_280px] lg:items-end">
                   <div>
-                    <p className="text-xs font-semibold uppercase text-white/50">Current month snapshot</p>
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50">Current month snapshot</p>
                     <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
                       <div>
-                        <p className="text-5xl font-bold tracking-normal">${totalEarned.toLocaleString()}</p>
-                        <p className="mt-1 text-sm text-white/60">Collected revenue in {monthLabel}</p>
+                        <p className="text-5xl font-bold tracking-normal text-slate-900 dark:text-white">${totalEarned.toLocaleString()}</p>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-white/60">Collected revenue in {monthLabel}</p>
                       </div>
-                      <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
-                        <p className="text-2xl font-bold">{paymentStats.paidPercent}%</p>
-                        <p className="text-xs text-white/55">Paid share</p>
+                      <div className="rounded-lg border border-slate-200/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{paymentStats.paidPercent}%</p>
+                        <p className="text-xs text-slate-500 dark:text-white/55">Paid share</p>
                       </div>
-                      <div className="rounded-lg border border-white/10 bg-white/5 px-4 py-3">
-                        <p className="text-2xl font-bold">{activeRate}%</p>
-                        <p className="text-xs text-white/55">Active students</p>
+                      <div className="rounded-lg border border-slate-200/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                        <p className="text-2xl font-bold text-slate-900 dark:text-white">{activeRate}%</p>
+                        <p className="text-xs text-slate-500 dark:text-white/55">Active students</p>
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-white/10 bg-white/5 p-4">
-                    <div className="mb-3 flex items-center justify-between text-xs text-white/55">
+                  <div className="rounded-lg border border-slate-200/70 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
+                    <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-white/55">
                       <span>6-month revenue</span>
                       <span>${paymentTrend.max.toLocaleString()} peak</span>
                     </div>
@@ -314,13 +314,13 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                         const height = paymentTrend.max > 0 ? Math.max(8, Math.round((row.value / paymentTrend.max) * 100)) : 8;
                         return (
                           <div key={row.key} className="flex flex-1 flex-col items-center gap-2">
-                            <div className="flex h-20 w-full items-end rounded-md bg-white/5">
+                            <div className="flex h-20 w-full items-end rounded-md bg-slate-100 dark:bg-white/5">
                               <div
                                 className="w-full rounded-md bg-gradient-to-t from-emerald-500 to-sky-400"
                                 style={{ height: `${height}%` }}
                               />
                             </div>
-                            <span className="text-[11px] text-white/45">{row.label}</span>
+                            <span className="text-[11px] text-slate-500 dark:text-white/45">{row.label}</span>
                           </div>
                         );
                       })}

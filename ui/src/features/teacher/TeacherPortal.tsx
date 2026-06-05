@@ -193,7 +193,7 @@ const TeacherPortal = () => {
       <PageHeader
         className="animate-slide-up"
         variant="hero"
-        heroGradient="from-slate-600 via-slate-700 to-slate-800"
+        heroGradient="from-indigo-800 via-blue-700 to-sky-600"
         title={`Welcome back, ${user?.first_name || 'Teacher'}!`}
         description="Teacher Portal - Manage your classes, students, and tests"
         icon={GraduationCap}
@@ -231,18 +231,18 @@ const TeacherPortal = () => {
         }
       />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {statsCards.map((stat, index) => (
-          <div key={index} className={`animate-slide-up animation-delay-${(index + 1) * 100}`}>
-            <MetricCard
-              label={stat.title}
-              value={stat.value}
-              detail={stat.detail}
-              icon={stat.icon}
-              tone={stat.tone}
-              onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
-            />
-          </div>
+          <MetricCard
+            key={index}
+            className={`animate-slide-up animation-delay-${(index + 1) * 100}`}
+            label={stat.title}
+            value={stat.value}
+            detail={stat.detail}
+            icon={stat.icon}
+            tone={stat.tone}
+            onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
+          />
         ))}
       </div>
 
