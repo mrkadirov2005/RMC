@@ -222,6 +222,29 @@ const toOptionalNumber = (value: any) => {
   return Number.isFinite(number) && number > 0 ? number : null;
 };
 
+const normalizePaymentMethod = (value: any) => {
+  const cleaned = String(value || '').trim().toLowerCase();
+  if (!cleaned) return 'Cash';
+  const methods: Record<string, string> = {
+    cash: 'Cash',
+    card: 'Credit Card',
+    credit_card: 'Credit Card',
+    'credit card': 'Credit Card',
+    bank: 'Bank Transfer',
+    bank_transfer: 'Bank Transfer',
+    'bank transfer': 'Bank Transfer',
+    transfer: 'Bank Transfer',
+    check: 'Check',
+    cheque: 'Check',
+    wallet: 'Digital Wallet',
+    digital_wallet: 'Digital Wallet',
+    'digital wallet': 'Digital Wallet',
+    click: 'Digital Wallet',
+    payme: 'Digital Wallet',
+  };
+  return methods[cleaned] || value;
+};
+
 const resolveClassId = async (row: any, centerId?: number, classIdCache?: Map<string, number | null>) => {
   const classId = toOptionalNumber(getRowValue(row, ['class_id', 'group_id']));
   if (classId != null) return classId;
@@ -442,7 +465,7 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         row.payment_date,
         row.amount,
         row.currency || 'USD',
-        row.payment_method || 'Cash',
+        normalizePaymentMethod(row.payment_method),
         row.transaction_reference || null,
         row.receipt_number || null,
         row.payment_status || 'Completed',
