@@ -1,0 +1,8 @@
+enrollment_number,payment_date,amount,currency,payment_method,transaction_reference,receipt_number,payment_status,payment_type,notes
+STU-00001,2026-06-01,650000,UZS,Cash,,RCPT-N-0001,Completed,Tuition,June tuition
+STU-00002,2026-06-01,650000,UZS,Card,TERM-N-0002,RCPT-N-0002,Completed,Tuition,June tuition
+STU-00003,2026-06-02,650000,UZS,Bank Transfer,BANK-N-0003,RCPT-N-0003,Pending,Tuition,Awaiting confirmation
+STU-00004,2026-06-02,650000,UZS,Cash,,RCPT-N-0004,Completed,Tuition,June tuition
+STU-00005,2026-06-03,650000,UZS,Cash,,RCPT-N-0005,Completed,Tuition,June tuition
+STU-00006,2026-06-03,650000,UZS,Card,TERM-N-0006,RCPT-N-0006,Completed,Tuition,June tuition
+STU-00007,2026-06-04,650000,UZS,Cash,,RCPT-N-0007,Pending,Tuition,Partial follow-up needed

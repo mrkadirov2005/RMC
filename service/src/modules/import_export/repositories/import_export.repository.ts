@@ -125,6 +125,41 @@ const findClassIdByNameOrCode = (className?: string | null, classCode?: string |
   return pool.query(query, params).then((r: any) => r.rows[0]?.class_id || null);
 };
 
+const findStudentIdByEnrollmentNumber = (enrollmentNumber?: string | null, centerId?: number) => {
+  const normalizedEnrollmentNumber = normalizeClassText(enrollmentNumber);
+  if (!normalizedEnrollmentNumber) return Promise.resolve(null);
+
+  let query = 'SELECT student_id FROM students WHERE LOWER(TRIM(enrollment_number)) = LOWER($1)';
+  const params: any[] = [normalizedEnrollmentNumber];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  query += ' ORDER BY student_id LIMIT 1';
+
+  return pool.query(query, params).then((r: any) => r.rows[0]?.student_id || null);
+};
+
+const findStudentIdByNameAndClass = (firstName?: string | null, lastName?: string | null, classId?: number | null, centerId?: number) => {
+  const normalizedFirstName = normalizeClassText(firstName);
+  const normalizedLastName = normalizeClassText(lastName);
+  if (!normalizedFirstName || !normalizedLastName) return Promise.resolve(null);
+
+  const params: any[] = [normalizedFirstName, normalizedLastName];
+  let query = `SELECT student_id FROM students WHERE LOWER(TRIM(first_name)) = LOWER($1) AND LOWER(TRIM(last_name)) = LOWER($2)`;
+  if (classId) {
+    params.push(classId);
+    query += ` AND class_id = $${params.length}`;
+  }
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  query += ' ORDER BY student_id LIMIT 1';
+
+  return pool.query(query, params).then((r: any) => r.rows[0]?.student_id || null);
+};
+
 const findOrCreateClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number) => {
   const existingClassId = await findClassIdByNameOrCode(className, classCode, centerId);
   if (existingClassId || !centerId) return existingClassId;
@@ -375,6 +410,8 @@ module.exports = {
   selectAllRooms,
   selectAllAssignments,
   findTeacherIdByEmployeeId,
+  findStudentIdByEnrollmentNumber,
+  findStudentIdByNameAndClass,
   findClassIdByNameOrCode,
   findOrCreateClassIdByNameOrCode,
   insertStudent,

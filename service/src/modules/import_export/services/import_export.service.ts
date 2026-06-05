@@ -253,6 +253,25 @@ const resolveTeacherId = async (row: any, centerId?: number, teacherIdCache?: Ma
   return resolvedTeacherId;
 };
 
+const resolveStudentId = async (row: any, centerId?: number, classId?: number | null) => {
+  const studentId = toOptionalNumber(getRowValue(row, ['student_id']));
+  if (studentId != null) return studentId;
+
+  const enrollmentNumber = getRowValue(row, ['enrollment_number', 'student_enrollment_number', 'student_code']);
+  if (enrollmentNumber) {
+    const resolvedByEnrollment = await importExportRepository.findStudentIdByEnrollmentNumber(enrollmentNumber, centerId);
+    if (resolvedByEnrollment) return resolvedByEnrollment;
+  }
+
+  const firstName = getRowValue(row, ['first_name', 'student_first_name', 'firstname', 'student_name']);
+  const lastName = getRowValue(row, ['last_name', 'student_last_name', 'lastname', 'student_surname']);
+  if (firstName && lastName) {
+    return importExportRepository.findStudentIdByNameAndClass(firstName, lastName, classId, centerId);
+  }
+
+  return null;
+};
+
 const normalizeSheetRows = (payload: any, columns: string[]) => {
   if (typeof payload?.csv === 'string') return parseCsv(payload.csv);
   const rawRows = Array.isArray(payload?.rows) ? payload.rows : Array.isArray(payload?.data) ? payload.data : [];
@@ -412,12 +431,13 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
         return { error: 'invalid_center' as const };
       }
-      if (centerId && row.student_id) {
-        const belongs = await studentInCenter(Number(row.student_id), Number(centerId));
+      const studentId = await resolveStudentId(row, rowCenterId);
+      if (centerId && studentId) {
+        const belongs = await studentInCenter(Number(studentId), Number(centerId));
         if (!belongs) return { error: 'invalid_center' as const };
       }
       const params = [
-        row.student_id,
+        studentId,
         rowCenterId,
         row.payment_date,
         row.amount,
@@ -455,10 +475,11 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       }
       const classId = await resolveClassId(row, rowCenterId, classIdCache);
       const teacherId = await resolveTeacherId(row, rowCenterId, teacherIdCache);
+      const studentId = await resolveStudentId(row, rowCenterId, classId);
       const params = [
         rowCenterId,
         classId,
-        toOptionalNumber(getRowValue(row, ['student_id'])),
+        studentId,
         teacherId,
         getRowValue(row, ['assignment_title', 'title', 'task']) || '',
         getRowValue(row, ['description', 'details']),
