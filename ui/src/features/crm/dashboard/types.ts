@@ -38,6 +38,7 @@ export interface DashboardStats {
   totalStudents: number;
   totalTeachers: number;
   totalClasses: number;
+  multiClassStudents: number;
   totalCenters: number;
   totalSchools: number;
   newStudentsThisMonth: number;

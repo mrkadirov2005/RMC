@@ -1,6 +1,7 @@
 // Source file for the dashboard area in the crm feature.
 
 import {
+  BookOpenCheck,
   GraduationCap,
   UserPlus,
   Users,
@@ -58,6 +59,7 @@ export const createInitialDashboardStats = (): DashboardStats => ({
   totalStudents: 0,
   totalTeachers: 0,
   totalClasses: 0,
+  multiClassStudents: 0,
   totalCenters: 0,
   totalSchools: 0,
   newStudentsThisMonth: 0,
@@ -109,6 +111,43 @@ const getClassLabel = (item: DashboardRecord) =>
   getRecordString(item, 'class_name') ||
   getRecordString(item, 'name') ||
   `Class ${getClassId(item) || ''}`.trim();
+
+const normalizeIdentityPart = (value?: string) =>
+  String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+
+const getStudentIdentityKey = (student: DashboardRecord) => {
+  const firstName = normalizeIdentityPart(getRecordString(student, 'first_name'));
+  const lastName = normalizeIdentityPart(getRecordString(student, 'last_name'));
+  const fullName = [firstName, lastName].filter(Boolean).join(' ');
+  return fullName || normalizeIdentityPart(getRecordString(student, 'name'));
+};
+
+const getStudentClassKey = (student: DashboardRecord) => {
+  const classId = getClassId(student);
+  if (classId) return `id:${classId}`;
+  const classCode = normalizeIdentityPart(getRecordString(student, 'class_code'));
+  if (classCode) return `code:${classCode}`;
+  const className = normalizeIdentityPart(getRecordString(student, 'class_name'));
+  return className ? `name:${className}` : undefined;
+};
+
+const countMultiClassStudents = (students: DashboardRecord[]) => {
+  const classesByStudent = new Map<string, Set<string>>();
+
+  students.forEach((student) => {
+    const studentKey = getStudentIdentityKey(student);
+    const classKey = getStudentClassKey(student);
+    if (!studentKey || !classKey) return;
+    const classes = classesByStudent.get(studentKey) || new Set<string>();
+    classes.add(classKey);
+    classesByStudent.set(studentKey, classes);
+  });
+
+  return Array.from(classesByStudent.values()).filter((classes) => classes.size > 1).length;
+};
 
 const sortScopeOptions = (options: DashboardScopeOption[]) =>
   [...options].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
@@ -410,6 +449,7 @@ export const buildDashboardStats = (
     totalStudents: collections.students.length,
     totalTeachers: isSuperuser ? collections.teachers.length : 0,
     totalClasses: collections.classes.length,
+    multiClassStudents: countMultiClassStudents(collections.students),
     totalCenters: isSuperuser ? collections.centers.length : 0,
     totalSchools: schoolNames.size,
     newStudentsThisMonth,
@@ -631,6 +671,14 @@ export const getDashboardStatCards = (
         progress: 100,
         detailsType: 'newStudents',
       },
+      {
+        label: 'Multi-Class Students',
+        value: stats.multiClassStudents,
+        icon: BookOpenCheck,
+        accent: 'from-amber-500 to-orange-500',
+        subValue: 'Same name in 2+ classes',
+        progress: 100,
+      },
     ];
   }
 
@@ -648,6 +696,14 @@ export const getDashboardStatCards = (
       value: stats.totalClasses,
       icon: GraduationCap,
       accent: 'from-emerald-500 to-teal-500',
+      progress: 100,
+    },
+    {
+      label: 'Multi-Class Students',
+      value: stats.multiClassStudents,
+      icon: BookOpenCheck,
+      accent: 'from-amber-500 to-orange-500',
+      subValue: 'Same name in 2+ classes',
       progress: 100,
     },
   ];
