@@ -223,7 +223,7 @@ export const studentAPI = {
     apiClient.delete(`/students/${id}/coins/${transactionId}`),
 };
 
-export type DataEntity = 'students' | 'teachers' | 'classes' | 'payments' | 'rooms' | 'assignments';
+export type DataEntity = 'students' | 'teachers' | 'classes' | 'payments' | 'rooms' | 'assignments' | 'subjects';
 
 export const dataAPI = {
   importEntity: (entity: DataEntity, csv: string) =>

@@ -74,6 +74,22 @@ const selectAllAssignments = (centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const selectAllSubjects = (centerId?: number) => {
+  let query = `
+    SELECT s.*, c.class_name, c.class_code, t.employee_id AS teacher_employee_id
+    FROM subjects s
+    LEFT JOIN classes c ON s.class_id = c.class_id
+    LEFT JOIN teachers t ON s.teacher_id = t.teacher_id
+  `;
+  const params: any[] = [];
+  if (centerId) {
+    query += ' WHERE s.center_id = $1';
+    params.push(centerId);
+  }
+  query += ' ORDER BY s.subject_id DESC';
+  return pool.query(query, params).then((r: any) => r.rows);
+};
+
 const normalizeClassText = (value?: string | null) => String(value || '').trim().replace(/\s+/g, ' ');
 
 const normalizeClassCode = (value?: string | null) => {
@@ -287,6 +303,32 @@ const insertAssignment = (params: any[]) =>
     params
   );
 
+const insertSubject = (params: any[]) =>
+  pool.query(
+    `WITH updated AS (
+       UPDATE subjects
+       SET subject_name = $3,
+           subject_code = $4,
+           teacher_id = $5,
+           total_marks = $6,
+           passing_marks = $7
+       WHERE center_id = $1
+         AND class_id = $2
+         AND COALESCE($4, '') <> ''
+         AND LOWER(TRIM(COALESCE(subject_code, ''))) = LOWER(TRIM($4))
+       RETURNING subject_id
+     ), inserted AS (
+       INSERT INTO subjects (center_id, class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks)
+       SELECT $1,$2,$3,$4,$5,$6,$7
+       WHERE NOT EXISTS (SELECT 1 FROM updated)
+       RETURNING subject_id
+     )
+     SELECT subject_id FROM updated
+     UNION ALL
+     SELECT subject_id FROM inserted`,
+    params
+  );
+
 const upsertStudent = (params: any[], hasStudentId: boolean) => {
   if (hasStudentId) {
     return pool.query(
@@ -408,6 +450,25 @@ const upsertAssignment = (params: any[], hasAssignmentId: boolean) => {
   return insertAssignment(params);
 };
 
+const upsertSubject = (params: any[], hasSubjectId: boolean) => {
+  if (hasSubjectId) {
+    return pool.query(
+      `INSERT INTO subjects (subject_id, center_id, class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+       ON CONFLICT (subject_id) DO UPDATE SET
+         center_id = EXCLUDED.center_id,
+         class_id = EXCLUDED.class_id,
+         subject_name = EXCLUDED.subject_name,
+         subject_code = EXCLUDED.subject_code,
+         teacher_id = EXCLUDED.teacher_id,
+         total_marks = EXCLUDED.total_marks,
+         passing_marks = EXCLUDED.passing_marks`,
+      params
+    );
+  }
+  return insertSubject(params);
+};
+
 const syncSerialSequence = (table: string, idColumn: string) =>
   pool.query(`SELECT setval(pg_get_serial_sequence($1, $2), COALESCE((SELECT MAX(${idColumn}) FROM ${table}), 1), true)`, [
     table,
@@ -421,6 +482,7 @@ module.exports = {
   selectAllPayments,
   selectAllRooms,
   selectAllAssignments,
+  selectAllSubjects,
   findTeacherIdByEmployeeId,
   findStudentIdByEnrollmentNumber,
   findStudentIdByNameAndClass,
@@ -432,11 +494,13 @@ module.exports = {
   insertPayment,
   insertRoom,
   insertAssignment,
+  insertSubject,
   upsertStudent,
   upsertTeacher,
   upsertPayment,
   upsertRoom,
   upsertAssignment,
+  upsertSubject,
   syncSerialSequence,
 };
 

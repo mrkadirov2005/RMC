@@ -1,0 +1,6 @@
+subject_id,center_id,class_id,class_name,class_code,teacher_id,teacher_employee_id,subject_name,subject_code,total_marks,passing_marks
+,,,IELTS Morning,IELTS-MOR,,TCH-001,IELTS Reading,IELTS-READ,100,40
+,,,IELTS Morning,IELTS-MOR,,TCH-001,IELTS Speaking,IELTS-SPEAK,100,40
+,,,SAT Evening,SAT-EVE,,TCH-002,SAT Math,SAT-MATH,800,400
+,,,SAT Evening,SAT-EVE,,TCH-002,SAT English,SAT-ENG,800,400
+,,,Math Foundation,MATH-FND,,TCH-003,Foundation Math,MATH-FOUNDATION,100,40

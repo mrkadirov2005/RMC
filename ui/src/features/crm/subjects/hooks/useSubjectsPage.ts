@@ -15,6 +15,7 @@ import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSl
 import { selectClassOptions, selectTeacherOptions } from '../../../../store/selectors';
 import type { Subject } from '../types';
 import { getStoredActiveCenterId } from '../../../../shared/auth/authStorage';
+import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
 
 // Provides subjects page.
 export const useSubjectsPage = () => {
@@ -35,6 +36,7 @@ export const useSubjectsPage = () => {
     total_marks: 100,
     passing_marks: 40,
   });
+  const [isImporting, setIsImporting] = useState(false);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -101,6 +103,17 @@ export const useSubjectsPage = () => {
     }
   };
 
+  const handleImportSubjects = async (file?: File) => {
+    setIsImporting(true);
+    const imported = await importCsvEntity('subjects', 'Subjects', file);
+    if (imported) {
+      dispatch(fetchSubjectsForce());
+    }
+    setIsImporting(false);
+  };
+
+  const handleExportSubjects = () => exportCsvEntity('subjects', 'Subjects');
+
   return {
     state,
     isModalOpen,
@@ -114,5 +127,8 @@ export const useSubjectsPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handleImportSubjects,
+    handleExportSubjects,
+    isImporting,
   };
 };

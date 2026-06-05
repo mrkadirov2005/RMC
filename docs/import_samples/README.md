@@ -6,10 +6,11 @@ Recommended import order for a fresh test center:
 
 1. `teachers_sample.csv`
 2. `classes_sample.csv`
-3. `students_sample.csv`
-4. `rooms_sample.csv`
-5. `assignments_sample.csv`
-6. `payments_sample.csv`
+3. `subjects_sample.csv`
+4. `students_sample.csv`
+5. `rooms_sample.csv`
+6. `assignments_sample.csv`
+7. `payments_sample.csv`
 
 Notes:
 

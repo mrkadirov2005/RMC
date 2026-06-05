@@ -191,6 +191,20 @@ const ASSIGNMENT_COLS = [
   'grade',
 ];
 
+const SUBJECT_COLS = [
+  'subject_id',
+  'center_id',
+  'class_id',
+  'class_name',
+  'class_code',
+  'teacher_id',
+  'teacher_employee_id',
+  'subject_name',
+  'subject_code',
+  'total_marks',
+  'passing_marks',
+];
+
 const ENTITY_CONFIG: Record<string, { columns: string[]; idColumn: string; table: string }> = {
   students: { columns: STUDENT_COLS, idColumn: 'student_id', table: 'students' },
   teachers: { columns: TEACHER_COLS, idColumn: 'teacher_id', table: 'teachers' },
@@ -198,6 +212,7 @@ const ENTITY_CONFIG: Record<string, { columns: string[]; idColumn: string; table
   payments: { columns: PAYMENT_COLS, idColumn: 'payment_id', table: 'payments' },
   rooms: { columns: ROOM_COLS, idColumn: 'room_id', table: 'rooms' },
   assignments: { columns: ASSIGNMENT_COLS, idColumn: 'assignment_id', table: 'assignments' },
+  subjects: { columns: SUBJECT_COLS, idColumn: 'subject_id', table: 'subjects' },
 };
 
 const getAppsScriptUrl = () => process.env.GOOGLE_APPS_SCRIPT_URL || process.env.APPS_SCRIPT_URL || '';
@@ -351,6 +366,9 @@ const exportEntity = async (entity: string, centerId?: number) => {
   } else if (entity === 'rooms') {
     rows = await importExportRepository.selectAllRooms(centerId);
     columns = ROOM_COLS;
+  } else if (entity === 'subjects') {
+    rows = await importExportRepository.selectAllSubjects(centerId);
+    columns = SUBJECT_COLS;
   } else {
     rows = await importExportRepository.selectAllAssignments(centerId);
     columns = ASSIGNMENT_COLS;
@@ -491,6 +509,25 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       const roomId = Number(row.room_id);
       const hasRoomId = upsert && Number.isFinite(roomId) && roomId > 0;
       await (upsert ? importExportRepository.upsertRoom(hasRoomId ? [roomId, ...params] : params, hasRoomId) : importExportRepository.insertRoom(params));
+    } else if (entity === 'subjects') {
+      const rowCenterId = centerId ?? Number(row.center_id);
+      if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
+        return { error: 'invalid_center' as const };
+      }
+      const classId = await resolveClassId(row, rowCenterId, classIdCache);
+      const teacherId = await resolveTeacherId(row, rowCenterId, teacherIdCache);
+      const params = [
+        rowCenterId,
+        classId,
+        getRowValue(row, ['subject_name', 'name']) || '',
+        getRowValue(row, ['subject_code', 'code']),
+        teacherId,
+        toOptionalNumber(getRowValue(row, ['total_marks', 'max_marks'])) || 100,
+        toOptionalNumber(getRowValue(row, ['passing_marks', 'pass_marks'])) || 40,
+      ];
+      const subjectId = Number(row.subject_id);
+      const hasSubjectId = upsert && Number.isFinite(subjectId) && subjectId > 0;
+      await (upsert ? importExportRepository.upsertSubject(hasSubjectId ? [subjectId, ...params] : params, hasSubjectId) : importExportRepository.insertSubject(params));
     } else {
       const rowCenterId = centerId ?? Number(row.center_id);
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {

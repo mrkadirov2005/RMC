@@ -1,7 +1,7 @@
 // Page component for the subjects screen in the crm feature.
 
 import { useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Search, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, X, Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -41,6 +41,9 @@ const SubjectsPage = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handleImportSubjects,
+    handleExportSubjects,
+    isImporting,
   } = useSubjectsPage();
   const filteredSubjects = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
@@ -64,9 +67,34 @@ const SubjectsPage = () => {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Subjects Management</h1>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" /> Add Subject
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            id="subjects-csv-import"
+            type="file"
+            accept=".csv,text/csv"
+            className="hidden"
+            onChange={(event) => {
+              handleImportSubjects(event.target.files?.[0]);
+              event.currentTarget.value = '';
+            }}
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById('subjects-csv-import')?.click()}
+            disabled={isImporting}
+          >
+            {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+            {isImporting ? 'Importing...' : 'Import CSV'}
+          </Button>
+          <Button type="button" variant="outline" onClick={handleExportSubjects}>
+            <Download className="mr-2 h-4 w-4" />
+            Export CSV
+          </Button>
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="mr-2 h-4 w-4" /> Add Subject
+          </Button>
+        </div>
       </div>
 
       {state.error && (
