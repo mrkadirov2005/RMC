@@ -105,6 +105,7 @@ export interface DashboardStatCard {
     | 'teachers'
     | 'schools'
     | 'newStudents'
+    | 'multiClassStudents'
     | 'expectedPayments'
     | 'collectedPayments'
     | 'remainingPayments'

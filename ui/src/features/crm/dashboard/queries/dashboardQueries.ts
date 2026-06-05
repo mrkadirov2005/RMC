@@ -678,6 +678,7 @@ export const getDashboardStatCards = (
         accent: 'from-amber-500 to-orange-500',
         subValue: 'Same name in 2+ classes',
         progress: 100,
+        detailsType: 'multiClassStudents',
       },
     ];
   }
@@ -705,6 +706,7 @@ export const getDashboardStatCards = (
       accent: 'from-amber-500 to-orange-500',
       subValue: 'Same name in 2+ classes',
       progress: 100,
+      detailsType: 'multiClassStudents',
     },
   ];
 };

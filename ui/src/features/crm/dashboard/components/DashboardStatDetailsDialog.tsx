@@ -86,6 +86,29 @@ const getClassName = (classMap: Map<number, DashboardRecord>, classId?: number) 
   return cls ? getString(cls, 'class_name') || getString(cls, 'name') || `Class ${classId}` : `Class ${classId}`;
 };
 
+const normalizeIdentityPart = (value: string) =>
+  value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ');
+
+const getStudentIdentityKey = (student: DashboardRecord) => normalizeIdentityPart(getFullName(student, ''));
+
+const getStudentClassKey = (student: DashboardRecord) => {
+  const classId = getNumber(student, 'class_id');
+  if (classId) return `id:${classId}`;
+  const classCode = normalizeIdentityPart(getString(student, 'class_code'));
+  if (classCode) return `code:${classCode}`;
+  const className = normalizeIdentityPart(getString(student, 'class_name'));
+  return className ? `name:${className}` : undefined;
+};
+
+const getStudentClassLabel = (student: DashboardRecord, classMap: Map<number, DashboardRecord>) => {
+  const classId = getNumber(student, 'class_id');
+  if (classId) return getClassName(classMap, classId);
+  return getString(student, 'class_name') || getString(student, 'class_code') || 'Unassigned';
+};
+
 const getPaymentStatus = (payment: DashboardRecord) =>
   (getString(payment, 'status') || getString(payment, 'payment_status')).toLowerCase();
 
@@ -188,6 +211,28 @@ export const DashboardStatDetailsDialog = ({
     if (card?.detailsType === 'newStudents') {
       return collections.students.filter((student) => isSameMonth(getString(student, 'created_at'), selectedMonth));
     }
+    if (card?.detailsType === 'multiClassStudents') {
+      const grouped = new Map<string, { name: string; students: DashboardRecord[]; classes: Map<string, string> }>();
+
+      collections.students.forEach((student) => {
+        const studentKey = getStudentIdentityKey(student);
+        const classKey = getStudentClassKey(student);
+        if (!studentKey || !classKey) return;
+
+        const group = grouped.get(studentKey) || {
+          name: getFullName(student, 'Unnamed student'),
+          students: [],
+          classes: new Map<string, string>(),
+        };
+        group.students.push(student);
+        group.classes.set(classKey, getStudentClassLabel(student, classMap));
+        grouped.set(studentKey, group);
+      });
+
+      return Array.from(grouped.values())
+        .filter((group) => group.classes.size > 1)
+        .sort((a, b) => b.classes.size - a.classes.size || a.name.localeCompare(b.name));
+    }
     if (card?.detailsType === 'schools') {
       const counts = new Map<string, number>();
       collections.students.forEach((student) => {
@@ -220,6 +265,8 @@ export const DashboardStatDetailsDialog = ({
   const description =
     card?.detailsType === 'schools'
       ? 'Schools represented by the students in the current dashboard scope.'
+      : card?.detailsType === 'multiClassStudents'
+        ? 'Students whose same name appears in more than one class in the current dashboard scope.'
       : isFinanceDetails(card?.detailsType)
         ? 'Financial records included in the current dashboard scope and selected month.'
       : 'Records included in the current dashboard scope.';
@@ -251,6 +298,40 @@ export const DashboardStatDetailsDialog = ({
             <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
               No records found for this card.
             </div>
+          ) : card?.detailsType === 'multiClassStudents' ? (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead className="text-right">Classes</TableHead>
+                  <TableHead>Class list</TableHead>
+                  <TableHead className="text-right">Matching rows</TableHead>
+                  <TableHead className="text-right">Profile</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {(rows as Array<{ name: string; students: DashboardRecord[]; classes: Map<string, string> }>).map((row) => {
+                  const firstStudent = row.students.find((student) => getStudentId(student)) || row.students[0];
+                  const classLabels = Array.from(row.classes.values()).sort((a, b) => a.localeCompare(b));
+                  return (
+                    <TableRow key={row.name} className={firstStudent ? 'cursor-pointer' : undefined} onClick={() => firstStudent && goToStudent(firstStudent)}>
+                      <TableCell className="font-medium">{row.name}</TableCell>
+                      <TableCell className="text-right font-semibold">{classLabels.length}</TableCell>
+                      <TableCell className="max-w-md text-muted-foreground">{classLabels.join(', ')}</TableCell>
+                      <TableCell className="text-right">{row.students.length}</TableCell>
+                      <TableCell className="text-right">
+                        {firstStudent && (
+                          <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={(event) => { event.stopPropagation(); goToStudent(firstStudent); }}>
+                            Open
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           ) : card?.detailsType === 'schools' ? (
             <Table>
               <TableHeader>
