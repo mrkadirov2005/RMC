@@ -1,0 +1,4 @@
+payment_id,student_id,center_id,payment_date,amount,currency,payment_method,transaction_reference,receipt_number,payment_status,payment_type,notes
+,1,,2026-06-01,650000,UZS,Cash,,RCPT-0001,Completed,Tuition,June tuition
+,2,,2026-06-01,650000,UZS,Card,TERM-12345,RCPT-0002,Completed,Tuition,June tuition
+,3,,2026-06-02,750000,UZS,Bank Transfer,BANK-7788,RCPT-0003,Pending,Tuition,Awaiting confirmation

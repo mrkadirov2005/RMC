@@ -1,0 +1,4 @@
+student_id,center_id,enrollment_number,first_name,last_name,username,password,email,phone,date_of_birth,parent_name,parent_phone,gender,status,teacher_id,teacher_employee_id,class_id,class_name,class_code,school_name,school_class
+,,STU-001,Ali,Valiyev,alivaliyev,Student123!,ali.valiyev@example.com,+998911111111,2010-01-20,Vali Valiyev,+998901111111,Male,Active,,TCH-001,,IELTS Morning,IELTS-MOR,Temurbek School,7-A
+,,STU-002,Malika,Karimova,malikakarimova,Student123!,malika.karimova@example.com,+998922222222,2011-04-15,Karim Karimov,+998902222222,Female,Active,,TCH-001,,IELTS Morning,IELTS-MOR,Temurbek School,7-A
+,,STU-003,Jasur,Ahmedov,jasurahmedov,Student123!,jasur.ahmedov@example.com,+998933333333,2009-09-08,Ahmed Ahmedov,+998903333333,Male,Active,,TCH-002,,SAT Evening,SAT-EVE,President School,8-B

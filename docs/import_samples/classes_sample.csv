@@ -1,0 +1,4 @@
+class_id,center_id,class_name,class_code,level,section,capacity,teacher_id,teacher_employee_id,room_number,payment_amount,payment_frequency
+,,IELTS Morning,IELTS-MOR,7,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""09:00""}",18,,TCH-001,101,650000,Monthly
+,,SAT Evening,SAT-EVE,8,"{""days"":[""Tuesday"",""Thursday""],""time"":""17:30""}",16,,TCH-002,202,750000,Monthly
+,,Math Foundation,MATH-FND,6,"{""days"":[""Monday"",""Wednesday""],""time"":""15:00""}",20,,TCH-003,103,500000,Monthly
