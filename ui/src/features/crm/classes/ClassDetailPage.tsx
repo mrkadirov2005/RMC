@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, Loader2, MapPin, PlayCircle, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, FileQuestion, Loader2, MapPin, PlayCircle, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { classAPI, studentAPI, subjectAPI } from '@/shared/api/api';
+import { classAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
@@ -43,6 +43,22 @@ type StudentItem = {
 
 type ClassSchedule = { days: string[]; time: string };
 
+type AssignedTestItem = {
+  test_id?: number;
+  id?: number;
+  test_name?: string;
+  test_type?: string;
+  description?: string;
+  duration_minutes?: number;
+  total_marks?: number;
+  passing_marks?: number;
+  is_active?: boolean;
+  is_mandatory?: boolean;
+  assigned_at?: string;
+  due_date?: string;
+  notes?: string;
+};
+
 const parseSchedule = (section?: string): ClassSchedule => {
   if (!section) return { days: [] as string[], time: '' };
   try {
@@ -69,6 +85,7 @@ const ClassDetailPage = () => {
   const [students, setStudents] = useState<StudentItem[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
   const [sessionModalId, setSessionModalId] = useState<number | null>(null);
   const [sessionModalDate, setSessionModalDate] = useState('');
@@ -84,11 +101,12 @@ const ClassDetailPage = () => {
       setLoading(true);
       setError('');
       try {
-        const [classResponse, studentsResponse, subjectsResponse, sessionsResponse] = await Promise.all([
+        const [classResponse, studentsResponse, subjectsResponse, sessionsResponse, testsResponse] = await Promise.all([
           classAPI.getById(Number(classId)),
           studentAPI.getAll().catch(() => ({ data: [] })),
           subjectAPI.getByClass(Number(classId)).catch(() => ({ data: [] })),
           classAPI.getSessions(Number(classId)).catch(() => ({ data: [] })),
+          testAPI.getAssignedTests('class', Number(classId)).catch(() => ({ data: [] })),
         ]);
         if (cancelled) return;
         const nextClass = classResponse?.data ?? classResponse;
@@ -96,6 +114,7 @@ const ClassDetailPage = () => {
         setStudents(unwrapRows(studentsResponse).filter((student: StudentItem) => Number(student.class_id) === Number(classId)));
         setSubjects(unwrapRows(subjectsResponse));
         setSessions(unwrapRows(sessionsResponse));
+        setAssignedTests(unwrapRows(testsResponse));
       } catch (err: any) {
         if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load class.');
       } finally {
@@ -244,6 +263,7 @@ const ClassDetailPage = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="students">Students</TabsTrigger>
           <TabsTrigger value="subjects">Subjects</TabsTrigger>
+          <TabsTrigger value="tests">Tests</TabsTrigger>
           <TabsTrigger value="sessions">Sessions</TabsTrigger>
         </TabsList>
 
@@ -313,6 +333,65 @@ const ClassDetailPage = () => {
                 </CardContent>
               </Card>
             ))}
+          </TabsContent>
+
+          <TabsContent value="tests" className="mt-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Test</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Marks</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {assignedTests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2">
+                        <FileQuestion className="h-8 w-8 text-muted-foreground/60" />
+                        <span>No tests assigned to this class.</span>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : assignedTests.map((test) => {
+                  const testId = Number(test.test_id || test.id || 0);
+                  return (
+                    <TableRow key={`${testId}-${test.assigned_at || ''}`}>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-semibold">{test.test_name || 'Untitled test'}</p>
+                          {test.description && <p className="line-clamp-2 text-xs text-muted-foreground">{test.description}</p>}
+                          <div className="flex flex-wrap gap-1">
+                            {test.duration_minutes ? <Badge variant="outline">{test.duration_minutes} min</Badge> : null}
+                            {test.is_mandatory ? <Badge variant="secondary">Mandatory</Badge> : <Badge variant="outline">Optional</Badge>}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>{test.test_type || '-'}</TableCell>
+                      <TableCell>
+                        {test.total_marks ?? '-'}
+                        {test.passing_marks ? <span className="text-xs text-muted-foreground"> / pass {test.passing_marks}</span> : null}
+                      </TableCell>
+                      <TableCell>{test.due_date ? new Date(test.due_date).toLocaleDateString() : '-'}</TableCell>
+                      <TableCell>
+                        <Badge variant={test.is_active === false ? 'outline' : 'secondary'}>
+                          {test.is_active === false ? 'Inactive' : 'Active'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => testId && navigate(`/tests/${testId}`)} disabled={!testId}>
+                          Open
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </TabsContent>
 
           <TabsContent value="sessions" className="mt-0">

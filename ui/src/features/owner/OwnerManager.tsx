@@ -7,6 +7,7 @@ import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerManagerStatistics } from './components/OwnerManagerStatistics';
 import { OwnerManagerTabStats } from './components/OwnerManagerTabStats';
+import { OwnerSystemSettings } from './components/OwnerSystemSettings';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -27,6 +28,8 @@ const OwnerManager = memo(() => {
           onTabChange={vm.handleTabChange}
           loading={vm.loading}
         />
+
+        <OwnerSystemSettings />
 
         {vm.activeTab === 'statistics' ? (
           <OwnerManagerStatistics

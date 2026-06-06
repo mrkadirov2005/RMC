@@ -1,7 +1,8 @@
 // Modal component for the classes screen in the crm feature.
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, User } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { FileQuestion, Loader2, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +23,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
+import { attendanceAPI, gradeAPI, testAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
 import { formatMoney } from '../../../utils/helpers';
 import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';
@@ -69,10 +70,23 @@ interface Attendance {
   remarks?: string;
 }
 
+interface AssignedTest {
+  test_id?: number;
+  id?: number;
+  test_name?: string;
+  test_type?: string;
+  duration_minutes?: number;
+  total_marks?: number;
+  due_date?: string;
+  is_mandatory?: boolean;
+  is_active?: boolean;
+  assigned_at?: string;
+}
+
 interface ClassDetailModalProps {
   open: boolean;
   classData: Class | null;
-  initialTab?: 'info' | 'students' | 'attendance' | 'grades' | 'calendar';
+  initialTab?: 'info' | 'students' | 'attendance' | 'grades' | 'tests' | 'calendar';
   selectedDate?: string;
   sessionId?: number | null;
   onClose: () => void;
@@ -88,6 +102,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   onClose,
 }) => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
 // Memoizes the select students by class derived value.
   const selectStudentsByClass = useMemo(makeSelectStudentsByClassId, []);
   const classId = Number(classData?.class_id || classData?.id);
@@ -97,6 +112,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   const attendanceLoading = useAppSelector((state) => state.attendance.loading);
   const allAttendance = useAppSelector((state) => state.attendance.items) as Attendance[];
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
+  const [assignedTests, setAssignedTests] = useState<AssignedTest[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<ClassDetailModalProps['initialTab']>('info');
 
@@ -121,8 +137,15 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       dispatch(fetchStudentsForce());
       dispatch(fetchAttendance());
       dispatch(fetchSubjectsThunk());
+      testAPI
+        .getAssignedTests('class', classId)
+        .then((response) => {
+          const data = response?.data ?? response;
+          setAssignedTests(Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []);
+        })
+        .catch(() => setAssignedTests([]));
     }
-  }, [classData, dispatch, initialTab, open, selectedDate, sessionId]);
+  }, [classData, classId, dispatch, initialTab, open, selectedDate, sessionId]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -347,11 +370,12 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="info">Info</TabsTrigger>
             <TabsTrigger value="students">Students</TabsTrigger>
             <TabsTrigger value="attendance">Attendance</TabsTrigger>
             <TabsTrigger value="grades">Exam Grades</TabsTrigger>
+            <TabsTrigger value="tests">Tests</TabsTrigger>
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
           </TabsList>
 
@@ -643,7 +667,67 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
             )}
           </TabsContent>
 
-          {/* Tab 5: Calendar */}
+          {/* Tab 5: Tests */}
+          <TabsContent value="tests" className="pt-4">
+            <div className="border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-primary">
+                    <TableHead className="text-primary-foreground font-semibold">Test</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">Type</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">Due Date</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">Status</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {assignedTests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
+                        <div className="flex flex-col items-center gap-2">
+                          <FileQuestion className="h-8 w-8 text-muted-foreground/60" />
+                          <span>No tests assigned to this class.</span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ) : assignedTests.map((test) => {
+                    const testId = Number(test.test_id || test.id || 0);
+                    return (
+                      <TableRow key={`${testId}-${test.assigned_at || ''}`}>
+                        <TableCell>
+                          <p className="font-semibold">{test.test_name || 'Untitled test'}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {test.duration_minutes ? `${test.duration_minutes} min` : 'No duration'}
+                            {' · '}
+                            {test.total_marks ?? '-'} marks
+                          </p>
+                        </TableCell>
+                        <TableCell>{test.test_type || '-'}</TableCell>
+                        <TableCell>{test.due_date ? new Date(test.due_date).toLocaleDateString() : '-'}</TableCell>
+                        <TableCell>{test.is_active === false ? 'Inactive' : test.is_mandatory ? 'Mandatory' : 'Optional'}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={!testId}
+                            onClick={() => {
+                              if (!testId) return;
+                              onClose();
+                              navigate(`/tests/${testId}`);
+                            }}
+                          >
+                            Open
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          {/* Tab 6: Calendar */}
           <TabsContent value="calendar" className="pt-4">
             <ClassCalendar schedule={parsedSchedule} />
           </TabsContent>

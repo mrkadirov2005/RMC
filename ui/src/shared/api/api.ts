@@ -443,6 +443,10 @@ export const translationAPI = {
   delete: (id: string) => apiClient.delete(`/translations/${encodeURIComponent(id)}`),
 };
 
+export const systemAPI = {
+  redeploy: (password: string) => apiClient.post('/system/redeploy', { password }),
+};
+
 export const portalAPI = {
   getDashboard: () => apiClient.get('/portal/dashboard'),
   getAttendance: () => apiClient.get('/portal/attendance'),

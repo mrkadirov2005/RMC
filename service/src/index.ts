@@ -46,6 +46,7 @@ async function main() {
   const roomsRoutes = require('./routes/roomsRoutes');
   const requestLogRoutes = require('./routes/requestLogRoutes');
   const translationRoutes = require('./routes/translationRoutes');
+  const systemRoutes = require('./routes/systemRoutes');
 
   const app = express();
   const PORT = process.env.PORT || 4000;
@@ -115,6 +116,7 @@ async function main() {
   app.use('/api/rooms', requireAuth, requireRole('superuser', 'teacher'), roomsRoutes);
   // Request logs (MongoDB): only superuser.
   app.use('/api/request-logs', requireAuth, requireRole('superuser'), requestLogRoutes);
+  app.use('/api/system', systemRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {
