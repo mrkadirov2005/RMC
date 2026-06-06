@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Languages, PencilLine, X } from 'lucide-react';
+import { Check, Languages, PencilLine, RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -89,6 +89,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
   const [target, setTarget] = useState<EditableTarget | null>(null);
   const [form, setForm] = useState<TranslationRow>({ id: '', english: '', uzbek: '' });
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const targetDescription = useMemo(() => {
     if (!target?.attribute) return 'Visible text';
@@ -160,9 +161,33 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
     }
   };
 
+  const refresh = async () => {
+    setRefreshing(true);
+    try {
+      await refreshTranslations();
+      showToast.success('Translations refreshed');
+    } catch {
+      showToast.error('Could not refresh translations');
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <div data-translation-edit-skip data-translation-editor>
       <div className="fixed right-4 top-4 z-[1600] flex items-center gap-2">
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          className="h-9 w-9 shadow-lg"
+          onClick={refresh}
+          disabled={refreshing}
+          aria-label="Refresh translations"
+          title="Refresh translations"
+        >
+          <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
+        </Button>
         <Button
           type="button"
           size="sm"

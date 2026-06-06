@@ -606,6 +606,9 @@ const translations: Record<string, string> = {
   'Translation saved': 'Tarjima saqlandi',
   'Translation id is required': 'Tarjima ID si majburiy',
   'Could not save translation': 'Tarjimani saqlab bolmadi',
+  'Refresh translations': 'Tarjimalarni yangilash',
+  'Translations refreshed': 'Tarjimalar yangilandi',
+  'Could not refresh translations': 'Tarjimalarni yangilab bolmadi',
 };
 
 const createReverseTranslations = (translationMap: Record<string, string>, englishMap: Record<string, string>) => ({
