@@ -592,6 +592,20 @@ const translations: Record<string, string> = {
   'Enter your payment password provided by admin.': 'Admin bergan tolov parolini kiriting.',
   'Exact status': 'Aniq holat',
   'Exam Grades': 'Imtihon baholari',
+  'Edit mode on': 'Tahrirlash rejimi yoqilgan',
+  'Edit translations': 'Tarjimalarni tahrirlash',
+  'Click a label, button, heading, table header, or placeholder to edit its translation.': 'Tarjimasini tahrirlash uchun label, tugma, sarlavha, jadval sarlavhasi yoki placeholder ustiga bosing.',
+  'Edit translation': 'Tarjimani tahrirlash',
+  'Visible text': 'Korinadigan matn',
+  'placeholder text': 'Placeholder matni',
+  'aria-label text': 'Aria-label matni',
+  'title text': 'Title matni',
+  'Editing:': 'Tahrirlanmoqda:',
+  'ID / key': 'ID / kalit',
+  'Save translation': 'Tarjimani saqlash',
+  'Translation saved': 'Tarjima saqlandi',
+  'Translation id is required': 'Tarjima ID si majburiy',
+  'Could not save translation': 'Tarjimani saqlab bolmadi',
 };
 
 const createReverseTranslations = (translationMap: Record<string, string>, englishMap: Record<string, string>) => ({
