@@ -709,9 +709,9 @@ interface LanguageContextValue {
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
 const getInitialLanguage = (): AppLanguage => {
-  if (typeof window === 'undefined') return 'en';
+  if (typeof window === 'undefined') return 'uz';
   const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  return stored === 'uz' ? 'uz' : 'en';
+  return stored === 'en' ? 'en' : 'uz';
 };
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
