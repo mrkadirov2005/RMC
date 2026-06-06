@@ -427,6 +427,22 @@ export const roomAPI = {
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/rooms/${id}`, { params }),
 };
 
+export type TranslationRow = {
+  id: string;
+  english: string;
+  uzbek: string;
+};
+
+export const translationAPI = {
+  getAll: () => apiClient.get<TranslationRow[]>('/translations'),
+  getById: (id: string) => apiClient.get<TranslationRow>(`/translations/${encodeURIComponent(id)}`),
+  save: (id: string, data: Pick<TranslationRow, 'english' | 'uzbek'>) =>
+    apiClient.put<TranslationRow>(`/translations/${encodeURIComponent(id)}`, data),
+  bulkSave: (translations: TranslationRow[]) =>
+    apiClient.post<TranslationRow[]>('/translations/bulk', { translations }),
+  delete: (id: string) => apiClient.delete(`/translations/${encodeURIComponent(id)}`),
+};
+
 export const portalAPI = {
   getDashboard: () => apiClient.get('/portal/dashboard'),
   getAttendance: () => apiClient.get('/portal/attendance'),

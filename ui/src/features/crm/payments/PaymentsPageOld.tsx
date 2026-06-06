@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { formatMoney } from '@/utils/helpers';
 import {
   Table,
   TableBody,
@@ -104,7 +105,7 @@ const PaymentsPage = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Payment>>({
     center_id: getResolvedCenterId(getCurrentUser()) ?? 0,
-    currency: 'USD',
+    currency: 'UZS',
     payment_status: 'Completed',
     payment_type: 'Tuition',
   });
@@ -288,7 +289,7 @@ const PaymentsPage = () => {
       setEditingId(null);
       setFormData({
         center_id: getResolvedCenterId(getCurrentUser()) ?? 0,
-        currency: 'USD',
+        currency: 'UZS',
         payment_status: 'Completed',
         payment_type: 'Tuition',
       });
@@ -302,7 +303,7 @@ const PaymentsPage = () => {
     setEditingId(null);
     setFormData({
       center_id: getResolvedCenterId(getCurrentUser()) ?? 0,
-      currency: 'USD',
+      currency: 'UZS',
       payment_status: 'Completed',
       payment_type: 'Tuition',
     });
@@ -438,7 +439,7 @@ const PaymentsPage = () => {
                             </div>
                             <div className="flex items-center gap-1 text-sm font-semibold text-primary">
                               <DollarSign className="h-3.5 w-3.5" />
-                              <span>${totalAmount.toLocaleString()}</span>
+                              <span>{formatMoney(totalAmount)}</span>
                             </div>
                           </div>
                         </CardContent>
@@ -482,7 +483,7 @@ const PaymentsPage = () => {
                             </div>
                             <div className="stat total">
                               <DollarSign className="h-3.5 w-3.5" />
-                              <span>${totalAmount.toLocaleString()}</span>
+                              <span>{formatMoney(totalAmount)}</span>
                             </div>
                           </div>
                         </div>
@@ -576,7 +577,7 @@ const PaymentsPage = () => {
                             </div>
                             <div className="stat total">
                               <DollarSign className="h-3.5 w-3.5" />
-                              <span>${totalAmount.toLocaleString()}</span>
+                              <span>{formatMoney(totalAmount)}</span>
                             </div>
                           </div>
                         </div>
@@ -635,7 +636,7 @@ const PaymentsPage = () => {
 
             <div className="text-sm text-muted-foreground flex items-center gap-4">
               <span>{displayedPayments.length} payments</span>
-              <span className="font-semibold">Total: ${totalAmount.toLocaleString()}</span>
+              <span className="font-semibold">Total: {formatMoney(totalAmount)}</span>
             </div>
           </div>
 
@@ -796,7 +797,7 @@ const PaymentsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="currency">Currency</Label>
-                  <Select value={formData.currency || 'USD'} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
+                  <Select value={formData.currency || 'UZS'} onValueChange={(value) => setFormData({ ...formData, currency: value })}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select currency" />
                     </SelectTrigger>

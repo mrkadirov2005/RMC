@@ -45,6 +45,7 @@ async function main() {
   const portalRoutes = require('./routes/portalRoutes');
   const roomsRoutes = require('./routes/roomsRoutes');
   const requestLogRoutes = require('./routes/requestLogRoutes');
+  const translationRoutes = require('./routes/translationRoutes');
 
   const app = express();
   const PORT = process.env.PORT || 4000;
@@ -69,6 +70,9 @@ async function main() {
 
   // Swagger UI
   app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs, { explorer: true }));
+
+  // Public static-content translations. Writes are protected inside the router.
+  app.use('/api/translations', translationRoutes);
 
   // API Routes
   // Auth routes (public - no authentication required)

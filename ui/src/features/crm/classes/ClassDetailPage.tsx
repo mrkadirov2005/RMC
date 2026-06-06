@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { classAPI, studentAPI, subjectAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
+import { formatMoney } from '@/utils/helpers';
 import SessionModal from './SessionModal';
 import { useAppSelector } from '../hooks';
 
@@ -231,7 +232,7 @@ const ClassDetailPage = () => {
               </div>
               <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
                 <DollarSign className="mb-2 h-5 w-5 text-white/75" />
-                <p className="truncate text-sm font-semibold">${Number(classData.payment_amount || 0).toLocaleString()} {classData.payment_frequency || ''}</p>
+                <p className="truncate text-sm font-semibold">{formatMoney(classData.payment_amount)} {classData.payment_frequency || ''}</p>
               </div>
             </div>
           </div>

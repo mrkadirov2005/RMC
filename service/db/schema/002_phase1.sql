@@ -78,7 +78,7 @@ CREATE TABLE payment_plans (
     center_id INT NOT NULL,
     name VARCHAR(100) NOT NULL,
     total_amount DECIMAL(12,2) NOT NULL,
-    currency VARCHAR(10) DEFAULT 'USD',
+    currency VARCHAR(10) DEFAULT 'UZS',
     start_date DATE NOT NULL,
     end_date DATE,
     status plan_status DEFAULT 'Active',
@@ -158,3 +158,9 @@ CREATE TABLE parent_students (
     FOREIGN KEY (student_id) REFERENCES students(student_id) ON DELETE CASCADE
 );
 CREATE INDEX idx_parent_students_parent ON parent_students(parent_id);
+
+CREATE TABLE translations (
+    id TEXT PRIMARY KEY,
+    english TEXT NOT NULL DEFAULT '',
+    uzbek TEXT NOT NULL DEFAULT ''
+);

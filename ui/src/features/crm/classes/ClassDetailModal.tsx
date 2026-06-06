@@ -24,6 +24,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
+import { formatMoney } from '../../../utils/helpers';
 import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';
 import { fetchStudentsForce } from '../../../slices/studentsSlice';
 import { fetchAttendance, fetchAttendanceForce } from '../../../slices/attendanceSlice';
@@ -378,7 +379,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 <div>
                   <p className="text-sm text-muted-foreground">Payment Amount</p>
                   <p className="font-semibold">
-                    ${classData.payment_amount} ({classData.payment_frequency})
+                    {formatMoney(classData.payment_amount)} ({classData.payment_frequency})
                   </p>
                 </div>
               </div>

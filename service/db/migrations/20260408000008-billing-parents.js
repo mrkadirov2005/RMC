@@ -68,7 +68,7 @@ module.exports = {
           center_id INT NOT NULL,
           name VARCHAR(100) NOT NULL,
           total_amount DECIMAL(12,2) NOT NULL,
-          currency VARCHAR(10) DEFAULT 'USD',
+          currency VARCHAR(10) DEFAULT 'UZS',
           start_date DATE NOT NULL,
           end_date DATE,
           status plan_status DEFAULT 'Active',

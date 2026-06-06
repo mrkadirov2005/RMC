@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, CreditCard, TrendingUp, Users } from 'lucide
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardFinancialMonth, DashboardStatCard } from '../types';
+import { formatMoney } from '@/utils/helpers';
 
 interface DashboardFinanceAnalysisProps {
   finance: DashboardFinancialMonth;
@@ -11,8 +12,6 @@ interface DashboardFinanceAnalysisProps {
   onNextMonth: () => void;
   onMetricClick?: (card: DashboardStatCard) => void;
 }
-
-const formatMoney = (value: number) => `$${value.toLocaleString()}`;
 
 const financeMetrics: Array<{
   label: string;

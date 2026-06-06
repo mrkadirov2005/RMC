@@ -3,12 +3,11 @@
 import { CreditCard, TrendingUp, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardStats } from '../types';
+import { formatMoney } from '@/utils/helpers';
 
 interface DashboardPaymentOverviewProps {
   stats: DashboardStats;
 }
-
-const formatMoney = (value: number) => `$${value.toLocaleString()}`;
 
 // Renders the dashboard payment overview module.
 export const DashboardPaymentOverview = ({ stats }: DashboardPaymentOverviewProps) => {

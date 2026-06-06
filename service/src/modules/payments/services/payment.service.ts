@@ -22,7 +22,7 @@ const createPayment = (body: any, centerId?: number) => {
     centerId || body.center_id,
     payment_date,
     amount,
-    currency || 'USD',
+    currency || 'UZS',
     payment_method || 'Cash',
     transaction_reference,
     receipt_number,

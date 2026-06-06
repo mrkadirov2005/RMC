@@ -20,12 +20,10 @@ import type {
   DashboardStats,
   DashboardStudentGrowthPoint,
 } from '../types';
+import { formatMoney } from '../../../../utils/helpers';
 
 const todayKey = new Date().toISOString().split('T')[0];
 const schoolColors = ['#38bdf8', '#34d399', '#f59e0b', '#f472b6', '#a78bfa', '#94a3b8'];
-
-// Formats money.
-const formatMoney = (value: number) => `$${value.toLocaleString()}`;
 
 // Returns record value.
 const getRecordValue = (item: DashboardRecord, key: string) => item[key];

@@ -15,6 +15,7 @@ import type {
 } from '../types';
 import { buildOwnerPaymentMonthStats, buildOwnerTeacherEarnings } from '../utils';
 import { PieChart } from '@/shared/components/PieChart';
+import { formatMoney } from '@/utils/helpers';
 
 interface Props {
   summary: OwnerManagerStatisticsSummary;
@@ -217,13 +218,13 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
   }, [collections.payments, selectedMonth]);
   const executiveKpis = [
     { label: 'Total Students', value: summary.totalStudents.toLocaleString(), detail: `${activeRate}% active`, icon: Users, tone: 'from-indigo-500 to-sky-500' },
-    { label: 'Monthly Revenue', value: `$${totalEarned.toLocaleString()}`, detail: `${paymentStats.paidPercent}% paid`, icon: DollarSign, tone: 'from-emerald-500 to-teal-500' },
+    { label: 'Monthly Revenue', value: formatMoney(totalEarned), detail: `${paymentStats.paidPercent}% paid`, icon: DollarSign, tone: 'from-emerald-500 to-teal-500' },
     { label: 'Branches', value: totalBranches.toLocaleString(), detail: `${totalClasses.toLocaleString()} classes`, icon: Building2, tone: 'from-cyan-500 to-blue-500' },
     { label: 'Teachers', value: totalTeachers.toLocaleString(), detail: `${teacherCoverage}% student coverage`, icon: GraduationCap, tone: 'from-fuchsia-500 to-rose-500' },
     { label: 'Class Coverage', value: `${classCoverage}%`, detail: `${summary.assignedToClass.toLocaleString()} assigned`, icon: BookMarked, tone: 'from-amber-500 to-orange-500' },
     { label: 'Avg Class Size', value: averageClassSize.toLocaleString(), detail: 'Students per class', icon: Activity, tone: 'from-violet-500 to-indigo-500' },
     { label: 'Paid Students', value: paymentStats.paidStudents.toLocaleString(), detail: `${paymentStats.unpaidStudents.toLocaleString()} unpaid`, icon: Wallet, tone: 'from-lime-500 to-emerald-500' },
-    { label: 'Revenue / Paid', value: `$${revenuePerPaidStudent.toLocaleString()}`, detail: 'Average collected', icon: Percent, tone: 'from-slate-600 to-slate-900' },
+    { label: 'Revenue / Paid', value: formatMoney(revenuePerPaidStudent), detail: 'Average collected', icon: Percent, tone: 'from-slate-600 to-slate-900' },
   ];
   const topCenter = centerBarRows[0];
   const topTeacher = teacherEarnings[0];
@@ -238,7 +239,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
     {
       label: 'Revenue leader',
       value: topTeacher?.teacherName || 'No teacher data',
-      detail: topTeacher ? `$${topTeacher.earnedAmount.toLocaleString()} collected in ${monthLabel}` : 'Teacher earnings will appear here',
+      detail: topTeacher ? `${formatMoney(topTeacher.earnedAmount)} collected in ${monthLabel}` : 'Teacher earnings will appear here',
       icon: Target,
       tone: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200',
     },
@@ -291,7 +292,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                     <p className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50">Current month snapshot</p>
                     <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
                       <div>
-                        <p className="text-5xl font-bold tracking-normal text-slate-900 dark:text-white">${totalEarned.toLocaleString()}</p>
+                        <p className="text-5xl font-bold tracking-normal text-slate-900 dark:text-white">{formatMoney(totalEarned)}</p>
                         <p className="mt-1 text-sm text-slate-500 dark:text-white/60">Collected revenue in {monthLabel}</p>
                       </div>
                       <div className="rounded-lg border border-slate-200/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
@@ -307,7 +308,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   <div className="rounded-lg border border-slate-200/70 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
                     <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-white/55">
                       <span>6-month revenue</span>
-                      <span>${paymentTrend.max.toLocaleString()} peak</span>
+                      <span>{formatMoney(paymentTrend.max)} peak</span>
                     </div>
                     <div className="flex h-28 items-end gap-2">
                       {paymentTrend.rows.map((row) => {
@@ -430,10 +431,10 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                     <CardDescription>Selected month collection performance.</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <p className="text-4xl font-bold text-slate-950 dark:text-white">${totalEarned.toLocaleString()}</p>
+                    <p className="text-4xl font-bold text-slate-950 dark:text-white">{formatMoney(totalEarned)}</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">Paid share</p><p className="font-semibold">{paymentStats.paidPercent}%</p></div>
-                      <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">Avg paid</p><p className="font-semibold">${revenuePerPaidStudent.toLocaleString()}</p></div>
+                      <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">Avg paid</p><p className="font-semibold">{formatMoney(revenuePerPaidStudent)}</p></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -491,7 +492,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                       {paymentTrend.rows.map((row) => (
                         <div key={row.key}>
                           <p>{row.label}</p>
-                          <p className="mt-1 font-semibold text-slate-700 dark:text-white/75">${row.value.toLocaleString()}</p>
+                          <p className="mt-1 font-semibold text-slate-700 dark:text-white/75">{formatMoney(row.value)}</p>
                         </div>
                       ))}
                     </div>
@@ -538,7 +539,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                           <p className="font-semibold text-slate-800 dark:text-white/85">{row.label}</p>
                           <p className="text-xs text-muted-foreground">{row.count.toLocaleString()} payments</p>
                         </div>
-                        <p className="text-lg font-bold text-emerald-600 dark:text-emerald-300">${row.amount.toLocaleString()}</p>
+                        <p className="text-lg font-bold text-emerald-600 dark:text-emerald-300">{formatMoney(row.amount)}</p>
                       </div>
                     ))}
                   </CardContent>
@@ -716,7 +717,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                 </div>
                 <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Earned total</p>
-                  <p className="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-300">${totalEarned.toLocaleString()}</p>
+                  <p className="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-300">{formatMoney(totalEarned)}</p>
                 </div>
                 <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
                   <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Top teacher</p>
@@ -771,7 +772,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                             <TableCell className="text-right text-emerald-600 dark:text-emerald-300">{row.paidStudents.toLocaleString()}</TableCell>
                             <TableCell className="text-right text-rose-600 dark:text-rose-300">{row.unpaidStudents.toLocaleString()}</TableCell>
                             <TableCell className="text-right font-semibold text-slate-900 dark:text-white">
-                              ${row.earnedAmount.toLocaleString()}
+                              {formatMoney(row.earnedAmount)}
                             </TableCell>
                           </TableRow>
                         ))}

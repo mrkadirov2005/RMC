@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { paymentAPI } from '../../../../shared/api/api';
 import { showToast } from '../../../../utils/toast';
+import { formatMoney } from '../../../../utils/helpers';
 
 interface Payment {
   payment_id?: number;
@@ -71,7 +72,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
   const [formData, setFormData] = useState<Partial<Payment>>({
     payment_status: 'Pending',
     payment_method: 'Cash',
-    currency: 'USD',
+    currency: 'UZS',
   });
   const [loading, setLoading] = useState(false);
 
@@ -85,7 +86,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
       setFormData({
         payment_status: 'Pending',
         payment_method: 'Cash',
-        currency: 'USD',
+        currency: 'UZS',
         amount: classData?.payment_amount || 0,
       });
     }
@@ -99,7 +100,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
     setFormData({
       payment_status: 'Pending',
       payment_method: 'Cash',
-      currency: 'USD',
+      currency: 'UZS',
       amount: classData?.payment_amount || 0,
     });
   };
@@ -179,7 +180,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
                 payments.map((payment, index) => (
                   <TableRow key={payment.payment_id || payment.id}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell>${(Number(payment.amount) || 0).toFixed(2)}</TableCell>
+                    <TableCell>{formatMoney(payment.amount)}</TableCell>
                     <TableCell>{new Date(payment.payment_date).toLocaleDateString()}</TableCell>
                     <TableCell>{payment.payment_method}</TableCell>
                     <TableCell>
@@ -288,7 +289,8 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
               <Input
                 id="currency"
                 type="text"
-                value={formData.currency || 'USD'}
+                readOnly
+                value={formData.currency || 'UZS'}
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
               />
             </div>

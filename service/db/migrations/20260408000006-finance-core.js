@@ -25,7 +25,7 @@ module.exports = {
           center_id INT NOT NULL,
           payment_date DATE NOT NULL,
           amount DECIMAL(12,2) NOT NULL,
-          currency VARCHAR(10) DEFAULT 'USD',
+          currency VARCHAR(10) DEFAULT 'UZS',
           payment_method payment_method_t DEFAULT 'Cash',
           transaction_reference VARCHAR(100),
           receipt_number VARCHAR(50) UNIQUE,

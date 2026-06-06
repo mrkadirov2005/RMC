@@ -41,6 +41,7 @@ import { Switch } from '@/components/ui/switch';
 import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
 import { exportCsvEntity } from '@/shared/dataCsv';
+import { formatMoney } from '@/utils/helpers';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
@@ -164,7 +165,7 @@ const ClassesPage = () => {
     },
     {
       label: 'Monthly tuition',
-      value: `$${monthlyTuition.toLocaleString()}`,
+      value: formatMoney(monthlyTuition),
       detail: 'Listed amounts',
       icon: DollarSign,
       shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',

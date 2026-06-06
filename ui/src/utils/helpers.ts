@@ -63,9 +63,15 @@ export const formatDate = (date: string | Date): string => {
 };
 
 // Format currency utility
-export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
-  return new Intl.NumberFormat('en-US', {
+export const formatCurrency = (amount: number, currency: string = 'UZS'): string => {
+  return new Intl.NumberFormat('uz-UZ', {
     style: 'currency',
     currency,
+    maximumFractionDigits: currency === 'UZS' ? 0 : 2,
   }).format(amount);
+};
+
+export const formatMoney = (amount: number | string | null | undefined): string => {
+  const numericAmount = Number(amount || 0);
+  return formatCurrency(Number.isFinite(numericAmount) ? numericAmount : 0, 'UZS');
 };

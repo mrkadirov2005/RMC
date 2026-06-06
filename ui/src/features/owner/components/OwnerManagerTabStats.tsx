@@ -28,6 +28,7 @@ import { getOwnerManagerRowId } from '../utils';
 import type { LucideIcon } from 'lucide-react';
 import type { OwnerManagerTabType, OwnerManagerStatisticsCollections } from '../types';
 import { buildOwnerTeacherEarnings } from '../utils';
+import { formatMoney } from '@/utils/helpers';
 
 interface OwnerManagerTabStatsProps {
   activeTab: OwnerManagerTabType;
@@ -373,7 +374,7 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
                       <TableCell className="text-right text-slate-700 dark:text-white/80">{row.totalStudents}</TableCell>
                       <TableCell className="text-right text-emerald-600 dark:text-emerald-300">{row.paidStudents}</TableCell>
                       <TableCell className="text-right text-rose-600 dark:text-rose-300">{row.unpaidStudents}</TableCell>
-                      <TableCell className="text-right font-semibold text-slate-900 dark:text-white">${row.earnedAmount.toLocaleString()}</TableCell>
+                      <TableCell className="text-right font-semibold text-slate-900 dark:text-white">{formatMoney(row.earnedAmount)}</TableCell>
                       <TableCell className="text-right">
                         {teacherRecord && (
                           <div className="inline-flex items-center gap-1">

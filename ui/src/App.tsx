@@ -48,6 +48,7 @@ import { ServiceStatusGuard } from './features/system/components/ServiceStatusGu
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
 import { PERMISSION_CODES } from './types';
 import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
+import { useLanguage } from './i18n/LanguageContext';
 
 // Handles safe log arg.
 const safeLogArg = (value: unknown) => {
@@ -76,18 +77,30 @@ if (typeof window !== 'undefined') {
 const LoadingSpinner = () => (
   <div className="flex flex-col items-center justify-center min-h-[200px] gap-3">
     <Loader2 className="w-8 h-8 animate-spin text-primary" />
-    <p className="text-sm text-muted-foreground">Loading...</p>
+    <LoadingLabel />
   </div>
 );
 
+const LoadingLabel = () => {
+  const { t } = useLanguage();
+  return <p className="text-sm text-muted-foreground">{t('Loading...')}</p>;
+};
+
 // Unauthorized page
 const UnauthorizedPage = () => (
-  <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center">
-    <h1 className="text-4xl font-bold text-destructive">Access Denied</h1>
-    <p className="text-muted-foreground">You don't have permission to access this resource.</p>
-    <a href="/dashboard" className="text-primary hover:underline font-medium">Go to Dashboard</a>
-  </div>
+  <UnauthorizedContent />
 );
+
+const UnauthorizedContent = () => {
+  const { t } = useLanguage();
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen gap-4 text-center">
+      <h1 className="text-4xl font-bold text-destructive">{t('Access Denied')}</h1>
+      <p className="text-muted-foreground">{t("You don't have permission to access this resource.")}</p>
+      <a href="/dashboard" className="text-primary hover:underline font-medium">{t('Go to Dashboard')}</a>
+    </div>
+  );
+};
 
 // Role-based redirect for default/catch-all routes
 const RoleBasedRedirect = () => {

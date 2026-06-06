@@ -31,6 +31,7 @@ import type { RootState } from '../../store';
 import { useAppDispatch } from '../crm/hooks';
 import { fetchStudentDashboard } from '../../slices/studentDashboardSlice';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { formatMoney } from '@/utils/helpers';
 
 
 interface StudentProfile {
@@ -391,7 +392,7 @@ const StudentPortal = () => {
         <MetricCard className="animate-slide-up animation-delay-200" label="Active Tests" value={activeTests} detail="Ready to take" icon={FileQuestion} tone="blue" onClick={() => navigate('/my-tests')} />
         <MetricCard className="animate-slide-up animation-delay-300" label="Attendance Rate" value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} present`} icon={CalendarDays} tone="green" />
         <MetricCard className="animate-slide-up animation-delay-400" label="Average Grade" value={`${averageGrade}%`} detail="Across posted grades" icon={CheckCircle} tone="neutral" />
-        <MetricCard className="animate-slide-up animation-delay-500" label="Outstanding Debt" value={`$${outstandingDebt.toLocaleString()}`} detail="Remaining balance" icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} />
+        <MetricCard className="animate-slide-up animation-delay-500" label="Outstanding Debt" value={formatMoney(outstandingDebt)} detail="Remaining balance" icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} />
         <MetricCard className="animate-slide-up animation-delay-600" label="Coins" value={Number(student?.coins || 0).toLocaleString()} detail="Current balance" icon={Coins} tone="amber" />
       </div>
 

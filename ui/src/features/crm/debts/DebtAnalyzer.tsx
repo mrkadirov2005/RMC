@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { formatMoney } from '@/utils/helpers';
 import {
   Dialog,
   DialogContent,
@@ -257,7 +258,7 @@ const DebtAnalyzer = () => {
                               {result.total_payments}
                             </TableCell>
                             <TableCell className="text-right">
-                              ${result.total_debt_balance.toFixed(2)}
+                              {formatMoney(result.total_debt_balance)}
                             </TableCell>
                             <TableCell>
                               <button
@@ -326,7 +327,7 @@ const DebtAnalyzer = () => {
             <div className="mt-4 space-y-2">
               <Label htmlFor="monthlyFee">Monthly Fee Amount</Label>
               <div className="flex items-center gap-2">
-                <span className="text-muted-foreground">$</span>
+                <span className="text-muted-foreground">UZS</span>
                 <Input
                   id="monthlyFee"
                   type="number"

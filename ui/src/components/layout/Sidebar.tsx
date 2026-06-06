@@ -18,6 +18,7 @@ import { fetchCentersForce } from '../../slices/centersSlice';
 import { selectCenterOptions } from '../../store/selectors';
 import { useThemeMode } from '../../theme/ThemeContext';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const iconMap: Record<string, React.ElementType> = {
   Dashboard: LayoutDashboard,
@@ -57,6 +58,7 @@ const Sidebar = memo(() => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { toggleTheme, isDark } = useThemeMode();
+  const { language, setLanguage, t } = useLanguage();
   const { canAccess } = useRBAC();
   const normalizedRole = String(user?.role || '').toLowerCase();
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
@@ -255,7 +257,7 @@ const Sidebar = memo(() => {
       {user && isGlobalSuperuser && isExpanded && (
         <div className="mx-3 mt-2">
           <label htmlFor="active_center_sidebar" className="sr-only">
-            Active Branch
+            {t('Active Branch')}
           </label>
           <div className="flex h-9 items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/60 px-2">
             <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -277,6 +279,28 @@ const Sidebar = memo(() => {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 pt-2 px-2">
+        {isExpanded && (
+          <div className="mb-2 px-1">
+            <div className="flex rounded-lg border border-sidebar-border bg-sidebar-accent/60 p-1">
+              {(['en', 'uz'] as const).map((option) => (
+                <button
+                  key={option}
+                  type="button"
+                  onClick={() => setLanguage(option)}
+                  className={cn(
+                    'flex-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors',
+                    language === option
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-sidebar-accent-foreground'
+                  )}
+                  aria-label={`${t('Language')}: ${option === 'en' ? t('English') : t('Uzbek')}`}
+                >
+                  {option === 'en' ? 'EN' : 'UZ'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         <TooltipProvider delayDuration={0}>
           <nav className="space-y-0.5">
             {filteredMenuItems.map((item) => {
@@ -296,11 +320,11 @@ const Sidebar = memo(() => {
                       )}
                     >
                       <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-muted-foreground')} />
-                      {isExpanded && <span>{item.label}</span>}
+                      {isExpanded && <span>{t(item.label)}</span>}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className={cn(isExpanded && 'hidden')}>
-                    {item.label}
+                    {t(item.label)}
                   </TooltipContent>
                 </Tooltip>
               );

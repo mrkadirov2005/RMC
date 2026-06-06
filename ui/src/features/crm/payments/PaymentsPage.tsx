@@ -91,6 +91,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
+import { formatMoney } from '@/utils/helpers';
 
 interface Payment {
   payment_id?: number;
@@ -147,8 +148,6 @@ const paymentStatCardClass =
 const folderCardClass =
   'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm';
 
-const formatMoney = (value: number) => `$${Number(value || 0).toLocaleString()}`;
-
 // Renders the payments page screen.
 const PaymentsPage = () => {
   const dispatch = useAppDispatch();
@@ -188,7 +187,7 @@ const PaymentsPage = () => {
   const hasActiveFilters = useAppSelector(selectPaymentsHasActiveFilters);
 
   const [formData, setFormData] = useState<Partial<Payment>>({
-    currency: 'USD',
+    currency: 'UZS',
     payment_method: 'Cash',
     payment_type: 'Tuition',
     status: 'Completed',
@@ -239,7 +238,7 @@ const PaymentsPage = () => {
       dispatch(setPaymentsEditingId(null));
       setFormData({
         center_id: defaultCenterId,
-        currency: 'USD',
+        currency: 'UZS',
         payment_method: 'Cash',
         payment_type: 'Tuition',
         status: 'Completed',
@@ -254,7 +253,7 @@ const PaymentsPage = () => {
     dispatch(setPaymentsEditingId(null));
     setFormData({
       center_id: getResolvedCenterId(user) ?? 0,
-      currency: 'USD',
+      currency: 'UZS',
       payment_method: 'Cash',
       payment_type: 'Tuition',
       status: 'Completed',
@@ -1351,7 +1350,7 @@ const PaymentsPage = () => {
                       </TableCell>
                       {!isTeacher && (
                         <TableCell className="font-semibold">
-                          ${Number(payment.amount || 0).toFixed(2)}
+                          {formatMoney(payment.amount || 0)}
                         </TableCell>
                       )}
                       {!isTeacher && <TableCell>{payment.payment_method}</TableCell>}

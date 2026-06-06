@@ -38,7 +38,7 @@ const create = async (body: any, centerId?: number) => {
     scopedCenterId,
     name,
     total_amount,
-    currency || 'USD',
+    currency || 'UZS',
     start_date,
     end_date || null,
   ]);

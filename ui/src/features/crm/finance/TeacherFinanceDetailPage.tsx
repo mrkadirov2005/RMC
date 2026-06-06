@@ -12,6 +12,7 @@ import { fetchPayments as fetchPaymentsThunk } from '@/slices/paymentsSlice';
 import { fetchTeachers as fetchTeachersThunk } from '@/slices/teachersSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { formatMoney } from '@/utils/helpers';
 
 interface Class {
   class_id?: number;
@@ -218,7 +219,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                    ${Number(classData.classEarnings).toFixed(2)}
+                    {formatMoney(classData.classEarnings)}
                   </p>
                 </CardContent>
               </Card>
@@ -238,7 +239,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-orange-600">
-                    ${((classData.totalStudents - classData.paidCount) * classData.class.payment_amount).toLocaleString()}
+                    {formatMoney((classData.totalStudents - classData.paidCount) * classData.class.payment_amount)}
                   </p>
                 </CardContent>
               </Card>
@@ -265,11 +266,11 @@ const TeacherFinanceDetailPage: React.FC = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">${Number(studentPayment.expectedAmount).toFixed(2)}</p>
+                        <p className="font-medium">{formatMoney(studentPayment.expectedAmount)}</p>
                         {studentPayment.isPaid ? (
                           <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm">
                             <CheckCircle className="h-4 w-4" />
-                            Paid: ${Number(studentPayment.paidAmount).toFixed(2)}
+                            Paid: {formatMoney(studentPayment.paidAmount)}
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-sm">

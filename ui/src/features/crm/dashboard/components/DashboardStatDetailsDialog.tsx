@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { DashboardCollections, DashboardRecord, DashboardStatCard } from '../types';
+import { formatMoney } from '@/utils/helpers';
 
 interface DashboardStatDetailsDialogProps {
   card: DashboardStatCard | null;
@@ -51,8 +52,6 @@ const getNumber = (item: DashboardRecord, key: string) => {
 const getStudentId = (student: DashboardRecord) => getNumber(student, 'student_id') || getNumber(student, 'id');
 
 const getTeacherId = (teacher: DashboardRecord) => getNumber(teacher, 'teacher_id') || getNumber(teacher, 'id');
-
-const formatMoney = (value: number) => `$${value.toLocaleString()}`;
 
 const formatDate = (value: string) => {
   if (!value) return '-';

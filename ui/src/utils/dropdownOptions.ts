@@ -191,8 +191,5 @@ export const termOptions: DropdownOption[] = [
 
 // Currency options
 export const currencyOptions: DropdownOption[] = [
-  { id: 1, label: 'USD', value: 'USD' },
-  { id: 2, label: 'EUR', value: 'EUR' },
-  { id: 3, label: 'GBP', value: 'GBP' },
-  { id: 4, label: 'AUD', value: 'AUD' },
+  { id: 1, label: 'UZS', value: 'UZS' },
 ];

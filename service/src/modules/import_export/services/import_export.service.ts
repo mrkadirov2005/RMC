@@ -482,7 +482,7 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         rowCenterId,
         row.payment_date,
         row.amount,
-        row.currency || 'USD',
+        row.currency || 'UZS',
         normalizePaymentMethod(row.payment_method),
         row.transaction_reference || null,
         row.receipt_number || null,
