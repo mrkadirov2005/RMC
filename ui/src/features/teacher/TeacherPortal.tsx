@@ -50,6 +50,7 @@ import { fetchClasses } from '../../slices/classesSlice';
 import { fetchAttendance } from '../../slices/attendanceSlice';
 import { fetchAssignments } from '../../slices/assignmentsSlice';
 import { selectTeacherPortalUi } from '../../store/selectors';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 interface TeacherStats {
   totalStudents: number;
@@ -67,6 +68,7 @@ const TeacherPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const teacherPortalUi = useAppSelector(selectTeacherPortalUi);
   const { tabValue } = teacherPortalUi;
 
@@ -162,22 +164,22 @@ const TeacherPortal = () => {
   };
 
   const statsCards = [
-    { title: 'My Students', value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: 'Assigned to you', tab: 'students' },
-    { title: 'My Classes', value: stats.totalClasses, icon: GraduationCap, tone: 'green' as const, detail: `${stats.upcomingClasses} active`, tab: 'classes' },
-    { title: 'Active Tests', value: stats.pendingTests, icon: FileQuestion, tone: 'amber' as const, detail: 'Open test work', tab: 'tests' },
-    { title: 'Pending Grading', value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? 'Needs attention' : 'Nothing pending', tab: 'grades' },
-    { title: "Today's Attendance", value: stats.todayAttendance, icon: CalendarDays, tone: 'neutral' as const, detail: 'Records today', tab: 'attendance' },
-    { title: 'Assignments', value: stats.pendingAssignments, icon: ClipboardList, tone: 'amber' as const, detail: stats.pendingAssignments > 0 ? 'To review' : 'Clear', tab: 'assignments' },
+    { title: t('My Students'), value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: t('Assigned to you'), tab: 'students' },
+    { title: t('My Classes'), value: stats.totalClasses, icon: GraduationCap, tone: 'green' as const, detail: `${stats.upcomingClasses} ${t('active')}`, tab: 'classes' },
+    { title: t('Active Tests'), value: stats.pendingTests, icon: FileQuestion, tone: 'amber' as const, detail: t('Open test work'), tab: 'tests' },
+    { title: t('Pending Grading'), value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? t('Needs attention') : t('Nothing pending'), tab: 'grades' },
+    { title: t("Today's Attendance"), value: stats.todayAttendance, icon: CalendarDays, tone: 'neutral' as const, detail: t('Records today'), tab: 'attendance' },
+    { title: t('Assignments'), value: stats.pendingAssignments, icon: ClipboardList, tone: 'amber' as const, detail: stats.pendingAssignments > 0 ? t('To review') : t('Clear'), tab: 'assignments' },
   ];
 
   const tabs = [
-    { value: 'students', label: 'My Students', icon: <Users className="h-4 w-4" /> },
-    { value: 'tests', label: 'My Tests', icon: <FileQuestion className="h-4 w-4" /> },
-    { value: 'classes', label: 'My Classes', icon: <GraduationCap className="h-4 w-4" /> },
-    { value: 'attendance', label: 'Attendance', icon: <CalendarDays className="h-4 w-4" /> },
-    { value: 'grades', label: 'Grades', icon: <Star className="h-4 w-4" /> },
-    { value: 'assignments', label: 'Assignments', icon: <ClipboardList className="h-4 w-4" /> },
-    { value: 'payments', label: 'Payments', icon: <Wallet className="h-4 w-4" /> },
+    { value: 'students', label: t('My Students'), icon: <Users className="h-4 w-4" /> },
+    { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
+    { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
+    { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
+    { value: 'grades', label: t('Grades'), icon: <Star className="h-4 w-4" /> },
+    { value: 'assignments', label: t('Assignments'), icon: <ClipboardList className="h-4 w-4" /> },
+    { value: 'payments', label: t('Payments'), icon: <Wallet className="h-4 w-4" /> },
   ];
 
   if (loading) {
@@ -194,12 +196,12 @@ const TeacherPortal = () => {
         className="animate-slide-up"
         variant="hero"
         heroGradient="from-indigo-800 via-blue-700 to-sky-600"
-        title={`Welcome back, ${user?.first_name || 'Teacher'}!`}
-        description="Teacher Portal - Manage your classes, students, and tests"
+        title={`${t('Welcome back')}, ${user?.first_name || t('Teacher')}!`}
+        description={t('Teacher Portal - Manage your classes, students, and tests')}
         icon={GraduationCap}
         meta={
           <>
-            <Badge className="bg-white/20 text-white border-none hover:bg-white/30">Teacher</Badge>
+            <Badge className="bg-white/20 text-white border-none hover:bg-white/30">{t('Teacher')}</Badge>
             {user?.roles && user.roles.length > 0 && user.roles.map((role: string) => (
               <Badge key={role} className="bg-white/10 text-white border-none hover:bg-white/20">{role}</Badge>
             ))}
@@ -210,21 +212,21 @@ const TeacherPortal = () => {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button type="button" variant="outline" size="icon" aria-label="Notifications" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                  <Button type="button" variant="outline" size="icon" aria-label={t('Notifications')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
                     <Bell className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Notifications</TooltipContent>
+                <TooltipContent>{t('Notifications')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button type="button" variant="outline" size="icon" aria-label="Schedule" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+                  <Button type="button" variant="outline" size="icon" aria-label={t('Schedule')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
                     <Clock className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>Schedule</TooltipContent>
+                <TooltipContent>{t('Schedule')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
           </>
@@ -248,21 +250,21 @@ const TeacherPortal = () => {
 
       <SectionPanel
         className="animate-slide-up animation-delay-500"
-        title="Teaching Workspace"
-        description="Switch between the daily tools you use most."
+        title={t('Teaching Workspace')}
+        description={t('Switch between the daily tools you use most.')}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => handleQuickAction('test')}>
               <FileQuestion className="mr-2 h-4 w-4" />
-              Create Test
+              {t('Create Test')}
             </Button>
             <Button type="button" variant="outline" size="sm" onClick={() => handleQuickAction('attendance')}>
               <CalendarDays className="mr-2 h-4 w-4" />
-              Attendance
+              {t('Attendance')}
             </Button>
             <Button type="button" size="sm" onClick={() => handleQuickAction('assignment')}>
               <Plus className="mr-2 h-4 w-4" />
-              Assignment
+              {t('Assignment')}
             </Button>
           </div>
         }
@@ -315,7 +317,7 @@ const TeacherPortal = () => {
           <Button
             size="icon"
             className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg"
-            aria-label="Quick add"
+            aria-label={t('Quick add')}
           >
             <Plus className="h-6 w-6" />
           </Button>
@@ -323,19 +325,19 @@ const TeacherPortal = () => {
         <DropdownMenuContent side="top" align="end" className="w-48">
           <DropdownMenuItem onClick={() => handleQuickAction('test')}>
             <FileQuestion className="h-4 w-4 mr-2" />
-            Create Test
+            {t('Create Test')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleQuickAction('attendance')}>
             <CalendarDays className="h-4 w-4 mr-2" />
-            Take Attendance
+            {t('Take Attendance')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleQuickAction('assignment')}>
             <ClipboardList className="h-4 w-4 mr-2" />
-            Create Assignment
+            {t('Create Assignment')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleQuickAction('grade')}>
             <Star className="h-4 w-4 mr-2" />
-            Enter Grades
+            {t('Enter Grades')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

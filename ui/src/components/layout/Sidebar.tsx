@@ -281,17 +281,18 @@ const Sidebar = memo(() => {
       <ScrollArea className="flex-1 pt-2 px-2">
         {isExpanded && (
           <div className="mb-2 px-1">
-            <div className="flex rounded-lg border border-sidebar-border bg-sidebar-accent/60 p-1">
+            <div className="flex rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-1 shadow-inner shadow-black/5">
               {(['en', 'uz'] as const).map((option) => (
                 <button
                   key={option}
                   type="button"
                   onClick={() => setLanguage(option)}
+                  aria-pressed={language === option}
                   className={cn(
-                    'flex-1 rounded-md px-2 py-1 text-xs font-semibold transition-colors',
+                    'flex-1 rounded-lg px-2 py-1.5 text-xs font-bold tracking-wide transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40',
                     language === option
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-muted-foreground hover:text-sidebar-accent-foreground'
+                      ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-sm shadow-indigo-500/25'
+                      : 'text-muted-foreground hover:-translate-y-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   )}
                   aria-label={`${t('Language')}: ${option === 'en' ? t('English') : t('Uzbek')}`}
                 >

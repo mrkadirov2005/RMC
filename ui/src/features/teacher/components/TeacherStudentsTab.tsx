@@ -51,6 +51,7 @@ import { studentAPI, gradeAPI, attendanceAPI, testAPI } from '../../../shared/ap
 import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '../../crm/hooks';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface Student {
   student_id: number;
@@ -96,6 +97,7 @@ interface TeacherStudentsTabProps {
 // Renders the teacher students tab tab.
 const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudentsTabProps) => {
   const { user } = useAppSelector((state) => state.auth);
+  const { t } = useLanguage();
   const effectiveTeacherId = teacherId ?? user?.id;
   const navigate = useNavigate();
   const [students, setStudents] = useState<Student[]>([]);
@@ -269,12 +271,12 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
       {/* Search Bar */}
       <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
         <h3 className="text-lg font-semibold">
-          My Students ({filteredStudents.length})
+          {t('My Students')} ({filteredStudents.length})
         </h3>
         <div className="relative min-w-[350px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search students by name, email, or enrollment..."
+            placeholder={t('Search students by name, email, or enrollment...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
@@ -285,19 +287,19 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
       {/* Students Table */}
       {filteredStudents.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No students found</p>
+          <p className="text-muted-foreground">{t('No students found')}</p>
         </div>
       ) : (
         <div className="border rounded-lg overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead>Student</TableHead>
-                <TableHead>Enrollment #</TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('Student')}</TableHead>
+                <TableHead>{t('Enrollment #')}</TableHead>
+                <TableHead>{t('Class')}</TableHead>
+                <TableHead>{t('Contact')}</TableHead>
+                <TableHead>{t('Status')}</TableHead>
+                <TableHead className="text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -327,7 +329,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">
-                      {student.class_name || 'Unassigned'}
+                      {student.class_name || t('Unassigned')}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -372,7 +374,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                   </TableCell>
                   <TableCell>
                     <Badge variant={getStatusVariant(student.status) as any}>
-                      {student.status || 'Active'}
+                      {t(student.status || 'Active')}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -388,7 +390,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem onClick={() => handleViewDetails(student)}>
                           <Eye className="h-4 w-4 mr-2" />
-                          View Details
+                          {t('View Details')}
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => {
@@ -399,23 +401,23 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                           }}
                         >
                           <Coins className="h-4 w-4 mr-2" />
-                          Update Coins
+                          {t('Update Coins')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => navigate(`/student/${student.student_id}`)}>
                           <Eye className="h-4 w-4 mr-2" />
-                          Full Profile
+                          {t('Full Profile')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleViewDetails(student, 'grades')}>
                           <Star className="h-4 w-4 mr-2" />
-                          View Grades
+                          {t('View Grades')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleViewDetails(student, 'attendance')}>
                           <CalendarDays className="h-4 w-4 mr-2" />
-                          View Attendance
+                          {t('View Attendance')}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleViewDetails(student, 'tests')}>
                           <FileQuestion className="h-4 w-4 mr-2" />
-                          View Test Results
+                          {t('View Test Results')}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -429,7 +431,7 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
 
       <div className="mt-3">
         <p className="text-sm text-muted-foreground">
-          Showing {filteredStudents.length} of {students.length} students
+          {t('Showing')} {filteredStudents.length} {t('of')} {students.length} {t('students')}
         </p>
       </div>
 
@@ -462,19 +464,19 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
                 <Card className="bg-indigo-500/10 text-center p-4">
                   <p className="text-3xl font-bold text-primary">{calculateAverageGrade()}%</p>
-                  <p className="text-xs text-muted-foreground">Avg. Grade</p>
+                  <p className="text-xs text-muted-foreground">{t('Avg. Grade')}</p>
                 </Card>
                 <Card className="bg-emerald-500/10 text-center p-4">
                   <p className="text-3xl font-bold text-emerald-500">{calculateAttendancePercentage()}%</p>
-                  <p className="text-xs text-muted-foreground">Attendance</p>
+                  <p className="text-xs text-muted-foreground">{t('Attendance')}</p>
                 </Card>
                 <Card className="bg-rose-500/10 text-center p-4">
                   <p className="text-3xl font-bold text-rose-500">{studentDetails.testResults.length}</p>
-                  <p className="text-xs text-muted-foreground">Tests Taken</p>
+                  <p className="text-xs text-muted-foreground">{t('Tests Taken')}</p>
                 </Card>
                 <Card className="bg-sky-500/10 text-center p-4">
                   <p className="text-3xl font-bold text-sky-500">{studentDetails.grades.length}</p>
-                  <p className="text-xs text-muted-foreground">Grades</p>
+                  <p className="text-xs text-muted-foreground">{t('Grades')}</p>
                 </Card>
               </div>
 
@@ -482,36 +484,36 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
               <Tabs value={detailsTab} onValueChange={setDetailsTab}>
                 <TabsList className="w-full justify-start">
                   <TabsTrigger value="overview" className="gap-1.5">
-                    <TrendingUp className="h-4 w-4" /> Overview
+                    <TrendingUp className="h-4 w-4" /> {t('Overview')}
                   </TabsTrigger>
                   <TabsTrigger value="grades" className="gap-1.5">
-                    <Star className="h-4 w-4" /> Grades
+                    <Star className="h-4 w-4" /> {t('Grades')}
                   </TabsTrigger>
                   <TabsTrigger value="attendance" className="gap-1.5">
-                    <CalendarDays className="h-4 w-4" /> Attendance
+                    <CalendarDays className="h-4 w-4" /> {t('Attendance')}
                   </TabsTrigger>
                   <TabsTrigger value="tests" className="gap-1.5">
-                    <FileQuestion className="h-4 w-4" /> Test Results
+                    <FileQuestion className="h-4 w-4" /> {t('Test Results')}
                   </TabsTrigger>
                   <TabsTrigger value="coins" className="gap-1.5">
-                    <Coins className="h-4 w-4" /> Coins
+                    <Coins className="h-4 w-4" /> {t('Coins')}
                   </TabsTrigger>
                 </TabsList>
 
                 {/* Overview Tab */}
                 <TabsContent value="overview">
-                  <h4 className="font-semibold mb-3">Personal Information</h4>
+                  <h4 className="font-semibold mb-3">{t('Personal Information')}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                     <div>
-                      <p className="text-xs text-muted-foreground">Email</p>
+                      <p className="text-xs text-muted-foreground">{t('Email')}</p>
                       <p className="text-sm">{selectedStudent?.email || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Phone</p>
+                      <p className="text-xs text-muted-foreground">{t('Phone')}</p>
                       <p className="text-sm">{selectedStudent?.phone || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Date of Birth</p>
+                      <p className="text-xs text-muted-foreground">{t('Date of Birth')}</p>
                       <p className="text-sm">
                         {selectedStudent?.date_of_birth
                           ? new Date(selectedStudent.date_of_birth).toLocaleDateString()
@@ -519,38 +521,38 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Gender</p>
+                      <p className="text-xs text-muted-foreground">{t('Gender')}</p>
                       <p className="text-sm">{selectedStudent?.gender || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Parent/Guardian</p>
+                      <p className="text-xs text-muted-foreground">{t('Parent/Guardian')}</p>
                       <p className="text-sm">{selectedStudent?.parent_name || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Parent Phone</p>
+                      <p className="text-xs text-muted-foreground">{t('Parent Phone')}</p>
                       <p className="text-sm">{selectedStudent?.parent_phone || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Class</p>
-                      <p className="text-sm">{selectedStudent?.class_name || 'Unassigned'}</p>
+                      <p className="text-xs text-muted-foreground">{t('Class')}</p>
+                      <p className="text-sm">{selectedStudent?.class_name || t('Unassigned')}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground">Status</p>
+                      <p className="text-xs text-muted-foreground">{t('Status')}</p>
                       <Badge variant={getStatusVariant(selectedStudent?.status || '') as any}>
-                        {selectedStudent?.status || 'Active'}
+                        {t(selectedStudent?.status || 'Active')}
                       </Badge>
                     </div>
                   </div>
 
-                  <h4 className="font-semibold mb-3">Recent Activity</h4>
+                  <h4 className="font-semibold mb-3">{t('Recent Activity')}</h4>
                   {studentDetails.grades.length === 0 && studentDetails.attendance.length === 0 ? (
-                    <p className="text-muted-foreground">No activity recorded yet</p>
+                    <p className="text-muted-foreground">{t('No activity recorded yet')}</p>
                   ) : (
                     <div className="flex flex-col gap-2">
                       {studentDetails.grades.slice(0, 3).map((grade, i) => (
                         <Card key={i} className="p-3 border">
                           <p className="text-sm">
-                            Grade: <strong>{grade.marks_obtained}/{grade.total_marks}</strong> in {grade.subject}
+                            {t('Grade')}: <strong>{grade.marks_obtained}/{grade.total_marks}</strong> {t('in')} {grade.subject}
                           </p>
                         </Card>
                       ))}
@@ -561,15 +563,15 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                 {/* Grades Tab */}
                 <TabsContent value="grades">
                   {studentDetails.grades.length === 0 ? (
-                    <p className="text-center py-6 text-muted-foreground">No grades recorded</p>
+                    <p className="text-center py-6 text-muted-foreground">{t('No grades recorded')}</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Subject</TableHead>
-                          <TableHead>Score</TableHead>
-                          <TableHead>Percentage</TableHead>
-                          <TableHead>Grade</TableHead>
+                          <TableHead>{t('Subject')}</TableHead>
+                          <TableHead>{t('Score')}</TableHead>
+                          <TableHead>{t('Percentage')}</TableHead>
+                          <TableHead>{t('Grade')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -606,9 +608,9 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Notes</TableHead>
+                          <TableHead>{t('Date')}</TableHead>
+                          <TableHead>{t('Status')}</TableHead>
+                          <TableHead>{t('Notes')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -641,15 +643,15 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                 {/* Test Results Tab */}
                 <TabsContent value="tests">
                   {studentDetails.testResults.length === 0 ? (
-                    <p className="text-center py-6 text-muted-foreground">No test results</p>
+                    <p className="text-center py-6 text-muted-foreground">{t('No test results')}</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Test</TableHead>
-                          <TableHead>Score</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Date</TableHead>
+                          <TableHead>{t('Test')}</TableHead>
+                          <TableHead>{t('Score')}</TableHead>
+                          <TableHead>{t('Status')}</TableHead>
+                          <TableHead>{t('Date')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -681,24 +683,24 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
                 <TabsContent value="coins">
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-xs text-muted-foreground">Current Balance</p>
+                      <p className="text-xs text-muted-foreground">{t('Current Balance')}</p>
                       <p className="text-2xl font-semibold">{coinBalance.toLocaleString()}</p>
                     </div>
                     <Button size="sm" onClick={() => setCoinDialogOpen(true)}>
-                      Update Coins
+                      {t('Update Coins')}
                     </Button>
                   </div>
                   {coinTransactions.length === 0 ? (
-                    <p className="text-center py-6 text-muted-foreground">No coin transactions yet</p>
+                    <p className="text-center py-6 text-muted-foreground">{t('No coin transactions yet')}</p>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Delta</TableHead>
-                          <TableHead>Reason</TableHead>
-                          <TableHead>By</TableHead>
-                          <TableHead className="text-right">Action</TableHead>
+                          <TableHead>{t('Date')}</TableHead>
+                          <TableHead>{t('Delta')}</TableHead>
+                          <TableHead>{t('Reason')}</TableHead>
+                          <TableHead>{t('By')}</TableHead>
+                          <TableHead className="text-right">{t('Action')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -734,10 +736,10 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDetailsDialog(false)}>
-              Close
+              {t('Close')}
             </Button>
             <Button onClick={() => navigate(`/student/${selectedStudent?.student_id}`)}>
-              View Full Profile
+              {t('View Full Profile')}
             </Button>
           </DialogFooter>
         </DialogContent>

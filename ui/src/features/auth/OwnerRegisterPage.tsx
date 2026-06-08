@@ -112,7 +112,7 @@ export const OwnerRegisterPage = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
+    <main data-translation-skip className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
       <section className="relative overflow-hidden border-b border-[#d8e4f1] bg-[#21116a] px-5 py-4 text-white lg:min-h-screen lg:border-b-0 lg:px-12 lg:py-10">
         <div className="flex items-center justify-between gap-4">
           <div className="rounded-lg bg-white p-2.5">
