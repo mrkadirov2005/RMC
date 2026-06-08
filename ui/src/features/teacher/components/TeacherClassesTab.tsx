@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { classAPI } from '../../../shared/api/api';
 import { useAppSelector } from '../../crm/hooks';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {
   class_id: number;
@@ -25,6 +26,7 @@ interface TeacherClassesTabProps {
 // Renders the teacher classes tab tab.
 const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesTabProps) => {
   const { user } = useAppSelector((state) => state.auth);
+  const { t } = useLanguage();
   const effectiveTeacherId = teacherId ?? user?.id;
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,10 +80,10 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
       <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-muted-foreground/20">
         <GraduationCap className="h-14 w-14 text-muted-foreground/40 mx-auto mb-3" />
         <h3 className="text-lg font-semibold text-muted-foreground">
-          No classes assigned yet
+          {t('No classes assigned yet')}
         </h3>
         <p className="text-sm text-muted-foreground">
-          Classes will appear here once they are assigned to you
+          {t('Classes will appear here once they are assigned to you')}
         </p>
       </div>
     );
@@ -100,7 +102,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                 <GraduationCap className="h-5 w-5" />
               </div>
               <Badge variant={getStatusVariant(classItem.status) as any}>
-                {classItem.status || 'Active'}
+                {t(classItem.status || 'Active')}
               </Badge>
             </div>
 
@@ -117,7 +119,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
             <div className="flex items-center gap-2 mt-3 text-muted-foreground">
               <Users className="h-4 w-4" />
               <span className="text-sm">
-                {classItem.student_count || 0} Students
+                {classItem.student_count || 0} {t('Students')}
               </span>
             </div>
 

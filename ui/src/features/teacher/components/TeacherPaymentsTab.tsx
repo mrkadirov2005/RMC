@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/table';
 import { Wallet, Calendar, Loader2, GraduationCap } from 'lucide-react';
 import { paymentAPI, classAPI, studentAPI } from '../../../shared/api/api';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface TeacherPaymentsTabProps {
   teacherId?: number;
@@ -23,6 +24,7 @@ interface TeacherPaymentsTabProps {
 
 // Renders the teacher payments tab tab.
 export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProps) {
+  const { t } = useLanguage();
   const [selectedPaymentMonth, setSelectedPaymentMonth] = useState(() => new Date().toISOString().slice(0, 7));
   const [payments, setPayments] = useState<any[]>([]);
   const [classes, setClasses] = useState<any[]>([]);
@@ -84,10 +86,10 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
       <div className="flex justify-between items-center sm:flex-row flex-col sm:items-center gap-4">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Wallet className="h-5 w-5 text-indigo-500" />
-          Student Payments Tracker
+          {t('Student Payments Tracker')}
         </h3>
         <div className="flex items-center gap-3">
-          <Label htmlFor="payment-month-teacher" className="font-semibold whitespace-nowrap">Select Month:</Label>
+          <Label htmlFor="payment-month-teacher" className="font-semibold whitespace-nowrap">{t('Select Month:')}</Label>
           <div className="relative">
             <Input
               id="payment-month-teacher"
@@ -104,7 +106,7 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
       {classes.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Wallet className="h-16 w-16 mx-auto opacity-30 mb-4" />
-          <h3 className="text-lg font-semibold">No classes found</h3>
+          <h3 className="text-lg font-semibold">{t('No classes found')}</h3>
         </div>
       ) : (
         <div className="space-y-4">
@@ -123,22 +125,22 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
                        </div>
                        <span>{classItem.class_name} <span className="text-muted-foreground text-sm font-normal ml-2 hidden sm:inline">({classItem.level})</span></span>
                     </div>
-                    <Badge variant="secondary" className="bg-background hover:bg-muted shadow-sm border">{classStudents.length} Students</Badge>
+                    <Badge variant="secondary" className="bg-background hover:bg-muted shadow-sm border">{classStudents.length} {t('Students')}</Badge>
                   </h4>
                 </div>
                 <div className="p-0">
                   <Table>
                     <TableHeader className="bg-muted/30">
                       <TableRow className="border-b-border">
-                        <TableHead className="font-semibold text-foreground pl-6">Student</TableHead>
-                        <TableHead className="font-semibold text-foreground hidden sm:table-cell">Enrollment #</TableHead>
-                        <TableHead className="font-semibold text-foreground text-right pr-6">Payment Status</TableHead>
+                        <TableHead className="font-semibold text-foreground pl-6">{t('Student')}</TableHead>
+                        <TableHead className="font-semibold text-foreground hidden sm:table-cell">{t('Enrollment #')}</TableHead>
+                        <TableHead className="font-semibold text-foreground text-right pr-6">{t('Payment Status')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {classStudents.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">No students</TableCell>
+                          <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">{t('No students')}</TableCell>
                         </TableRow>
                       ) : (
                         classStudents.map((student) => {
@@ -168,11 +170,11 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
                               <TableCell className="text-right pr-6">
                                 {hasPaid ? (
                                   <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-500/20 px-3 py-1 shadow-sm font-semibold">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" /> Paid
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" /> {t('Paid')}
                                   </Badge>
                                 ) : (
                                   <Badge className="bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border-rose-200 dark:border-rose-500/20 px-3 py-1 shadow-sm font-semibold">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2" /> Unpaid
+                                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2" /> {t('Unpaid')}
                                   </Badge>
                                 )}
                               </TableCell>

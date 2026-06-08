@@ -32,6 +32,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { classAPI, studentAPI, attendanceAPI } from '../../../shared/api/api';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {
   class_id: number;
@@ -59,6 +60,7 @@ interface TeacherAttendanceTabProps {
 
 // Renders the teacher attendance tab tab.
 const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProps) => {
+  const { t } = useLanguage();
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [selectedClass, setSelectedClass] = useState<number | ''>('');
   const [students, setStudents] = useState<Student[]>([]);
@@ -208,11 +210,11 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
         await attendanceAPI.create(record);
       }
 
-      setSuccess(`Attendance saved successfully for ${records.length} students`);
+      setSuccess(`${t('Attendance saved successfully for')} ${records.length} ${t('students')}`);
       setShowSaveDialog(false);
       onRefresh?.();
     } catch (err: any) {
-      setError('Failed to save attendance. Please try again.');
+      setError(t('Failed to save attendance. Please try again.'));
       console.error('Error saving attendance:', err);
     } finally {
       setSaving(false);
@@ -238,10 +240,10 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        <h3 className="text-lg font-semibold">Take Attendance</h3>
+        <h3 className="text-lg font-semibold">{t('Take Attendance')}</h3>
         <div className="flex gap-3 items-center">
           <div>
-            <Label htmlFor="att-date" className="text-xs text-muted-foreground">Date</Label>
+            <Label htmlFor="att-date" className="text-xs text-muted-foreground">{t('Date')}</Label>
             <Input
               id="att-date"
               type="date"
@@ -251,14 +253,14 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
             />
           </div>
           <div>
-            <Label htmlFor="att-class" className="text-xs text-muted-foreground">Select Class</Label>
+            <Label htmlFor="att-class" className="text-xs text-muted-foreground">{t('Select Class')}</Label>
             <select
               id="att-class"
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
               className="flex h-9 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value="">-- Select --</option>
+              <option value="">-- {t('Select')} --</option>
               {classes.map((cls) => (
                 <option key={cls.class_id} value={cls.class_id}>
                   {cls.class_name}
@@ -286,8 +288,8 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
       {!selectedClass ? (
         <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-border">
           <CalendarDays className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-muted-foreground">Select a class to take attendance</h3>
-          <p className="text-sm text-muted-foreground">Choose a class from the dropdown above</p>
+          <h3 className="text-lg font-semibold text-muted-foreground">{t('Select a class to take attendance')}</h3>
+          <p className="text-sm text-muted-foreground">{t('Choose a class from the dropdown above')}</p>
         </div>
       ) : studentsLoading ? (
         <div className="flex justify-center py-8">
@@ -295,7 +297,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
         </div>
       ) : students.length === 0 ? (
         <div className="text-center py-8">
-          <p className="text-muted-foreground">No students in this class</p>
+          <p className="text-muted-foreground">{t('No students in this class')}</p>
         </div>
       ) : (
         <>
@@ -304,25 +306,25 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
             <Card className="bg-green-50/50 text-center">
               <CardContent className="py-3">
                 <p className="text-3xl font-bold text-green-600">{attendanceStats.present}</p>
-                <p className="text-xs text-muted-foreground">Present</p>
+                <p className="text-xs text-muted-foreground">{t('Present')}</p>
               </CardContent>
             </Card>
             <Card className="bg-red-50/50 text-center">
               <CardContent className="py-3">
                 <p className="text-3xl font-bold text-red-500">{attendanceStats.absent}</p>
-                <p className="text-xs text-muted-foreground">Absent</p>
+                <p className="text-xs text-muted-foreground">{t('Absent')}</p>
               </CardContent>
             </Card>
             <Card className="bg-amber-50/50 text-center">
               <CardContent className="py-3">
                 <p className="text-3xl font-bold text-amber-500">{attendanceStats.late}</p>
-                <p className="text-xs text-muted-foreground">Late</p>
+                <p className="text-xs text-muted-foreground">{t('Late')}</p>
               </CardContent>
             </Card>
             <Card className="bg-blue-50/50 text-center">
               <CardContent className="py-3">
                 <p className="text-3xl font-bold text-blue-500">{attendanceStats.halfDay}</p>
-                <p className="text-xs text-muted-foreground">Half Day</p>
+                <p className="text-xs text-muted-foreground">{t('Half Day')}</p>
               </CardContent>
             </Card>
           </div>
@@ -331,11 +333,11 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
           <div className="flex gap-3 mb-4 flex-wrap">
             <Button variant="outline" className="border-green-400 text-green-600 hover:bg-green-50" onClick={markAllPresent}>
               <CheckCircle className="h-4 w-4 mr-2" />
-              Mark All Present
+              {t('Mark All Present')}
             </Button>
             <Button variant="outline" className="border-red-400 text-red-600 hover:bg-red-50" onClick={markAllAbsent}>
               <XCircle className="h-4 w-4 mr-2" />
-              Mark All Absent
+              {t('Mark All Absent')}
             </Button>
             <div className="flex-1" />
             <Button
@@ -343,14 +345,14 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
               className=""
             >
               <Save className="h-4 w-4 mr-2" />
-              Save Attendance
+              {t('Save Attendance')}
             </Button>
           </div>
 
           {existingAttendance.length > 0 && (
             <Alert className="mb-4 border-blue-300 bg-blue-50 text-blue-800">
               <AlertDescription>
-                Attendance already recorded for this date. Saving will update the records.
+                {t('Attendance already recorded for this date. Saving will update the records.')}
               </AlertDescription>
             </Alert>
           )}
@@ -361,10 +363,10 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-12">#</TableHead>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Enrollment #</TableHead>
-                  <TableHead className="w-[300px]">Status</TableHead>
-                  <TableHead>Notes</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Enrollment #')}</TableHead>
+                  <TableHead className="w-[300px]">{t('Status')}</TableHead>
+                  <TableHead>{t('Notes')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -415,7 +417,7 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
                       </TableCell>
                       <TableCell>
                         <Input
-                          placeholder="Add notes..."
+                          placeholder={t('Add notes...')}
                           value={record?.notes || ''}
                           onChange={(e) => handleNotesChange(student.student_id, e.target.value)}
                           className="w-48 h-8 text-sm"
@@ -434,25 +436,25 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
       <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Save Attendance</DialogTitle>
+            <DialogTitle>{t('Save Attendance')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground mb-3">
-            You are about to save attendance for <strong>{students.length}</strong> students on{' '}
+            {t('You are about to save attendance for')} <strong>{students.length}</strong> {t('students on')}{' '}
             <strong>{new Date(attendanceDate).toLocaleDateString()}</strong>.
           </p>
           <div className="flex gap-2 flex-wrap">
             <span className="inline-flex items-center gap-1 text-xs border border-green-400 text-green-600 rounded-full px-2.5 py-1">
-              <CheckCircle className="h-3 w-3" /> {attendanceStats.present} Present
+              <CheckCircle className="h-3 w-3" /> {attendanceStats.present} {t('Present')}
             </span>
             <span className="inline-flex items-center gap-1 text-xs border border-red-400 text-red-600 rounded-full px-2.5 py-1">
-              <XCircle className="h-3 w-3" /> {attendanceStats.absent} Absent
+              <XCircle className="h-3 w-3" /> {attendanceStats.absent} {t('Absent')}
             </span>
             <span className="inline-flex items-center gap-1 text-xs border border-amber-400 text-amber-600 rounded-full px-2.5 py-1">
-              <Clock className="h-3 w-3" /> {attendanceStats.late} Late
+              <Clock className="h-3 w-3" /> {attendanceStats.late} {t('Late')}
             </span>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>{t('Cancel')}</Button>
             <Button
               onClick={handleSaveAttendance}
               disabled={saving}
@@ -461,12 +463,12 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
               {saving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
+                  {t('Saving...')}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  Save Attendance
+                  {t('Save Attendance')}
                 </>
               )}
             </Button>

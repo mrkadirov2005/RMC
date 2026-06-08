@@ -41,6 +41,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { testAPI } from '../../../shared/api/api';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface Test {
   test_id: number;
@@ -76,6 +77,7 @@ interface TeacherTestsTabProps {
 // Renders the teacher tests tab tab.
 const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [tests, setTests] = useState<Test[]>([]);
   const [filteredTests, setFilteredTests] = useState<Test[]>([]);
   const [loading, setLoading] = useState(true);
@@ -122,7 +124,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       setTests(response.data || []);
     } catch (err: any) {
       console.error('Error loading tests:', err);
-      setError('Failed to load tests');
+      setError(t('Failed to load tests'));
     } finally {
       setLoading(false);
     }
@@ -254,11 +256,11 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <Tabs value={filterTab} onValueChange={setFilterTab}>
           <TabsList>
-            <TabsTrigger value="all">All ({tests.length})</TabsTrigger>
-            <TabsTrigger value="active">Active ({tests.filter((t) => t.is_active).length})</TabsTrigger>
-            <TabsTrigger value="inactive">Inactive ({tests.filter((t) => !t.is_active).length})</TabsTrigger>
+            <TabsTrigger value="all">{t('All')} ({tests.length})</TabsTrigger>
+            <TabsTrigger value="active">{t('Active')} ({tests.filter((test) => test.is_active).length})</TabsTrigger>
+            <TabsTrigger value="inactive">{t('Inactive')} ({tests.filter((test) => !test.is_active).length})</TabsTrigger>
             <TabsTrigger value="submissions">
-              With Submissions
+              {t('With Submissions')}
               {tests.filter((t) => (t.submission_count || 0) > 0).length > 0 && (
                 <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-xs w-5 h-5">
                   {tests.filter((t) => (t.submission_count || 0) > 0).length}
@@ -270,7 +272,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
         <div className="relative min-w-[220px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tests..."
+            placeholder={t('Search tests...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9"
@@ -288,9 +290,9 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       {filteredTests.length === 0 ? (
         <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-border">
           <FileQuestion className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-muted-foreground">No tests found</h3>
+          <h3 className="text-lg font-semibold text-muted-foreground">{t('No tests found')}</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            {searchTerm ? 'Try adjusting your search' : 'Create your first test to get started'}
+            {searchTerm ? t('Try adjusting your search') : t('Create your first test to get started')}
           </p>
           {!searchTerm && (
             <Button
@@ -298,7 +300,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
               className=""
             >
               <Plus className="h-4 w-4 mr-2" />
-              Create Test
+              {t('Create Test')}
             </Button>
           )}
         </div>
@@ -322,10 +324,10 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                   </div>
                   <div className="flex items-center gap-1.5">
                     <Badge variant="outline" className={cn('text-xs', test.is_private ? 'border-amber-300 text-amber-700 bg-amber-50' : 'border-emerald-300 text-emerald-700 bg-emerald-50')}>
-                      {test.is_private ? 'Private' : 'Public'}
+                      {test.is_private ? t('Private') : t('Public')}
                     </Badge>
                     <Badge variant="outline" className={cn('text-xs', test.is_active ? 'border-green-400 text-green-600' : 'border-border text-muted-foreground')}>
-                      {test.is_active ? 'Active' : 'Inactive'}
+                      {test.is_active ? t('Active') : t('Inactive')}
                     </Badge>
                     <button
                       className="p-1 rounded hover:bg-muted text-muted-foreground"
@@ -351,16 +353,16 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <CheckCircle className="h-4 w-4" />
-                    {test.total_marks} marks
+                    {test.total_marks} {t('marks')}
                   </div>
                 </div>
 
                 <div className="flex gap-4 mt-2 items-center">
                   <span className="text-xs text-muted-foreground">
-                    {test.question_count || 0} questions
+                    {test.question_count || 0} {t('questions')}
                   </span>
                   <span className="text-xs text-muted-foreground relative">
-                    submissions
+                    {t('submissions')}
                     {(test.submission_count || 0) > 0 && (
                       <span className="absolute -top-2 -right-5 inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] w-4 h-4">
                         {test.submission_count}
@@ -385,26 +387,26 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
             className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}`); }}
           >
-            <Eye className="h-4 w-4" /> View Details
+            <Eye className="h-4 w-4" /> {t('View Details')}
           </button>
           <button
             className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/edit`); }}
           >
-            <Edit className="h-4 w-4" /> Edit Test
+            <Edit className="h-4 w-4" /> {t('Edit Test')}
           </button>
           <button
             className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => { handleMenuClose(); navigate(`/tests/${selectedTest?.test_id}/assign`); }}
           >
-            <ClipboardList className="h-4 w-4" /> Assign Test
+            <ClipboardList className="h-4 w-4" /> {t('Assign Test')}
           </button>
           <button
             className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={handleViewSubmissions}
           >
             <Users className="h-4 w-4" />
-            View Submissions
+            {t('View Submissions')}
             {(selectedTest?.submission_count || 0) > 0 && (
               <span className="ml-auto inline-flex items-center justify-center rounded-full bg-indigo-500 text-white text-[10px] w-4 h-4">
                 {selectedTest?.submission_count}
@@ -415,7 +417,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
             onClick={() => { handleMenuClose(); setDeleteDialog(true); }}
           >
-            <Trash2 className="h-4 w-4" /> Delete Test
+            <Trash2 className="h-4 w-4" /> {t('Delete Test')}
           </button>
         </div>
       )}
@@ -425,9 +427,9 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <div className="flex justify-between items-center">
-              <DialogTitle>Test Submissions - {selectedTest?.test_name}</DialogTitle>
+              <DialogTitle>{t('Test Submissions')} - {selectedTest?.test_name}</DialogTitle>
               <Badge className="bg-indigo-100 text-indigo-700 border-indigo-300">
-                {submissions.length} submissions
+                {submissions.length} {t('submissions')}
               </Badge>
             </div>
           </DialogHeader>
@@ -437,18 +439,18 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
             </div>
           ) : submissions.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No submissions yet</p>
+              <p className="text-muted-foreground">{t('No submissions yet')}</p>
             </div>
           ) : (
             <div className="border rounded-md overflow-hidden">
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50">
-                    <TableHead>Student</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Score</TableHead>
-                    <TableHead>Submitted At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('Student')}</TableHead>
+                    <TableHead>{t('Status')}</TableHead>
+                    <TableHead>{t('Score')}</TableHead>
+                    <TableHead>{t('Submitted At')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -469,7 +471,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                       <TableCell className="text-right">
                         <button
                           className="p-1.5 rounded hover:bg-muted text-muted-foreground"
-                          title="View Submission"
+                          title={t('View Submission')}
                           onClick={() => navigate(`/tests/submissions/${sub.submission_id}`)}
                         >
                           <Eye className="h-4 w-4" />
@@ -477,7 +479,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                         {sub.status !== 'graded' && (
                           <button
                             className="p-1.5 rounded hover:bg-indigo-50 text-indigo-600 ml-1"
-                            title="Grade Submission"
+                            title={t('Grade Submission')}
                             onClick={() => navigate(`/tests/submissions/${sub.submission_id}/grade`)}
                           >
                             <Award className="h-4 w-4" />
@@ -491,7 +493,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setSubmissionsDialog(false)}>Close</Button>
+            <Button variant="outline" onClick={() => setSubmissionsDialog(false)}>{t('Close')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -500,14 +502,14 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
       <Dialog open={deleteDialog} onOpenChange={setDeleteDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Test</DialogTitle>
+            <DialogTitle>{t('Delete Test')}</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{selectedTest?.test_name}&quot;? This action cannot be undone.
+            {t('Are you sure you want to delete')} &quot;{selectedTest?.test_name}&quot;? {t('This action cannot be undone.')}
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialog(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteTest}>Delete</Button>
+            <Button variant="outline" onClick={() => setDeleteDialog(false)}>{t('Cancel')}</Button>
+            <Button variant="destructive" onClick={handleDeleteTest}>{t('Delete')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

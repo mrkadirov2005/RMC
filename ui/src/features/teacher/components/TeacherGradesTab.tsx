@@ -41,6 +41,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { classAPI, studentAPI, gradeAPI, subjectAPI } from '../../../shared/api/api';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {
   class_id: number;
@@ -78,6 +79,7 @@ interface TeacherGradesTabProps {
 
 // Renders the teacher grades tab tab.
 const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
+  const { t } = useLanguage();
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -179,7 +181,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     if (!selectedStudent || !selectedSubject) {
       setSnackbar({
         open: true,
-        message: 'Please select a subject first',
+        message: t('Please select a subject first'),
         severity: 'error',
       });
       return;
@@ -200,7 +202,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
 
       setSnackbar({
         open: true,
-        message: 'Grade saved successfully!',
+        message: t('Grade saved successfully!'),
         severity: 'success',
       });
       setGradeDialogOpen(false);
@@ -210,7 +212,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
       console.error('Error saving grade:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to save grade',
+        message: t('Failed to save grade'),
         severity: 'error',
       });
     } finally {
@@ -269,12 +271,12 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-4 flex-wrap gap-3">
-        <h3 className="text-lg font-semibold">Manage Grades</h3>
+        <h3 className="text-lg font-semibold">{t('Manage Grades')}</h3>
         <div className="flex gap-3 items-center flex-wrap">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search students..."
+              placeholder={t('Search students...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 w-48"
@@ -285,7 +287,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
             onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
             className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring min-w-[150px]"
           >
-            <option value="">All Classes</option>
+            <option value="">{t('All Classes')}</option>
             {classes.map((cls) => (
               <option key={cls.class_id} value={cls.class_id}>
                 {cls.class_name}
@@ -297,7 +299,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
             onChange={(e) => setSelectedSubject(e.target.value ? Number(e.target.value) : '')}
             className="h-9 rounded-md border border-input bg-background px-3 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring min-w-[150px]"
           >
-            <option value="">All Subjects</option>
+            <option value="">{t('All Subjects')}</option>
             {subjects.map((subj) => (
               <option key={subj.subject_id} value={subj.subject_id}>
                 {subj.subject_name}
@@ -312,7 +314,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
         <Card className="bg-indigo-500/10 text-center p-4">
           <Star className="h-8 w-8 text-indigo-500 mx-auto" />
           <p className="text-3xl font-bold text-indigo-500">{grades.length}</p>
-          <p className="text-xs text-muted-foreground">Total Grades</p>
+          <p className="text-xs text-muted-foreground">{t('Total Grades')}</p>
         </Card>
         <Card className="bg-emerald-500/10 text-center p-4">
           <TrendingUp className="h-8 w-8 text-emerald-500 mx-auto" />
@@ -325,27 +327,27 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
               : 0}
             %
           </p>
-          <p className="text-xs text-muted-foreground">Class Average</p>
+          <p className="text-xs text-muted-foreground">{t('Class Average')}</p>
         </Card>
         <Card className="bg-sky-500/10 text-center p-4">
           <BarChart3 className="h-8 w-8 text-sky-500 mx-auto" />
           <p className="text-3xl font-bold text-sky-500">{students.length}</p>
-          <p className="text-xs text-muted-foreground">Students</p>
+          <p className="text-xs text-muted-foreground">{t('Students')}</p>
         </Card>
         <Card className="bg-amber-500/10 text-center p-4">
           <SlidersHorizontal className="h-8 w-8 text-amber-500 mx-auto" />
           <p className="text-3xl font-bold text-amber-500">
             {new Set(grades.map((g) => g.grade_type)).size}
           </p>
-          <p className="text-xs text-muted-foreground">Grade Types</p>
+          <p className="text-xs text-muted-foreground">{t('Grade Types')}</p>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs value={tabValue} onValueChange={setTabValue} className="mb-4">
         <TabsList>
-          <TabsTrigger value="student-grades">Student Grades</TabsTrigger>
-          <TabsTrigger value="recent-activity">Recent Activity</TabsTrigger>
+          <TabsTrigger value="student-grades">{t('Student Grades')}</TabsTrigger>
+          <TabsTrigger value="recent-activity">{t('Recent Activity')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="student-grades">
@@ -353,12 +355,12 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead>Student</TableHead>
-                  <TableHead>Enrollment #</TableHead>
-                  <TableHead className="text-center">Grades Count</TableHead>
-                  <TableHead className="text-center">Average</TableHead>
-                  <TableHead className="text-center">Letter Grade</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Enrollment #')}</TableHead>
+                  <TableHead className="text-center">{t('Grades Count')}</TableHead>
+                  <TableHead className="text-center">{t('Average')}</TableHead>
+                  <TableHead className="text-center">{t('Letter Grade')}</TableHead>
+                  <TableHead className="text-center">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -372,7 +374,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
                   <TableRow>
                     <TableCell colSpan={6} className="text-center py-8">
                       <p className="text-muted-foreground">
-                        {selectedClass ? 'No students found' : 'Select a class to view students'}
+                        {selectedClass ? t('No students found') : t('Select a class to view students')}
                       </p>
                     </TableCell>
                   </TableRow>
@@ -443,7 +445,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
                                   <Plus className="h-4 w-4" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent>Add Grade</TooltipContent>
+                              <TooltipContent>{t('Add Grade')}</TooltipContent>
                             </Tooltip>
                           </TooltipProvider>
                         </TableCell>
@@ -461,7 +463,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
             {grades.length === 0 ? (
               <div className="text-center py-8">
                 <Star className="h-14 w-14 text-muted-foreground/40 mx-auto mb-3" />
-                <p className="text-muted-foreground">No grades recorded yet</p>
+                <p className="text-muted-foreground">{t('No grades recorded yet')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -518,19 +520,19 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>
-              Add Grade for {selectedStudent?.first_name} {selectedStudent?.last_name}
+              {t('Add Grade for')} {selectedStudent?.first_name} {selectedStudent?.last_name}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             {!selectedSubject && (
               <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-800">
                 <AlertDescription>
-                  Please select a subject from the filters above before adding a grade
+                  {t('Please select a subject from the filters above before adding a grade')}
                 </AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
-              <Label>Grade Type</Label>
+              <Label>{t('Grade Type')}</Label>
               <select
                 value={newGrade.grade_type}
                 onChange={(e) =>
@@ -547,7 +549,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Score</Label>
+                <Label>{t('Score')}</Label>
                 <Input
                   type="number"
                   value={newGrade.grade_value}
@@ -560,7 +562,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Max Score</Label>
+                <Label>{t('Max Score')}</Label>
                 <Input
                   type="number"
                   value={newGrade.max_value}
@@ -574,7 +576,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label>Notes (optional)</Label>
+              <Label>{t('Notes (optional)')}</Label>
               <textarea
                 className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 value={newGrade.notes}
@@ -584,7 +586,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGradeDialogOpen(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               onClick={handleSaveGrade}
@@ -595,7 +597,7 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
               ) : (
                 <Save className="h-4 w-4 mr-2" />
               )}
-              {saving ? 'Saving...' : 'Save Grade'}
+              {saving ? t('Saving...') : t('Save Grade')}
             </Button>
           </DialogFooter>
         </DialogContent>
