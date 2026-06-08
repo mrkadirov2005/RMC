@@ -6,6 +6,7 @@ import type { Class, Student } from '../types';
 import { useAppSelector } from '../../hooks';
 
 import { studentAPI } from '../../../../shared/api/api';
+import { createStudentIdentity } from '../../../../shared/studentIdentity';
 import { showToast } from '../../../../utils/toast';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 
@@ -28,7 +29,10 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
         await studentAPI.update(editingId, formData);
         showToast.success('Student updated successfully!');
       } else {
-        await studentAPI.create(formData);
+        await studentAPI.create({
+          ...formData,
+          ...createStudentIdentity(),
+        });
         showToast.success('Student created successfully!');
       }
       refreshStudents?.();

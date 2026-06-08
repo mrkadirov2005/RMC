@@ -1,6 +1,14 @@
 const { spawn } = require('child_process');
 const crypto = require('crypto');
 const path = require('path');
+const pool = require('../../../db/pool');
+
+const RESET_CONFIRMATION = 'TRUNCATE_EDUCATION_DATA';
+const RESET_TABLES = {
+  students: 'students',
+  teachers: 'teachers',
+  classes: 'classes',
+};
 
 const getRedeployScriptPath = () =>
   process.env.SERVER_REDEPLOY_SCRIPT ||
@@ -40,9 +48,43 @@ const scheduleRedeploy = () => {
   }, 500);
 };
 
+const validateDevResetRequest = (confirmation: string) => {
+  if (process.env.NODE_ENV === 'production') {
+    const error: any = new Error('Dev reset endpoint is disabled in production.');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (String(confirmation || '') !== RESET_CONFIRMATION) {
+    const error: any = new Error(`Invalid confirmation. Send confirmation: ${RESET_CONFIRMATION}`);
+    error.statusCode = 400;
+    throw error;
+  }
+};
+
+type ResetTableKey = keyof typeof RESET_TABLES;
+
+const resetTable = async (tableKey: ResetTableKey) => {
+  const tableName = RESET_TABLES[tableKey];
+  const beforeResult = await pool.query(`SELECT COUNT(*)::int AS count FROM ${tableName}`);
+
+  await pool.query(`TRUNCATE TABLE ${tableName} RESTART IDENTITY CASCADE`);
+
+  const beforeCount = beforeResult.rows[0]?.count ?? 0;
+  return {
+    truncated: tableName,
+    cascade: true,
+    before: beforeCount,
+    after: 0,
+  };
+};
+
 module.exports = {
   validateRedeployPassword,
   scheduleRedeploy,
+  validateDevResetRequest,
+  resetTable,
+  RESET_CONFIRMATION,
 };
 
 export {};

@@ -13,8 +13,6 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
   <div className="grid grid-cols-2 gap-4">
     <div className="space-y-2"><Label>First Name</Label><Input value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required /></div>
     <div className="space-y-2"><Label>Last Name</Label><Input value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required /></div>
-    <div className="space-y-2"><Label>Enrollment #</Label><Input value={formData.enrollment_number || ''} onChange={(e) => setFormData({ ...formData, enrollment_number: e.target.value })} required /></div>
-    <div className="space-y-2"><Label>Email</Label><Input value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required /></div>
     <div className="space-y-2"><Label>Phone</Label><Input value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required /></div>
     <div className="space-y-2"><Label>Date of Birth</Label><Input type="date" value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} required /></div>
     <SelectField label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" />

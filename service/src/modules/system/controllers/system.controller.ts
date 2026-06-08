@@ -12,8 +12,24 @@ const redeployServer = async (req: any, res: any) => {
   }
 };
 
+const resetTable = (tableName: 'students' | 'teachers' | 'classes') => async (req: any, res: any) => {
+  try {
+    systemService.validateDevResetRequest(req.body?.confirmation);
+    const result = await systemService.resetTable(tableName);
+    res.json({
+      message: `${tableName} reset completed.`,
+      ...result,
+    });
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message });
+  }
+};
+
 module.exports = {
   redeployServer,
+  resetStudents: resetTable('students'),
+  resetTeachers: resetTable('teachers'),
+  resetClasses: resetTable('classes'),
 };
 
 export {};

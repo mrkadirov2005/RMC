@@ -126,6 +126,8 @@ const looksLikeHeader = (row) => {
   return cells.some((cell) => /^t\/?r$|^n\/?r$/.test(cell)) && cells.some((cell) => /tel|raqam|maktab|sinfi|sana/.test(cell));
 };
 
+const isNameColumnHeader = (value) => /^(ismi\s+familiyasi|ism\s+familiya|fio|full\s+name|name)$/i.test(compact(value));
+
 const indexOf = (row, patterns) => {
   for (let index = 0; index < row.length; index += 1) {
     const cell = compact(row[index]).toLowerCase();
@@ -209,7 +211,7 @@ for (const file of files) {
     const schoolNameIndex = indexOf(row, [/maktab/]);
     const addressIndex = indexOf(row, [/manzil/]);
     const headerName = compact(row[nameIndex]);
-    const className = isScheduleText(headerName) ? previousTitle : headerName || previousTitle;
+    const className = isScheduleText(headerName) || isNameColumnHeader(headerName) ? previousTitle : headerName || previousTitle;
     if (!className) continue;
 
     if (isScheduleText(headerName)) previousSchedule = headerName;

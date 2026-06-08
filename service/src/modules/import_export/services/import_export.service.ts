@@ -230,6 +230,11 @@ const getRowValue = (row: any, aliases: string[]) => {
   return null;
 };
 
+const isInvalidClassName = (value: any) => {
+  const cleaned = String(value || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  return ['ismi familiyasi', 'ism familiya', 'fio', 'full name', 'name'].includes(cleaned);
+};
+
 const toOptionalNumber = (value: any) => {
   const cleaned = cleanValue(value);
   if (cleaned == null) return null;
@@ -267,6 +272,7 @@ const resolveClassId = async (row: any, centerId?: number, classIdCache?: Map<st
   const className = getRowValue(row, ['class_name', 'group_name', 'group', 'class']);
   const classCode = getRowValue(row, ['class_code', 'group_code']) || className;
   if (!className && !classCode) return null;
+  if (isInvalidClassName(className) || isInvalidClassName(classCode)) return null;
 
   const cacheKey = [centerId ?? '', className ?? '', classCode ?? ''].map((value) => String(value).trim().toLowerCase()).join('|');
   if (classIdCache?.has(cacheKey)) return classIdCache.get(cacheKey) ?? null;
@@ -453,6 +459,7 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       }
       const className = getRowValue(row, ['class_name', 'group_name', 'group', 'class']) || '';
       const classCode = getRowValue(row, ['class_code', 'group_code']) || className;
+      if (isInvalidClassName(className) || isInvalidClassName(classCode)) continue;
       const teacherId = await resolveTeacherId(row, rowCenterId, teacherIdCache);
       const params = [
         rowCenterId,

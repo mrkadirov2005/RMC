@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useAppDispatch, useAppSelector } from '../../crm/hooks';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../../shared/auth/authStorage';
+import { createStudentIdentity } from '../../../shared/studentIdentity';
 import { generateTempPassword } from '../../../utils/password';
 import { showToast, handleApiError } from '../../../utils/toast';
 import {
@@ -305,6 +306,11 @@ export const useOwnerManager = () => {
               role: String(formData.role || 'admin').toLowerCase(),
               permissions: normalizePermissions(formData.permissions),
             }
+          : activeTab === 'students' && !editingId
+            ? {
+                ...formData,
+                ...createStudentIdentity(),
+              }
           : formData;
 
       if (editingId) {

@@ -116,10 +116,8 @@ export const OWNER_MANAGER_FIELDS: Record<OwnerManagerTabType, OwnerManagerField
   ],
   students: [
     { name: 'center_id', label: 'Center', type: 'number', required: true },
-    { name: 'enrollment_number', label: 'Enrollment Number', type: 'text', required: true },
     { name: 'first_name', label: 'First Name', type: 'text', required: true },
     { name: 'last_name', label: 'Last Name', type: 'text', required: true },
-    { name: 'email', label: 'Email', type: 'email', required: true },
     { name: 'phone', label: 'Phone', type: 'text', required: true },
     { name: 'date_of_birth', label: 'Date of Birth', type: 'date', required: true },
     { name: 'parent_name', label: 'Parent Name', type: 'text', required: true },
