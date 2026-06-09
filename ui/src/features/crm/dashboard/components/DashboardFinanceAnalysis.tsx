@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardFinancialMonth, DashboardStatCard } from '../types';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 
 interface DashboardFinanceAnalysisProps {
   finance: DashboardFinancialMonth;
@@ -64,6 +65,11 @@ export const DashboardFinanceAnalysis = ({
   onNextMonth,
   onMetricClick,
 }: DashboardFinanceAnalysisProps) => {
+  const { t } = useLanguage();
+  const localizedMonthLabel = finance.monthLabel.replace(
+    /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/,
+    (_, month, year) => `${t(month)} ${year}`
+  );
   const maxPaid = Math.max(...finance.buckets.map((bucket) => bucket.paid), 1);
   const unpaidRate = finance.expectedPayments > 0
     ? Math.min(Math.round((finance.remainingPayments / finance.expectedPayments) * 100), 100)
@@ -78,18 +84,18 @@ export const DashboardFinanceAnalysis = ({
             <span className="flex h-9 w-9 items-center justify-center rounded-md bg-cyan-50 text-cyan-700 dark:h-auto dark:w-auto dark:bg-transparent dark:text-cyan-600">
               <CreditCard className="h-5 w-5" />
             </span>
-            Financial Analysis
+            {t('Financial Analysis')}
           </CardTitle>
           <p className="mt-1 text-xs text-muted-foreground">
-            Expected tuition, collected payments, and remaining balance for the selected month.
+            {t('Expected tuition, collected payments, and remaining balance for the selected month.')}
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-1 dark:border-transparent dark:bg-transparent dark:p-0">
-          <Button type="button" variant="outline" size="icon" onClick={onPreviousMonth} aria-label="Previous month">
+          <Button type="button" variant="outline" size="icon" onClick={onPreviousMonth} aria-label={t('Previous month')}>
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <div className="min-w-36 text-center text-sm font-semibold">{finance.monthLabel}</div>
-          <Button type="button" variant="outline" size="icon" onClick={onNextMonth} aria-label="Next month">
+          <div className="min-w-36 text-center text-sm font-semibold">{localizedMonthLabel}</div>
+          <Button type="button" variant="outline" size="icon" onClick={onNextMonth} aria-label={t('Next month')}>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -103,7 +109,7 @@ export const DashboardFinanceAnalysis = ({
               className={`rounded-lg border p-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:shadow-none dark:hover:translate-y-0 dark:hover:shadow-none ${metric.shellClass}`}
               onClick={() =>
                 onMetricClick?.({
-                  label: metric.label,
+                  label: t(metric.label),
                   value: formatMoney(Number(finance[metric.valueKey]) || 0),
                   icon: CreditCard,
                   accent: 'from-cyan-500 to-emerald-500',
@@ -111,19 +117,19 @@ export const DashboardFinanceAnalysis = ({
                 })
               }
             >
-              <p className={`text-xs ${metric.labelClass}`}>{metric.label}</p>
+              <p className={`text-xs ${metric.labelClass}`}>{t(metric.label)}</p>
               <p className={`mt-1 text-xl font-bold ${metric.valueClass}`}>
                 {formatMoney(Number(finance[metric.valueKey]) || 0)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-sky-700 dark:text-muted-foreground">View details</p>
+              <p className="mt-1 text-[11px] font-medium text-sky-700 dark:text-muted-foreground">{t('View details')}</p>
             </button>
           ))}
         </div>
 
         <div>
           <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
-            <span>{finance.collectionRate}% collected</span>
-            <span>{unpaidRate}% remaining</span>
+            <span>{finance.collectionRate}% {t('collected')}</span>
+            <span>{unpaidRate}% {t('remaining')}</span>
           </div>
           <div className="flex h-3 overflow-hidden rounded-full bg-muted">
             <div className="bg-emerald-500 transition-all" style={{ width: `${finance.collectionRate}%` }} />
@@ -135,8 +141,8 @@ export const DashboardFinanceAnalysis = ({
           <div className="rounded-lg border border-cyan-100 bg-gradient-to-b from-white via-sky-50/70 to-emerald-50/45 p-4 shadow-sm dark:border-border dark:bg-none dark:shadow-none">
             <div className="mb-4 flex items-center justify-between">
               <div>
-                <p className="text-sm font-semibold">Collections by month segment</p>
-                <p className="text-xs text-muted-foreground">Paid payments grouped by payment date.</p>
+                <p className="text-sm font-semibold">{t('Collections by month segment')}</p>
+                <p className="text-xs text-muted-foreground">{t('Paid payments grouped by payment date.')}</p>
               </div>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </div>
@@ -168,8 +174,8 @@ export const DashboardFinanceAnalysis = ({
                 <Users className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold">{finance.paidStudents} students paid</p>
-                <p className="text-xs text-muted-foreground">Covered their expected monthly amount</p>
+                <p className="text-sm font-semibold">{finance.paidStudents} {t('students paid')}</p>
+                <p className="text-xs text-muted-foreground">{t('Covered their expected monthly amount')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-lg border border-rose-100 bg-rose-50/70 p-3 shadow-sm dark:border-border dark:bg-transparent dark:shadow-none">
@@ -177,8 +183,8 @@ export const DashboardFinanceAnalysis = ({
                 <Users className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-sm font-semibold">{finance.unpaidStudents} students remaining</p>
-                <p className="text-xs text-muted-foreground">Still below expected payment</p>
+                <p className="text-sm font-semibold">{finance.unpaidStudents} {t('students remaining')}</p>
+                <p className="text-xs text-muted-foreground">{t('Still below expected payment')}</p>
               </div>
             </div>
           </div>

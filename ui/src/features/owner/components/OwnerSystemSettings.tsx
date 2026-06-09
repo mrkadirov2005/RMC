@@ -7,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { systemAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 export const OwnerSystemSettings = () => {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const { t } = useLanguage();
 
   const close = () => {
     setOpen(false);
@@ -21,17 +23,17 @@ export const OwnerSystemSettings = () => {
 
   const redeploy = async () => {
     if (!password.trim()) {
-      showToast.error('Redeploy password is required.');
+      showToast.error(t('Redeploy password is required.'));
       return;
     }
 
     setSubmitting(true);
     try {
       await systemAPI.redeploy(password);
-      showToast.success('Server redeploy started.');
+      showToast.success(t('Server redeploy started.'));
       close();
     } catch {
-      showToast.error('Could not start server redeploy.');
+      showToast.error(t('Could not start server redeploy.'));
       setSubmitting(false);
     }
   };
@@ -42,19 +44,19 @@ export const OwnerSystemSettings = () => {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <ServerCog className="h-5 w-5 text-amber-600 dark:text-amber-300" />
-            Owner system settings
+            {t('Owner system settings')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="max-w-2xl space-y-1">
-            <p className="text-sm font-medium text-slate-900 dark:text-white">Redeploy server</p>
+            <p className="text-sm font-medium text-slate-900 dark:text-white">{t('Redeploy server')}</p>
             <p className="text-sm text-slate-600 dark:text-white/65">
-              Runs the configured redeploy script after confirming the password from the backend .env file.
+              {t('Runs the configured redeploy script after confirming the password from the backend .env file.')}
             </p>
           </div>
           <Button type="button" variant="outline" className="gap-2 border-amber-300 bg-white dark:bg-background" onClick={() => setOpen(true)}>
             <RotateCcw className="h-4 w-4" />
-            Redeploy
+            {t('Redeploy')}
           </Button>
         </CardContent>
       </Card>
@@ -64,16 +66,16 @@ export const OwnerSystemSettings = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-amber-500" />
-              Confirm server redeploy
+              {t('Confirm server redeploy')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Enter the redeploy password from <span className="font-semibold text-foreground">SERVER_REDEPLOY_PASSWORD</span>.
+              {t('Enter the redeploy password from')} <span className="font-semibold text-foreground">SERVER_REDEPLOY_PASSWORD</span>.
             </p>
             <div className="space-y-2">
-              <Label htmlFor="redeploy-password">Redeploy password</Label>
+              <Label htmlFor="redeploy-password">{t('Redeploy password')}</Label>
               <Input
                 id="redeploy-password"
                 type="password"
@@ -91,10 +93,10 @@ export const OwnerSystemSettings = () => {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={close} disabled={submitting}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="button" className="bg-amber-500 text-white hover:bg-amber-600" onClick={redeploy} disabled={submitting}>
-              {submitting ? 'Starting...' : 'Start redeploy'}
+              {submitting ? t('Starting...') : t('Start redeploy')}
             </Button>
           </DialogFooter>
         </DialogContent>

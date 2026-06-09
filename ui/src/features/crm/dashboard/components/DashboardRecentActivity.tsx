@@ -4,6 +4,7 @@ import { Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardActivityItem } from '../types';
 import { formatDashboardDate } from '../queries/dashboardQueries';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 
 interface DashboardRecentActivityProps {
   items: DashboardActivityItem[];
@@ -11,15 +12,17 @@ interface DashboardRecentActivityProps {
 
 // Renders the dashboard recent activity module.
 export const DashboardRecentActivity = ({ items }: DashboardRecentActivityProps) => {
+  const { t } = useLanguage();
+
   return (
     <Card className="lg:col-span-2">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Recent Activity</CardTitle>
+        <CardTitle className="text-base">{t('Recent Activity')}</CardTitle>
         <Activity className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length === 0 ? (
-          <div className="text-sm text-muted-foreground">No recent activity yet.</div>
+          <div className="text-sm text-muted-foreground">{t('No recent activity yet.')}</div>
         ) : (
           items.map((item) => (
             <div
@@ -41,4 +44,3 @@ export const DashboardRecentActivity = ({ items }: DashboardRecentActivityProps)
     </Card>
   );
 };
-

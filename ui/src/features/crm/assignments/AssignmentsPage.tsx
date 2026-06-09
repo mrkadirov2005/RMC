@@ -28,11 +28,13 @@ import {
 import { SelectField } from '../students/components/SelectField';
 import { useAssignmentsPage } from './hooks/useAssignmentsPage';
 import { getStatusColor } from './queries';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the assignments page screen.
 const AssignmentsPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { t } = useLanguage();
   const {
     state,
     classes,
@@ -128,11 +130,11 @@ const AssignmentsPage = () => {
             disabled={isImporting}
           >
             {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            {isImporting ? 'Importing...' : 'Import CSV'}
+            {isImporting ? t('Importing...') : t('Import CSV')}
           </Button>
           <Button type="button" variant="outline" onClick={handleExportAssignments}>
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {t('Export CSV')}
           </Button>
           <Button onClick={() => handleOpenModal()}>
             <Plus className="mr-2 h-4 w-4" /> Add Assignment

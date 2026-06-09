@@ -3,12 +3,14 @@
 import { TrendingUp } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DashboardStudentGrowthPoint } from '../types';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 
 interface DashboardStudentGrowthChartProps {
   points: DashboardStudentGrowthPoint[];
 }
 
 export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthChartProps) => {
+  const { t } = useLanguage();
   const maxTotal = Math.max(...points.map((point) => point.totalStudents), 1);
   const maxNew = Math.max(...points.map((point) => point.newStudents), 1);
   const hasData = points.some((point) => point.newStudents > 0 || point.totalStudents > 0);
@@ -23,8 +25,8 @@ export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthCh
       <CardHeader className="relative flex flex-row items-center justify-between">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
         <div>
-          <CardTitle className="text-base text-slate-950 dark:text-card-foreground">Student Growth</CardTitle>
-          <p className="mt-1 text-xs text-muted-foreground">Growth according to student registry dates.</p>
+          <CardTitle className="text-base text-slate-950 dark:text-card-foreground">{t('Student Growth')}</CardTitle>
+          <p className="mt-1 text-xs text-muted-foreground">{t('Growth according to student registry dates.')}</p>
         </div>
         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sky-50 text-sky-700 dark:bg-transparent dark:text-muted-foreground">
           <TrendingUp className="h-5 w-5" />
@@ -33,7 +35,7 @@ export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthCh
       <CardContent>
         {!hasData ? (
           <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-            No registry-date data yet.
+            {t('No registry-date data yet.')}
           </div>
         ) : (
           <div className="space-y-5">
@@ -74,7 +76,7 @@ export const DashboardStudentGrowthChart = ({ points }: DashboardStudentGrowthCh
                       <div
                         className="w-full rounded-t bg-emerald-500"
                         style={{ height: `${height}%` }}
-                        title={`${point.newStudents} new students`}
+                        title={`${point.newStudents} ${t('new students')}`}
                       />
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2">

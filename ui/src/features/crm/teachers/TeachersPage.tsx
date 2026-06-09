@@ -38,6 +38,7 @@ import type { Teacher } from './types';
 import { dataAPI, teacherAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import { exportCsvEntity } from '@/shared/dataCsv';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -110,6 +111,7 @@ const TeachersPage = () => {
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<number>>(new Set());
+  const { t } = useLanguage();
   const {
     navigate,
     state,
@@ -338,11 +340,11 @@ const TeachersPage = () => {
                   disabled={isImporting}
                 >
                   {isImporting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Upload className="mr-2 h-5 w-5" />}
-                  {isImporting ? 'Importing...' : 'Import CSV'}
+                  {isImporting ? t('Importing...') : t('Import CSV')}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleExportTeachers}>
                   <Download className="mr-2 h-5 w-5" />
-                  Export CSV
+                  {t('Export CSV')}
                 </Button>
               </>
             )}

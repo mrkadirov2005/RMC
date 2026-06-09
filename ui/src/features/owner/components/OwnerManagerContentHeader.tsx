@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import type { OwnerManagerTabType, OwnerManagerMeta } from '../types';
 
 interface OwnerManagerContentHeaderProps {
@@ -49,6 +50,12 @@ export const OwnerManagerContentHeader = ({
   loading,
 }: OwnerManagerContentHeaderProps) => {
   const CurrentIcon = currentMeta.icon;
+  const { t } = useLanguage();
+  const helperMessage = isScopedAndMissingCenter
+    ? t(scopedMessage)
+    : activeTab === 'statistics'
+      ? t('Showing combined data from every center.')
+      : `${t('Working inside')} ${activeCenterLabel}.`;
 
   return (
     <div className="space-y-4">
@@ -60,18 +67,18 @@ export const OwnerManagerContentHeader = ({
           </div>
           <div>
             <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
-              {currentMeta.label}
+              {t(currentMeta.label)}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-white/55">{currentMeta.description}</p>
+            <p className="text-sm text-slate-500 dark:text-white/55">{t(currentMeta.description)}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="border-slate-200/70 bg-slate-100/70 text-xs text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-            {dataCount} records
+            {dataCount} {t('records')}
           </Badge>
           <Badge variant="outline" className="border-slate-200/70 bg-slate-100/70 text-xs text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-            Branch: {activeCenterLabel}
+            {t('Branch')}: {activeCenterLabel}
           </Badge>
 
           {activeTab !== 'statistics' && (
@@ -82,7 +89,7 @@ export const OwnerManagerContentHeader = ({
               className={cn('ml-1 bg-amber-400 text-slate-950 hover:bg-amber-300', isScopedAndMissingCenter && 'opacity-70')}
             >
               <Plus className="mr-1.5 h-4 w-4" />
-              Add
+              {t('Add')}
             </Button>
           )}
         </div>
@@ -105,9 +112,9 @@ export const OwnerManagerContentHeader = ({
                     ? 'bg-amber-400 text-slate-950 shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white'
                 )}
-              >
-                <Icon className="h-4 w-4" />
-                {tab.label}
+                >
+                  <Icon className="h-4 w-4" />
+                {t(tab.label)}
               </button>
             );
           })}
@@ -116,7 +123,7 @@ export const OwnerManagerContentHeader = ({
 
       {isScopedAndMissingCenter && (
         <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-700 dark:border-amber-400/20 dark:text-amber-100">
-          {scopedMessage}
+          {helperMessage}
         </p>
       )}
     </div>

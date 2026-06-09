@@ -29,6 +29,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { OwnerManagerTabType, OwnerManagerStatisticsCollections } from '../types';
 import { buildOwnerTeacherEarnings } from '../utils';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface OwnerManagerTabStatsProps {
   activeTab: OwnerManagerTabType;
@@ -54,6 +55,14 @@ interface BarItem {
   color: string;
   badgeClass: string;
 }
+
+const statSurfaceClasses = [
+  'border-indigo-300/80 bg-gradient-to-br from-indigo-100 via-sky-50 to-cyan-200/80 shadow-indigo-200/70 dark:border-indigo-400/25 dark:from-indigo-900/45 dark:via-slate-950/80 dark:to-sky-900/35',
+  'border-emerald-300/80 bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-200/75 shadow-emerald-200/70 dark:border-emerald-400/25 dark:from-emerald-900/45 dark:via-slate-950/80 dark:to-teal-900/35',
+  'border-fuchsia-300/80 bg-gradient-to-br from-fuchsia-100 via-pink-50 to-violet-200/75 shadow-fuchsia-200/70 dark:border-fuchsia-400/25 dark:from-fuchsia-900/45 dark:via-slate-950/80 dark:to-violet-900/35',
+  'border-amber-300/80 bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-200/85 shadow-amber-200/70 dark:border-amber-400/25 dark:from-amber-900/45 dark:via-slate-950/80 dark:to-orange-900/35',
+  'border-rose-300/80 bg-gradient-to-br from-rose-100 via-pink-50 to-orange-200/70 shadow-rose-200/70 dark:border-rose-400/25 dark:from-rose-900/45 dark:via-slate-950/80 dark:to-pink-900/35',
+] as const;
 
 const countByStatus = (data: any[], status: string) =>
   data.filter((item) => String(item?.status || '').toLowerCase() === status).length;
@@ -119,39 +128,44 @@ const ProgressBreakdown = ({ title, description, items, total }: {
   description: string;
   items: BarItem[];
   total: number;
-}) => (
-  <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
-    <CardHeader className="pb-2">
-      <CardTitle className="text-base text-slate-900 dark:text-white">{title}</CardTitle>
-      <CardDescription className="text-slate-500 dark:text-white/55">{description}</CardDescription>
-    </CardHeader>
-    <CardContent className="space-y-3">
-      {items.map((item) => {
-        const percent = total > 0 ? Math.round((item.count / total) * 100) : 0;
-        return (
-          <div key={item.label} className="space-y-1.5">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className={cn('text-xs font-medium', item.badgeClass)}>
-                  {item.label}
-                </Badge>
-                <span className="text-slate-600 dark:text-white/70">{item.count.toLocaleString()}</span>
+}) => {
+  const { t } = useLanguage();
+
+  return (
+    <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base text-slate-900 dark:text-white">{t(title)}</CardTitle>
+        <CardDescription className="text-slate-500 dark:text-white/55">{t(description)}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {items.map((item) => {
+          const percent = total > 0 ? Math.round((item.count / total) * 100) : 0;
+          return (
+            <div key={item.label} className="space-y-1.5">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={cn('text-xs font-medium', item.badgeClass)}>
+                    {t(item.label)}
+                  </Badge>
+                  <span className="text-slate-600 dark:text-white/70">{item.count.toLocaleString()}</span>
+                </div>
+                <span className="text-xs text-slate-500 dark:text-white/45">{percent}%</span>
               </div>
-              <span className="text-xs text-slate-500 dark:text-white/45">{percent}%</span>
+              <div className="h-2 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/5">
+                <div className={cn('h-full rounded-full transition-all duration-300', item.color)} style={{ width: `${percent}%` }} />
+              </div>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-slate-200/70 dark:bg-white/5">
-              <div className={cn('h-full rounded-full transition-all duration-300', item.color)} style={{ width: `${percent}%` }} />
-            </div>
-          </div>
-        );
-      })}
-    </CardContent>
-  </Card>
-);
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+};
 
 // --- Per-tab breakdowns ---
 
 const CentersBreakdown = ({ data, cross }: { data: any[]; cross: { students: number; teachers: number; classes: number } }) => {
+  const { t } = useLanguage();
   const total = cross.students + cross.teachers + cross.classes;
   const items: BarItem[] = [
     { label: 'Students', count: cross.students, color: 'bg-emerald-500', badgeClass: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300' },
@@ -167,16 +181,16 @@ const CentersBreakdown = ({ data, cross }: { data: any[]; cross: { students: num
       <ProgressBreakdown title="Resource Distribution" description="Students, teachers, and classes across all centers." items={items} total={total} />
       <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base text-slate-900 dark:text-white">Per-Center Averages</CardTitle>
-          <CardDescription className="text-slate-500 dark:text-white/55">Average distribution per center.</CardDescription>
+          <CardTitle className="text-base text-slate-900 dark:text-white">{t('Per-Center Averages')}</CardTitle>
+          <CardDescription className="text-slate-500 dark:text-white/55">{t('Average distribution per center.')}</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
           <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-300">Avg Students</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-300">{t('Avg Students')}</p>
             <p className="mt-2 text-2xl font-semibold text-indigo-800 dark:text-indigo-100">{avgStudentsPerCenter}</p>
           </div>
           <div className="rounded-xl border border-fuchsia-500/20 bg-fuchsia-500/5 p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-fuchsia-600 dark:text-fuchsia-300">Avg Teachers</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-fuchsia-600 dark:text-fuchsia-300">{t('Avg Teachers')}</p>
             <p className="mt-2 text-2xl font-semibold text-fuchsia-800 dark:text-fuchsia-100">{avgTeachersPerCenter}</p>
           </div>
         </CardContent>
@@ -186,6 +200,7 @@ const CentersBreakdown = ({ data, cross }: { data: any[]; cross: { students: num
 };
 
 const SuperuserBreakdown = ({ data }: { data: any[] }) => {
+  const { t } = useLanguage();
   const total = data.length;
   const statusItems: BarItem[] = [
     { label: 'Active', count: countByStatus(data, 'active'), color: 'bg-emerald-500', badgeClass: 'bg-emerald-500/10 text-emerald-700 border-emerald-500/20 dark:text-emerald-300' },
@@ -207,17 +222,17 @@ const SuperuserBreakdown = ({ data }: { data: any[] }) => {
       <ProgressBreakdown title="Status Breakdown" description="Admin accounts by current status." items={statusItems} total={total} />
       <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
         <CardHeader className="pb-2">
-          <CardTitle className="text-base text-slate-900 dark:text-white">Top Permissions</CardTitle>
-          <CardDescription className="text-slate-500 dark:text-white/55">Most assigned permissions across admins.</CardDescription>
+          <CardTitle className="text-base text-slate-900 dark:text-white">{t('Top Permissions')}</CardTitle>
+          <CardDescription className="text-slate-500 dark:text-white/55">{t('Most assigned permissions across admins.')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {topPerms.length === 0 ? (
-            <p className="text-sm text-slate-500 dark:text-white/55">No permission data available.</p>
+            <p className="text-sm text-slate-500 dark:text-white/55">{t('No permission data available.')}</p>
           ) : (
             topPerms.map(([perm, count]) => (
               <div key={perm} className="flex items-center justify-between rounded-lg border border-slate-200/70 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
                 <span className="text-sm font-medium text-slate-700 dark:text-white/80">{perm}</span>
-                <Badge variant="outline" className="border-slate-200/70 text-xs dark:border-white/10">{count} admins</Badge>
+                <Badge variant="outline" className="border-slate-200/70 text-xs dark:border-white/10">{count} {t('admins')}</Badge>
               </div>
             ))
           )}
@@ -227,10 +242,10 @@ const SuperuserBreakdown = ({ data }: { data: any[] }) => {
   );
 };
 
-const getMonthLabel = (monthKey: string) => {
+const getMonthLabel = (monthKey: string, language: string) => {
   const [year, month] = monthKey.split('-').map(Number);
   if (!year || !month) return monthKey;
-  return new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return new Date(year, month - 1, 1).toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' });
 };
 
 const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword }: {
@@ -240,6 +255,7 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
   onDelete: (id: number) => void;
   onResetPassword: (item: any) => void;
 }) => {
+  const { language, t } = useLanguage();
   const total = data.length;
   const male = countByGender(data, 'male');
   const female = countByGender(data, 'female');
@@ -270,7 +286,7 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
     [collections, selectedMonth]
   );
   const totalEarned = useMemo(() => teacherEarnings.reduce((sum, row) => sum + row.earnedAmount, 0), [teacherEarnings]);
-  const monthLabel = useMemo(() => getMonthLabel(selectedMonth), [selectedMonth]);
+  const monthLabel = useMemo(() => getMonthLabel(selectedMonth, language), [language, selectedMonth]);
 
   return (
     <div className="space-y-4">
@@ -278,12 +294,12 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
         <ProgressBreakdown title="Gender Breakdown" description="Teacher distribution by gender." items={genderItems} total={total} />
         <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base text-slate-900 dark:text-white">Top Specializations</CardTitle>
-            <CardDescription className="text-slate-500 dark:text-white/55">Most common teacher specializations.</CardDescription>
+            <CardTitle className="text-base text-slate-900 dark:text-white">{t('Top Specializations')}</CardTitle>
+            <CardDescription className="text-slate-500 dark:text-white/55">{t('Most common teacher specializations.')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-2">
             {topSpecs.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-white/55">No specialization data available.</p>
+              <p className="text-sm text-slate-500 dark:text-white/55">{t('No specialization data available.')}</p>
             ) : (
               topSpecs.map(([spec, count]) => (
                 <div key={spec} className="flex items-center justify-between rounded-lg border border-slate-200/70 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.03]">
@@ -301,9 +317,9 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
         <CardHeader>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <CardTitle className="text-base text-slate-900 dark:text-white">Teacher Earnings</CardTitle>
+              <CardTitle className="text-base text-slate-900 dark:text-white">{t('Teacher Earnings')}</CardTitle>
               <CardDescription className="text-slate-500 dark:text-white/55">
-                Earnings for {monthLabel}, sorted from highest to lowest.
+                {t('Earnings for')} {monthLabel}, {t('sorted from highest to lowest.')}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -320,37 +336,37 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
           {/* Earnings summary cards */}
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">Earned Total</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-300">{t('Earned Total')}</p>
               <p className="mt-1 text-xl font-semibold text-emerald-800 dark:text-emerald-100">
                 <DollarSign className="mr-0.5 inline h-4 w-4" />{totalEarned.toLocaleString()}
               </p>
             </div>
             <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-3">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-300">Top Teacher</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-300">{t('Top Teacher')}</p>
               <p className="mt-1 truncate text-sm font-semibold text-indigo-800 dark:text-indigo-100">
-                {teacherEarnings[0]?.teacherName || 'No data'}
+                {teacherEarnings[0]?.teacherName || t('No data')}
               </p>
             </div>
             <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
-              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">Month</p>
+              <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">{t('Month')}</p>
               <p className="mt-1 text-sm font-semibold text-slate-800 dark:text-white/90">{monthLabel}</p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
           {teacherEarnings.length === 0 ? (
-            <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">No earnings data for this month.</div>
+            <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">{t('No earnings data for this month.')}</div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03]">
-                  <TableHead className="text-slate-600 dark:text-white/70">Teacher</TableHead>
-                  <TableHead className="text-right text-slate-600 dark:text-white/70">Classes</TableHead>
-                  <TableHead className="text-right text-slate-600 dark:text-white/70">Students</TableHead>
-                  <TableHead className="text-right text-slate-600 dark:text-white/70">Paid</TableHead>
-                  <TableHead className="text-right text-slate-600 dark:text-white/70">Unpaid</TableHead>
-                  <TableHead className="text-right text-slate-600 dark:text-white/70">Earnings</TableHead>
-                  <TableHead className="w-[120px] text-right text-slate-600 dark:text-white/70">Actions</TableHead>
+                  <TableHead className="text-slate-600 dark:text-white/70">{t('Teacher')}</TableHead>
+                  <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Classes')}</TableHead>
+                  <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Students')}</TableHead>
+                  <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Paid')}</TableHead>
+                  <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Unpaid')}</TableHead>
+                  <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Earnings')}</TableHead>
+                  <TableHead className="w-[120px] text-right text-slate-600 dark:text-white/70">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -378,13 +394,13 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
                       <TableCell className="text-right">
                         {teacherRecord && (
                           <div className="inline-flex items-center gap-1">
-                            <Button variant="ghost" size="icon" onClick={() => onResetPassword(teacherRecord)} className="text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400" title="Reset password">
+                            <Button variant="ghost" size="icon" onClick={() => onResetPassword(teacherRecord)} className="text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400" title={t('Reset password')}>
                               <KeyRound className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => onEdit(teacherRecord)} className="text-sky-600 hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400" title="Edit">
+                            <Button variant="ghost" size="icon" onClick={() => onEdit(teacherRecord)} className="text-sky-600 hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400" title={t('Edit')}>
                               <Pencil className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon" onClick={() => onDelete(Number(getOwnerManagerRowId(teacherRecord)))} className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400" title="Delete">
+                            <Button variant="ghost" size="icon" onClick={() => onDelete(Number(getOwnerManagerRowId(teacherRecord)))} className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400" title={t('Delete')}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -432,6 +448,7 @@ const StudentBreakdown = ({ data }: { data: any[] }) => {
 // --- Main component ---
 
 export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, collections, onEdit, onDelete, onResetPassword }: OwnerManagerTabStatsProps) => {
+  const { t } = useLanguage();
   const stats = useMemo(() => {
     switch (activeTab) {
       case 'centers': return buildCenterStats(data, crossCounts);
@@ -452,17 +469,18 @@ export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, co
         'grid gap-4',
         stats.length <= 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2 xl:grid-cols-4'
       )}>
-        {stats.map((card) => {
+        {stats.map((card, index) => {
           const Icon = card.icon;
           return (
             <Card
               key={card.label}
-              className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10"
+              className={cn('overflow-hidden shadow-lg backdrop-blur dark:shadow-black/10', statSurfaceClasses[index % statSurfaceClasses.length])}
             >
+              <div className={cn('h-1 bg-gradient-to-r', card.tone)} />
               <CardContent className="flex items-center justify-between gap-3 p-4">
                 <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/45">
-                    {card.label}
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-700/75 dark:text-white/60">
+                    {t(card.label)}
                   </p>
                   <p className="mt-2 text-2xl font-semibold text-slate-900 dark:text-white">
                     {loading ? '...' : typeof card.value === 'number' ? card.value.toLocaleString() : card.value}
