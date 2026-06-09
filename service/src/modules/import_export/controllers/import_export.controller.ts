@@ -50,6 +50,9 @@ const importEntity = async (req: any, res: any) => {
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'CSV rows must belong to this center.' });
     }
+    if (out.error === 'missing_student') {
+      return res.status(400).json({ error: 'Payment row references an unknown student.', details: out.details, row: out.row });
+    }
     const { created } = out as { created: number; entity: string };
     await logAudit({
       user_type: req.user?.userType || 'system',
@@ -123,6 +126,9 @@ const pullEntityFromSheets = async (req: any, res: any) => {
     }
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Google Sheet rows must belong to this center.' });
+    }
+    if (out.error === 'missing_student') {
+      return res.status(400).json({ error: 'Payment row references an unknown student.', details: out.details, row: out.row });
     }
     const { rows } = out as { rows: number; entity: string };
     await logAudit({

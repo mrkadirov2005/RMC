@@ -152,6 +152,7 @@ const CLASS_COLS = [
 const PAYMENT_COLS = [
   'payment_id',
   'student_id',
+  'enrollment_number',
   'center_id',
   'payment_date',
   'amount',
@@ -398,7 +399,8 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
   let created = 0;
   const classIdCache = new Map<string, number | null>();
   const teacherIdCache = new Map<string, number | null>();
-  for (const row of rows) {
+  for (const [index, row] of rows.entries()) {
+    const rowNumber = index + 2;
     if (entity === 'students') {
       const identity = createGeneratedStudentIdentity();
       const rowCenterId = centerId ?? Number(row.center_id);
@@ -480,6 +482,20 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         return { error: 'invalid_center' as const };
       }
       const studentId = await resolveStudentId(row, rowCenterId);
+      if (!studentId) {
+        const studentReference =
+          getRowValue(row, ['student_id']) ||
+          getRowValue(row, ['enrollment_number', 'student_enrollment_number', 'student_code']) ||
+          [getRowValue(row, ['first_name', 'student_first_name', 'firstname', 'student_name']), getRowValue(row, ['last_name', 'student_last_name', 'lastname', 'student_surname'])]
+            .filter(Boolean)
+            .join(' ') ||
+          'empty student reference';
+        return {
+          error: 'missing_student' as const,
+          row: rowNumber,
+          details: `Payment row ${rowNumber} could not resolve student "${studentReference}". Import students first, or provide a valid student_id/enrollment_number.`,
+        };
+      }
       if (centerId && studentId) {
         const belongs = await studentInCenter(Number(studentId), Number(centerId));
         if (!belongs) return { error: 'invalid_center' as const };
