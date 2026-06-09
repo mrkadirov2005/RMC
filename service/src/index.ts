@@ -47,7 +47,6 @@ async function main() {
   const requestLogRoutes = require('./routes/requestLogRoutes');
   const translationRoutes = require('./routes/translationRoutes');
   const systemRoutes = require('./routes/systemRoutes');
-  const { startTelegramBot, stopTelegramBot } = require('./modules/telegramBot/telegramBot.service');
 
   const app = express();
   const PORT = process.env.PORT || 4000;
@@ -128,7 +127,6 @@ async function main() {
   const server = app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
-  startTelegramBot();
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;
@@ -142,7 +140,6 @@ async function main() {
 
     server.close(async () => {
       try {
-        stopTelegramBot();
         await pool.end();
         await closeMongo();
         console.log('Server and database pool closed');
