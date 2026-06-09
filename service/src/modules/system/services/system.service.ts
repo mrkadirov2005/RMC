@@ -10,6 +10,12 @@ const RESET_TABLES = {
   classes: 'classes',
 };
 
+const envFlag = (name: string, defaultValue: boolean) => {
+  const raw = String(process.env[name] || '').trim().toLowerCase();
+  if (!raw) return defaultValue;
+  return raw === '1' || raw === 'true' || raw === 'yes' || raw === 'on';
+};
+
 const getRedeployScriptPath = () =>
   process.env.SERVER_REDEPLOY_SCRIPT ||
   path.resolve(process.cwd(), '..', 'scripts', 'redeploy.sh');
@@ -51,6 +57,12 @@ const scheduleRedeploy = () => {
 const validateDevResetRequest = (confirmation: string) => {
   if (process.env.NODE_ENV === 'production') {
     const error: any = new Error('Dev reset endpoint is disabled in production.');
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (!envFlag('OWNER_DATA_RESET_ENABLED', true)) {
+    const error: any = new Error('Owner data reset endpoint is disabled.');
     error.statusCode = 403;
     throw error;
   }
