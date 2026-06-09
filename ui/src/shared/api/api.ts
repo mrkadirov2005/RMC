@@ -445,6 +445,9 @@ export const translationAPI = {
 
 export const systemAPI = {
   redeploy: (password: string) => apiClient.post('/system/redeploy', { password }),
+  resetStudents: (confirmation: string) => apiClient.post('/system/dev/reset-students', { confirmation }),
+  resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),
+  resetClasses: (confirmation: string) => apiClient.post('/system/dev/reset-classes', { confirmation }),
 };
 
 export const portalAPI = {
