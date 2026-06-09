@@ -448,6 +448,7 @@ export const systemAPI = {
   resetStudents: (confirmation: string) => apiClient.post('/system/dev/reset-students', { confirmation }),
   resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),
   resetClasses: (confirmation: string) => apiClient.post('/system/dev/reset-classes', { confirmation }),
+  resetPayments: (confirmation: string) => apiClient.post('/system/dev/reset-payments', { confirmation }),
 };
 
 export const portalAPI = {

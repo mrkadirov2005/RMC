@@ -13,7 +13,7 @@ import { useLanguage } from '../../../i18n/LanguageContext';
 const RESET_CONFIRMATION = 'TRUNCATE_EDUCATION_DATA';
 
 type ResetTarget = {
-  key: 'students' | 'teachers' | 'classes';
+  key: 'students' | 'teachers' | 'classes' | 'payments';
   label: string;
   endpoint: (confirmation: string) => Promise<any>;
 };
@@ -22,6 +22,7 @@ const resetTargets: ResetTarget[] = [
   { key: 'students', label: 'Students', endpoint: systemAPI.resetStudents },
   { key: 'teachers', label: 'Teachers', endpoint: systemAPI.resetTeachers },
   { key: 'classes', label: 'Classes', endpoint: systemAPI.resetClasses },
+  { key: 'payments', label: 'Payments', endpoint: systemAPI.resetPayments },
 ];
 
 export const OwnerSystemSettings = () => {
@@ -116,10 +117,10 @@ export const OwnerSystemSettings = () => {
           <Alert variant="destructive" className="bg-white/70 dark:bg-background/40">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
-              Clears the selected table with cascade and restarts its IDs. This endpoint is disabled in production by the backend.
+              Clears the selected table with cascade and restarts its IDs. This requires OWNER_DATA_RESET_ENABLED=true on the backend.
             </AlertDescription>
           </Alert>
-          <div className="grid gap-2 sm:grid-cols-3">
+          <div className="grid gap-2 sm:grid-cols-4">
             {resetTargets.map((target) => (
               <Button
                 key={target.key}
