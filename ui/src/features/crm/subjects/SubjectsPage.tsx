@@ -24,10 +24,12 @@ import {
 } from '@/components/ui/table';
 import { SelectField } from '../students/components/SelectField';
 import { useSubjectsPage } from './hooks/useSubjectsPage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the subjects page screen.
 const SubjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const { t } = useLanguage();
   const {
     state,
     isModalOpen,
@@ -85,11 +87,11 @@ const SubjectsPage = () => {
             disabled={isImporting}
           >
             {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-            {isImporting ? 'Importing...' : 'Import CSV'}
+            {isImporting ? t('Importing...') : t('Import CSV')}
           </Button>
           <Button type="button" variant="outline" onClick={handleExportSubjects}>
             <Download className="mr-2 h-4 w-4" />
-            Export CSV
+            {t('Export CSV')}
           </Button>
           <Button onClick={() => handleOpenModal()}>
             <Plus className="mr-2 h-4 w-4" /> Add Subject

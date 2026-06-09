@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS, OWNER_MANAGER_FIELDS, OWNER_MANAGER_STATUS_OPTIONS } from '../constants';
 import { PERMISSION_DESCRIPTIONS } from '../../crm/rbac/permissions';
+import { useLanguage } from '../../../i18n/LanguageContext';
 import type { OwnerManagerFormData, OwnerManagerMeta, OwnerManagerTabType } from '../types';
 
 interface OwnerManagerDialogProps {
@@ -43,6 +44,15 @@ export const OwnerManagerDialog = ({
   const CurrentIcon = currentMeta.icon;
   const fields = OWNER_MANAGER_FIELDS[activeTab];
   const isSuperuser = activeTab === 'superusers';
+  const { t } = useLanguage();
+  const entityLabels: Partial<Record<OwnerManagerTabType, string>> = {
+    centers: 'Branch',
+    owners: 'Owner',
+    superusers: 'Admin',
+    teachers: 'Teacher',
+    students: 'Student',
+  };
+  const entityLabel = t(entityLabels[activeTab] || currentMeta.label);
 
 // Renders field.
   const renderField = (field: { name: string; label: string; type: string; required?: boolean }) => {
@@ -60,7 +70,7 @@ export const OwnerManagerDialog = ({
           disabled={loading || !centerOptions.length || (centerFieldName === 'branch_id' && editingId != null)}
           className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <option value="">{centerOptions.length ? 'Select a branch' : 'No branches available'}</option>
+          <option value="">{centerOptions.length ? t('Select a branch') : t('No branches available')}</option>
           {centerOptions.map((center: any) => {
             const centerId = Number(center.center_id || center.id);
             return (
@@ -100,10 +110,10 @@ export const OwnerManagerDialog = ({
           disabled={loading}
           className="h-11 w-full rounded-lg border border-input bg-background px-3 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          <option value="">Select status</option>
+          <option value="">{t('Select status')}</option>
           {OWNER_MANAGER_STATUS_OPTIONS[activeTab].map((option) => (
             <option key={option} value={option}>
-              {option}
+              {t(option)}
             </option>
           ))}
         </select>
@@ -121,9 +131,9 @@ export const OwnerManagerDialog = ({
             onChange={onInputChange}
             required={field.required && editingId == null}
             disabled={loading}
-            placeholder={editingId ? 'Leave blank to keep current password' : undefined}
+            placeholder={editingId ? t('Leave blank to keep current password') : undefined}
           />
-          {editingId && <p className="text-xs text-muted-foreground">Leave blank to keep the current password.</p>}
+          {editingId && <p className="text-xs text-muted-foreground">{t('Leave blank to keep the current password.')}</p>}
         </>
       );
     }
@@ -154,7 +164,7 @@ export const OwnerManagerDialog = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <CurrentIcon className="h-5 w-5 text-amber-300" />
-            {editingId ? 'Edit' : 'Add New'} {currentMeta.label.slice(0, -1)}
+            {editingId ? t('Edit') : t('Add New')} {entityLabel}
           </DialogTitle>
         </DialogHeader>
 
@@ -163,7 +173,7 @@ export const OwnerManagerDialog = ({
             {fields.map((field) => (
               <div key={field.name} className="space-y-2">
                 <Label htmlFor={field.name} className="text-slate-600 dark:text-white/75">
-                  {field.label}
+                  {t(field.label)}
                   {field.required ? ' *' : ''}
                 </Label>
                 {renderField(field)}
@@ -174,9 +184,9 @@ export const OwnerManagerDialog = ({
           {isSuperuser && (
             <div className="space-y-4 rounded-2xl border border-slate-200/70 bg-slate-50 p-4 dark:border-white/10 dark:bg-white/[0.03]">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Admin permissions</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{t('Admin permissions')}</h3>
                 <p className="mt-1 text-sm text-slate-500 dark:text-white/60">
-                  Choose which navbar items and sections this branch admin can see.
+                  {t('Choose which navbar items and sections this branch admin can see.')}
                 </p>
               </div>
 
@@ -196,9 +206,9 @@ export const OwnerManagerDialog = ({
                         className="mt-1 h-4 w-4 rounded border-slate-300 bg-transparent text-amber-400 focus:ring-amber-400 dark:border-white/20"
                       />
                       <div className="space-y-1">
-                        <p className="font-medium text-slate-900 dark:text-white">{option.label}</p>
+                        <p className="font-medium text-slate-900 dark:text-white">{t(option.label)}</p>
                         <p className="text-xs leading-5 text-slate-500 dark:text-white/55">
-                          {PERMISSION_DESCRIPTIONS[option.code] || option.code}
+                          {t(PERMISSION_DESCRIPTIONS[option.code] || option.code)}
                         </p>
                       </div>
                     </label>
@@ -216,7 +226,7 @@ export const OwnerManagerDialog = ({
               disabled={loading}
               className="border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
             >
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="submit"
@@ -224,7 +234,7 @@ export const OwnerManagerDialog = ({
               className="bg-amber-400 text-slate-950 hover:bg-amber-300"
             >
               {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {loading ? 'Saving...' : 'Save changes'}
+              {loading ? t('Saving...') : t('Save changes')}
             </Button>
           </DialogFooter>
         </form>

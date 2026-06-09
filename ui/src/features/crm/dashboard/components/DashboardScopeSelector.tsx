@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '../../../../i18n/LanguageContext';
 import type { DashboardScope, DashboardScopeOptions, DashboardScopeType } from '../types';
 
 interface DashboardScopeSelectorProps {
@@ -44,9 +45,10 @@ const getSelectPlaceholder = (type: DashboardScopeType) => {
 
 // Renders the dashboard scope selector module.
 export const DashboardScopeSelector = ({ scope, options, onScopeChange }: DashboardScopeSelectorProps) => {
+  const { t } = useLanguage();
   const currentOptions = getOptionsForScope(options, scope.type);
   const selectedOption = currentOptions.find((option) => option.value === scope.value);
-  const selectedLabel = scope.type === 'all' ? 'All students' : selectedOption?.label || getSelectPlaceholder(scope.type);
+  const selectedLabel = scope.type === 'all' ? t('All students') : selectedOption?.label || t(getSelectPlaceholder(scope.type));
   const selectedCount = scope.type === 'all'
     ? options.status.reduce((sum, option) => sum + option.count, 0)
     : selectedOption?.count || 0;
@@ -62,9 +64,9 @@ export const DashboardScopeSelector = ({ scope, options, onScopeChange }: Dashbo
             <Layers3 className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-950 dark:text-card-foreground">Statistics scope</p>
+          <p className="text-sm font-semibold text-slate-950 dark:text-card-foreground">{t('Statistics scope')}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {selectedLabel} · {selectedCount.toLocaleString()} students in view
+            {selectedLabel} · {selectedCount.toLocaleString()} {t('students in view')}
           </p>
           </div>
         </div>
@@ -88,7 +90,7 @@ export const DashboardScopeSelector = ({ scope, options, onScopeChange }: Dashbo
                   onClick={() => onScopeChange({ type: item.value, value: 'all' })}
                 >
                   <Icon className="h-4 w-4" />
-                  {item.label}
+                  {t(item.label)}
                 </Button>
               );
             })}
@@ -100,10 +102,10 @@ export const DashboardScopeSelector = ({ scope, options, onScopeChange }: Dashbo
             onValueChange={(value) => onScopeChange({ ...scope, value })}
           >
             <SelectTrigger className="w-full border-white/80 bg-white/90 shadow-sm sm:w-[260px] dark:border-input dark:bg-background dark:shadow-none">
-              <SelectValue placeholder={getSelectPlaceholder(scope.type)} />
+              <SelectValue placeholder={t(getSelectPlaceholder(scope.type))} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All {scope.type === 'all' ? 'statistics' : scope.type}</SelectItem>
+              <SelectItem value="all">{t('All')} {t(scope.type === 'all' ? 'statistics' : scope.type)}</SelectItem>
               {currentOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   <span className="flex items-center gap-2">

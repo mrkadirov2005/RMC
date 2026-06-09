@@ -32,6 +32,7 @@ import { useAppDispatch } from '../crm/hooks';
 import { fetchStudentDashboard } from '../../slices/studentDashboardSlice';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 
 interface StudentProfile {
@@ -139,6 +140,7 @@ const StudentPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const { language, t } = useLanguage();
 
   const { data: dashboardData, loading, error } = useAppSelector((state) => state.studentDashboard);
   
@@ -168,10 +170,16 @@ const StudentPortal = () => {
 
 // Formats date.
   const formatDate = (value?: string) => {
-    if (!value) return 'Unknown date';
+    if (!value) return t('Unknown date');
     const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return 'Unknown date';
-    return d.toLocaleDateString();
+    if (Number.isNaN(d.getTime())) return t('Unknown date');
+    return d.toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'en-US');
+  };
+
+  const formatStatusLabel = (status?: string) => {
+    if (!status) return t('Pending');
+    const label = status.replace(/_/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+    return t(label);
   };
 
 // Runs side effects for this component.
@@ -297,12 +305,12 @@ const StudentPortal = () => {
         className="animate-slide-up"
         variant="hero"
         heroGradient="from-sky-500 via-cyan-500 to-teal-400"
-        title={`Welcome back, ${user?.first_name || 'Student'}!`}
-        description="Student Portal - Your schedule, tests, assignments, grades, and payments"
+        title={`${t('Welcome back')}, ${user?.first_name || t('Student')}!`}
+        description={t('Student Portal - Your schedule, tests, assignments, grades, and payments')}
         icon={GraduationCap}
         meta={
           <>
-            <Badge className="bg-white/20 text-white border-none hover:bg-white/30">Student</Badge>
+            <Badge className="bg-white/20 text-white border-none hover:bg-white/30">{t('Student')}</Badge>
             {classInfo?.class_name && <Badge className="bg-white/10 text-white border-none hover:bg-white/20">{classInfo.class_name}</Badge>}
           </>
         }
@@ -310,9 +318,9 @@ const StudentPortal = () => {
           <>
             <Button variant="outline" onClick={() => navigate('/my-tests')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
               <FileQuestion className="mr-2 h-4 w-4" />
-              My Tests
+              {t('My Tests')}
             </Button>
-            <Button variant="outline" size="icon" aria-label="Notifications" className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
+            <Button variant="outline" size="icon" aria-label={t('Notifications')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
               <Bell className="h-4 w-4" />
             </Button>
           </>
@@ -321,8 +329,8 @@ const StudentPortal = () => {
 
       <SectionPanel
         className="animate-slide-up animation-delay-100"
-        title="Today"
-        description="The most important student work for the next school day."
+        title={t('Today')}
+        description={t('The most important student work for the next school day.')}
         contentClassName="grid gap-3 md:grid-cols-3"
       >
         <div className="rounded-lg border bg-background p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md">
@@ -330,17 +338,17 @@ const StudentPortal = () => {
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-blue-50 text-blue-700 dark:bg-blue-500/10 dark:text-blue-300">
               <CalendarDays className="h-5 w-5" />
             </div>
-            <Badge variant="outline">{todaySchedule.length} classes</Badge>
+            <Badge variant="outline">{todaySchedule.length} {t('classes')}</Badge>
           </div>
-          <h3 className="mt-4 text-sm font-semibold text-foreground">Today’s schedule</h3>
+          <h3 className="mt-4 text-sm font-semibold text-foreground">{t('Today’s schedule')}</h3>
           {todaySchedule.length === 0 ? (
-            <p className="mt-1 text-sm text-muted-foreground">No classes scheduled today.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t('No classes scheduled today.')}</p>
           ) : (
             <div className="mt-3 space-y-2">
               {todaySchedule.slice(0, 2).map((item, index) => (
                 <div key={`${item.room_id}-${index}`} className="flex items-center justify-between rounded-md bg-muted/60 px-3 py-2 text-sm">
                   <span className="font-medium">{item.time}</span>
-                  <span className="text-muted-foreground">Room {item.room_number}</span>
+                  <span className="text-muted-foreground">{t('Room')} {item.room_number}</span>
                 </div>
               ))}
             </div>
@@ -351,14 +359,14 @@ const StudentPortal = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-md bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
             <FileQuestion className="h-5 w-5" />
           </div>
-          <h3 className="mt-4 text-sm font-semibold text-foreground">Next test</h3>
+          <h3 className="mt-4 text-sm font-semibold text-foreground">{t('Next test')}</h3>
           {nextTest ? (
             <>
               <p className="mt-1 truncate text-sm text-muted-foreground">{nextTest.test_name}</p>
               <p className="mt-2 text-xs font-medium text-foreground">{formatDate(nextTest.due_date)}</p>
             </>
           ) : (
-            <p className="mt-1 text-sm text-muted-foreground">No upcoming tests.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t('No upcoming tests.')}</p>
           )}
         </div>
 
@@ -366,16 +374,16 @@ const StudentPortal = () => {
           <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
             <ClipboardList className="h-5 w-5" />
           </div>
-          <h3 className="mt-4 text-sm font-semibold text-foreground">Next assignment</h3>
+          <h3 className="mt-4 text-sm font-semibold text-foreground">{t('Next assignment')}</h3>
           {nextAssignment ? (
             <>
               <p className="mt-1 truncate text-sm text-muted-foreground">
-                {nextAssignment.assignment_title || nextAssignment.title || 'Assignment'}
+                {nextAssignment.assignment_title || nextAssignment.title || t('Assignment')}
               </p>
               <p className="mt-2 text-xs font-medium text-foreground">{formatDate(nextAssignment.due_date)}</p>
             </>
           ) : (
-            <p className="mt-1 text-sm text-muted-foreground">No assignments due this week.</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t('No assignments due this week.')}</p>
           )}
         </div>
       </SectionPanel>
@@ -389,17 +397,17 @@ const StudentPortal = () => {
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <MetricCard className="animate-slide-up animation-delay-200" label="Active Tests" value={activeTests} detail="Ready to take" icon={FileQuestion} tone="blue" onClick={() => navigate('/my-tests')} />
-        <MetricCard className="animate-slide-up animation-delay-300" label="Attendance Rate" value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} present`} icon={CalendarDays} tone="green" />
-        <MetricCard className="animate-slide-up animation-delay-400" label="Average Grade" value={`${averageGrade}%`} detail="Across posted grades" icon={CheckCircle} tone="neutral" />
-        <MetricCard className="animate-slide-up animation-delay-500" label="Outstanding Debt" value={formatMoney(outstandingDebt)} detail="Remaining balance" icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} />
-        <MetricCard className="animate-slide-up animation-delay-600" label="Coins" value={Number(student?.coins || 0).toLocaleString()} detail="Current balance" icon={Coins} tone="amber" />
+        <MetricCard className="animate-slide-up animation-delay-200" label={t('Active Tests')} value={activeTests} detail={t('Ready to take')} icon={FileQuestion} tone="blue" onClick={() => navigate('/my-tests')} />
+        <MetricCard className="animate-slide-up animation-delay-300" label={t('Attendance Rate')} value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} ${t('present')}`} icon={CalendarDays} tone="green" />
+        <MetricCard className="animate-slide-up animation-delay-400" label={t('Average Grade')} value={`${averageGrade}%`} detail={t('Across posted grades')} icon={CheckCircle} tone="neutral" />
+        <MetricCard className="animate-slide-up animation-delay-500" label={t('Outstanding Debt')} value={formatMoney(outstandingDebt)} detail={t('Remaining balance')} icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} />
+        <MetricCard className="animate-slide-up animation-delay-600" label={t('Coins')} value={Number(student?.coins || 0).toLocaleString()} detail={t('Current balance')} icon={Coins} tone="amber" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-fade-in animation-delay-400">
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Student Profile</CardTitle>
+            <CardTitle className="text-base">{t('Student Profile')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center gap-2">
@@ -409,25 +417,25 @@ const StudentPortal = () => {
             {student?.enrollment_number && (
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span>Enrollment: {student.enrollment_number}</span>
+                <span>{t('Enrollment')}: {student.enrollment_number}</span>
               </div>
             )}
             {student?.phone && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>Phone: {student.phone}</span>
+                <span>{t('Phone')}: {student.phone}</span>
               </div>
             )}
             {student?.parent_name && (
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span>Guardian: {student.parent_name}</span>
+                <span>{t('Guardian')}: {student.parent_name}</span>
               </div>
             )}
             {student?.parent_phone && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>Guardian Phone: {student.parent_phone}</span>
+                <span>{t('Guardian Phone')}: {student.parent_phone}</span>
               </div>
             )}
           </CardContent>
@@ -435,29 +443,29 @@ const StudentPortal = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Class Snapshot</CardTitle>
+            <CardTitle className="text-base">{t('Class Snapshot')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center gap-2">
               <GraduationCap className="h-4 w-4 text-muted-foreground" />
-              <span>{classInfo?.class_name || 'Class not assigned'}</span>
+              <span>{classInfo?.class_name || t('Class not assigned')}</span>
             </div>
             {classInfo?.class_code && (
               <div className="flex items-center gap-2">
                 <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                <span>Code: {classInfo.class_code}</span>
+                <span>{t('Code')}: {classInfo.class_code}</span>
               </div>
             )}
             {classInfo?.room_number && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>Room: {classInfo.room_number}</span>
+                <span>{t('Room')}: {classInfo.room_number}</span>
               </div>
             )}
             {teacher?.first_name && (
               <div className="flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-muted-foreground" />
-                <span>Teacher: {teacher.first_name} {teacher.last_name}</span>
+                <span>{t('Teacher')}: {teacher.first_name} {teacher.last_name}</span>
               </div>
             )}
           </CardContent>
@@ -465,16 +473,16 @@ const StudentPortal = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Subjects</CardTitle>
+            <CardTitle className="text-base">{t('Subjects')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2 text-sm">
             {subjects.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No subjects assigned yet.</p>
+              <p className="text-sm text-muted-foreground">{t('No subjects assigned yet.')}</p>
             ) : (
               subjects.slice(0, 6).map((subject) => (
                 <div key={subject.subject_id || subject.id} className="flex items-center justify-between">
                   <span>{subject.subject_name}</span>
-                  <Badge variant="outline">Active</Badge>
+                  <Badge variant="outline">{t('Active')}</Badge>
                 </div>
               ))
             )}
@@ -485,21 +493,21 @@ const StudentPortal = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in animation-delay-400">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Upcoming Tests</CardTitle>
+            <CardTitle className="text-base">{t('Upcoming Tests')}</CardTitle>
             <Button variant="outline" size="sm" onClick={() => navigate('/my-tests')}>
-              View all
+              {t('View all')}
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {upcomingTests.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No tests scheduled soon.</p>
+              <p className="text-sm text-muted-foreground">{t('No tests scheduled soon.')}</p>
             ) : (
               upcomingTests.map((test) => (
                 <div key={test.test_id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
                   <div>
                     <p className="text-sm font-medium">{test.test_name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {test.test_type?.replace(/_/g, ' ')} - {test.total_marks || 0} marks
+                      {test.test_type?.replace(/_/g, ' ')} - {test.total_marks || 0} {t('marks')}
                     </p>
                   </div>
                   <div className="text-xs text-muted-foreground">{formatDate(test.due_date)}</div>
@@ -511,18 +519,18 @@ const StudentPortal = () => {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-base">Assignments Due Soon</CardTitle>
-            <Badge variant="outline">{assignmentsDue.length} due</Badge>
+            <CardTitle className="text-base">{t('Assignments Due Soon')}</CardTitle>
+            <Badge variant="outline">{assignmentsDue.length} {t('due')}</Badge>
           </CardHeader>
           <CardContent className="space-y-3">
             {assignmentsDue.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No assignments due this week.</p>
+              <p className="text-sm text-muted-foreground">{t('No assignments due this week.')}</p>
             ) : (
               assignmentsDue.map((assignment) => (
                 <div key={assignment.assignment_id || assignment.id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
                   <div>
-                    <p className="text-sm font-medium">{assignment.assignment_title || assignment.title || 'Assignment'}</p>
-                    <p className="text-xs text-muted-foreground">Status: {assignment.status || 'Pending'}</p>
+                    <p className="text-sm font-medium">{assignment.assignment_title || assignment.title || t('Assignment')}</p>
+                    <p className="text-xs text-muted-foreground">{t('Status')}: {formatStatusLabel(assignment.status)}</p>
                   </div>
                   <div className="text-xs text-muted-foreground">{formatDate(assignment.due_date)}</div>
                 </div>
@@ -534,22 +542,22 @@ const StudentPortal = () => {
 
       <Card className="animate-fade-in animation-delay-400">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Recent Grades</CardTitle>
-          <Badge variant="outline">{grades.length} total</Badge>
+          <CardTitle className="text-base">{t('Recent Grades')}</CardTitle>
+          <Badge variant="outline">{grades.length} {t('total')}</Badge>
         </CardHeader>
         <CardContent className="space-y-3">
           {recentGrades.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No grades posted yet.</p>
+            <p className="text-sm text-muted-foreground">{t('No grades posted yet.')}</p>
           ) : (
             recentGrades.map((grade) => (
               <div key={grade.grade_id || grade.id} className="flex items-center justify-between border-b last:border-b-0 pb-3 last:pb-0">
                 <div>
-                  <p className="text-sm font-medium">{grade.subject || 'Subject'}</p>
+                  <p className="text-sm font-medium">{grade.subject || t('Subject')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {grade.marks_obtained ?? 0}/{grade.total_marks ?? 0} - {grade.grade_letter || 'N/A'}
+                    {grade.marks_obtained ?? 0}/{grade.total_marks ?? 0} - {grade.grade_letter || t('N/A')}
                   </p>
                 </div>
-                <div className="text-xs text-muted-foreground">{grade.percentage ? `${Math.round(grade.percentage)}%` : 'N/A'}</div>
+                <div className="text-xs text-muted-foreground">{grade.percentage ? `${Math.round(grade.percentage)}%` : t('N/A')}</div>
               </div>
             ))
           )}
@@ -560,7 +568,7 @@ const StudentPortal = () => {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-primary" />
-            Weekly Class Schedule
+            {t('Weekly Class Schedule')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -582,14 +590,14 @@ const StudentPortal = () => {
                       "text-[10px] font-bold uppercase tracking-wider",
                       isToday ? "text-primary" : "text-muted-foreground"
                     )}>
-                      {day.substring(0, 3)}
+                      {t(day).substring(0, 3)}
                     </span>
                     {isToday && <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
                   </div>
 
                   <div className="space-y-1.5 min-h-[40px]">
                     {daySchedule.length === 0 ? (
-                      <div className="text-[10px] text-muted-foreground/50 italic py-2">No class</div>
+                      <div className="text-[10px] text-muted-foreground/50 italic py-2">{t('No class')}</div>
                     ) : (
                       daySchedule.map((item, idx) => (
                         <div
@@ -601,7 +609,7 @@ const StudentPortal = () => {
                           </div>
                           <div className="text-[9px] text-muted-foreground mt-0.5 flex items-center gap-1">
                             <MapPin className="h-2 w-2" />
-                            Room {item.room_number}
+                            {t('Room')} {item.room_number}
                           </div>
                         </div>
                       ))
@@ -620,7 +628,7 @@ const StudentPortal = () => {
             <div className="rounded-md bg-muted p-2 text-primary">
               <Wallet className="h-5 w-5" />
             </div>
-            Payment History
+            {t('Payment History')}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6">
@@ -634,8 +642,8 @@ const StudentPortal = () => {
                 return pDate.getFullYear() === year && (pDate.getMonth() + 1) === month;
               });
 
-              const monthName = monthDate.toLocaleString('default', { month: 'short' });
-              const yearName = monthDate.toLocaleString('default', { year: '2-digit' });
+              const monthName = monthDate.toLocaleString(language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'short' });
+              const yearName = monthDate.toLocaleString(language === 'uz' ? 'uz-UZ' : 'en-US', { year: '2-digit' });
 
               return (
                 <div key={`${monthName}-${yearName}`} className={cn(
@@ -657,9 +665,9 @@ const StudentPortal = () => {
                     )}
                   </div>
                   {hasPaid ? (
-                    <span className="text-xs font-bold text-emerald-600">Settled</span>
+                    <span className="text-xs font-bold text-emerald-600">{t('Settled')}</span>
                   ) : (
-                    <span className="text-xs font-bold text-rose-600">Unpaid</span>
+                    <span className="text-xs font-bold text-rose-600">{t('Unpaid')}</span>
                   )}
                 </div>
               );

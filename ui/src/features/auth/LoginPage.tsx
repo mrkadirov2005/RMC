@@ -75,7 +75,7 @@ const otherRoles = {
 };
 
 const inputClass =
-  'h-12 rounded-md border-[#d8e4f1] bg-white pl-11 text-[#21116a] placeholder:text-slate-400 focus-visible:border-[#16a7e2] focus-visible:ring-[#16a7e2]/25';
+  'h-12 rounded-md border-[#d8e4f1] bg-white pl-11 text-[#21116a] placeholder:text-slate-400 focus-visible:border-[#16a7e2] focus-visible:ring-[#16a7e2]/25 lg:h-[3.15rem]';
 
 // Renders the login page screen.
 export const LoginPage = ({ userType }: LoginPageProps) => {
@@ -174,36 +174,38 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
   };
 
   return (
-    <main className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
-      <section className="relative overflow-hidden border-b border-[#d8e4f1] bg-[#fbfdff] px-5 py-4 lg:min-h-screen lg:border-b-0 lg:border-r lg:px-12 lg:py-10">
-        <div className="flex items-center justify-between gap-4">
+    <main data-translation-skip className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
+      <section className="relative overflow-hidden border-b border-[#d8e4f1] bg-[#fbfdff] px-5 py-4 lg:min-h-screen lg:border-b-0 lg:border-r lg:px-12 lg:py-10 xl:px-14">
+        <div className="flex items-center gap-4">
           <img src={logoSrc} alt="Temurbek School" className="h-14 w-auto object-contain sm:h-20 lg:h-24" />
-          <Badge className="border-[#16a7e2]/30 bg-[#16a7e2]/10 text-[#21116a] hover:bg-[#16a7e2]/10">
-            {config.eyebrow}
-          </Badge>
         </div>
 
-        <div className="mt-6 grid gap-5 sm:mt-10 lg:mt-24 lg:max-w-2xl lg:gap-8">
+        <div className="mt-6 grid gap-5 sm:mt-10 lg:mt-24 lg:max-w-[720px] lg:gap-8 xl:mt-28">
           <div>
             <div className="mb-5 h-1 w-16 rounded-full bg-[#16a7e2]" aria-hidden="true" />
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
-            <h1 className="mt-3 max-w-xl text-3xl font-semibold leading-tight tracking-normal text-[#21116a] sm:mt-4 sm:text-4xl lg:text-5xl">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
+              <Badge className="border-[#16a7e2]/30 bg-[#16a7e2]/10 text-[#21116a] hover:bg-[#16a7e2]/10">
+                {config.eyebrow}
+              </Badge>
+            </div>
+            <h1 className="mt-3 max-w-[680px] text-3xl font-semibold leading-tight tracking-normal text-[#21116a] sm:mt-4 sm:text-4xl lg:text-[3.65rem] lg:leading-[1.03] xl:text-[3.9rem]">
               A focused workspace for learning center operations.
             </h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
               Secure access for administrators, teachers, and students of Temurbek School.
             </p>
           </div>
 
-          <div className="hidden max-w-xl grid-cols-2 gap-3 sm:grid">
+          <div className="hidden max-w-[670px] grid-cols-2 gap-3 sm:grid">
             {[
               ['Branch control', 'Students, teachers, classes'],
               ['Learning flow', 'Tests, grades, attendance'],
               ['Finance view', 'Payments and debts'],
               ['Portals', 'Teacher and student access'],
             ].map(([label, detail]) => (
-              <div key={label} className="rounded-lg border border-[#cbe8f8] bg-white p-4 shadow-sm shadow-[#16a7e2]/5">
-                <p className="text-sm font-semibold text-[#21116a]">{label}</p>
+              <div key={label} className="rounded-lg border border-[#cbe8f8] bg-white p-4 shadow-sm shadow-[#16a7e2]/5 xl:p-5">
+                <p className="text-sm font-semibold text-[#21116a] xl:text-[0.95rem]">{label}</p>
                 <p className="mt-1 text-xs leading-5 text-slate-500">{detail}</p>
               </div>
             ))}
@@ -215,19 +217,19 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
         </div>
       </section>
 
-      <section className="flex items-start bg-[#eef8ff] px-5 py-7 sm:px-8 lg:min-h-screen lg:items-center lg:px-12">
-        <div className="w-full max-w-[430px]">
-          <div className="mb-6 h-1 w-14 rounded-full bg-[#16a7e2]" aria-hidden="true" />
-          <div className="mb-8 flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-[#16a7e2]/25 bg-[#16a7e2]/10 text-[#16a7e2]">
-              <RoleIcon className="h-6 w-6" />
+      <section className="flex min-h-screen items-center justify-center bg-[#eef8ff] px-5 py-7 sm:px-8 lg:px-12">
+        <div className="mx-auto w-full max-w-[460px]">
+          <div className="mb-7 h-1 w-16 rounded-full bg-[#16a7e2]" aria-hidden="true" />
+          <div className="mb-9 flex items-start gap-4">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#16a7e2]/25 bg-[#16a7e2]/10 text-[#16a7e2]">
+              <RoleIcon className="h-7 w-7" />
             </div>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#16a7e2]">{config.eyebrow}</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-normal text-[#21116a]">
+              <h2 className="mt-1 text-2xl font-semibold tracking-normal text-[#21116a] xl:text-[1.85rem]">
                 {config.title} sign in
               </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">{config.subtitle}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-600 xl:text-[0.95rem]">{config.subtitle}</p>
             </div>
           </div>
 
@@ -237,13 +239,13 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
             <div className="space-y-2">
-              <label htmlFor={`${userType}-username`} className="text-sm font-semibold text-[#21116a]">
+              <label htmlFor={`${userType}-username`} className="text-sm font-semibold text-[#21116a] xl:text-[0.95rem]">
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                 <Input
                   id={`${userType}-username`}
                   placeholder="Enter username"
@@ -259,11 +261,11 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor={`${userType}-password`} className="text-sm font-semibold text-[#21116a]">
+              <label htmlFor={`${userType}-password`} className="text-sm font-semibold text-[#21116a] xl:text-[0.95rem]">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                 <Input
                   id={`${userType}-password`}
                   placeholder="Enter password"
@@ -288,7 +290,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </div>
 
             <div className="flex items-center justify-between gap-3">
-              <label htmlFor={`${userType}-remember`} className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+              <label htmlFor={`${userType}-remember`} className="flex cursor-pointer items-center gap-2 text-sm text-slate-600 xl:text-[0.95rem]">
                 <input
                   id={`${userType}-remember`}
                   type="checkbox"
@@ -301,7 +303,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
               <button
                 type="button"
                 onClick={handleForgotPassword}
-                className="text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 transition-colors hover:text-[#16a7e2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
+                className="text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 transition-colors hover:text-[#16a7e2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35 xl:text-[0.95rem]"
               >
                 Forgot password?
               </button>
@@ -310,7 +312,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d] focus-visible:ring-[#16a7e2]/40"
+              className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d] focus-visible:ring-[#16a7e2]/40 lg:h-[3.15rem] xl:text-[0.95rem]"
             >
               {loading ? (
                 <>
@@ -326,7 +328,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </Button>
           </form>
 
-          <div className="mt-8 border-t border-[#d8e4f1] pt-5">
+          <div className="mt-9 border-t border-[#d8e4f1] pt-6">
             <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Switch workspace</p>
             <div className="flex flex-wrap gap-2">
               {otherRoles[userType].map((role) => {

@@ -42,6 +42,7 @@ import { fetchClasses } from '../../../slices/classesSlice';
 import { showToast } from '@/utils/toast';
 import { selectRoomsPageUi } from '../../../store/selectors';
 import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const weekDays = [
   'Monday',
@@ -70,6 +71,7 @@ const RoomsPage = () => {
   });
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { t } = useLanguage();
   const summaryCards = useMemo(() => {
     const uniqueRooms = new Set(rooms.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)).size;
     const assignedRooms = rooms.filter((room: any) => room.class_id || room.class_name).length;
@@ -232,7 +234,7 @@ const RoomsPage = () => {
               className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
             >
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-              {isImporting ? 'Importing...' : 'Import CSV'}
+              {isImporting ? t('Importing...') : t('Import CSV')}
             </Button>
             <Button
               type="button"
@@ -241,7 +243,7 @@ const RoomsPage = () => {
               className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
             >
               <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              {t('Export CSV')}
             </Button>
             <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="mr-2 h-4 w-4" />

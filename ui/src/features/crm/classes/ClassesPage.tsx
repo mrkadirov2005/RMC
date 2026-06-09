@@ -42,6 +42,7 @@ import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
@@ -51,6 +52,7 @@ const ClassesPage = () => {
   const [teacherFilter, setTeacherFilter] = useState('all');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedClassIds, setSelectedClassIds] = useState<Set<number>>(new Set());
+  const { t } = useLanguage();
   const {
     state,
     isModalOpen,
@@ -137,36 +139,36 @@ const ClassesPage = () => {
   const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
   const summaryCards = [
     {
-      label: 'Classes shown',
+      label: t('Classes shown'),
       value: filteredClasses.length.toLocaleString(),
-      detail: `${scheduledClasses.toLocaleString()} scheduled`,
+      detail: `${scheduledClasses.toLocaleString()} ${t('scheduled')}`,
       icon: BookOpen,
       shell: 'from-indigo-50 via-white to-sky-50 border-indigo-100',
       iconShell: 'from-indigo-500 to-sky-500',
       text: 'text-indigo-950',
     },
     {
-      label: 'Capacity',
+      label: t('Capacity'),
       value: totalCapacity.toLocaleString(),
-      detail: 'Total seats',
+      detail: t('Total seats'),
       icon: Users,
       shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
       iconShell: 'from-emerald-500 to-teal-500',
       text: 'text-emerald-950',
     },
     {
-      label: 'Rooms',
+      label: t('Rooms'),
       value: roomsInView.toLocaleString(),
-      detail: 'In current view',
+      detail: t('In current view'),
       icon: MapPin,
       shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
       iconShell: 'from-amber-500 to-orange-500',
       text: 'text-amber-950',
     },
     {
-      label: 'Monthly tuition',
+      label: t('Monthly tuition'),
       value: formatMoney(monthlyTuition),
-      detail: 'Listed amounts',
+      detail: t('Listed amounts'),
       icon: DollarSign,
       shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
       iconShell: 'from-cyan-500 to-fuchsia-500',
@@ -181,7 +183,7 @@ const ClassesPage = () => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
-            aria-label="Open class actions"
+            aria-label={t('Open class actions')}
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
@@ -189,22 +191,22 @@ const ClassesPage = () => {
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuItem onClick={() => navigate(`/classes/${getClassId(cls)}`)} className="gap-2">
             <Info className="h-4 w-4 text-cyan-600" />
-            Details
+            {t('Details')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleGenerateSessions(cls)} className="gap-2">
             <CalendarDays className="h-4 w-4 text-indigo-600" />
-            Generate Sessions
+            {t('Generate Sessions')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleOpenModal(cls)} className="gap-2">
             <Pencil className="h-4 w-4 text-blue-500" />
-            Edit
+            {t('Edit')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
             className="gap-2 text-destructive focus:text-destructive"
           >
             <Trash2 className="h-4 w-4" />
-            Delete
+            {t('Delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -222,9 +224,9 @@ const ClassesPage = () => {
               <BookOpen className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Classes Management</h1>
+              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">{t('Classes Management')}</h1>
               <p className="mt-1 text-sm text-muted-foreground">
-                Organize class groups, schedules, rooms, tuition, and session generation.
+                {t('Organize class groups, schedules, rooms, tuition, and session generation.')}
               </p>
             </div>
           </div>
@@ -245,7 +247,7 @@ const ClassesPage = () => {
               className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
             >
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-              {isImporting ? 'Importing...' : 'Import CSV'}
+              {isImporting ? t('Importing...') : t('Import CSV')}
             </Button>
             <Button
               type="button"
@@ -254,11 +256,11 @@ const ClassesPage = () => {
               className="border-white/80 bg-white/80 shadow-sm dark:border-border dark:bg-background dark:shadow-none"
             >
               <Download className="mr-2 h-4 w-4" />
-              Export CSV
+              {t('Export CSV')}
             </Button>
             <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 px-5 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="mr-2 h-4 w-4" />
-              Add Class
+              {t('Add Class')}
             </Button>
           </div>
         </div>
@@ -295,7 +297,7 @@ const ClassesPage = () => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search classes by name, code, schedule, room..."
+            placeholder={t('Search classes by name, code, schedule, room...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border-white/80 bg-white/90 pl-10 pr-10 shadow-sm dark:border-input dark:bg-background dark:shadow-none"
@@ -314,10 +316,10 @@ const ClassesPage = () => {
         </div>
         <Select value={teacherFilter} onValueChange={setTeacherFilter}>
           <SelectTrigger className="w-full border-white/80 bg-white/90 shadow-sm lg:w-[260px] dark:border-input dark:bg-background dark:shadow-none">
-            <SelectValue placeholder="Filter by teacher" />
+            <SelectValue placeholder={t('Filter by teacher')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All teachers</SelectItem>
+            <SelectItem value="all">{t('All teachers')}</SelectItem>
             {teacherOptions.map((teacher) => (
               <SelectItem key={teacher.id || teacher.value} value={String(teacher.value)}>
                 {teacher.label}
@@ -333,25 +335,25 @@ const ClassesPage = () => {
         </div>
       ) : state.items.length === 0 ? (
         <Alert className="mb-4">
-          <AlertDescription>No classes found. Create your first class to get started!</AlertDescription>
+          <AlertDescription>{t('No classes found. Create your first class to get started!')}</AlertDescription>
         </Alert>
       ) : filteredClasses.length === 0 ? (
         <Alert className="mb-4">
-          <AlertDescription>No classes match your search.</AlertDescription>
+          <AlertDescription>{t('No classes match your search.')}</AlertDescription>
         </Alert>
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
           {selectedClassIds.size > 0 && (
             <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
-              <span className="font-medium">{selectedClassIds.size} selected</span>
+              <span className="font-medium">{selectedClassIds.size} {t('selected')}</span>
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={deleteSelectedClasses}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('Delete')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClassIds(new Set())}>
-                  Clear
+                  {t('Clear')}
                 </Button>
               </div>
             </div>
@@ -367,12 +369,12 @@ const ClassesPage = () => {
                       if (input) input.indeterminate = selectedVisibleClassCount > 0 && !allVisibleClassesSelected;
                     }}
                     onChange={(event) => toggleAllVisibleClasses(event.target.checked)}
-                    aria-label="Select all visible classes"
+                    aria-label={t('Select all visible classes')}
                     className="h-4 w-4"
                   />
                 </TableHead>
-                <TableHead>Class</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('Class')}</TableHead>
+                <TableHead className="text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -408,14 +410,14 @@ const ClassesPage = () => {
         <>
           {selectedClassIds.size > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
-              <span className="font-medium">{selectedClassIds.size} selected</span>
+              <span className="font-medium">{selectedClassIds.size} {t('selected')}</span>
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={deleteSelectedClasses}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('Delete')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClassIds(new Set())}>
-                  Clear
+                  {t('Clear')}
                 </Button>
               </div>
             </div>
@@ -443,7 +445,7 @@ const ClassesPage = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{cls.class_name}</p>
-                      <p className="sr-only">{cls.class_code || 'Class details'}</p>
+                      <p className="sr-only">{cls.class_code || t('Class details')}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -455,14 +457,14 @@ const ClassesPage = () => {
         <>
           {selectedClassIds.size > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
-              <span className="font-medium">{selectedClassIds.size} selected</span>
+              <span className="font-medium">{selectedClassIds.size} {t('selected')}</span>
               <div className="flex items-center gap-2">
                 <Button type="button" variant="outline" size="sm" onClick={deleteSelectedClasses}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('Delete')}
                 </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => setSelectedClassIds(new Set())}>
-                  Clear
+                  {t('Clear')}
                 </Button>
               </div>
             </div>
@@ -506,11 +508,11 @@ const ClassesPage = () => {
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Class' : 'Add New Class'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Class') : t('Add New Class')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="class_name">Class Name *</Label>
+              <Label htmlFor="class_name">{t('Class Name')} *</Label>
               <Input
                 id="class_name"
                 required
@@ -519,7 +521,7 @@ const ClassesPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="class_code">Class Code *</Label>
+              <Label htmlFor="class_code">{t('Class Code')} *</Label>
               <Input
                 id="class_code"
                 required
@@ -529,7 +531,7 @@ const ClassesPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="level">Level *</Label>
+                <Label htmlFor="level">{t('Level')} *</Label>
                 <Input
                   id="level"
                   type="number"
@@ -542,7 +544,7 @@ const ClassesPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="capacity">Capacity *</Label>
+                <Label htmlFor="capacity">{t('Capacity')} *</Label>
                 <Input
                   id="capacity"
                   type="number"
@@ -552,7 +554,7 @@ const ClassesPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="room_number">Room Number *</Label>
+                <Label htmlFor="room_number">{t('Room Number')} *</Label>
                 <Input
                   id="room_number"
                   required
@@ -563,7 +565,7 @@ const ClassesPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="payment_amount">Payment Amount *</Label>
+                <Label htmlFor="payment_amount">{t('Payment Amount')} *</Label>
                 <Input
                   id="payment_amount"
                   type="number"
@@ -574,13 +576,13 @@ const ClassesPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment_frequency">Payment Frequency</Label>
+                <Label htmlFor="payment_frequency">{t('Payment Frequency')}</Label>
                 <Select
                   value={formData.payment_frequency || 'Monthly'}
                   onValueChange={(val) => setFormData({ ...formData, payment_frequency: val })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Frequency" />
+                    <SelectValue placeholder={t('Select Frequency')} />
                   </SelectTrigger>
                   <SelectContent>
                     {frequencyOptions.map((opt) => (
@@ -595,11 +597,11 @@ const ClassesPage = () => {
 
             {/* Schedule Section */}
             <div className="p-4 bg-muted rounded-lg mt-2">
-              <h4 className="font-bold text-sm mb-3">Class Schedule</h4>
+              <h4 className="font-bold text-sm mb-3">{t('Class Schedule')}</h4>
 
               {/* Days Selection */}
               <div className="mb-3">
-                <p className="text-xs font-semibold mb-2">Select Class Days</p>
+                <p className="text-xs font-semibold mb-2">{t('Select Class Days')}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {weekDays.map((day) => (
                     <label key={day} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -615,7 +617,7 @@ const ClassesPage = () => {
 
               {/* Time Selection */}
               <div className="space-y-2">
-                <Label htmlFor="schedule_time">Class Time</Label>
+                <Label htmlFor="schedule_time">{t('Class Time')}</Label>
                 <Input
                   id="schedule_time"
                   type="time"
@@ -628,13 +630,13 @@ const ClassesPage = () => {
             {/* Center and Teacher Selection */}
             {isOwner && (
               <div className="space-y-2">
-                <Label htmlFor="center_id">Center</Label>
+                <Label htmlFor="center_id">{t('Center')}</Label>
                 <Select
                   value={String(formData.center_id || '')}
                   onValueChange={(val) => setFormData({ ...formData, center_id: Number(val) })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select Center" />
+                    <SelectValue placeholder={t('Select Center')} />
                   </SelectTrigger>
                   <SelectContent>
                     {centerOptions.map((opt) => (
@@ -648,7 +650,7 @@ const ClassesPage = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="teacher_id">Teacher (Optional)</Label>
+              <Label htmlFor="teacher_id">{t('Teacher (Optional)')}</Label>
               <Select
                 value={String(formData.teacher_id || 'none')}
                 onValueChange={(val) =>
@@ -659,10 +661,10 @@ const ClassesPage = () => {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Teacher" />
+                  <SelectValue placeholder={t('Select Teacher')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">None</SelectItem>
+                  <SelectItem value="none">{t('None')}</SelectItem>
                   {teacherOptions.map((opt) => (
                     <SelectItem key={opt.id || opt.value} value={String(opt.value)}>
                       {opt.label}
@@ -674,10 +676,10 @@ const ClassesPage = () => {
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" disabled={state.loading}>
-                {state.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                {state.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Save')}
               </Button>
             </DialogFooter>
           </form>
@@ -688,7 +690,7 @@ const ClassesPage = () => {
       <Dialog open={deleteModalOpen} onOpenChange={(open) => !open && handleCloseDeleteModal()}>
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Attendance records found</DialogTitle>
+            <DialogTitle>{t('Attendance records found')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
@@ -700,17 +702,17 @@ const ClassesPage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Student ID</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Session</TableHead>
+                    <TableHead>{t('Date')}</TableHead>
+                    <TableHead>{t('Student ID')}</TableHead>
+                    <TableHead>{t('Status')}</TableHead>
+                    <TableHead>{t('Session')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {deleteAttendance.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={4} className="text-center text-muted-foreground">
-                        No attendance records found.
+                        {t('No attendance records found.')}
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -731,10 +733,10 @@ const ClassesPage = () => {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleCloseDeleteModal} disabled={deleteLoading}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="button" variant="destructive" onClick={handleForceDelete} disabled={deleteLoading}>
-              {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Delete anyway'}
+              {deleteLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Delete anyway')}
             </Button>
           </DialogFooter>
         </DialogContent>

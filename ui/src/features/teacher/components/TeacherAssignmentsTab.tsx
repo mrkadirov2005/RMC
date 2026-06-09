@@ -33,6 +33,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { classAPI, subjectAPI, assignmentAPI } from '../../../shared/api/api';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {
   class_id: number;
@@ -64,6 +65,7 @@ interface TeacherAssignmentsTabProps {
 
 // Renders the teacher assignments tab tab.
 const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabProps) => {
+  const { t } = useLanguage();
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -187,7 +189,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     if (!formData.assignment_title || !formData.class_id || !formData.due_date) {
       setSnackbar({
         open: true,
-        message: 'Please fill in all required fields',
+        message: t('Please fill in all required fields'),
         severity: 'error',
       });
       return;
@@ -204,14 +206,14 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
         await assignmentAPI.update(selectedAssignment.assignment_id, data);
         setSnackbar({
           open: true,
-          message: 'Assignment updated successfully!',
+          message: t('Assignment updated successfully!'),
           severity: 'success',
         });
       } else {
         await assignmentAPI.create(data);
         setSnackbar({
           open: true,
-          message: 'Assignment created successfully!',
+          message: t('Assignment created successfully!'),
           severity: 'success',
         });
       }
@@ -223,7 +225,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       console.error('Error saving assignment:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to save assignment',
+        message: t('Failed to save assignment'),
         severity: 'error',
       });
     } finally {
@@ -239,7 +241,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       await assignmentAPI.delete(selectedAssignment.assignment_id);
       setSnackbar({
         open: true,
-        message: 'Assignment deleted successfully!',
+        message: t('Assignment deleted successfully!'),
         severity: 'success',
       });
       setDeleteDialogOpen(false);
@@ -250,7 +252,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       console.error('Error deleting assignment:', error);
       setSnackbar({
         open: true,
-        message: 'Failed to delete assignment',
+        message: t('Failed to delete assignment'),
         severity: 'error',
       });
     }
@@ -272,10 +274,10 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     const due = new Date(dueDate);
     const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return { label: 'Overdue', colorClass: 'bg-red-100 text-red-700 border-red-300', icon: <AlertTriangle className="h-3.5 w-3.5" /> };
-    if (diffDays === 0) return { label: 'Due Today', colorClass: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Clock className="h-3.5 w-3.5" /> };
-    if (diffDays <= 3) return { label: 'Due Soon', colorClass: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Clock className="h-3.5 w-3.5" /> };
-    return { label: 'Active', colorClass: 'bg-green-100 text-green-700 border-green-300', icon: <CheckCircle className="h-3.5 w-3.5" /> };
+    if (diffDays < 0) return { label: t('Overdue'), colorClass: 'bg-red-100 text-red-700 border-red-300', icon: <AlertTriangle className="h-3.5 w-3.5" /> };
+    if (diffDays === 0) return { label: t('Due Today'), colorClass: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Clock className="h-3.5 w-3.5" /> };
+    if (diffDays <= 3) return { label: t('Due Soon'), colorClass: 'bg-amber-100 text-amber-700 border-amber-300', icon: <Clock className="h-3.5 w-3.5" /> };
+    return { label: t('Active'), colorClass: 'bg-green-100 text-green-700 border-green-300', icon: <CheckCircle className="h-3.5 w-3.5" /> };
   };
 
   const filteredAssignments = assignments.filter(
@@ -308,12 +310,12 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        <h3 className="text-lg font-semibold">Manage Assignments</h3>
+        <h3 className="text-lg font-semibold">{t('Manage Assignments')}</h3>
         <div className="flex gap-3 items-center flex-wrap">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search assignments..."
+              placeholder={t('Search assignments...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 w-52"
@@ -324,7 +326,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
             className="flex h-9 w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <option value="">All Classes</option>
+            <option value="">{t('All Classes')}</option>
             {classes.map((cls) => (
               <option key={cls.class_id} value={cls.class_id}>{cls.class_name}</option>
             ))}
@@ -334,7 +336,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             className=""
           >
             <Plus className="h-4 w-4 mr-2" />
-            New Assignment
+            {t('New Assignment')}
           </Button>
         </div>
       </div>
@@ -344,31 +346,31 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
         <Card className="bg-indigo-50/50 text-center p-3">
           <ClipboardList className="h-8 w-8 text-indigo-500 mx-auto" />
           <p className="text-3xl font-bold text-indigo-500">{assignments.length}</p>
-          <p className="text-xs text-muted-foreground">Total Assignments</p>
+          <p className="text-xs text-muted-foreground">{t('Total Assignments')}</p>
         </Card>
         <Card className="bg-green-50/50 text-center p-3">
           <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
           <p className="text-3xl font-bold text-green-500">{activeAssignments.length}</p>
-          <p className="text-xs text-muted-foreground">Active</p>
+          <p className="text-xs text-muted-foreground">{t('Active')}</p>
         </Card>
         <Card className="bg-red-50/50 text-center p-3">
           <AlertTriangle className="h-8 w-8 text-red-500 mx-auto" />
           <p className="text-3xl font-bold text-red-500">{pastAssignments.length}</p>
-          <p className="text-xs text-muted-foreground">Past Due</p>
+          <p className="text-xs text-muted-foreground">{t('Past Due')}</p>
         </Card>
         <Card className="bg-blue-50/50 text-center p-3">
           <Users className="h-8 w-8 text-blue-500 mx-auto" />
           <p className="text-3xl font-bold text-blue-500">{classes.length}</p>
-          <p className="text-xs text-muted-foreground">Classes</p>
+          <p className="text-xs text-muted-foreground">{t('Classes')}</p>
         </Card>
       </div>
 
       {/* Tabs */}
       <Tabs value={tabValue} onValueChange={setTabValue} className="mb-6">
         <TabsList>
-          <TabsTrigger value="active">Active ({activeAssignments.length})</TabsTrigger>
-          <TabsTrigger value="past">Past Due ({pastAssignments.length})</TabsTrigger>
-          <TabsTrigger value="all">All ({filteredAssignments.length})</TabsTrigger>
+          <TabsTrigger value="active">{t('Active')} ({activeAssignments.length})</TabsTrigger>
+          <TabsTrigger value="past">{t('Past Due')} ({pastAssignments.length})</TabsTrigger>
+          <TabsTrigger value="all">{t('All')} ({filteredAssignments.length})</TabsTrigger>
         </TabsList>
       </Tabs>
 
@@ -376,14 +378,14 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       {currentList.length === 0 ? (
         <div className="text-center py-12 bg-muted/50 rounded-lg border-2 border-dashed border-border">
           <ClipboardList className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-muted-foreground">No assignments found</h3>
+          <h3 className="text-lg font-semibold text-muted-foreground">{t('No assignments found')}</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            {tabValue === 'active' ? 'Create a new assignment to get started' : 'No past due assignments'}
+            {tabValue === 'active' ? t('Create a new assignment to get started') : t('No past due assignments')}
           </p>
           {tabValue === 'active' && (
             <Button variant="outline" onClick={() => handleOpenDialog()}>
               <Plus className="h-4 w-4 mr-2" />
-              Create Assignment
+              {t('Create Assignment')}
             </Button>
           )}
         </div>
@@ -430,10 +432,10 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
                   <div className="flex justify-between items-center">
                     <div className="flex items-center gap-1 text-xs text-muted-foreground">
                       <Calendar className="h-3.5 w-3.5" />
-                      Due: {new Date(assignment.due_date).toLocaleDateString()}
+                      {t('Due')}: {new Date(assignment.due_date).toLocaleDateString()}
                     </div>
                     {assignment.max_score && (
-                      <span className="text-xs text-muted-foreground">Max: {assignment.max_score} pts</span>
+                      <span className="text-xs text-muted-foreground">{t('Max')}: {assignment.max_score} {t('pts')}</span>
                     )}
                   </div>
                 </CardContent>
@@ -454,13 +456,13 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             className="flex items-center gap-2 w-full px-3 py-2 text-sm hover:bg-muted"
             onClick={() => handleOpenDialog(selectedAssignment!)}
           >
-            <Edit className="h-4 w-4" /> Edit
+            <Edit className="h-4 w-4" /> {t('Edit')}
           </button>
           <button
             className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50"
             onClick={() => { setDeleteDialogOpen(true); setMenuOpen(false); }}
           >
-            <Trash2 className="h-4 w-4" /> Delete
+            <Trash2 className="h-4 w-4" /> {t('Delete')}
           </button>
         </div>
       )}
@@ -469,11 +471,11 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedAssignment ? 'Edit Assignment' : 'Create New Assignment'}</DialogTitle>
+            <DialogTitle>{selectedAssignment ? t('Edit Assignment') : t('Create New Assignment')}</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="assign-title">Title *</Label>
+              <Label htmlFor="assign-title">{t('Title')} *</Label>
               <Input
                 id="assign-title"
                 value={formData.assignment_title}
@@ -481,7 +483,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="assign-desc">Description</Label>
+              <Label htmlFor="assign-desc">{t('Description')}</Label>
               <Textarea
                 id="assign-desc"
                 rows={3}
@@ -491,28 +493,28 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="assign-class">Class *</Label>
+                <Label htmlFor="assign-class">{t('Class')} *</Label>
                 <select
                   id="assign-class"
                   value={formData.class_id}
                   onChange={(e) => setFormData({ ...formData, class_id: e.target.value ? Number(e.target.value) : '' })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
-                  <option value="">-- Select --</option>
+                  <option value="">-- {t('Select')} --</option>
                   {classes.map((cls) => (
                     <option key={cls.class_id} value={cls.class_id}>{cls.class_name}</option>
                   ))}
                 </select>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="assign-subject">Subject</Label>
+                <Label htmlFor="assign-subject">{t('Subject')}</Label>
                 <select
                   id="assign-subject"
                   value={formData.subject_id}
                   onChange={(e) => setFormData({ ...formData, subject_id: e.target.value ? Number(e.target.value) : '' })}
                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 >
-                  <option value="">None</option>
+                  <option value="">{t('None')}</option>
                   {subjects.map((subj) => (
                     <option key={subj.subject_id} value={subj.subject_id}>{subj.subject_name}</option>
                   ))}
@@ -521,7 +523,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="assign-due">Due Date *</Label>
+                <Label htmlFor="assign-due">{t('Due Date')} *</Label>
                 <Input
                   id="assign-due"
                   type="date"
@@ -530,7 +532,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="assign-score">Max Score</Label>
+                <Label htmlFor="assign-score">{t('Max Score')}</Label>
                 <Input
                   id="assign-score"
                   type="number"
@@ -541,7 +543,7 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>{t('Cancel')}</Button>
             <Button
               onClick={handleSaveAssignment}
               disabled={saving}
@@ -550,12 +552,12 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
               {saving ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Saving...
+                  {t('Saving...')}
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  {selectedAssignment ? 'Update' : 'Create'}
+                  {selectedAssignment ? t('Update') : t('Create')}
                 </>
               )}
             </Button>
@@ -567,17 +569,17 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Assignment</DialogTitle>
+            <DialogTitle>{t('Delete Assignment')}</DialogTitle>
           </DialogHeader>
           <Alert variant="destructive" className="mb-3">
-            <AlertDescription>This action cannot be undone.</AlertDescription>
+            <AlertDescription>{t('This action cannot be undone.')}</AlertDescription>
           </Alert>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete &quot;{selectedAssignment?.assignment_title}&quot;?
+            {t('Are you sure you want to delete')} &quot;{selectedAssignment?.assignment_title}&quot;?
           </p>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteAssignment}>Delete</Button>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>{t('Cancel')}</Button>
+            <Button variant="destructive" onClick={handleDeleteAssignment}>{t('Delete')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
