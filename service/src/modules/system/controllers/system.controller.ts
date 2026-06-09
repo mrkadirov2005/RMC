@@ -12,7 +12,7 @@ const redeployServer = async (req: any, res: any) => {
   }
 };
 
-const resetTable = (tableName: 'students' | 'teachers' | 'classes') => async (req: any, res: any) => {
+const resetTable = (tableName: 'students' | 'teachers' | 'classes' | 'payments') => async (req: any, res: any) => {
   try {
     systemService.validateDevResetRequest(req.body?.confirmation);
     const result = await systemService.resetTable(tableName);
@@ -30,6 +30,7 @@ module.exports = {
   resetStudents: resetTable('students'),
   resetTeachers: resetTable('teachers'),
   resetClasses: resetTable('classes'),
+  resetPayments: resetTable('payments'),
 };
 
 export {};

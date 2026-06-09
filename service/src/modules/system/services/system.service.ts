@@ -8,6 +8,7 @@ const RESET_TABLES = {
   students: 'students',
   teachers: 'teachers',
   classes: 'classes',
+  payments: 'payments',
 };
 
 const envFlag = (name: string, defaultValue: boolean) => {
@@ -55,13 +56,8 @@ const scheduleRedeploy = () => {
 };
 
 const validateDevResetRequest = (confirmation: string) => {
-  if (process.env.NODE_ENV === 'production') {
-    const error: any = new Error('Dev reset endpoint is disabled in production.');
-    error.statusCode = 403;
-    throw error;
-  }
-
-  if (!envFlag('OWNER_DATA_RESET_ENABLED', true)) {
+  const enabledByDefault = process.env.NODE_ENV !== 'production';
+  if (!envFlag('OWNER_DATA_RESET_ENABLED', enabledByDefault)) {
     const error: any = new Error('Owner data reset endpoint is disabled.');
     error.statusCode = 403;
     throw error;
