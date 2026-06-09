@@ -28,13 +28,10 @@ export const OwnerSystemSettings = () => {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
-<<<<<<< HEAD
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null);
   const [resetConfirmation, setResetConfirmation] = useState('');
   const [resetSubmitting, setResetSubmitting] = useState(false);
-=======
   const { t } = useLanguage();
->>>>>>> origin
 
   const close = () => {
     setOpen(false);
