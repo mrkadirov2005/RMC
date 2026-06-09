@@ -16,6 +16,7 @@ import type {
 import { buildOwnerPaymentMonthStats, buildOwnerTeacherEarnings } from '../utils';
 import { PieChart } from '@/shared/components/PieChart';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface Props {
   summary: OwnerManagerStatisticsSummary;
@@ -30,10 +31,10 @@ const sectionTabs: { value: OwnerManagerStatisticsSection; label: string }[] = [
   { value: 'statistics', label: 'Enrollment Mix' },
 ];
 
-const getMonthLabel = (monthKey: string) => {
+const getMonthLabel = (monthKey: string, language: string) => {
   const [year, month] = monthKey.split('-').map((value) => Number(value));
   if (!year || !month) return monthKey;
-  return new Date(year, month - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  return new Date(year, month - 1, 1).toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' });
 };
 
 const getPaymentAmount = (payment: any) => Number(payment?.amount || payment?.paid_amount || payment?.payment_amount || 0);
@@ -46,8 +47,20 @@ const getPaymentMonth = (payment: any) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
 
+const kpiSurfaceClasses = [
+  'border-indigo-300/80 bg-gradient-to-br from-indigo-100 via-sky-50 to-cyan-200/80 shadow-indigo-200/70 dark:border-indigo-400/25 dark:from-indigo-900/45 dark:via-slate-950/80 dark:to-sky-900/35',
+  'border-emerald-300/80 bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-200/75 shadow-emerald-200/70 dark:border-emerald-400/25 dark:from-emerald-900/45 dark:via-slate-950/80 dark:to-teal-900/35',
+  'border-cyan-300/80 bg-gradient-to-br from-cyan-100 via-blue-50 to-sky-200/80 shadow-cyan-200/70 dark:border-cyan-400/25 dark:from-cyan-900/45 dark:via-slate-950/80 dark:to-blue-900/35',
+  'border-fuchsia-300/80 bg-gradient-to-br from-fuchsia-100 via-pink-50 to-violet-200/75 shadow-fuchsia-200/70 dark:border-fuchsia-400/25 dark:from-fuchsia-900/45 dark:via-slate-950/80 dark:to-violet-900/35',
+  'border-amber-300/80 bg-gradient-to-br from-amber-100 via-orange-50 to-yellow-200/85 shadow-amber-200/70 dark:border-amber-400/25 dark:from-amber-900/45 dark:via-slate-950/80 dark:to-orange-900/35',
+  'border-violet-300/80 bg-gradient-to-br from-violet-100 via-fuchsia-50 to-indigo-200/75 shadow-violet-200/70 dark:border-violet-400/25 dark:from-violet-900/45 dark:via-slate-950/80 dark:to-fuchsia-900/35',
+  'border-lime-300/80 bg-gradient-to-br from-lime-100 via-emerald-50 to-teal-200/75 shadow-lime-200/70 dark:border-lime-400/25 dark:from-lime-900/45 dark:via-slate-950/80 dark:to-emerald-900/35',
+  'border-slate-300/80 bg-gradient-to-br from-slate-100 via-white to-slate-200 shadow-slate-200/80 dark:border-slate-600/70 dark:from-slate-800 dark:via-slate-900/85 dark:to-slate-700/70',
+] as const;
+
 // Renders the owner statistics module.
 export const OwnerManagerStatistics = ({ summary, collections, loading }: Props) => {
+  const { language, t } = useLanguage();
   const [activeSection, setActiveSection] = useState<OwnerManagerStatisticsSection>('overview');
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const now = new Date();
@@ -56,7 +69,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
   const [selectedSchoolLabel, setSelectedSchoolLabel] = useState<string | null>(null);
 
   const total = Math.max(summary.totalStudents, 0);
-  const monthLabel = useMemo(() => getMonthLabel(selectedMonth), [selectedMonth]);
+  const monthLabel = useMemo(() => getMonthLabel(selectedMonth, language), [language, selectedMonth]);
   const paymentStats = useMemo(
     () => buildOwnerPaymentMonthStats(collections.students, collections.payments, selectedMonth),
     [collections.payments, collections.students, selectedMonth]
@@ -105,7 +118,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
       const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       return {
         key,
-        label: date.toLocaleDateString(undefined, { month: 'short' }),
+        label: date.toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'short' }),
         value: totals.get(key) || 0,
       };
     });
@@ -116,7 +129,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
       return `${x},${y}`;
     }).join(' ');
     return { rows, points, max };
-  }, [collections.payments]);
+  }, [collections.payments, language]);
 
   const schoolDistribution = useMemo(() => {
     const palette = [
@@ -217,36 +230,36 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
       .slice(0, 6);
   }, [collections.payments, selectedMonth]);
   const executiveKpis = [
-    { label: 'Total Students', value: summary.totalStudents.toLocaleString(), detail: `${activeRate}% active`, icon: Users, tone: 'from-indigo-500 to-sky-500' },
-    { label: 'Monthly Revenue', value: formatMoney(totalEarned), detail: `${paymentStats.paidPercent}% paid`, icon: DollarSign, tone: 'from-emerald-500 to-teal-500' },
-    { label: 'Branches', value: totalBranches.toLocaleString(), detail: `${totalClasses.toLocaleString()} classes`, icon: Building2, tone: 'from-cyan-500 to-blue-500' },
-    { label: 'Teachers', value: totalTeachers.toLocaleString(), detail: `${teacherCoverage}% student coverage`, icon: GraduationCap, tone: 'from-fuchsia-500 to-rose-500' },
-    { label: 'Class Coverage', value: `${classCoverage}%`, detail: `${summary.assignedToClass.toLocaleString()} assigned`, icon: BookMarked, tone: 'from-amber-500 to-orange-500' },
-    { label: 'Avg Class Size', value: averageClassSize.toLocaleString(), detail: 'Students per class', icon: Activity, tone: 'from-violet-500 to-indigo-500' },
-    { label: 'Paid Students', value: paymentStats.paidStudents.toLocaleString(), detail: `${paymentStats.unpaidStudents.toLocaleString()} unpaid`, icon: Wallet, tone: 'from-lime-500 to-emerald-500' },
-    { label: 'Revenue / Paid', value: formatMoney(revenuePerPaidStudent), detail: 'Average collected', icon: Percent, tone: 'from-slate-600 to-slate-900' },
+    { label: 'Total Students', value: summary.totalStudents.toLocaleString(), detail: `${activeRate}% ${t('active')}`, icon: Users, tone: 'from-indigo-500 to-sky-500' },
+    { label: 'Monthly Revenue', value: formatMoney(totalEarned), detail: `${paymentStats.paidPercent}% ${t('paid')}`, icon: DollarSign, tone: 'from-emerald-500 to-teal-500' },
+    { label: 'Branches', value: totalBranches.toLocaleString(), detail: `${totalClasses.toLocaleString()} ${t('classes')}`, icon: Building2, tone: 'from-cyan-500 to-blue-500' },
+    { label: 'Teachers', value: totalTeachers.toLocaleString(), detail: `${teacherCoverage}% ${t('student coverage')}`, icon: GraduationCap, tone: 'from-fuchsia-500 to-rose-500' },
+    { label: 'Class Coverage', value: `${classCoverage}%`, detail: `${summary.assignedToClass.toLocaleString()} ${t('assigned')}`, icon: BookMarked, tone: 'from-amber-500 to-orange-500' },
+    { label: 'Avg Class Size', value: averageClassSize.toLocaleString(), detail: t('Students per class'), icon: Activity, tone: 'from-violet-500 to-indigo-500' },
+    { label: 'Paid Students', value: paymentStats.paidStudents.toLocaleString(), detail: `${paymentStats.unpaidStudents.toLocaleString()} ${t('unpaid')}`, icon: Wallet, tone: 'from-lime-500 to-emerald-500' },
+    { label: 'Revenue / Paid', value: formatMoney(revenuePerPaidStudent), detail: t('Average collected'), icon: Percent, tone: 'from-slate-600 to-slate-900' },
   ];
   const topCenter = centerBarRows[0];
   const topTeacher = teacherEarnings[0];
   const insightCards = [
     {
       label: 'Strongest branch',
-      value: topCenter?.centerName || 'No branch data',
-      detail: topCenter ? `${topCenter.totalStudents.toLocaleString()} students enrolled` : 'Add branch data to compare performance',
+      value: topCenter?.centerName || t('No branch data'),
+      detail: topCenter ? `${topCenter.totalStudents.toLocaleString()} ${t('students enrolled')}` : t('Add branch data to compare performance'),
       icon: Trophy,
       tone: 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200',
     },
     {
       label: 'Revenue leader',
-      value: topTeacher?.teacherName || 'No teacher data',
-      detail: topTeacher ? `${formatMoney(topTeacher.earnedAmount)} collected in ${monthLabel}` : 'Teacher earnings will appear here',
+      value: topTeacher?.teacherName || t('No teacher data'),
+      detail: topTeacher ? `${formatMoney(topTeacher.earnedAmount)} ${t('collected in')} ${monthLabel}` : t('Teacher earnings will appear here'),
       icon: Target,
       tone: 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-200',
     },
     {
       label: 'Needs attention',
-      value: `${paymentStats.unpaidStudents.toLocaleString()} unpaid`,
-      detail: `${paymentStats.unpaidPercent}% of students have no completed payment this month`,
+      value: `${paymentStats.unpaidStudents.toLocaleString()} ${t('unpaid')}`,
+      detail: `${paymentStats.unpaidPercent}% ${t('of students have no completed payment this month')}`,
       icon: AlertTriangle,
       tone: 'border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-400/20 dark:bg-rose-400/10 dark:text-rose-200',
     },
@@ -260,16 +273,16 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
             <div>
               <div className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5 text-emerald-500" />
-                <CardTitle className="text-2xl text-slate-900 dark:text-white">Owner Performance Dashboard</CardTitle>
+                <CardTitle className="text-2xl text-slate-900 dark:text-white">{t('Owner Performance Dashboard')}</CardTitle>
               </div>
               <CardDescription className="mt-2 text-slate-500 dark:text-white/60">
-                Executive-level statistics across students, branches, revenue, classes, and teacher performance.
+                {t('Executive-level statistics across students, branches, revenue, classes, and teacher performance.')}
               </CardDescription>
             </div>
             <div className="flex w-fit flex-wrap items-center gap-3 rounded-lg border border-slate-200/70 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-950/40">
               <label className="flex items-center gap-2 text-sm text-slate-600 dark:text-white/70">
                 <CalendarDays className="h-4 w-4 text-emerald-500" />
-                Month
+                {t('Month')}
               </label>
               <input
                 type="month"
@@ -289,26 +302,26 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-400 via-sky-400 to-amber-300" />
                 <div className="grid gap-5 lg:grid-cols-[1fr_280px] lg:items-end">
                   <div>
-                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50">Current month snapshot</p>
+                    <p className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50">{t('Current month snapshot')}</p>
                     <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
                       <div>
                         <p className="text-5xl font-bold tracking-normal text-slate-900 dark:text-white">{formatMoney(totalEarned)}</p>
-                        <p className="mt-1 text-sm text-slate-500 dark:text-white/60">Collected revenue in {monthLabel}</p>
+                        <p className="mt-1 text-sm text-slate-500 dark:text-white/60">{t('Collected revenue in')} {monthLabel}</p>
                       </div>
-                      <div className="rounded-lg border border-slate-200/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                      <div className="rounded-lg border border-emerald-300/80 bg-gradient-to-br from-emerald-100 via-white to-lime-100 px-4 py-3 shadow-sm shadow-emerald-200/70 dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:bg-none">
                         <p className="text-2xl font-bold text-slate-900 dark:text-white">{paymentStats.paidPercent}%</p>
-                        <p className="text-xs text-slate-500 dark:text-white/55">Paid share</p>
+                        <p className="text-xs text-emerald-700/80 dark:text-emerald-200/70">{t('Paid share')}</p>
                       </div>
-                      <div className="rounded-lg border border-slate-200/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+                      <div className="rounded-lg border border-sky-300/80 bg-gradient-to-br from-sky-100 via-white to-cyan-100 px-4 py-3 shadow-sm shadow-sky-200/70 dark:border-sky-400/20 dark:bg-sky-500/10 dark:bg-none">
                         <p className="text-2xl font-bold text-slate-900 dark:text-white">{activeRate}%</p>
-                        <p className="text-xs text-slate-500 dark:text-white/55">Active students</p>
+                        <p className="text-xs text-sky-700/80 dark:text-sky-200/70">{t('Active students')}</p>
                       </div>
                     </div>
                   </div>
-                  <div className="rounded-lg border border-slate-200/70 bg-white/80 p-4 dark:border-white/10 dark:bg-white/5">
+                  <div className="rounded-lg border border-amber-300/80 bg-gradient-to-br from-amber-100 via-white to-orange-100 p-4 shadow-sm shadow-amber-200/70 dark:border-amber-400/20 dark:bg-amber-500/10 dark:bg-none">
                     <div className="mb-3 flex items-center justify-between text-xs text-slate-500 dark:text-white/55">
-                      <span>6-month revenue</span>
-                      <span>{formatMoney(paymentTrend.max)} peak</span>
+                      <span>{t('6-month revenue')}</span>
+                      <span>{formatMoney(paymentTrend.max)} {t('peak')}</span>
                     </div>
                     <div className="flex h-28 items-end gap-2">
                       {paymentTrend.rows.map((row) => {
@@ -341,7 +354,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                         <Icon className="h-5 w-5" />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-semibold uppercase opacity-70">{insight.label}</p>
+                        <p className="text-xs font-semibold uppercase opacity-70">{t(insight.label)}</p>
                         <p className="mt-1 truncate text-base font-bold">{insight.value}</p>
                         <p className="mt-1 text-sm opacity-75">{insight.detail}</p>
                       </div>
@@ -353,19 +366,19 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {executiveKpis.map((card) => {
+            {executiveKpis.map((card, index) => {
               const Icon = card.icon;
               return (
                 <div
                   key={card.label}
-                  className="overflow-hidden rounded-lg border border-slate-200/70 bg-white shadow-sm dark:border-white/10 dark:bg-slate-950/40"
+                  className={cn('overflow-hidden rounded-lg border shadow-md dark:shadow-black/10', kpiSurfaceClasses[index % kpiSurfaceClasses.length])}
                 >
                   <div className={cn('h-1 bg-gradient-to-r', card.tone)} />
                   <div className="flex items-start justify-between gap-3 p-4">
                     <div>
-                      <p className="text-xs font-semibold uppercase text-slate-500 dark:text-white/45">{card.label}</p>
+                      <p className="text-xs font-semibold uppercase text-slate-700/75 dark:text-white/60">{t(card.label)}</p>
                       <p className="mt-2 text-2xl font-bold text-slate-950 dark:text-white">{loading ? '...' : card.value}</p>
-                      <p className="mt-1 text-sm text-slate-500 dark:text-white/55">{card.detail}</p>
+                      <p className="mt-1 text-sm text-slate-700/70 dark:text-white/60">{card.detail}</p>
                     </div>
                     <div className={cn('rounded-lg bg-gradient-to-br p-2.5 text-white', card.tone)}>
                       <Icon className="h-5 w-5" />
@@ -384,7 +397,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   value={tab.value}
                   className="rounded-md px-4 py-2 data-[state=active]:bg-slate-950 data-[state=active]:text-white dark:data-[state=active]:bg-primary dark:data-[state=active]:text-primary-foreground"
                 >
-                  {tab.label}
+                  {t(tab.label)}
                 </TabsTrigger>
               ))}
             </TabsList>
@@ -393,33 +406,33 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               <div className="grid gap-4 lg:grid-cols-3">
                 <Card className="border-slate-200/70 bg-gradient-to-br from-white to-emerald-50 dark:border-white/10 dark:bg-slate-950/40 dark:bg-none">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Enrollment Health</CardTitle>
-                    <CardDescription>Active and inactive student balance.</CardDescription>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Enrollment Health')}</CardTitle>
+                    <CardDescription>{t('Active and inactive student balance.')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-end justify-between">
                       <p className="text-4xl font-bold text-slate-950 dark:text-white">{activeRate}%</p>
-                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{summary.activeStudents.toLocaleString()} active</Badge>
+                      <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{summary.activeStudents.toLocaleString()} {t('active')}</Badge>
                     </div>
                     <div className="h-3 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10">
                       <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400" style={{ width: `${activeRate}%` }} />
                     </div>
-                    <p className="text-sm text-muted-foreground">{summary.inactiveStudents.toLocaleString()} inactive, graduated, or removed students.</p>
+                    <p className="text-sm text-muted-foreground">{summary.inactiveStudents.toLocaleString()} {t('inactive, graduated, or removed students.')}</p>
                   </CardContent>
                 </Card>
 
                 <Card className="border-slate-200/70 bg-gradient-to-br from-white to-indigo-50 dark:border-white/10 dark:bg-slate-950/40 dark:bg-none">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Assignment Coverage</CardTitle>
-                    <CardDescription>How complete class and teacher assignment is.</CardDescription>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Assignment Coverage')}</CardTitle>
+                    <CardDescription>{t('How complete class and teacher assignment is.')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm"><span>Class assigned</span><strong>{classCoverage}%</strong></div>
+                      <div className="flex justify-between text-sm"><span>{t('Class assigned')}</span><strong>{classCoverage}%</strong></div>
                       <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10"><div className="h-full bg-indigo-500" style={{ width: `${classCoverage}%` }} /></div>
                     </div>
                     <div className="space-y-2">
-                      <div className="flex justify-between text-sm"><span>Teacher assigned</span><strong>{teacherCoverage}%</strong></div>
+                      <div className="flex justify-between text-sm"><span>{t('Teacher assigned')}</span><strong>{teacherCoverage}%</strong></div>
                       <div className="h-2 overflow-hidden rounded-full bg-slate-200 dark:bg-white/10"><div className="h-full bg-fuchsia-500" style={{ width: `${teacherCoverage}%` }} /></div>
                     </div>
                   </CardContent>
@@ -427,14 +440,14 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
                 <Card className="border-slate-200/70 bg-gradient-to-br from-white to-amber-50 dark:border-white/10 dark:bg-slate-950/40 dark:bg-none">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Revenue Pulse</CardTitle>
-                    <CardDescription>Selected month collection performance.</CardDescription>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Revenue Pulse')}</CardTitle>
+                    <CardDescription>{t('Selected month collection performance.')}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p className="text-4xl font-bold text-slate-950 dark:text-white">{formatMoney(totalEarned)}</p>
                     <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">Paid share</p><p className="font-semibold">{paymentStats.paidPercent}%</p></div>
-                      <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">Avg paid</p><p className="font-semibold">{formatMoney(revenuePerPaidStudent)}</p></div>
+                      <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">{t('Paid share')}</p><p className="font-semibold">{paymentStats.paidPercent}%</p></div>
+                      <div className="rounded-lg bg-white/80 p-3 dark:bg-white/5"><p className="text-muted-foreground">{t('Avg paid')}</p><p className="font-semibold">{formatMoney(revenuePerPaidStudent)}</p></div>
                     </div>
                   </CardContent>
                 </Card>
@@ -443,14 +456,14 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               <div className="grid gap-4 xl:grid-cols-2">
                 <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Students by Center</CardTitle>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Students by Center')}</CardTitle>
                     <CardDescription className="text-slate-500 dark:text-white/55">
-                      Bar chart for the busiest centers.
+                      {t('Bar chart for the busiest centers.')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {centerBarRows.length === 0 ? (
-                      <p className="text-sm text-slate-500 dark:text-white/55">No center statistics available.</p>
+                      <p className="text-sm text-slate-500 dark:text-white/55">{t('No center statistics available.')}</p>
                     ) : centerBarRows.map((center) => (
                       <div key={center.centerId} className="grid grid-cols-[minmax(90px,150px)_1fr_auto] items-center gap-3 text-sm">
                         <span className="truncate font-medium text-slate-700 dark:text-white/75">{center.centerName}</span>
@@ -462,7 +475,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                             {center.totalStudents}
                           </div>
                         </div>
-                        <span className="text-right text-slate-500 dark:text-white/45">{center.activeStudents} active</span>
+                        <span className="text-right text-slate-500 dark:text-white/45">{center.activeStudents} {t('active')}</span>
                       </div>
                     ))}
                   </CardContent>
@@ -470,9 +483,9 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
                 <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Payment Trend</CardTitle>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Payment Trend')}</CardTitle>
                     <CardDescription className="text-slate-500 dark:text-white/55">
-                      Line chart for collected payments over the last 6 months.
+                      {t('Line chart for collected payments over the last 6 months.')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -503,14 +516,14 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               <div className="grid gap-4 xl:grid-cols-2">
                 <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Class Levels</CardTitle>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Class Levels')}</CardTitle>
                     <CardDescription className="text-slate-500 dark:text-white/55">
-                      Class distribution by level.
+                      {t('Class distribution by level.')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {classLevelRows.length === 0 ? (
-                      <p className="text-sm text-slate-500 dark:text-white/55">No class level data available.</p>
+                      <p className="text-sm text-slate-500 dark:text-white/55">{t('No class level data available.')}</p>
                     ) : classLevelRows.map((row) => (
                       <div key={row.label} className="grid grid-cols-[110px_1fr_48px] items-center gap-3 text-sm">
                         <span className="truncate font-medium text-slate-700 dark:text-white/75">{row.label}</span>
@@ -525,19 +538,19 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
                 <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Payment Methods</CardTitle>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Payment Methods')}</CardTitle>
                     <CardDescription className="text-slate-500 dark:text-white/55">
-                      Collected amount by method for {monthLabel}.
+                      {t('Collected amount by method for')} {monthLabel}.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     {paymentMethodRows.length === 0 ? (
-                      <p className="text-sm text-slate-500 dark:text-white/55">No payment method data this month.</p>
+                      <p className="text-sm text-slate-500 dark:text-white/55">{t('No payment method data this month.')}</p>
                     ) : paymentMethodRows.map((row) => (
                       <div key={row.label} className="flex items-center justify-between rounded-lg border border-slate-200/70 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-white/[0.03]">
                         <div>
                           <p className="font-semibold text-slate-800 dark:text-white/85">{row.label}</p>
-                          <p className="text-xs text-muted-foreground">{row.count.toLocaleString()} payments</p>
+                          <p className="text-xs text-muted-foreground">{row.count.toLocaleString()} {t('payments')}</p>
                         </div>
                         <p className="text-lg font-bold text-emerald-600 dark:text-emerald-300">{formatMoney(row.amount)}</p>
                       </div>
@@ -549,15 +562,15 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
               <div className="grid gap-4 xl:grid-cols-2">
                 <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Gender Breakdown</CardTitle>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Gender Breakdown')}</CardTitle>
                     <CardDescription className="text-slate-500 dark:text-white/55">
-                      How the total student body is distributed.
+                      {t('How the total student body is distributed.')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     {loading ? (
                       <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/55">
-                        Loading student demographics...
+                        {t('Loading student demographics...')}
                       </div>
                     ) : (
                       genderRows.map((row) => {
@@ -567,9 +580,9 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
                                 <Badge variant="outline" className={cn('font-medium', row.className)}>
-                                  {row.label}
+                                  {t(row.label)}
                                 </Badge>
-                                <span className="text-slate-600 dark:text-white/70">{row.count.toLocaleString()} students</span>
+                                <span className="text-slate-600 dark:text-white/70">{row.count.toLocaleString()} {t('students')}</span>
                               </div>
                               <span className="text-slate-500 dark:text-white/45">{percent}%</span>
                             </div>
@@ -591,23 +604,23 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
                 <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                   <CardHeader>
-                    <CardTitle className="text-lg text-slate-900 dark:text-white">Center Breakdown</CardTitle>
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Center Breakdown')}</CardTitle>
                     <CardDescription className="text-slate-500 dark:text-white/55">
-                      Top centers by total student count.
+                      {t('Top centers by total student count.')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="overflow-x-auto p-0">
                     {loading ? (
-                      <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">Loading combined student data...</div>
+                      <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">{t('Loading combined student data...')}</div>
                     ) : summary.centerBreakdown.length === 0 ? (
-                      <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">No students found yet.</div>
+                      <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">{t('No students found yet.')}</div>
                     ) : (
                       <Table>
                         <TableHeader>
                           <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
-                            <TableHead className="text-slate-600 dark:text-white/70">Center</TableHead>
-                            <TableHead className="text-right text-slate-600 dark:text-white/70">Students</TableHead>
-                            <TableHead className="text-right text-slate-600 dark:text-white/70">Active</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">{t('Center')}</TableHead>
+                            <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Students')}</TableHead>
+                            <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Active')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -616,7 +629,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                               <TableCell className="text-slate-800 dark:text-white/85">
                                 <div className="flex flex-col gap-1">
                                   <span className="font-medium">{center.centerName}</span>
-                                  <span className="text-xs text-slate-500 dark:text-white/45">Center #{center.centerId}</span>
+                                  <span className="text-xs text-slate-500 dark:text-white/45">{t('Center')} #{center.centerId}</span>
                                 </div>
                               </TableCell>
                               <TableCell className="text-right text-slate-700 dark:text-white/80">{center.totalStudents.toLocaleString()}</TableCell>
@@ -632,54 +645,54 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
               <div className="flex flex-wrap gap-2">
                 <Badge variant="outline" className="border-slate-200/70 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-                  {summary.inactiveStudents.toLocaleString()} inactive students
+                  {summary.inactiveStudents.toLocaleString()} {t('inactive students')}
                 </Badge>
                 <Badge variant="outline" className="border-slate-200/70 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-                  {summary.activeStudents.toLocaleString()} active students
+                  {summary.activeStudents.toLocaleString()} {t('active students')}
                 </Badge>
                 <Badge variant="outline" className="border-slate-200/70 bg-slate-100 text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
-                  {summary.totalStudents.toLocaleString()} total students
+                  {summary.totalStudents.toLocaleString()} {t('total students')}
                 </Badge>
               </div>
             </TabsContent>
 
             <TabsContent value="payments" className="mt-6 space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Students total</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[0])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Students total')}</p>
                   <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{paymentStats.totalStudents.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Paid students</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[1])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Paid students')}</p>
                   <p className="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-300">{paymentStats.paidStudents.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Unpaid students</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[4])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Unpaid students')}</p>
                   <p className="mt-2 text-3xl font-semibold text-rose-600 dark:text-rose-300">{paymentStats.unpaidStudents.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Paid share</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[3])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Paid share')}</p>
                   <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{paymentStats.paidPercent}%</p>
                 </div>
               </div>
 
               <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>
-                  <CardTitle className="text-lg text-slate-900 dark:text-white">Paid vs Unpaid Students</CardTitle>
+                  <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Paid vs Unpaid Students')}</CardTitle>
                   <CardDescription className="text-slate-500 dark:text-white/55">
-                    Student count for {monthLabel}.
+                    {t('Student count for')} {monthLabel}.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {loading ? (
                     <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/55">
-                      Loading payment statistics...
+                      {t('Loading payment statistics...')}
                     </div>
                   ) : (
                     <>
                       <div className="flex items-center justify-between text-sm text-slate-600 dark:text-white/70">
-                        <span>{paymentStats.paidStudents} paid</span>
-                        <span>{paymentStats.unpaidStudents} unpaid</span>
+                        <span>{paymentStats.paidStudents} {t('paid')}</span>
+                        <span>{paymentStats.unpaidStudents} {t('unpaid')}</span>
                       </div>
                       <div className="h-4 w-full overflow-hidden rounded-full bg-slate-200/70 shadow-inner dark:bg-white/5">
                         <div className="flex h-full w-full">
@@ -695,11 +708,11 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                       </div>
                       <div className="grid gap-3 sm:grid-cols-2">
                         <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-200/70">Paid students</p>
+                          <p className="text-xs uppercase tracking-[0.24em] text-emerald-700 dark:text-emerald-200/70">{t('Paid students')}</p>
                           <p className="mt-2 text-2xl font-semibold text-emerald-800 dark:text-emerald-100">{paymentStats.paidStudents}</p>
                         </div>
                         <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-4">
-                          <p className="text-xs uppercase tracking-[0.24em] text-rose-700 dark:text-rose-200/70">Unpaid students</p>
+                          <p className="text-xs uppercase tracking-[0.24em] text-rose-700 dark:text-rose-200/70">{t('Unpaid students')}</p>
                           <p className="mt-2 text-2xl font-semibold text-rose-800 dark:text-rose-100">{paymentStats.unpaidStudents}</p>
                         </div>
                       </div>
@@ -711,48 +724,48 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
 
             <TabsContent value="teachers" className="mt-6 space-y-6">
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Teachers</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[2])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Teachers')}</p>
                   <p className="mt-2 text-3xl font-semibold text-slate-900 dark:text-white">{teacherEarnings.length.toLocaleString()}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Earned total</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[1])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Earned total')}</p>
                   <p className="mt-2 text-3xl font-semibold text-emerald-600 dark:text-emerald-300">{formatMoney(totalEarned)}</p>
                 </div>
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Top teacher</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[3])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Top teacher')}</p>
                   <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">
-                    {teacherEarnings[0]?.teacherName || 'No data'}
+                    {teacherEarnings[0]?.teacherName || t('No data')}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-slate-200/70 bg-white/70 p-4 dark:border-white/10 dark:bg-slate-950/40">
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-500 dark:text-white/45">Selected month</p>
+                <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[4])}>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Selected month')}</p>
                   <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{monthLabel}</p>
                 </div>
               </div>
 
               <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>
-                  <CardTitle className="text-lg text-slate-900 dark:text-white">Teacher Earnings</CardTitle>
+                  <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Teacher Earnings')}</CardTitle>
                   <CardDescription className="text-slate-500 dark:text-white/55">
-                    Earnings for {monthLabel}, sorted from highest to lowest.
+                    {t('Earnings for')} {monthLabel}, {t('sorted from highest to lowest.')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="overflow-x-auto p-0">
                   {loading ? (
-                    <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">Loading teacher earnings...</div>
+                    <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">{t('Loading teacher earnings...')}</div>
                   ) : teacherEarnings.length === 0 ? (
-                    <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">No teachers found yet.</div>
+                    <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">{t('No teachers found yet.')}</div>
                   ) : (
                     <Table>
                       <TableHeader>
                         <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
-                          <TableHead className="text-slate-600 dark:text-white/70">Teacher</TableHead>
-                          <TableHead className="text-right text-slate-600 dark:text-white/70">Classes</TableHead>
-                          <TableHead className="text-right text-slate-600 dark:text-white/70">Students</TableHead>
-                          <TableHead className="text-right text-slate-600 dark:text-white/70">Paid</TableHead>
-                          <TableHead className="text-right text-slate-600 dark:text-white/70">Unpaid</TableHead>
-                          <TableHead className="text-right text-slate-600 dark:text-white/70">Earnings</TableHead>
+                          <TableHead className="text-slate-600 dark:text-white/70">{t('Teacher')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Classes')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Students')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Paid')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Unpaid')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Earnings')}</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -763,7 +776,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                                 <span className="text-xs text-slate-500 dark:text-white/40">{index + 1}.</span>
                                 <div className="flex flex-col gap-1">
                                   <span className="font-medium">{row.teacherName}</span>
-                                  <span className="text-xs text-slate-500 dark:text-white/45">Teacher #{row.teacherId}</span>
+                                  <span className="text-xs text-slate-500 dark:text-white/45">{t('Teacher')} #{row.teacherId}</span>
                                 </div>
                               </div>
                             </TableCell>
@@ -786,9 +799,9 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
             <TabsContent value="statistics" className="mt-6 space-y-6">
               <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>
-                  <CardTitle className="text-lg text-slate-900 dark:text-white">Students by school</CardTitle>
+                  <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Students by school')}</CardTitle>
                   <CardDescription className="text-slate-500 dark:text-white/55">
-                    Distribution based on the optional student school fields.
+                    {t('Distribution based on the optional student school fields.')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-6 md:grid-cols-[260px_1fr]">
@@ -797,10 +810,10 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   </div>
                   <div className="space-y-3">
                     {loading ? (
-                      <div className="text-sm text-slate-500 dark:text-white/55">Loading school breakdown...</div>
+                      <div className="text-sm text-slate-500 dark:text-white/55">{t('Loading school breakdown...')}</div>
                     ) : schoolDistribution.slices.length === 0 ? (
                       <div className="text-sm text-slate-500 dark:text-white/55">
-                        No students found yet. Add optional `school_name` on student records to populate this chart.
+                        {t('No students found yet. Add optional `school_name` on student records to populate this chart.')}
                       </div>
                     ) : (
                       <div className="grid gap-2">
@@ -838,26 +851,26 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   <DialogHeader>
                     <DialogTitle className="text-slate-900 dark:text-white">
                       {selectedSchoolLabel === 'Other'
-                        ? 'Students from other schools'
+                        ? t('Students from other schools')
                         : selectedSchoolLabel === 'Unknown'
-                          ? 'Students with no school set'
-                          : `Students from ${selectedSchoolLabel}`}
+                          ? t('Students with no school set')
+                          : `${t('Students from')} ${selectedSchoolLabel}`}
                     </DialogTitle>
                   </DialogHeader>
 
                   {loading ? (
-                    <div className="text-sm text-slate-500 dark:text-white/55">Loading students...</div>
+                    <div className="text-sm text-slate-500 dark:text-white/55">{t('Loading students...')}</div>
                   ) : selectedSchoolStudents.length === 0 ? (
-                    <div className="text-sm text-slate-500 dark:text-white/55">No students found for this selection.</div>
+                    <div className="text-sm text-slate-500 dark:text-white/55">{t('No students found for this selection.')}</div>
                   ) : (
                     <div className="overflow-x-auto rounded-xl border border-slate-200/70 dark:border-white/10">
                       <Table>
                         <TableHeader>
                           <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
-                            <TableHead className="text-slate-600 dark:text-white/70">Student</TableHead>
-                            <TableHead className="text-slate-600 dark:text-white/70">Enrollment</TableHead>
-                            <TableHead className="text-slate-600 dark:text-white/70">Center</TableHead>
-                            <TableHead className="text-slate-600 dark:text-white/70">Class</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">{t('Student')}</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">{t('Enrollment')}</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">{t('Center')}</TableHead>
+                            <TableHead className="text-slate-600 dark:text-white/70">{t('Class')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>

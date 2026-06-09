@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { dataAPI, studentAPI } from '@/shared/api/api';
 import { exportCsvEntity } from '@/shared/dataCsv';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentsFormDialog } from './components/StudentsFormDialog';
@@ -32,8 +33,9 @@ const StudentsPage = () => {
   const [isSheetsPushing, setIsSheetsPushing] = useState(false);
   const [isSheetsPulling, setIsSheetsPulling] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const { t } = useLanguage();
   const s = useStudentsPage();
-  const title = 'Students';
+  const title = t('Students');
   const canImportStudents = s.user?.userType === 'superuser';
 // Handles active count.
   const activeCount = [
@@ -86,30 +88,30 @@ const StudentsPage = () => {
   const coinsOnPage = pageStudents.reduce((sum, student) => sum + (Number(student.coins) || 0), 0);
   const summaryCards = [
     {
-      label: 'Students shown',
+      label: t('Students shown'),
       value: pageStudents.length.toLocaleString(),
-      detail: `${activeStudents.toLocaleString()} active`,
+      detail: `${activeStudents.toLocaleString()} ${t('active')}`,
       icon: Users,
       tone: 'blue' as const,
     },
     {
-      label: 'Schools',
+      label: t('Schools'),
       value: schoolsOnPage.toLocaleString(),
-      detail: 'In current view',
+      detail: t('In current view'),
       icon: School,
       tone: 'green' as const,
     },
     {
-      label: 'Classes',
+      label: t('Classes'),
       value: classesOnPage.toLocaleString(),
-      detail: 'Assigned groups',
+      detail: t('Assigned groups'),
       icon: GraduationCap,
       tone: 'amber' as const,
     },
     {
-      label: 'Coins',
+      label: t('Coins'),
       value: coinsOnPage.toLocaleString(),
-      detail: 'Visible students',
+      detail: t('Visible students'),
       icon: Coins,
       tone: 'neutral' as const,
     },
@@ -235,7 +237,7 @@ const StudentsPage = () => {
     <div className="space-y-6">
       <PageHeader
         title={title}
-        description="Browse, filter, and manage student profiles with quick access to classes, schools, status, and coin balances."
+        description={t('Browse, filter, and manage student profiles with quick access to classes, schools, status, and coin balances.')}
         icon={Users}
         actions={
           <>
@@ -255,14 +257,14 @@ const StudentsPage = () => {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isImporting}
                 >
-                  <Upload className="w-5 h-5 mr-2" /> {isImporting ? 'Importing...' : 'Import CSV'}
+                  <Upload className="w-5 h-5 mr-2" /> {isImporting ? t('Importing...') : t('Import CSV')}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={handleExportStudents}
                 >
-                  <Download className="w-5 h-5 mr-2" /> Export CSV
+                  <Download className="w-5 h-5 mr-2" /> {t('Export CSV')}
                 </Button>
                 <Button
                   type="button"
@@ -270,7 +272,7 @@ const StudentsPage = () => {
                   onClick={handlePushStudentsToSheets}
                   disabled={isSheetsPushing || isSheetsPulling}
                 >
-                  <FileSpreadsheet className="w-5 h-5 mr-2" /> {isSheetsPushing ? 'Updating...' : 'Update Sheets'}
+                  <FileSpreadsheet className="w-5 h-5 mr-2" /> {isSheetsPushing ? t('Updating...') : t('Update Sheets')}
                 </Button>
                 <Button
                   type="button"
@@ -278,12 +280,12 @@ const StudentsPage = () => {
                   onClick={handlePullStudentsFromSheets}
                   disabled={isSheetsPushing || isSheetsPulling}
                 >
-                  <Download className="w-5 h-5 mr-2" /> {isSheetsPulling ? 'Importing...' : 'Import Sheets'}
+                  <Download className="w-5 h-5 mr-2" /> {isSheetsPulling ? t('Importing...') : t('Import Sheets')}
                 </Button>
               </>
             )}
             <Button onClick={() => s.handleOpenModal()}>
-              <Plus className="w-5 h-5 mr-2" /> Add Student
+              <Plus className="w-5 h-5 mr-2" /> {t('Add Student')}
             </Button>
           </>
         }
@@ -304,8 +306,8 @@ const StudentsPage = () => {
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
         <TabsList className="mb-5 bg-slate-100/80 dark:bg-muted">
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="statistics">Statistics</TabsTrigger>
+          <TabsTrigger value="students">{t('Students')}</TabsTrigger>
+          <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
         </TabsList>
         <TabsContent value="students" className="mt-0">
           <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} activeCount={activeCount} onClearAll={s.clearFilters} />
@@ -349,21 +351,21 @@ const StudentsPage = () => {
           />
           <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-border dark:bg-transparent">
             <p className="text-sm text-muted-foreground">
-              Showing {start}-{end} of {total} students
+              {t('Showing')} {start}-{end} {t('of')} {total} {t('students')}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <Select value={String(s.limit)} onValueChange={(value) => s.setLimit(Number(value))}>
                 <SelectTrigger className="h-9 w-[110px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {[10, 20, 50, 100].map((value) => <SelectItem key={value} value={String(value)}>{value} / page</SelectItem>)}
+                  {[10, 20, 50, 100].map((value) => <SelectItem key={value} value={String(value)}>{value} / {t('page')}</SelectItem>)}
                 </SelectContent>
               </Select>
               <Button variant="outline" size="sm" onClick={() => s.setPage(Math.max(1, s.page - 1))} disabled={s.page <= 1 || s.state.loading}>
-                <ChevronLeft className="mr-1 h-4 w-4" /> Prev
+                <ChevronLeft className="mr-1 h-4 w-4" /> {t('Prev')}
               </Button>
-              <span className="min-w-[90px] text-center text-sm font-medium">Page {s.page} / {totalPages}</span>
+              <span className="min-w-[90px] text-center text-sm font-medium">{t('Page')} {s.page} / {totalPages}</span>
               <Button variant="outline" size="sm" onClick={() => s.setPage(Math.min(totalPages, s.page + 1))} disabled={s.page >= totalPages || s.state.loading}>
-                Next <ChevronRight className="ml-1 h-4 w-4" />
+                {t('Next')} <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </div>

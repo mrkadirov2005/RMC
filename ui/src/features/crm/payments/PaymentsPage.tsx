@@ -92,6 +92,7 @@ import {
 import { cn } from '@/lib/utils';
 import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Payment {
   payment_id?: number;
@@ -152,6 +153,7 @@ const folderCardClass =
 const PaymentsPage = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
+  const { t } = useLanguage();
   const isTeacher = user?.userType === 'teacher';
 // Handles is owner.
   const isOwner = (user?.role || '').toLowerCase() === 'owner';
@@ -622,11 +624,11 @@ const PaymentsPage = () => {
                   disabled={isImporting}
                 >
                   {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                  {isImporting ? 'Importing...' : 'Import CSV'}
+                  {isImporting ? t('Importing...') : t('Import CSV')}
                 </Button>
                 <Button type="button" variant="outline" onClick={handleExportPayments}>
                   <Download className="mr-2 h-4 w-4" />
-                  Export CSV
+                  {t('Export CSV')}
                 </Button>
                 <Button onClick={() => handleOpenModal()}>
                   <Plus className="mr-2 h-4 w-4" /> Add Payment
