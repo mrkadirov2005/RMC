@@ -3,7 +3,7 @@ const pool = require('../../../db/pool');
 const findAll = (centerId?: number, teacherId?: number) => {
   let query = 'SELECT * FROM classes';
   const params: any[] = [];
-  const conditions: string[] = [];
+  const conditions: string[] = ['deleted_at IS NULL'];
   if (centerId) {
     params.push(centerId);
     conditions.push(`center_id = $${params.length}`);
@@ -20,7 +20,7 @@ const findAll = (centerId?: number, teacherId?: number) => {
 };
 
 const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT * FROM classes WHERE class_id = $1';
+  let query = 'SELECT * FROM classes WHERE class_id = $1 AND deleted_at IS NULL';
   const params: any[] = [id];
   if (centerId) {
     query += ' AND center_id = $2';
@@ -34,7 +34,7 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
 };
 
 const teacherExists = (teacherId: number, centerId?: number) => {
-  let query = 'SELECT teacher_id FROM teachers WHERE teacher_id = $1';
+  let query = 'SELECT teacher_id FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL';
   const params: any[] = [teacherId];
   if (centerId) {
     query += ' AND center_id = $2';
@@ -54,7 +54,7 @@ const insert = (params: any[]) =>
 
 const update = (id: number, params: any[], centerId?: number) => {
   let query =
-    'UPDATE classes SET class_name = COALESCE($1, class_name), level = COALESCE($2, level), section = COALESCE($3, section), capacity = COALESCE($4, capacity), teacher_id = COALESCE($5, teacher_id), room_number = COALESCE($6, room_number), payment_amount = COALESCE($7, payment_amount), updated_at = CURRENT_TIMESTAMP WHERE class_id = $8';
+    'UPDATE classes SET class_name = COALESCE($1, class_name), level = COALESCE($2, level), section = COALESCE($3, section), capacity = COALESCE($4, capacity), teacher_id = COALESCE($5, teacher_id), room_number = COALESCE($6, room_number), payment_amount = COALESCE($7, payment_amount), updated_at = CURRENT_TIMESTAMP WHERE class_id = $8 AND deleted_at IS NULL';
   const values: any[] = [...params, id];
   if (centerId) {
     query += ' AND center_id = $9';
@@ -65,7 +65,7 @@ const update = (id: number, params: any[], centerId?: number) => {
 };
 
 const remove = (id: number, centerId?: number) => {
-  let query = 'DELETE FROM classes WHERE class_id = $1';
+  let query = 'UPDATE classes SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE class_id = $1 AND deleted_at IS NULL';
   const params: any[] = [id];
   if (centerId) {
     query += ' AND center_id = $2';
@@ -75,6 +75,17 @@ const remove = (id: number, centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-module.exports = { findAll, findById, teacherExists, insert, update, remove };
+const purge = (id: number, centerId?: number) => {
+  let query = 'DELETE FROM classes WHERE class_id = $1 AND deleted_at IS NOT NULL';
+  const params: any[] = [id];
+  if (centerId) {
+    query += ' AND center_id = $2';
+    params.push(centerId);
+  }
+  query += ' RETURNING *';
+  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+};
+
+module.exports = { findAll, findById, teacherExists, insert, update, remove, purge };
 
 export {};

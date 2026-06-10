@@ -70,7 +70,7 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
       decoded.userType === 'student' &&
       ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(req.method || '').toUpperCase())
     ) {
-      const result = await pool.query('SELECT is_frozen FROM students WHERE student_id = $1', [decoded.id]);
+      const result = await pool.query('SELECT is_frozen FROM students WHERE student_id = $1 AND deleted_at IS NULL', [decoded.id]);
       const isFrozen = Boolean(result.rows?.[0]?.is_frozen);
       if (isFrozen) {
         res.status(423).json({
@@ -127,6 +127,22 @@ function requireRole(...allowedTypes: UserType[]) {
   };
 }
 
+function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
+  if (!req.user) {
+    res.status(401).json({ error: 'Authentication required.' });
+    return;
+  }
+
+  const isOwner = req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner';
+  const isMuzaffar = String(req.user.username || '').toLowerCase() === 'muzaffar';
+  if (isOwner && isMuzaffar) {
+    next();
+    return;
+  }
+
+  res.status(403).json({ error: 'Permanent delete is restricted to owner muzaffar.' });
+}
+
 /**
  * Middleware: Require that authenticated user can only access their own data
  * Checks if request parameter matches the authenticated user's ID
@@ -173,6 +189,7 @@ module.exports = {
   verifyToken,
   requireAuth,
   requireRole,
+  requireMuzaffarHardDelete,
   requireSelfOrAdmin,
   requireOwner: (req: any, res: any, next: any) => {
     if (!req.user) {

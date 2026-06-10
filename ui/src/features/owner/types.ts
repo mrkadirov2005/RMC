@@ -53,6 +53,7 @@ export interface OwnerManagerStatisticsCollections {
   teachers: any[];
   classes: any[];
   payments: any[];
+  deletedStudents: any[];
 }
 
 export type OwnerManagerStatisticsSection = 'overview' | 'payments' | 'teachers' | 'statistics';

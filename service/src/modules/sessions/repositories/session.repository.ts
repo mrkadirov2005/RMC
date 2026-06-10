@@ -21,7 +21,7 @@ const bulkInsert = async (rows: any[]) => {
   const query = `
     INSERT INTO sessions (center_id, class_id, teacher_id, session_date, start_time, duration_minutes, end_time)
     VALUES ${placeholders.join(', ')}
-    ON CONFLICT (class_id, session_date, start_time) DO NOTHING
+    ON CONFLICT (class_id, session_date, start_time) WHERE deleted_at IS NULL DO NOTHING
     RETURNING session_id
   `;
 
@@ -30,7 +30,7 @@ const bulkInsert = async (rows: any[]) => {
 };
 
 const findByClass = async (classId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT * FROM sessions WHERE class_id = $1';
+  let query = 'SELECT * FROM sessions WHERE class_id = $1 AND deleted_at IS NULL';
   const params: any[] = [classId];
   if (centerId) {
     params.push(centerId);
@@ -46,7 +46,7 @@ const findByClass = async (classId: number, centerId?: number, teacherId?: numbe
 };
 
 const deleteUpcoming = async (classId: number, fromDate: string, toDate?: string, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM sessions WHERE class_id = $1 AND session_date >= $2';
+  let query = 'UPDATE sessions SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE class_id = $1 AND session_date >= $2 AND deleted_at IS NULL';
   const params: any[] = [classId, fromDate];
 
   if (toDate) {
@@ -68,7 +68,7 @@ const deleteUpcoming = async (classId: number, fromDate: string, toDate?: string
 };
 
 const deleteById = async (classId: number, sessionId: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM sessions WHERE session_id = $1 AND class_id = $2';
+  let query = 'UPDATE sessions SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE session_id = $1 AND class_id = $2 AND deleted_at IS NULL';
   const params: any[] = [sessionId, classId];
   if (centerId) {
     params.push(centerId);
@@ -83,16 +83,32 @@ const deleteById = async (classId: number, sessionId: number, centerId?: number,
   return { deleted: result.rowCount || 0 };
 };
 
+const softDeleteByClass = async (classId: number, centerId?: number, teacherId?: number) => {
+  let query = 'UPDATE sessions SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE class_id = $1 AND deleted_at IS NULL';
+  const params: any[] = [classId];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (teacherId) {
+    params.push(teacherId);
+    query += ` AND teacher_id = $${params.length}`;
+  }
+  const result = await pool.query(query, params);
+  return result.rowCount || 0;
+};
+
 const create = async (row: any) => {
   const query = `
     INSERT INTO sessions (center_id, class_id, teacher_id, session_date, start_time, duration_minutes, end_time)
     VALUES ($1, $2, $3, $4, $5, $6, $7)
-    ON CONFLICT (class_id, session_date, start_time) 
+    ON CONFLICT (class_id, session_date, start_time) WHERE deleted_at IS NULL
     DO UPDATE SET 
       teacher_id = EXCLUDED.teacher_id,
       duration_minutes = EXCLUDED.duration_minutes,
       end_time = EXCLUDED.end_time,
-      center_id = EXCLUDED.center_id
+      center_id = EXCLUDED.center_id,
+      updated_at = CURRENT_TIMESTAMP
     RETURNING *
   `;
   const values = [
@@ -108,7 +124,23 @@ const create = async (row: any) => {
   return result.rows[0];
 };
 
-module.exports = { create, bulkInsert, findByClass, deleteUpcoming, deleteById };
+const purgeById = async (classId: number, sessionId: number, centerId?: number, teacherId?: number) => {
+  let query = 'DELETE FROM sessions WHERE session_id = $1 AND class_id = $2 AND deleted_at IS NOT NULL';
+  const params: any[] = [sessionId, classId];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (teacherId) {
+    params.push(teacherId);
+    query += ` AND teacher_id = $${params.length}`;
+  }
+  query += ' RETURNING session_id';
+  const result = await pool.query(query, params);
+  return { deleted: result.rowCount || 0 };
+};
+
+module.exports = { create, bulkInsert, findByClass, deleteUpcoming, deleteById, softDeleteByClass, purgeById };
 
 
 export {};

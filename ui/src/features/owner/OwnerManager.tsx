@@ -47,7 +47,9 @@ const OwnerManager = memo(() => {
               collections={vm.statisticsCollections}
               onEdit={vm.handleEdit}
               onDelete={vm.handleDelete}
+              onHardDelete={vm.handleHardDelete}
               onResetPassword={vm.handleResetPassword}
+              canHardDelete={vm.canHardDelete}
             />
             {vm.activeTab !== 'teachers' && (
               <OwnerManagerTable
@@ -59,7 +61,9 @@ const OwnerManager = memo(() => {
                 isScopedAndMissingCenter={vm.isScopedAndMissingCenter}
                 onEdit={vm.handleEdit}
                 onDelete={vm.handleDelete}
+                onHardDelete={vm.handleHardDelete}
                 onResetPassword={vm.handleResetPassword}
+                canHardDelete={vm.canHardDelete}
               />
             )}
           </>

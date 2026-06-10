@@ -3,16 +3,18 @@ const pool = require('../../../db/pool');
 const findAll = (centerId?: number) => {
   let query = 'SELECT * FROM teachers';
   const params: any[] = [];
+  const conditions = ['deleted_at IS NULL'];
   if (centerId) {
-    query += ' WHERE center_id = $1';
     params.push(centerId);
+    conditions.push(`center_id = $${params.length}`);
   }
+  query += ' WHERE ' + conditions.join(' AND ');
   query += ' ORDER BY teacher_id';
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
 const findById = (id: number, centerId?: number) => {
-  let query = 'SELECT * FROM teachers WHERE teacher_id = $1';
+  let query = 'SELECT * FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL';
   const params: any[] = [id];
   if (centerId) {
     query += ' AND center_id = $2';
@@ -24,7 +26,7 @@ const findById = (id: number, centerId?: number) => {
 const findByUsername = (username: string) =>
   pool
     .query(
-      'SELECT teacher_id, first_name, last_name, email, password_hash, status, center_id FROM teachers WHERE username = $1',
+      'SELECT teacher_id, first_name, last_name, email, password_hash, status, center_id FROM teachers WHERE username = $1 AND deleted_at IS NULL',
       [username]
     )
     .then((r: any) => r.rows[0] || null);
@@ -39,11 +41,11 @@ const insert = (params: any[]) =>
     .then((r: any) => r.rows[0]);
 
 const countByUsername = (username: string) =>
-  pool.query('SELECT teacher_id FROM teachers WHERE username = $1', [username]).then((r: any) => r.rows.length);
+  pool.query('SELECT teacher_id FROM teachers WHERE username = $1 AND deleted_at IS NULL', [username]).then((r: any) => r.rows.length);
 
 const update = (id: number, fields: any[], centerId?: number) => {
   let query =
-    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), status = COALESCE($6, status), roles = COALESCE($7, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $8';
+    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), status = COALESCE($6, status), roles = COALESCE($7, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $8 AND deleted_at IS NULL';
   const params: any[] = [...fields, id];
   if (centerId) {
     query += ' AND center_id = $9';
@@ -59,11 +61,11 @@ const getDeleteDependencies = async (id: number, centerId?: number) => {
   if (centerId) params.push(centerId);
 
   const [classes, students, subjects, assignments, sessions, attendance, grades] = await Promise.all([
-    pool.query(`SELECT class_id, class_name, class_code FROM classes WHERE teacher_id = $1${scoped} ORDER BY class_id`, params),
-    pool.query(`SELECT student_id, first_name, last_name FROM students WHERE teacher_id = $1${scoped} ORDER BY student_id`, params),
+    pool.query(`SELECT class_id, class_name, class_code FROM classes WHERE teacher_id = $1${scoped} AND deleted_at IS NULL ORDER BY class_id`, params),
+    pool.query(`SELECT student_id, first_name, last_name FROM students WHERE teacher_id = $1${scoped} AND deleted_at IS NULL ORDER BY student_id`, params),
     pool.query(`SELECT subject_id, subject_name, subject_code FROM subjects WHERE teacher_id = $1${scoped} ORDER BY subject_id`, params),
     pool.query(`SELECT assignment_id, assignment_title FROM assignments WHERE teacher_id = $1 ORDER BY assignment_id`, [id]),
-    pool.query(`SELECT session_id, class_id, session_date FROM sessions WHERE teacher_id = $1${scoped} ORDER BY session_id`, params),
+    pool.query(`SELECT session_id, class_id, session_date FROM sessions WHERE teacher_id = $1${scoped} AND deleted_at IS NULL ORDER BY session_id`, params),
     pool.query(`SELECT COUNT(*)::int AS count FROM attendance WHERE teacher_id = $1${scoped}`, params),
     pool.query(`SELECT COUNT(*)::int AS count FROM grades WHERE teacher_id = $1${scoped}`, params),
   ]);
@@ -96,11 +98,11 @@ const unassignDeleteDependencies = async (id: number, centerId?: number) => {
     const scoped = centerId ? ' AND center_id = $2' : '';
     if (centerId) params.push(centerId);
 
-    await client.query(`UPDATE students SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped}`, params);
-    await client.query(`UPDATE classes SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped}`, params);
+    await client.query(`UPDATE students SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped} AND deleted_at IS NULL`, params);
+    await client.query(`UPDATE classes SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped} AND deleted_at IS NULL`, params);
     await client.query(`UPDATE subjects SET teacher_id = NULL WHERE teacher_id = $1${scoped}`, params);
     await client.query('UPDATE assignments SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1', [id]);
-    await client.query(`UPDATE sessions SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped}`, params);
+    await client.query(`UPDATE sessions SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped} AND deleted_at IS NULL`, params);
 
     await client.query('COMMIT');
   } catch (error) {
@@ -112,7 +114,22 @@ const unassignDeleteDependencies = async (id: number, centerId?: number) => {
 };
 
 const remove = (id: number, centerId?: number) => {
-  let query = 'DELETE FROM teachers WHERE teacher_id = $1';
+  let query = `UPDATE teachers
+    SET deleted_at = CURRENT_TIMESTAMP,
+        status = 'Retired',
+        updated_at = CURRENT_TIMESTAMP
+    WHERE teacher_id = $1 AND deleted_at IS NULL`;
+  const params: any[] = [id];
+  if (centerId) {
+    query += ' AND center_id = $2';
+    params.push(centerId);
+  }
+  query += ' RETURNING *';
+  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+};
+
+const purge = (id: number, centerId?: number) => {
+  let query = 'DELETE FROM teachers WHERE teacher_id = $1 AND deleted_at IS NOT NULL';
   const params: any[] = [id];
   if (centerId) {
     query += ' AND center_id = $2';
@@ -123,11 +140,11 @@ const remove = (id: number, centerId?: number) => {
 };
 
 const findPasswordHash = (id: number) =>
-  pool.query('SELECT password_hash FROM teachers WHERE teacher_id = $1', [id]).then((r: any) => r.rows[0]?.password_hash);
+  pool.query('SELECT password_hash FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL', [id]).then((r: any) => r.rows[0]?.password_hash);
 
 const setCredentials = (id: number, username: string, password_hash: string, centerId?: number) => {
   let query =
-    'UPDATE teachers SET username = $1, password_hash = $2, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $3';
+    'UPDATE teachers SET username = $1, password_hash = $2, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $3 AND deleted_at IS NULL';
   const params: any[] = [username, password_hash, id];
   if (centerId) {
     query += ' AND center_id = $4';
@@ -138,7 +155,7 @@ const setCredentials = (id: number, username: string, password_hash: string, cen
 };
 
 const updatePasswordHash = (id: number, password_hash: string) =>
-  pool.query('UPDATE teachers SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $2', [
+  pool.query('UPDATE teachers SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $2 AND deleted_at IS NULL', [
     password_hash,
     id,
   ]);
@@ -154,6 +171,7 @@ module.exports = {
   hasDeleteDependencies,
   unassignDeleteDependencies,
   remove,
+  purge,
   findPasswordHash,
   setCredentials,
   updatePasswordHash,

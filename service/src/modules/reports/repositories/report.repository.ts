@@ -1,19 +1,24 @@
 const pool = require('../../../db/pool');
 
+const addDeletedFilter = (filter: string, alias = '') => {
+  const deletedColumn = alias ? `${alias}.deleted_at` : 'deleted_at';
+  return filter ? `${filter} AND ${deletedColumn} IS NULL` : `WHERE ${deletedColumn} IS NULL`;
+};
+
 const countStudents = (centerFilter: string, params: any[]) =>
   pool
     .query(
       `SELECT COUNT(*)::int AS total, SUM(CASE WHEN status = 'Active' THEN 1 ELSE 0 END)::int AS active
-       FROM students ${centerFilter}`,
+       FROM students ${addDeletedFilter(centerFilter)}`,
       params
     )
     .then((r: any) => r.rows[0]);
 
 const countTeachers = (centerFilter: string, params: any[]) =>
-  pool.query(`SELECT COUNT(*)::int AS total FROM teachers ${centerFilter}`, params).then((r: any) => r.rows[0]);
+  pool.query(`SELECT COUNT(*)::int AS total FROM teachers ${addDeletedFilter(centerFilter)}`, params).then((r: any) => r.rows[0]);
 
 const countClasses = (centerFilter: string, params: any[]) =>
-  pool.query(`SELECT COUNT(*)::int AS total FROM classes ${centerFilter}`, params).then((r: any) => r.rows[0]);
+  pool.query(`SELECT COUNT(*)::int AS total FROM classes ${addDeletedFilter(centerFilter)}`, params).then((r: any) => r.rows[0]);
 
 const sumPayments = (where: string, params: any[]) =>
   pool

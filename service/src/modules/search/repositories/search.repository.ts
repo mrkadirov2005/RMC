@@ -7,7 +7,7 @@ const buildScopedQuery = (
   centerId?: number,
   extraConditions: string[] = []
 ) => {
-  const conditions = [`(${nameConditions.join(' OR ')})`, ...extraConditions];
+  const conditions = [`(${nameConditions.join(' OR ')})`, 'deleted_at IS NULL', ...extraConditions];
   if (centerId) {
     params.push(centerId);
     conditions.push(`center_id = $${params.length}`);

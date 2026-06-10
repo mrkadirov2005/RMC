@@ -11,6 +11,7 @@ import {
   GraduationCap,
   KeyRound,
   Pencil,
+  ShieldX,
   Shield,
   ShieldCheck,
   Trash2,
@@ -39,7 +40,9 @@ interface OwnerManagerTabStatsProps {
   collections: OwnerManagerStatisticsCollections;
   onEdit: (item: any) => void;
   onDelete: (id: number) => void;
+  onHardDelete: (id: number) => void;
   onResetPassword: (item: any) => void;
+  canHardDelete: boolean;
 }
 
 interface StatCard {
@@ -248,12 +251,14 @@ const getMonthLabel = (monthKey: string, language: string) => {
   return new Date(year, month - 1, 1).toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'en-US', { month: 'long', year: 'numeric' });
 };
 
-const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword }: {
+const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onHardDelete, onResetPassword, canHardDelete }: {
   data: any[];
   collections: OwnerManagerStatisticsCollections;
   onEdit: (item: any) => void;
   onDelete: (id: number) => void;
+  onHardDelete: (id: number) => void;
   onResetPassword: (item: any) => void;
+  canHardDelete: boolean;
 }) => {
   const { language, t } = useLanguage();
   const total = data.length;
@@ -403,6 +408,11 @@ const TeacherBreakdown = ({ data, collections, onEdit, onDelete, onResetPassword
                             <Button variant="ghost" size="icon" onClick={() => onDelete(Number(getOwnerManagerRowId(teacherRecord)))} className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400" title={t('Delete')}>
                               <Trash2 className="h-4 w-4" />
                             </Button>
+                            {canHardDelete && (
+                              <Button variant="ghost" size="icon" onClick={() => onHardDelete(Number(getOwnerManagerRowId(teacherRecord)))} className="text-red-700 hover:bg-red-600/10 hover:text-red-800 dark:text-red-300" title={t('Hard delete')}>
+                                <ShieldX className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
                         )}
                       </TableCell>
@@ -447,7 +457,7 @@ const StudentBreakdown = ({ data }: { data: any[] }) => {
 
 // --- Main component ---
 
-export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, collections, onEdit, onDelete, onResetPassword }: OwnerManagerTabStatsProps) => {
+export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, collections, onEdit, onDelete, onHardDelete, onResetPassword, canHardDelete }: OwnerManagerTabStatsProps) => {
   const { t } = useLanguage();
   const stats = useMemo(() => {
     switch (activeTab) {
@@ -500,7 +510,7 @@ export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, co
         <>
           {activeTab === 'centers' && <CentersBreakdown data={data} cross={crossCounts} />}
           {activeTab === 'superusers' && <SuperuserBreakdown data={data} />}
-          {activeTab === 'teachers' && <TeacherBreakdown data={data} collections={collections} onEdit={onEdit} onDelete={onDelete} onResetPassword={onResetPassword} />}
+          {activeTab === 'teachers' && <TeacherBreakdown data={data} collections={collections} onEdit={onEdit} onDelete={onDelete} onHardDelete={onHardDelete} onResetPassword={onResetPassword} canHardDelete={canHardDelete} />}
           {activeTab === 'students' && <StudentBreakdown data={data} />}
         </>
       )}

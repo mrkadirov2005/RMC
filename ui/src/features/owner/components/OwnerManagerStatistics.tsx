@@ -1,7 +1,7 @@
 // Statistics view for the owner feature.
 
 import { useMemo, useState } from 'react';
-import { Activity, AlertTriangle, BarChart3, BookMarked, Building2, CalendarDays, DollarSign, GraduationCap, Percent, Target, Trophy, Users, Wallet } from 'lucide-react';
+import { Activity, AlertTriangle, BarChart3, BookMarked, Building2, CalendarDays, DollarSign, GraduationCap, Percent, Target, Trophy, UserMinus, Users, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -47,6 +47,21 @@ const getPaymentMonth = (payment: any) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
 
+const getTeacherDisplayName = (teacher: any, fallbackId?: number) => {
+  const name = [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ').trim();
+  if (name) return name;
+  if (teacher?.full_name) return String(teacher.full_name);
+  if (fallbackId) return `Teacher #${fallbackId}`;
+  return 'No teacher';
+};
+
+const getClassDisplayName = (cls: any, fallbackId?: number) => {
+  const name = [cls?.class_name, cls?.class_code].filter(Boolean).join(' / ').trim();
+  if (name) return name;
+  if (fallbackId) return `Group #${fallbackId}`;
+  return 'No group';
+};
+
 const kpiSurfaceClasses = [
   'border-indigo-300/80 bg-gradient-to-br from-indigo-100 via-sky-50 to-cyan-200/80 shadow-indigo-200/70 dark:border-indigo-400/25 dark:from-indigo-900/45 dark:via-slate-950/80 dark:to-sky-900/35',
   'border-emerald-300/80 bg-gradient-to-br from-emerald-100 via-teal-50 to-lime-200/75 shadow-emerald-200/70 dark:border-emerald-400/25 dark:from-emerald-900/45 dark:via-slate-950/80 dark:to-teal-900/35',
@@ -84,6 +99,67 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
         selectedMonth
       ),
     [collections.classes, collections.payments, collections.students, collections.teachers, selectedMonth]
+  );
+  const deletedStudentBreakdown = useMemo(() => {
+    const teacherLookup = new Map<number, string>();
+    collections.teachers.forEach((teacher) => {
+      const teacherId = Number(teacher?.teacher_id || teacher?.id || 0);
+      if (teacherId) teacherLookup.set(teacherId, getTeacherDisplayName(teacher, teacherId));
+    });
+
+    const classLookup = new Map<number, string>();
+    collections.classes.forEach((cls) => {
+      const classId = Number(cls?.class_id || cls?.id || 0);
+      if (classId) classLookup.set(classId, getClassDisplayName(cls, classId));
+    });
+
+    const grouped = new Map<string, {
+      key: string;
+      teacherId: number;
+      teacherName: string;
+      classId: number;
+      groupName: string;
+      deletedCount: number;
+      latestDeletedAt: string;
+    }>();
+
+    collections.deletedStudents.forEach((student) => {
+      const teacherId = Number(student?.teacher_id || 0);
+      const classId = Number(student?.class_id || 0);
+      const teacherName =
+        [student?.teacher_first_name, student?.teacher_last_name].filter(Boolean).join(' ').trim() ||
+        teacherLookup.get(teacherId) ||
+        getTeacherDisplayName(null, teacherId);
+      const groupName =
+        [student?.class_name, student?.class_code].filter(Boolean).join(' / ').trim() ||
+        classLookup.get(classId) ||
+        getClassDisplayName(null, classId);
+      const key = `${teacherId || 'none'}:${classId || 'none'}`;
+      const current = grouped.get(key) || {
+        key,
+        teacherId,
+        teacherName,
+        classId,
+        groupName,
+        deletedCount: 0,
+        latestDeletedAt: '',
+      };
+      const deletedAt = String(student?.deleted_at || '');
+      current.deletedCount += 1;
+      if (deletedAt && (!current.latestDeletedAt || new Date(deletedAt) > new Date(current.latestDeletedAt))) {
+        current.latestDeletedAt = deletedAt;
+      }
+      grouped.set(key, current);
+    });
+
+    return Array.from(grouped.values()).sort((a, b) => {
+      if (b.deletedCount !== a.deletedCount) return b.deletedCount - a.deletedCount;
+      return a.teacherName.localeCompare(b.teacherName);
+    });
+  }, [collections.classes, collections.deletedStudents, collections.teachers]);
+  const deletedStudentTotal = useMemo(
+    () => deletedStudentBreakdown.reduce((sum, row) => sum + row.deletedCount, 0),
+    [deletedStudentBreakdown]
   );
   const totalEarned = useMemo(
     () => teacherEarnings.reduce((sum, row) => sum + row.earnedAmount, 0),
@@ -739,10 +815,64 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                   </p>
                 </div>
                 <div className={cn('rounded-2xl border p-4 shadow-md dark:shadow-black/10', kpiSurfaceClasses[4])}>
-                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Selected month')}</p>
-                  <p className="mt-2 text-lg font-semibold text-slate-900 dark:text-white">{monthLabel}</p>
+                  <p className="text-xs uppercase tracking-[0.24em] text-slate-700/75 dark:text-white/60">{t('Soft-deleted students')}</p>
+                  <p className="mt-2 text-3xl font-semibold text-rose-600 dark:text-rose-300">{deletedStudentTotal.toLocaleString()}</p>
                 </div>
               </div>
+
+              <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <UserMinus className="h-5 w-5 text-rose-500" />
+                    <CardTitle className="text-lg text-slate-900 dark:text-white">{t('Deleted Students by Teacher Groups')}</CardTitle>
+                  </div>
+                  <CardDescription className="text-slate-500 dark:text-white/55">
+                    {t('Soft-deleted students grouped by teacher and class/group.')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="overflow-x-auto p-0">
+                  {loading ? (
+                    <div className="px-6 pb-6 pt-2 text-sm text-slate-500 dark:text-white/55">{t('Loading deleted student breakdown...')}</div>
+                  ) : deletedStudentBreakdown.length === 0 ? (
+                    <div className="px-6 pb-6 text-sm text-slate-500 dark:text-white/55">{t('No soft-deleted students found.')}</div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/[0.03]">
+                          <TableHead className="text-slate-600 dark:text-white/70">{t('Teacher')}</TableHead>
+                          <TableHead className="text-slate-600 dark:text-white/70">{t('Group')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Deleted students')}</TableHead>
+                          <TableHead className="text-right text-slate-600 dark:text-white/70">{t('Last deleted')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {deletedStudentBreakdown.map((row) => (
+                          <TableRow key={row.key} className="border-slate-200/60 dark:border-white/5">
+                            <TableCell className="text-slate-800 dark:text-white/85">
+                              <div className="flex flex-col gap-1">
+                                <span className="font-medium">{row.teacherName}</span>
+                                {row.teacherId ? <span className="text-xs text-slate-500 dark:text-white/45">{t('Teacher')} #{row.teacherId}</span> : null}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-slate-700 dark:text-white/80">
+                              <div className="flex flex-col gap-1">
+                                <span>{row.groupName}</span>
+                                {row.classId ? <span className="text-xs text-slate-500 dark:text-white/45">{t('Class')} #{row.classId}</span> : null}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right font-semibold text-rose-600 dark:text-rose-300">{row.deletedCount.toLocaleString()}</TableCell>
+                            <TableCell className="text-right text-slate-600 dark:text-white/75">
+                              {row.latestDeletedAt
+                                ? new Date(row.latestDeletedAt).toLocaleDateString(language === 'uz' ? 'uz-UZ' : 'en-US')
+                                : '-'}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
 
               <Card className="border-slate-200/70 bg-white/70 dark:border-white/10 dark:bg-slate-950/40">
                 <CardHeader>

@@ -2,7 +2,7 @@ export {};
 
 const express_class = require('express');
 const router_class = express_class.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireMuzaffarHardDelete } = require('../middleware/auth');
 const { validateBody, validateQuery } = require('../middleware/validation');
 const { DeleteUpcomingSessionsDto, GenerateClassSessionsDto } = require('../dtos/request.dto');
 const classController=require('../modules/classes/controllers/class.controller');
@@ -207,6 +207,7 @@ router_class.delete('/:id/sessions', requireAuth, validateQuery(DeleteUpcomingSe
  *         description: Session deleted
  */
 router_class.delete('/:id/sessions/:sessionId', requireAuth, classController.deleteClassSessionById);
+router_class.delete('/:id/sessions/:sessionId/purge', requireAuth, requireMuzaffarHardDelete, classController.purgeClassSessionById);
 
 /**
  * @swagger
@@ -235,5 +236,6 @@ router_class.delete('/:id/sessions/:sessionId', requireAuth, classController.del
  *         description: Class has attendance records
  */
 router_class.delete('/:id', requireAuth, classController.deleteClass);
+router_class.delete('/:id/purge', requireAuth, requireMuzaffarHardDelete, classController.purgeClass);
 
 module.exports = router_class;

@@ -14,7 +14,7 @@ const list = (query: { payment_id?: string; status?: string }, centerId?: number
   }
   if (centerId) {
     params.push(centerId);
-    conditions.push(`payment_id IN (SELECT payment_id FROM payments WHERE center_id = $${params.length})`);
+    conditions.push(`payment_id IN (SELECT payment_id FROM payments WHERE center_id = $${params.length} AND deleted_at IS NULL)`);
   }
   return refundRepository.findAllFiltered(conditions, params);
 };

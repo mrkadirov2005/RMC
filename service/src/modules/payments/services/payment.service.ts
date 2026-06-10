@@ -42,6 +42,8 @@ const listByStudent = (studentId: number, centerId?: number, teacherId?: number)
 
 const deletePayment = (id: number, centerId?: number, teacherId?: number) => paymentRepository.remove(id, centerId, teacherId);
 
+const purgePayment = (id: number, centerId?: number, teacherId?: number) => paymentRepository.purge(id, centerId, teacherId);
+
 module.exports = {
   listPayments,
   getPayment,
@@ -49,6 +51,7 @@ module.exports = {
   updatePayment,
   listByStudent,
   deletePayment,
+  purgePayment,
 };
 
 export {};

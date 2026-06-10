@@ -3,7 +3,7 @@ export {};
 const express_teacher = require('express');
 const router_teacher = express_teacher.Router();
 const teacherController = require('../modules/teachers/controllers/teacher.controller');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireMuzaffarHardDelete } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { CredentialsDto, PasswordChangeDto, PaymentPasswordDto, SetPasswordDto } = require('../dtos/request.dto');
 
@@ -114,6 +114,7 @@ router_teacher.put('/:id', requireAuth, teacherController.updateTeacher);
  *         description: Teacher not found
  */
 router_teacher.delete('/:id', requireAuth, requireRole('superuser'), teacherController.deleteTeacher);
+router_teacher.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, teacherController.purgeTeacher);
 
 /**
  * @swagger

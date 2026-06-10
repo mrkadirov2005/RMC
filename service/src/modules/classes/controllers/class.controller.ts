@@ -106,11 +106,33 @@ const deleteClass = async (req: any, res: any) => {
     res.json({
       message: 'Class deleted successfully',
       class: result.row,
-      deleted_attendance_count: result.deletedAttendanceCount || 0,
+      deleted_session_count: result.deletedSessionCount || 0,
     });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to delete class', details: error.message || String(error) });
+  }
+};
+
+const purgeClass = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    const result = await classService.purgeClass(Number(req.params.id), centerId ?? undefined);
+    if (!result?.row) return res.status(404).json({ error: 'Soft-deleted class not found' });
+    res.json({ message: 'Class permanently deleted', class: result.row });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    if (error?.code === '23503') {
+      return res.status(409).json({
+        error: 'Class is still referenced by other records',
+        message: 'Delete or reassign related records before permanently deleting this class.',
+        details: error.detail,
+      });
+    }
+    res.status(500).json({ error: 'Failed to permanently delete class', details: error.message || String(error) });
   }
 };
 
@@ -238,6 +260,48 @@ const deleteClassSessionById = async (req: any, res: any) => {
   }
 };
 
+const purgeClassSessionById = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    if (req.user?.userType === 'student') {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    const classId = Number(req.params.id);
+    const sessionId = Number(req.params.sessionId);
+    if (!Number.isFinite(sessionId)) {
+      return res.status(400).json({ error: 'sessionId is required.' });
+    }
+
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    const out = await sessionService.purgeSessionById({
+      classId,
+      sessionId,
+      centerId: centerId ?? undefined,
+      teacherId,
+    });
+
+    if (!out.deleted) return res.status(404).json({ error: 'Soft-deleted session not found' });
+    res.json({ message: 'Session permanently deleted', ...out });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    if (error?.code === '23503') {
+      return res.status(409).json({
+        error: 'Session is still referenced by other records',
+        message: 'Delete or reassign related records before permanently deleting this session.',
+        details: error.detail,
+      });
+    }
+    res.status(500).json({ error: 'Failed to permanently delete session', details: error.message || String(error) });
+  }
+};
+
 const createClassSession = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -269,11 +333,13 @@ module.exports = {
   createClass,
   updateClass,
   deleteClass,
+  purgeClass,
   createClassSession,
   generateClassSessions,
   getClassSessions,
   deleteUpcomingClassSessions,
   deleteClassSessionById,
+  purgeClassSessionById,
 };
 
 

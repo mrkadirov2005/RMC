@@ -76,6 +76,17 @@ const getStudentById = async (req: any, res: any) => {
   }
 };
 
+const getDeletedStudents = async (req: any, res: any) => {
+  try {
+    const { centerId } = getScopedCenterId(req);
+    const rows = await studentService.listDeletedStudents(centerId ?? undefined);
+    res.json(rows);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch deleted students', details: error.message || String(error) });
+  }
+};
+
 const createStudent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -151,6 +162,32 @@ const deleteStudent = async (req: any, res: any) => {
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to delete student', details: error.message || String(error) });
+  }
+};
+
+const purgeStudent = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (req.user?.userType === 'student') {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+    const row = await studentService.purgeStudent(Number(req.params.id), centerId ?? undefined, teacherId);
+    if (!row) return res.status(404).json({ error: 'Soft-deleted student not found' });
+    res.json({ message: 'Student permanently deleted', student: row });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    if (error?.code === '23503') {
+      return res.status(409).json({
+        error: 'Student is still referenced by other records',
+        message: 'Delete or reassign related records before permanently deleting this student.',
+        details: error.detail,
+      });
+    }
+    res.status(500).json({ error: 'Failed to permanently delete student', details: error.message || String(error) });
   }
 };
 
@@ -367,9 +404,11 @@ const deleteStudentCoinTransaction = async (req: any, res: any) => {
 module.exports = {
   getAllStudents,
   getStudentById,
+  getDeletedStudents,
   createStudent,
   updateStudent,
   deleteStudent,
+  purgeStudent,
   studentLogin,
   setStudentPassword,
   changeStudentPassword,

@@ -5,7 +5,7 @@ const findAll = (centerId?: number, teacherId?: number) => {
   const params: any[] = [];
   const conditions: string[] = [];
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = s.class_id';
+    query += ' JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -25,7 +25,7 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
   const params: any[] = [id];
   const conditions: string[] = ['s.subject_id = $1'];
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = s.class_id';
+    query += ' JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -42,7 +42,7 @@ const findByClass = (classId: number, centerId?: number, teacherId?: number) => 
   const params: any[] = [classId];
   const conditions: string[] = ['s.class_id = $1'];
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = s.class_id';
+    query += ' JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -67,7 +67,7 @@ const update = (id: number, params: any[], centerId?: number, teacherId?: number
     'UPDATE subjects SET subject_name = COALESCE($1, subject_name), subject_code = COALESCE($2, subject_code), teacher_id = COALESCE($3, teacher_id), total_marks = COALESCE($4, total_marks), passing_marks = COALESCE($5, passing_marks) WHERE subject_id = $6';
   const values: any[] = [...params, id];
   if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
+    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
     if (centerId) {
       values.push(centerId);
       query += ` AND center_id = $${values.length}`;
@@ -86,7 +86,7 @@ const remove = (id: number, centerId?: number, teacherId?: number) => {
   let query = 'DELETE FROM subjects WHERE subject_id = $1';
   const params: any[] = [id];
   if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
+    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
     if (centerId) {
       params.push(centerId);
       query += ` AND center_id = $${params.length}`;

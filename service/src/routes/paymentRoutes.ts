@@ -3,7 +3,7 @@ export {};
 const express_payment = require('express');
 const router_payment = express_payment.Router();
 const paymentController = require('../modules/payments/controllers/payment.controller');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireMuzaffarHardDelete } = require('../middleware/auth');
 
 /**
  * @swagger
@@ -138,5 +138,6 @@ router_payment.get('/student/:studentId', requireAuth, paymentController.getPaym
  *         description: Payment not found
  */
 router_payment.delete('/:id', requireAuth, paymentController.deletePayment);
+router_payment.delete('/:id/purge', requireAuth, requireMuzaffarHardDelete, paymentController.purgePayment);
 
 module.exports = router_payment;

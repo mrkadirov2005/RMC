@@ -21,5 +21,6 @@ export const ownerManagerApi = {
   students: {
     ...studentAPI,
     getAllAcrossCenters: () => studentAPI.getAll(undefined, { skipCenterScope: true }),
+    getDeletedAcrossCenters: () => studentAPI.getDeleted({ skipCenterScope: true }),
   },
 };

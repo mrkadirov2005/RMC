@@ -26,6 +26,8 @@ const addStudentFilters = (
     conditions.push(`s.center_id = $${params.length}`);
   }
 
+  conditions.push('s.deleted_at IS NULL');
+
   if (teacherId) {
     params.push(teacherId);
     conditions.push(`s.teacher_id = $${params.length}`);
@@ -100,10 +102,10 @@ const findAllWithClass = async (centerId?: number, teacherId?: number) => {
   let query = `
     SELECT s.*, c.class_name
     FROM students s
-    LEFT JOIN classes c ON s.class_id = c.class_id
+    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
   `;
   const params: any[] = [];
-  const conditions: string[] = [];
+  const conditions: string[] = ['s.deleted_at IS NULL'];
 
   if (centerId) {
     params.push(centerId);
@@ -128,7 +130,7 @@ const findAllWithClass = async (centerId?: number, teacherId?: number) => {
 const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
   const fromClause = `
     FROM students s
-    LEFT JOIN classes c ON s.class_id = c.class_id
+    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
     LEFT JOIN edu_centers ec ON s.center_id = ec.center_id
     LEFT JOIN subjects sub ON sub.class_id = c.class_id
   `;
@@ -172,8 +174,8 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
   let query = `
     SELECT s.*, c.class_name
     FROM students s
-    LEFT JOIN classes c ON s.class_id = c.class_id
-    WHERE s.student_id = $1
+    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
+    WHERE s.student_id = $1 AND s.deleted_at IS NULL
   `;
   const params: any[] = [id];
 
@@ -189,6 +191,30 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
 
   const result = await pool.query(query, params);
   return result.rows[0] || null;
+};
+
+const findDeletedWithClassAndTeacher = async (centerId?: number) => {
+  let query = `
+    SELECT
+      s.*,
+      c.class_name,
+      c.class_code,
+      t.first_name AS teacher_first_name,
+      t.last_name AS teacher_last_name,
+      t.employee_id AS teacher_employee_id
+    FROM students s
+    LEFT JOIN classes c ON s.class_id = c.class_id
+    LEFT JOIN teachers t ON s.teacher_id = t.teacher_id
+    WHERE s.deleted_at IS NOT NULL
+  `;
+  const params: any[] = [];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND s.center_id = $${params.length}`;
+  }
+  query += ' ORDER BY s.deleted_at DESC, s.student_id DESC';
+  const result = await pool.query(query, params);
+  return result.rows;
 };
 
 const insert = async (payload: Record<string, unknown>) => {
@@ -255,7 +281,7 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
       school_name = COALESCE($10, school_name),
       school_class = COALESCE($11, school_class),
       updated_at = CURRENT_TIMESTAMP
-    WHERE student_id = $12`;
+    WHERE student_id = $12 AND deleted_at IS NULL`;
   const params: any[] = [
     first_name,
     last_name,
@@ -288,7 +314,27 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
 };
 
 const remove = async (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM students WHERE student_id = $1';
+  let query = `UPDATE students
+    SET deleted_at = CURRENT_TIMESTAMP,
+        status = 'Removed',
+        updated_at = CURRENT_TIMESTAMP
+    WHERE student_id = $1 AND deleted_at IS NULL`;
+  const params: any[] = [id];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (teacherId) {
+    params.push(teacherId);
+    query += ` AND teacher_id = $${params.length}`;
+  }
+  query += ' RETURNING *';
+  const result = await pool.query(query, params);
+  return result.rows[0] || null;
+};
+
+const purge = async (id: number, centerId?: number, teacherId?: number) => {
+  let query = 'DELETE FROM students WHERE student_id = $1 AND deleted_at IS NOT NULL';
   const params: any[] = [id];
   if (centerId) {
     params.push(centerId);
@@ -305,14 +351,14 @@ const remove = async (id: number, centerId?: number, teacherId?: number) => {
 
 const findByUsername = async (username: string) => {
   const result = await pool.query(
-    'SELECT student_id, first_name, last_name, email, password_hash, status, class_id, center_id, is_frozen FROM students WHERE username = $1',
+    'SELECT student_id, first_name, last_name, email, password_hash, status, class_id, center_id, is_frozen FROM students WHERE username = $1 AND deleted_at IS NULL',
     [username]
   );
   return result.rows[0] || null;
 };
 
 const findPasswordHashById = async (id: number) => {
-  const result = await pool.query('SELECT password_hash FROM students WHERE student_id = $1', [id]);
+  const result = await pool.query('SELECT password_hash FROM students WHERE student_id = $1 AND deleted_at IS NULL', [id]);
   return result.rows[0]?.password_hash ?? null;
 };
 
@@ -324,7 +370,7 @@ const setCredentials = async (
   teacherId?: number
 ) => {
   let query =
-    'UPDATE students SET username = $1, password_hash = $2, updated_at = CURRENT_TIMESTAMP WHERE student_id = $3';
+    'UPDATE students SET username = $1, password_hash = $2, updated_at = CURRENT_TIMESTAMP WHERE student_id = $3 AND deleted_at IS NULL';
   const params: any[] = [username, password_hash, id];
   if (centerId) {
     params.push(centerId);
@@ -343,7 +389,7 @@ const setCredentials = async (
 };
 
 const updatePasswordHash = async (id: number, password_hash: string) => {
-  await pool.query('UPDATE students SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2', [
+  await pool.query('UPDATE students SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
     password_hash,
     id,
   ]);
@@ -353,9 +399,11 @@ module.exports = {
   findAllWithClass,
   findPaginatedWithClass,
   findByIdWithClass,
+  findDeletedWithClassAndTeacher,
   insert,
   update,
   remove,
+  purge,
   findByUsername,
   findPasswordHashById,
   setCredentials,

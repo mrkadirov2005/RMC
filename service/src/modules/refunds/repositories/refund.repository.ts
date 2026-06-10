@@ -28,7 +28,7 @@ const update = (id: number, status: any, refunded_at: any) =>
     .then((r: any) => r.rows[0] || null);
 
 const updatePaymentRefunded = (paymentId: number) =>
-  pool.query(`UPDATE payments SET payment_status = 'Refunded', updated_at = CURRENT_TIMESTAMP WHERE payment_id = $1`, [paymentId]);
+  pool.query(`UPDATE payments SET payment_status = 'Refunded', updated_at = CURRENT_TIMESTAMP WHERE payment_id = $1 AND deleted_at IS NULL`, [paymentId]);
 
 const remove = (id: number) =>
   pool.query('DELETE FROM refunds WHERE refund_id = $1 RETURNING *', [id]).then((r: any) => r.rows[0] || null);

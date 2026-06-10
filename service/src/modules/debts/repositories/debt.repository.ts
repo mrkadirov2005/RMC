@@ -10,7 +10,7 @@ const findAll = (centerId?: number, teacherId?: number) => {
     conditions.push(`d.center_id = $${params.length}`);
   }
   if (teacherId) {
-    query += ' JOIN students s ON s.student_id = d.student_id';
+    query += ' JOIN students s ON s.student_id = d.student_id AND s.deleted_at IS NULL';
     params.push(teacherId);
     conditions.push(`s.teacher_id = $${params.length}`);
   }
@@ -30,7 +30,7 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
     params.push(centerId);
   }
   if (teacherId) {
-    query += ` AND d.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1})`;
+    query += ` AND d.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
     params.push(teacherId);
   }
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
@@ -57,7 +57,7 @@ const updatePaid = (id: number, amount_paid: number, balance: number, remarks: a
     params.push(centerId);
   }
   if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1})`;
+    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
     params.push(teacherId);
   }
   query += ' RETURNING *';
@@ -72,7 +72,7 @@ const findByStudent = (studentId: number, centerId?: number, teacherId?: number)
     params.push(centerId);
   }
   if (teacherId) {
-    query += ` AND d.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1})`;
+    query += ` AND d.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
     params.push(teacherId);
   }
   query += ' ORDER BY d.debt_date DESC';
@@ -87,7 +87,7 @@ const remove = (id: number, centerId?: number, teacherId?: number) => {
     params.push(centerId);
   }
   if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1})`;
+    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
     params.push(teacherId);
   }
   query += ' RETURNING *';
@@ -95,7 +95,7 @@ const remove = (id: number, centerId?: number, teacherId?: number) => {
 };
 
 const findActiveStudents = (center_id?: string, teacherId?: number) => {
-  let q = 'SELECT student_id, first_name, last_name, enrollment_number, center_id FROM students WHERE status = $1';
+  let q = 'SELECT student_id, first_name, last_name, enrollment_number, center_id FROM students WHERE status = $1 AND deleted_at IS NULL';
   const params: any[] = ['Active'];
   if (center_id) {
     q += ' AND center_id = $2';
@@ -118,6 +118,7 @@ const findPaymentsForStudentInRange = (studentId: number, start: Date, end: Date
         AND payment_date >= $2
         AND payment_date <= $3
         AND payment_status = 'Completed'
+        AND deleted_at IS NULL
       ORDER BY payment_date ASC
     `,
       [studentId, start, end]
@@ -138,7 +139,7 @@ const findOpenDebtsForStudent = (studentId: number) =>
     .then((r: any) => r.rows);
 
 const getStudentCenter = (studentId: number) =>
-  pool.query('SELECT center_id FROM students WHERE student_id = $1', [studentId]).then((r: any) => r.rows[0]?.center_id);
+  pool.query('SELECT center_id FROM students WHERE student_id = $1 AND deleted_at IS NULL', [studentId]).then((r: any) => r.rows[0]?.center_id);
 
 const paymentMonthlySummary = (studentId: number) =>
   pool
@@ -150,7 +151,7 @@ const paymentMonthlySummary = (studentId: number) =>
         SUM(amount) as total_paid,
         COUNT(*) as payment_count
       FROM payments
-      WHERE student_id = $1 AND payment_status = 'Completed'
+      WHERE student_id = $1 AND payment_status = 'Completed' AND deleted_at IS NULL
       GROUP BY EXTRACT(YEAR FROM payment_date), EXTRACT(MONTH FROM payment_date)
       ORDER BY year DESC, month DESC
     `,

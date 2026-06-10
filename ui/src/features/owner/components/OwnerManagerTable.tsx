@@ -1,6 +1,6 @@
 // Source file for the components area in the owner feature.
 
-import { BarChart3, KeyRound, Loader2, Pencil, Trash2 } from 'lucide-react';
+import { BarChart3, KeyRound, Loader2, Pencil, ShieldX, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,7 +19,9 @@ interface OwnerManagerTableProps {
   isScopedAndMissingCenter: boolean;
   onEdit: (item: any) => void;
   onDelete: (id: number) => void;
+  onHardDelete: (id: number) => void;
   onResetPassword: (item: any) => void;
+  canHardDelete: boolean;
 }
 
 // Renders status badge.
@@ -58,7 +60,9 @@ export const OwnerManagerTable = ({
   isScopedAndMissingCenter,
   onEdit,
   onDelete,
+  onHardDelete,
   onResetPassword,
+  canHardDelete,
 }: OwnerManagerTableProps) => {
   const { t } = useLanguage();
 
@@ -138,6 +142,17 @@ export const OwnerManagerTable = ({
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
+                          {canHardDelete && (activeTab === 'teachers' || activeTab === 'students') && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => onHardDelete(Number(rowId))}
+                              className="text-red-700 hover:bg-red-600/10 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
+                              title={t('Hard delete')}
+                            >
+                              <ShieldX className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

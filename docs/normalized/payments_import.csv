@@ -1,8 +1,1315 @@
 enrollment_number,payment_date,amount,currency,payment_method,transaction_reference,receipt_number,payment_status,payment_type,notes
-STU-00001,2026-06-01,650000,UZS,Cash,,RCPT-N-0001,Completed,Tuition,June tuition
-STU-00002,2026-06-01,650000,UZS,Credit Card,TERM-N-0002,RCPT-N-0002,Completed,Tuition,June tuition
-STU-00003,2026-06-02,650000,UZS,Bank Transfer,BANK-N-0003,RCPT-N-0003,Pending,Tuition,Awaiting confirmation
-STU-00004,2026-06-02,650000,UZS,Cash,,RCPT-N-0004,Completed,Tuition,June tuition
-STU-00005,2026-06-03,650000,UZS,Cash,,RCPT-N-0005,Completed,Tuition,June tuition
-STU-00006,2026-06-03,650000,UZS,Credit Card,TERM-N-0006,RCPT-N-0006,Completed,Tuition,June tuition
-STU-00007,2026-06-04,650000,UZS,Cash,,RCPT-N-0007,Pending,Tuition,Partial follow-up needed
+STU-00001,2026-06-01,650000,UZS,Cash,,RCPT-N-00001,Completed,Tuition,June tuition
+STU-00002,2026-06-02,650000,UZS,Credit Card,TERM-N-00002,RCPT-N-00002,Completed,Tuition,June tuition
+STU-00003,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00003,RCPT-N-00003,Completed,Tuition,June tuition
+STU-00004,2026-06-04,650000,UZS,Cash,,RCPT-N-00004,Completed,Tuition,June tuition
+STU-00005,2026-06-05,650000,UZS,Credit Card,TERM-N-00005,RCPT-N-00005,Completed,Tuition,June tuition
+STU-00006,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00006,RCPT-N-00006,Completed,Tuition,June tuition
+STU-00007,2026-06-07,650000,UZS,Cash,,RCPT-N-00007,Completed,Tuition,June tuition
+STU-00008,2026-06-08,650000,UZS,Credit Card,TERM-N-00008,RCPT-N-00008,Completed,Tuition,June tuition
+STU-00009,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00009,RCPT-N-00009,Completed,Tuition,June tuition
+STU-00010,2026-06-10,650000,UZS,Cash,,RCPT-N-00010,Completed,Tuition,June tuition
+STU-00011,2026-06-11,650000,UZS,Credit Card,TERM-N-00011,RCPT-N-00011,Completed,Tuition,June tuition
+STU-00012,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00012,RCPT-N-00012,Completed,Tuition,June tuition
+STU-00013,2026-06-13,650000,UZS,Cash,,RCPT-N-00013,Completed,Tuition,June tuition
+STU-00014,2026-06-14,650000,UZS,Credit Card,TERM-N-00014,RCPT-N-00014,Completed,Tuition,June tuition
+STU-00015,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00015,RCPT-N-00015,Completed,Tuition,June tuition
+STU-00016,2026-06-16,650000,UZS,Cash,,RCPT-N-00016,Completed,Tuition,June tuition
+STU-00017,2026-06-17,650000,UZS,Credit Card,TERM-N-00017,RCPT-N-00017,Completed,Tuition,June tuition
+STU-00018,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00018,RCPT-N-00018,Completed,Tuition,June tuition
+STU-00019,2026-06-19,650000,UZS,Cash,,RCPT-N-00019,Completed,Tuition,June tuition
+STU-00020,2026-06-20,650000,UZS,Credit Card,TERM-N-00020,RCPT-N-00020,Completed,Tuition,June tuition
+STU-00021,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00021,RCPT-N-00021,Completed,Tuition,June tuition
+STU-00022,2026-06-22,650000,UZS,Cash,,RCPT-N-00022,Completed,Tuition,June tuition
+STU-00023,2026-06-23,650000,UZS,Credit Card,TERM-N-00023,RCPT-N-00023,Completed,Tuition,June tuition
+STU-00024,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00024,RCPT-N-00024,Completed,Tuition,June tuition
+STU-00025,2026-06-25,650000,UZS,Cash,,RCPT-N-00025,Completed,Tuition,June tuition
+STU-00026,2026-06-26,650000,UZS,Credit Card,TERM-N-00026,RCPT-N-00026,Completed,Tuition,June tuition
+STU-00027,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00027,RCPT-N-00027,Completed,Tuition,June tuition
+STU-00028,2026-06-28,650000,UZS,Cash,,RCPT-N-00028,Completed,Tuition,June tuition
+STU-00029,2026-06-29,650000,UZS,Credit Card,TERM-N-00029,RCPT-N-00029,Completed,Tuition,June tuition
+STU-00030,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00030,RCPT-N-00030,Completed,Tuition,June tuition
+STU-00031,2026-06-01,650000,UZS,Cash,,RCPT-N-00031,Completed,Tuition,June tuition
+STU-00032,2026-06-02,650000,UZS,Credit Card,TERM-N-00032,RCPT-N-00032,Completed,Tuition,June tuition
+STU-00033,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00033,RCPT-N-00033,Completed,Tuition,June tuition
+STU-00034,2026-06-04,650000,UZS,Cash,,RCPT-N-00034,Completed,Tuition,June tuition
+STU-00035,2026-06-05,650000,UZS,Credit Card,TERM-N-00035,RCPT-N-00035,Completed,Tuition,June tuition
+STU-00036,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00036,RCPT-N-00036,Completed,Tuition,June tuition
+STU-00037,2026-06-07,650000,UZS,Cash,,RCPT-N-00037,Completed,Tuition,June tuition
+STU-00038,2026-06-08,650000,UZS,Credit Card,TERM-N-00038,RCPT-N-00038,Completed,Tuition,June tuition
+STU-00039,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00039,RCPT-N-00039,Completed,Tuition,June tuition
+STU-00040,2026-06-10,650000,UZS,Cash,,RCPT-N-00040,Completed,Tuition,June tuition
+STU-00041,2026-06-11,650000,UZS,Credit Card,TERM-N-00041,RCPT-N-00041,Completed,Tuition,June tuition
+STU-00042,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00042,RCPT-N-00042,Completed,Tuition,June tuition
+STU-00043,2026-06-13,650000,UZS,Cash,,RCPT-N-00043,Completed,Tuition,June tuition
+STU-00044,2026-06-14,650000,UZS,Credit Card,TERM-N-00044,RCPT-N-00044,Completed,Tuition,June tuition
+STU-00045,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00045,RCPT-N-00045,Completed,Tuition,June tuition
+STU-00046,2026-06-16,650000,UZS,Cash,,RCPT-N-00046,Completed,Tuition,June tuition
+STU-00047,2026-06-17,650000,UZS,Credit Card,TERM-N-00047,RCPT-N-00047,Completed,Tuition,June tuition
+STU-00048,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00048,RCPT-N-00048,Completed,Tuition,June tuition
+STU-00049,2026-06-19,650000,UZS,Cash,,RCPT-N-00049,Completed,Tuition,June tuition
+STU-00050,2026-06-20,650000,UZS,Credit Card,TERM-N-00050,RCPT-N-00050,Completed,Tuition,June tuition
+STU-00051,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00051,RCPT-N-00051,Completed,Tuition,June tuition
+STU-00052,2026-06-22,650000,UZS,Cash,,RCPT-N-00052,Completed,Tuition,June tuition
+STU-00053,2026-06-23,650000,UZS,Credit Card,TERM-N-00053,RCPT-N-00053,Completed,Tuition,June tuition
+STU-00054,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00054,RCPT-N-00054,Completed,Tuition,June tuition
+STU-00055,2026-06-25,650000,UZS,Cash,,RCPT-N-00055,Completed,Tuition,June tuition
+STU-00056,2026-06-26,650000,UZS,Credit Card,TERM-N-00056,RCPT-N-00056,Completed,Tuition,June tuition
+STU-00057,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00057,RCPT-N-00057,Completed,Tuition,June tuition
+STU-00058,2026-06-28,650000,UZS,Cash,,RCPT-N-00058,Completed,Tuition,June tuition
+STU-00059,2026-06-29,650000,UZS,Credit Card,TERM-N-00059,RCPT-N-00059,Completed,Tuition,June tuition
+STU-00060,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00060,RCPT-N-00060,Completed,Tuition,June tuition
+STU-00061,2026-06-01,650000,UZS,Cash,,RCPT-N-00061,Completed,Tuition,June tuition
+STU-00062,2026-06-02,650000,UZS,Credit Card,TERM-N-00062,RCPT-N-00062,Completed,Tuition,June tuition
+STU-00063,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00063,RCPT-N-00063,Completed,Tuition,June tuition
+STU-00064,2026-06-04,650000,UZS,Cash,,RCPT-N-00064,Completed,Tuition,June tuition
+STU-00065,2026-06-05,650000,UZS,Credit Card,TERM-N-00065,RCPT-N-00065,Completed,Tuition,June tuition
+STU-00066,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00066,RCPT-N-00066,Completed,Tuition,June tuition
+STU-00067,2026-06-07,650000,UZS,Cash,,RCPT-N-00067,Completed,Tuition,June tuition
+STU-00068,2026-06-08,650000,UZS,Credit Card,TERM-N-00068,RCPT-N-00068,Completed,Tuition,June tuition
+STU-00069,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00069,RCPT-N-00069,Completed,Tuition,June tuition
+STU-00070,2026-06-10,650000,UZS,Cash,,RCPT-N-00070,Completed,Tuition,June tuition
+STU-00071,2026-06-11,650000,UZS,Credit Card,TERM-N-00071,RCPT-N-00071,Completed,Tuition,June tuition
+STU-00072,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00072,RCPT-N-00072,Completed,Tuition,June tuition
+STU-00073,2026-06-13,650000,UZS,Cash,,RCPT-N-00073,Completed,Tuition,June tuition
+STU-00074,2026-06-14,650000,UZS,Credit Card,TERM-N-00074,RCPT-N-00074,Completed,Tuition,June tuition
+STU-00075,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00075,RCPT-N-00075,Completed,Tuition,June tuition
+STU-00076,2026-06-16,650000,UZS,Cash,,RCPT-N-00076,Completed,Tuition,June tuition
+STU-00077,2026-06-17,650000,UZS,Credit Card,TERM-N-00077,RCPT-N-00077,Completed,Tuition,June tuition
+STU-00078,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00078,RCPT-N-00078,Completed,Tuition,June tuition
+STU-00079,2026-06-19,650000,UZS,Cash,,RCPT-N-00079,Completed,Tuition,June tuition
+STU-00080,2026-06-20,650000,UZS,Credit Card,TERM-N-00080,RCPT-N-00080,Completed,Tuition,June tuition
+STU-00081,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00081,RCPT-N-00081,Completed,Tuition,June tuition
+STU-00082,2026-06-22,650000,UZS,Cash,,RCPT-N-00082,Completed,Tuition,June tuition
+STU-00083,2026-06-23,650000,UZS,Credit Card,TERM-N-00083,RCPT-N-00083,Completed,Tuition,June tuition
+STU-00084,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00084,RCPT-N-00084,Completed,Tuition,June tuition
+STU-00085,2026-06-25,650000,UZS,Cash,,RCPT-N-00085,Completed,Tuition,June tuition
+STU-00086,2026-06-26,650000,UZS,Credit Card,TERM-N-00086,RCPT-N-00086,Completed,Tuition,June tuition
+STU-00087,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00087,RCPT-N-00087,Completed,Tuition,June tuition
+STU-00088,2026-06-28,650000,UZS,Cash,,RCPT-N-00088,Completed,Tuition,June tuition
+STU-00089,2026-06-29,650000,UZS,Credit Card,TERM-N-00089,RCPT-N-00089,Completed,Tuition,June tuition
+STU-00090,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00090,RCPT-N-00090,Completed,Tuition,June tuition
+STU-00091,2026-06-01,650000,UZS,Cash,,RCPT-N-00091,Completed,Tuition,June tuition
+STU-00092,2026-06-02,650000,UZS,Credit Card,TERM-N-00092,RCPT-N-00092,Completed,Tuition,June tuition
+STU-00093,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00093,RCPT-N-00093,Completed,Tuition,June tuition
+STU-00094,2026-06-04,650000,UZS,Cash,,RCPT-N-00094,Completed,Tuition,June tuition
+STU-00095,2026-06-05,650000,UZS,Credit Card,TERM-N-00095,RCPT-N-00095,Completed,Tuition,June tuition
+STU-00096,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00096,RCPT-N-00096,Completed,Tuition,June tuition
+STU-00097,2026-06-07,650000,UZS,Cash,,RCPT-N-00097,Completed,Tuition,June tuition
+STU-00098,2026-06-08,650000,UZS,Credit Card,TERM-N-00098,RCPT-N-00098,Completed,Tuition,June tuition
+STU-00099,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00099,RCPT-N-00099,Completed,Tuition,June tuition
+STU-00100,2026-06-10,650000,UZS,Cash,,RCPT-N-00100,Completed,Tuition,June tuition
+STU-00101,2026-06-11,650000,UZS,Credit Card,TERM-N-00101,RCPT-N-00101,Completed,Tuition,June tuition
+STU-00102,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00102,RCPT-N-00102,Completed,Tuition,June tuition
+STU-00103,2026-06-13,650000,UZS,Cash,,RCPT-N-00103,Completed,Tuition,June tuition
+STU-00104,2026-06-14,650000,UZS,Credit Card,TERM-N-00104,RCPT-N-00104,Completed,Tuition,June tuition
+STU-00105,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00105,RCPT-N-00105,Completed,Tuition,June tuition
+STU-00106,2026-06-16,650000,UZS,Cash,,RCPT-N-00106,Completed,Tuition,June tuition
+STU-00107,2026-06-17,650000,UZS,Credit Card,TERM-N-00107,RCPT-N-00107,Completed,Tuition,June tuition
+STU-00108,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00108,RCPT-N-00108,Completed,Tuition,June tuition
+STU-00109,2026-06-19,650000,UZS,Cash,,RCPT-N-00109,Completed,Tuition,June tuition
+STU-00110,2026-06-20,650000,UZS,Credit Card,TERM-N-00110,RCPT-N-00110,Completed,Tuition,June tuition
+STU-00111,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00111,RCPT-N-00111,Completed,Tuition,June tuition
+STU-00112,2026-06-22,650000,UZS,Cash,,RCPT-N-00112,Completed,Tuition,June tuition
+STU-00113,2026-06-23,650000,UZS,Credit Card,TERM-N-00113,RCPT-N-00113,Completed,Tuition,June tuition
+STU-00114,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00114,RCPT-N-00114,Completed,Tuition,June tuition
+STU-00115,2026-06-25,650000,UZS,Cash,,RCPT-N-00115,Completed,Tuition,June tuition
+STU-00116,2026-06-26,650000,UZS,Credit Card,TERM-N-00116,RCPT-N-00116,Completed,Tuition,June tuition
+STU-00117,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00117,RCPT-N-00117,Completed,Tuition,June tuition
+STU-00118,2026-06-28,650000,UZS,Cash,,RCPT-N-00118,Completed,Tuition,June tuition
+STU-00119,2026-06-29,650000,UZS,Credit Card,TERM-N-00119,RCPT-N-00119,Completed,Tuition,June tuition
+STU-00120,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00120,RCPT-N-00120,Completed,Tuition,June tuition
+STU-00121,2026-06-01,650000,UZS,Cash,,RCPT-N-00121,Completed,Tuition,June tuition
+STU-00122,2026-06-02,650000,UZS,Credit Card,TERM-N-00122,RCPT-N-00122,Completed,Tuition,June tuition
+STU-00123,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00123,RCPT-N-00123,Completed,Tuition,June tuition
+STU-00124,2026-06-04,650000,UZS,Cash,,RCPT-N-00124,Completed,Tuition,June tuition
+STU-00125,2026-06-05,650000,UZS,Credit Card,TERM-N-00125,RCPT-N-00125,Completed,Tuition,June tuition
+STU-00126,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00126,RCPT-N-00126,Completed,Tuition,June tuition
+STU-00127,2026-06-07,650000,UZS,Cash,,RCPT-N-00127,Completed,Tuition,June tuition
+STU-00128,2026-06-08,650000,UZS,Credit Card,TERM-N-00128,RCPT-N-00128,Completed,Tuition,June tuition
+STU-00129,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00129,RCPT-N-00129,Completed,Tuition,June tuition
+STU-00130,2026-06-10,650000,UZS,Cash,,RCPT-N-00130,Completed,Tuition,June tuition
+STU-00131,2026-06-11,650000,UZS,Credit Card,TERM-N-00131,RCPT-N-00131,Completed,Tuition,June tuition
+STU-00132,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00132,RCPT-N-00132,Completed,Tuition,June tuition
+STU-00133,2026-06-13,650000,UZS,Cash,,RCPT-N-00133,Completed,Tuition,June tuition
+STU-00134,2026-06-14,650000,UZS,Credit Card,TERM-N-00134,RCPT-N-00134,Completed,Tuition,June tuition
+STU-00135,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00135,RCPT-N-00135,Completed,Tuition,June tuition
+STU-00136,2026-06-16,650000,UZS,Cash,,RCPT-N-00136,Completed,Tuition,June tuition
+STU-00137,2026-06-17,650000,UZS,Credit Card,TERM-N-00137,RCPT-N-00137,Completed,Tuition,June tuition
+STU-00138,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00138,RCPT-N-00138,Completed,Tuition,June tuition
+STU-00139,2026-06-19,650000,UZS,Cash,,RCPT-N-00139,Completed,Tuition,June tuition
+STU-00140,2026-06-20,650000,UZS,Credit Card,TERM-N-00140,RCPT-N-00140,Completed,Tuition,June tuition
+STU-00141,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00141,RCPT-N-00141,Completed,Tuition,June tuition
+STU-00142,2026-06-22,650000,UZS,Cash,,RCPT-N-00142,Completed,Tuition,June tuition
+STU-00143,2026-06-23,650000,UZS,Credit Card,TERM-N-00143,RCPT-N-00143,Completed,Tuition,June tuition
+STU-00144,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00144,RCPT-N-00144,Completed,Tuition,June tuition
+STU-00145,2026-06-25,650000,UZS,Cash,,RCPT-N-00145,Completed,Tuition,June tuition
+STU-00146,2026-06-26,650000,UZS,Credit Card,TERM-N-00146,RCPT-N-00146,Completed,Tuition,June tuition
+STU-00147,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00147,RCPT-N-00147,Completed,Tuition,June tuition
+STU-00148,2026-06-28,650000,UZS,Cash,,RCPT-N-00148,Completed,Tuition,June tuition
+STU-00149,2026-06-29,650000,UZS,Credit Card,TERM-N-00149,RCPT-N-00149,Completed,Tuition,June tuition
+STU-00150,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00150,RCPT-N-00150,Completed,Tuition,June tuition
+STU-00151,2026-06-01,650000,UZS,Cash,,RCPT-N-00151,Completed,Tuition,June tuition
+STU-00152,2026-06-02,650000,UZS,Credit Card,TERM-N-00152,RCPT-N-00152,Completed,Tuition,June tuition
+STU-00153,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00153,RCPT-N-00153,Completed,Tuition,June tuition
+STU-00154,2026-06-04,650000,UZS,Cash,,RCPT-N-00154,Completed,Tuition,June tuition
+STU-00155,2026-06-05,650000,UZS,Credit Card,TERM-N-00155,RCPT-N-00155,Completed,Tuition,June tuition
+STU-00156,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00156,RCPT-N-00156,Completed,Tuition,June tuition
+STU-00157,2026-06-07,650000,UZS,Cash,,RCPT-N-00157,Completed,Tuition,June tuition
+STU-00158,2026-06-08,650000,UZS,Credit Card,TERM-N-00158,RCPT-N-00158,Completed,Tuition,June tuition
+STU-00159,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00159,RCPT-N-00159,Completed,Tuition,June tuition
+STU-00160,2026-06-10,650000,UZS,Cash,,RCPT-N-00160,Completed,Tuition,June tuition
+STU-00161,2026-06-11,650000,UZS,Credit Card,TERM-N-00161,RCPT-N-00161,Completed,Tuition,June tuition
+STU-00162,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00162,RCPT-N-00162,Completed,Tuition,June tuition
+STU-00163,2026-06-13,650000,UZS,Cash,,RCPT-N-00163,Completed,Tuition,June tuition
+STU-00164,2026-06-14,650000,UZS,Credit Card,TERM-N-00164,RCPT-N-00164,Completed,Tuition,June tuition
+STU-00165,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00165,RCPT-N-00165,Completed,Tuition,June tuition
+STU-00166,2026-06-16,650000,UZS,Cash,,RCPT-N-00166,Completed,Tuition,June tuition
+STU-00167,2026-06-17,650000,UZS,Credit Card,TERM-N-00167,RCPT-N-00167,Completed,Tuition,June tuition
+STU-00168,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00168,RCPT-N-00168,Completed,Tuition,June tuition
+STU-00169,2026-06-19,650000,UZS,Cash,,RCPT-N-00169,Completed,Tuition,June tuition
+STU-00170,2026-06-20,650000,UZS,Credit Card,TERM-N-00170,RCPT-N-00170,Completed,Tuition,June tuition
+STU-00171,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00171,RCPT-N-00171,Completed,Tuition,June tuition
+STU-00172,2026-06-22,650000,UZS,Cash,,RCPT-N-00172,Completed,Tuition,June tuition
+STU-00173,2026-06-23,650000,UZS,Credit Card,TERM-N-00173,RCPT-N-00173,Completed,Tuition,June tuition
+STU-00174,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00174,RCPT-N-00174,Completed,Tuition,June tuition
+STU-00175,2026-06-25,650000,UZS,Cash,,RCPT-N-00175,Completed,Tuition,June tuition
+STU-00176,2026-06-26,650000,UZS,Credit Card,TERM-N-00176,RCPT-N-00176,Completed,Tuition,June tuition
+STU-00177,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00177,RCPT-N-00177,Completed,Tuition,June tuition
+STU-00178,2026-06-28,650000,UZS,Cash,,RCPT-N-00178,Completed,Tuition,June tuition
+STU-00179,2026-06-29,650000,UZS,Credit Card,TERM-N-00179,RCPT-N-00179,Completed,Tuition,June tuition
+STU-00180,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00180,RCPT-N-00180,Completed,Tuition,June tuition
+STU-00181,2026-06-01,650000,UZS,Cash,,RCPT-N-00181,Completed,Tuition,June tuition
+STU-00182,2026-06-02,650000,UZS,Credit Card,TERM-N-00182,RCPT-N-00182,Completed,Tuition,June tuition
+STU-00183,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00183,RCPT-N-00183,Completed,Tuition,June tuition
+STU-00184,2026-06-04,650000,UZS,Cash,,RCPT-N-00184,Completed,Tuition,June tuition
+STU-00185,2026-06-05,650000,UZS,Credit Card,TERM-N-00185,RCPT-N-00185,Completed,Tuition,June tuition
+STU-00186,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00186,RCPT-N-00186,Completed,Tuition,June tuition
+STU-00187,2026-06-07,650000,UZS,Cash,,RCPT-N-00187,Completed,Tuition,June tuition
+STU-00188,2026-06-08,650000,UZS,Credit Card,TERM-N-00188,RCPT-N-00188,Completed,Tuition,June tuition
+STU-00189,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00189,RCPT-N-00189,Completed,Tuition,June tuition
+STU-00190,2026-06-10,650000,UZS,Cash,,RCPT-N-00190,Completed,Tuition,June tuition
+STU-00191,2026-06-11,650000,UZS,Credit Card,TERM-N-00191,RCPT-N-00191,Completed,Tuition,June tuition
+STU-00192,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00192,RCPT-N-00192,Completed,Tuition,June tuition
+STU-00193,2026-06-13,650000,UZS,Cash,,RCPT-N-00193,Completed,Tuition,June tuition
+STU-00194,2026-06-14,650000,UZS,Credit Card,TERM-N-00194,RCPT-N-00194,Completed,Tuition,June tuition
+STU-00195,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00195,RCPT-N-00195,Completed,Tuition,June tuition
+STU-00196,2026-06-16,650000,UZS,Cash,,RCPT-N-00196,Completed,Tuition,June tuition
+STU-00197,2026-06-17,650000,UZS,Credit Card,TERM-N-00197,RCPT-N-00197,Completed,Tuition,June tuition
+STU-00198,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00198,RCPT-N-00198,Completed,Tuition,June tuition
+STU-00199,2026-06-19,650000,UZS,Cash,,RCPT-N-00199,Completed,Tuition,June tuition
+STU-00200,2026-06-20,650000,UZS,Credit Card,TERM-N-00200,RCPT-N-00200,Completed,Tuition,June tuition
+STU-00201,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00201,RCPT-N-00201,Completed,Tuition,June tuition
+STU-00202,2026-06-22,650000,UZS,Cash,,RCPT-N-00202,Completed,Tuition,June tuition
+STU-00203,2026-06-23,650000,UZS,Credit Card,TERM-N-00203,RCPT-N-00203,Completed,Tuition,June tuition
+STU-00204,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00204,RCPT-N-00204,Completed,Tuition,June tuition
+STU-00205,2026-06-25,650000,UZS,Cash,,RCPT-N-00205,Completed,Tuition,June tuition
+STU-00206,2026-06-26,650000,UZS,Credit Card,TERM-N-00206,RCPT-N-00206,Completed,Tuition,June tuition
+STU-00207,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00207,RCPT-N-00207,Completed,Tuition,June tuition
+STU-00208,2026-06-28,650000,UZS,Cash,,RCPT-N-00208,Completed,Tuition,June tuition
+STU-00209,2026-06-29,650000,UZS,Credit Card,TERM-N-00209,RCPT-N-00209,Completed,Tuition,June tuition
+STU-00210,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00210,RCPT-N-00210,Completed,Tuition,June tuition
+STU-00211,2026-06-01,650000,UZS,Cash,,RCPT-N-00211,Completed,Tuition,June tuition
+STU-00212,2026-06-02,650000,UZS,Credit Card,TERM-N-00212,RCPT-N-00212,Completed,Tuition,June tuition
+STU-00213,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00213,RCPT-N-00213,Completed,Tuition,June tuition
+STU-00214,2026-06-04,650000,UZS,Cash,,RCPT-N-00214,Completed,Tuition,June tuition
+STU-00215,2026-06-05,650000,UZS,Credit Card,TERM-N-00215,RCPT-N-00215,Completed,Tuition,June tuition
+STU-00216,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00216,RCPT-N-00216,Completed,Tuition,June tuition
+STU-00217,2026-06-07,650000,UZS,Cash,,RCPT-N-00217,Completed,Tuition,June tuition
+STU-00218,2026-06-08,650000,UZS,Credit Card,TERM-N-00218,RCPT-N-00218,Completed,Tuition,June tuition
+STU-00219,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00219,RCPT-N-00219,Completed,Tuition,June tuition
+STU-00220,2026-06-10,650000,UZS,Cash,,RCPT-N-00220,Completed,Tuition,June tuition
+STU-00221,2026-06-11,650000,UZS,Credit Card,TERM-N-00221,RCPT-N-00221,Completed,Tuition,June tuition
+STU-00222,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00222,RCPT-N-00222,Completed,Tuition,June tuition
+STU-00223,2026-06-13,650000,UZS,Cash,,RCPT-N-00223,Completed,Tuition,June tuition
+STU-00224,2026-06-14,650000,UZS,Credit Card,TERM-N-00224,RCPT-N-00224,Completed,Tuition,June tuition
+STU-00225,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00225,RCPT-N-00225,Completed,Tuition,June tuition
+STU-00226,2026-06-16,650000,UZS,Cash,,RCPT-N-00226,Completed,Tuition,June tuition
+STU-00227,2026-06-17,650000,UZS,Credit Card,TERM-N-00227,RCPT-N-00227,Completed,Tuition,June tuition
+STU-00228,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00228,RCPT-N-00228,Completed,Tuition,June tuition
+STU-00229,2026-06-19,650000,UZS,Cash,,RCPT-N-00229,Completed,Tuition,June tuition
+STU-00230,2026-06-20,650000,UZS,Credit Card,TERM-N-00230,RCPT-N-00230,Completed,Tuition,June tuition
+STU-00231,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00231,RCPT-N-00231,Completed,Tuition,June tuition
+STU-00232,2026-06-22,650000,UZS,Cash,,RCPT-N-00232,Completed,Tuition,June tuition
+STU-00233,2026-06-23,650000,UZS,Credit Card,TERM-N-00233,RCPT-N-00233,Completed,Tuition,June tuition
+STU-00234,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00234,RCPT-N-00234,Completed,Tuition,June tuition
+STU-00235,2026-06-25,650000,UZS,Cash,,RCPT-N-00235,Completed,Tuition,June tuition
+STU-00236,2026-06-26,650000,UZS,Credit Card,TERM-N-00236,RCPT-N-00236,Completed,Tuition,June tuition
+STU-00237,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00237,RCPT-N-00237,Completed,Tuition,June tuition
+STU-00238,2026-06-28,650000,UZS,Cash,,RCPT-N-00238,Completed,Tuition,June tuition
+STU-00239,2026-06-29,650000,UZS,Credit Card,TERM-N-00239,RCPT-N-00239,Completed,Tuition,June tuition
+STU-00240,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00240,RCPT-N-00240,Completed,Tuition,June tuition
+STU-00241,2026-06-01,650000,UZS,Cash,,RCPT-N-00241,Completed,Tuition,June tuition
+STU-00242,2026-06-02,650000,UZS,Credit Card,TERM-N-00242,RCPT-N-00242,Completed,Tuition,June tuition
+STU-00243,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00243,RCPT-N-00243,Completed,Tuition,June tuition
+STU-00244,2026-06-04,650000,UZS,Cash,,RCPT-N-00244,Completed,Tuition,June tuition
+STU-00245,2026-06-05,650000,UZS,Credit Card,TERM-N-00245,RCPT-N-00245,Completed,Tuition,June tuition
+STU-00246,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00246,RCPT-N-00246,Completed,Tuition,June tuition
+STU-00247,2026-06-07,650000,UZS,Cash,,RCPT-N-00247,Completed,Tuition,June tuition
+STU-00248,2026-06-08,650000,UZS,Credit Card,TERM-N-00248,RCPT-N-00248,Completed,Tuition,June tuition
+STU-00249,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00249,RCPT-N-00249,Completed,Tuition,June tuition
+STU-00250,2026-06-10,650000,UZS,Cash,,RCPT-N-00250,Completed,Tuition,June tuition
+STU-00251,2026-06-11,650000,UZS,Credit Card,TERM-N-00251,RCPT-N-00251,Completed,Tuition,June tuition
+STU-00252,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00252,RCPT-N-00252,Completed,Tuition,June tuition
+STU-00253,2026-06-13,650000,UZS,Cash,,RCPT-N-00253,Completed,Tuition,June tuition
+STU-00254,2026-06-14,650000,UZS,Credit Card,TERM-N-00254,RCPT-N-00254,Completed,Tuition,June tuition
+STU-00255,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00255,RCPT-N-00255,Completed,Tuition,June tuition
+STU-00256,2026-06-16,650000,UZS,Cash,,RCPT-N-00256,Completed,Tuition,June tuition
+STU-00257,2026-06-17,650000,UZS,Credit Card,TERM-N-00257,RCPT-N-00257,Completed,Tuition,June tuition
+STU-00258,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00258,RCPT-N-00258,Completed,Tuition,June tuition
+STU-00259,2026-06-19,650000,UZS,Cash,,RCPT-N-00259,Completed,Tuition,June tuition
+STU-00260,2026-06-20,650000,UZS,Credit Card,TERM-N-00260,RCPT-N-00260,Completed,Tuition,June tuition
+STU-00261,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00261,RCPT-N-00261,Completed,Tuition,June tuition
+STU-00262,2026-06-22,650000,UZS,Cash,,RCPT-N-00262,Completed,Tuition,June tuition
+STU-00263,2026-06-23,650000,UZS,Credit Card,TERM-N-00263,RCPT-N-00263,Completed,Tuition,June tuition
+STU-00264,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00264,RCPT-N-00264,Completed,Tuition,June tuition
+STU-00265,2026-06-25,650000,UZS,Cash,,RCPT-N-00265,Completed,Tuition,June tuition
+STU-00266,2026-06-26,650000,UZS,Credit Card,TERM-N-00266,RCPT-N-00266,Completed,Tuition,June tuition
+STU-00267,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00267,RCPT-N-00267,Completed,Tuition,June tuition
+STU-00268,2026-06-28,650000,UZS,Cash,,RCPT-N-00268,Completed,Tuition,June tuition
+STU-00269,2026-06-29,650000,UZS,Credit Card,TERM-N-00269,RCPT-N-00269,Completed,Tuition,June tuition
+STU-00270,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00270,RCPT-N-00270,Completed,Tuition,June tuition
+STU-00271,2026-06-01,650000,UZS,Cash,,RCPT-N-00271,Completed,Tuition,June tuition
+STU-00272,2026-06-02,650000,UZS,Credit Card,TERM-N-00272,RCPT-N-00272,Completed,Tuition,June tuition
+STU-00273,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00273,RCPT-N-00273,Completed,Tuition,June tuition
+STU-00274,2026-06-04,650000,UZS,Cash,,RCPT-N-00274,Completed,Tuition,June tuition
+STU-00275,2026-06-05,650000,UZS,Credit Card,TERM-N-00275,RCPT-N-00275,Completed,Tuition,June tuition
+STU-00276,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00276,RCPT-N-00276,Completed,Tuition,June tuition
+STU-00277,2026-06-07,650000,UZS,Cash,,RCPT-N-00277,Completed,Tuition,June tuition
+STU-00278,2026-06-08,650000,UZS,Credit Card,TERM-N-00278,RCPT-N-00278,Completed,Tuition,June tuition
+STU-00279,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00279,RCPT-N-00279,Completed,Tuition,June tuition
+STU-00280,2026-06-10,650000,UZS,Cash,,RCPT-N-00280,Completed,Tuition,June tuition
+STU-00281,2026-06-11,650000,UZS,Credit Card,TERM-N-00281,RCPT-N-00281,Completed,Tuition,June tuition
+STU-00282,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00282,RCPT-N-00282,Completed,Tuition,June tuition
+STU-00283,2026-06-13,650000,UZS,Cash,,RCPT-N-00283,Completed,Tuition,June tuition
+STU-00284,2026-06-14,650000,UZS,Credit Card,TERM-N-00284,RCPT-N-00284,Completed,Tuition,June tuition
+STU-00285,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00285,RCPT-N-00285,Completed,Tuition,June tuition
+STU-00286,2026-06-16,650000,UZS,Cash,,RCPT-N-00286,Completed,Tuition,June tuition
+STU-00287,2026-06-17,650000,UZS,Credit Card,TERM-N-00287,RCPT-N-00287,Completed,Tuition,June tuition
+STU-00288,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00288,RCPT-N-00288,Completed,Tuition,June tuition
+STU-00289,2026-06-19,650000,UZS,Cash,,RCPT-N-00289,Completed,Tuition,June tuition
+STU-00290,2026-06-20,650000,UZS,Credit Card,TERM-N-00290,RCPT-N-00290,Completed,Tuition,June tuition
+STU-00291,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00291,RCPT-N-00291,Completed,Tuition,June tuition
+STU-00292,2026-06-22,650000,UZS,Cash,,RCPT-N-00292,Completed,Tuition,June tuition
+STU-00293,2026-06-23,650000,UZS,Credit Card,TERM-N-00293,RCPT-N-00293,Completed,Tuition,June tuition
+STU-00294,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00294,RCPT-N-00294,Completed,Tuition,June tuition
+STU-00295,2026-06-25,650000,UZS,Cash,,RCPT-N-00295,Completed,Tuition,June tuition
+STU-00296,2026-06-26,650000,UZS,Credit Card,TERM-N-00296,RCPT-N-00296,Completed,Tuition,June tuition
+STU-00297,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00297,RCPT-N-00297,Completed,Tuition,June tuition
+STU-00298,2026-06-28,650000,UZS,Cash,,RCPT-N-00298,Completed,Tuition,June tuition
+STU-00299,2026-06-29,650000,UZS,Credit Card,TERM-N-00299,RCPT-N-00299,Completed,Tuition,June tuition
+STU-00300,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00300,RCPT-N-00300,Completed,Tuition,June tuition
+STU-00301,2026-06-01,650000,UZS,Cash,,RCPT-N-00301,Completed,Tuition,June tuition
+STU-00302,2026-06-02,650000,UZS,Credit Card,TERM-N-00302,RCPT-N-00302,Completed,Tuition,June tuition
+STU-00303,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00303,RCPT-N-00303,Completed,Tuition,June tuition
+STU-00304,2026-06-04,650000,UZS,Cash,,RCPT-N-00304,Completed,Tuition,June tuition
+STU-00305,2026-06-05,650000,UZS,Credit Card,TERM-N-00305,RCPT-N-00305,Completed,Tuition,June tuition
+STU-00306,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00306,RCPT-N-00306,Completed,Tuition,June tuition
+STU-00307,2026-06-07,650000,UZS,Cash,,RCPT-N-00307,Completed,Tuition,June tuition
+STU-00308,2026-06-08,650000,UZS,Credit Card,TERM-N-00308,RCPT-N-00308,Completed,Tuition,June tuition
+STU-00309,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00309,RCPT-N-00309,Completed,Tuition,June tuition
+STU-00310,2026-06-10,650000,UZS,Cash,,RCPT-N-00310,Completed,Tuition,June tuition
+STU-00311,2026-06-11,650000,UZS,Credit Card,TERM-N-00311,RCPT-N-00311,Completed,Tuition,June tuition
+STU-00312,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00312,RCPT-N-00312,Completed,Tuition,June tuition
+STU-00313,2026-06-13,650000,UZS,Cash,,RCPT-N-00313,Completed,Tuition,June tuition
+STU-00314,2026-06-14,650000,UZS,Credit Card,TERM-N-00314,RCPT-N-00314,Completed,Tuition,June tuition
+STU-00315,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00315,RCPT-N-00315,Completed,Tuition,June tuition
+STU-00316,2026-06-16,650000,UZS,Cash,,RCPT-N-00316,Completed,Tuition,June tuition
+STU-00317,2026-06-17,650000,UZS,Credit Card,TERM-N-00317,RCPT-N-00317,Completed,Tuition,June tuition
+STU-00318,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00318,RCPT-N-00318,Completed,Tuition,June tuition
+STU-00319,2026-06-19,650000,UZS,Cash,,RCPT-N-00319,Completed,Tuition,June tuition
+STU-00320,2026-06-20,650000,UZS,Credit Card,TERM-N-00320,RCPT-N-00320,Completed,Tuition,June tuition
+STU-00321,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00321,RCPT-N-00321,Completed,Tuition,June tuition
+STU-00322,2026-06-22,650000,UZS,Cash,,RCPT-N-00322,Completed,Tuition,June tuition
+STU-00323,2026-06-23,650000,UZS,Credit Card,TERM-N-00323,RCPT-N-00323,Completed,Tuition,June tuition
+STU-00324,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00324,RCPT-N-00324,Completed,Tuition,June tuition
+STU-00325,2026-06-25,650000,UZS,Cash,,RCPT-N-00325,Completed,Tuition,June tuition
+STU-00326,2026-06-26,650000,UZS,Credit Card,TERM-N-00326,RCPT-N-00326,Completed,Tuition,June tuition
+STU-00327,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00327,RCPT-N-00327,Completed,Tuition,June tuition
+STU-00328,2026-06-28,650000,UZS,Cash,,RCPT-N-00328,Completed,Tuition,June tuition
+STU-00329,2026-06-29,650000,UZS,Credit Card,TERM-N-00329,RCPT-N-00329,Completed,Tuition,June tuition
+STU-00330,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00330,RCPT-N-00330,Completed,Tuition,June tuition
+STU-00331,2026-06-01,650000,UZS,Cash,,RCPT-N-00331,Completed,Tuition,June tuition
+STU-00332,2026-06-02,650000,UZS,Credit Card,TERM-N-00332,RCPT-N-00332,Completed,Tuition,June tuition
+STU-00333,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00333,RCPT-N-00333,Completed,Tuition,June tuition
+STU-00334,2026-06-04,650000,UZS,Cash,,RCPT-N-00334,Completed,Tuition,June tuition
+STU-00335,2026-06-05,650000,UZS,Credit Card,TERM-N-00335,RCPT-N-00335,Completed,Tuition,June tuition
+STU-00336,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00336,RCPT-N-00336,Completed,Tuition,June tuition
+STU-00337,2026-06-07,650000,UZS,Cash,,RCPT-N-00337,Completed,Tuition,June tuition
+STU-00338,2026-06-08,650000,UZS,Credit Card,TERM-N-00338,RCPT-N-00338,Completed,Tuition,June tuition
+STU-00339,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00339,RCPT-N-00339,Completed,Tuition,June tuition
+STU-00340,2026-06-10,650000,UZS,Cash,,RCPT-N-00340,Completed,Tuition,June tuition
+STU-00341,2026-06-11,650000,UZS,Credit Card,TERM-N-00341,RCPT-N-00341,Completed,Tuition,June tuition
+STU-00342,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00342,RCPT-N-00342,Completed,Tuition,June tuition
+STU-00343,2026-06-13,650000,UZS,Cash,,RCPT-N-00343,Completed,Tuition,June tuition
+STU-00344,2026-06-14,650000,UZS,Credit Card,TERM-N-00344,RCPT-N-00344,Completed,Tuition,June tuition
+STU-00345,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00345,RCPT-N-00345,Completed,Tuition,June tuition
+STU-00346,2026-06-16,650000,UZS,Cash,,RCPT-N-00346,Completed,Tuition,June tuition
+STU-00347,2026-06-17,650000,UZS,Credit Card,TERM-N-00347,RCPT-N-00347,Completed,Tuition,June tuition
+STU-00348,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00348,RCPT-N-00348,Completed,Tuition,June tuition
+STU-00349,2026-06-19,650000,UZS,Cash,,RCPT-N-00349,Completed,Tuition,June tuition
+STU-00350,2026-06-20,650000,UZS,Credit Card,TERM-N-00350,RCPT-N-00350,Completed,Tuition,June tuition
+STU-00351,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00351,RCPT-N-00351,Completed,Tuition,June tuition
+STU-00352,2026-06-22,650000,UZS,Cash,,RCPT-N-00352,Completed,Tuition,June tuition
+STU-00353,2026-06-23,650000,UZS,Credit Card,TERM-N-00353,RCPT-N-00353,Completed,Tuition,June tuition
+STU-00354,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00354,RCPT-N-00354,Completed,Tuition,June tuition
+STU-00355,2026-06-25,650000,UZS,Cash,,RCPT-N-00355,Completed,Tuition,June tuition
+STU-00356,2026-06-26,650000,UZS,Credit Card,TERM-N-00356,RCPT-N-00356,Completed,Tuition,June tuition
+STU-00357,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00357,RCPT-N-00357,Completed,Tuition,June tuition
+STU-00358,2026-06-28,650000,UZS,Cash,,RCPT-N-00358,Completed,Tuition,June tuition
+STU-00359,2026-06-29,650000,UZS,Credit Card,TERM-N-00359,RCPT-N-00359,Completed,Tuition,June tuition
+STU-00360,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00360,RCPT-N-00360,Completed,Tuition,June tuition
+STU-00361,2026-06-01,650000,UZS,Cash,,RCPT-N-00361,Completed,Tuition,June tuition
+STU-00362,2026-06-02,650000,UZS,Credit Card,TERM-N-00362,RCPT-N-00362,Completed,Tuition,June tuition
+STU-00363,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00363,RCPT-N-00363,Completed,Tuition,June tuition
+STU-00364,2026-06-04,650000,UZS,Cash,,RCPT-N-00364,Completed,Tuition,June tuition
+STU-00365,2026-06-05,650000,UZS,Credit Card,TERM-N-00365,RCPT-N-00365,Completed,Tuition,June tuition
+STU-00366,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00366,RCPT-N-00366,Completed,Tuition,June tuition
+STU-00367,2026-06-07,650000,UZS,Cash,,RCPT-N-00367,Completed,Tuition,June tuition
+STU-00368,2026-06-08,650000,UZS,Credit Card,TERM-N-00368,RCPT-N-00368,Completed,Tuition,June tuition
+STU-00369,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00369,RCPT-N-00369,Completed,Tuition,June tuition
+STU-00370,2026-06-10,650000,UZS,Cash,,RCPT-N-00370,Completed,Tuition,June tuition
+STU-00371,2026-06-11,650000,UZS,Credit Card,TERM-N-00371,RCPT-N-00371,Completed,Tuition,June tuition
+STU-00372,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00372,RCPT-N-00372,Completed,Tuition,June tuition
+STU-00373,2026-06-13,650000,UZS,Cash,,RCPT-N-00373,Completed,Tuition,June tuition
+STU-00374,2026-06-14,650000,UZS,Credit Card,TERM-N-00374,RCPT-N-00374,Completed,Tuition,June tuition
+STU-00375,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00375,RCPT-N-00375,Completed,Tuition,June tuition
+STU-00376,2026-06-16,650000,UZS,Cash,,RCPT-N-00376,Completed,Tuition,June tuition
+STU-00377,2026-06-17,650000,UZS,Credit Card,TERM-N-00377,RCPT-N-00377,Completed,Tuition,June tuition
+STU-00378,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00378,RCPT-N-00378,Completed,Tuition,June tuition
+STU-00379,2026-06-19,650000,UZS,Cash,,RCPT-N-00379,Completed,Tuition,June tuition
+STU-00380,2026-06-20,650000,UZS,Credit Card,TERM-N-00380,RCPT-N-00380,Completed,Tuition,June tuition
+STU-00381,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00381,RCPT-N-00381,Completed,Tuition,June tuition
+STU-00382,2026-06-22,650000,UZS,Cash,,RCPT-N-00382,Completed,Tuition,June tuition
+STU-00383,2026-06-23,650000,UZS,Credit Card,TERM-N-00383,RCPT-N-00383,Completed,Tuition,June tuition
+STU-00384,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00384,RCPT-N-00384,Completed,Tuition,June tuition
+STU-00385,2026-06-25,650000,UZS,Cash,,RCPT-N-00385,Completed,Tuition,June tuition
+STU-00386,2026-06-26,650000,UZS,Credit Card,TERM-N-00386,RCPT-N-00386,Completed,Tuition,June tuition
+STU-00387,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00387,RCPT-N-00387,Completed,Tuition,June tuition
+STU-00388,2026-06-28,650000,UZS,Cash,,RCPT-N-00388,Completed,Tuition,June tuition
+STU-00389,2026-06-29,650000,UZS,Credit Card,TERM-N-00389,RCPT-N-00389,Completed,Tuition,June tuition
+STU-00390,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00390,RCPT-N-00390,Completed,Tuition,June tuition
+STU-00391,2026-06-01,650000,UZS,Cash,,RCPT-N-00391,Completed,Tuition,June tuition
+STU-00392,2026-06-02,650000,UZS,Credit Card,TERM-N-00392,RCPT-N-00392,Completed,Tuition,June tuition
+STU-00393,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00393,RCPT-N-00393,Completed,Tuition,June tuition
+STU-00394,2026-06-04,650000,UZS,Cash,,RCPT-N-00394,Completed,Tuition,June tuition
+STU-00395,2026-06-05,650000,UZS,Credit Card,TERM-N-00395,RCPT-N-00395,Completed,Tuition,June tuition
+STU-00396,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00396,RCPT-N-00396,Completed,Tuition,June tuition
+STU-00397,2026-06-07,650000,UZS,Cash,,RCPT-N-00397,Completed,Tuition,June tuition
+STU-00398,2026-06-08,650000,UZS,Credit Card,TERM-N-00398,RCPT-N-00398,Completed,Tuition,June tuition
+STU-00399,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00399,RCPT-N-00399,Completed,Tuition,June tuition
+STU-00400,2026-06-10,650000,UZS,Cash,,RCPT-N-00400,Completed,Tuition,June tuition
+STU-00401,2026-06-11,650000,UZS,Credit Card,TERM-N-00401,RCPT-N-00401,Completed,Tuition,June tuition
+STU-00402,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00402,RCPT-N-00402,Completed,Tuition,June tuition
+STU-00403,2026-06-13,650000,UZS,Cash,,RCPT-N-00403,Completed,Tuition,June tuition
+STU-00404,2026-06-14,650000,UZS,Credit Card,TERM-N-00404,RCPT-N-00404,Completed,Tuition,June tuition
+STU-00405,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00405,RCPT-N-00405,Completed,Tuition,June tuition
+STU-00406,2026-06-16,650000,UZS,Cash,,RCPT-N-00406,Completed,Tuition,June tuition
+STU-00407,2026-06-17,650000,UZS,Credit Card,TERM-N-00407,RCPT-N-00407,Completed,Tuition,June tuition
+STU-00408,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00408,RCPT-N-00408,Completed,Tuition,June tuition
+STU-00409,2026-06-19,650000,UZS,Cash,,RCPT-N-00409,Completed,Tuition,June tuition
+STU-00410,2026-06-20,650000,UZS,Credit Card,TERM-N-00410,RCPT-N-00410,Completed,Tuition,June tuition
+STU-00411,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00411,RCPT-N-00411,Completed,Tuition,June tuition
+STU-00412,2026-06-22,650000,UZS,Cash,,RCPT-N-00412,Completed,Tuition,June tuition
+STU-00413,2026-06-23,650000,UZS,Credit Card,TERM-N-00413,RCPT-N-00413,Completed,Tuition,June tuition
+STU-00414,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00414,RCPT-N-00414,Completed,Tuition,June tuition
+STU-00415,2026-06-25,650000,UZS,Cash,,RCPT-N-00415,Completed,Tuition,June tuition
+STU-00416,2026-06-26,650000,UZS,Credit Card,TERM-N-00416,RCPT-N-00416,Completed,Tuition,June tuition
+STU-00417,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00417,RCPT-N-00417,Completed,Tuition,June tuition
+STU-00418,2026-06-28,650000,UZS,Cash,,RCPT-N-00418,Completed,Tuition,June tuition
+STU-00419,2026-06-29,650000,UZS,Credit Card,TERM-N-00419,RCPT-N-00419,Completed,Tuition,June tuition
+STU-00420,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00420,RCPT-N-00420,Completed,Tuition,June tuition
+STU-00421,2026-06-01,650000,UZS,Cash,,RCPT-N-00421,Completed,Tuition,June tuition
+STU-00422,2026-06-02,650000,UZS,Credit Card,TERM-N-00422,RCPT-N-00422,Completed,Tuition,June tuition
+STU-00423,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00423,RCPT-N-00423,Completed,Tuition,June tuition
+STU-00424,2026-06-04,650000,UZS,Cash,,RCPT-N-00424,Completed,Tuition,June tuition
+STU-00425,2026-06-05,650000,UZS,Credit Card,TERM-N-00425,RCPT-N-00425,Completed,Tuition,June tuition
+STU-00426,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00426,RCPT-N-00426,Completed,Tuition,June tuition
+STU-00427,2026-06-07,650000,UZS,Cash,,RCPT-N-00427,Completed,Tuition,June tuition
+STU-00428,2026-06-08,650000,UZS,Credit Card,TERM-N-00428,RCPT-N-00428,Completed,Tuition,June tuition
+STU-00429,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00429,RCPT-N-00429,Completed,Tuition,June tuition
+STU-00430,2026-06-10,650000,UZS,Cash,,RCPT-N-00430,Completed,Tuition,June tuition
+STU-00431,2026-06-11,650000,UZS,Credit Card,TERM-N-00431,RCPT-N-00431,Completed,Tuition,June tuition
+STU-00432,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00432,RCPT-N-00432,Completed,Tuition,June tuition
+STU-00433,2026-06-13,650000,UZS,Cash,,RCPT-N-00433,Completed,Tuition,June tuition
+STU-00434,2026-06-14,650000,UZS,Credit Card,TERM-N-00434,RCPT-N-00434,Completed,Tuition,June tuition
+STU-00435,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00435,RCPT-N-00435,Completed,Tuition,June tuition
+STU-00436,2026-06-16,650000,UZS,Cash,,RCPT-N-00436,Completed,Tuition,June tuition
+STU-00437,2026-06-17,650000,UZS,Credit Card,TERM-N-00437,RCPT-N-00437,Completed,Tuition,June tuition
+STU-00438,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00438,RCPT-N-00438,Completed,Tuition,June tuition
+STU-00439,2026-06-19,650000,UZS,Cash,,RCPT-N-00439,Completed,Tuition,June tuition
+STU-00440,2026-06-20,650000,UZS,Credit Card,TERM-N-00440,RCPT-N-00440,Completed,Tuition,June tuition
+STU-00441,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00441,RCPT-N-00441,Completed,Tuition,June tuition
+STU-00442,2026-06-22,650000,UZS,Cash,,RCPT-N-00442,Completed,Tuition,June tuition
+STU-00443,2026-06-23,650000,UZS,Credit Card,TERM-N-00443,RCPT-N-00443,Completed,Tuition,June tuition
+STU-00444,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00444,RCPT-N-00444,Completed,Tuition,June tuition
+STU-00445,2026-06-25,650000,UZS,Cash,,RCPT-N-00445,Completed,Tuition,June tuition
+STU-00446,2026-06-26,650000,UZS,Credit Card,TERM-N-00446,RCPT-N-00446,Completed,Tuition,June tuition
+STU-00447,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00447,RCPT-N-00447,Completed,Tuition,June tuition
+STU-00448,2026-06-28,650000,UZS,Cash,,RCPT-N-00448,Completed,Tuition,June tuition
+STU-00449,2026-06-29,650000,UZS,Credit Card,TERM-N-00449,RCPT-N-00449,Completed,Tuition,June tuition
+STU-00450,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00450,RCPT-N-00450,Completed,Tuition,June tuition
+STU-00451,2026-06-01,650000,UZS,Cash,,RCPT-N-00451,Completed,Tuition,June tuition
+STU-00452,2026-06-02,650000,UZS,Credit Card,TERM-N-00452,RCPT-N-00452,Completed,Tuition,June tuition
+STU-00453,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00453,RCPT-N-00453,Completed,Tuition,June tuition
+STU-00454,2026-06-04,650000,UZS,Cash,,RCPT-N-00454,Completed,Tuition,June tuition
+STU-00455,2026-06-05,650000,UZS,Credit Card,TERM-N-00455,RCPT-N-00455,Completed,Tuition,June tuition
+STU-00456,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00456,RCPT-N-00456,Completed,Tuition,June tuition
+STU-00457,2026-06-07,650000,UZS,Cash,,RCPT-N-00457,Completed,Tuition,June tuition
+STU-00458,2026-06-08,650000,UZS,Credit Card,TERM-N-00458,RCPT-N-00458,Completed,Tuition,June tuition
+STU-00459,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00459,RCPT-N-00459,Completed,Tuition,June tuition
+STU-00460,2026-06-10,650000,UZS,Cash,,RCPT-N-00460,Completed,Tuition,June tuition
+STU-00461,2026-06-11,650000,UZS,Credit Card,TERM-N-00461,RCPT-N-00461,Completed,Tuition,June tuition
+STU-00462,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00462,RCPT-N-00462,Completed,Tuition,June tuition
+STU-00463,2026-06-13,650000,UZS,Cash,,RCPT-N-00463,Completed,Tuition,June tuition
+STU-00464,2026-06-14,650000,UZS,Credit Card,TERM-N-00464,RCPT-N-00464,Completed,Tuition,June tuition
+STU-00465,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00465,RCPT-N-00465,Completed,Tuition,June tuition
+STU-00466,2026-06-16,650000,UZS,Cash,,RCPT-N-00466,Completed,Tuition,June tuition
+STU-00467,2026-06-17,650000,UZS,Credit Card,TERM-N-00467,RCPT-N-00467,Completed,Tuition,June tuition
+STU-00468,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00468,RCPT-N-00468,Completed,Tuition,June tuition
+STU-00469,2026-06-19,650000,UZS,Cash,,RCPT-N-00469,Completed,Tuition,June tuition
+STU-00470,2026-06-20,650000,UZS,Credit Card,TERM-N-00470,RCPT-N-00470,Completed,Tuition,June tuition
+STU-00471,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00471,RCPT-N-00471,Completed,Tuition,June tuition
+STU-00472,2026-06-22,650000,UZS,Cash,,RCPT-N-00472,Completed,Tuition,June tuition
+STU-00473,2026-06-23,650000,UZS,Credit Card,TERM-N-00473,RCPT-N-00473,Completed,Tuition,June tuition
+STU-00474,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00474,RCPT-N-00474,Completed,Tuition,June tuition
+STU-00475,2026-06-25,650000,UZS,Cash,,RCPT-N-00475,Completed,Tuition,June tuition
+STU-00476,2026-06-26,650000,UZS,Credit Card,TERM-N-00476,RCPT-N-00476,Completed,Tuition,June tuition
+STU-00477,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00477,RCPT-N-00477,Completed,Tuition,June tuition
+STU-00478,2026-06-28,650000,UZS,Cash,,RCPT-N-00478,Completed,Tuition,June tuition
+STU-00479,2026-06-29,650000,UZS,Credit Card,TERM-N-00479,RCPT-N-00479,Completed,Tuition,June tuition
+STU-00480,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00480,RCPT-N-00480,Completed,Tuition,June tuition
+STU-00481,2026-06-01,650000,UZS,Cash,,RCPT-N-00481,Completed,Tuition,June tuition
+STU-00482,2026-06-02,650000,UZS,Credit Card,TERM-N-00482,RCPT-N-00482,Completed,Tuition,June tuition
+STU-00483,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00483,RCPT-N-00483,Completed,Tuition,June tuition
+STU-00484,2026-06-04,650000,UZS,Cash,,RCPT-N-00484,Completed,Tuition,June tuition
+STU-00485,2026-06-05,650000,UZS,Credit Card,TERM-N-00485,RCPT-N-00485,Completed,Tuition,June tuition
+STU-00486,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00486,RCPT-N-00486,Completed,Tuition,June tuition
+STU-00487,2026-06-07,650000,UZS,Cash,,RCPT-N-00487,Completed,Tuition,June tuition
+STU-00488,2026-06-08,650000,UZS,Credit Card,TERM-N-00488,RCPT-N-00488,Completed,Tuition,June tuition
+STU-00489,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00489,RCPT-N-00489,Completed,Tuition,June tuition
+STU-00490,2026-06-10,650000,UZS,Cash,,RCPT-N-00490,Completed,Tuition,June tuition
+STU-00491,2026-06-11,650000,UZS,Credit Card,TERM-N-00491,RCPT-N-00491,Completed,Tuition,June tuition
+STU-00492,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00492,RCPT-N-00492,Completed,Tuition,June tuition
+STU-00493,2026-06-13,650000,UZS,Cash,,RCPT-N-00493,Completed,Tuition,June tuition
+STU-00494,2026-06-14,650000,UZS,Credit Card,TERM-N-00494,RCPT-N-00494,Completed,Tuition,June tuition
+STU-00495,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00495,RCPT-N-00495,Completed,Tuition,June tuition
+STU-00496,2026-06-16,650000,UZS,Cash,,RCPT-N-00496,Completed,Tuition,June tuition
+STU-00497,2026-06-17,650000,UZS,Credit Card,TERM-N-00497,RCPT-N-00497,Completed,Tuition,June tuition
+STU-00498,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00498,RCPT-N-00498,Completed,Tuition,June tuition
+STU-00499,2026-06-19,650000,UZS,Cash,,RCPT-N-00499,Completed,Tuition,June tuition
+STU-00500,2026-06-20,650000,UZS,Credit Card,TERM-N-00500,RCPT-N-00500,Completed,Tuition,June tuition
+STU-00501,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00501,RCPT-N-00501,Completed,Tuition,June tuition
+STU-00502,2026-06-22,650000,UZS,Cash,,RCPT-N-00502,Completed,Tuition,June tuition
+STU-00503,2026-06-23,650000,UZS,Credit Card,TERM-N-00503,RCPT-N-00503,Completed,Tuition,June tuition
+STU-00504,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00504,RCPT-N-00504,Completed,Tuition,June tuition
+STU-00505,2026-06-25,650000,UZS,Cash,,RCPT-N-00505,Completed,Tuition,June tuition
+STU-00506,2026-06-26,650000,UZS,Credit Card,TERM-N-00506,RCPT-N-00506,Completed,Tuition,June tuition
+STU-00507,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00507,RCPT-N-00507,Completed,Tuition,June tuition
+STU-00508,2026-06-28,650000,UZS,Cash,,RCPT-N-00508,Completed,Tuition,June tuition
+STU-00509,2026-06-29,650000,UZS,Credit Card,TERM-N-00509,RCPT-N-00509,Completed,Tuition,June tuition
+STU-00510,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00510,RCPT-N-00510,Completed,Tuition,June tuition
+STU-00511,2026-06-01,650000,UZS,Cash,,RCPT-N-00511,Completed,Tuition,June tuition
+STU-00512,2026-06-02,650000,UZS,Credit Card,TERM-N-00512,RCPT-N-00512,Completed,Tuition,June tuition
+STU-00513,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00513,RCPT-N-00513,Completed,Tuition,June tuition
+STU-00514,2026-06-04,650000,UZS,Cash,,RCPT-N-00514,Completed,Tuition,June tuition
+STU-00515,2026-06-05,650000,UZS,Credit Card,TERM-N-00515,RCPT-N-00515,Completed,Tuition,June tuition
+STU-00516,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00516,RCPT-N-00516,Completed,Tuition,June tuition
+STU-00517,2026-06-07,650000,UZS,Cash,,RCPT-N-00517,Completed,Tuition,June tuition
+STU-00518,2026-06-08,650000,UZS,Credit Card,TERM-N-00518,RCPT-N-00518,Completed,Tuition,June tuition
+STU-00519,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00519,RCPT-N-00519,Completed,Tuition,June tuition
+STU-00520,2026-06-10,650000,UZS,Cash,,RCPT-N-00520,Completed,Tuition,June tuition
+STU-00521,2026-06-11,650000,UZS,Credit Card,TERM-N-00521,RCPT-N-00521,Completed,Tuition,June tuition
+STU-00522,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00522,RCPT-N-00522,Completed,Tuition,June tuition
+STU-00523,2026-06-13,650000,UZS,Cash,,RCPT-N-00523,Completed,Tuition,June tuition
+STU-00524,2026-06-14,650000,UZS,Credit Card,TERM-N-00524,RCPT-N-00524,Completed,Tuition,June tuition
+STU-00525,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00525,RCPT-N-00525,Completed,Tuition,June tuition
+STU-00526,2026-06-16,650000,UZS,Cash,,RCPT-N-00526,Completed,Tuition,June tuition
+STU-00527,2026-06-17,650000,UZS,Credit Card,TERM-N-00527,RCPT-N-00527,Completed,Tuition,June tuition
+STU-00528,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00528,RCPT-N-00528,Completed,Tuition,June tuition
+STU-00529,2026-06-19,650000,UZS,Cash,,RCPT-N-00529,Completed,Tuition,June tuition
+STU-00530,2026-06-20,650000,UZS,Credit Card,TERM-N-00530,RCPT-N-00530,Completed,Tuition,June tuition
+STU-00531,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00531,RCPT-N-00531,Completed,Tuition,June tuition
+STU-00532,2026-06-22,650000,UZS,Cash,,RCPT-N-00532,Completed,Tuition,June tuition
+STU-00533,2026-06-23,650000,UZS,Credit Card,TERM-N-00533,RCPT-N-00533,Completed,Tuition,June tuition
+STU-00534,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00534,RCPT-N-00534,Completed,Tuition,June tuition
+STU-00535,2026-06-25,650000,UZS,Cash,,RCPT-N-00535,Completed,Tuition,June tuition
+STU-00536,2026-06-26,650000,UZS,Credit Card,TERM-N-00536,RCPT-N-00536,Completed,Tuition,June tuition
+STU-00537,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00537,RCPT-N-00537,Completed,Tuition,June tuition
+STU-00538,2026-06-28,650000,UZS,Cash,,RCPT-N-00538,Completed,Tuition,June tuition
+STU-00539,2026-06-29,650000,UZS,Credit Card,TERM-N-00539,RCPT-N-00539,Completed,Tuition,June tuition
+STU-00540,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00540,RCPT-N-00540,Completed,Tuition,June tuition
+STU-00541,2026-06-01,650000,UZS,Cash,,RCPT-N-00541,Completed,Tuition,June tuition
+STU-00542,2026-06-02,650000,UZS,Credit Card,TERM-N-00542,RCPT-N-00542,Completed,Tuition,June tuition
+STU-00543,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00543,RCPT-N-00543,Completed,Tuition,June tuition
+STU-00544,2026-06-04,650000,UZS,Cash,,RCPT-N-00544,Completed,Tuition,June tuition
+STU-00545,2026-06-05,650000,UZS,Credit Card,TERM-N-00545,RCPT-N-00545,Completed,Tuition,June tuition
+STU-00546,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00546,RCPT-N-00546,Completed,Tuition,June tuition
+STU-00547,2026-06-07,650000,UZS,Cash,,RCPT-N-00547,Completed,Tuition,June tuition
+STU-00548,2026-06-08,650000,UZS,Credit Card,TERM-N-00548,RCPT-N-00548,Completed,Tuition,June tuition
+STU-00549,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00549,RCPT-N-00549,Completed,Tuition,June tuition
+STU-00550,2026-06-10,650000,UZS,Cash,,RCPT-N-00550,Completed,Tuition,June tuition
+STU-00551,2026-06-11,650000,UZS,Credit Card,TERM-N-00551,RCPT-N-00551,Completed,Tuition,June tuition
+STU-00552,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00552,RCPT-N-00552,Completed,Tuition,June tuition
+STU-00553,2026-06-13,650000,UZS,Cash,,RCPT-N-00553,Completed,Tuition,June tuition
+STU-00554,2026-06-14,650000,UZS,Credit Card,TERM-N-00554,RCPT-N-00554,Completed,Tuition,June tuition
+STU-00555,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00555,RCPT-N-00555,Completed,Tuition,June tuition
+STU-00556,2026-06-16,650000,UZS,Cash,,RCPT-N-00556,Completed,Tuition,June tuition
+STU-00557,2026-06-17,650000,UZS,Credit Card,TERM-N-00557,RCPT-N-00557,Completed,Tuition,June tuition
+STU-00558,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00558,RCPT-N-00558,Completed,Tuition,June tuition
+STU-00559,2026-06-19,650000,UZS,Cash,,RCPT-N-00559,Completed,Tuition,June tuition
+STU-00560,2026-06-20,650000,UZS,Credit Card,TERM-N-00560,RCPT-N-00560,Completed,Tuition,June tuition
+STU-00561,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00561,RCPT-N-00561,Completed,Tuition,June tuition
+STU-00562,2026-06-22,650000,UZS,Cash,,RCPT-N-00562,Completed,Tuition,June tuition
+STU-00563,2026-06-23,650000,UZS,Credit Card,TERM-N-00563,RCPT-N-00563,Completed,Tuition,June tuition
+STU-00564,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00564,RCPT-N-00564,Completed,Tuition,June tuition
+STU-00565,2026-06-25,650000,UZS,Cash,,RCPT-N-00565,Completed,Tuition,June tuition
+STU-00566,2026-06-26,650000,UZS,Credit Card,TERM-N-00566,RCPT-N-00566,Completed,Tuition,June tuition
+STU-00567,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00567,RCPT-N-00567,Completed,Tuition,June tuition
+STU-00568,2026-06-28,650000,UZS,Cash,,RCPT-N-00568,Completed,Tuition,June tuition
+STU-00569,2026-06-29,650000,UZS,Credit Card,TERM-N-00569,RCPT-N-00569,Completed,Tuition,June tuition
+STU-00570,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00570,RCPT-N-00570,Completed,Tuition,June tuition
+STU-00571,2026-06-01,650000,UZS,Cash,,RCPT-N-00571,Completed,Tuition,June tuition
+STU-00572,2026-06-02,650000,UZS,Credit Card,TERM-N-00572,RCPT-N-00572,Completed,Tuition,June tuition
+STU-00573,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00573,RCPT-N-00573,Completed,Tuition,June tuition
+STU-00574,2026-06-04,650000,UZS,Cash,,RCPT-N-00574,Completed,Tuition,June tuition
+STU-00575,2026-06-05,650000,UZS,Credit Card,TERM-N-00575,RCPT-N-00575,Completed,Tuition,June tuition
+STU-00576,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00576,RCPT-N-00576,Completed,Tuition,June tuition
+STU-00577,2026-06-07,650000,UZS,Cash,,RCPT-N-00577,Completed,Tuition,June tuition
+STU-00578,2026-06-08,650000,UZS,Credit Card,TERM-N-00578,RCPT-N-00578,Completed,Tuition,June tuition
+STU-00579,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00579,RCPT-N-00579,Completed,Tuition,June tuition
+STU-00580,2026-06-10,650000,UZS,Cash,,RCPT-N-00580,Completed,Tuition,June tuition
+STU-00581,2026-06-11,650000,UZS,Credit Card,TERM-N-00581,RCPT-N-00581,Completed,Tuition,June tuition
+STU-00582,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00582,RCPT-N-00582,Completed,Tuition,June tuition
+STU-00583,2026-06-13,650000,UZS,Cash,,RCPT-N-00583,Completed,Tuition,June tuition
+STU-00584,2026-06-14,650000,UZS,Credit Card,TERM-N-00584,RCPT-N-00584,Completed,Tuition,June tuition
+STU-00585,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00585,RCPT-N-00585,Completed,Tuition,June tuition
+STU-00586,2026-06-16,650000,UZS,Cash,,RCPT-N-00586,Completed,Tuition,June tuition
+STU-00587,2026-06-17,650000,UZS,Credit Card,TERM-N-00587,RCPT-N-00587,Completed,Tuition,June tuition
+STU-00588,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00588,RCPT-N-00588,Completed,Tuition,June tuition
+STU-00589,2026-06-19,650000,UZS,Cash,,RCPT-N-00589,Completed,Tuition,June tuition
+STU-00590,2026-06-20,650000,UZS,Credit Card,TERM-N-00590,RCPT-N-00590,Completed,Tuition,June tuition
+STU-00591,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00591,RCPT-N-00591,Completed,Tuition,June tuition
+STU-00592,2026-06-22,650000,UZS,Cash,,RCPT-N-00592,Completed,Tuition,June tuition
+STU-00593,2026-06-23,650000,UZS,Credit Card,TERM-N-00593,RCPT-N-00593,Completed,Tuition,June tuition
+STU-00594,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00594,RCPT-N-00594,Completed,Tuition,June tuition
+STU-00595,2026-06-25,650000,UZS,Cash,,RCPT-N-00595,Completed,Tuition,June tuition
+STU-00596,2026-06-26,650000,UZS,Credit Card,TERM-N-00596,RCPT-N-00596,Completed,Tuition,June tuition
+STU-00597,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00597,RCPT-N-00597,Completed,Tuition,June tuition
+STU-00598,2026-06-28,650000,UZS,Cash,,RCPT-N-00598,Completed,Tuition,June tuition
+STU-00599,2026-06-29,650000,UZS,Credit Card,TERM-N-00599,RCPT-N-00599,Completed,Tuition,June tuition
+STU-00600,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00600,RCPT-N-00600,Completed,Tuition,June tuition
+STU-00601,2026-06-01,650000,UZS,Cash,,RCPT-N-00601,Completed,Tuition,June tuition
+STU-00602,2026-06-02,650000,UZS,Credit Card,TERM-N-00602,RCPT-N-00602,Completed,Tuition,June tuition
+STU-00603,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00603,RCPT-N-00603,Completed,Tuition,June tuition
+STU-00604,2026-06-04,650000,UZS,Cash,,RCPT-N-00604,Completed,Tuition,June tuition
+STU-00605,2026-06-05,650000,UZS,Credit Card,TERM-N-00605,RCPT-N-00605,Completed,Tuition,June tuition
+STU-00606,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00606,RCPT-N-00606,Completed,Tuition,June tuition
+STU-00607,2026-06-07,650000,UZS,Cash,,RCPT-N-00607,Completed,Tuition,June tuition
+STU-00608,2026-06-08,650000,UZS,Credit Card,TERM-N-00608,RCPT-N-00608,Completed,Tuition,June tuition
+STU-00609,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00609,RCPT-N-00609,Completed,Tuition,June tuition
+STU-00610,2026-06-10,650000,UZS,Cash,,RCPT-N-00610,Completed,Tuition,June tuition
+STU-00611,2026-06-11,650000,UZS,Credit Card,TERM-N-00611,RCPT-N-00611,Completed,Tuition,June tuition
+STU-00612,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00612,RCPT-N-00612,Completed,Tuition,June tuition
+STU-00613,2026-06-13,650000,UZS,Cash,,RCPT-N-00613,Completed,Tuition,June tuition
+STU-00614,2026-06-14,650000,UZS,Credit Card,TERM-N-00614,RCPT-N-00614,Completed,Tuition,June tuition
+STU-00615,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00615,RCPT-N-00615,Completed,Tuition,June tuition
+STU-00616,2026-06-16,650000,UZS,Cash,,RCPT-N-00616,Completed,Tuition,June tuition
+STU-00617,2026-06-17,650000,UZS,Credit Card,TERM-N-00617,RCPT-N-00617,Completed,Tuition,June tuition
+STU-00618,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00618,RCPT-N-00618,Completed,Tuition,June tuition
+STU-00619,2026-06-19,650000,UZS,Cash,,RCPT-N-00619,Completed,Tuition,June tuition
+STU-00620,2026-06-20,650000,UZS,Credit Card,TERM-N-00620,RCPT-N-00620,Completed,Tuition,June tuition
+STU-00621,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00621,RCPT-N-00621,Completed,Tuition,June tuition
+STU-00622,2026-06-22,650000,UZS,Cash,,RCPT-N-00622,Completed,Tuition,June tuition
+STU-00623,2026-06-23,650000,UZS,Credit Card,TERM-N-00623,RCPT-N-00623,Completed,Tuition,June tuition
+STU-00624,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00624,RCPT-N-00624,Completed,Tuition,June tuition
+STU-00625,2026-06-25,650000,UZS,Cash,,RCPT-N-00625,Completed,Tuition,June tuition
+STU-00626,2026-06-26,650000,UZS,Credit Card,TERM-N-00626,RCPT-N-00626,Completed,Tuition,June tuition
+STU-00627,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00627,RCPT-N-00627,Completed,Tuition,June tuition
+STU-00628,2026-06-28,650000,UZS,Cash,,RCPT-N-00628,Completed,Tuition,June tuition
+STU-00629,2026-06-29,650000,UZS,Credit Card,TERM-N-00629,RCPT-N-00629,Completed,Tuition,June tuition
+STU-00630,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00630,RCPT-N-00630,Completed,Tuition,June tuition
+STU-00631,2026-06-01,650000,UZS,Cash,,RCPT-N-00631,Completed,Tuition,June tuition
+STU-00632,2026-06-02,650000,UZS,Credit Card,TERM-N-00632,RCPT-N-00632,Completed,Tuition,June tuition
+STU-00633,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00633,RCPT-N-00633,Completed,Tuition,June tuition
+STU-00634,2026-06-04,650000,UZS,Cash,,RCPT-N-00634,Completed,Tuition,June tuition
+STU-00635,2026-06-05,650000,UZS,Credit Card,TERM-N-00635,RCPT-N-00635,Completed,Tuition,June tuition
+STU-00636,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00636,RCPT-N-00636,Completed,Tuition,June tuition
+STU-00637,2026-06-07,650000,UZS,Cash,,RCPT-N-00637,Completed,Tuition,June tuition
+STU-00638,2026-06-08,650000,UZS,Credit Card,TERM-N-00638,RCPT-N-00638,Completed,Tuition,June tuition
+STU-00639,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00639,RCPT-N-00639,Completed,Tuition,June tuition
+STU-00640,2026-06-10,650000,UZS,Cash,,RCPT-N-00640,Completed,Tuition,June tuition
+STU-00641,2026-06-11,650000,UZS,Credit Card,TERM-N-00641,RCPT-N-00641,Completed,Tuition,June tuition
+STU-00642,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00642,RCPT-N-00642,Completed,Tuition,June tuition
+STU-00643,2026-06-13,650000,UZS,Cash,,RCPT-N-00643,Completed,Tuition,June tuition
+STU-00644,2026-06-14,650000,UZS,Credit Card,TERM-N-00644,RCPT-N-00644,Completed,Tuition,June tuition
+STU-00645,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00645,RCPT-N-00645,Completed,Tuition,June tuition
+STU-00646,2026-06-16,650000,UZS,Cash,,RCPT-N-00646,Completed,Tuition,June tuition
+STU-00647,2026-06-17,650000,UZS,Credit Card,TERM-N-00647,RCPT-N-00647,Completed,Tuition,June tuition
+STU-00648,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00648,RCPT-N-00648,Completed,Tuition,June tuition
+STU-00649,2026-06-19,650000,UZS,Cash,,RCPT-N-00649,Completed,Tuition,June tuition
+STU-00650,2026-06-20,650000,UZS,Credit Card,TERM-N-00650,RCPT-N-00650,Completed,Tuition,June tuition
+STU-00651,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00651,RCPT-N-00651,Completed,Tuition,June tuition
+STU-00652,2026-06-22,650000,UZS,Cash,,RCPT-N-00652,Completed,Tuition,June tuition
+STU-00653,2026-06-23,650000,UZS,Credit Card,TERM-N-00653,RCPT-N-00653,Completed,Tuition,June tuition
+STU-00654,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00654,RCPT-N-00654,Completed,Tuition,June tuition
+STU-00655,2026-06-25,650000,UZS,Cash,,RCPT-N-00655,Completed,Tuition,June tuition
+STU-00656,2026-06-26,650000,UZS,Credit Card,TERM-N-00656,RCPT-N-00656,Completed,Tuition,June tuition
+STU-00657,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00657,RCPT-N-00657,Completed,Tuition,June tuition
+STU-00658,2026-06-28,650000,UZS,Cash,,RCPT-N-00658,Completed,Tuition,June tuition
+STU-00659,2026-06-29,650000,UZS,Credit Card,TERM-N-00659,RCPT-N-00659,Completed,Tuition,June tuition
+STU-00660,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00660,RCPT-N-00660,Completed,Tuition,June tuition
+STU-00661,2026-06-01,650000,UZS,Cash,,RCPT-N-00661,Completed,Tuition,June tuition
+STU-00662,2026-06-02,650000,UZS,Credit Card,TERM-N-00662,RCPT-N-00662,Completed,Tuition,June tuition
+STU-00663,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00663,RCPT-N-00663,Completed,Tuition,June tuition
+STU-00664,2026-06-04,650000,UZS,Cash,,RCPT-N-00664,Completed,Tuition,June tuition
+STU-00665,2026-06-05,650000,UZS,Credit Card,TERM-N-00665,RCPT-N-00665,Completed,Tuition,June tuition
+STU-00666,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00666,RCPT-N-00666,Completed,Tuition,June tuition
+STU-00667,2026-06-07,650000,UZS,Cash,,RCPT-N-00667,Completed,Tuition,June tuition
+STU-00668,2026-06-08,650000,UZS,Credit Card,TERM-N-00668,RCPT-N-00668,Completed,Tuition,June tuition
+STU-00669,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00669,RCPT-N-00669,Completed,Tuition,June tuition
+STU-00670,2026-06-10,650000,UZS,Cash,,RCPT-N-00670,Completed,Tuition,June tuition
+STU-00671,2026-06-11,650000,UZS,Credit Card,TERM-N-00671,RCPT-N-00671,Completed,Tuition,June tuition
+STU-00672,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00672,RCPT-N-00672,Completed,Tuition,June tuition
+STU-00673,2026-06-13,650000,UZS,Cash,,RCPT-N-00673,Completed,Tuition,June tuition
+STU-00674,2026-06-14,650000,UZS,Credit Card,TERM-N-00674,RCPT-N-00674,Completed,Tuition,June tuition
+STU-00675,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00675,RCPT-N-00675,Completed,Tuition,June tuition
+STU-00676,2026-06-16,650000,UZS,Cash,,RCPT-N-00676,Completed,Tuition,June tuition
+STU-00677,2026-06-17,650000,UZS,Credit Card,TERM-N-00677,RCPT-N-00677,Completed,Tuition,June tuition
+STU-00678,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00678,RCPT-N-00678,Completed,Tuition,June tuition
+STU-00679,2026-06-19,650000,UZS,Cash,,RCPT-N-00679,Completed,Tuition,June tuition
+STU-00680,2026-06-20,650000,UZS,Credit Card,TERM-N-00680,RCPT-N-00680,Completed,Tuition,June tuition
+STU-00681,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00681,RCPT-N-00681,Completed,Tuition,June tuition
+STU-00682,2026-06-22,650000,UZS,Cash,,RCPT-N-00682,Completed,Tuition,June tuition
+STU-00683,2026-06-23,650000,UZS,Credit Card,TERM-N-00683,RCPT-N-00683,Completed,Tuition,June tuition
+STU-00684,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00684,RCPT-N-00684,Completed,Tuition,June tuition
+STU-00685,2026-06-25,650000,UZS,Cash,,RCPT-N-00685,Completed,Tuition,June tuition
+STU-00686,2026-06-26,650000,UZS,Credit Card,TERM-N-00686,RCPT-N-00686,Completed,Tuition,June tuition
+STU-00687,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00687,RCPT-N-00687,Completed,Tuition,June tuition
+STU-00688,2026-06-28,650000,UZS,Cash,,RCPT-N-00688,Completed,Tuition,June tuition
+STU-00689,2026-06-29,650000,UZS,Credit Card,TERM-N-00689,RCPT-N-00689,Completed,Tuition,June tuition
+STU-00690,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00690,RCPT-N-00690,Completed,Tuition,June tuition
+STU-00691,2026-06-01,650000,UZS,Cash,,RCPT-N-00691,Completed,Tuition,June tuition
+STU-00692,2026-06-02,650000,UZS,Credit Card,TERM-N-00692,RCPT-N-00692,Completed,Tuition,June tuition
+STU-00693,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00693,RCPT-N-00693,Completed,Tuition,June tuition
+STU-00694,2026-06-04,650000,UZS,Cash,,RCPT-N-00694,Completed,Tuition,June tuition
+STU-00695,2026-06-05,650000,UZS,Credit Card,TERM-N-00695,RCPT-N-00695,Completed,Tuition,June tuition
+STU-00696,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00696,RCPT-N-00696,Completed,Tuition,June tuition
+STU-00697,2026-06-07,650000,UZS,Cash,,RCPT-N-00697,Completed,Tuition,June tuition
+STU-00698,2026-06-08,650000,UZS,Credit Card,TERM-N-00698,RCPT-N-00698,Completed,Tuition,June tuition
+STU-00699,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00699,RCPT-N-00699,Completed,Tuition,June tuition
+STU-00700,2026-06-10,650000,UZS,Cash,,RCPT-N-00700,Completed,Tuition,June tuition
+STU-00701,2026-06-11,650000,UZS,Credit Card,TERM-N-00701,RCPT-N-00701,Completed,Tuition,June tuition
+STU-00702,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00702,RCPT-N-00702,Completed,Tuition,June tuition
+STU-00703,2026-06-13,650000,UZS,Cash,,RCPT-N-00703,Completed,Tuition,June tuition
+STU-00704,2026-06-14,650000,UZS,Credit Card,TERM-N-00704,RCPT-N-00704,Completed,Tuition,June tuition
+STU-00705,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00705,RCPT-N-00705,Completed,Tuition,June tuition
+STU-00706,2026-06-16,650000,UZS,Cash,,RCPT-N-00706,Completed,Tuition,June tuition
+STU-00707,2026-06-17,650000,UZS,Credit Card,TERM-N-00707,RCPT-N-00707,Completed,Tuition,June tuition
+STU-00708,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00708,RCPT-N-00708,Completed,Tuition,June tuition
+STU-00709,2026-06-19,650000,UZS,Cash,,RCPT-N-00709,Completed,Tuition,June tuition
+STU-00710,2026-06-20,650000,UZS,Credit Card,TERM-N-00710,RCPT-N-00710,Completed,Tuition,June tuition
+STU-00711,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00711,RCPT-N-00711,Completed,Tuition,June tuition
+STU-00712,2026-06-22,650000,UZS,Cash,,RCPT-N-00712,Completed,Tuition,June tuition
+STU-00713,2026-06-23,650000,UZS,Credit Card,TERM-N-00713,RCPT-N-00713,Completed,Tuition,June tuition
+STU-00714,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00714,RCPT-N-00714,Completed,Tuition,June tuition
+STU-00715,2026-06-25,650000,UZS,Cash,,RCPT-N-00715,Completed,Tuition,June tuition
+STU-00716,2026-06-26,650000,UZS,Credit Card,TERM-N-00716,RCPT-N-00716,Completed,Tuition,June tuition
+STU-00717,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00717,RCPT-N-00717,Completed,Tuition,June tuition
+STU-00718,2026-06-28,650000,UZS,Cash,,RCPT-N-00718,Completed,Tuition,June tuition
+STU-00719,2026-06-29,650000,UZS,Credit Card,TERM-N-00719,RCPT-N-00719,Completed,Tuition,June tuition
+STU-00720,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00720,RCPT-N-00720,Completed,Tuition,June tuition
+STU-00721,2026-06-01,650000,UZS,Cash,,RCPT-N-00721,Completed,Tuition,June tuition
+STU-00722,2026-06-02,650000,UZS,Credit Card,TERM-N-00722,RCPT-N-00722,Completed,Tuition,June tuition
+STU-00723,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00723,RCPT-N-00723,Completed,Tuition,June tuition
+STU-00724,2026-06-04,650000,UZS,Cash,,RCPT-N-00724,Completed,Tuition,June tuition
+STU-00725,2026-06-05,650000,UZS,Credit Card,TERM-N-00725,RCPT-N-00725,Completed,Tuition,June tuition
+STU-00726,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00726,RCPT-N-00726,Completed,Tuition,June tuition
+STU-00727,2026-06-07,650000,UZS,Cash,,RCPT-N-00727,Completed,Tuition,June tuition
+STU-00728,2026-06-08,650000,UZS,Credit Card,TERM-N-00728,RCPT-N-00728,Completed,Tuition,June tuition
+STU-00729,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00729,RCPT-N-00729,Completed,Tuition,June tuition
+STU-00730,2026-06-10,650000,UZS,Cash,,RCPT-N-00730,Completed,Tuition,June tuition
+STU-00731,2026-06-11,650000,UZS,Credit Card,TERM-N-00731,RCPT-N-00731,Completed,Tuition,June tuition
+STU-00732,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00732,RCPT-N-00732,Completed,Tuition,June tuition
+STU-00733,2026-06-13,650000,UZS,Cash,,RCPT-N-00733,Completed,Tuition,June tuition
+STU-00734,2026-06-14,650000,UZS,Credit Card,TERM-N-00734,RCPT-N-00734,Completed,Tuition,June tuition
+STU-00735,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00735,RCPT-N-00735,Completed,Tuition,June tuition
+STU-00736,2026-06-16,650000,UZS,Cash,,RCPT-N-00736,Completed,Tuition,June tuition
+STU-00737,2026-06-17,650000,UZS,Credit Card,TERM-N-00737,RCPT-N-00737,Completed,Tuition,June tuition
+STU-00738,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00738,RCPT-N-00738,Completed,Tuition,June tuition
+STU-00739,2026-06-19,650000,UZS,Cash,,RCPT-N-00739,Completed,Tuition,June tuition
+STU-00740,2026-06-20,650000,UZS,Credit Card,TERM-N-00740,RCPT-N-00740,Completed,Tuition,June tuition
+STU-00741,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00741,RCPT-N-00741,Completed,Tuition,June tuition
+STU-00742,2026-06-22,650000,UZS,Cash,,RCPT-N-00742,Completed,Tuition,June tuition
+STU-00743,2026-06-23,650000,UZS,Credit Card,TERM-N-00743,RCPT-N-00743,Completed,Tuition,June tuition
+STU-00744,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00744,RCPT-N-00744,Completed,Tuition,June tuition
+STU-00745,2026-06-25,650000,UZS,Cash,,RCPT-N-00745,Completed,Tuition,June tuition
+STU-00746,2026-06-26,650000,UZS,Credit Card,TERM-N-00746,RCPT-N-00746,Completed,Tuition,June tuition
+STU-00747,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00747,RCPT-N-00747,Completed,Tuition,June tuition
+STU-00748,2026-06-28,650000,UZS,Cash,,RCPT-N-00748,Completed,Tuition,June tuition
+STU-00749,2026-06-29,650000,UZS,Credit Card,TERM-N-00749,RCPT-N-00749,Completed,Tuition,June tuition
+STU-00750,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00750,RCPT-N-00750,Completed,Tuition,June tuition
+STU-00751,2026-06-01,650000,UZS,Cash,,RCPT-N-00751,Completed,Tuition,June tuition
+STU-00752,2026-06-02,650000,UZS,Credit Card,TERM-N-00752,RCPT-N-00752,Completed,Tuition,June tuition
+STU-00753,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00753,RCPT-N-00753,Completed,Tuition,June tuition
+STU-00754,2026-06-04,650000,UZS,Cash,,RCPT-N-00754,Completed,Tuition,June tuition
+STU-00755,2026-06-05,650000,UZS,Credit Card,TERM-N-00755,RCPT-N-00755,Completed,Tuition,June tuition
+STU-00756,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00756,RCPT-N-00756,Completed,Tuition,June tuition
+STU-00757,2026-06-07,650000,UZS,Cash,,RCPT-N-00757,Completed,Tuition,June tuition
+STU-00758,2026-06-08,650000,UZS,Credit Card,TERM-N-00758,RCPT-N-00758,Completed,Tuition,June tuition
+STU-00759,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00759,RCPT-N-00759,Completed,Tuition,June tuition
+STU-00760,2026-06-10,650000,UZS,Cash,,RCPT-N-00760,Completed,Tuition,June tuition
+STU-00761,2026-06-11,650000,UZS,Credit Card,TERM-N-00761,RCPT-N-00761,Completed,Tuition,June tuition
+STU-00762,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00762,RCPT-N-00762,Completed,Tuition,June tuition
+STU-00763,2026-06-13,650000,UZS,Cash,,RCPT-N-00763,Completed,Tuition,June tuition
+STU-00764,2026-06-14,650000,UZS,Credit Card,TERM-N-00764,RCPT-N-00764,Completed,Tuition,June tuition
+STU-00765,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00765,RCPT-N-00765,Completed,Tuition,June tuition
+STU-00766,2026-06-16,650000,UZS,Cash,,RCPT-N-00766,Completed,Tuition,June tuition
+STU-00767,2026-06-17,650000,UZS,Credit Card,TERM-N-00767,RCPT-N-00767,Completed,Tuition,June tuition
+STU-00768,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00768,RCPT-N-00768,Completed,Tuition,June tuition
+STU-00769,2026-06-19,650000,UZS,Cash,,RCPT-N-00769,Completed,Tuition,June tuition
+STU-00770,2026-06-20,650000,UZS,Credit Card,TERM-N-00770,RCPT-N-00770,Completed,Tuition,June tuition
+STU-00771,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00771,RCPT-N-00771,Completed,Tuition,June tuition
+STU-00772,2026-06-22,650000,UZS,Cash,,RCPT-N-00772,Completed,Tuition,June tuition
+STU-00773,2026-06-23,650000,UZS,Credit Card,TERM-N-00773,RCPT-N-00773,Completed,Tuition,June tuition
+STU-00774,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00774,RCPT-N-00774,Completed,Tuition,June tuition
+STU-00775,2026-06-25,650000,UZS,Cash,,RCPT-N-00775,Completed,Tuition,June tuition
+STU-00776,2026-06-26,650000,UZS,Credit Card,TERM-N-00776,RCPT-N-00776,Completed,Tuition,June tuition
+STU-00777,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00777,RCPT-N-00777,Completed,Tuition,June tuition
+STU-00778,2026-06-28,650000,UZS,Cash,,RCPT-N-00778,Completed,Tuition,June tuition
+STU-00779,2026-06-29,650000,UZS,Credit Card,TERM-N-00779,RCPT-N-00779,Completed,Tuition,June tuition
+STU-00780,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00780,RCPT-N-00780,Completed,Tuition,June tuition
+STU-00781,2026-06-01,650000,UZS,Cash,,RCPT-N-00781,Completed,Tuition,June tuition
+STU-00782,2026-06-02,650000,UZS,Credit Card,TERM-N-00782,RCPT-N-00782,Completed,Tuition,June tuition
+STU-00783,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00783,RCPT-N-00783,Completed,Tuition,June tuition
+STU-00784,2026-06-04,650000,UZS,Cash,,RCPT-N-00784,Completed,Tuition,June tuition
+STU-00785,2026-06-05,650000,UZS,Credit Card,TERM-N-00785,RCPT-N-00785,Completed,Tuition,June tuition
+STU-00786,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00786,RCPT-N-00786,Completed,Tuition,June tuition
+STU-00787,2026-06-07,650000,UZS,Cash,,RCPT-N-00787,Completed,Tuition,June tuition
+STU-00788,2026-06-08,650000,UZS,Credit Card,TERM-N-00788,RCPT-N-00788,Completed,Tuition,June tuition
+STU-00789,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00789,RCPT-N-00789,Completed,Tuition,June tuition
+STU-00790,2026-06-10,650000,UZS,Cash,,RCPT-N-00790,Completed,Tuition,June tuition
+STU-00791,2026-06-11,650000,UZS,Credit Card,TERM-N-00791,RCPT-N-00791,Completed,Tuition,June tuition
+STU-00792,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00792,RCPT-N-00792,Completed,Tuition,June tuition
+STU-00793,2026-06-13,650000,UZS,Cash,,RCPT-N-00793,Completed,Tuition,June tuition
+STU-00794,2026-06-14,650000,UZS,Credit Card,TERM-N-00794,RCPT-N-00794,Completed,Tuition,June tuition
+STU-00795,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00795,RCPT-N-00795,Completed,Tuition,June tuition
+STU-00796,2026-06-16,650000,UZS,Cash,,RCPT-N-00796,Completed,Tuition,June tuition
+STU-00797,2026-06-17,650000,UZS,Credit Card,TERM-N-00797,RCPT-N-00797,Completed,Tuition,June tuition
+STU-00798,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00798,RCPT-N-00798,Completed,Tuition,June tuition
+STU-00799,2026-06-19,650000,UZS,Cash,,RCPT-N-00799,Completed,Tuition,June tuition
+STU-00800,2026-06-20,650000,UZS,Credit Card,TERM-N-00800,RCPT-N-00800,Completed,Tuition,June tuition
+STU-00801,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00801,RCPT-N-00801,Completed,Tuition,June tuition
+STU-00802,2026-06-22,650000,UZS,Cash,,RCPT-N-00802,Completed,Tuition,June tuition
+STU-00803,2026-06-23,650000,UZS,Credit Card,TERM-N-00803,RCPT-N-00803,Completed,Tuition,June tuition
+STU-00804,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00804,RCPT-N-00804,Completed,Tuition,June tuition
+STU-00805,2026-06-25,650000,UZS,Cash,,RCPT-N-00805,Completed,Tuition,June tuition
+STU-00806,2026-06-26,650000,UZS,Credit Card,TERM-N-00806,RCPT-N-00806,Completed,Tuition,June tuition
+STU-00807,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00807,RCPT-N-00807,Completed,Tuition,June tuition
+STU-00808,2026-06-28,650000,UZS,Cash,,RCPT-N-00808,Completed,Tuition,June tuition
+STU-00809,2026-06-29,650000,UZS,Credit Card,TERM-N-00809,RCPT-N-00809,Completed,Tuition,June tuition
+STU-00810,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00810,RCPT-N-00810,Completed,Tuition,June tuition
+STU-00811,2026-06-01,650000,UZS,Cash,,RCPT-N-00811,Completed,Tuition,June tuition
+STU-00812,2026-06-02,650000,UZS,Credit Card,TERM-N-00812,RCPT-N-00812,Completed,Tuition,June tuition
+STU-00813,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00813,RCPT-N-00813,Completed,Tuition,June tuition
+STU-00814,2026-06-04,650000,UZS,Cash,,RCPT-N-00814,Completed,Tuition,June tuition
+STU-00815,2026-06-05,650000,UZS,Credit Card,TERM-N-00815,RCPT-N-00815,Completed,Tuition,June tuition
+STU-00816,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00816,RCPT-N-00816,Completed,Tuition,June tuition
+STU-00817,2026-06-07,650000,UZS,Cash,,RCPT-N-00817,Completed,Tuition,June tuition
+STU-00818,2026-06-08,650000,UZS,Credit Card,TERM-N-00818,RCPT-N-00818,Completed,Tuition,June tuition
+STU-00819,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00819,RCPT-N-00819,Completed,Tuition,June tuition
+STU-00820,2026-06-10,650000,UZS,Cash,,RCPT-N-00820,Completed,Tuition,June tuition
+STU-00821,2026-06-11,650000,UZS,Credit Card,TERM-N-00821,RCPT-N-00821,Completed,Tuition,June tuition
+STU-00822,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00822,RCPT-N-00822,Completed,Tuition,June tuition
+STU-00823,2026-06-13,650000,UZS,Cash,,RCPT-N-00823,Completed,Tuition,June tuition
+STU-00824,2026-06-14,650000,UZS,Credit Card,TERM-N-00824,RCPT-N-00824,Completed,Tuition,June tuition
+STU-00825,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00825,RCPT-N-00825,Completed,Tuition,June tuition
+STU-00826,2026-06-16,650000,UZS,Cash,,RCPT-N-00826,Completed,Tuition,June tuition
+STU-00827,2026-06-17,650000,UZS,Credit Card,TERM-N-00827,RCPT-N-00827,Completed,Tuition,June tuition
+STU-00828,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00828,RCPT-N-00828,Completed,Tuition,June tuition
+STU-00829,2026-06-19,650000,UZS,Cash,,RCPT-N-00829,Completed,Tuition,June tuition
+STU-00830,2026-06-20,650000,UZS,Credit Card,TERM-N-00830,RCPT-N-00830,Completed,Tuition,June tuition
+STU-00831,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00831,RCPT-N-00831,Completed,Tuition,June tuition
+STU-00832,2026-06-22,650000,UZS,Cash,,RCPT-N-00832,Completed,Tuition,June tuition
+STU-00833,2026-06-23,650000,UZS,Credit Card,TERM-N-00833,RCPT-N-00833,Completed,Tuition,June tuition
+STU-00834,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00834,RCPT-N-00834,Completed,Tuition,June tuition
+STU-00835,2026-06-25,650000,UZS,Cash,,RCPT-N-00835,Completed,Tuition,June tuition
+STU-00836,2026-06-26,650000,UZS,Credit Card,TERM-N-00836,RCPT-N-00836,Completed,Tuition,June tuition
+STU-00837,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00837,RCPT-N-00837,Completed,Tuition,June tuition
+STU-00838,2026-06-28,650000,UZS,Cash,,RCPT-N-00838,Completed,Tuition,June tuition
+STU-00839,2026-06-29,650000,UZS,Credit Card,TERM-N-00839,RCPT-N-00839,Completed,Tuition,June tuition
+STU-00840,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00840,RCPT-N-00840,Completed,Tuition,June tuition
+STU-00841,2026-06-01,650000,UZS,Cash,,RCPT-N-00841,Completed,Tuition,June tuition
+STU-00842,2026-06-02,650000,UZS,Credit Card,TERM-N-00842,RCPT-N-00842,Completed,Tuition,June tuition
+STU-00843,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00843,RCPT-N-00843,Completed,Tuition,June tuition
+STU-00844,2026-06-04,650000,UZS,Cash,,RCPT-N-00844,Completed,Tuition,June tuition
+STU-00845,2026-06-05,650000,UZS,Credit Card,TERM-N-00845,RCPT-N-00845,Completed,Tuition,June tuition
+STU-00846,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00846,RCPT-N-00846,Completed,Tuition,June tuition
+STU-00847,2026-06-07,650000,UZS,Cash,,RCPT-N-00847,Completed,Tuition,June tuition
+STU-00848,2026-06-08,650000,UZS,Credit Card,TERM-N-00848,RCPT-N-00848,Completed,Tuition,June tuition
+STU-00849,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00849,RCPT-N-00849,Completed,Tuition,June tuition
+STU-00850,2026-06-10,650000,UZS,Cash,,RCPT-N-00850,Completed,Tuition,June tuition
+STU-00851,2026-06-11,650000,UZS,Credit Card,TERM-N-00851,RCPT-N-00851,Completed,Tuition,June tuition
+STU-00852,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00852,RCPT-N-00852,Completed,Tuition,June tuition
+STU-00853,2026-06-13,650000,UZS,Cash,,RCPT-N-00853,Completed,Tuition,June tuition
+STU-00854,2026-06-14,650000,UZS,Credit Card,TERM-N-00854,RCPT-N-00854,Completed,Tuition,June tuition
+STU-00855,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00855,RCPT-N-00855,Completed,Tuition,June tuition
+STU-00856,2026-06-16,650000,UZS,Cash,,RCPT-N-00856,Completed,Tuition,June tuition
+STU-00857,2026-06-17,650000,UZS,Credit Card,TERM-N-00857,RCPT-N-00857,Completed,Tuition,June tuition
+STU-00858,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00858,RCPT-N-00858,Completed,Tuition,June tuition
+STU-00859,2026-06-19,650000,UZS,Cash,,RCPT-N-00859,Completed,Tuition,June tuition
+STU-00860,2026-06-20,650000,UZS,Credit Card,TERM-N-00860,RCPT-N-00860,Completed,Tuition,June tuition
+STU-00861,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00861,RCPT-N-00861,Completed,Tuition,June tuition
+STU-00862,2026-06-22,650000,UZS,Cash,,RCPT-N-00862,Completed,Tuition,June tuition
+STU-00863,2026-06-23,650000,UZS,Credit Card,TERM-N-00863,RCPT-N-00863,Completed,Tuition,June tuition
+STU-00864,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00864,RCPT-N-00864,Completed,Tuition,June tuition
+STU-00865,2026-06-25,650000,UZS,Cash,,RCPT-N-00865,Completed,Tuition,June tuition
+STU-00866,2026-06-26,650000,UZS,Credit Card,TERM-N-00866,RCPT-N-00866,Completed,Tuition,June tuition
+STU-00867,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00867,RCPT-N-00867,Completed,Tuition,June tuition
+STU-00868,2026-06-28,650000,UZS,Cash,,RCPT-N-00868,Completed,Tuition,June tuition
+STU-00869,2026-06-29,650000,UZS,Credit Card,TERM-N-00869,RCPT-N-00869,Completed,Tuition,June tuition
+STU-00870,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00870,RCPT-N-00870,Completed,Tuition,June tuition
+STU-00871,2026-06-01,650000,UZS,Cash,,RCPT-N-00871,Completed,Tuition,June tuition
+STU-00872,2026-06-02,650000,UZS,Credit Card,TERM-N-00872,RCPT-N-00872,Completed,Tuition,June tuition
+STU-00873,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00873,RCPT-N-00873,Completed,Tuition,June tuition
+STU-00874,2026-06-04,650000,UZS,Cash,,RCPT-N-00874,Completed,Tuition,June tuition
+STU-00875,2026-06-05,650000,UZS,Credit Card,TERM-N-00875,RCPT-N-00875,Completed,Tuition,June tuition
+STU-00876,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00876,RCPT-N-00876,Completed,Tuition,June tuition
+STU-00877,2026-06-07,650000,UZS,Cash,,RCPT-N-00877,Completed,Tuition,June tuition
+STU-00878,2026-06-08,650000,UZS,Credit Card,TERM-N-00878,RCPT-N-00878,Completed,Tuition,June tuition
+STU-00879,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00879,RCPT-N-00879,Completed,Tuition,June tuition
+STU-00880,2026-06-10,650000,UZS,Cash,,RCPT-N-00880,Completed,Tuition,June tuition
+STU-00881,2026-06-11,650000,UZS,Credit Card,TERM-N-00881,RCPT-N-00881,Completed,Tuition,June tuition
+STU-00882,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00882,RCPT-N-00882,Completed,Tuition,June tuition
+STU-00883,2026-06-13,650000,UZS,Cash,,RCPT-N-00883,Completed,Tuition,June tuition
+STU-00884,2026-06-14,650000,UZS,Credit Card,TERM-N-00884,RCPT-N-00884,Completed,Tuition,June tuition
+STU-00885,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00885,RCPT-N-00885,Completed,Tuition,June tuition
+STU-00886,2026-06-16,650000,UZS,Cash,,RCPT-N-00886,Completed,Tuition,June tuition
+STU-00887,2026-06-17,650000,UZS,Credit Card,TERM-N-00887,RCPT-N-00887,Completed,Tuition,June tuition
+STU-00888,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00888,RCPT-N-00888,Completed,Tuition,June tuition
+STU-00889,2026-06-19,650000,UZS,Cash,,RCPT-N-00889,Completed,Tuition,June tuition
+STU-00890,2026-06-20,650000,UZS,Credit Card,TERM-N-00890,RCPT-N-00890,Completed,Tuition,June tuition
+STU-00891,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00891,RCPT-N-00891,Completed,Tuition,June tuition
+STU-00892,2026-06-22,650000,UZS,Cash,,RCPT-N-00892,Completed,Tuition,June tuition
+STU-00893,2026-06-23,650000,UZS,Credit Card,TERM-N-00893,RCPT-N-00893,Completed,Tuition,June tuition
+STU-00894,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00894,RCPT-N-00894,Completed,Tuition,June tuition
+STU-00895,2026-06-25,650000,UZS,Cash,,RCPT-N-00895,Completed,Tuition,June tuition
+STU-00896,2026-06-26,650000,UZS,Credit Card,TERM-N-00896,RCPT-N-00896,Completed,Tuition,June tuition
+STU-00897,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00897,RCPT-N-00897,Completed,Tuition,June tuition
+STU-00898,2026-06-28,650000,UZS,Cash,,RCPT-N-00898,Completed,Tuition,June tuition
+STU-00899,2026-06-29,650000,UZS,Credit Card,TERM-N-00899,RCPT-N-00899,Completed,Tuition,June tuition
+STU-00900,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00900,RCPT-N-00900,Completed,Tuition,June tuition
+STU-00901,2026-06-01,650000,UZS,Cash,,RCPT-N-00901,Completed,Tuition,June tuition
+STU-00902,2026-06-02,650000,UZS,Credit Card,TERM-N-00902,RCPT-N-00902,Completed,Tuition,June tuition
+STU-00903,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00903,RCPT-N-00903,Completed,Tuition,June tuition
+STU-00904,2026-06-04,650000,UZS,Cash,,RCPT-N-00904,Completed,Tuition,June tuition
+STU-00905,2026-06-05,650000,UZS,Credit Card,TERM-N-00905,RCPT-N-00905,Completed,Tuition,June tuition
+STU-00906,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00906,RCPT-N-00906,Completed,Tuition,June tuition
+STU-00907,2026-06-07,650000,UZS,Cash,,RCPT-N-00907,Completed,Tuition,June tuition
+STU-00908,2026-06-08,650000,UZS,Credit Card,TERM-N-00908,RCPT-N-00908,Completed,Tuition,June tuition
+STU-00909,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00909,RCPT-N-00909,Completed,Tuition,June tuition
+STU-00910,2026-06-10,650000,UZS,Cash,,RCPT-N-00910,Completed,Tuition,June tuition
+STU-00911,2026-06-11,650000,UZS,Credit Card,TERM-N-00911,RCPT-N-00911,Completed,Tuition,June tuition
+STU-00912,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00912,RCPT-N-00912,Completed,Tuition,June tuition
+STU-00913,2026-06-13,650000,UZS,Cash,,RCPT-N-00913,Completed,Tuition,June tuition
+STU-00914,2026-06-14,650000,UZS,Credit Card,TERM-N-00914,RCPT-N-00914,Completed,Tuition,June tuition
+STU-00915,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00915,RCPT-N-00915,Completed,Tuition,June tuition
+STU-00916,2026-06-16,650000,UZS,Cash,,RCPT-N-00916,Completed,Tuition,June tuition
+STU-00917,2026-06-17,650000,UZS,Credit Card,TERM-N-00917,RCPT-N-00917,Completed,Tuition,June tuition
+STU-00918,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00918,RCPT-N-00918,Completed,Tuition,June tuition
+STU-00919,2026-06-19,650000,UZS,Cash,,RCPT-N-00919,Completed,Tuition,June tuition
+STU-00920,2026-06-20,650000,UZS,Credit Card,TERM-N-00920,RCPT-N-00920,Completed,Tuition,June tuition
+STU-00921,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00921,RCPT-N-00921,Completed,Tuition,June tuition
+STU-00922,2026-06-22,650000,UZS,Cash,,RCPT-N-00922,Completed,Tuition,June tuition
+STU-00923,2026-06-23,650000,UZS,Credit Card,TERM-N-00923,RCPT-N-00923,Completed,Tuition,June tuition
+STU-00924,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00924,RCPT-N-00924,Completed,Tuition,June tuition
+STU-00925,2026-06-25,650000,UZS,Cash,,RCPT-N-00925,Completed,Tuition,June tuition
+STU-00926,2026-06-26,650000,UZS,Credit Card,TERM-N-00926,RCPT-N-00926,Completed,Tuition,June tuition
+STU-00927,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00927,RCPT-N-00927,Completed,Tuition,June tuition
+STU-00928,2026-06-28,650000,UZS,Cash,,RCPT-N-00928,Completed,Tuition,June tuition
+STU-00929,2026-06-29,650000,UZS,Credit Card,TERM-N-00929,RCPT-N-00929,Completed,Tuition,June tuition
+STU-00930,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00930,RCPT-N-00930,Completed,Tuition,June tuition
+STU-00931,2026-06-01,650000,UZS,Cash,,RCPT-N-00931,Completed,Tuition,June tuition
+STU-00932,2026-06-02,650000,UZS,Credit Card,TERM-N-00932,RCPT-N-00932,Completed,Tuition,June tuition
+STU-00933,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00933,RCPT-N-00933,Completed,Tuition,June tuition
+STU-00934,2026-06-04,650000,UZS,Cash,,RCPT-N-00934,Completed,Tuition,June tuition
+STU-00935,2026-06-05,650000,UZS,Credit Card,TERM-N-00935,RCPT-N-00935,Completed,Tuition,June tuition
+STU-00936,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00936,RCPT-N-00936,Completed,Tuition,June tuition
+STU-00937,2026-06-07,650000,UZS,Cash,,RCPT-N-00937,Completed,Tuition,June tuition
+STU-00938,2026-06-08,650000,UZS,Credit Card,TERM-N-00938,RCPT-N-00938,Completed,Tuition,June tuition
+STU-00939,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00939,RCPT-N-00939,Completed,Tuition,June tuition
+STU-00940,2026-06-10,650000,UZS,Cash,,RCPT-N-00940,Completed,Tuition,June tuition
+STU-00941,2026-06-11,650000,UZS,Credit Card,TERM-N-00941,RCPT-N-00941,Completed,Tuition,June tuition
+STU-00942,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00942,RCPT-N-00942,Completed,Tuition,June tuition
+STU-00943,2026-06-13,650000,UZS,Cash,,RCPT-N-00943,Completed,Tuition,June tuition
+STU-00944,2026-06-14,650000,UZS,Credit Card,TERM-N-00944,RCPT-N-00944,Completed,Tuition,June tuition
+STU-00945,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00945,RCPT-N-00945,Completed,Tuition,June tuition
+STU-00946,2026-06-16,650000,UZS,Cash,,RCPT-N-00946,Completed,Tuition,June tuition
+STU-00947,2026-06-17,650000,UZS,Credit Card,TERM-N-00947,RCPT-N-00947,Completed,Tuition,June tuition
+STU-00948,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00948,RCPT-N-00948,Completed,Tuition,June tuition
+STU-00949,2026-06-19,650000,UZS,Cash,,RCPT-N-00949,Completed,Tuition,June tuition
+STU-00950,2026-06-20,650000,UZS,Credit Card,TERM-N-00950,RCPT-N-00950,Completed,Tuition,June tuition
+STU-00951,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00951,RCPT-N-00951,Completed,Tuition,June tuition
+STU-00952,2026-06-22,650000,UZS,Cash,,RCPT-N-00952,Completed,Tuition,June tuition
+STU-00953,2026-06-23,650000,UZS,Credit Card,TERM-N-00953,RCPT-N-00953,Completed,Tuition,June tuition
+STU-00954,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00954,RCPT-N-00954,Completed,Tuition,June tuition
+STU-00955,2026-06-25,650000,UZS,Cash,,RCPT-N-00955,Completed,Tuition,June tuition
+STU-00956,2026-06-26,650000,UZS,Credit Card,TERM-N-00956,RCPT-N-00956,Completed,Tuition,June tuition
+STU-00957,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00957,RCPT-N-00957,Completed,Tuition,June tuition
+STU-00958,2026-06-28,650000,UZS,Cash,,RCPT-N-00958,Completed,Tuition,June tuition
+STU-00959,2026-06-29,650000,UZS,Credit Card,TERM-N-00959,RCPT-N-00959,Completed,Tuition,June tuition
+STU-00960,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00960,RCPT-N-00960,Completed,Tuition,June tuition
+STU-00961,2026-06-01,650000,UZS,Cash,,RCPT-N-00961,Completed,Tuition,June tuition
+STU-00962,2026-06-02,650000,UZS,Credit Card,TERM-N-00962,RCPT-N-00962,Completed,Tuition,June tuition
+STU-00963,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00963,RCPT-N-00963,Completed,Tuition,June tuition
+STU-00964,2026-06-04,650000,UZS,Cash,,RCPT-N-00964,Completed,Tuition,June tuition
+STU-00965,2026-06-05,650000,UZS,Credit Card,TERM-N-00965,RCPT-N-00965,Completed,Tuition,June tuition
+STU-00966,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00966,RCPT-N-00966,Completed,Tuition,June tuition
+STU-00967,2026-06-07,650000,UZS,Cash,,RCPT-N-00967,Completed,Tuition,June tuition
+STU-00968,2026-06-08,650000,UZS,Credit Card,TERM-N-00968,RCPT-N-00968,Completed,Tuition,June tuition
+STU-00969,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00969,RCPT-N-00969,Completed,Tuition,June tuition
+STU-00970,2026-06-10,650000,UZS,Cash,,RCPT-N-00970,Completed,Tuition,June tuition
+STU-00971,2026-06-11,650000,UZS,Credit Card,TERM-N-00971,RCPT-N-00971,Completed,Tuition,June tuition
+STU-00972,2026-06-12,650000,UZS,Bank Transfer,BANK-N-00972,RCPT-N-00972,Completed,Tuition,June tuition
+STU-00973,2026-06-13,650000,UZS,Cash,,RCPT-N-00973,Completed,Tuition,June tuition
+STU-00974,2026-06-14,650000,UZS,Credit Card,TERM-N-00974,RCPT-N-00974,Completed,Tuition,June tuition
+STU-00975,2026-06-15,650000,UZS,Bank Transfer,BANK-N-00975,RCPT-N-00975,Completed,Tuition,June tuition
+STU-00976,2026-06-16,650000,UZS,Cash,,RCPT-N-00976,Completed,Tuition,June tuition
+STU-00977,2026-06-17,650000,UZS,Credit Card,TERM-N-00977,RCPT-N-00977,Completed,Tuition,June tuition
+STU-00978,2026-06-18,650000,UZS,Bank Transfer,BANK-N-00978,RCPT-N-00978,Completed,Tuition,June tuition
+STU-00979,2026-06-19,650000,UZS,Cash,,RCPT-N-00979,Completed,Tuition,June tuition
+STU-00980,2026-06-20,650000,UZS,Credit Card,TERM-N-00980,RCPT-N-00980,Completed,Tuition,June tuition
+STU-00981,2026-06-21,650000,UZS,Bank Transfer,BANK-N-00981,RCPT-N-00981,Completed,Tuition,June tuition
+STU-00982,2026-06-22,650000,UZS,Cash,,RCPT-N-00982,Completed,Tuition,June tuition
+STU-00983,2026-06-23,650000,UZS,Credit Card,TERM-N-00983,RCPT-N-00983,Completed,Tuition,June tuition
+STU-00984,2026-06-24,650000,UZS,Bank Transfer,BANK-N-00984,RCPT-N-00984,Completed,Tuition,June tuition
+STU-00985,2026-06-25,650000,UZS,Cash,,RCPT-N-00985,Completed,Tuition,June tuition
+STU-00986,2026-06-26,650000,UZS,Credit Card,TERM-N-00986,RCPT-N-00986,Completed,Tuition,June tuition
+STU-00987,2026-06-27,650000,UZS,Bank Transfer,BANK-N-00987,RCPT-N-00987,Completed,Tuition,June tuition
+STU-00988,2026-06-28,650000,UZS,Cash,,RCPT-N-00988,Completed,Tuition,June tuition
+STU-00989,2026-06-29,650000,UZS,Credit Card,TERM-N-00989,RCPT-N-00989,Completed,Tuition,June tuition
+STU-00990,2026-06-30,650000,UZS,Bank Transfer,BANK-N-00990,RCPT-N-00990,Completed,Tuition,June tuition
+STU-00991,2026-06-01,650000,UZS,Cash,,RCPT-N-00991,Completed,Tuition,June tuition
+STU-00992,2026-06-02,650000,UZS,Credit Card,TERM-N-00992,RCPT-N-00992,Completed,Tuition,June tuition
+STU-00993,2026-06-03,650000,UZS,Bank Transfer,BANK-N-00993,RCPT-N-00993,Completed,Tuition,June tuition
+STU-00994,2026-06-04,650000,UZS,Cash,,RCPT-N-00994,Completed,Tuition,June tuition
+STU-00995,2026-06-05,650000,UZS,Credit Card,TERM-N-00995,RCPT-N-00995,Completed,Tuition,June tuition
+STU-00996,2026-06-06,650000,UZS,Bank Transfer,BANK-N-00996,RCPT-N-00996,Completed,Tuition,June tuition
+STU-00997,2026-06-07,650000,UZS,Cash,,RCPT-N-00997,Completed,Tuition,June tuition
+STU-00998,2026-06-08,650000,UZS,Credit Card,TERM-N-00998,RCPT-N-00998,Completed,Tuition,June tuition
+STU-00999,2026-06-09,650000,UZS,Bank Transfer,BANK-N-00999,RCPT-N-00999,Completed,Tuition,June tuition
+STU-01000,2026-06-10,650000,UZS,Cash,,RCPT-N-01000,Completed,Tuition,June tuition
+STU-01001,2026-06-11,650000,UZS,Credit Card,TERM-N-01001,RCPT-N-01001,Completed,Tuition,June tuition
+STU-01002,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01002,RCPT-N-01002,Completed,Tuition,June tuition
+STU-01003,2026-06-13,650000,UZS,Cash,,RCPT-N-01003,Completed,Tuition,June tuition
+STU-01004,2026-06-14,650000,UZS,Credit Card,TERM-N-01004,RCPT-N-01004,Completed,Tuition,June tuition
+STU-01005,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01005,RCPT-N-01005,Completed,Tuition,June tuition
+STU-01006,2026-06-16,650000,UZS,Cash,,RCPT-N-01006,Completed,Tuition,June tuition
+STU-01007,2026-06-17,650000,UZS,Credit Card,TERM-N-01007,RCPT-N-01007,Completed,Tuition,June tuition
+STU-01008,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01008,RCPT-N-01008,Completed,Tuition,June tuition
+STU-01009,2026-06-19,650000,UZS,Cash,,RCPT-N-01009,Completed,Tuition,June tuition
+STU-01010,2026-06-20,650000,UZS,Credit Card,TERM-N-01010,RCPT-N-01010,Completed,Tuition,June tuition
+STU-01011,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01011,RCPT-N-01011,Completed,Tuition,June tuition
+STU-01012,2026-06-22,650000,UZS,Cash,,RCPT-N-01012,Completed,Tuition,June tuition
+STU-01013,2026-06-23,650000,UZS,Credit Card,TERM-N-01013,RCPT-N-01013,Completed,Tuition,June tuition
+STU-01014,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01014,RCPT-N-01014,Completed,Tuition,June tuition
+STU-01015,2026-06-25,650000,UZS,Cash,,RCPT-N-01015,Completed,Tuition,June tuition
+STU-01016,2026-06-26,650000,UZS,Credit Card,TERM-N-01016,RCPT-N-01016,Completed,Tuition,June tuition
+STU-01017,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01017,RCPT-N-01017,Completed,Tuition,June tuition
+STU-01018,2026-06-28,650000,UZS,Cash,,RCPT-N-01018,Completed,Tuition,June tuition
+STU-01019,2026-06-29,650000,UZS,Credit Card,TERM-N-01019,RCPT-N-01019,Completed,Tuition,June tuition
+STU-01020,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01020,RCPT-N-01020,Completed,Tuition,June tuition
+STU-01021,2026-06-01,650000,UZS,Cash,,RCPT-N-01021,Completed,Tuition,June tuition
+STU-01022,2026-06-02,650000,UZS,Credit Card,TERM-N-01022,RCPT-N-01022,Completed,Tuition,June tuition
+STU-01023,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01023,RCPT-N-01023,Completed,Tuition,June tuition
+STU-01024,2026-06-04,650000,UZS,Cash,,RCPT-N-01024,Completed,Tuition,June tuition
+STU-01025,2026-06-05,650000,UZS,Credit Card,TERM-N-01025,RCPT-N-01025,Completed,Tuition,June tuition
+STU-01026,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01026,RCPT-N-01026,Completed,Tuition,June tuition
+STU-01027,2026-06-07,650000,UZS,Cash,,RCPT-N-01027,Completed,Tuition,June tuition
+STU-01028,2026-06-08,650000,UZS,Credit Card,TERM-N-01028,RCPT-N-01028,Completed,Tuition,June tuition
+STU-01029,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01029,RCPT-N-01029,Completed,Tuition,June tuition
+STU-01030,2026-06-10,650000,UZS,Cash,,RCPT-N-01030,Completed,Tuition,June tuition
+STU-01031,2026-06-11,650000,UZS,Credit Card,TERM-N-01031,RCPT-N-01031,Completed,Tuition,June tuition
+STU-01032,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01032,RCPT-N-01032,Completed,Tuition,June tuition
+STU-01033,2026-06-13,650000,UZS,Cash,,RCPT-N-01033,Completed,Tuition,June tuition
+STU-01034,2026-06-14,650000,UZS,Credit Card,TERM-N-01034,RCPT-N-01034,Completed,Tuition,June tuition
+STU-01035,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01035,RCPT-N-01035,Completed,Tuition,June tuition
+STU-01036,2026-06-16,650000,UZS,Cash,,RCPT-N-01036,Completed,Tuition,June tuition
+STU-01037,2026-06-17,650000,UZS,Credit Card,TERM-N-01037,RCPT-N-01037,Completed,Tuition,June tuition
+STU-01038,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01038,RCPT-N-01038,Completed,Tuition,June tuition
+STU-01039,2026-06-19,650000,UZS,Cash,,RCPT-N-01039,Completed,Tuition,June tuition
+STU-01040,2026-06-20,650000,UZS,Credit Card,TERM-N-01040,RCPT-N-01040,Completed,Tuition,June tuition
+STU-01041,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01041,RCPT-N-01041,Completed,Tuition,June tuition
+STU-01042,2026-06-22,650000,UZS,Cash,,RCPT-N-01042,Completed,Tuition,June tuition
+STU-01043,2026-06-23,650000,UZS,Credit Card,TERM-N-01043,RCPT-N-01043,Completed,Tuition,June tuition
+STU-01044,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01044,RCPT-N-01044,Completed,Tuition,June tuition
+STU-01045,2026-06-25,650000,UZS,Cash,,RCPT-N-01045,Completed,Tuition,June tuition
+STU-01046,2026-06-26,650000,UZS,Credit Card,TERM-N-01046,RCPT-N-01046,Completed,Tuition,June tuition
+STU-01047,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01047,RCPT-N-01047,Completed,Tuition,June tuition
+STU-01048,2026-06-28,650000,UZS,Cash,,RCPT-N-01048,Completed,Tuition,June tuition
+STU-01049,2026-06-29,650000,UZS,Credit Card,TERM-N-01049,RCPT-N-01049,Completed,Tuition,June tuition
+STU-01050,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01050,RCPT-N-01050,Completed,Tuition,June tuition
+STU-01051,2026-06-01,650000,UZS,Cash,,RCPT-N-01051,Completed,Tuition,June tuition
+STU-01052,2026-06-02,650000,UZS,Credit Card,TERM-N-01052,RCPT-N-01052,Completed,Tuition,June tuition
+STU-01053,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01053,RCPT-N-01053,Completed,Tuition,June tuition
+STU-01054,2026-06-04,650000,UZS,Cash,,RCPT-N-01054,Completed,Tuition,June tuition
+STU-01055,2026-06-05,650000,UZS,Credit Card,TERM-N-01055,RCPT-N-01055,Completed,Tuition,June tuition
+STU-01056,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01056,RCPT-N-01056,Completed,Tuition,June tuition
+STU-01057,2026-06-07,650000,UZS,Cash,,RCPT-N-01057,Completed,Tuition,June tuition
+STU-01058,2026-06-08,650000,UZS,Credit Card,TERM-N-01058,RCPT-N-01058,Completed,Tuition,June tuition
+STU-01059,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01059,RCPT-N-01059,Completed,Tuition,June tuition
+STU-01060,2026-06-10,650000,UZS,Cash,,RCPT-N-01060,Completed,Tuition,June tuition
+STU-01061,2026-06-11,650000,UZS,Credit Card,TERM-N-01061,RCPT-N-01061,Completed,Tuition,June tuition
+STU-01062,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01062,RCPT-N-01062,Completed,Tuition,June tuition
+STU-01063,2026-06-13,650000,UZS,Cash,,RCPT-N-01063,Completed,Tuition,June tuition
+STU-01064,2026-06-14,650000,UZS,Credit Card,TERM-N-01064,RCPT-N-01064,Completed,Tuition,June tuition
+STU-01065,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01065,RCPT-N-01065,Completed,Tuition,June tuition
+STU-01066,2026-06-16,650000,UZS,Cash,,RCPT-N-01066,Completed,Tuition,June tuition
+STU-01067,2026-06-17,650000,UZS,Credit Card,TERM-N-01067,RCPT-N-01067,Completed,Tuition,June tuition
+STU-01068,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01068,RCPT-N-01068,Completed,Tuition,June tuition
+STU-01069,2026-06-19,650000,UZS,Cash,,RCPT-N-01069,Completed,Tuition,June tuition
+STU-01070,2026-06-20,650000,UZS,Credit Card,TERM-N-01070,RCPT-N-01070,Completed,Tuition,June tuition
+STU-01071,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01071,RCPT-N-01071,Completed,Tuition,June tuition
+STU-01072,2026-06-22,650000,UZS,Cash,,RCPT-N-01072,Completed,Tuition,June tuition
+STU-01073,2026-06-23,650000,UZS,Credit Card,TERM-N-01073,RCPT-N-01073,Completed,Tuition,June tuition
+STU-01074,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01074,RCPT-N-01074,Completed,Tuition,June tuition
+STU-01075,2026-06-25,650000,UZS,Cash,,RCPT-N-01075,Completed,Tuition,June tuition
+STU-01076,2026-06-26,650000,UZS,Credit Card,TERM-N-01076,RCPT-N-01076,Completed,Tuition,June tuition
+STU-01077,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01077,RCPT-N-01077,Completed,Tuition,June tuition
+STU-01078,2026-06-28,650000,UZS,Cash,,RCPT-N-01078,Completed,Tuition,June tuition
+STU-01079,2026-06-29,650000,UZS,Credit Card,TERM-N-01079,RCPT-N-01079,Completed,Tuition,June tuition
+STU-01080,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01080,RCPT-N-01080,Completed,Tuition,June tuition
+STU-01081,2026-06-01,650000,UZS,Cash,,RCPT-N-01081,Completed,Tuition,June tuition
+STU-01082,2026-06-02,650000,UZS,Credit Card,TERM-N-01082,RCPT-N-01082,Completed,Tuition,June tuition
+STU-01083,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01083,RCPT-N-01083,Completed,Tuition,June tuition
+STU-01084,2026-06-04,650000,UZS,Cash,,RCPT-N-01084,Completed,Tuition,June tuition
+STU-01085,2026-06-05,650000,UZS,Credit Card,TERM-N-01085,RCPT-N-01085,Completed,Tuition,June tuition
+STU-01086,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01086,RCPT-N-01086,Completed,Tuition,June tuition
+STU-01087,2026-06-07,650000,UZS,Cash,,RCPT-N-01087,Completed,Tuition,June tuition
+STU-01088,2026-06-08,650000,UZS,Credit Card,TERM-N-01088,RCPT-N-01088,Completed,Tuition,June tuition
+STU-01089,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01089,RCPT-N-01089,Completed,Tuition,June tuition
+STU-01090,2026-06-10,650000,UZS,Cash,,RCPT-N-01090,Completed,Tuition,June tuition
+STU-01091,2026-06-11,650000,UZS,Credit Card,TERM-N-01091,RCPT-N-01091,Completed,Tuition,June tuition
+STU-01092,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01092,RCPT-N-01092,Completed,Tuition,June tuition
+STU-01093,2026-06-13,650000,UZS,Cash,,RCPT-N-01093,Completed,Tuition,June tuition
+STU-01094,2026-06-14,650000,UZS,Credit Card,TERM-N-01094,RCPT-N-01094,Completed,Tuition,June tuition
+STU-01095,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01095,RCPT-N-01095,Completed,Tuition,June tuition
+STU-01096,2026-06-16,650000,UZS,Cash,,RCPT-N-01096,Completed,Tuition,June tuition
+STU-01097,2026-06-17,650000,UZS,Credit Card,TERM-N-01097,RCPT-N-01097,Completed,Tuition,June tuition
+STU-01098,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01098,RCPT-N-01098,Completed,Tuition,June tuition
+STU-01099,2026-06-19,650000,UZS,Cash,,RCPT-N-01099,Completed,Tuition,June tuition
+STU-01100,2026-06-20,650000,UZS,Credit Card,TERM-N-01100,RCPT-N-01100,Completed,Tuition,June tuition
+STU-01101,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01101,RCPT-N-01101,Completed,Tuition,June tuition
+STU-01102,2026-06-22,650000,UZS,Cash,,RCPT-N-01102,Completed,Tuition,June tuition
+STU-01103,2026-06-23,650000,UZS,Credit Card,TERM-N-01103,RCPT-N-01103,Completed,Tuition,June tuition
+STU-01104,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01104,RCPT-N-01104,Completed,Tuition,June tuition
+STU-01105,2026-06-25,650000,UZS,Cash,,RCPT-N-01105,Completed,Tuition,June tuition
+STU-01106,2026-06-26,650000,UZS,Credit Card,TERM-N-01106,RCPT-N-01106,Completed,Tuition,June tuition
+STU-01107,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01107,RCPT-N-01107,Completed,Tuition,June tuition
+STU-01108,2026-06-28,650000,UZS,Cash,,RCPT-N-01108,Completed,Tuition,June tuition
+STU-01109,2026-06-29,650000,UZS,Credit Card,TERM-N-01109,RCPT-N-01109,Completed,Tuition,June tuition
+STU-01110,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01110,RCPT-N-01110,Completed,Tuition,June tuition
+STU-01111,2026-06-01,650000,UZS,Cash,,RCPT-N-01111,Completed,Tuition,June tuition
+STU-01112,2026-06-02,650000,UZS,Credit Card,TERM-N-01112,RCPT-N-01112,Completed,Tuition,June tuition
+STU-01113,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01113,RCPT-N-01113,Completed,Tuition,June tuition
+STU-01114,2026-06-04,650000,UZS,Cash,,RCPT-N-01114,Completed,Tuition,June tuition
+STU-01115,2026-06-05,650000,UZS,Credit Card,TERM-N-01115,RCPT-N-01115,Completed,Tuition,June tuition
+STU-01116,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01116,RCPT-N-01116,Completed,Tuition,June tuition
+STU-01117,2026-06-07,650000,UZS,Cash,,RCPT-N-01117,Completed,Tuition,June tuition
+STU-01118,2026-06-08,650000,UZS,Credit Card,TERM-N-01118,RCPT-N-01118,Completed,Tuition,June tuition
+STU-01119,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01119,RCPT-N-01119,Completed,Tuition,June tuition
+STU-01120,2026-06-10,650000,UZS,Cash,,RCPT-N-01120,Completed,Tuition,June tuition
+STU-01121,2026-06-11,650000,UZS,Credit Card,TERM-N-01121,RCPT-N-01121,Completed,Tuition,June tuition
+STU-01122,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01122,RCPT-N-01122,Completed,Tuition,June tuition
+STU-01123,2026-06-13,650000,UZS,Cash,,RCPT-N-01123,Completed,Tuition,June tuition
+STU-01124,2026-06-14,650000,UZS,Credit Card,TERM-N-01124,RCPT-N-01124,Completed,Tuition,June tuition
+STU-01125,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01125,RCPT-N-01125,Completed,Tuition,June tuition
+STU-01126,2026-06-16,650000,UZS,Cash,,RCPT-N-01126,Completed,Tuition,June tuition
+STU-01127,2026-06-17,650000,UZS,Credit Card,TERM-N-01127,RCPT-N-01127,Completed,Tuition,June tuition
+STU-01128,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01128,RCPT-N-01128,Completed,Tuition,June tuition
+STU-01129,2026-06-19,650000,UZS,Cash,,RCPT-N-01129,Completed,Tuition,June tuition
+STU-01130,2026-06-20,650000,UZS,Credit Card,TERM-N-01130,RCPT-N-01130,Completed,Tuition,June tuition
+STU-01131,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01131,RCPT-N-01131,Completed,Tuition,June tuition
+STU-01132,2026-06-22,650000,UZS,Cash,,RCPT-N-01132,Completed,Tuition,June tuition
+STU-01133,2026-06-23,650000,UZS,Credit Card,TERM-N-01133,RCPT-N-01133,Completed,Tuition,June tuition
+STU-01134,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01134,RCPT-N-01134,Completed,Tuition,June tuition
+STU-01135,2026-06-25,650000,UZS,Cash,,RCPT-N-01135,Completed,Tuition,June tuition
+STU-01136,2026-06-26,650000,UZS,Credit Card,TERM-N-01136,RCPT-N-01136,Completed,Tuition,June tuition
+STU-01137,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01137,RCPT-N-01137,Completed,Tuition,June tuition
+STU-01138,2026-06-28,650000,UZS,Cash,,RCPT-N-01138,Completed,Tuition,June tuition
+STU-01139,2026-06-29,650000,UZS,Credit Card,TERM-N-01139,RCPT-N-01139,Completed,Tuition,June tuition
+STU-01140,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01140,RCPT-N-01140,Completed,Tuition,June tuition
+STU-01141,2026-06-01,650000,UZS,Cash,,RCPT-N-01141,Completed,Tuition,June tuition
+STU-01142,2026-06-02,650000,UZS,Credit Card,TERM-N-01142,RCPT-N-01142,Completed,Tuition,June tuition
+STU-01143,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01143,RCPT-N-01143,Completed,Tuition,June tuition
+STU-01144,2026-06-04,650000,UZS,Cash,,RCPT-N-01144,Completed,Tuition,June tuition
+STU-01145,2026-06-05,650000,UZS,Credit Card,TERM-N-01145,RCPT-N-01145,Completed,Tuition,June tuition
+STU-01146,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01146,RCPT-N-01146,Completed,Tuition,June tuition
+STU-01147,2026-06-07,650000,UZS,Cash,,RCPT-N-01147,Completed,Tuition,June tuition
+STU-01148,2026-06-08,650000,UZS,Credit Card,TERM-N-01148,RCPT-N-01148,Completed,Tuition,June tuition
+STU-01149,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01149,RCPT-N-01149,Completed,Tuition,June tuition
+STU-01150,2026-06-10,650000,UZS,Cash,,RCPT-N-01150,Completed,Tuition,June tuition
+STU-01151,2026-06-11,650000,UZS,Credit Card,TERM-N-01151,RCPT-N-01151,Completed,Tuition,June tuition
+STU-01152,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01152,RCPT-N-01152,Completed,Tuition,June tuition
+STU-01153,2026-06-13,650000,UZS,Cash,,RCPT-N-01153,Completed,Tuition,June tuition
+STU-01154,2026-06-14,650000,UZS,Credit Card,TERM-N-01154,RCPT-N-01154,Completed,Tuition,June tuition
+STU-01155,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01155,RCPT-N-01155,Completed,Tuition,June tuition
+STU-01156,2026-06-16,650000,UZS,Cash,,RCPT-N-01156,Completed,Tuition,June tuition
+STU-01157,2026-06-17,650000,UZS,Credit Card,TERM-N-01157,RCPT-N-01157,Completed,Tuition,June tuition
+STU-01158,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01158,RCPT-N-01158,Completed,Tuition,June tuition
+STU-01159,2026-06-19,650000,UZS,Cash,,RCPT-N-01159,Completed,Tuition,June tuition
+STU-01160,2026-06-20,650000,UZS,Credit Card,TERM-N-01160,RCPT-N-01160,Completed,Tuition,June tuition
+STU-01161,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01161,RCPT-N-01161,Completed,Tuition,June tuition
+STU-01162,2026-06-22,650000,UZS,Cash,,RCPT-N-01162,Completed,Tuition,June tuition
+STU-01163,2026-06-23,650000,UZS,Credit Card,TERM-N-01163,RCPT-N-01163,Completed,Tuition,June tuition
+STU-01164,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01164,RCPT-N-01164,Completed,Tuition,June tuition
+STU-01165,2026-06-25,650000,UZS,Cash,,RCPT-N-01165,Completed,Tuition,June tuition
+STU-01166,2026-06-26,650000,UZS,Credit Card,TERM-N-01166,RCPT-N-01166,Completed,Tuition,June tuition
+STU-01167,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01167,RCPT-N-01167,Completed,Tuition,June tuition
+STU-01168,2026-06-28,650000,UZS,Cash,,RCPT-N-01168,Completed,Tuition,June tuition
+STU-01169,2026-06-29,650000,UZS,Credit Card,TERM-N-01169,RCPT-N-01169,Completed,Tuition,June tuition
+STU-01170,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01170,RCPT-N-01170,Completed,Tuition,June tuition
+STU-01171,2026-06-01,650000,UZS,Cash,,RCPT-N-01171,Completed,Tuition,June tuition
+STU-01172,2026-06-02,650000,UZS,Credit Card,TERM-N-01172,RCPT-N-01172,Completed,Tuition,June tuition
+STU-01173,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01173,RCPT-N-01173,Completed,Tuition,June tuition
+STU-01174,2026-06-04,650000,UZS,Cash,,RCPT-N-01174,Completed,Tuition,June tuition
+STU-01175,2026-06-05,650000,UZS,Credit Card,TERM-N-01175,RCPT-N-01175,Completed,Tuition,June tuition
+STU-01176,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01176,RCPT-N-01176,Completed,Tuition,June tuition
+STU-01177,2026-06-07,650000,UZS,Cash,,RCPT-N-01177,Completed,Tuition,June tuition
+STU-01178,2026-06-08,650000,UZS,Credit Card,TERM-N-01178,RCPT-N-01178,Completed,Tuition,June tuition
+STU-01179,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01179,RCPT-N-01179,Completed,Tuition,June tuition
+STU-01180,2026-06-10,650000,UZS,Cash,,RCPT-N-01180,Completed,Tuition,June tuition
+STU-01181,2026-06-11,650000,UZS,Credit Card,TERM-N-01181,RCPT-N-01181,Completed,Tuition,June tuition
+STU-01182,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01182,RCPT-N-01182,Completed,Tuition,June tuition
+STU-01183,2026-06-13,650000,UZS,Cash,,RCPT-N-01183,Completed,Tuition,June tuition
+STU-01184,2026-06-14,650000,UZS,Credit Card,TERM-N-01184,RCPT-N-01184,Completed,Tuition,June tuition
+STU-01185,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01185,RCPT-N-01185,Completed,Tuition,June tuition
+STU-01186,2026-06-16,650000,UZS,Cash,,RCPT-N-01186,Completed,Tuition,June tuition
+STU-01187,2026-06-17,650000,UZS,Credit Card,TERM-N-01187,RCPT-N-01187,Completed,Tuition,June tuition
+STU-01188,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01188,RCPT-N-01188,Completed,Tuition,June tuition
+STU-01189,2026-06-19,650000,UZS,Cash,,RCPT-N-01189,Completed,Tuition,June tuition
+STU-01190,2026-06-20,650000,UZS,Credit Card,TERM-N-01190,RCPT-N-01190,Completed,Tuition,June tuition
+STU-01191,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01191,RCPT-N-01191,Completed,Tuition,June tuition
+STU-01192,2026-06-22,650000,UZS,Cash,,RCPT-N-01192,Completed,Tuition,June tuition
+STU-01193,2026-06-23,650000,UZS,Credit Card,TERM-N-01193,RCPT-N-01193,Completed,Tuition,June tuition
+STU-01194,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01194,RCPT-N-01194,Completed,Tuition,June tuition
+STU-01195,2026-06-25,650000,UZS,Cash,,RCPT-N-01195,Completed,Tuition,June tuition
+STU-01196,2026-06-26,650000,UZS,Credit Card,TERM-N-01196,RCPT-N-01196,Completed,Tuition,June tuition
+STU-01197,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01197,RCPT-N-01197,Completed,Tuition,June tuition
+STU-01198,2026-06-28,650000,UZS,Cash,,RCPT-N-01198,Completed,Tuition,June tuition
+STU-01199,2026-06-29,650000,UZS,Credit Card,TERM-N-01199,RCPT-N-01199,Completed,Tuition,June tuition
+STU-01200,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01200,RCPT-N-01200,Completed,Tuition,June tuition
+STU-01201,2026-06-01,650000,UZS,Cash,,RCPT-N-01201,Completed,Tuition,June tuition
+STU-01202,2026-06-02,650000,UZS,Credit Card,TERM-N-01202,RCPT-N-01202,Completed,Tuition,June tuition
+STU-01203,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01203,RCPT-N-01203,Completed,Tuition,June tuition
+STU-01204,2026-06-04,650000,UZS,Cash,,RCPT-N-01204,Completed,Tuition,June tuition
+STU-01205,2026-06-05,650000,UZS,Credit Card,TERM-N-01205,RCPT-N-01205,Completed,Tuition,June tuition
+STU-01206,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01206,RCPT-N-01206,Completed,Tuition,June tuition
+STU-01207,2026-06-07,650000,UZS,Cash,,RCPT-N-01207,Completed,Tuition,June tuition
+STU-01208,2026-06-08,650000,UZS,Credit Card,TERM-N-01208,RCPT-N-01208,Completed,Tuition,June tuition
+STU-01209,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01209,RCPT-N-01209,Completed,Tuition,June tuition
+STU-01210,2026-06-10,650000,UZS,Cash,,RCPT-N-01210,Completed,Tuition,June tuition
+STU-01211,2026-06-11,650000,UZS,Credit Card,TERM-N-01211,RCPT-N-01211,Completed,Tuition,June tuition
+STU-01212,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01212,RCPT-N-01212,Completed,Tuition,June tuition
+STU-01213,2026-06-13,650000,UZS,Cash,,RCPT-N-01213,Completed,Tuition,June tuition
+STU-01214,2026-06-14,650000,UZS,Credit Card,TERM-N-01214,RCPT-N-01214,Completed,Tuition,June tuition
+STU-01215,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01215,RCPT-N-01215,Completed,Tuition,June tuition
+STU-01216,2026-06-16,650000,UZS,Cash,,RCPT-N-01216,Completed,Tuition,June tuition
+STU-01217,2026-06-17,650000,UZS,Credit Card,TERM-N-01217,RCPT-N-01217,Completed,Tuition,June tuition
+STU-01218,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01218,RCPT-N-01218,Completed,Tuition,June tuition
+STU-01219,2026-06-19,650000,UZS,Cash,,RCPT-N-01219,Completed,Tuition,June tuition
+STU-01220,2026-06-20,650000,UZS,Credit Card,TERM-N-01220,RCPT-N-01220,Completed,Tuition,June tuition
+STU-01221,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01221,RCPT-N-01221,Completed,Tuition,June tuition
+STU-01222,2026-06-22,650000,UZS,Cash,,RCPT-N-01222,Completed,Tuition,June tuition
+STU-01223,2026-06-23,650000,UZS,Credit Card,TERM-N-01223,RCPT-N-01223,Completed,Tuition,June tuition
+STU-01224,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01224,RCPT-N-01224,Completed,Tuition,June tuition
+STU-01225,2026-06-25,650000,UZS,Cash,,RCPT-N-01225,Completed,Tuition,June tuition
+STU-01226,2026-06-26,650000,UZS,Credit Card,TERM-N-01226,RCPT-N-01226,Completed,Tuition,June tuition
+STU-01227,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01227,RCPT-N-01227,Completed,Tuition,June tuition
+STU-01228,2026-06-28,650000,UZS,Cash,,RCPT-N-01228,Completed,Tuition,June tuition
+STU-01229,2026-06-29,650000,UZS,Credit Card,TERM-N-01229,RCPT-N-01229,Completed,Tuition,June tuition
+STU-01230,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01230,RCPT-N-01230,Completed,Tuition,June tuition
+STU-01231,2026-06-01,650000,UZS,Cash,,RCPT-N-01231,Completed,Tuition,June tuition
+STU-01232,2026-06-02,650000,UZS,Credit Card,TERM-N-01232,RCPT-N-01232,Completed,Tuition,June tuition
+STU-01233,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01233,RCPT-N-01233,Completed,Tuition,June tuition
+STU-01234,2026-06-04,650000,UZS,Cash,,RCPT-N-01234,Completed,Tuition,June tuition
+STU-01235,2026-06-05,650000,UZS,Credit Card,TERM-N-01235,RCPT-N-01235,Completed,Tuition,June tuition
+STU-01236,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01236,RCPT-N-01236,Completed,Tuition,June tuition
+STU-01237,2026-06-07,650000,UZS,Cash,,RCPT-N-01237,Completed,Tuition,June tuition
+STU-01238,2026-06-08,650000,UZS,Credit Card,TERM-N-01238,RCPT-N-01238,Completed,Tuition,June tuition
+STU-01239,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01239,RCPT-N-01239,Completed,Tuition,June tuition
+STU-01240,2026-06-10,650000,UZS,Cash,,RCPT-N-01240,Completed,Tuition,June tuition
+STU-01241,2026-06-11,650000,UZS,Credit Card,TERM-N-01241,RCPT-N-01241,Completed,Tuition,June tuition
+STU-01242,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01242,RCPT-N-01242,Completed,Tuition,June tuition
+STU-01243,2026-06-13,650000,UZS,Cash,,RCPT-N-01243,Completed,Tuition,June tuition
+STU-01244,2026-06-14,650000,UZS,Credit Card,TERM-N-01244,RCPT-N-01244,Completed,Tuition,June tuition
+STU-01245,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01245,RCPT-N-01245,Completed,Tuition,June tuition
+STU-01246,2026-06-16,650000,UZS,Cash,,RCPT-N-01246,Completed,Tuition,June tuition
+STU-01247,2026-06-17,650000,UZS,Credit Card,TERM-N-01247,RCPT-N-01247,Completed,Tuition,June tuition
+STU-01248,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01248,RCPT-N-01248,Completed,Tuition,June tuition
+STU-01249,2026-06-19,650000,UZS,Cash,,RCPT-N-01249,Completed,Tuition,June tuition
+STU-01250,2026-06-20,650000,UZS,Credit Card,TERM-N-01250,RCPT-N-01250,Completed,Tuition,June tuition
+STU-01251,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01251,RCPT-N-01251,Completed,Tuition,June tuition
+STU-01252,2026-06-22,650000,UZS,Cash,,RCPT-N-01252,Completed,Tuition,June tuition
+STU-01253,2026-06-23,650000,UZS,Credit Card,TERM-N-01253,RCPT-N-01253,Completed,Tuition,June tuition
+STU-01254,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01254,RCPT-N-01254,Completed,Tuition,June tuition
+STU-01255,2026-06-25,650000,UZS,Cash,,RCPT-N-01255,Completed,Tuition,June tuition
+STU-01256,2026-06-26,650000,UZS,Credit Card,TERM-N-01256,RCPT-N-01256,Completed,Tuition,June tuition
+STU-01257,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01257,RCPT-N-01257,Completed,Tuition,June tuition
+STU-01258,2026-06-28,650000,UZS,Cash,,RCPT-N-01258,Completed,Tuition,June tuition
+STU-01259,2026-06-29,650000,UZS,Credit Card,TERM-N-01259,RCPT-N-01259,Completed,Tuition,June tuition
+STU-01260,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01260,RCPT-N-01260,Completed,Tuition,June tuition
+STU-01261,2026-06-01,650000,UZS,Cash,,RCPT-N-01261,Completed,Tuition,June tuition
+STU-01262,2026-06-02,650000,UZS,Credit Card,TERM-N-01262,RCPT-N-01262,Completed,Tuition,June tuition
+STU-01263,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01263,RCPT-N-01263,Completed,Tuition,June tuition
+STU-01264,2026-06-04,650000,UZS,Cash,,RCPT-N-01264,Completed,Tuition,June tuition
+STU-01265,2026-06-05,650000,UZS,Credit Card,TERM-N-01265,RCPT-N-01265,Completed,Tuition,June tuition
+STU-01266,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01266,RCPT-N-01266,Completed,Tuition,June tuition
+STU-01267,2026-06-07,650000,UZS,Cash,,RCPT-N-01267,Completed,Tuition,June tuition
+STU-01268,2026-06-08,650000,UZS,Credit Card,TERM-N-01268,RCPT-N-01268,Completed,Tuition,June tuition
+STU-01269,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01269,RCPT-N-01269,Completed,Tuition,June tuition
+STU-01270,2026-06-10,650000,UZS,Cash,,RCPT-N-01270,Completed,Tuition,June tuition
+STU-01271,2026-06-11,650000,UZS,Credit Card,TERM-N-01271,RCPT-N-01271,Completed,Tuition,June tuition
+STU-01272,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01272,RCPT-N-01272,Completed,Tuition,June tuition
+STU-01273,2026-06-13,650000,UZS,Cash,,RCPT-N-01273,Completed,Tuition,June tuition
+STU-01274,2026-06-14,650000,UZS,Credit Card,TERM-N-01274,RCPT-N-01274,Completed,Tuition,June tuition
+STU-01275,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01275,RCPT-N-01275,Completed,Tuition,June tuition
+STU-01276,2026-06-16,650000,UZS,Cash,,RCPT-N-01276,Completed,Tuition,June tuition
+STU-01277,2026-06-17,650000,UZS,Credit Card,TERM-N-01277,RCPT-N-01277,Completed,Tuition,June tuition
+STU-01278,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01278,RCPT-N-01278,Completed,Tuition,June tuition
+STU-01279,2026-06-19,650000,UZS,Cash,,RCPT-N-01279,Completed,Tuition,June tuition
+STU-01280,2026-06-20,650000,UZS,Credit Card,TERM-N-01280,RCPT-N-01280,Completed,Tuition,June tuition
+STU-01281,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01281,RCPT-N-01281,Completed,Tuition,June tuition
+STU-01282,2026-06-22,650000,UZS,Cash,,RCPT-N-01282,Completed,Tuition,June tuition
+STU-01283,2026-06-23,650000,UZS,Credit Card,TERM-N-01283,RCPT-N-01283,Completed,Tuition,June tuition
+STU-01284,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01284,RCPT-N-01284,Completed,Tuition,June tuition
+STU-01285,2026-06-25,650000,UZS,Cash,,RCPT-N-01285,Completed,Tuition,June tuition
+STU-01286,2026-06-26,650000,UZS,Credit Card,TERM-N-01286,RCPT-N-01286,Completed,Tuition,June tuition
+STU-01287,2026-06-27,650000,UZS,Bank Transfer,BANK-N-01287,RCPT-N-01287,Completed,Tuition,June tuition
+STU-01288,2026-06-28,650000,UZS,Cash,,RCPT-N-01288,Completed,Tuition,June tuition
+STU-01289,2026-06-29,650000,UZS,Credit Card,TERM-N-01289,RCPT-N-01289,Completed,Tuition,June tuition
+STU-01290,2026-06-30,650000,UZS,Bank Transfer,BANK-N-01290,RCPT-N-01290,Completed,Tuition,June tuition
+STU-01291,2026-06-01,650000,UZS,Cash,,RCPT-N-01291,Completed,Tuition,June tuition
+STU-01292,2026-06-02,650000,UZS,Credit Card,TERM-N-01292,RCPT-N-01292,Completed,Tuition,June tuition
+STU-01293,2026-06-03,650000,UZS,Bank Transfer,BANK-N-01293,RCPT-N-01293,Completed,Tuition,June tuition
+STU-01294,2026-06-04,650000,UZS,Cash,,RCPT-N-01294,Completed,Tuition,June tuition
+STU-01295,2026-06-05,650000,UZS,Credit Card,TERM-N-01295,RCPT-N-01295,Completed,Tuition,June tuition
+STU-01296,2026-06-06,650000,UZS,Bank Transfer,BANK-N-01296,RCPT-N-01296,Completed,Tuition,June tuition
+STU-01297,2026-06-07,650000,UZS,Cash,,RCPT-N-01297,Completed,Tuition,June tuition
+STU-01298,2026-06-08,650000,UZS,Credit Card,TERM-N-01298,RCPT-N-01298,Completed,Tuition,June tuition
+STU-01299,2026-06-09,650000,UZS,Bank Transfer,BANK-N-01299,RCPT-N-01299,Completed,Tuition,June tuition
+STU-01300,2026-06-10,650000,UZS,Cash,,RCPT-N-01300,Completed,Tuition,June tuition
+STU-01301,2026-06-11,650000,UZS,Credit Card,TERM-N-01301,RCPT-N-01301,Completed,Tuition,June tuition
+STU-01302,2026-06-12,650000,UZS,Bank Transfer,BANK-N-01302,RCPT-N-01302,Completed,Tuition,June tuition
+STU-01303,2026-06-13,650000,UZS,Cash,,RCPT-N-01303,Completed,Tuition,June tuition
+STU-01304,2026-06-14,650000,UZS,Credit Card,TERM-N-01304,RCPT-N-01304,Completed,Tuition,June tuition
+STU-01305,2026-06-15,650000,UZS,Bank Transfer,BANK-N-01305,RCPT-N-01305,Completed,Tuition,June tuition
+STU-01306,2026-06-16,650000,UZS,Cash,,RCPT-N-01306,Completed,Tuition,June tuition
+STU-01307,2026-06-17,650000,UZS,Credit Card,TERM-N-01307,RCPT-N-01307,Completed,Tuition,June tuition
+STU-01308,2026-06-18,650000,UZS,Bank Transfer,BANK-N-01308,RCPT-N-01308,Completed,Tuition,June tuition
+STU-01309,2026-06-19,650000,UZS,Cash,,RCPT-N-01309,Completed,Tuition,June tuition
+STU-01310,2026-06-20,650000,UZS,Credit Card,TERM-N-01310,RCPT-N-01310,Completed,Tuition,June tuition
+STU-01311,2026-06-21,650000,UZS,Bank Transfer,BANK-N-01311,RCPT-N-01311,Completed,Tuition,June tuition
+STU-01312,2026-06-22,650000,UZS,Cash,,RCPT-N-01312,Completed,Tuition,June tuition
+STU-01313,2026-06-23,650000,UZS,Credit Card,TERM-N-01313,RCPT-N-01313,Completed,Tuition,June tuition
+STU-01314,2026-06-24,650000,UZS,Bank Transfer,BANK-N-01314,RCPT-N-01314,Completed,Tuition,June tuition

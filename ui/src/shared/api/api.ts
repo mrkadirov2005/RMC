@@ -206,9 +206,14 @@ export const studentAPI = {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
+  getDeleted: (options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/students/deleted', {
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   create: (data: any) => apiClient.post('/students', data),
   update: (id: number, data: any) => apiClient.put(`/students/${id}`, data),
   delete: (id: number) => apiClient.delete(`/students/${id}`),
+  purge: (id: number) => apiClient.delete(`/students/${id}/purge`),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/students/${id}/set-password`, data),
   getCoins: (id: number) => apiClient.get(`/students/${id}/coins`),
@@ -247,6 +252,7 @@ export const teacherAPI = {
   update: (id: number, data: any) => apiClient.put(`/teachers/${id}`, data),
   delete: (id: number, options?: { force?: boolean }) =>
     apiClient.delete(`/teachers/${id}`, { params: options?.force ? { force: 'true' } : undefined }),
+  purge: (id: number) => apiClient.delete(`/teachers/${id}/purge`),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/teachers/${id}/set-password`, data),
   setPaymentPassword: (id: number, data: { password: string }) =>
@@ -264,12 +270,15 @@ export const classAPI = {
   create: (data: any) => apiClient.post('/classes', data),
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
   delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),
+  purge: (id: number) => apiClient.delete(`/classes/${id}/purge`),
   generateSessions: (id: number, data: { month: number; year: number; duration_minutes: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions/generate`, data),
   deleteSessions: (id: number, params: { from: string; to?: string }) =>
     apiClient.delete(`/classes/${id}/sessions`, { params }),
   deleteSessionById: (id: number, sessionId: number) =>
     apiClient.delete(`/classes/${id}/sessions/${sessionId}`),
+  purgeSessionById: (id: number, sessionId: number) =>
+    apiClient.delete(`/classes/${id}/sessions/${sessionId}/purge`),
   createSession: (id: number, data: { session_date: string; start_time: string; duration_minutes?: number; teacher_id?: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions`, data),
 };
@@ -286,6 +295,7 @@ export const paymentAPI = {
   create: (data: any) => apiClient.post('/payments', data),
   update: (id: number, data: any) => apiClient.put(`/payments/${id}`, data),
   delete: (id: number) => apiClient.delete(`/payments/${id}`),
+  purge: (id: number) => apiClient.delete(`/payments/${id}/purge`),
 };
 
 export const gradeAPI = {

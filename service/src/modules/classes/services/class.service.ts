@@ -1,5 +1,5 @@
 const classRepository = require('../repositories/class.repository');
-const attendanceRepository = require('../../attendance/repositories/attendance.repository');
+const sessionRepository = require('../../sessions/repositories/session.repository');
 
 const listClasses = (centerId?: number, teacherId?: number) => classRepository.findAll(centerId, teacherId);
 
@@ -33,21 +33,17 @@ const updateClass = (id: number, body: any, centerId?: number) => {
 };
 
 const deleteClass = async (id: number, centerId?: number, options?: { force?: boolean }) => {
-  const force = Boolean(options?.force);
-  const attendance = await attendanceRepository.findByClass(id, centerId);
-  if (attendance.length > 0 && !force) {
-    return { error: 'has_attendance' as const, attendance };
-  }
-
-  let deletedAttendanceCount = 0;
-  if (attendance.length > 0 && force) {
-    deletedAttendanceCount = await attendanceRepository.removeByClass(id, centerId);
-  }
-
   const row = await classRepository.remove(id, centerId);
-  return { row, deletedAttendanceCount };
+  if (!row) return { row };
+  const deletedSessionCount = await sessionRepository.softDeleteByClass(id, centerId);
+  return { row, deletedSessionCount };
 };
 
-module.exports = { listClasses, getClass, createClass, updateClass, deleteClass };
+const purgeClass = async (id: number, centerId?: number) => {
+  const row = await classRepository.purge(id, centerId);
+  return { row };
+};
+
+module.exports = { listClasses, getClass, createClass, updateClass, deleteClass, purgeClass };
 
 export {};

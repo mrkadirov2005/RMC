@@ -94,18 +94,18 @@ const deleteTeacher = async (id: number, centerId?: number, options?: { force?: 
   if (!teacher) return { kind: 'not_found' as const };
 
   const dependencies = await teacherRepository.getDeleteDependencies(id, centerId);
-  const hasHistory = dependencies.attendance_count > 0 || dependencies.grades_count > 0;
-  if (hasHistory) {
-    return { kind: 'blocked' as const, reason: 'history', dependencies };
-  }
-
   if (teacherRepository.hasDeleteDependencies(dependencies)) {
-    if (!options?.force) return { kind: 'has_dependencies' as const, dependencies };
     await teacherRepository.unassignDeleteDependencies(id, centerId);
   }
 
   const row = await teacherRepository.remove(id, centerId);
   return { kind: 'deleted' as const, row, dependencies };
+};
+
+const purgeTeacher = async (id: number, centerId?: number) => {
+  const row = await teacherRepository.purge(id, centerId);
+  if (!row) return { kind: 'not_found' as const };
+  return { kind: 'purged' as const, row };
 };
 
 const authenticate = async (username: string, password: string) => {
@@ -134,6 +134,7 @@ module.exports = {
   createTeacher,
   updateTeacher,
   deleteTeacher,
+  purgeTeacher,
   authenticate,
   setPasswordByAdmin,
   changePassword,

@@ -3,7 +3,7 @@ export {};
 const express_student = require('express');
 const router_student = express_student.Router();
 const studentController = require('../modules/students/controllers/student.controller');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireMuzaffarHardDelete } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
 const { CredentialsDto, PasswordChangeDto, SetPasswordDto, StudentCoinTransactionDto } = require('../dtos/request.dto');
 
@@ -24,6 +24,7 @@ const { CredentialsDto, PasswordChangeDto, SetPasswordDto, StudentCoinTransactio
  *                 $ref: '#/components/schemas/Student'
  */
 router_student.get('/', requireAuth, studentController.getAllStudents);
+router_student.get('/deleted', requireAuth, requireMuzaffarHardDelete, studentController.getDeletedStudents);
 
 /**
  * @swagger
@@ -110,6 +111,7 @@ router_student.put('/:id', requireAuth, studentController.updateStudent);
  *         description: Student not found
  */
 router_student.delete('/:id', requireAuth, requireRole('superuser'), studentController.deleteStudent);
+router_student.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, studentController.purgeStudent);
 
 /**
  * @swagger

@@ -11,7 +11,7 @@ const getAll = async (centerId?: number, teacherId?: number) => {
   }
 
   if (teacherId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id';
+    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
     params.push(teacherId);
     conditions.push(`c.teacher_id = $${params.length}`);
   }
@@ -36,7 +36,7 @@ const getById = async (id: number, centerId?: number, teacherId?: number) => {
   }
 
   if (teacherId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id';
+    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
     params.push(teacherId);
     conditions.push(`c.teacher_id = $${params.length}`);
   }
@@ -144,7 +144,7 @@ const update = async (id: number, payload: any, centerId?: number, teacherId?: n
     query += ` AND center_id = $${params.length}`;
   }
   if (teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
+    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
     params.push(teacherId);
     query += ` AND teacher_id = $${params.length}`;
     query += ')';
@@ -162,7 +162,7 @@ const remove = async (id: number, centerId?: number, teacherId?: number) => {
     query += ` AND center_id = $${params.length}`;
   }
   if (teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
+    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
     params.push(teacherId);
     query += ` AND teacher_id = $${params.length}`;
     query += ')';

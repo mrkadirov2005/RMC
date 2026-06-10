@@ -1,11 +1,13 @@
 const pool = require('../../../db/pool');
 
 const selectAllStudents = (centerId?: number) => {
-  let query = 'SELECT s.*, c.class_name, c.class_code FROM students s LEFT JOIN classes c ON s.class_id = c.class_id';
+  let query = 'SELECT s.*, c.class_name, c.class_code FROM students s LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL';
   const params: any[] = [];
   if (centerId) {
-    query += ' WHERE s.center_id = $1';
+    query += ' WHERE s.center_id = $1 AND s.deleted_at IS NULL';
     params.push(centerId);
+  } else {
+    query += ' WHERE s.deleted_at IS NULL';
   }
   query += ' ORDER BY s.student_id DESC';
   return pool.query(query, params).then((r: any) => r.rows);
@@ -15,8 +17,10 @@ const selectAllTeachers = (centerId?: number) => {
   let query = 'SELECT * FROM teachers';
   const params: any[] = [];
   if (centerId) {
-    query += ' WHERE center_id = $1';
+    query += ' WHERE center_id = $1 AND deleted_at IS NULL';
     params.push(centerId);
+  } else {
+    query += ' WHERE deleted_at IS NULL';
   }
   query += ' ORDER BY teacher_id DESC';
   return pool.query(query, params).then((r: any) => r.rows);
@@ -26,8 +30,10 @@ const selectAllClasses = (centerId?: number) => {
   let query = 'SELECT * FROM classes';
   const params: any[] = [];
   if (centerId) {
-    query += ' WHERE center_id = $1';
+    query += ' WHERE center_id = $1 AND deleted_at IS NULL';
     params.push(centerId);
+  } else {
+    query += ' WHERE deleted_at IS NULL';
   }
   query += ' ORDER BY class_id DESC';
   return pool.query(query, params).then((r: any) => r.rows);
@@ -37,8 +43,10 @@ const selectAllPayments = (centerId?: number) => {
   let query = 'SELECT * FROM payments';
   const params: any[] = [];
   if (centerId) {
-    query += ' WHERE center_id = $1';
+    query += ' WHERE center_id = $1 AND deleted_at IS NULL';
     params.push(centerId);
+  } else {
+    query += ' WHERE deleted_at IS NULL';
   }
   query += ' ORDER BY payment_id DESC';
   return pool.query(query, params).then((r: any) => r.rows);
@@ -48,7 +56,7 @@ const selectAllRooms = (centerId?: number) => {
   let query = `
     SELECT r.*, c.class_name, c.class_code
     FROM rooms r
-    LEFT JOIN classes c ON r.class_id = c.class_id
+    LEFT JOIN classes c ON r.class_id = c.class_id AND c.deleted_at IS NULL
   `;
   const params: any[] = [];
   if (centerId) {
@@ -63,7 +71,7 @@ const selectAllAssignments = (centerId?: number) => {
   let query = `
     SELECT a.*, c.class_name, c.class_code
     FROM assignments a
-    LEFT JOIN classes c ON a.class_id = c.class_id
+    LEFT JOIN classes c ON a.class_id = c.class_id AND c.deleted_at IS NULL
   `;
   const params: any[] = [];
   if (centerId) {
@@ -78,8 +86,8 @@ const selectAllSubjects = (centerId?: number) => {
   let query = `
     SELECT s.*, c.class_name, c.class_code, t.employee_id AS teacher_employee_id
     FROM subjects s
-    LEFT JOIN classes c ON s.class_id = c.class_id
-    LEFT JOIN teachers t ON s.teacher_id = t.teacher_id
+    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
+    LEFT JOIN teachers t ON s.teacher_id = t.teacher_id AND t.deleted_at IS NULL
   `;
   const params: any[] = [];
   if (centerId) {
@@ -104,7 +112,7 @@ const findTeacherIdByEmployeeId = (employeeId?: string | null, centerId?: number
   const normalizedEmployeeId = normalizeClassText(employeeId);
   if (!normalizedEmployeeId) return Promise.resolve(null);
 
-  let query = 'SELECT teacher_id FROM teachers WHERE LOWER(TRIM(employee_id)) = LOWER($1)';
+  let query = 'SELECT teacher_id FROM teachers WHERE LOWER(TRIM(employee_id)) = LOWER($1) AND deleted_at IS NULL';
   const params: any[] = [normalizedEmployeeId];
   if (centerId) {
     params.push(centerId);
@@ -131,7 +139,7 @@ const findClassIdByNameOrCode = (className?: string | null, classCode?: string |
   }
   if (!conditions.length) return Promise.resolve(null);
 
-  let query = `SELECT class_id FROM classes WHERE (${conditions.join(' OR ')})`;
+  let query = `SELECT class_id FROM classes WHERE (${conditions.join(' OR ')}) AND deleted_at IS NULL`;
   if (centerId) {
     params.push(centerId);
     query += ` AND center_id = $${params.length}`;
@@ -145,7 +153,7 @@ const findStudentIdByEnrollmentNumber = (enrollmentNumber?: string | null, cente
   const normalizedEnrollmentNumber = normalizeClassText(enrollmentNumber);
   if (!normalizedEnrollmentNumber) return Promise.resolve(null);
 
-  let query = 'SELECT student_id FROM students WHERE LOWER(TRIM(enrollment_number)) = LOWER($1)';
+  let query = 'SELECT student_id FROM students WHERE LOWER(TRIM(enrollment_number)) = LOWER($1) AND deleted_at IS NULL';
   const params: any[] = [normalizedEnrollmentNumber];
   if (centerId) {
     params.push(centerId);
@@ -162,7 +170,7 @@ const findStudentIdByNameAndClass = (firstName?: string | null, lastName?: strin
   if (!normalizedFirstName || !normalizedLastName) return Promise.resolve(null);
 
   const params: any[] = [normalizedFirstName, normalizedLastName];
-  let query = `SELECT student_id FROM students WHERE LOWER(TRIM(first_name)) = LOWER($1) AND LOWER(TRIM(last_name)) = LOWER($2)`;
+  let query = `SELECT student_id FROM students WHERE LOWER(TRIM(first_name)) = LOWER($1) AND LOWER(TRIM(last_name)) = LOWER($2) AND deleted_at IS NULL`;
   if (classId) {
     params.push(classId);
     query += ` AND class_id = $${params.length}`;
@@ -210,7 +218,7 @@ const insertStudent = (params: any[]) =>
   pool.query(
     `INSERT INTO students (center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-     ON CONFLICT (enrollment_number) DO UPDATE SET
+     ON CONFLICT (enrollment_number) WHERE deleted_at IS NULL DO UPDATE SET
        center_id = EXCLUDED.center_id,
        first_name = EXCLUDED.first_name,
        last_name = EXCLUDED.last_name,
@@ -235,7 +243,7 @@ const insertTeacher = (params: any[]) =>
   pool.query(
     `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, username, password_hash)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
-     ON CONFLICT (employee_id) DO UPDATE SET
+     ON CONFLICT (employee_id) WHERE deleted_at IS NULL DO UPDATE SET
        center_id = EXCLUDED.center_id,
        first_name = EXCLUDED.first_name,
        last_name = EXCLUDED.last_name,
@@ -256,7 +264,7 @@ const upsertClassByCode = (params: any[]) =>
   pool.query(
     `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, payment_amount, payment_frequency)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
-     ON CONFLICT (class_code) DO UPDATE SET
+     ON CONFLICT (class_code) WHERE deleted_at IS NULL DO UPDATE SET
        center_id = EXCLUDED.center_id,
        class_name = EXCLUDED.class_name,
        level = EXCLUDED.level,
@@ -274,7 +282,7 @@ const insertPayment = (params: any[]) =>
   pool.query(
     `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-     ON CONFLICT (receipt_number) DO UPDATE SET
+     ON CONFLICT (receipt_number) WHERE deleted_at IS NULL DO UPDATE SET
        student_id = EXCLUDED.student_id,
        center_id = EXCLUDED.center_id,
        payment_date = EXCLUDED.payment_date,

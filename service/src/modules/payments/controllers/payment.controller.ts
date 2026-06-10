@@ -150,6 +150,32 @@ const deletePayment = async (req: any, res: any) => {
   }
 };
 
+const purgePayment = async (req: any, res: any) => {
+  try {
+    if (req.user?.userType === 'teacher') {
+      return res.status(403).json({ error: 'Teachers cannot permanently delete payments.' });
+    }
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    const row = await paymentService.purgePayment(Number(req.params.id), centerId ?? undefined, teacherId);
+    if (!row) return res.status(404).json({ error: 'Soft-deleted payment not found' });
+    res.json({ message: 'Payment permanently deleted', payment: row });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    if (error?.code === '23503') {
+      return res.status(409).json({
+        error: 'Payment is still referenced by other records',
+        message: 'Delete or reassign related records before permanently deleting this payment.',
+        details: error.detail,
+      });
+    }
+    res.status(500).json({ error: 'Failed to permanently delete payment', details: error.message || String(error) });
+  }
+};
+
 module.exports = {
   getAllPayments,
   getPaymentById,
@@ -157,6 +183,7 @@ module.exports = {
   updatePayment,
   getPaymentsByStudent,
   deletePayment,
+  purgePayment,
 };
 
 export {};

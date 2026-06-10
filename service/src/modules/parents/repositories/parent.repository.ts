@@ -10,7 +10,7 @@ const findAllSafe = (centerId?: number) => {
     query += `
       JOIN parent_students ps ON ps.parent_id = p.parent_id
       JOIN students s ON s.student_id = ps.student_id
-      WHERE s.center_id = $1
+      WHERE s.center_id = $1 AND s.deleted_at IS NULL
     `;
     params.push(centerId);
   }
@@ -27,7 +27,7 @@ const findByIdSafe = (id: number, centerId?: number) => {
       FROM parents p
       JOIN parent_students ps ON ps.parent_id = p.parent_id
       JOIN students s ON s.student_id = ps.student_id
-      WHERE p.parent_id = $1 AND s.center_id = $2
+      WHERE p.parent_id = $1 AND s.center_id = $2 AND s.deleted_at IS NULL
     `;
     params.push(centerId);
   }
@@ -53,7 +53,7 @@ const update = (id: number, params: any[], centerId?: number) =>
         phone = COALESCE($4, phone),
         status = COALESCE($5, status),
         updated_at = CURRENT_TIMESTAMP
-       WHERE parent_id = $6${centerId ? ' AND parent_id IN (SELECT ps.parent_id FROM parent_students ps JOIN students s ON s.student_id = ps.student_id WHERE s.center_id = $7)' : ''} RETURNING parent_id, first_name, last_name, email, phone, username, status`,
+       WHERE parent_id = $6${centerId ? ' AND parent_id IN (SELECT ps.parent_id FROM parent_students ps JOIN students s ON s.student_id = ps.student_id WHERE s.center_id = $7 AND s.deleted_at IS NULL)' : ''} RETURNING parent_id, first_name, last_name, email, phone, username, status`,
       centerId ? [...params, id, centerId] : [...params, id]
     )
     .then((r: any) => r.rows[0] || null);
@@ -62,7 +62,7 @@ const remove = (id: number, centerId?: number) => {
   let query = 'DELETE FROM parents WHERE parent_id = $1';
   const params: any[] = [id];
   if (centerId) {
-    query += ' AND parent_id IN (SELECT ps.parent_id FROM parent_students ps JOIN students s ON s.student_id = ps.student_id WHERE s.center_id = $2)';
+    query += ' AND parent_id IN (SELECT ps.parent_id FROM parent_students ps JOIN students s ON s.student_id = ps.student_id WHERE s.center_id = $2 AND s.deleted_at IS NULL)';
     params.push(centerId);
   }
   query += ' RETURNING parent_id';
@@ -91,7 +91,7 @@ const findStudentsForParent = (parentId: number) =>
     .query(
       `SELECT s.* FROM parent_students ps
        JOIN students s ON s.student_id = ps.student_id
-       WHERE ps.parent_id = $1`,
+       WHERE ps.parent_id = $1 AND s.deleted_at IS NULL`,
       [parentId]
     )
     .then((r: any) => r.rows);
@@ -101,7 +101,8 @@ const findPaymentsForParent = (parentId: number) =>
     .query(
       `SELECT p.* FROM parent_students ps
        JOIN payments p ON p.student_id = ps.student_id
-       WHERE ps.parent_id = $1
+       JOIN students s ON s.student_id = ps.student_id
+       WHERE ps.parent_id = $1 AND p.deleted_at IS NULL AND s.deleted_at IS NULL
        ORDER BY p.payment_date DESC`,
       [parentId]
     )
@@ -112,7 +113,8 @@ const findAttendanceForParent = (parentId: number) =>
     .query(
       `SELECT a.* FROM parent_students ps
        JOIN attendance a ON a.student_id = ps.student_id
-       WHERE ps.parent_id = $1
+       JOIN students s ON s.student_id = ps.student_id
+       WHERE ps.parent_id = $1 AND s.deleted_at IS NULL
        ORDER BY a.attendance_date DESC`,
       [parentId]
     )
@@ -123,7 +125,8 @@ const findGradesForParent = (parentId: number) =>
     .query(
       `SELECT g.* FROM parent_students ps
        JOIN grades g ON g.student_id = ps.student_id
-       WHERE ps.parent_id = $1
+       JOIN students s ON s.student_id = ps.student_id
+       WHERE ps.parent_id = $1 AND s.deleted_at IS NULL
        ORDER BY g.academic_year DESC, g.term DESC`,
       [parentId]
     )

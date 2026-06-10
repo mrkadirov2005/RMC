@@ -102,6 +102,30 @@ const deleteTeacher = async (req: any, res: any) => {
   }
 };
 
+const purgeTeacher = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    const result = await teacherService.purgeTeacher(Number(req.params.id), centerId ?? undefined);
+    if (result?.kind === 'not_found') {
+      return res.status(404).json({ error: 'Soft-deleted teacher not found', message: 'Soft-deleted teacher not found' });
+    }
+    res.json({ message: 'Teacher permanently deleted', teacher: result.row });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    if (error?.code === '23503') {
+      return res.status(409).json({
+        error: 'Teacher is still referenced by other records',
+        message: 'Reassign related records before permanently deleting this teacher.',
+        details: error.detail,
+      });
+    }
+    res.status(500).json({ error: 'Failed to permanently delete teacher', details: error.message || String(error) });
+  }
+};
+
 const teacherLogin = async (req: any, res: any) => {
   try {
     const { username, password } = req.body;
@@ -229,6 +253,7 @@ module.exports = {
   createTeacher,
   updateTeacher,
   deleteTeacher,
+  purgeTeacher,
   teacherLogin,
   teacherPaymentLogin,
   setTeacherPaymentPassword,

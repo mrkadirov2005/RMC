@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import { useAppDispatch, useAppSelector } from '../../crm/hooks';
-import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../../shared/auth/authStorage';
+import { getStoredActiveCenterId, getStoredAuth, setStoredActiveCenterId } from '../../../shared/auth/authStorage';
 import { createStudentIdentity } from '../../../shared/studentIdentity';
 import { generateTempPassword } from '../../../utils/password';
 import { showToast, handleApiError } from '../../../utils/toast';
@@ -72,6 +72,7 @@ export const useOwnerManager = () => {
     teachers: [] as any[],
     classes: [] as any[],
     payments: [] as any[],
+    deletedStudents: [] as any[],
   });
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
 
@@ -108,6 +109,13 @@ export const useOwnerManager = () => {
   const dataCount = data.length;
   const centerCount = centerOptions.length;
   const statistics = useMemo(() => buildOwnerStudentStatistics(data, centerLookup), [centerLookup, data]);
+  const canHardDelete = useMemo(() => {
+    const user = getStoredAuth().user;
+    return (
+      String(user?.username || '').toLowerCase() === 'muzaffar' &&
+      String(user?.role || '').toLowerCase() === 'owner'
+    );
+  }, []);
 
 // Memoizes the fetch data callback.
   const fetchData = useCallback(async () => {
@@ -135,35 +143,39 @@ export const useOwnerManager = () => {
       }
 
       if (activeTab === 'statistics') {
-        const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
+        const [studentsRes, teachersRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
           ownerManagerApi.students.getAllAcrossCenters(),
           ownerManagerApi.teachers.getAllAcrossCenters(),
           ownerManagerApi.classes.getAllAcrossCenters(),
           ownerManagerApi.payments.getAllAcrossCenters(),
+          canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters() : Promise.resolve({ data: [] }),
         ]);
 
         const students = Array.isArray(studentsRes) ? studentsRes : studentsRes.data || [];
         const teachers = Array.isArray(teachersRes) ? teachersRes : teachersRes.data || [];
         const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
         const payments = Array.isArray(paymentsRes) ? paymentsRes : paymentsRes.data || [];
+        const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
 
-        setStatisticsCollections({ students, teachers, classes, payments });
+        setStatisticsCollections({ students, teachers, classes, payments, deletedStudents });
         dispatch(setOwnerManagerData(students));
         return;
       }
 
       if (activeTab === 'teachers') {
-        const [teachersRes, studentsRes, classesRes, paymentsRes] = await Promise.all([
+        const [teachersRes, studentsRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
           ownerManagerApi.teachers.getAll(),
           ownerManagerApi.students.getAllAcrossCenters(),
           ownerManagerApi.classes.getAllAcrossCenters(),
           ownerManagerApi.payments.getAllAcrossCenters(),
+          canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters() : Promise.resolve({ data: [] }),
         ]);
         const teachers = Array.isArray(teachersRes) ? teachersRes : teachersRes.data || [];
         const students = Array.isArray(studentsRes) ? studentsRes : studentsRes.data || [];
         const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
         const payments = Array.isArray(paymentsRes) ? paymentsRes : paymentsRes.data || [];
-        setStatisticsCollections({ students, teachers, classes, payments });
+        const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
+        setStatisticsCollections({ students, teachers, classes, payments, deletedStudents });
         dispatch(setOwnerManagerData(teachers));
         return;
       }
@@ -194,11 +206,12 @@ export const useOwnerManager = () => {
         teachers: [],
         classes: [],
         payments: [],
+        deletedStudents: [],
       });
     } finally {
       dispatch(setOwnerManagerLoading(false));
     }
-  }, [activeCenterId, activeTab, dispatch, needsCenterScope]);
+  }, [activeCenterId, activeTab, canHardDelete, dispatch, needsCenterScope]);
 
 // Memoizes the load centers callback.
   const loadCenters = useCallback(async () => {
@@ -397,6 +410,39 @@ export const useOwnerManager = () => {
     }
   }, [activeTab, dispatch, fetchData]);
 
+// Memoizes the handle hard delete callback.
+  const handleHardDelete = useCallback(async (id: number) => {
+    if (!canHardDelete) {
+      showToast.error('Permanent delete is restricted to owner muzaffar.');
+      return;
+    }
+    if (!window.confirm('Permanently delete this record? This cannot be undone.')) return;
+
+    dispatch(setOwnerManagerLoading(true));
+    try {
+      switch (activeTab) {
+        case 'teachers':
+          await ownerManagerApi.teachers.delete(id);
+          await ownerManagerApi.teachers.purge(id);
+          break;
+        case 'students':
+          await ownerManagerApi.students.delete(id);
+          await ownerManagerApi.students.purge(id);
+          break;
+        default:
+          showToast.error('Permanent delete is not available in this section.');
+          return;
+      }
+      showToast.success('Record permanently deleted.');
+      await fetchData();
+    } catch (err) {
+      const errorMessage = handleApiError(err);
+      showToast.error(errorMessage);
+    } finally {
+      dispatch(setOwnerManagerLoading(false));
+    }
+  }, [activeTab, canHardDelete, dispatch, fetchData]);
+
 // Memoizes the handle reset password callback.
   const handleResetPassword = useCallback(async (item: any) => {
     if (activeTab !== 'teachers' && activeTab !== 'students') return;
@@ -485,6 +531,7 @@ export const useOwnerManager = () => {
     statisticsCollections,
     statistics,
     crossCounts,
+    canHardDelete,
     selectedPermissions,
     formData,
     handleInputChange,
@@ -492,6 +539,7 @@ export const useOwnerManager = () => {
     handleCloseForm,
     handleSubmit,
     handleDelete,
+    handleHardDelete,
     handleEdit,
     handleResetPassword,
     handlePermissionToggle,

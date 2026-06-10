@@ -20,7 +20,7 @@ const overview = async (query: { center_id?: string; start_date?: string; end_da
   const classes = await reportRepository.countClasses(centerFilter, params);
 
   const paymentsParams: any[] = [];
-  let paymentsWhere = `WHERE payment_status = 'Completed'`;
+  let paymentsWhere = `WHERE payment_status = 'Completed' AND deleted_at IS NULL`;
   if (scopedCenterId) {
     paymentsParams.push(scopedCenterId);
     paymentsWhere += ` AND center_id = $${paymentsParams.length}`;
@@ -65,7 +65,7 @@ const paymentsReport = async (
   const { start, end } = buildDateRange(start_date, end_date);
 
   const params: any[] = [];
-  let where = `WHERE payment_status = 'Completed'`;
+  let where = `WHERE payment_status = 'Completed' AND deleted_at IS NULL`;
 
   if (scopedCenterId) {
     params.push(scopedCenterId);

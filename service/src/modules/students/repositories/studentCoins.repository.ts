@@ -2,14 +2,14 @@ const pool = require('../../../db/pool');
 
 const findStudentForUpdate = async (client: any, studentId: number) => {
   const result = await client.query(
-    'SELECT student_id, center_id, teacher_id, coins FROM students WHERE student_id = $1 FOR UPDATE',
+    'SELECT student_id, center_id, teacher_id, coins FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE',
     [studentId]
   );
   return result.rows[0] || null;
 };
 
 const listTransactions = async (studentId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT t.* FROM student_coin_transactions t JOIN students s ON s.student_id = t.student_id';
+  let query = 'SELECT t.* FROM student_coin_transactions t JOIN students s ON s.student_id = t.student_id AND s.deleted_at IS NULL';
   const params: any[] = [studentId];
   const conditions: string[] = ['t.student_id = $1'];
 
@@ -54,7 +54,7 @@ const addTransaction = async (
       return { error: 'insufficient' as const, balance: currentCoins };
     }
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2', [
+    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
       nextCoins,
       studentId,
     ]);
@@ -111,7 +111,7 @@ const upsertSourceTransaction = async (
       return { error: 'insufficient' as const, balance: currentCoins };
     }
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2', [
+    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
       nextCoins,
       studentId,
     ]);
@@ -174,7 +174,7 @@ const updateTransaction = async (
       return { error: 'insufficient' as const, balance: currentCoins };
     }
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2', [
+    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
       nextCoins,
       studentId,
     ]);
@@ -221,7 +221,7 @@ const deleteTransaction = async (studentId: number, transactionId: number) => {
       return { error: 'insufficient' as const, balance: currentCoins };
     }
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2', [
+    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
       nextCoins,
       studentId,
     ]);

@@ -10,6 +10,9 @@ const listStudentsPaginated = (filters: Record<string, unknown>, centerId?: numb
 const getStudent = (id: number, centerId?: number, teacherId?: number) =>
   studentRepository.findByIdWithClass(id, centerId, teacherId);
 
+const listDeletedStudents = (centerId?: number) =>
+  studentRepository.findDeletedWithClassAndTeacher(centerId);
+
 const createStudent = (body: any) => {
   const password_hash = body.password ? hashPassword(body.password) : null;
   return studentRepository.insert({
@@ -40,6 +43,9 @@ const updateStudent = (id: number, body: any, centerId?: number, teacherId?: num
 const deleteStudent = (id: number, centerId?: number, teacherId?: number) =>
   studentRepository.remove(id, centerId, teacherId);
 
+const purgeStudent = (id: number, centerId?: number, teacherId?: number) =>
+  studentRepository.purge(id, centerId, teacherId);
+
 const authenticate = async (username: string, password: string) => {
   const student = await studentRepository.findByUsername(username);
   if (!student) return { kind: 'invalid' as const };
@@ -65,9 +71,11 @@ module.exports = {
   listStudents,
   listStudentsPaginated,
   getStudent,
+  listDeletedStudents,
   createStudent,
   updateStudent,
   deleteStudent,
+  purgeStudent,
   authenticate,
   setPasswordByAdmin,
   changePassword,

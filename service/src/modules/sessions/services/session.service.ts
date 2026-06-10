@@ -132,6 +132,16 @@ const deleteSessionById = (params: {
   return sessionRepository.deleteById(classId, sessionId, centerId, teacherId);
 };
 
+const purgeSessionById = (params: {
+  classId: number;
+  sessionId: number;
+  centerId?: number;
+  teacherId?: number;
+}) => {
+  const { classId, sessionId, centerId, teacherId } = params;
+  return sessionRepository.purgeById(classId, sessionId, centerId, teacherId);
+};
+
 const createSession = async (params: {
   classId: number;
   centerId?: number;
@@ -161,7 +171,8 @@ module.exports = {
   generateMonthlySessions, 
   listByClass, 
   deleteUpcomingSessions, 
-  deleteSessionById 
+  deleteSessionById,
+  purgeSessionById
 };
 
 

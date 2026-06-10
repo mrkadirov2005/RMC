@@ -6,7 +6,7 @@ const findAll = (centerId?: number, teacherId?: number, studentId?: number) => {
   const params: any[] = [];
 
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id';
+    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -33,7 +33,7 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
   const conditions: string[] = ['g.grade_id = $1'];
 
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id';
+    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -76,7 +76,7 @@ const update = (id: number, params: any[], centerId?: number, teacherId?: number
     'UPDATE grades SET marks_obtained = COALESCE($1, marks_obtained), percentage = COALESCE($2, percentage), grade_letter = COALESCE($3, grade_letter), attendance_score = COALESCE($4, attendance_score), homework_score = COALESCE($5, homework_score), activity_score = COALESCE($6, activity_score), updated_at = CURRENT_TIMESTAMP WHERE grade_id = $7';
   const values: any[] = [...params, id];
   if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
+    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
     if (centerId) {
       values.push(centerId);
       query += ` AND center_id = $${values.length}`;
@@ -159,7 +159,7 @@ const findByStudent = (studentId: number, centerId?: number, teacherId?: number)
   const conditions: string[] = ['g.student_id = $1'];
 
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id';
+    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -178,7 +178,7 @@ const findBySession = (sessionId: number, centerId?: number, teacherId?: number)
   const conditions: string[] = ['g.session_id = $1'];
 
   if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id';
+    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
     params.push(centerId);
     conditions.push(`c.center_id = $${params.length}`);
   }
@@ -209,7 +209,7 @@ const remove = (id: number, centerId?: number, teacherId?: number) => {
   let query = 'DELETE FROM grades WHERE grade_id = $1';
   const params: any[] = [id];
   if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE 1=1';
+    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
     if (centerId) {
       params.push(centerId);
       query += ` AND center_id = $${params.length}`;
