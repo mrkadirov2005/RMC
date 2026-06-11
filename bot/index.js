@@ -57,6 +57,26 @@ function normalizePhone(value) {
   return String(value || '').replace(/[^\d+]/g, '');
 }
 
+function parseDateInput(value) {
+  const text = cleanText(value);
+  const match = text.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day ||
+    year < 1900 ||
+    year > new Date().getUTCFullYear()
+  ) {
+    return null;
+  }
+  return text;
+}
+
 function formatDate(value) {
   if (!value) return '-';
   const date = new Date(value);
@@ -432,6 +452,11 @@ async function handleRegisterStep(message, state) {
   const chatId = message.chat.id;
   const text = cleanText(message.text);
   const step = REGISTER_STEPS[state.step];
+  if (!step) {
+    userState.delete(chatId);
+    await sendMessage(chatId, 'Ro‘yxatdan o‘tish holati eskirgan. Qaytadan boshlang.', { reply_markup: MAIN_KEYBOARD });
+    return;
+  }
   if (!text) {
     await sendMessage(chatId, step.prompt);
     return;
@@ -444,6 +469,14 @@ async function handleRegisterStep(message, state) {
       return;
     }
     state.data[step.key] = normalized;
+    state.step += 1;
+  } else if (step.key === 'date_of_birth') {
+    const parsedDate = parseDateInput(text);
+    if (!parsedDate) {
+      await sendMessage(chatId, "Sana noto‘g‘ri. Iltimos YYYY-MM-DD formatida kiriting. Masalan: 2008-05-21");
+      return;
+    }
+    state.data[step.key] = parsedDate;
     state.step += 1;
   } else if (step.key === 'username') {
     if (await isUsernameTaken(text)) {
@@ -463,13 +496,21 @@ async function handleRegisterStep(message, state) {
     return;
   }
 
-  const saved = await saveRegistration(message.from, chatId, state.data);
-  userState.delete(chatId);
-  await sendMessage(
-    chatId,
-    `Ro'yhatdan o'tish so'rovi saqlandi.\nID: ${saved.registration_id}\nGuruh: ${process.env.BOT_REGISTRATION_CLASS_LABEL || 'Unassigned'}\nStatus: Pending`,
-    { reply_markup: MAIN_KEYBOARD }
-  );
+  try {
+    const saved = await saveRegistration(message.from, chatId, state.data);
+    userState.delete(chatId);
+    await sendMessage(
+      chatId,
+      `Ro'yhatdan o'tish so'rovi saqlandi.\nID: ${saved.registration_id}\nGuruh: ${process.env.BOT_REGISTRATION_CLASS_LABEL || 'Unassigned'}\nStatus: Pending`,
+      { reply_markup: MAIN_KEYBOARD }
+    );
+  } catch (error) {
+    console.error('Registration save failed:', error);
+    userState.delete(chatId);
+    await sendMessage(chatId, 'Ro‘yxatdan o‘tishni saqlashda xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.', {
+      reply_markup: MAIN_KEYBOARD,
+    });
+  }
 }
 
 async function startLogin(chatId) {
