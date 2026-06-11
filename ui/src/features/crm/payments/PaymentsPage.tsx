@@ -23,6 +23,8 @@ import {
   ShieldCheck,
   Upload,
   Download,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   createPayment,
@@ -159,6 +161,114 @@ const paymentStatCardClass =
 const folderCardClass =
   'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm';
 
+const folderPageSizeOptions = [12, 24, 48];
+const paymentPageSizeOptions = [10, 25, 50, 100];
+
+const clampPage = (page: number, totalPages: number) => Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+
+const paginateItems = <T,>(items: T[], page: number, pageSize: number) => {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = clampPage(page, totalPages);
+  const start = (currentPage - 1) * pageSize;
+  return {
+    currentPage,
+    totalPages,
+    start,
+    end: Math.min(start + pageSize, items.length),
+    items: items.slice(start, start + pageSize),
+  };
+};
+
+const buildPageNumbers = (currentPage: number, totalPages: number) => {
+  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+  return Array.from(pages)
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((a, b) => a - b);
+};
+
+const PaginationBar = ({
+  total,
+  currentPage,
+  totalPages,
+  start,
+  end,
+  pageSize,
+  pageSizeOptions,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  total: number;
+  currentPage: number;
+  totalPages: number;
+  start: number;
+  end: number;
+  pageSize: number;
+  pageSizeOptions: number[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}) => {
+  if (total === 0) return null;
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-muted-foreground">
+        Showing {start + 1}-{end} of {total}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-8 w-[92px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {option} / page
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Previous
+        </Button>
+        <div className="flex items-center gap-1">
+          {buildPageNumbers(currentPage, totalPages).map((page, index, pages) => (
+            <div key={page} className="flex items-center gap-1">
+              {index > 0 && page - pages[index - 1] > 1 && (
+                <span className="px-1 text-muted-foreground">...</span>
+              )}
+              <Button
+                type="button"
+                variant={page === currentPage ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 min-w-8 px-2"
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+        >
+          Next
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // Renders the payments page screen.
 const PaymentsPage = () => {
   const dispatch = useAppDispatch();
@@ -207,6 +317,10 @@ const PaymentsPage = () => {
   const [teacherDetailView, setTeacherDetailView] = useState<TeacherDetailView>('groups');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isImporting, setIsImporting] = useState(false);
+  const [folderPage, setFolderPage] = useState(1);
+  const [folderPageSize, setFolderPageSize] = useState(12);
+  const [paymentsPage, setPaymentsPage] = useState(1);
+  const [paymentsPageSize, setPaymentsPageSize] = useState(25);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
 // Runs side effects for this component.
@@ -220,6 +334,16 @@ const PaymentsPage = () => {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, isOwner]);
+
+// Resets paginated folder pages when the grouping context changes.
+  useEffect(() => {
+    setFolderPage(1);
+  }, [activeTab, searchTerm, selectedFolder?.type, selectedFolder?.id, teacherDetailView, viewMode]);
+
+// Resets paginated payment rows when payment filters or folder context changes.
+  useEffect(() => {
+    setPaymentsPage(1);
+  }, [searchTerm, filterStatus, filterMethod, selectedFolder?.type, selectedFolder?.id]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -478,11 +602,31 @@ const PaymentsPage = () => {
     return teacherOverallStats.filter(({ teacherId }) => teacherIds.has(Number(teacherId)));
   }, [filteredRootTeachers, rootSearch, teacherOverallStats]);
 
+  const paginatedRootStudents = useMemo(
+    () => paginateItems(filteredRootStudents, folderPage, folderPageSize),
+    [filteredRootStudents, folderPage, folderPageSize]
+  );
+
+  const paginatedRootClasses = useMemo(
+    () => paginateItems(filteredRootClasses, folderPage, folderPageSize),
+    [filteredRootClasses, folderPage, folderPageSize]
+  );
+
+  const paginatedRootTeachers = useMemo(
+    () => paginateItems(filteredRootTeachers, folderPage, folderPageSize),
+    [filteredRootTeachers, folderPage, folderPageSize]
+  );
+
 // Memoizes the selected teacher classes derived value.
   const selectedTeacherClasses = useMemo(() => {
     if (!selectedFolder || selectedFolder.type !== 'teacher') return [];
     return classes.filter((cls) => Number(cls.teacher_id) === Number(selectedFolder.id));
   }, [selectedFolder, classes]);
+
+  const paginatedSelectedTeacherClasses = useMemo(
+    () => paginateItems(selectedTeacherClasses, folderPage, folderPageSize),
+    [selectedTeacherClasses, folderPage, folderPageSize]
+  );
 
 // Memoizes the selected teacher stats derived value.
   const selectedTeacherStats = useMemo(() => {
@@ -561,6 +705,11 @@ const PaymentsPage = () => {
 
     return payments;
   }, [searchTerm, filterStatus, filterMethod, selectedFolderPayments, students]);
+
+  const paginatedDisplayedPayments = useMemo(
+    () => paginateItems(displayedPayments, paymentsPage, paymentsPageSize),
+    [displayedPayments, paymentsPage, paymentsPageSize]
+  );
 
   const totalAmount = displayedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
   const displayedPaidAmount = displayedPayments.filter(isPaidPayment).reduce((sum, p) => sum + getPaymentAmount(p), 0);
@@ -758,184 +907,232 @@ const PaymentsPage = () => {
           <div>
             {/* By Students Tab */}
             {activeTab === 'students' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading students...</p>
-                  </div>
-                ) : filteredRootStudents.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">{searchTerm ? 'No students match your search' : 'No students found'}</p>
-                  </div>
-                ) : (
-                  filteredRootStudents.map((student) => {
-                    const studentId = student.student_id || student.id || 0;
-                    const paymentCount = getPaymentCountForStudent(studentId);
-                    const totalAmount = getTotalAmountForStudent(studentId);
-                    return (
-                      <Card
-                        key={studentId}
-                        className={cn(folderCardClass, 'border-emerald-100 dark:border-border')}
-                        onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
-                      >
-                        <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
-                        <CardContent className="folder-card-content p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-                              <Folder className="h-5 w-5" />
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading students...</p>
+                    </div>
+                  ) : filteredRootStudents.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">{searchTerm ? 'No students match your search' : 'No students found'}</p>
+                    </div>
+                  ) : (
+                    paginatedRootStudents.items.map((student) => {
+                      const studentId = student.student_id || student.id || 0;
+                      const paymentCount = getPaymentCountForStudent(studentId);
+                      const totalAmount = getTotalAmountForStudent(studentId);
+                      return (
+                        <Card
+                          key={studentId}
+                          className={cn(folderCardClass, 'border-emerald-100 dark:border-border')}
+                          onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
+                        >
+                          <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
+                          <CardContent className="folder-card-content p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
+                                <Folder className="h-5 w-5" />
+                              </div>
                             </div>
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
-                            <p className="text-sm text-muted-foreground">ID: {studentId}</p>
-                          </div>
-                          <div className="mt-3 flex items-center justify-between border-t pt-3">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <CreditCard className="h-3.5 w-3.5" />
-                              <span>{paymentCount} payments</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
+                              <p className="text-sm text-muted-foreground">ID: {studentId}</p>
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-primary">
-                              <DollarSign className="h-3.5 w-3.5" />
-                              <span>{formatMoney(totalAmount)}</span>
+                            <div className="mt-3 flex items-center justify-between border-t pt-3">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <CreditCard className="h-3.5 w-3.5" />
+                                <span>{paymentCount} payments</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-primary">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                <span>{formatMoney(totalAmount)}</span>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={filteredRootStudents.length}
+                  currentPage={paginatedRootStudents.currentPage}
+                  totalPages={paginatedRootStudents.totalPages}
+                  start={paginatedRootStudents.start}
+                  end={paginatedRootStudents.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(value) => {
+                    setFolderPageSize(value);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading classes...</p>
-                  </div>
-                ) : filteredRootClasses.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">{searchTerm ? 'No classes match your search' : 'No classes found'}</p>
-                  </div>
-                ) : (
-                  filteredRootClasses.map((cls) => {
-                    const classId = cls.class_id || cls.id || 0;
-                    const paymentCount = getPaymentCountForClass(classId);
-                    const totalAmount = getTotalAmountForClass(classId);
-                    return (
-                      <Card
-                        key={classId}
-                        className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
-                        onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                      >
-                        <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
-                        <CardContent className="folder-card-content p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
-                              <Folder className="h-5 w-5" />
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading classes...</p>
+                    </div>
+                  ) : filteredRootClasses.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">{searchTerm ? 'No classes match your search' : 'No classes found'}</p>
+                    </div>
+                  ) : (
+                    paginatedRootClasses.items.map((cls) => {
+                      const classId = cls.class_id || cls.id || 0;
+                      const paymentCount = getPaymentCountForClass(classId);
+                      const totalAmount = getTotalAmountForClass(classId);
+                      return (
+                        <Card
+                          key={classId}
+                          className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
+                          onClick={() => handleFolderClick('class', classId, cls.class_name)}
+                        >
+                          <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
+                          <CardContent className="folder-card-content p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                                <Folder className="h-5 w-5" />
+                              </div>
                             </div>
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{cls.class_name}</h3>
-                            <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                          </div>
-                          <div className="mt-3 flex items-center justify-between border-t pt-3">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <CreditCard className="h-3.5 w-3.5" />
-                              <span>{paymentCount} payments</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{cls.class_name}</h3>
+                              <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
-                              <DollarSign className="h-3.5 w-3.5" />
-                              <span>{formatMoney(totalAmount)}</span>
+                            <div className="mt-3 flex items-center justify-between border-t pt-3">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <CreditCard className="h-3.5 w-3.5" />
+                                <span>{paymentCount} payments</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
+                                <DollarSign className="h-3.5 w-3.5" />
+                                <span>{formatMoney(totalAmount)}</span>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={filteredRootClasses.length}
+                  currentPage={paginatedRootClasses.currentPage}
+                  totalPages={paginatedRootClasses.totalPages}
+                  start={paginatedRootClasses.start}
+                  end={paginatedRootClasses.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(value) => {
+                    setFolderPageSize(value);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
             {/* By Teachers Tab */}
             {activeTab === 'teachers' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading teachers...</p>
-                  </div>
-                ) : filteredRootTeachers.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">{searchTerm ? 'No teachers match your search' : 'No teachers found'}</p>
-                  </div>
-                ) : (
-                  filteredRootTeachers.map((teacher) => {
-                    const teacherId = teacher.teacher_id || teacher.id || 0;
-                    const paymentCount = getPaymentCountForTeacher(teacherId);
-                    const teacherStats = getTeacherPaymentStats(teacherId);
-                    return (
-                      <Card
-                        key={teacherId}
-                        className={cn(folderCardClass, 'border-indigo-100 dark:border-border')}
-                        onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
-                      >
-                        <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500 dark:hidden" />
-                        <CardContent className="folder-card-content p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-                              <Folder className="h-5 w-5" />
-                            </div>
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                            <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
-                          </div>
-                          {isTeacher ? (
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Users className="h-3.5 w-3.5" />
-                                <span>{teacherStats.totalStudents} students</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                                <CreditCard className="h-3.5 w-3.5" />
-                                <span>{paymentCount} payments</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading teachers...</p>
+                    </div>
+                  ) : filteredRootTeachers.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">{searchTerm ? 'No teachers match your search' : 'No teachers found'}</p>
+                    </div>
+                  ) : (
+                    paginatedRootTeachers.items.map((teacher) => {
+                      const teacherId = teacher.teacher_id || teacher.id || 0;
+                      const paymentCount = getPaymentCountForTeacher(teacherId);
+                      const teacherStats = getTeacherPaymentStats(teacherId);
+                      return (
+                        <Card
+                          key={teacherId}
+                          className={cn(folderCardClass, 'border-indigo-100 dark:border-border')}
+                          onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
+                        >
+                          <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500 dark:hidden" />
+                          <CardContent className="folder-card-content p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
+                                <Folder className="h-5 w-5" />
                               </div>
                             </div>
-                          ) : (
-                            <>
-                              <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t text-xs">
-                                <div className="rounded-md bg-muted/40 p-2">
-                                  <p className="text-muted-foreground">Worked</p>
-                                  <p className="font-semibold">{formatMoney(teacherStats.totalWorked)}</p>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
+                              <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
+                            </div>
+                            {isTeacher ? (
+                              <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                  <Users className="h-3.5 w-3.5" />
+                                  <span>{teacherStats.totalStudents} students</span>
                                 </div>
-                                <div className="rounded-md bg-green-50 p-2">
-                                  <p className="text-green-700">Paid</p>
-                                  <p className="font-semibold text-green-700">{formatMoney(teacherStats.paidAmount)}</p>
-                                </div>
-                                <div className="rounded-md bg-red-50 p-2">
-                                  <p className="text-red-700">Unpaid</p>
-                                  <p className="font-semibold text-red-700">{formatMoney(teacherStats.unpaidAmount)}</p>
-                                </div>
-                                <div className="rounded-md bg-muted/40 p-2">
-                                  <p className="text-muted-foreground">Students</p>
-                                  <p className="font-semibold">{teacherStats.paidStudents}/{teacherStats.totalStudents} paid</p>
+                                <div className="flex items-center gap-1 text-sm font-semibold text-primary">
+                                  <CreditCard className="h-3.5 w-3.5" />
+                                  <span>{paymentCount} payments</span>
                                 </div>
                               </div>
-                              <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                                <span>{teacherStats.unpaidStudents} unpaid students</span>
-                                <span>{paymentCount} payments</span>
-                              </div>
-                            </>
-                          )}
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            ) : (
+                              <>
+                                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t text-xs">
+                                  <div className="rounded-md bg-muted/40 p-2">
+                                    <p className="text-muted-foreground">Worked</p>
+                                    <p className="font-semibold">{formatMoney(teacherStats.totalWorked)}</p>
+                                  </div>
+                                  <div className="rounded-md bg-green-50 p-2">
+                                    <p className="text-green-700">Paid</p>
+                                    <p className="font-semibold text-green-700">{formatMoney(teacherStats.paidAmount)}</p>
+                                  </div>
+                                  <div className="rounded-md bg-red-50 p-2">
+                                    <p className="text-red-700">Unpaid</p>
+                                    <p className="font-semibold text-red-700">{formatMoney(teacherStats.unpaidAmount)}</p>
+                                  </div>
+                                  <div className="rounded-md bg-muted/40 p-2">
+                                    <p className="text-muted-foreground">Students</p>
+                                    <p className="font-semibold">{teacherStats.paidStudents}/{teacherStats.totalStudents} paid</p>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
+                                  <span>{teacherStats.unpaidStudents} unpaid students</span>
+                                  <span>{paymentCount} payments</span>
+                                </div>
+                              </>
+                            )}
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={filteredRootTeachers.length}
+                  currentPage={paginatedRootTeachers.currentPage}
+                  totalPages={paginatedRootTeachers.totalPages}
+                  start={paginatedRootTeachers.start}
+                  end={paginatedRootTeachers.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(value) => {
+                    setFolderPageSize(value);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
@@ -1096,53 +1293,69 @@ const PaymentsPage = () => {
           </Card>
 
           {teacherDetailView === 'groups' ? (
-            <div className={folderGridClass}>
-              {loadingData ? (
-                <div className="col-span-full text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                  <p className="text-muted-foreground">Loading groups...</p>
-                </div>
-              ) : selectedTeacherClasses.length === 0 ? (
-                <div className="col-span-full text-center py-8">
-                  <p className="text-muted-foreground">No groups found for this teacher</p>
-                </div>
-              ) : (
-                selectedTeacherClasses.map((cls) => {
-                  const classId = cls.class_id || cls.id || 0;
-                  const paymentCount = getPaymentCountForClass(classId);
-                  const totalAmount = getTotalAmountForClass(classId);
-                  return (
-                    <Card
-                      key={classId}
-                      className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
-                      onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                    >
-                      <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
-                      <CardContent className="folder-card-content p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
-                            <Folder className="h-5 w-5" />
+            <div className="space-y-4">
+              <div className={folderGridClass}>
+                {loadingData ? (
+                  <div className="col-span-full text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                    <p className="text-muted-foreground">Loading groups...</p>
+                  </div>
+                ) : selectedTeacherClasses.length === 0 ? (
+                  <div className="col-span-full text-center py-8">
+                    <p className="text-muted-foreground">No groups found for this teacher</p>
+                  </div>
+                ) : (
+                  paginatedSelectedTeacherClasses.items.map((cls) => {
+                    const classId = cls.class_id || cls.id || 0;
+                    const paymentCount = getPaymentCountForClass(classId);
+                    const totalAmount = getTotalAmountForClass(classId);
+                    return (
+                      <Card
+                        key={classId}
+                        className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
+                        onClick={() => handleFolderClick('class', classId, cls.class_name)}
+                      >
+                        <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
+                        <CardContent className="folder-card-content p-4">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                              <Folder className="h-5 w-5" />
+                            </div>
                           </div>
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="font-semibold">{cls.class_name}</h3>
-                          <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                        </div>
-                        <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <CreditCard className="h-3.5 w-3.5" />
-                            <span>{paymentCount} payments</span>
+                          <div className="space-y-1">
+                            <h3 className="font-semibold">{cls.class_name}</h3>
+                            <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                           </div>
-                          <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
-                            <DollarSign className="h-3.5 w-3.5" />
-                            <span>{formatMoney(totalAmount)}</span>
+                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                              <CreditCard className="h-3.5 w-3.5" />
+                              <span>{paymentCount} payments</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
+                              <DollarSign className="h-3.5 w-3.5" />
+                              <span>{formatMoney(totalAmount)}</span>
+                            </div>
                           </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
+              </div>
+              <PaginationBar
+                total={selectedTeacherClasses.length}
+                currentPage={paginatedSelectedTeacherClasses.currentPage}
+                totalPages={paginatedSelectedTeacherClasses.totalPages}
+                start={paginatedSelectedTeacherClasses.start}
+                end={paginatedSelectedTeacherClasses.end}
+                pageSize={folderPageSize}
+                pageSizeOptions={folderPageSizeOptions}
+                onPageChange={setFolderPage}
+                onPageSizeChange={(value) => {
+                  setFolderPageSize(value);
+                  setFolderPage(1);
+                }}
+              />
             </div>
           ) : (
             <>
@@ -1363,7 +1576,7 @@ const PaymentsPage = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  displayedPayments.map((payment) => (
+                  paginatedDisplayedPayments.items.map((payment) => (
                     <TableRow key={payment.payment_id || payment.id}>
                       {!isTeacher && (
                         <TableCell className="font-mono">{payment.receipt_number}</TableCell>
@@ -1405,6 +1618,20 @@ const PaymentsPage = () => {
               </TableBody>
             </Table>
           </div>
+          <PaginationBar
+            total={displayedPayments.length}
+            currentPage={paginatedDisplayedPayments.currentPage}
+            totalPages={paginatedDisplayedPayments.totalPages}
+            start={paginatedDisplayedPayments.start}
+            end={paginatedDisplayedPayments.end}
+            pageSize={paymentsPageSize}
+            pageSizeOptions={paymentPageSizeOptions}
+            onPageChange={setPaymentsPage}
+            onPageSizeChange={(value) => {
+              setPaymentsPageSize(value);
+              setPaymentsPage(1);
+            }}
+          />
         </>
       )}
 
