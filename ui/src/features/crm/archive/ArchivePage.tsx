@@ -1,0 +1,273 @@
+import { useEffect, useMemo, useState } from 'react';
+import { Archive, BookOpen, CalendarDays, CreditCard, GraduationCap, Loader2, Users } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { PageHeader } from '@/components/common/PageHeader';
+import { MetricCard } from '@/components/common/MetricCard';
+import { archiveAPI } from '@/shared/api/api';
+import { formatMoney } from '@/utils/helpers';
+
+type ArchivePayload = {
+  students: any[];
+  teachers: any[];
+  classes: any[];
+  payments: any[];
+  sessions: any[];
+  counts: Record<string, number>;
+};
+
+const emptyArchive: ArchivePayload = {
+  students: [],
+  teachers: [],
+  classes: [],
+  payments: [],
+  sessions: [],
+  counts: { students: 0, teachers: 0, classes: 0, payments: 0, sessions: 0 },
+};
+
+const fullName = (row: any, firstKey = 'first_name', lastKey = 'last_name') =>
+  [row?.[firstKey], row?.[lastKey]].filter(Boolean).join(' ').trim() || '-';
+
+const teacherName = (row: any) =>
+  [row?.teacher_first_name, row?.teacher_last_name].filter(Boolean).join(' ').trim() || '-';
+
+const formatDate = (value: any) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toLocaleDateString();
+};
+
+const EmptyRow = ({ colSpan, label }: { colSpan: number; label: string }) => (
+  <TableRow>
+    <TableCell colSpan={colSpan} className="py-10 text-center text-muted-foreground">
+      {label}
+    </TableCell>
+  </TableRow>
+);
+
+const ArchivePage = () => {
+  const [archive, setArchive] = useState<ArchivePayload>(emptyArchive);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    archiveAPI.getAll()
+      .then((response) => {
+        if (cancelled) return;
+        setArchive(response?.data || emptyArchive);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load archive.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const totalArchived = useMemo(
+    () => Object.values(archive.counts || {}).reduce((sum, value) => sum + Number(value || 0), 0),
+    [archive.counts]
+  );
+
+  const cards = [
+    { label: 'Students', value: archive.counts.students || 0, detail: 'Soft-deleted profiles', icon: Users, tone: 'blue' as const },
+    { label: 'Teachers', value: archive.counts.teachers || 0, detail: 'Archived staff', icon: GraduationCap, tone: 'green' as const },
+    { label: 'Classes', value: archive.counts.classes || 0, detail: 'Archived groups', icon: BookOpen, tone: 'amber' as const },
+    { label: 'Payments', value: archive.counts.payments || 0, detail: 'Archived payments', icon: CreditCard, tone: 'neutral' as const },
+  ];
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Archive"
+        description="Soft-deleted records across students, teachers, classes, payments, and calendar sessions."
+        icon={Archive}
+      />
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+        <MetricCard label="Total archived" value={totalArchived.toLocaleString()} detail="All record types" icon={Archive} tone="neutral" />
+        {cards.map((card) => (
+          <MetricCard
+            key={card.label}
+            label={card.label}
+            value={Number(card.value).toLocaleString()}
+            detail={card.detail}
+            icon={card.icon}
+            tone={card.tone}
+          />
+        ))}
+      </div>
+
+      <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
+        <CardContent className="p-0">
+          <Tabs defaultValue="students">
+            <TabsList className="h-auto w-full justify-start rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
+              <TabsTrigger value="students">Students</TabsTrigger>
+              <TabsTrigger value="teachers">Teachers</TabsTrigger>
+              <TabsTrigger value="classes">Classes</TabsTrigger>
+              <TabsTrigger value="payments">Payments</TabsTrigger>
+              <TabsTrigger value="sessions">Calendar Sessions</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="students" className="m-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Enrollment</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Archived At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archive.students.length === 0 ? <EmptyRow colSpan={5} label="No archived students." /> : archive.students.map((student) => (
+                    <TableRow key={student.student_id}>
+                      <TableCell className="font-medium">{fullName(student)}</TableCell>
+                      <TableCell>{student.enrollment_number || '-'}</TableCell>
+                      <TableCell>{[student.class_name, student.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
+                      <TableCell><Badge variant="outline">{student.status || 'Archived'}</Badge></TableCell>
+                      <TableCell>{formatDate(student.deleted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+
+            <TabsContent value="teachers" className="m-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Teacher</TableHead>
+                    <TableHead>Employee ID</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Archived At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archive.teachers.length === 0 ? <EmptyRow colSpan={5} label="No archived teachers." /> : archive.teachers.map((teacher) => (
+                    <TableRow key={teacher.teacher_id}>
+                      <TableCell className="font-medium">{fullName(teacher)}</TableCell>
+                      <TableCell>{teacher.employee_id || '-'}</TableCell>
+                      <TableCell>{teacher.email || '-'}</TableCell>
+                      <TableCell><Badge variant="outline">{teacher.status || 'Archived'}</Badge></TableCell>
+                      <TableCell>{formatDate(teacher.deleted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+
+            <TabsContent value="classes" className="m-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Teacher</TableHead>
+                    <TableHead>Room</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Archived At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archive.classes.length === 0 ? <EmptyRow colSpan={5} label="No archived classes." /> : archive.classes.map((cls) => (
+                    <TableRow key={cls.class_id}>
+                      <TableCell className="font-medium">{[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
+                      <TableCell>{teacherName(cls)}</TableCell>
+                      <TableCell>{cls.room_number || '-'}</TableCell>
+                      <TableCell>{formatMoney(Number(cls.payment_amount || 0))}</TableCell>
+                      <TableCell>{formatDate(cls.deleted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+
+            <TabsContent value="payments" className="m-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Receipt</TableHead>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Archived At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archive.payments.length === 0 ? <EmptyRow colSpan={5} label="No archived payments." /> : archive.payments.map((payment) => (
+                    <TableRow key={payment.payment_id}>
+                      <TableCell className="font-medium">{payment.receipt_number || `#${payment.payment_id}`}</TableCell>
+                      <TableCell>{[payment.student_first_name, payment.student_last_name].filter(Boolean).join(' ').trim() || payment.enrollment_number || '-'}</TableCell>
+                      <TableCell>{formatMoney(Number(payment.amount || 0))}</TableCell>
+                      <TableCell><Badge variant="outline">{payment.payment_status || '-'}</Badge></TableCell>
+                      <TableCell>{formatDate(payment.deleted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+
+            <TabsContent value="sessions" className="m-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Group</TableHead>
+                    <TableHead>Teacher</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Archived At</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {archive.sessions.length === 0 ? <EmptyRow colSpan={5} label="No archived calendar sessions." /> : archive.sessions.map((session) => (
+                    <TableRow key={session.session_id}>
+                      <TableCell className="font-medium">{formatDate(session.session_date)}</TableCell>
+                      <TableCell>{[session.class_name, session.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
+                      <TableCell>{teacherName(session)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                          {session.start_time || '-'}
+                        </div>
+                      </TableCell>
+                      <TableCell>{formatDate(session.deleted_at)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default ArchivePage;

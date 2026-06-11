@@ -26,6 +26,7 @@ import CentersPage from './features/crm/centers/CentersPage';
 import DebtsPage from './features/crm/debts/DebtsPage';
 import FinancePage from './features/crm/finance/FinancePage';
 import RoomsPage from './features/crm/rooms/RoomsPage';
+import ArchivePage from './features/crm/archive/ArchivePage';
 
 import TeacherFinanceDetailPage from './features/crm/finance/TeacherFinanceDetailPage';
 import AssignmentsPage from './features/crm/assignments/AssignmentsPage';
@@ -251,6 +252,17 @@ function AppContent() {
 
                   <StudentDetailPage />
                 </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/archive"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']}>
+              <Layout>
+                <ArchivePage />
               </Layout>
             </ProtectedRoute>
           }

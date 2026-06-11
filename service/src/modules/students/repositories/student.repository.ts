@@ -382,7 +382,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
   try {
     await client.query('BEGIN');
 
-    let sourceQuery = 'SELECT * FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE';
+    let sourceQuery = 'SELECT * FROM students WHERE student_id = $1 AND deleted_at IS NULL';
     const sourceParams: any[] = [id];
     if (centerId) {
       sourceParams.push(centerId);
@@ -392,6 +392,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
       sourceParams.push(teacherId);
       sourceQuery += ` AND teacher_id = $${sourceParams.length}`;
     }
+    sourceQuery += ' FOR UPDATE';
     const sourceResult = await client.query(sourceQuery, sourceParams);
     const source = sourceResult.rows[0];
     if (!source) {

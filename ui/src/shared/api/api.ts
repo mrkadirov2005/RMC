@@ -243,6 +243,10 @@ export const dataAPI = {
     apiClient.post(`/data/sheets/pull/${entity}`, {}),
 };
 
+export const archiveAPI = {
+  getAll: () => apiClient.get('/archive'),
+};
+
 export const teacherAPI = {
   getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/teachers', {
