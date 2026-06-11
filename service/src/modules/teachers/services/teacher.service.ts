@@ -1,25 +1,7 @@
-const { z } = require('zod');
 const { hashPassword } = require('../../../shared/password');
 const teacherRepository = require('../repositories/teacher.repository');
 
 const DEFAULT_TEACHER_PASSWORD = '012345678';
-
-const createTeacherSchema = z.object({
-  center_id: z.number(),
-  employee_id: z.string().min(1, 'Employee ID is required'),
-  first_name: z.string().min(1, 'First name is required'),
-  last_name: z.string().min(1, 'Last name is required'),
-  email: z.string().email('Invalid email format'),
-  phone: z.string().optional(),
-  date_of_birth: z.string().optional(),
-  gender: z.string().optional(),
-  qualification: z.string().optional(),
-  specialization: z.string().optional(),
-  status: z.string().default('Active'),
-  roles: z.array(z.string()).optional(),
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-});
 
 const buildUsername = (name: string) => {
   const cleaned = String(name || '')
@@ -47,19 +29,13 @@ const getTeacher = (id: number, centerId?: number) => teacherRepository.findById
 const createTeacher = async (body: any) => {
   const defaultUsername = buildUsername(body?.first_name);
   const explicitUsername = String(body?.username || '').trim();
-  const bodyWithDefaults = {
+  const d = {
     ...body,
+    status: body?.status || 'Active',
+    roles: body?.roles || [],
     username: explicitUsername || defaultUsername,
     password: body?.password || DEFAULT_TEACHER_PASSWORD,
   };
-  const validationResult = createTeacherSchema.safeParse(bodyWithDefaults);
-  if (!validationResult.success) {
-    return {
-      error: 'validation',
-      details: validationResult.error.issues.map((e: any) => ({ field: e.path.join('.'), message: e.message })),
-    };
-  }
-  const d = validationResult.data;
   const shouldAutoResolveUsername = !explicitUsername || explicitUsername === defaultUsername;
   const username = shouldAutoResolveUsername ? await getAvailableUsername(d.username) : d.username;
   const exists = await teacherRepository.countByUsername(username);

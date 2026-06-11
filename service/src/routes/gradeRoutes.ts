@@ -4,8 +4,8 @@ const express_grade = require('express');
 const router_grade = express_grade.Router();
 const gradeController = require('../modules/grades/controllers/grade.controller');
 const { requireAuth } = require('../middleware/auth');
-const { validateBody } = require('../middleware/validation');
-const { BulkGradesDto } = require('../dtos/request.dto');
+const { validateBody, validateParams } = require('../middleware/validation');
+const { BulkGradesDto, IdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -47,7 +47,7 @@ router_grade.get('/', requireAuth, gradeController.getAllGrades);
  *       404:
  *         description: Grade not found
  */
-router_grade.get('/:id', requireAuth, gradeController.getGradeById);
+router_grade.get('/:id', requireAuth, validateParams(IdParamDto), gradeController.getGradeById);
 
 /**
  * @swagger
@@ -118,7 +118,7 @@ router_grade.post('/bulk', requireAuth, validateBody(BulkGradesDto), gradeContro
  *       404:
  *         description: Grade not found
  */
-router_grade.put('/:id', requireAuth, gradeController.updateGrade);
+router_grade.put('/:id', requireAuth, validateParams(IdParamDto), gradeController.updateGrade);
 
 /**
  * @swagger
@@ -144,7 +144,7 @@ router_grade.put('/:id', requireAuth, gradeController.updateGrade);
  *       404:
  *         description: Student not found
  */
-router_grade.get('/student/:studentId', requireAuth, gradeController.getGradesByStudent);
+router_grade.get('/student/:studentId', requireAuth, validateParams(StudentIdParamDto), gradeController.getGradesByStudent);
 
 /**
  * @swagger
@@ -164,8 +164,8 @@ router_grade.get('/student/:studentId', requireAuth, gradeController.getGradesBy
  *       404:
  *         description: Grade not found
  */
-router_grade.delete('/:id', requireAuth, gradeController.deleteGrade);
-router_grade.get('/session/:sessionId', requireAuth, gradeController.getGradesBySession);
+router_grade.delete('/:id', requireAuth, validateParams(IdParamDto), gradeController.deleteGrade);
+router_grade.get('/session/:sessionId', requireAuth, validateParams(SessionIdParamDto), gradeController.getGradesBySession);
 router_grade.post('/session-scores', requireAuth, gradeController.upsertSessionScores);
 
 module.exports = router_grade;

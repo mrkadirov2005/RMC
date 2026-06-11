@@ -22,10 +22,21 @@ const toValidationErrors = (errors: any[]): Array<{ field: string; message: stri
   return out;
 };
 
+const stripEmptyStrings = (value: any): any => {
+  if (Array.isArray(value)) return value.map(stripEmptyStrings);
+  if (value && typeof value === 'object') {
+    Object.keys(value).forEach((key) => {
+      value[key] = stripEmptyStrings(value[key]);
+    });
+    return value;
+  }
+  return value === '' ? undefined : value;
+};
+
 const validateInput =
   (DtoClass: any, source: 'body' | 'query' | 'params' = 'body') =>
   async (req: any, res: any, next: any) => {
-    const instance = plainToInstance(DtoClass, req[source], {
+    const instance = plainToInstance(DtoClass, stripEmptyStrings({ ...(req[source] || {}) }), {
       enableImplicitConversion: true,
     });
 

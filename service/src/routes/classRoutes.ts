@@ -3,8 +3,17 @@ export {};
 const express_class = require('express');
 const router_class = express_class.Router();
 const { requireAuth, requireMuzaffarHardDelete } = require('../middleware/auth');
-const { validateBody, validateQuery } = require('../middleware/validation');
-const { DeleteUpcomingSessionsDto, GenerateClassSessionsDto } = require('../dtos/request.dto');
+const { validateBody, validateParams, validateQuery } = require('../middleware/validation');
+const {
+  ClassSessionParamDto,
+  CreateClassDto,
+  CreateClassSessionDto,
+  DeleteUpcomingSessionsDto,
+  ForceQueryDto,
+  GenerateClassSessionsDto,
+  IdParamDto,
+  UpdateClassDto,
+} = require('../dtos/request.dto');
 const classController=require('../modules/classes/controllers/class.controller');
 /**
  * @swagger
@@ -46,7 +55,7 @@ router_class.get('/', requireAuth, classController.getAllClasses);
  *       404:
  *         description: Class not found
  */
-router_class.get('/:id', requireAuth, classController.getClassById);
+router_class.get('/:id', requireAuth, validateParams(IdParamDto), classController.getClassById);
 
 /**
  * @swagger
@@ -64,7 +73,7 @@ router_class.get('/:id', requireAuth, classController.getClassById);
  *       200:
  *         description: List of sessions for the class
  */
-router_class.get('/:id/sessions', requireAuth, classController.getClassSessions);
+router_class.get('/:id/sessions', requireAuth, validateParams(IdParamDto), classController.getClassSessions);
 
 /**
  * @swagger
@@ -73,7 +82,7 @@ router_class.get('/:id/sessions', requireAuth, classController.getClassSessions)
  *     summary: Create single session
  *     tags: [Classes]
  */
-router_class.post('/:id/sessions', requireAuth, classController.createClassSession);
+router_class.post('/:id/sessions', requireAuth, validateParams(IdParamDto), validateBody(CreateClassSessionDto), classController.createClassSession);
 
 
 /**
@@ -94,7 +103,7 @@ router_class.post('/:id/sessions', requireAuth, classController.createClassSessi
  *       400:
  *         description: Invalid input
  */
-router_class.post('/', requireAuth, classController.createClass);
+router_class.post('/', requireAuth, validateBody(CreateClassDto), classController.createClass);
 
 /**
  * @swagger
@@ -120,7 +129,7 @@ router_class.post('/', requireAuth, classController.createClass);
  *       404:
  *         description: Class not found
  */
-router_class.put('/:id', requireAuth, classController.updateClass);
+router_class.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateClassDto), classController.updateClass);
 
 /**
  * @swagger
@@ -153,7 +162,7 @@ router_class.put('/:id', requireAuth, classController.updateClass);
  *       200:
  *         description: Sessions generated
  */
-router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateClassSessionsDto), classController.generateClassSessions);
+router_class.post('/:id/sessions/generate', requireAuth, validateParams(IdParamDto), validateBody(GenerateClassSessionsDto), classController.generateClassSessions);
 
 /**
  * @swagger
@@ -183,7 +192,7 @@ router_class.post('/:id/sessions/generate', requireAuth, validateBody(GenerateCl
  *       200:
  *         description: Sessions deleted
  */
-router_class.delete('/:id/sessions', requireAuth, validateQuery(DeleteUpcomingSessionsDto), classController.deleteUpcomingClassSessions);
+router_class.delete('/:id/sessions', requireAuth, validateParams(IdParamDto), validateQuery(DeleteUpcomingSessionsDto), classController.deleteUpcomingClassSessions);
 
 /**
  * @swagger
@@ -206,8 +215,8 @@ router_class.delete('/:id/sessions', requireAuth, validateQuery(DeleteUpcomingSe
  *       200:
  *         description: Session deleted
  */
-router_class.delete('/:id/sessions/:sessionId', requireAuth, classController.deleteClassSessionById);
-router_class.delete('/:id/sessions/:sessionId/purge', requireAuth, requireMuzaffarHardDelete, classController.purgeClassSessionById);
+router_class.delete('/:id/sessions/:sessionId', requireAuth, validateParams(ClassSessionParamDto), classController.deleteClassSessionById);
+router_class.delete('/:id/sessions/:sessionId/purge', requireAuth, requireMuzaffarHardDelete, validateParams(ClassSessionParamDto), classController.purgeClassSessionById);
 
 /**
  * @swagger
@@ -235,7 +244,7 @@ router_class.delete('/:id/sessions/:sessionId/purge', requireAuth, requireMuzaff
  *       409:
  *         description: Class has attendance records
  */
-router_class.delete('/:id', requireAuth, classController.deleteClass);
-router_class.delete('/:id/purge', requireAuth, requireMuzaffarHardDelete, classController.purgeClass);
+router_class.delete('/:id', requireAuth, validateParams(IdParamDto), validateQuery(ForceQueryDto), classController.deleteClass);
+router_class.delete('/:id/purge', requireAuth, requireMuzaffarHardDelete, validateParams(IdParamDto), classController.purgeClass);
 
 module.exports = router_class;

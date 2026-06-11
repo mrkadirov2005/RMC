@@ -4,8 +4,20 @@ const express_student = require('express');
 const router_student = express_student.Router();
 const studentController = require('../modules/students/controllers/student.controller');
 const { requireAuth, requireRole, requireMuzaffarHardDelete } = require('../middleware/auth');
-const { validateBody } = require('../middleware/validation');
-const { CredentialsDto, PasswordChangeDto, SetPasswordDto, StudentCoinTransactionDto } = require('../dtos/request.dto');
+const { validateBody, validateParams, validateQuery } = require('../middleware/validation');
+const {
+  CredentialsDto,
+  ClassIdParamDto,
+  CreateStudentDto,
+  IdParamDto,
+  PasswordChangeDto,
+  SetPasswordDto,
+  StudentCoinTransactionDto,
+  StudentCoinTransactionParamDto,
+  StudentListQueryDto,
+  TransferStudentDto,
+  UpdateStudentDto,
+} = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -23,8 +35,9 @@ const { CredentialsDto, PasswordChangeDto, SetPasswordDto, StudentCoinTransactio
  *               items:
  *                 $ref: '#/components/schemas/Student'
  */
-router_student.get('/', requireAuth, studentController.getAllStudents);
+router_student.get('/', requireAuth, validateQuery(StudentListQueryDto), studentController.getAllStudents);
 router_student.get('/deleted', requireAuth, requireMuzaffarHardDelete, studentController.getDeletedStudents);
+router_student.get('/class/:classId', requireAuth, validateParams(ClassIdParamDto), studentController.getClassStudentsWithTransfers);
 
 /**
  * @swagger
@@ -48,7 +61,7 @@ router_student.get('/deleted', requireAuth, requireMuzaffarHardDelete, studentCo
  *       404:
  *         description: Student not found
  */
-router_student.get('/:id', requireAuth, studentController.getStudentById);
+router_student.get('/:id', requireAuth, validateParams(IdParamDto), studentController.getStudentById);
 
 /**
  * @swagger
@@ -66,7 +79,7 @@ router_student.get('/:id', requireAuth, studentController.getStudentById);
  *       201:
  *         description: Student created successfully
  */
-router_student.post('/', requireAuth, studentController.createStudent);
+router_student.post('/', requireAuth, validateBody(CreateStudentDto), studentController.createStudent);
 
 /**
  * @swagger
@@ -90,7 +103,7 @@ router_student.post('/', requireAuth, studentController.createStudent);
  *       200:
  *         description: Student updated successfully
  */
-router_student.put('/:id', requireAuth, studentController.updateStudent);
+router_student.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateStudentDto), studentController.updateStudent);
 
 /**
  * @swagger
@@ -110,8 +123,9 @@ router_student.put('/:id', requireAuth, studentController.updateStudent);
  *       404:
  *         description: Student not found
  */
-router_student.delete('/:id', requireAuth, requireRole('superuser'), studentController.deleteStudent);
-router_student.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, studentController.purgeStudent);
+router_student.delete('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), studentController.deleteStudent);
+router_student.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, validateParams(IdParamDto), studentController.purgeStudent);
+router_student.post('/:id/transfer', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(TransferStudentDto), studentController.transferStudent);
 
 /**
  * @swagger
@@ -171,7 +185,7 @@ router_student.post('/auth/login', validateBody(CredentialsDto), studentControll
  *       200:
  *         description: Password set successfully
  */
-router_student.post('/:id/set-password', requireAuth, requireRole('superuser'), validateBody(SetPasswordDto), studentController.setStudentPassword);
+router_student.post('/:id/set-password', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(SetPasswordDto), studentController.setStudentPassword);
 
 /**
  * @swagger
@@ -203,7 +217,7 @@ router_student.post('/:id/set-password', requireAuth, requireRole('superuser'), 
  *       200:
  *         description: Password changed successfully
  */
-router_student.post('/:id/change-password', requireAuth, validateBody(PasswordChangeDto), studentController.changeStudentPassword);
+router_student.post('/:id/change-password', requireAuth, validateParams(IdParamDto), validateBody(PasswordChangeDto), studentController.changeStudentPassword);
 
 /**
  * @swagger
@@ -212,7 +226,7 @@ router_student.post('/:id/change-password', requireAuth, validateBody(PasswordCh
  *     summary: Get student coin balance and transactions
  *     tags: [Students]
  */
-router_student.get('/:id/coins', requireAuth, studentController.getStudentCoins);
+router_student.get('/:id/coins', requireAuth, validateParams(IdParamDto), studentController.getStudentCoins);
 
 /**
  * @swagger
@@ -221,7 +235,7 @@ router_student.get('/:id/coins', requireAuth, studentController.getStudentCoins)
  *     summary: Add or subtract student coins
  *     tags: [Students]
  */
-router_student.post('/:id/coins', requireAuth, validateBody(StudentCoinTransactionDto), studentController.addStudentCoins);
+router_student.post('/:id/coins', requireAuth, validateParams(IdParamDto), validateBody(StudentCoinTransactionDto), studentController.addStudentCoins);
 
 /**
  * @swagger
@@ -230,7 +244,7 @@ router_student.post('/:id/coins', requireAuth, validateBody(StudentCoinTransacti
  *     summary: Update a coin transaction
  *     tags: [Students]
  */
-router_student.put('/:id/coins/:transactionId', requireAuth, validateBody(StudentCoinTransactionDto), studentController.updateStudentCoinTransaction);
+router_student.put('/:id/coins/:transactionId', requireAuth, validateParams(StudentCoinTransactionParamDto), validateBody(StudentCoinTransactionDto), studentController.updateStudentCoinTransaction);
 
 /**
  * @swagger
@@ -239,7 +253,7 @@ router_student.put('/:id/coins/:transactionId', requireAuth, validateBody(Studen
  *     summary: Delete a coin transaction
  *     tags: [Students]
  */
-router_student.delete('/:id/coins/:transactionId', requireAuth, studentController.deleteStudentCoinTransaction);
+router_student.delete('/:id/coins/:transactionId', requireAuth, validateParams(StudentCoinTransactionParamDto), studentController.deleteStudentCoinTransaction);
 
 module.exports = router_student;
 

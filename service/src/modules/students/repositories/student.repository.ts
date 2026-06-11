@@ -217,6 +217,34 @@ const findDeletedWithClassAndTeacher = async (centerId?: number) => {
   return result.rows;
 };
 
+const findByClassIncludingTransferred = async (classId: number, centerId?: number, teacherId?: number) => {
+  let query = `
+    SELECT s.*, c.class_name
+    FROM students s
+    LEFT JOIN classes c ON s.class_id = c.class_id
+    WHERE s.class_id = $1
+      AND (s.deleted_at IS NULL OR s.status = 'Transferred')
+  `;
+  const params: any[] = [classId];
+
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND s.center_id = $${params.length}`;
+  }
+
+  if (teacherId) {
+    params.push(teacherId);
+    query += ` AND s.teacher_id = $${params.length}`;
+  }
+
+  query += ` ORDER BY
+    CASE WHEN s.status = 'Transferred' THEN 1 ELSE 0 END,
+    s.student_id`;
+
+  const result = await pool.query(query, params);
+  return result.rows;
+};
+
 const insert = async (payload: Record<string, unknown>) => {
   const {
     center_id,
@@ -349,6 +377,127 @@ const purge = async (id: number, centerId?: number, teacherId?: number) => {
   return result.rows[0] || null;
 };
 
+const transferToClass = async (id: number, targetClassId: number, centerId?: number, teacherId?: number) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    let sourceQuery = 'SELECT * FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE';
+    const sourceParams: any[] = [id];
+    if (centerId) {
+      sourceParams.push(centerId);
+      sourceQuery += ` AND center_id = $${sourceParams.length}`;
+    }
+    if (teacherId) {
+      sourceParams.push(teacherId);
+      sourceQuery += ` AND teacher_id = $${sourceParams.length}`;
+    }
+    const sourceResult = await client.query(sourceQuery, sourceParams);
+    const source = sourceResult.rows[0];
+    if (!source) {
+      await client.query('ROLLBACK');
+      return { error: 'not_found' as const };
+    }
+
+    let targetQuery = 'SELECT class_id, center_id, teacher_id FROM classes WHERE class_id = $1 AND deleted_at IS NULL';
+    const targetParams: any[] = [targetClassId];
+    if (centerId) {
+      targetParams.push(centerId);
+      targetQuery += ` AND center_id = $${targetParams.length}`;
+    } else {
+      targetParams.push(source.center_id);
+      targetQuery += ` AND center_id = $${targetParams.length}`;
+    }
+    const targetResult = await client.query(targetQuery, targetParams);
+    const targetClass = targetResult.rows[0];
+    if (!targetClass) {
+      await client.query('ROLLBACK');
+      return { error: 'target_class_not_found' as const };
+    }
+
+    if (Number(source.class_id) === Number(targetClass.class_id)) {
+      await client.query('ROLLBACK');
+      return { error: 'same_class' as const };
+    }
+
+    const transferredResult = await client.query(
+      `UPDATE students
+       SET status = 'Transferred',
+           deleted_at = CURRENT_TIMESTAMP,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE student_id = $1
+       RETURNING *`,
+      [id]
+    );
+
+    const newStudentResult = await client.query(
+      `INSERT INTO students (
+        center_id,
+        enrollment_number,
+        first_name,
+        last_name,
+        username,
+        password_hash,
+        email,
+        phone,
+        date_of_birth,
+        parent_name,
+        parent_phone,
+        gender,
+        status,
+        teacher_id,
+        class_id,
+        school_name,
+        school_class,
+        is_frozen,
+        coins
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, 'Active', $13, $14, $15, $16, $17, $18)
+      RETURNING *`,
+      [
+        targetClass.center_id,
+        source.enrollment_number,
+        source.first_name,
+        source.last_name,
+        source.username,
+        source.password_hash,
+        source.email,
+        source.phone,
+        source.date_of_birth,
+        source.parent_name,
+        source.parent_phone,
+        source.gender,
+        targetClass.teacher_id || null,
+        targetClass.class_id,
+        source.school_name,
+        source.school_class,
+        source.is_frozen ?? false,
+        Number(source.coins || 0),
+      ]
+    );
+
+    await client.query(
+      `INSERT INTO parent_students (parent_id, student_id, relationship, is_primary)
+       SELECT parent_id, $2, relationship, is_primary
+       FROM parent_students
+       WHERE student_id = $1
+       ON CONFLICT DO NOTHING`,
+      [id, newStudentResult.rows[0].student_id]
+    );
+
+    await client.query('COMMIT');
+    return {
+      transferred: transferredResult.rows[0],
+      student: newStudentResult.rows[0],
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const findByUsername = async (username: string) => {
   const result = await pool.query(
     'SELECT student_id, first_name, last_name, email, password_hash, status, class_id, center_id, is_frozen FROM students WHERE username = $1 AND deleted_at IS NULL',
@@ -400,10 +549,12 @@ module.exports = {
   findPaginatedWithClass,
   findByIdWithClass,
   findDeletedWithClassAndTeacher,
+  findByClassIncludingTransferred,
   insert,
   update,
   remove,
   purge,
+  transferToClass,
   findByUsername,
   findPasswordHashById,
   setCredentials,

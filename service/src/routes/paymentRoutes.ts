@@ -4,6 +4,8 @@ const express_payment = require('express');
 const router_payment = express_payment.Router();
 const paymentController = require('../modules/payments/controllers/payment.controller');
 const { requireAuth, requireMuzaffarHardDelete } = require('../middleware/auth');
+const { validateBody, validateParams } = require('../middleware/validation');
+const { CreatePaymentDto, IdParamDto, StudentIdParamDto, UpdatePaymentDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -45,7 +47,7 @@ router_payment.get('/', requireAuth, paymentController.getAllPayments);
  *       404:
  *         description: Payment not found
  */
-router_payment.get('/:id', requireAuth, paymentController.getPaymentById);
+router_payment.get('/:id', requireAuth, validateParams(IdParamDto), paymentController.getPaymentById);
 
 /**
  * @swagger
@@ -65,7 +67,7 @@ router_payment.get('/:id', requireAuth, paymentController.getPaymentById);
  *       400:
  *         description: Invalid input
  */
-router_payment.post('/', requireAuth, paymentController.createPayment);
+router_payment.post('/', requireAuth, validateBody(CreatePaymentDto), paymentController.createPayment);
 
 /**
  * @swagger
@@ -91,7 +93,7 @@ router_payment.post('/', requireAuth, paymentController.createPayment);
  *       404:
  *         description: Payment not found
  */
-router_payment.put('/:id', requireAuth, paymentController.updatePayment);
+router_payment.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdatePaymentDto), paymentController.updatePayment);
 
 /**
  * @swagger
@@ -117,7 +119,7 @@ router_payment.put('/:id', requireAuth, paymentController.updatePayment);
  *       404:
  *         description: Student not found
  */
-router_payment.get('/student/:studentId', requireAuth, paymentController.getPaymentsByStudent);
+router_payment.get('/student/:studentId', requireAuth, validateParams(StudentIdParamDto), paymentController.getPaymentsByStudent);
 
 /**
  * @swagger
@@ -137,7 +139,7 @@ router_payment.get('/student/:studentId', requireAuth, paymentController.getPaym
  *       404:
  *         description: Payment not found
  */
-router_payment.delete('/:id', requireAuth, paymentController.deletePayment);
-router_payment.delete('/:id/purge', requireAuth, requireMuzaffarHardDelete, paymentController.purgePayment);
+router_payment.delete('/:id', requireAuth, validateParams(IdParamDto), paymentController.deletePayment);
+router_payment.delete('/:id/purge', requireAuth, requireMuzaffarHardDelete, validateParams(IdParamDto), paymentController.purgePayment);
 
 module.exports = router_payment;

@@ -231,6 +231,22 @@ const StudentsPage = () => {
       showToast.success(`Deleted ${ids.length} student${ids.length === 1 ? '' : 's'}.`);
     }
   };
+  const handleTransferStudent = async (student: Student, targetClassId: number) => {
+    const id = student.student_id || student.id;
+    if (!id) {
+      showToast.error('Student ID is missing.');
+      throw new Error('Student ID is missing.');
+    }
+
+    try {
+      await studentAPI.transfer(id, targetClassId);
+      showToast.success('Student transferred successfully.');
+      await refreshStudents();
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to transfer student.');
+      throw error;
+    }
+  };
   const handleExportStudents = () => exportCsvEntity('students', 'Students');
 
   return (
@@ -344,9 +360,11 @@ const StudentsPage = () => {
             onView={(id) => navigate(`/student/${id}`)}
             onEdit={s.handleOpenModal}
             onDelete={s.handleDelete}
+            onTransfer={handleTransferStudent}
             onBulkDelete={handleBulkDeleteStudents}
             onPasswordUpdate={handlePasswordUpdate}
             onCoinsUpdated={s.actions.fetchAll}
+            classOptions={s.classes}
             viewMode={viewMode}
           />
           <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-border dark:bg-transparent">

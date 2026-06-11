@@ -2,7 +2,9 @@ import { Type } from 'class-transformer';
 import {
   ArrayNotEmpty,
   IsArray,
+  IsBoolean,
   IsDateString,
+  IsEmail,
   IsIn,
   IsInt,
   IsNotEmpty,
@@ -14,6 +16,71 @@ import {
   MinLength,
 } from 'class-validator';
 
+class IdParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  id!: number;
+}
+
+class StudentIdParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  studentId!: number;
+}
+
+class ClassIdParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  classId!: number;
+}
+
+class SessionIdParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  sessionId!: number;
+}
+
+class EntityParamDto {
+  @IsString()
+  @IsIn(['students', 'teachers', 'classes', 'payments', 'rooms', 'assignments', 'subjects'])
+  entity!: string;
+}
+
+class ClassSessionParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  id!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  sessionId!: number;
+}
+
+class StudentCoinTransactionParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  id!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  transactionId!: number;
+}
+
+class ForceQueryDto {
+  @IsOptional()
+  @IsString()
+  @IsIn(['true', 'false', ''])
+  force?: string;
+}
+
 class CredentialsDto {
   @IsString()
   @IsNotEmpty()
@@ -22,6 +89,485 @@ class CredentialsDto {
   @IsString()
   @IsNotEmpty()
   password!: string;
+}
+
+class StudentListQueryDto {
+  @IsOptional()
+  @IsString()
+  q?: string;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  school_name?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  class_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  subject_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  level?: number;
+
+  @IsOptional()
+  @IsString()
+  address?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  age?: number;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit?: number;
+}
+
+class CreateStudentDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  enrollment_number!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  first_name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  last_name!: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsDateString()
+  date_of_birth?: string;
+
+  @IsOptional()
+  @IsString()
+  parent_name?: string;
+
+  @IsOptional()
+  @IsString()
+  parent_phone?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  teacher_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  class_id?: number;
+
+  @IsOptional()
+  @IsString()
+  school_name?: string;
+
+  @IsOptional()
+  @IsString()
+  school_class?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  is_frozen?: boolean;
+}
+
+class UpdateStudentDto {
+  @IsOptional()
+  @IsString()
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  last_name?: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  class_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  teacher_id?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  is_frozen?: boolean;
+
+  @IsOptional()
+  @IsString()
+  school_name?: string;
+
+  @IsOptional()
+  @IsString()
+  school_class?: string;
+}
+
+class TransferStudentDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  target_class_id!: number;
+}
+
+class CreateTeacherDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  employee_id!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  first_name!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  last_name!: string;
+
+  @IsEmail()
+  email!: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsDateString()
+  date_of_birth?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
+
+  @IsOptional()
+  @IsString()
+  qualification?: string;
+
+  @IsOptional()
+  @IsString()
+  specialization?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  roles?: string[];
+
+  @IsOptional()
+  @IsString()
+  @MinLength(3)
+  username?: string;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(6)
+  password?: string;
+}
+
+class UpdateTeacherDto {
+  @IsOptional()
+  @IsString()
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  last_name?: string;
+
+  @IsOptional()
+  @IsString()
+  username?: string;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  roles?: string[];
+}
+
+class CreateClassDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  class_name!: string;
+
+  @IsOptional()
+  @IsString()
+  class_code?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  level?: number;
+
+  @IsOptional()
+  @IsString()
+  section?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  capacity?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  teacher_id?: number;
+
+  @IsOptional()
+  @IsString()
+  room_number?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  payment_amount?: number;
+
+  @IsOptional()
+  @IsString()
+  payment_frequency?: string;
+}
+
+class UpdateClassDto {
+  @IsOptional()
+  @IsString()
+  class_name?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  level?: number;
+
+  @IsOptional()
+  @IsString()
+  section?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  capacity?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  teacher_id?: number;
+
+  @IsOptional()
+  @IsString()
+  room_number?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  payment_amount?: number;
+}
+
+class CreateClassSessionDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  teacher_id?: number;
+
+  @IsDateString()
+  session_date!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  start_time!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  duration_minutes?: number;
+}
+
+class CreatePaymentDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  student_id!: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  center_id?: number;
+
+  @IsOptional()
+  @IsDateString()
+  payment_date?: string;
+
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  amount!: number;
+
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_method?: string;
+
+  @IsOptional()
+  @IsString()
+  transaction_reference?: string;
+
+  @IsOptional()
+  @IsString()
+  receipt_number?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_status?: string;
+
+  @IsOptional()
+  @IsString()
+  payment_type?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+}
+
+class UpdatePaymentDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  amount?: number;
+
+  @IsOptional()
+  @IsString()
+  payment_status?: string;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
 }
 
 class PasswordChangeDto {
@@ -367,7 +913,26 @@ class CreateAttendanceDto {
 }
 
 module.exports = {
+  IdParamDto,
+  StudentIdParamDto,
+  ClassIdParamDto,
+  SessionIdParamDto,
+  EntityParamDto,
+  ClassSessionParamDto,
+  StudentCoinTransactionParamDto,
+  ForceQueryDto,
   CredentialsDto,
+  StudentListQueryDto,
+  CreateStudentDto,
+  UpdateStudentDto,
+  TransferStudentDto,
+  CreateTeacherDto,
+  UpdateTeacherDto,
+  CreateClassDto,
+  UpdateClassDto,
+  CreateClassSessionDto,
+  CreatePaymentDto,
+  UpdatePaymentDto,
   PasswordChangeDto,
   SetPasswordDto,
   PaymentPasswordDto,

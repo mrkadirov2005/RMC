@@ -4,8 +4,17 @@ const express_teacher = require('express');
 const router_teacher = express_teacher.Router();
 const teacherController = require('../modules/teachers/controllers/teacher.controller');
 const { requireAuth, requireRole, requireMuzaffarHardDelete } = require('../middleware/auth');
-const { validateBody } = require('../middleware/validation');
-const { CredentialsDto, PasswordChangeDto, PaymentPasswordDto, SetPasswordDto } = require('../dtos/request.dto');
+const { validateBody, validateParams, validateQuery } = require('../middleware/validation');
+const {
+  CredentialsDto,
+  CreateTeacherDto,
+  ForceQueryDto,
+  IdParamDto,
+  PasswordChangeDto,
+  PaymentPasswordDto,
+  SetPasswordDto,
+  UpdateTeacherDto,
+} = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -47,7 +56,7 @@ router_teacher.get('/', requireAuth, teacherController.getAllTeachers);
  *       404:
  *         description: Teacher not found
  */
-router_teacher.get('/:id', requireAuth, teacherController.getTeacherById);
+router_teacher.get('/:id', requireAuth, validateParams(IdParamDto), teacherController.getTeacherById);
 
 /**
  * @swagger
@@ -67,7 +76,7 @@ router_teacher.get('/:id', requireAuth, teacherController.getTeacherById);
  *       400:
  *         description: Invalid input
  */
-router_teacher.post('/', requireAuth, teacherController.createTeacher);
+router_teacher.post('/', requireAuth, validateBody(CreateTeacherDto), teacherController.createTeacher);
 
 /**
  * @swagger
@@ -93,7 +102,7 @@ router_teacher.post('/', requireAuth, teacherController.createTeacher);
  *       404:
  *         description: Teacher not found
  */
-router_teacher.put('/:id', requireAuth, teacherController.updateTeacher);
+router_teacher.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateTeacherDto), teacherController.updateTeacher);
 
 /**
  * @swagger
@@ -113,8 +122,8 @@ router_teacher.put('/:id', requireAuth, teacherController.updateTeacher);
  *       404:
  *         description: Teacher not found
  */
-router_teacher.delete('/:id', requireAuth, requireRole('superuser'), teacherController.deleteTeacher);
-router_teacher.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, teacherController.purgeTeacher);
+router_teacher.delete('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateQuery(ForceQueryDto), teacherController.deleteTeacher);
+router_teacher.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, validateParams(IdParamDto), teacherController.purgeTeacher);
 
 /**
  * @swagger
@@ -183,7 +192,7 @@ router_teacher.post('/auth/payment-login', validateBody(CredentialsDto), teacher
  *       200:
  *         description: Password set successfully
  */
-router_teacher.post('/:id/set-password', requireAuth, requireRole('superuser'), validateBody(SetPasswordDto), teacherController.setTeacherPassword);
+router_teacher.post('/:id/set-password', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(SetPasswordDto), teacherController.setTeacherPassword);
 
 /**
  * @swagger
@@ -192,7 +201,7 @@ router_teacher.post('/:id/set-password', requireAuth, requireRole('superuser'), 
  *     summary: Set teacher payment access password (admin operation)
  *     tags: [Teachers]
  */
-router_teacher.post('/:id/payment-password', requireAuth, requireRole('superuser'), validateBody(PaymentPasswordDto), teacherController.setTeacherPaymentPassword);
+router_teacher.post('/:id/payment-password', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(PaymentPasswordDto), teacherController.setTeacherPaymentPassword);
 
 /**
  * @swagger
@@ -224,7 +233,7 @@ router_teacher.post('/:id/payment-password', requireAuth, requireRole('superuser
  *       200:
  *         description: Password changed successfully
  */
-router_teacher.post('/:id/change-password', requireAuth, validateBody(PasswordChangeDto), teacherController.changeTeacherPassword);
+router_teacher.post('/:id/change-password', requireAuth, validateParams(IdParamDto), validateBody(PasswordChangeDto), teacherController.changeTeacherPassword);
 
 module.exports = router_teacher;
 

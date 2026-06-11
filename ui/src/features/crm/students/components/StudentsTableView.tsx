@@ -1,10 +1,13 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { Coins, Folder, Info, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Coins, Folder, Info, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
-import type { Student } from '../types';
+import type { Class, Student } from '../types';
 
 interface Props {
   students: Student[];
@@ -24,9 +27,11 @@ interface Props {
   onView: (id: number) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: number) => void;
+  onTransfer?: (student: Student, targetClassId: number) => Promise<void> | void;
   onBulkDelete?: (ids: number[]) => Promise<void> | void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
+  classOptions?: Class[];
   viewMode?: ViewMode;
 }
 
@@ -95,14 +100,19 @@ export const StudentsTableView = ({
   onView,
   onEdit,
   onDelete,
+  onTransfer,
   onBulkDelete,
   onPasswordUpdate,
   onCoinsUpdated,
+  classOptions = [],
   viewMode = 'list',
 }: Props) => {
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [transferStudent, setTransferStudent] = useState<Student | null>(null);
+  const [targetClassId, setTargetClassId] = useState('');
+  const [transferring, setTransferring] = useState(false);
 
   const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
   const visibleIds = students.map(getStudentId).filter((id) => id > 0);
@@ -141,6 +151,30 @@ export const StudentsTableView = ({
     setCoinDialogOpen(true);
   };
 
+  const openTransfer = (student: Student) => {
+    setTransferStudent(student);
+    setTargetClassId('');
+  };
+
+  const closeTransfer = () => {
+    if (transferring) return;
+    setTransferStudent(null);
+    setTargetClassId('');
+  };
+
+  const submitTransfer = async () => {
+    const nextClassId = Number(targetClassId);
+    if (!transferStudent || !nextClassId || !onTransfer) return;
+    setTransferring(true);
+    try {
+      await onTransfer(transferStudent, nextClassId);
+      setTransferStudent(null);
+      setTargetClassId('');
+    } finally {
+      setTransferring(false);
+    }
+  };
+
   const renderActions = (student: Student) => (
     <div className="flex justify-end">
       <DropdownMenu>
@@ -167,6 +201,12 @@ export const StudentsTableView = ({
             <Pencil className="h-4 w-4 text-blue-500" />
             Edit
           </DropdownMenuItem>
+          {onTransfer && (
+            <DropdownMenuItem onClick={() => openTransfer(student)} className="gap-2">
+              <ArrowRightLeft className="h-4 w-4 text-emerald-600" />
+              Transfer
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             onClick={() => onDelete(student.student_id || student.id || 0)}
             className="gap-2 text-red-600 focus:text-red-600"
@@ -182,14 +222,61 @@ export const StudentsTableView = ({
   const emptyText = hasActiveFilters ? 'No students match your search criteria' : 'No students found in this class';
 
   const dialog = (
-    <StudentCoinsDialog
-      open={coinDialogOpen}
-      onOpenChange={setCoinDialogOpen}
-      studentId={selectedStudent?.student_id || selectedStudent?.id}
-      studentName={selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : undefined}
-      currentCoins={selectedStudent?.coins}
-      onSaved={onCoinsUpdated}
-    />
+    <>
+      <StudentCoinsDialog
+        open={coinDialogOpen}
+        onOpenChange={setCoinDialogOpen}
+        studentId={selectedStudent?.student_id || selectedStudent?.id}
+        studentName={selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : undefined}
+        currentCoins={selectedStudent?.coins}
+        onSaved={onCoinsUpdated}
+      />
+      <Dialog open={transferStudent != null} onOpenChange={(open) => (!open ? closeTransfer() : undefined)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Transfer student</DialogTitle>
+            <DialogDescription>
+              Move this student into another group. The current group keeps a transferred record, and a new active student record is created in the target group.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-lg border bg-slate-50 px-3 py-2 text-sm dark:bg-muted/40">
+              <p className="font-medium">{transferStudent?.first_name} {transferStudent?.last_name}</p>
+              <p className="text-xs text-muted-foreground">Current group: {transferStudent?.class_name || transferStudent?.class_id || 'Unassigned'}</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="target-class">New group</Label>
+              <Select value={targetClassId} onValueChange={setTargetClassId} disabled={transferring}>
+                <SelectTrigger id="target-class">
+                  <SelectValue placeholder="Select target group" />
+                </SelectTrigger>
+                <SelectContent>
+                  {classOptions
+                    .filter((cls) => Number(cls.class_id || cls.id || 0) !== Number(transferStudent?.class_id || 0))
+                    .map((cls) => {
+                      const id = Number(cls.class_id || cls.id || 0);
+                      return (
+                        <SelectItem key={id} value={String(id)}>
+                          {[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || `Group #${id}`}
+                        </SelectItem>
+                      );
+                    })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={closeTransfer} disabled={transferring}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={submitTransfer} disabled={transferring || !targetClassId}>
+              <ArrowRightLeft className="mr-2 h-4 w-4" />
+              {transferring ? 'Transferring...' : 'Transfer'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 
   if (viewMode !== 'list') {

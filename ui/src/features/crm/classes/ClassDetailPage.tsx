@@ -39,6 +39,7 @@ type StudentItem = {
   enrollment_number?: string;
   status?: string;
   phone?: string;
+  deleted_at?: string | null;
 };
 
 type ClassSchedule = { days: string[]; time: string };
@@ -103,7 +104,7 @@ const ClassDetailPage = () => {
       try {
         const [classResponse, studentsResponse, subjectsResponse, sessionsResponse, testsResponse] = await Promise.all([
           classAPI.getById(Number(classId)),
-          studentAPI.getAll().catch(() => ({ data: [] })),
+          studentAPI.getByClassWithTransfers(Number(classId)).catch(() => ({ data: [] })),
           subjectAPI.getByClass(Number(classId)).catch(() => ({ data: [] })),
           classAPI.getSessions(Number(classId)).catch(() => ({ data: [] })),
           testAPI.getAssignedTests('class', Number(classId)).catch(() => ({ data: [] })),
@@ -111,7 +112,7 @@ const ClassDetailPage = () => {
         if (cancelled) return;
         const nextClass = classResponse?.data ?? classResponse;
         setClassData(nextClass);
-        setStudents(unwrapRows(studentsResponse).filter((student: StudentItem) => Number(student.class_id) === Number(classId)));
+        setStudents(unwrapRows(studentsResponse));
         setSubjects(unwrapRows(subjectsResponse));
         setSessions(unwrapRows(sessionsResponse));
         setAssignedTests(unwrapRows(testsResponse));
@@ -130,8 +131,9 @@ const ClassDetailPage = () => {
   const schedule = useMemo(() => parseSchedule(classData?.section), [classData?.section]);
   const className = classData?.class_name || 'Class';
   const activeStudents = students.filter((student) => String(student.status || '').toLowerCase() === 'active').length;
+  const transferredStudents = students.filter((student) => String(student.status || '').toLowerCase() === 'transferred').length;
   const capacity = Number(classData?.capacity || 0);
-  const fillRate = capacity > 0 ? Math.min(100, Math.round((students.length / capacity) * 100)) : 0;
+  const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
   const todayKey = new Date().toISOString().split('T')[0];
 
   const openSessionWorkflow = (session: any) => {
@@ -237,13 +239,13 @@ const ClassDetailPage = () => {
             <div className="grid gap-3 sm:grid-cols-2 lg:w-[460px]">
               <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
                 <Users className="mb-2 h-5 w-5 text-white/75" />
-                <p className="text-2xl font-bold">{students.length}</p>
-                <p className="text-xs text-white/70">{activeStudents} active students</p>
+                <p className="text-2xl font-bold">{activeStudents}</p>
+                <p className="text-xs text-white/70">{transferredStudents} transferred records</p>
               </div>
               <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
                 <BookOpen className="mb-2 h-5 w-5 text-white/75" />
                 <p className="text-2xl font-bold">{fillRate}%</p>
-                <p className="text-xs text-white/70">{students.length} / {capacity || '-'} seats</p>
+                <p className="text-xs text-white/70">{activeStudents} / {capacity || '-'} seats</p>
               </div>
               <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
                 <MapPin className="mb-2 h-5 w-5 text-white/75" />
@@ -310,14 +312,21 @@ const ClassDetailPage = () => {
               <TableBody>
                 {students.length === 0 ? (
                   <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
-                ) : students.map((student) => (
-                  <TableRow key={student.student_id || student.id}>
+                ) : students.map((student) => {
+                  const isTransferred = String(student.status || '').toLowerCase() === 'transferred';
+                  return (
+                  <TableRow key={student.student_id || student.id} className={isTransferred ? 'bg-amber-50/60 text-muted-foreground dark:bg-amber-950/10' : undefined}>
                     <TableCell className="font-semibold">{student.first_name} {student.last_name}</TableCell>
                     <TableCell>{student.enrollment_number || '-'}</TableCell>
-                    <TableCell>{student.status || '-'}</TableCell>
+                    <TableCell>
+                      <Badge variant={isTransferred ? 'outline' : 'secondary'} className={isTransferred ? 'border-amber-300 text-amber-700 dark:border-amber-400/30 dark:text-amber-200' : undefined}>
+                        {isTransferred ? 'Transferred' : student.status || '-'}
+                      </Badge>
+                    </TableCell>
                     <TableCell>{student.phone || '-'}</TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           </TabsContent>

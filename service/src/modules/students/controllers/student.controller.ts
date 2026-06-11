@@ -87,6 +87,24 @@ const getDeletedStudents = async (req: any, res: any) => {
   }
 };
 
+const getClassStudentsWithTransfers = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (req.user?.userType === 'student' && Number(req.params.classId) !== Number(req.user?.class_id)) {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+    const rows = await studentService.listClassStudentsWithTransfers(Number(req.params.classId), centerId ?? undefined, teacherId);
+    res.json(rows);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch class students', details: error.message || String(error) });
+  }
+};
+
 const createStudent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -188,6 +206,39 @@ const purgeStudent = async (req: any, res: any) => {
       });
     }
     res.status(500).json({ error: 'Failed to permanently delete student', details: error.message || String(error) });
+  }
+};
+
+const transferStudent = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (req.user?.userType === 'student') {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    const result = await studentService.transferStudent(
+      Number(req.params.id),
+      Number(req.body.target_class_id),
+      centerId ?? undefined,
+      teacherId
+    );
+
+    if (result?.error === 'not_found') return res.status(404).json({ error: 'Student not found' });
+    if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Target class not found' });
+    if (result?.error === 'same_class') return res.status(400).json({ error: 'Student is already in this class' });
+
+    res.status(201).json({
+      message: 'Student transferred successfully',
+      transferred_student: result.transferred,
+      student: result.student,
+    });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to transfer student', details: error.message || String(error) });
   }
 };
 
@@ -405,10 +456,12 @@ module.exports = {
   getAllStudents,
   getStudentById,
   getDeletedStudents,
+  getClassStudentsWithTransfers,
   createStudent,
   updateStudent,
   deleteStudent,
   purgeStudent,
+  transferStudent,
   studentLogin,
   setStudentPassword,
   changeStudentPassword,

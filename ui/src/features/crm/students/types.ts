@@ -19,8 +19,10 @@ export interface Student {
   school_name?: string | null;
   school_class?: string | null;
   class_name?: string | null;
+  class_code?: string | null;
   class_level?: number | null;
   center_address?: string | null;
+  deleted_at?: string | null;
   coins?: number;
   username?: string;
   password?: string;
@@ -33,4 +35,5 @@ export interface Class {
   class_code: string;
   level: number;
   capacity: number;
+  center_id?: number;
 }

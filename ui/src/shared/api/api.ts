@@ -206,12 +206,14 @@ export const studentAPI = {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
+  getByClassWithTransfers: (classId: number) => apiClient.get(`/students/class/${classId}`),
   getDeleted: (options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students/deleted', {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
   create: (data: any) => apiClient.post('/students', data),
   update: (id: number, data: any) => apiClient.put(`/students/${id}`, data),
+  transfer: (id: number, targetClassId: number) => apiClient.post(`/students/${id}/transfer`, { target_class_id: targetClassId }),
   delete: (id: number) => apiClient.delete(`/students/${id}`),
   purge: (id: number) => apiClient.delete(`/students/${id}/purge`),
   setPassword: (id: number, data: { username: string; password: string }) =>

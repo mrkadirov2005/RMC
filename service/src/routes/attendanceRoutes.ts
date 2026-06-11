@@ -4,8 +4,8 @@ const express_att = require('express');
 const router_att = express_att.Router();
 const attendanceController = require('../modules/attendance/controllers/attendance.controller');
 const { requireAuth } = require('../middleware/auth');
-const { validateBody } = require('../middleware/validation');
-const { CreateAttendanceDto } = require('../dtos/request.dto');
+const { validateBody, validateParams } = require('../middleware/validation');
+const { ClassIdParamDto, CreateAttendanceDto, IdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -31,7 +31,7 @@ router_att.get('/', requireAuth, attendanceController.getAllAttendance);
  *   get:
  *     summary: Get attendance records by student ID
  */
-router_att.get('/student/:studentId', requireAuth, attendanceController.getAttendanceByStudent);
+router_att.get('/student/:studentId', requireAuth, validateParams(StudentIdParamDto), attendanceController.getAttendanceByStudent);
 
 /**
  * @swagger
@@ -39,7 +39,7 @@ router_att.get('/student/:studentId', requireAuth, attendanceController.getAtten
  *   get:
  *     summary: Get attendance records by class ID
  */
-router_att.get('/class/:classId', requireAuth, attendanceController.getAttendanceByClass);
+router_att.get('/class/:classId', requireAuth, validateParams(ClassIdParamDto), attendanceController.getAttendanceByClass);
 
 /**
  * @swagger
@@ -47,7 +47,7 @@ router_att.get('/class/:classId', requireAuth, attendanceController.getAttendanc
  *   get:
  *     summary: Get attendance records by session ID
  */
-router_att.get('/session/:sessionId', requireAuth, attendanceController.getAttendanceBySession);
+router_att.get('/session/:sessionId', requireAuth, validateParams(SessionIdParamDto), attendanceController.getAttendanceBySession);
 
 /**
  * @swagger
@@ -71,7 +71,7 @@ router_att.get('/session/:sessionId', requireAuth, attendanceController.getAtten
  *       404:
  *         description: Attendance record not found
  */
-router_att.get('/:id', requireAuth, attendanceController.getAttendanceById);
+router_att.get('/:id', requireAuth, validateParams(IdParamDto), attendanceController.getAttendanceById);
 
 /**
  * @swagger
@@ -117,7 +117,7 @@ router_att.post('/', requireAuth, validateBody(CreateAttendanceDto), attendanceC
  *       404:
  *         description: Attendance record not found
  */
-router_att.put('/:id', requireAuth, attendanceController.updateAttendance);
+router_att.put('/:id', requireAuth, validateParams(IdParamDto), attendanceController.updateAttendance);
 
 
 /**
@@ -138,6 +138,6 @@ router_att.put('/:id', requireAuth, attendanceController.updateAttendance);
  *       404:
  *         description: Attendance record not found
  */
-router_att.delete('/:id', requireAuth, attendanceController.deleteAttendance);
+router_att.delete('/:id', requireAuth, validateParams(IdParamDto), attendanceController.deleteAttendance);
 
 module.exports = router_att;
