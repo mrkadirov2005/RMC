@@ -77,7 +77,6 @@ services:
         required: false
     environment:
       NODE_ENV: production
-      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
       DB_HOST: postgres
       DB_PORT: "5432"
       DB_USER: crm_user
