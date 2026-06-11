@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { attendanceAPI, gradeAPI, testAPI } from '../../../shared/api/api';
+import { attendanceAPI, gradeAPI, studentAPI, testAPI } from '../../../shared/api/api';
 import { showToast } from '../../../utils/toast';
 import { formatMoney } from '../../../utils/helpers';
 import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';
@@ -56,6 +57,8 @@ interface Student {
   last_name: string;
   enrollment_number: string;
   class_id: number;
+  status?: string;
+  deleted_at?: string | null;
 }
 
 interface Attendance {
@@ -107,11 +110,13 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   const selectStudentsByClass = useMemo(makeSelectStudentsByClassId, []);
   const classId = Number(classData?.class_id || classData?.id);
   const subjectOptions = useAppSelector(selectSubjectOptions);
-  const students = useAppSelector((state) => selectStudentsByClass(state, classId)) as Student[];
+  const activeStudents = useAppSelector((state) => selectStudentsByClass(state, classId)) as Student[];
   const studentsLoading = useAppSelector((state) => state.students.loading);
   const attendanceLoading = useAppSelector((state) => state.attendance.loading);
   const allAttendance = useAppSelector((state) => state.attendance.items) as Attendance[];
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
+  const [classStudents, setClassStudents] = useState<Student[]>([]);
+  const [classStudentsLoading, setClassStudentsLoading] = useState(false);
   const [assignedTests, setAssignedTests] = useState<AssignedTest[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [activeTab, setActiveTab] = useState<ClassDetailModalProps['initialTab']>('info');
@@ -134,9 +139,18 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   useEffect(() => {
     if (open && classData) {
       setActiveTab(initialTab || 'info');
+      setClassStudentsLoading(true);
       dispatch(fetchStudentsForce());
       dispatch(fetchAttendance());
       dispatch(fetchSubjectsThunk());
+      studentAPI
+        .getByClassWithTransfers(classId)
+        .then((response) => {
+          const data = response?.data ?? response;
+          setClassStudents(Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : []);
+        })
+        .catch(() => setClassStudents([]))
+        .finally(() => setClassStudentsLoading(false));
       testAPI
         .getAssignedTests('class', classId)
         .then((response) => {
@@ -152,13 +166,13 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
     if (!open) return;
     setAttendance((prevMap) => {
       const next = new Map<number, string>();
-      students.forEach((student: Student) => {
+      activeStudents.forEach((student: Student) => {
         const sid = Number(student.student_id || student.id);
         if (sid) next.set(sid, prevMap.get(sid) || '');
       });
       return next;
     });
-  }, [open, students]);
+  }, [open, activeStudents]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -346,7 +360,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
     }
   };
 
-  const loading = studentsLoading || attendanceLoading;
+  const loading = studentsLoading || attendanceLoading || classStudentsLoading;
 
   if (!classData) return null;
   // Parse schedule from section field
@@ -433,26 +447,40 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
               <div className="flex justify-center py-6">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : students.length === 0 ? (
+            ) : classStudents.length === 0 ? (
               <Alert>
                 <AlertDescription>No students enrolled in this class</AlertDescription>
               </Alert>
             ) : (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {students.map((student) => (
-                  <div
-                    key={student.student_id || student.id}
-                    className="flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 dark:border-border dark:bg-background/70"
-                  >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-muted dark:text-primary">
-                      {student.first_name?.charAt(0) || <User className="h-4 w-4" />}
-                      {student.last_name?.charAt(0)}
+                {classStudents.map((student) => {
+                  const isTransferred = String(student.status || '').toLowerCase() === 'transferred';
+                  return (
+                    <div
+                      key={student.student_id || student.id}
+                      className={cn(
+                        'flex items-center gap-2 rounded-lg border p-3 dark:border-border dark:bg-background/70',
+                        isTransferred ? 'border-amber-200 bg-amber-50/70 text-muted-foreground' : 'border-indigo-100 bg-indigo-50/50'
+                      )}
+                    >
+                      <div className={cn(
+                        'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-semibold dark:bg-muted dark:text-primary',
+                        isTransferred ? 'bg-amber-100 text-amber-700' : 'bg-indigo-100 text-indigo-700'
+                      )}>
+                        {student.first_name?.charAt(0) || <User className="h-4 w-4" />}
+                        {student.last_name?.charAt(0)}
+                      </div>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                        {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
+                      </span>
+                      {isTransferred && (
+                        <Badge variant="outline" className="border-amber-300 text-amber-700">
+                          Transferred
+                        </Badge>
+                      )}
                     </div>
-                    <span className="truncate text-sm font-semibold">
-                      {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -469,7 +497,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {students.map((student) => {
+                    {activeStudents.map((student) => {
                       const studentId = student.student_id || student.id || 0;
                       const status = attendance.get(studentId) || '';
 
@@ -517,7 +545,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
               <div className="flex justify-center py-6">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : students.length === 0 ? (
+            ) : activeStudents.length === 0 ? (
               <Alert>
                 <AlertDescription>No students enrolled in this class to grade</AlertDescription>
               </Alert>
@@ -596,7 +624,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {students.map((student, index) => {
+                      {activeStudents.map((student, index) => {
                         const studentId = student.student_id || student.id || 0;
                         const marks = gradeMarks.get(studentId);
                         const marksNum = marks !== undefined && marks !== '' ? Number(marks) : null;
@@ -652,13 +680,13 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 {/* Summary & Submit */}
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-muted-foreground">
-                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} of {students.length} students graded
+                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} of {activeStudents.length} students graded
                   </p>
                   <Button
                     size="lg"
                     className="min-w-[180px]"
                     onClick={handleSubmitBulkGrades}
-                    disabled={submittingGrades || students.length === 0}
+                    disabled={submittingGrades || activeStudents.length === 0}
                   >
                     {submittingGrades ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit All Grades'}
                   </Button>
