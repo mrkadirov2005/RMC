@@ -251,6 +251,12 @@ export const archiveAPI = {
     apiClient.delete(`/archive/${entity}/${id}/purge`),
 };
 
+export const telegramRegistrationAPI = {
+  getAll: (params?: { status?: string }) => apiClient.get('/telegram-registrations', { params }),
+  convert: (id: number) => apiClient.post(`/telegram-registrations/${id}/convert`),
+  reject: (id: number) => apiClient.post(`/telegram-registrations/${id}/reject`),
+};
+
 export const teacherAPI = {
   getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/teachers', {

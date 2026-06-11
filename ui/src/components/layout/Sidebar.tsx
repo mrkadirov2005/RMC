@@ -6,7 +6,7 @@ import {
   LayoutDashboard, Users, BookOpen, CreditCard, BarChart3, DollarSign,
   ClipboardList, CheckCircle, Building2, AlertTriangle, FileQuestion,
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
-  Archive,
+  Archive, MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -37,6 +37,7 @@ const iconMap: Record<string, React.ElementType> = {
   Calendar: CalendarDays,
   Settings: SettingsIcon,
   Archive,
+  Telegram: MessageCircle,
   Rooms: Building2,
   Logs: ClipboardList,
 };
@@ -125,6 +126,7 @@ const Sidebar = memo(() => {
     { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
     { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser'], permission: 'CRUD_STUDENT' },
+    { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'] },
     { label: 'Teachers', path: '/teachers', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_CLASS' },

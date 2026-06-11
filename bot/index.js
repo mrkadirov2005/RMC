@@ -110,9 +110,15 @@ async function initDb() {
       center_id INT,
       class_label VARCHAR(100) NOT NULL DEFAULT 'Unassigned',
       status VARCHAR(30) NOT NULL DEFAULT 'Pending',
+      converted_student_id INT,
+      converted_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE telegram_student_registrations
+      ADD COLUMN IF NOT EXISTS converted_student_id INT,
+      ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP;
 
     CREATE INDEX IF NOT EXISTS idx_telegram_student_registrations_chat
       ON telegram_student_registrations(telegram_chat_id);
