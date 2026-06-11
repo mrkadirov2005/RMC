@@ -1,5 +1,39 @@
 const pool = require('../../../db/pool');
 
+const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
+
+const toDateOnly = (date: Date) => date.toISOString().slice(0, 10);
+
+const buildTransferAllocation = (source: any, targetClass: any, transferDate = new Date()) => {
+  const sourceMonthly = Number(source.source_payment_amount || 0);
+  const targetMonthly = Number(targetClass.payment_amount || 0);
+  const monthStart = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth(), 1));
+  const nextMonthStart = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth() + 1, 1));
+  const monthEnd = new Date(nextMonthStart.getTime() - 24 * 60 * 60 * 1000);
+  const effectiveDate = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth(), transferDate.getUTCDate()));
+  const totalDays = monthEnd.getUTCDate();
+  const transferDay = effectiveDate.getUTCDate();
+  const sourceDays = Math.max(transferDay - 1, 0);
+  const targetDays = Math.max(totalDays - sourceDays, 0);
+  const sourceEarned = roundMoney((sourceMonthly * sourceDays) / totalDays);
+  const sourceCredit = roundMoney(Math.max(sourceMonthly - sourceEarned, 0));
+  const targetCharge = roundMoney((targetMonthly * targetDays) / totalDays);
+
+  return {
+    monthStart,
+    monthEnd,
+    effectiveDate,
+    totalDays,
+    sourceDays,
+    targetDays,
+    sourceMonthly,
+    targetMonthly,
+    sourceEarned,
+    sourceCredit,
+    targetCharge,
+  };
+};
+
 interface StudentListFilters {
   q?: string;
   school_name?: string;
@@ -382,15 +416,20 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
   try {
     await client.query('BEGIN');
 
-    let sourceQuery = 'SELECT * FROM students WHERE student_id = $1 AND deleted_at IS NULL';
+    let sourceQuery = `
+      SELECT s.*, c.payment_amount AS source_payment_amount
+      FROM students s
+      LEFT JOIN classes c ON c.class_id = s.class_id
+      WHERE s.student_id = $1 AND s.deleted_at IS NULL
+    `;
     const sourceParams: any[] = [id];
     if (centerId) {
       sourceParams.push(centerId);
-      sourceQuery += ` AND center_id = $${sourceParams.length}`;
+      sourceQuery += ` AND s.center_id = $${sourceParams.length}`;
     }
     if (teacherId) {
       sourceParams.push(teacherId);
-      sourceQuery += ` AND teacher_id = $${sourceParams.length}`;
+      sourceQuery += ` AND s.teacher_id = $${sourceParams.length}`;
     }
     sourceQuery += ' FOR UPDATE';
     const sourceResult = await client.query(sourceQuery, sourceParams);
@@ -400,7 +439,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
       return { error: 'not_found' as const };
     }
 
-    let targetQuery = 'SELECT class_id, center_id, teacher_id FROM classes WHERE class_id = $1 AND deleted_at IS NULL';
+    let targetQuery = 'SELECT class_id, center_id, teacher_id, payment_amount FROM classes WHERE class_id = $1 AND deleted_at IS NULL';
     const targetParams: any[] = [targetClassId];
     if (centerId) {
       targetParams.push(centerId);
@@ -476,6 +515,113 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
         Number(source.coins || 0),
       ]
     );
+    const newStudent = newStudentResult.rows[0];
+
+    const allocation = buildTransferAllocation(source, targetClass);
+    const paidResult = await client.query(
+      `SELECT COALESCE(SUM(amount), 0)::numeric AS paid_amount
+       FROM payments
+       WHERE student_id = $1
+         AND center_id = $2
+         AND deleted_at IS NULL
+         AND LOWER(payment_status) IN ('completed', 'paid')
+         AND COALESCE(payment_type, '') <> 'Transfer Adjustment'
+         AND payment_date >= $3
+         AND payment_date <= $4`,
+      [id, source.center_id, toDateOnly(allocation.monthStart), toDateOnly(allocation.monthEnd)]
+    );
+    const paidAmount = Number(paidResult.rows[0]?.paid_amount || 0);
+    const shouldAllocate = allocation.sourceMonthly > 0 && paidAmount >= allocation.sourceMonthly;
+
+    if (shouldAllocate && allocation.sourceCredit > 0) {
+      await client.query(
+        `INSERT INTO payments (
+          student_id,
+          center_id,
+          payment_date,
+          amount,
+          currency,
+          payment_method,
+          transaction_reference,
+          receipt_number,
+          payment_status,
+          payment_type,
+          notes,
+          transfer_source_student_id,
+          transfer_target_student_id,
+          transfer_source_class_id,
+          transfer_target_class_id,
+          transfer_effective_date,
+          covered_from,
+          covered_to,
+          coverage_days,
+          coverage_total_days
+        )
+        VALUES ($1, $2, $3, $4, 'UZS', 'Cash', $5, NULL, 'Completed', 'Transfer Adjustment', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        [
+          id,
+          source.center_id,
+          toDateOnly(allocation.effectiveDate),
+          -allocation.sourceCredit,
+          `TRANSFER-${id}-${newStudent.student_id}-SOURCE`,
+          `Transfer credit: ${allocation.sourceDays}/${allocation.totalDays} days kept in previous group`,
+          id,
+          newStudent.student_id,
+          source.class_id,
+          targetClass.class_id,
+          toDateOnly(allocation.effectiveDate),
+          toDateOnly(allocation.effectiveDate),
+          toDateOnly(allocation.monthEnd),
+          allocation.targetDays,
+          allocation.totalDays,
+        ]
+      );
+    }
+
+    if (shouldAllocate && allocation.targetCharge > 0) {
+      await client.query(
+        `INSERT INTO payments (
+          student_id,
+          center_id,
+          payment_date,
+          amount,
+          currency,
+          payment_method,
+          transaction_reference,
+          receipt_number,
+          payment_status,
+          payment_type,
+          notes,
+          transfer_source_student_id,
+          transfer_target_student_id,
+          transfer_source_class_id,
+          transfer_target_class_id,
+          transfer_effective_date,
+          covered_from,
+          covered_to,
+          coverage_days,
+          coverage_total_days
+        )
+        VALUES ($1, $2, $3, $4, 'UZS', 'Cash', $5, NULL, 'Completed', 'Transfer Adjustment', $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+        [
+          newStudent.student_id,
+          targetClass.center_id,
+          toDateOnly(allocation.effectiveDate),
+          allocation.targetCharge,
+          `TRANSFER-${id}-${newStudent.student_id}-TARGET`,
+          `Transfer charge: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
+          id,
+          newStudent.student_id,
+          source.class_id,
+          targetClass.class_id,
+          toDateOnly(allocation.effectiveDate),
+          toDateOnly(allocation.effectiveDate),
+          toDateOnly(allocation.monthEnd),
+          allocation.targetDays,
+          allocation.totalDays,
+        ]
+      );
+    }
 
     await client.query(
       `INSERT INTO parent_students (parent_id, student_id, relationship, is_primary)
@@ -489,7 +635,19 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
     await client.query('COMMIT');
     return {
       transferred: transferredResult.rows[0],
-      student: newStudentResult.rows[0],
+      student: newStudent,
+      payment_allocation: {
+        applied: shouldAllocate,
+        paid_amount: paidAmount,
+        source_monthly_amount: allocation.sourceMonthly,
+        target_monthly_amount: allocation.targetMonthly,
+        source_days: allocation.sourceDays,
+        target_days: allocation.targetDays,
+        total_days: allocation.totalDays,
+        source_earned_amount: allocation.sourceEarned,
+        source_credit_amount: shouldAllocate ? allocation.sourceCredit : 0,
+        target_charge_amount: shouldAllocate ? allocation.targetCharge : 0,
+      },
     };
   } catch (error) {
     await client.query('ROLLBACK');

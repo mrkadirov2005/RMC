@@ -109,6 +109,16 @@ interface Payment {
   receipt_number?: string;
   reference_number?: string;
   notes?: string;
+  student_first_name?: string;
+  student_last_name?: string;
+  student_class_id?: number;
+  student_teacher_id?: number;
+  student_status?: string;
+  student_deleted_at?: string;
+  student_class_name?: string;
+  coverage_days?: number;
+  coverage_total_days?: number;
+  transfer_effective_date?: string;
 }
 
 interface Teacher {
@@ -324,16 +334,26 @@ const PaymentsPage = () => {
       .map((s) => s.student_id || s.id || 0);
   };
 
-// Returns payments for student ids.
-  const getPaymentsForStudentIds = (studentIds: number[]): Payment[] => {
-    const idSet = new Set(studentIds.map((id) => Number(id)));
-    return state.items.filter((payment) => idSet.has(Number(payment.student_id)));
+  const getPaymentsForTeacher = (teacherId: number): Payment[] => {
+    const studentIds = new Set(getStudentIdsForTeacher(teacherId).map((id) => Number(id)));
+    return state.items.filter(
+      (payment) =>
+        Number(payment.student_teacher_id || 0) === Number(teacherId) || studentIds.has(Number(payment.student_id))
+    );
+  };
+
+  const getPaymentsForClass = (classId: number): Payment[] => {
+    const studentIds = new Set(getStudentIdsForClass(classId).map((id) => Number(id)));
+    return state.items.filter(
+      (payment) =>
+        Number(payment.student_class_id || 0) === Number(classId) || studentIds.has(Number(payment.student_id))
+    );
   };
 
 // Returns teacher payment stats.
   const getTeacherPaymentStats = (teacherId: number) => {
     const studentIds = getStudentIdsForTeacher(teacherId);
-    const payments = getPaymentsForStudentIds(studentIds);
+    const payments = getPaymentsForTeacher(teacherId);
     const paidPayments = payments.filter(isPaidPayment);
     const unpaidPayments = payments.filter((payment) => !isPaidPayment(payment));
 
@@ -353,20 +373,17 @@ const PaymentsPage = () => {
 
   // Get payments count for teacher
   const getPaymentCountForTeacher = (teacherId: number): number => {
-    const studentIds = getStudentIdsForTeacher(teacherId);
-    return getPaymentsForStudentIds(studentIds).length;
+    return getPaymentsForTeacher(teacherId).length;
   };
 
   // Get payments count for class
   const getPaymentCountForClass = (classId: number): number => {
-    const studentIds = getStudentIdsForClass(classId);
-    return state.items.filter((p) => studentIds.includes(p.student_id)).length;
+    return getPaymentsForClass(classId).length;
   };
 
   // Get total amount for class
   const getTotalAmountForClass = (classId: number): number => {
-    const studentIds = getStudentIdsForClass(classId);
-    return getPaymentsForStudentIds(studentIds)
+    return getPaymentsForClass(classId)
       .filter(isPaidPayment)
       .reduce((sum, payment) => sum + getPaymentAmount(payment), 0);
   };
@@ -394,6 +411,8 @@ const PaymentsPage = () => {
 // Memoizes the selected folder payments derived value.
   const selectedFolderPayments = useMemo(() => {
     if (!selectedFolder) return state.items;
+    if (selectedFolder.type === 'teacher') return getPaymentsForTeacher(selectedFolder.id);
+    if (selectedFolder.type === 'class') return getPaymentsForClass(selectedFolder.id);
     const idSet = new Set(selectedFolderStudentIds.map((id) => Number(id)));
     return state.items.filter((payment) => idSet.has(Number(payment.student_id)));
   }, [selectedFolder, selectedFolderStudentIds, state.items]);
@@ -577,7 +596,10 @@ const PaymentsPage = () => {
 // Returns student name.
   const getStudentName = (studentId: number): string => {
     const student = students.find((s) => (s.student_id || s.id) === studentId);
-    return student ? `${student.first_name} ${student.last_name}` : 'Unknown Student';
+    if (student) return `${student.first_name} ${student.last_name}`;
+    const payment = state.items.find((p) => Number(p.student_id) === Number(studentId));
+    const fallbackName = `${payment?.student_first_name || ''} ${payment?.student_last_name || ''}`.trim();
+    return fallbackName || 'Unknown Student';
   };
 
 // Returns status badge classes.

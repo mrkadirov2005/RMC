@@ -1,14 +1,27 @@
 const pool = require('../../../db/pool');
 
 const findAll = (centerId?: number, teacherId?: number) => {
-  let query = 'SELECT p.* FROM payments p';
+  let query = `
+    SELECT
+      p.*,
+      s.first_name AS student_first_name,
+      s.last_name AS student_last_name,
+      s.class_id AS student_class_id,
+      s.teacher_id AS student_teacher_id,
+      s.status AS student_status,
+      s.deleted_at AS student_deleted_at,
+      c.class_name AS student_class_name
+    FROM payments p
+    LEFT JOIN students s ON s.student_id = p.student_id
+    LEFT JOIN classes c ON c.class_id = s.class_id
+  `;
   const params: any[] = [];
   const conditions: string[] = [];
 
   if (teacherId) {
-    query += ' JOIN students s ON s.student_id = p.student_id AND s.deleted_at IS NULL';
     params.push(teacherId);
     conditions.push(`s.teacher_id = $${params.length}`);
+    conditions.push(`(s.deleted_at IS NULL OR s.status = 'Transferred')`);
   }
   if (centerId) {
     params.push(centerId);
