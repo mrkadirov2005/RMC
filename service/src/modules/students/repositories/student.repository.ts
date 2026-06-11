@@ -431,7 +431,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
       sourceParams.push(teacherId);
       sourceQuery += ` AND s.teacher_id = $${sourceParams.length}`;
     }
-    sourceQuery += ' FOR UPDATE';
+    sourceQuery += ' FOR UPDATE OF s';
     const sourceResult = await client.query(sourceQuery, sourceParams);
     const source = sourceResult.rows[0];
     if (!source) {

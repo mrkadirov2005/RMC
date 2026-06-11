@@ -25,6 +25,12 @@ const listArchive = async (centerId?: number) => {
   };
 };
 
-module.exports = { listArchive };
+const restoreArchiveItem = (entity: string, id: number, centerId?: number) =>
+  archiveRepository.restoreArchived(entity, id, centerId);
+
+const purgeArchiveItem = (entity: string, id: number, centerId?: number) =>
+  archiveRepository.purgeArchived(entity, id, centerId);
+
+module.exports = { listArchive, restoreArchiveItem, purgeArchiveItem };
 
 export {};

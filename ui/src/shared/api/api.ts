@@ -245,6 +245,10 @@ export const dataAPI = {
 
 export const archiveAPI = {
   getAll: () => apiClient.get('/archive'),
+  restore: (entity: 'students' | 'teachers' | 'classes' | 'payments' | 'sessions', id: number) =>
+    apiClient.post(`/archive/${entity}/${id}/restore`),
+  purge: (entity: 'students' | 'teachers' | 'classes' | 'payments' | 'sessions', id: number) =>
+    apiClient.delete(`/archive/${entity}/${id}/purge`),
 };
 
 export const teacherAPI = {

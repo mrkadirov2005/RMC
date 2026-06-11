@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Archive, BookOpen, CalendarDays, CreditCard, GraduationCap, Loader2, Users } from 'lucide-react';
+import { Archive, BookOpen, CalendarDays, CreditCard, GraduationCap, Loader2, RefreshCcw, RotateCcw, Trash2, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,6 +10,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { archiveAPI } from '@/shared/api/api';
 import { formatMoney } from '@/utils/helpers';
+import { useAppSelector } from '../hooks';
 
 type ArchivePayload = {
   students: any[];
@@ -49,12 +51,17 @@ const EmptyRow = ({ colSpan, label }: { colSpan: number; label: string }) => (
   </TableRow>
 );
 
+type ArchiveEntity = 'students' | 'teachers' | 'classes' | 'payments' | 'sessions';
+
 const ArchivePage = () => {
+  const { user } = useAppSelector((state) => state.auth);
   const [archive, setArchive] = useState<ArchivePayload>(emptyArchive);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [actionKey, setActionKey] = useState('');
+  const isOwner = (user?.role || '').toLowerCase() === 'owner' || (user?.username || '').toLowerCase() === 'muzaffar';
 
-  useEffect(() => {
+  const loadArchive = () => {
     let cancelled = false;
     setLoading(true);
     setError('');
@@ -73,7 +80,80 @@ const ArchivePage = () => {
     return () => {
       cancelled = true;
     };
+  };
+
+  useEffect(() => {
+    return loadArchive();
   }, []);
+
+  const refreshArchive = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await archiveAPI.getAll();
+      setArchive(response?.data || emptyArchive);
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load archive.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestore = async (entity: ArchiveEntity, id: number) => {
+    const key = `${entity}:${id}:restore`;
+    setActionKey(key);
+    setError('');
+    try {
+      await archiveAPI.restore(entity, id);
+      await refreshArchive();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to restore record.');
+    } finally {
+      setActionKey('');
+    }
+  };
+
+  const handlePurge = async (entity: ArchiveEntity, id: number) => {
+    if (!window.confirm('Permanently delete this archived record? This cannot be undone.')) return;
+    const key = `${entity}:${id}:purge`;
+    setActionKey(key);
+    setError('');
+    try {
+      await archiveAPI.purge(entity, id);
+      await refreshArchive();
+    } catch (err: any) {
+      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to permanently delete record.');
+    } finally {
+      setActionKey('');
+    }
+  };
+
+  const rowActions = (entity: ArchiveEntity, id: number) => (
+    <div className="flex justify-end gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => handleRestore(entity, id)}
+        disabled={Boolean(actionKey)}
+      >
+        {actionKey === `${entity}:${id}:restore` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
+        Restore
+      </Button>
+      {isOwner && (
+        <Button
+          type="button"
+          variant="destructive"
+          size="sm"
+          onClick={() => handlePurge(entity, id)}
+          disabled={Boolean(actionKey)}
+        >
+          {actionKey === `${entity}:${id}:purge` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+          Delete
+        </Button>
+      )}
+    </div>
+  );
 
   const totalArchived = useMemo(
     () => Object.values(archive.counts || {}).reduce((sum, value) => sum + Number(value || 0), 0),
@@ -101,6 +181,12 @@ const ArchivePage = () => {
         title="Archive"
         description="Soft-deleted records across students, teachers, classes, payments, and calendar sessions."
         icon={Archive}
+        actions={
+          <Button type="button" variant="outline" size="sm" onClick={refreshArchive} disabled={loading || Boolean(actionKey)}>
+            <RefreshCcw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+        }
       />
 
       {error && (
@@ -143,16 +229,18 @@ const ArchivePage = () => {
                     <TableHead>Group</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Archived At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.students.length === 0 ? <EmptyRow colSpan={5} label="No archived students." /> : archive.students.map((student) => (
+                  {archive.students.length === 0 ? <EmptyRow colSpan={6} label="No archived students." /> : archive.students.map((student) => (
                     <TableRow key={student.student_id}>
                       <TableCell className="font-medium">{fullName(student)}</TableCell>
                       <TableCell>{student.enrollment_number || '-'}</TableCell>
                       <TableCell>{[student.class_name, student.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
                       <TableCell><Badge variant="outline">{student.status || 'Archived'}</Badge></TableCell>
                       <TableCell>{formatDate(student.deleted_at)}</TableCell>
+                      <TableCell>{rowActions('students', Number(student.student_id))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -168,16 +256,18 @@ const ArchivePage = () => {
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Archived At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.teachers.length === 0 ? <EmptyRow colSpan={5} label="No archived teachers." /> : archive.teachers.map((teacher) => (
+                  {archive.teachers.length === 0 ? <EmptyRow colSpan={6} label="No archived teachers." /> : archive.teachers.map((teacher) => (
                     <TableRow key={teacher.teacher_id}>
                       <TableCell className="font-medium">{fullName(teacher)}</TableCell>
                       <TableCell>{teacher.employee_id || '-'}</TableCell>
                       <TableCell>{teacher.email || '-'}</TableCell>
                       <TableCell><Badge variant="outline">{teacher.status || 'Archived'}</Badge></TableCell>
                       <TableCell>{formatDate(teacher.deleted_at)}</TableCell>
+                      <TableCell>{rowActions('teachers', Number(teacher.teacher_id))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -193,16 +283,18 @@ const ArchivePage = () => {
                     <TableHead>Room</TableHead>
                     <TableHead>Payment</TableHead>
                     <TableHead>Archived At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.classes.length === 0 ? <EmptyRow colSpan={5} label="No archived classes." /> : archive.classes.map((cls) => (
+                  {archive.classes.length === 0 ? <EmptyRow colSpan={6} label="No archived classes." /> : archive.classes.map((cls) => (
                     <TableRow key={cls.class_id}>
                       <TableCell className="font-medium">{[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
                       <TableCell>{teacherName(cls)}</TableCell>
                       <TableCell>{cls.room_number || '-'}</TableCell>
                       <TableCell>{formatMoney(Number(cls.payment_amount || 0))}</TableCell>
                       <TableCell>{formatDate(cls.deleted_at)}</TableCell>
+                      <TableCell>{rowActions('classes', Number(cls.class_id))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -218,16 +310,18 @@ const ArchivePage = () => {
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Archived At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.payments.length === 0 ? <EmptyRow colSpan={5} label="No archived payments." /> : archive.payments.map((payment) => (
+                  {archive.payments.length === 0 ? <EmptyRow colSpan={6} label="No archived payments." /> : archive.payments.map((payment) => (
                     <TableRow key={payment.payment_id}>
                       <TableCell className="font-medium">{payment.receipt_number || `#${payment.payment_id}`}</TableCell>
                       <TableCell>{[payment.student_first_name, payment.student_last_name].filter(Boolean).join(' ').trim() || payment.enrollment_number || '-'}</TableCell>
                       <TableCell>{formatMoney(Number(payment.amount || 0))}</TableCell>
                       <TableCell><Badge variant="outline">{payment.payment_status || '-'}</Badge></TableCell>
                       <TableCell>{formatDate(payment.deleted_at)}</TableCell>
+                      <TableCell>{rowActions('payments', Number(payment.payment_id))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -243,10 +337,11 @@ const ArchivePage = () => {
                     <TableHead>Teacher</TableHead>
                     <TableHead>Time</TableHead>
                     <TableHead>Archived At</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.sessions.length === 0 ? <EmptyRow colSpan={5} label="No archived calendar sessions." /> : archive.sessions.map((session) => (
+                  {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label="No archived calendar sessions." /> : archive.sessions.map((session) => (
                     <TableRow key={session.session_id}>
                       <TableCell className="font-medium">{formatDate(session.session_date)}</TableCell>
                       <TableCell>{[session.class_name, session.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
@@ -258,6 +353,7 @@ const ArchivePage = () => {
                         </div>
                       </TableCell>
                       <TableCell>{formatDate(session.deleted_at)}</TableCell>
+                      <TableCell>{rowActions('sessions', Number(session.session_id))}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
