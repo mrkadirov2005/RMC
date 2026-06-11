@@ -53,6 +53,10 @@ function cleanText(text) {
   return String(text || '').trim();
 }
 
+function normalizePhone(value) {
+  return String(value || '').replace(/[^\d+]/g, '');
+}
+
 function formatDate(value) {
   if (!value) return '-';
   const date = new Date(value);
@@ -172,6 +176,44 @@ async function saveRegistration(from, chatId, data) {
     values
   );
   return result.rows[0];
+}
+
+async function isUsernameTaken(username) {
+  const value = cleanText(username).toLowerCase();
+  if (!value) return false;
+  const result = await pool.query(
+    `SELECT 1
+     FROM students
+     WHERE LOWER(TRIM(username)) = $1
+       AND deleted_at IS NULL
+     UNION ALL
+     SELECT 1
+     FROM telegram_student_registrations
+     WHERE LOWER(TRIM(username)) = $1
+       AND status IN ('Pending', 'Imported')
+     LIMIT 1`,
+    [value]
+  );
+  return result.rowCount > 0;
+}
+
+async function isPhoneTaken(phone) {
+  const value = normalizePhone(phone);
+  if (!value) return false;
+  const result = await pool.query(
+    `SELECT 1
+     FROM students
+     WHERE REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9+]', '', 'g') = $1
+       AND deleted_at IS NULL
+     UNION ALL
+     SELECT 1
+     FROM telegram_student_registrations
+     WHERE REGEXP_REPLACE(COALESCE(phone, ''), '[^0-9+]', '', 'g') = $1
+       AND status IN ('Pending', 'Imported')
+     LIMIT 1`,
+    [value]
+  );
+  return result.rowCount > 0;
 }
 
 async function authenticate(username, password) {
@@ -395,8 +437,25 @@ async function handleRegisterStep(message, state) {
     return;
   }
 
-  state.data[step.key] = text;
-  state.step += 1;
+  if (step.key === 'phone') {
+    const normalized = normalizePhone(text);
+    if (await isPhoneTaken(normalized)) {
+      await sendMessage(chatId, 'Bu telefon raqam allaqachon ro‘yxatdan o‘tgan. Boshqa telefon raqam kiriting:');
+      return;
+    }
+    state.data[step.key] = normalized;
+    state.step += 1;
+  } else if (step.key === 'username') {
+    if (await isUsernameTaken(text)) {
+      await sendMessage(chatId, 'Bu username band. Boshqa username kiriting:');
+      return;
+    }
+    state.data[step.key] = text;
+    state.step += 1;
+  } else {
+    state.data[step.key] = text;
+    state.step += 1;
+  }
 
   if (state.step < REGISTER_STEPS.length) {
     userState.set(chatId, state);
