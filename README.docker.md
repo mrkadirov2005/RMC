@@ -16,6 +16,13 @@ To start the Telegram bot, provide your BotFather token:
 TELEGRAM_BOT_TOKEN=123456:your-token docker compose up -d --build
 ```
 
+Or create `bot/.env` from `bot/.env.example` and run the normal command:
+
+```bash
+cp bot/.env.example bot/.env
+docker compose up -d --build
+```
+
 If port `4000` is unavailable on your machine, override the host port:
 
 ```bash

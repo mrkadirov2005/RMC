@@ -72,6 +72,9 @@ services:
       context: ./bot
       dockerfile: Dockerfile
     container_name: crm_telegram_bot
+    env_file:
+      - path: ./bot/.env
+        required: false
     environment:
       NODE_ENV: production
       TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
