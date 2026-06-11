@@ -67,6 +67,30 @@ services:
     networks:
       - crm_network
 
+  telegram-bot:
+    build:
+      context: ./bot
+      dockerfile: Dockerfile
+    container_name: crm_telegram_bot
+    environment:
+      NODE_ENV: production
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN:-}"
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: crm_user
+      DB_PASSWORD: crm_password
+      DB_NAME: crm_db
+      BOT_DEFAULT_CENTER_ID: "${BOT_DEFAULT_CENTER_ID:-1}"
+      BOT_REGISTRATION_CLASS_LABEL: "${BOT_REGISTRATION_CLASS_LABEL:-Unassigned}"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    restart: unless-stopped
+    networks:
+      - crm_network
+
 volumes:
   postgres_data:
   mongo_data:
