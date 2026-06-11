@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
+import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { telegramRegistrationAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 
@@ -55,6 +56,8 @@ const TelegramRegistrationsPage = () => {
   const [error, setError] = useState('');
   const [status, setStatus] = useState('Pending');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const [actionId, setActionId] = useState<number | null>(null);
 
   const load = async () => {
@@ -95,6 +98,14 @@ const TelegramRegistrationsPage = () => {
         .some((value) => String(value).toLowerCase().includes(query))
     );
   }, [rows, search]);
+  const paginatedRows = useMemo(
+    () => paginateItems(filteredRows, page, pageSize),
+    [filteredRows, page, pageSize]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, status]);
 
   const counts = useMemo(() => {
     return rows.reduce(
@@ -218,7 +229,7 @@ const TelegramRegistrationsPage = () => {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredRows.map((row) => {
+              paginatedRows.items.map((row) => {
                 const imported = String(row.status || '').toLowerCase() === 'imported';
                 const rejected = String(row.status || '').toLowerCase() === 'rejected';
                 return (
@@ -279,6 +290,20 @@ const TelegramRegistrationsPage = () => {
           </TableBody>
         </Table>
       </div>
+      <PaginationBar
+        total={filteredRows.length}
+        currentPage={paginatedRows.currentPage}
+        totalPages={paginatedRows.totalPages}
+        start={paginatedRows.start}
+        end={paginatedRows.end}
+        pageSize={pageSize}
+        pageSizeOptions={defaultPageSizeOptions}
+        onPageChange={setPage}
+        onPageSizeChange={(nextPageSize) => {
+          setPageSize(nextPageSize);
+          setPage(1);
+        }}
+      />
     </div>
   );
 };

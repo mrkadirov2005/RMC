@@ -43,6 +43,7 @@ import { showToast } from '@/utils/toast';
 import { selectRoomsPageUi } from '../../../store/selectors';
 import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 const weekDays = [
   'Monday',
@@ -70,8 +71,20 @@ const RoomsPage = () => {
     time: '09:00',
   });
   const [isImporting, setIsImporting] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLanguage();
+  const paginatedRooms = useMemo(
+    () => paginateItems(rooms, page, pageSize),
+    [rooms, page, pageSize]
+  );
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setPage(1);
+  }, [rooms.length]);
+
   const summaryCards = useMemo(() => {
     const uniqueRooms = new Set(rooms.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)).size;
     const assignedRooms = rooms.filter((room: any) => room.class_id || room.class_name).length;
@@ -314,7 +327,7 @@ const RoomsPage = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    rooms.map((room) => (
+                    paginatedRooms.items.map((room) => (
                       <TableRow key={room.room_id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                         <TableCell className="font-semibold text-slate-950 dark:text-card-foreground">
                           <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-indigo-700 dark:bg-muted dark:text-card-foreground">
@@ -344,6 +357,22 @@ const RoomsPage = () => {
                   )}
                 </TableBody>
               </Table>
+            </div>
+            <div className="mt-4">
+              <PaginationBar
+                total={rooms.length}
+                currentPage={paginatedRooms.currentPage}
+                totalPages={paginatedRooms.totalPages}
+                start={paginatedRooms.start}
+                end={paginatedRooms.end}
+                pageSize={pageSize}
+                pageSizeOptions={defaultPageSizeOptions}
+                onPageChange={setPage}
+                onPageSizeChange={(nextPageSize) => {
+                  setPageSize(nextPageSize);
+                  setPage(1);
+                }}
+              />
             </div>
           </CardContent>
         </Card>

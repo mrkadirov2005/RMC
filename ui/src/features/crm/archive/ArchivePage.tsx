@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
+import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { archiveAPI } from '@/shared/api/api';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
@@ -59,6 +60,20 @@ const ArchivePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [actionKey, setActionKey] = useState('');
+  const [pages, setPages] = useState<Record<ArchiveEntity, number>>({
+    students: 1,
+    teachers: 1,
+    classes: 1,
+    payments: 1,
+    sessions: 1,
+  });
+  const [pageSizes, setPageSizes] = useState<Record<ArchiveEntity, number>>({
+    students: 25,
+    teachers: 25,
+    classes: 25,
+    payments: 25,
+    sessions: 25,
+  });
   const isOwner = (user?.role || '').toLowerCase() === 'owner' || (user?.username || '').toLowerCase() === 'muzaffar';
 
   const loadArchive = () => {
@@ -159,6 +174,38 @@ const ArchivePage = () => {
     () => Object.values(archive.counts || {}).reduce((sum, value) => sum + Number(value || 0), 0),
     [archive.counts]
   );
+  const paginatedArchive = useMemo(
+    () => ({
+      students: paginateItems(archive.students, pages.students, pageSizes.students),
+      teachers: paginateItems(archive.teachers, pages.teachers, pageSizes.teachers),
+      classes: paginateItems(archive.classes, pages.classes, pageSizes.classes),
+      payments: paginateItems(archive.payments, pages.payments, pageSizes.payments),
+      sessions: paginateItems(archive.sessions, pages.sessions, pageSizes.sessions),
+    }),
+    [archive, pages, pageSizes]
+  );
+  const setEntityPage = (entity: ArchiveEntity, page: number) => {
+    setPages((current) => ({ ...current, [entity]: page }));
+  };
+  const setEntityPageSize = (entity: ArchiveEntity, pageSize: number) => {
+    setPageSizes((current) => ({ ...current, [entity]: pageSize }));
+    setEntityPage(entity, 1);
+  };
+  const archivePagination = (entity: ArchiveEntity, total: number) => (
+    <div className="border-t p-4">
+      <PaginationBar
+        total={total}
+        currentPage={paginatedArchive[entity].currentPage}
+        totalPages={paginatedArchive[entity].totalPages}
+        start={paginatedArchive[entity].start}
+        end={paginatedArchive[entity].end}
+        pageSize={pageSizes[entity]}
+        pageSizeOptions={defaultPageSizeOptions}
+        onPageChange={(page) => setEntityPage(entity, page)}
+        onPageSizeChange={(pageSize) => setEntityPageSize(entity, pageSize)}
+      />
+    </div>
+  );
 
   const cards = [
     { label: 'Students', value: archive.counts.students || 0, detail: 'Soft-deleted profiles', icon: Users, tone: 'blue' as const },
@@ -233,7 +280,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.students.length === 0 ? <EmptyRow colSpan={6} label="No archived students." /> : archive.students.map((student) => (
+                  {archive.students.length === 0 ? <EmptyRow colSpan={6} label="No archived students." /> : paginatedArchive.students.items.map((student) => (
                     <TableRow key={student.student_id}>
                       <TableCell className="font-medium">{fullName(student)}</TableCell>
                       <TableCell>{student.enrollment_number || '-'}</TableCell>
@@ -245,6 +292,7 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
+              {archivePagination('students', archive.students.length)}
             </TabsContent>
 
             <TabsContent value="teachers" className="m-0">
@@ -260,7 +308,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.teachers.length === 0 ? <EmptyRow colSpan={6} label="No archived teachers." /> : archive.teachers.map((teacher) => (
+                  {archive.teachers.length === 0 ? <EmptyRow colSpan={6} label="No archived teachers." /> : paginatedArchive.teachers.items.map((teacher) => (
                     <TableRow key={teacher.teacher_id}>
                       <TableCell className="font-medium">{fullName(teacher)}</TableCell>
                       <TableCell>{teacher.employee_id || '-'}</TableCell>
@@ -272,6 +320,7 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
+              {archivePagination('teachers', archive.teachers.length)}
             </TabsContent>
 
             <TabsContent value="classes" className="m-0">
@@ -287,7 +336,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.classes.length === 0 ? <EmptyRow colSpan={6} label="No archived classes." /> : archive.classes.map((cls) => (
+                  {archive.classes.length === 0 ? <EmptyRow colSpan={6} label="No archived classes." /> : paginatedArchive.classes.items.map((cls) => (
                     <TableRow key={cls.class_id}>
                       <TableCell className="font-medium">{[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
                       <TableCell>{teacherName(cls)}</TableCell>
@@ -299,6 +348,7 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
+              {archivePagination('classes', archive.classes.length)}
             </TabsContent>
 
             <TabsContent value="payments" className="m-0">
@@ -314,7 +364,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.payments.length === 0 ? <EmptyRow colSpan={6} label="No archived payments." /> : archive.payments.map((payment) => (
+                  {archive.payments.length === 0 ? <EmptyRow colSpan={6} label="No archived payments." /> : paginatedArchive.payments.items.map((payment) => (
                     <TableRow key={payment.payment_id}>
                       <TableCell className="font-medium">{payment.receipt_number || `#${payment.payment_id}`}</TableCell>
                       <TableCell>{[payment.student_first_name, payment.student_last_name].filter(Boolean).join(' ').trim() || payment.enrollment_number || '-'}</TableCell>
@@ -326,6 +376,7 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
+              {archivePagination('payments', archive.payments.length)}
             </TabsContent>
 
             <TabsContent value="sessions" className="m-0">
@@ -341,7 +392,7 @@ const ArchivePage = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label="No archived calendar sessions." /> : archive.sessions.map((session) => (
+                  {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label="No archived calendar sessions." /> : paginatedArchive.sessions.items.map((session) => (
                     <TableRow key={session.session_id}>
                       <TableCell className="font-medium">{formatDate(session.session_date)}</TableCell>
                       <TableCell>{[session.class_name, session.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
@@ -358,6 +409,7 @@ const ArchivePage = () => {
                   ))}
                 </TableBody>
               </Table>
+              {archivePagination('sessions', archive.sessions.length)}
             </TabsContent>
           </Tabs>
         </CardContent>

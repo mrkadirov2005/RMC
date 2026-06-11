@@ -39,6 +39,7 @@ import { dataAPI, teacherAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -108,6 +109,8 @@ const PasswordField = ({
 const TeachersPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<number>>(new Set());
@@ -154,9 +157,16 @@ const TeachersPage = () => {
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [searchTerm, state.items]);
-  const visibleTeacherIds = filteredTeachers.map(getTeacherId).filter((id) => id > 0);
+  const paginatedTeachers = useMemo(
+    () => paginateItems(filteredTeachers, page, pageSize),
+    [filteredTeachers, page, pageSize]
+  );
+  const visibleTeacherIds = paginatedTeachers.items.map(getTeacherId).filter((id) => id > 0);
   const selectedVisibleTeacherCount = visibleTeacherIds.filter((id) => selectedTeacherIds.has(id)).length;
   const allVisibleTeachersSelected = visibleTeacherIds.length > 0 && selectedVisibleTeacherCount === visibleTeacherIds.length;
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, viewMode]);
   const toggleTeacher = (id: number, checked: boolean) => {
     setSelectedTeacherIds((current) => {
       const next = new Set(current);
@@ -453,7 +463,7 @@ const TeachersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTeachers.map((teacher) => (
+              {paginatedTeachers.items.map((teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                   <TableCell>
                     <input
@@ -501,7 +511,7 @@ const TeachersPage = () => {
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filteredTeachers.map((teacher) => (
+            {paginatedTeachers.items.map((teacher) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
                 className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
@@ -550,7 +560,7 @@ const TeachersPage = () => {
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {filteredTeachers.map((teacher, index) => (
+            {paginatedTeachers.items.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
                 className="relative h-full flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
@@ -595,6 +605,23 @@ const TeachersPage = () => {
             ))}
           </div>
         </>
+      )}
+
+      {!state.loading && filteredTeachers.length > 0 && (
+        <PaginationBar
+          total={filteredTeachers.length}
+          currentPage={paginatedTeachers.currentPage}
+          totalPages={paginatedTeachers.totalPages}
+          start={paginatedTeachers.start}
+          end={paginatedTeachers.end}
+          pageSize={pageSize}
+          pageSizeOptions={defaultCardPageSizeOptions}
+          onPageChange={setPage}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setPage(1);
+          }}
+        />
       )}
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>

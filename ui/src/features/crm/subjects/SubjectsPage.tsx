@@ -1,6 +1,6 @@
 // Page component for the subjects screen in the crm feature.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, Loader2, Search, X, Upload, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,10 +25,13 @@ import {
 import { SelectField } from '../students/components/SelectField';
 import { useSubjectsPage } from './hooks/useSubjectsPage';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 // Renders the subjects page screen.
 const SubjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const { t } = useLanguage();
   const {
     state,
@@ -64,6 +67,14 @@ const SubjectsPage = () => {
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [searchTerm, state.items]);
+  const paginatedSubjects = useMemo(
+    () => paginateItems(filteredSubjects, page, pageSize),
+    [filteredSubjects, page, pageSize]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="p-6 space-y-6">
@@ -154,7 +165,7 @@ const SubjectsPage = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredSubjects.map((subject) => (
+                  paginatedSubjects.items.map((subject) => (
                     <TableRow key={subject.subject_id || subject.id}>
                       <TableCell className="font-medium">{subject.subject_name}</TableCell>
                       <TableCell className="text-right">
@@ -172,6 +183,22 @@ const SubjectsPage = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4">
+            <PaginationBar
+              total={filteredSubjects.length}
+              currentPage={paginatedSubjects.currentPage}
+              totalPages={paginatedSubjects.totalPages}
+              start={paginatedSubjects.start}
+              end={paginatedSubjects.end}
+              pageSize={pageSize}
+              pageSizeOptions={defaultPageSizeOptions}
+              onPageChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPageSize(nextPageSize);
+                setPage(1);
+              }}
+            />
           </div>
         </CardContent>
       </Card>

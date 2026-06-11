@@ -1,6 +1,6 @@
 // Page component for the centers screen in the crm feature.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Loader2, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,10 +16,13 @@ import {
 } from '@/components/ui/dialog';
 import { CRUDTable } from '../../../shared/components/CRUDComponents';
 import { useCentersPage } from './hooks/useCentersPage';
+import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 // Renders the centers page screen.
 const CentersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const {
     state,
     isModalOpen,
@@ -57,6 +60,14 @@ const CentersPage = () => {
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [searchTerm, state.items]);
+  const paginatedCenters = useMemo(
+    () => paginateItems(filteredCenters, page, pageSize),
+    [filteredCenters, page, pageSize]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4 space-y-6">
@@ -139,7 +150,7 @@ const CentersPage = () => {
       ) : (
         <CRUDTable
           title=""
-          data={filteredCenters}
+          data={paginatedCenters.items}
           columns={columns}
           onAdd={() => handleOpenModal()}
           onEdit={handleOpenModal}
@@ -157,6 +168,23 @@ const CentersPage = () => {
                 {isActive ? 'Active' : 'Use Branch'}
               </Button>
             );
+          }}
+        />
+      )}
+
+      {!state.loading && filteredCenters.length > 0 && (
+        <PaginationBar
+          total={filteredCenters.length}
+          currentPage={paginatedCenters.currentPage}
+          totalPages={paginatedCenters.totalPages}
+          start={paginatedCenters.start}
+          end={paginatedCenters.end}
+          pageSize={pageSize}
+          pageSizeOptions={defaultPageSizeOptions}
+          onPageChange={setPage}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setPage(1);
           }}
         />
       )}

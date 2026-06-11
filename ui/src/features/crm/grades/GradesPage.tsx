@@ -1,7 +1,7 @@
 // Page component for the grades screen in the crm feature.
 
 import { useState, useEffect, useMemo } from 'react';
-import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, Loader2, X, Users, BarChart3 } from 'lucide-react';
+import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, Loader2, X, Users, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   createGrade,
   deleteGrade,
@@ -107,6 +107,114 @@ interface Student {
 
 type FolderType = 'teacher' | 'class' | 'student';
 
+const folderPageSizeOptions = [12, 24, 48];
+const gradePageSizeOptions = [10, 25, 50, 100];
+
+const clampPage = (page: number, totalPages: number) => Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+
+const paginateItems = <T,>(items: T[], page: number, pageSize: number) => {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = clampPage(page, totalPages);
+  const start = (currentPage - 1) * pageSize;
+  return {
+    currentPage,
+    totalPages,
+    start,
+    end: Math.min(start + pageSize, items.length),
+    items: items.slice(start, start + pageSize),
+  };
+};
+
+const buildPageNumbers = (currentPage: number, totalPages: number) => {
+  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+  return Array.from(pages)
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((a, b) => a - b);
+};
+
+const PaginationBar = ({
+  total,
+  currentPage,
+  totalPages,
+  start,
+  end,
+  pageSize,
+  pageSizeOptions,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  total: number;
+  currentPage: number;
+  totalPages: number;
+  start: number;
+  end: number;
+  pageSize: number;
+  pageSizeOptions: number[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}) => {
+  if (total === 0) return null;
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-muted-foreground">
+        Showing {start + 1}-{end} of {total}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-8 w-[92px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {option} / page
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Previous
+        </Button>
+        <div className="flex items-center gap-1">
+          {buildPageNumbers(currentPage, totalPages).map((page, index, pages) => (
+            <div key={page} className="flex items-center gap-1">
+              {index > 0 && page - pages[index - 1] > 1 && (
+                <span className="px-1 text-muted-foreground">...</span>
+              )}
+              <Button
+                type="button"
+                variant={page === currentPage ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 min-w-8 px-2"
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+        >
+          Next
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
 // Renders the grades page screen.
 const GradesPage = () => {
   const dispatch = useAppDispatch();
@@ -148,6 +256,10 @@ const GradesPage = () => {
     term: 'First',
   });
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [folderPage, setFolderPage] = useState(1);
+  const [folderPageSize, setFolderPageSize] = useState(12);
+  const [gradesPage, setGradesPage] = useState(1);
+  const [gradesPageSize, setGradesPageSize] = useState(25);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -172,6 +284,16 @@ const GradesPage = () => {
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
   }, [dispatch]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setFolderPage(1);
+  }, [activeTab, viewMode]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setGradesPage(1);
+  }, [searchTerm, filterTerm, filterGrade, selectedFolder?.type, selectedFolder?.id]);
 
 // Handles open modal.
   const handleOpenModal = (grade?: Grade) => {
@@ -320,6 +442,23 @@ const GradesPage = () => {
 
     return grades;
   }, [searchTerm, filterTerm, filterGrade, selectedFolder, state.items, students]);
+
+  const paginatedStudents = useMemo(
+    () => paginateItems(students, folderPage, folderPageSize),
+    [students, folderPage, folderPageSize]
+  );
+  const paginatedClasses = useMemo(
+    () => paginateItems(classes, folderPage, folderPageSize),
+    [classes, folderPage, folderPageSize]
+  );
+  const paginatedTeachers = useMemo(
+    () => paginateItems(teachers, folderPage, folderPageSize),
+    [teachers, folderPage, folderPageSize]
+  );
+  const paginatedGrades = useMemo(
+    () => paginateItems(displayedGrades, gradesPage, gradesPageSize),
+    [displayedGrades, gradesPage, gradesPageSize]
+  );
 
 // Handles clear filters.
   const clearFilters = () => {
@@ -551,145 +690,193 @@ const GradesPage = () => {
 
             {/* By Students Tab */}
             {activeTab === 'students' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading students...</p>
-                  </div>
-                ) : students.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No students found</p>
-                  </div>
-                ) : (
-                  students.map((student) => {
-                    const studentId = student.student_id || student.id || 0;
-                    const gradeCount = getGradeCountForStudent(studentId);
-                    const avgPercentage = getAveragePercentageForStudent(studentId);
-                    return (
-                      <Card
-                        key={studentId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
-                            <p className="text-sm text-muted-foreground">ID: {studentId}</p>
-                          </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <BookOpen className="h-3.5 w-3.5" />
-                              <span>{gradeCount} grades</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading students...</p>
+                    </div>
+                  ) : students.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No students found</p>
+                    </div>
+                  ) : (
+                    paginatedStudents.items.map((student) => {
+                      const studentId = student.student_id || student.id || 0;
+                      const gradeCount = getGradeCountForStudent(studentId);
+                      const avgPercentage = getAveragePercentageForStudent(studentId);
+                      return (
+                        <Card
+                          key={studentId}
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Folder className="h-9 w-9 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: getGradeColor('A') }}>
-                              <span>{avgPercentage.toFixed(1)}%</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
+                              <p className="text-sm text-muted-foreground">ID: {studentId}</p>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <BookOpen className="h-3.5 w-3.5" />
+                                <span>{gradeCount} grades</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: getGradeColor('A') }}>
+                                <span>{avgPercentage.toFixed(1)}%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={students.length}
+                  currentPage={paginatedStudents.currentPage}
+                  totalPages={paginatedStudents.totalPages}
+                  start={paginatedStudents.start}
+                  end={paginatedStudents.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading classes...</p>
-                  </div>
-                ) : classes.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No classes found</p>
-                  </div>
-                ) : (
-                  classes.map((cls) => {
-                    const classId = cls.class_id || cls.id || 0;
-                    const gradeCount = getGradeCountForClass(classId);
-                    const avgPercentage = getAveragePercentageForClass(classId);
-                    return (
-                      <Card
-                        key={classId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{cls.class_name}</h3>
-                            <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                          </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <BookOpen className="h-3.5 w-3.5" />
-                              <span>{gradeCount} grades</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading classes...</p>
+                    </div>
+                  ) : classes.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No classes found</p>
+                    </div>
+                  ) : (
+                    paginatedClasses.items.map((cls) => {
+                      const classId = cls.class_id || cls.id || 0;
+                      const gradeCount = getGradeCountForClass(classId);
+                      const avgPercentage = getAveragePercentageForClass(classId);
+                      return (
+                        <Card
+                          key={classId}
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleFolderClick('class', classId, cls.class_name)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Folder className="h-9 w-9 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: getGradeColor('A') }}>
-                              <span>{avgPercentage.toFixed(1)}%</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{cls.class_name}</h3>
+                              <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <BookOpen className="h-3.5 w-3.5" />
+                                <span>{gradeCount} grades</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: getGradeColor('A') }}>
+                                <span>{avgPercentage.toFixed(1)}%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={classes.length}
+                  currentPage={paginatedClasses.currentPage}
+                  totalPages={paginatedClasses.totalPages}
+                  start={paginatedClasses.start}
+                  end={paginatedClasses.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
             {/* By Teachers Tab */}
             {activeTab === 'teachers' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading teachers...</p>
-                  </div>
-                ) : teachers.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No teachers found</p>
-                  </div>
-                ) : (
-                  teachers.map((teacher) => {
-                    const teacherId = teacher.teacher_id || teacher.id || 0;
-                    const gradeCount = getGradeCountForTeacher(teacherId);
-                    return (
-                      <Card
-                        key={teacherId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                            <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
-                          </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Users className="h-3.5 w-3.5" />
-                              <span>{getStudentIdsForTeacher(teacherId).length} students</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading teachers...</p>
+                    </div>
+                  ) : teachers.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No teachers found</p>
+                    </div>
+                  ) : (
+                    paginatedTeachers.items.map((teacher) => {
+                      const teacherId = teacher.teacher_id || teacher.id || 0;
+                      const gradeCount = getGradeCountForTeacher(teacherId);
+                      return (
+                        <Card
+                          key={teacherId}
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Folder className="h-9 w-9 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <BookOpen className="h-3.5 w-3.5" />
-                              <span>{gradeCount} grades</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
+                              <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Users className="h-3.5 w-3.5" />
+                                <span>{getStudentIdsForTeacher(teacherId).length} students</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <BookOpen className="h-3.5 w-3.5" />
+                                <span>{gradeCount} grades</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={teachers.length}
+                  currentPage={paginatedTeachers.currentPage}
+                  totalPages={paginatedTeachers.totalPages}
+                  start={paginatedTeachers.start}
+                  end={paginatedTeachers.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
           </div>
@@ -807,7 +994,7 @@ const GradesPage = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  displayedGrades.map((grade) => (
+                  paginatedGrades.items.map((grade) => (
                     <TableRow key={grade.grade_id || grade.id}>
                       <TableCell>{getStudentName(grade.student_id)}</TableCell>
                       <TableCell>{grade.subject}</TableCell>
@@ -835,6 +1022,22 @@ const GradesPage = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4">
+            <PaginationBar
+              total={displayedGrades.length}
+              currentPage={paginatedGrades.currentPage}
+              totalPages={paginatedGrades.totalPages}
+              start={paginatedGrades.start}
+              end={paginatedGrades.end}
+              pageSize={gradesPageSize}
+              pageSizeOptions={gradePageSizeOptions}
+              onPageChange={setGradesPage}
+              onPageSizeChange={(pageSize) => {
+                setGradesPageSize(pageSize);
+                setGradesPage(1);
+              }}
+            />
           </div>
         </>
       )}

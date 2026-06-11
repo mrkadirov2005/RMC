@@ -45,13 +45,127 @@ import {
   X,
   Loader2,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useAttendancePage } from './hooks/useAttendancePage';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+
+const folderPageSizeOptions = [12, 24, 48];
+const attendancePageSizeOptions = [10, 25, 50, 100];
+
+const clampPage = (page: number, totalPages: number) => Math.min(Math.max(page, 1), Math.max(totalPages, 1));
+
+const paginateItems = <T,>(items: T[], page: number, pageSize: number) => {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const currentPage = clampPage(page, totalPages);
+  const start = (currentPage - 1) * pageSize;
+  return {
+    currentPage,
+    totalPages,
+    start,
+    end: Math.min(start + pageSize, items.length),
+    items: items.slice(start, start + pageSize),
+  };
+};
+
+const buildPageNumbers = (currentPage: number, totalPages: number) => {
+  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
+  return Array.from(pages)
+    .filter((page) => page >= 1 && page <= totalPages)
+    .sort((a, b) => a - b);
+};
+
+const PaginationBar = ({
+  total,
+  currentPage,
+  totalPages,
+  start,
+  end,
+  pageSize,
+  pageSizeOptions,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  total: number;
+  currentPage: number;
+  totalPages: number;
+  start: number;
+  end: number;
+  pageSize: number;
+  pageSizeOptions: number[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (pageSize: number) => void;
+}) => {
+  if (total === 0) return null;
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
+      <div className="text-muted-foreground">
+        Showing {start + 1}-{end} of {total}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
+          <SelectTrigger className="h-8 w-[92px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {pageSizeOptions.map((option) => (
+              <SelectItem key={option} value={String(option)}>
+                {option} / page
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+        >
+          <ChevronLeft className="mr-1 h-4 w-4" />
+          Previous
+        </Button>
+        <div className="flex items-center gap-1">
+          {buildPageNumbers(currentPage, totalPages).map((page, index, pages) => (
+            <div key={page} className="flex items-center gap-1">
+              {index > 0 && page - pages[index - 1] > 1 && (
+                <span className="px-1 text-muted-foreground">...</span>
+              )}
+              <Button
+                type="button"
+                variant={page === currentPage ? 'default' : 'outline'}
+                size="sm"
+                className="h-8 min-w-8 px-2"
+                onClick={() => onPageChange(page)}
+              >
+                {page}
+              </Button>
+            </div>
+          ))}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+        >
+          Next
+          <ChevronRight className="ml-1 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
 
 // Renders the attendance page screen.
 const AttendancePage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [folderPage, setFolderPage] = useState(1);
+  const [folderPageSize, setFolderPageSize] = useState(12);
+  const [attendancePage, setAttendancePage] = useState(1);
+  const [attendancePageSize, setAttendancePageSize] = useState(25);
   const attendanceHelpers = useAttendancePage();
   const {
     state,
@@ -96,6 +210,33 @@ const AttendancePage = () => {
     getPresentCountForStudent,
     attendanceStatusOptions,
   } = attendanceHelpers;
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setFolderPage(1);
+  }, [activeTab, viewMode]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setAttendancePage(1);
+  }, [searchTerm, filterStatus, filterDate, selectedFolder?.type, selectedFolder?.id]);
+
+  const paginatedStudents = useMemo(
+    () => paginateItems(students, folderPage, folderPageSize),
+    [students, folderPage, folderPageSize]
+  );
+  const paginatedClasses = useMemo(
+    () => paginateItems(classes, folderPage, folderPageSize),
+    [classes, folderPage, folderPageSize]
+  );
+  const paginatedTeachers = useMemo(
+    () => paginateItems(teachers, folderPage, folderPageSize),
+    [teachers, folderPage, folderPageSize]
+  );
+  const paginatedAttendance = useMemo(
+    () => paginateItems(displayedAttendance, attendancePage, attendancePageSize),
+    [displayedAttendance, attendancePage, attendancePageSize]
+  );
 // Memoizes the attendance statistics derived value.
   const attendanceStatistics = useMemo(() => {
     const totalRecords = state.items.length;
@@ -280,145 +421,193 @@ const AttendancePage = () => {
 
             {/* By Students Tab */}
             {activeTab === 'students' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading students...</p>
-                  </div>
-                ) : students.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No students found</p>
-                  </div>
-                ) : (
-                  students.map((student) => {
-                    const studentId = student.student_id || student.id || 0;
-                    const attendanceCount = getAttendanceCountForStudent(studentId);
-                    const presentCount = getPresentCountForStudent(studentId);
-                    return (
-                      <Card
-                        key={studentId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
-                            <p className="text-sm text-muted-foreground">ID: {studentId}</p>
-                          </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <CheckCircle className="h-3.5 w-3.5" />
-                              <span>{presentCount}/{attendanceCount} present</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading students...</p>
+                    </div>
+                  ) : students.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No students found</p>
+                    </div>
+                  ) : (
+                    paginatedStudents.items.map((student) => {
+                      const studentId = student.student_id || student.id || 0;
+                      const attendanceCount = getAttendanceCountForStudent(studentId);
+                      const presentCount = getPresentCountForStudent(studentId);
+                      return (
+                        <Card
+                          key={studentId}
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Folder className="h-9 w-9 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
-                              <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
+                              <p className="text-sm text-muted-foreground">ID: {studentId}</p>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                <span>{presentCount}/{attendanceCount} present</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
+                                <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={students.length}
+                  currentPage={paginatedStudents.currentPage}
+                  totalPages={paginatedStudents.totalPages}
+                  start={paginatedStudents.start}
+                  end={paginatedStudents.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
             {/* By Classes Tab */}
             {activeTab === 'classes' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading classes...</p>
-                  </div>
-                ) : classes.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No classes found</p>
-                  </div>
-                ) : (
-                  classes.map((cls) => {
-                    const classId = cls.class_id || cls.id || 0;
-                    const attendanceCount = getAttendanceCountForClass(classId);
-                    const presentCount = getPresentCountForClass(classId);
-                    return (
-                      <Card
-                        key={classId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{cls.class_name}</h3>
-                            <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                          </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <CheckCircle className="h-3.5 w-3.5" />
-                              <span>{presentCount}/{attendanceCount} present</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading classes...</p>
+                    </div>
+                  ) : classes.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No classes found</p>
+                    </div>
+                  ) : (
+                    paginatedClasses.items.map((cls) => {
+                      const classId = cls.class_id || cls.id || 0;
+                      const attendanceCount = getAttendanceCountForClass(classId);
+                      const presentCount = getPresentCountForClass(classId);
+                      return (
+                        <Card
+                          key={classId}
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleFolderClick('class', classId, cls.class_name)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Folder className="h-9 w-9 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
-                              <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{cls.class_name}</h3>
+                              <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                <span>{presentCount}/{attendanceCount} present</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
+                                <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={classes.length}
+                  currentPage={paginatedClasses.currentPage}
+                  totalPages={paginatedClasses.totalPages}
+                  start={paginatedClasses.start}
+                  end={paginatedClasses.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
             {/* By Teachers Tab */}
             {activeTab === 'teachers' && (
-              <div className={folderGridClass}>
-                {loadingData ? (
-                  <div className="col-span-full text-center py-8">
-                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                    <p className="text-muted-foreground">Loading teachers...</p>
-                  </div>
-                ) : teachers.length === 0 ? (
-                  <div className="col-span-full text-center py-8">
-                    <p className="text-muted-foreground">No teachers found</p>
-                  </div>
-                ) : (
-                  teachers.map((teacher) => {
-                    const teacherId = teacher.teacher_id || teacher.id || 0;
-                    const attendanceCount = getAttendanceCountForTeacher(teacherId);
-                    return (
-                      <Card
-                        key={teacherId}
-                        className="cursor-pointer hover:shadow-md transition-shadow"
-                        onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-center gap-3 mb-3">
-                            <Folder className="h-9 w-9 text-primary" />
-                          </div>
-                          <div className="space-y-1">
-                            <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                            <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
-                          </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <Users className="h-3.5 w-3.5" />
-                              <span>{attendanceHelpers.getStudentIdsForTeacher(teacherId).length} students</span>
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading teachers...</p>
+                    </div>
+                  ) : teachers.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No teachers found</p>
+                    </div>
+                  ) : (
+                    paginatedTeachers.items.map((teacher) => {
+                      const teacherId = teacher.teacher_id || teacher.id || 0;
+                      const attendanceCount = getAttendanceCountForTeacher(teacherId);
+                      return (
+                        <Card
+                          key={teacherId}
+                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-center gap-3 mb-3">
+                              <Folder className="h-9 w-9 text-primary" />
                             </div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <CheckCircle className="h-3.5 w-3.5" />
-                              <span>{attendanceCount} records</span>
+                            <div className="space-y-1">
+                              <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
+                              <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })
-                )}
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <Users className="h-3.5 w-3.5" />
+                                <span>{attendanceHelpers.getStudentIdsForTeacher(teacherId).length} students</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                                <CheckCircle className="h-3.5 w-3.5" />
+                                <span>{attendanceCount} records</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={teachers.length}
+                  currentPage={paginatedTeachers.currentPage}
+                  totalPages={paginatedTeachers.totalPages}
+                  start={paginatedTeachers.start}
+                  end={paginatedTeachers.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
           </div>
@@ -521,7 +710,7 @@ const AttendancePage = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  displayedAttendance.map((attendance) => (
+                  paginatedAttendance.items.map((attendance) => (
                     <TableRow key={attendance.attendance_id || attendance.id}>
                       <TableCell>{getStudentName(attendance.student_id)}</TableCell>
                       <TableCell>{new Date(attendance.attendance_date).toLocaleDateString()}</TableCell>
@@ -546,6 +735,22 @@ const AttendancePage = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4">
+            <PaginationBar
+              total={displayedAttendance.length}
+              currentPage={paginatedAttendance.currentPage}
+              totalPages={paginatedAttendance.totalPages}
+              start={paginatedAttendance.start}
+              end={paginatedAttendance.end}
+              pageSize={attendancePageSize}
+              pageSizeOptions={attendancePageSizeOptions}
+              onPageChange={setAttendancePage}
+              onPageSizeChange={(pageSize) => {
+                setAttendancePageSize(pageSize);
+                setAttendancePage(1);
+              }}
+            />
           </div>
         </>
       )}

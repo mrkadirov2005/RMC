@@ -10,39 +10,40 @@ import { fetchCentersForce } from './slices/centersSlice';
 import { setAppCenterReady } from './slices/pagesUiSlice';
 import Layout from './components/layout/Layout';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
-import { LoginPage, OwnerLoginPage, OwnerRegisterPage } from './features/auth';
-import Dashboard from './features/crm/dashboard/Dashboard';
-import { OwnerManager } from './features/owner';
-import StudentsPage from './features/crm/students/StudentsPage';
-import StudentDetailPage from './features/crm/students/StudentDetailPage';
-import TeachersPage from './features/crm/teachers/TeachersPage';
-import TeacherDetailPage from './features/crm/teachers/TeacherDetailPage';
-import PaymentsPage from './features/crm/payments/PaymentsPage';
-import GradesPage from './features/crm/grades/GradesPage';
-import AttendancePage from './features/crm/attendance/AttendancePage';
-import ClassesPage from './features/crm/classes/ClassesPage';
-import ClassDetailPage from './features/crm/classes/ClassDetailPage';
-import CentersPage from './features/crm/centers/CentersPage';
-import DebtsPage from './features/crm/debts/DebtsPage';
-import FinancePage from './features/crm/finance/FinancePage';
-import RoomsPage from './features/crm/rooms/RoomsPage';
-import ArchivePage from './features/crm/archive/ArchivePage';
-import TelegramRegistrationsPage from './features/crm/telegram/TelegramRegistrationsPage';
-
-import TeacherFinanceDetailPage from './features/crm/finance/TeacherFinanceDetailPage';
-import AssignmentsPage from './features/crm/assignments/AssignmentsPage';
-import SubjectsPage from './features/crm/subjects/SubjectsPage';
-import TestsPage from './features/crm/tests/TestsPage';
+const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
+const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then((module) => ({ default: module.OwnerLoginPage })));
+const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
+const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
+const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
+const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
+const StudentDetailPage = lazy(() => import('./features/crm/students/StudentDetailPage'));
+const TeachersPage = lazy(() => import('./features/crm/teachers/TeachersPage'));
+const TeacherDetailPage = lazy(() => import('./features/crm/teachers/TeacherDetailPage'));
+const PaymentsPage = lazy(() => import('./features/crm/payments/PaymentsPage'));
+const GradesPage = lazy(() => import('./features/crm/grades/GradesPage'));
+const AttendancePage = lazy(() => import('./features/crm/attendance/AttendancePage'));
+const ClassesPage = lazy(() => import('./features/crm/classes/ClassesPage'));
+const ClassDetailPage = lazy(() => import('./features/crm/classes/ClassDetailPage'));
+const CentersPage = lazy(() => import('./features/crm/centers/CentersPage'));
+const DebtsPage = lazy(() => import('./features/crm/debts/DebtsPage'));
+const FinancePage = lazy(() => import('./features/crm/finance/FinancePage'));
+const RoomsPage = lazy(() => import('./features/crm/rooms/RoomsPage'));
+const ArchivePage = lazy(() => import('./features/crm/archive/ArchivePage'));
+const TelegramRegistrationsPage = lazy(() => import('./features/crm/telegram/TelegramRegistrationsPage'));
+const TeacherFinanceDetailPage = lazy(() => import('./features/crm/finance/TeacherFinanceDetailPage'));
+const AssignmentsPage = lazy(() => import('./features/crm/assignments/AssignmentsPage'));
+const SubjectsPage = lazy(() => import('./features/crm/subjects/SubjectsPage'));
+const TestsPage = lazy(() => import('./features/crm/tests/TestsPage'));
 const CalendarPage = lazy(() => import('./features/crm/calendar/CalendarPage'));
-import CreateTestPage from './features/crm/tests/CreateTestPage';
-import TestDetailPage from './features/crm/tests/TestDetailPage';
-import TakeTestPage from './features/crm/tests/TakeTestPage';
-import StudentTestsPage from './features/crm/tests/StudentTestsPage';
-import TestAssignPage from './features/crm/tests/TestAssignPage';
-import GradeSubmissionPage from './features/crm/tests/GradeSubmissionPage';
-import ViewSubmissionPage from './features/crm/tests/ViewSubmissionPage';
-import TeacherPortal from './features/teacher/TeacherPortal';
-import StudentPortal from './features/student/StudentPortal';
+const CreateTestPage = lazy(() => import('./features/crm/tests/CreateTestPage'));
+const TestDetailPage = lazy(() => import('./features/crm/tests/TestDetailPage'));
+const TakeTestPage = lazy(() => import('./features/crm/tests/TakeTestPage'));
+const StudentTestsPage = lazy(() => import('./features/crm/tests/StudentTestsPage'));
+const TestAssignPage = lazy(() => import('./features/crm/tests/TestAssignPage'));
+const GradeSubmissionPage = lazy(() => import('./features/crm/tests/GradeSubmissionPage'));
+const ViewSubmissionPage = lazy(() => import('./features/crm/tests/ViewSubmissionPage'));
+const TeacherPortal = lazy(() => import('./features/teacher/TeacherPortal'));
+const StudentPortal = lazy(() => import('./features/student/StudentPortal'));
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
 const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage.tsx'));
 import { Loader2 } from 'lucide-react';
@@ -194,6 +195,7 @@ function AppContent() {
 
   return (
     <ServiceStatusGuard>
+      <Suspense fallback={<LoadingSpinner />}>
       <Routes>
         {/* Auth Routes */}
         <Route path="/login/owner" element={<OwnerLoginPage />} />
@@ -676,6 +678,7 @@ function AppContent() {
         <Route path="/" element={<RoleBasedRedirect />} />
         <Route path="*" element={<RoleBasedRedirect />} />
       </Routes>
+      </Suspense>
     </ServiceStatusGuard>
   );
 }

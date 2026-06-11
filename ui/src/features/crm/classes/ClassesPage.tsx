@@ -1,6 +1,6 @@
 // Page component for the classes screen in the crm feature.
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload, Download } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,6 +43,7 @@ import { formatSchedule } from './queries';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
@@ -50,6 +51,8 @@ const ClassesPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedClassIds, setSelectedClassIds] = useState<Set<number>>(new Set());
   const { t } = useLanguage();
@@ -107,9 +110,16 @@ const ClassesPage = () => {
     });
   }, [searchTerm, state.items, teacherFilter]);
   const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
-  const visibleClassIds = filteredClasses.map(getClassId).filter((id) => id > 0);
+  const paginatedClasses = useMemo(
+    () => paginateItems(filteredClasses, page, pageSize),
+    [filteredClasses, page, pageSize]
+  );
+  const visibleClassIds = paginatedClasses.items.map(getClassId).filter((id) => id > 0);
   const selectedVisibleClassCount = visibleClassIds.filter((id) => selectedClassIds.has(id)).length;
   const allVisibleClassesSelected = visibleClassIds.length > 0 && selectedVisibleClassCount === visibleClassIds.length;
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, teacherFilter, viewMode]);
   const toggleClass = (id: number, checked: boolean) => {
     setSelectedClassIds((current) => {
       const next = new Set(current);
@@ -378,7 +388,7 @@ const ClassesPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClasses.map((cls) => (
+              {paginatedClasses.items.map((cls) => (
                 <TableRow key={cls.class_id || cls.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                   <TableCell>
                     <input
@@ -423,7 +433,7 @@ const ClassesPage = () => {
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {filteredClasses.map((cls) => (
+            {paginatedClasses.items.map((cls) => (
               <Card
                 key={cls.class_id || cls.id}
                 className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
@@ -470,7 +480,7 @@ const ClassesPage = () => {
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredClasses.map((cls, index) => (
+            {paginatedClasses.items.map((cls, index) => (
               <Card
                 key={cls.class_id || cls.id}
                 className="relative flex h-full flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
@@ -502,6 +512,23 @@ const ClassesPage = () => {
             ))}
           </div>
         </>
+      )}
+
+      {!state.loading && filteredClasses.length > 0 && (
+        <PaginationBar
+          total={filteredClasses.length}
+          currentPage={paginatedClasses.currentPage}
+          totalPages={paginatedClasses.totalPages}
+          start={paginatedClasses.start}
+          end={paginatedClasses.end}
+          pageSize={pageSize}
+          pageSizeOptions={defaultCardPageSizeOptions}
+          onPageChange={setPage}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setPage(1);
+          }}
+        />
       )}
 
       {/* Add/Edit Class Dialog */}

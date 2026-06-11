@@ -1,6 +1,6 @@
 // Page component for the tests screen in the crm feature.
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Play,
@@ -41,6 +41,7 @@ import {
   testStatCardClass,
   testSurfaceClass,
 } from './testVisuals';
+import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 interface Test {
   test_id: number;
@@ -61,6 +62,8 @@ interface Test {
 const StudentTestsPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
   const { user } = useAppSelector((state) => state.auth);
   const { available, inProgress, completed } = useAppSelector(selectAssignedTestsBuckets);
   const loading = useAppSelector(selectAssignedTestsLoading);
@@ -68,12 +71,21 @@ const StudentTestsPage = () => {
   const studentTestsUi = useAppSelector(selectStudentTestsPageUi);
   const { error, tabValue } = studentTestsUi;
   const visibleTests = useAppSelector(selectStudentTestsVisibleForPageUi) as Test[];
+  const paginatedTests = useMemo(
+    () => paginateItems(visibleTests, page, pageSize),
+    [visibleTests, page, pageSize]
+  );
 
 // Runs side effects for this component.
   useEffect(() => {
     if (!user?.id) return;
     dispatch(fetchAssignedTests({ type: 'student', id: Number(user.id) }));
   }, [dispatch, user?.id]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setPage(1);
+  }, [tabValue]);
 
 // Handles start test.
   const handleStartTest = async (test: Test) => {
@@ -209,7 +221,7 @@ const StudentTestsPage = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {visibleTests.map((test) => (
+            {paginatedTests.items.map((test) => (
               <Card
                 key={test.test_id}
                 className={cn(
@@ -313,6 +325,22 @@ const StudentTestsPage = () => {
               </Card>
             ))}
           </div>
+        )}
+        {visibleTests.length > 0 && (
+          <PaginationBar
+            total={visibleTests.length}
+            currentPage={paginatedTests.currentPage}
+            totalPages={paginatedTests.totalPages}
+            start={paginatedTests.start}
+            end={paginatedTests.end}
+            pageSize={pageSize}
+            pageSizeOptions={defaultCardPageSizeOptions}
+            onPageChange={setPage}
+            onPageSizeChange={(nextPageSize) => {
+              setPageSize(nextPageSize);
+              setPage(1);
+            }}
+          />
         )}
       </Tabs>
     </div>

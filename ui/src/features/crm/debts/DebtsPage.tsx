@@ -1,6 +1,6 @@
 // Page component for the debts screen in the crm feature.
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pencil, Trash2, Plus, Loader2, Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -28,10 +28,13 @@ import DebtAnalyzer from './DebtAnalyzer';
 import { useDebtsPage } from './hooks/useDebtsPage';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 // Renders the debts page screen.
 const DebtsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   const { t } = useLanguage();
   const {
     state,
@@ -66,6 +69,14 @@ const DebtsPage = () => {
         .some((value) => String(value).toLowerCase().includes(search))
     );
   }, [getStudentName, searchTerm, state.items]);
+  const paginatedDebts = useMemo(
+    () => paginateItems(filteredDebts, page, pageSize),
+    [filteredDebts, page, pageSize]
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm]);
 
   return (
     <div className="p-6 space-y-6">
@@ -137,7 +148,7 @@ const DebtsPage = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredDebts.map((debt) => {
+                  paginatedDebts.items.map((debt) => {
                     const debtAmount = typeof debt.debt_amount === 'string' ? parseFloat(debt.debt_amount) : debt.debt_amount;
                     const amountPaid = typeof debt.amount_paid === 'string' ? parseFloat(debt.amount_paid) : debt.amount_paid;
                     const remaining = debtAmount - amountPaid;
@@ -166,6 +177,22 @@ const DebtsPage = () => {
                 )}
               </TableBody>
             </Table>
+          </div>
+          <div className="mt-4">
+            <PaginationBar
+              total={filteredDebts.length}
+              currentPage={paginatedDebts.currentPage}
+              totalPages={paginatedDebts.totalPages}
+              start={paginatedDebts.start}
+              end={paginatedDebts.end}
+              pageSize={pageSize}
+              pageSizeOptions={defaultPageSizeOptions}
+              onPageChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPageSize(nextPageSize);
+                setPage(1);
+              }}
+            />
           </div>
         </CardContent>
       </Card>

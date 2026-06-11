@@ -1,6 +1,6 @@
 // Page component for the tests screen in the crm feature.
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -72,6 +72,7 @@ import {
   testStatCardClass,
   testSurfaceClass,
 } from './testVisuals';
+import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 interface Test {
   test_id: number;
@@ -93,6 +94,8 @@ interface Test {
 const TestsPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
   const { user } = useAppSelector((state) => state.auth);
   const loading = useAppSelector(selectTestsLoading);
   const testsError = useAppSelector(selectTestsError);
@@ -102,6 +105,10 @@ const TestsPage = () => {
 // Memoizes the select filtered tests derived value.
   const selectFilteredTests = useMemo(makeSelectFilteredTestsForPageUi, []);
   const filteredTests = useAppSelector((state) => selectFilteredTests(state)) as Test[];
+  const paginatedTests = useMemo(
+    () => paginateItems(filteredTests, page, pageSize),
+    [filteredTests, page, pageSize]
+  );
   const selectedTest = useAppSelector(selectTestsPageSelectedTest) as Test | null;
   const error = pageError || testsError;
 
@@ -109,6 +116,11 @@ const TestsPage = () => {
   useEffect(() => {
     dispatch(fetchTests());
   }, [dispatch]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setPage(1);
+  }, [tabValue, searchTerm, filterType]);
 
 // Handles delete.
   const handleDelete = async () => {
@@ -298,7 +310,7 @@ const TestsPage = () => {
         </div>
       ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {filteredTests.map((test) => (
+            {paginatedTests.items.map((test) => (
               <Card
                 key={test.test_id}
                 className={cn(
@@ -411,6 +423,23 @@ const TestsPage = () => {
             </Card>
           ))}
         </div>
+      )}
+
+      {filteredTests.length > 0 && (
+        <PaginationBar
+          total={filteredTests.length}
+          currentPage={paginatedTests.currentPage}
+          totalPages={paginatedTests.totalPages}
+          start={paginatedTests.start}
+          end={paginatedTests.end}
+          pageSize={pageSize}
+          pageSizeOptions={defaultCardPageSizeOptions}
+          onPageChange={setPage}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setPage(1);
+          }}
+        />
       )}
 
       {/* Delete Confirmation Dialog */}

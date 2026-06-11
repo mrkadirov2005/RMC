@@ -1,6 +1,6 @@
 // Page component for the assignments screen in the crm feature.
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2, Upload, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -29,10 +29,15 @@ import { SelectField } from '../students/components/SelectField';
 import { useAssignmentsPage } from './hooks/useAssignmentsPage';
 import { getStatusColor } from './queries';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PaginationBar, defaultCardPageSizeOptions, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 // Renders the assignments page screen.
 const AssignmentsPage = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [folderPage, setFolderPage] = useState(1);
+  const [folderPageSize, setFolderPageSize] = useState(12);
+  const [assignmentPage, setAssignmentPage] = useState(1);
+  const [assignmentPageSize, setAssignmentPageSize] = useState(25);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLanguage();
   const {
@@ -86,6 +91,10 @@ const AssignmentsPage = () => {
         .some((value) => String(value).toLowerCase().includes(rootSearch))
     );
   }, [classes, rootSearch]);
+  const paginatedClasses = useMemo(
+    () => paginateItems(filteredClasses, folderPage, folderPageSize),
+    [filteredClasses, folderPage, folderPageSize]
+  );
   const filteredPersonalAssignments = useMemo(() => {
     if (!rootSearch) return personalAssignments;
     return personalAssignments.filter((assignment) =>
@@ -94,6 +103,18 @@ const AssignmentsPage = () => {
         .some((value) => String(value).toLowerCase().includes(rootSearch))
     );
   }, [personalAssignments, rootSearch]);
+  const paginatedAssignments = useMemo(
+    () => paginateItems(displayedAssignments, assignmentPage, assignmentPageSize),
+    [displayedAssignments, assignmentPage, assignmentPageSize]
+  );
+
+  useEffect(() => {
+    setFolderPage(1);
+  }, [rootSearch, activeTab, viewMode]);
+
+  useEffect(() => {
+    setAssignmentPage(1);
+  }, [searchTerm, filterStatus, selectedFolder?.type, selectedFolder?.id]);
 
   return (
     <div className="p-6 space-y-6">
@@ -216,7 +237,7 @@ const AssignmentsPage = () => {
                     {searchTerm ? 'No classes match your search' : 'No classes found'}
                   </div>
                 ) : (
-                  filteredClasses.map((cls) => {
+                  paginatedClasses.items.map((cls) => {
                     const classId = cls.class_id || cls.id || 0;
                     const assignmentCount = getAssignmentCountForClass(classId);
                     const completedCount = getCompletedCountForClass(classId);
@@ -254,6 +275,24 @@ const AssignmentsPage = () => {
                     ) : null;
                   })
                 )}
+              </div>
+            )}
+            {activeTab === 'classes' && filteredClasses.length > 0 && (
+              <div className="mt-4">
+                <PaginationBar
+                  total={filteredClasses.length}
+                  currentPage={paginatedClasses.currentPage}
+                  totalPages={paginatedClasses.totalPages}
+                  start={paginatedClasses.start}
+                  end={paginatedClasses.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={defaultCardPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(nextPageSize) => {
+                    setFolderPageSize(nextPageSize);
+                    setFolderPage(1);
+                  }}
+                />
               </div>
             )}
 
@@ -412,7 +451,7 @@ const AssignmentsPage = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      displayedAssignments.map((assignment) => (
+                      paginatedAssignments.items.map((assignment) => (
                         <TableRow key={assignment.assignment_id || assignment.id}>
                           <TableCell className="font-semibold">{assignment.assignment_title}</TableCell>
                           <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
@@ -458,6 +497,22 @@ const AssignmentsPage = () => {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+              <div className="mt-4">
+                <PaginationBar
+                  total={displayedAssignments.length}
+                  currentPage={paginatedAssignments.currentPage}
+                  totalPages={paginatedAssignments.totalPages}
+                  start={paginatedAssignments.start}
+                  end={paginatedAssignments.end}
+                  pageSize={assignmentPageSize}
+                  pageSizeOptions={defaultPageSizeOptions}
+                  onPageChange={setAssignmentPage}
+                  onPageSizeChange={(nextPageSize) => {
+                    setAssignmentPageSize(nextPageSize);
+                    setAssignmentPage(1);
+                  }}
+                />
               </div>
             </CardContent>
           </Card>

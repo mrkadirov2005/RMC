@@ -10,6 +10,7 @@ import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggl
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchTeachers } from '@/slices/teachersSlice';
+import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 interface Teacher {
   teacher_id?: number;
@@ -26,6 +27,8 @@ const FinancePage: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
 
   const dispatch = useAppDispatch();
   const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
@@ -46,6 +49,15 @@ const FinancePage: React.FC = () => {
       return fullName.includes(term) || teacher.email?.toLowerCase().includes(term);
     });
   }, [teachers, searchTerm]);
+  const paginatedTeachers = useMemo(
+    () => paginateItems(filteredTeachers, page, pageSize),
+    [filteredTeachers, page, pageSize]
+  );
+
+// Runs side effects for this component.
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, viewMode]);
 
   if (isLoading) {
     return (
@@ -88,7 +100,7 @@ const FinancePage: React.FC = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTeachers.map((teacher: Teacher) => (
+              {paginatedTeachers.items.map((teacher: Teacher) => (
                 <TableRow key={teacher.teacher_id || teacher.id}>
                   <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
                   <TableCell className="text-right">
@@ -103,7 +115,7 @@ const FinancePage: React.FC = () => {
         </Card>
       ) : viewMode === 'compact' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {filteredTeachers.map((teacher: Teacher) => (
+          {paginatedTeachers.items.map((teacher: Teacher) => (
             <Card key={teacher.teacher_id || teacher.id} className="cursor-pointer transition-shadow hover:shadow-md" onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}>
               <CardContent className="p-3">
                 <div className="flex items-center gap-3">
@@ -119,7 +131,7 @@ const FinancePage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTeachers.map((teacher: Teacher) => (
+          {paginatedTeachers.items.map((teacher: Teacher) => (
             <div
               key={teacher.teacher_id || teacher.id}
               className="bg-white dark:bg-slate-900 rounded-lg border border-gray-200 dark:border-slate-700 shadow hover:shadow-lg transition-shadow p-6 cursor-pointer dark:hover:bg-slate-800"
@@ -151,6 +163,23 @@ const FinancePage: React.FC = () => {
         <div className="text-center py-12">
           <p className="text-gray-500 dark:text-gray-400 text-lg">No teachers found</p>
         </div>
+      )}
+
+      {filteredTeachers.length > 0 && (
+        <PaginationBar
+          total={filteredTeachers.length}
+          currentPage={paginatedTeachers.currentPage}
+          totalPages={paginatedTeachers.totalPages}
+          start={paginatedTeachers.start}
+          end={paginatedTeachers.end}
+          pageSize={pageSize}
+          pageSizeOptions={defaultCardPageSizeOptions}
+          onPageChange={setPage}
+          onPageSizeChange={(nextPageSize) => {
+            setPageSize(nextPageSize);
+            setPage(1);
+          }}
+        />
       )}
     </div>
   );
