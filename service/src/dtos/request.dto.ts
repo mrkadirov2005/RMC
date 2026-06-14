@@ -872,7 +872,17 @@ class CreateTestDto {
   @IsInt()
   @Min(1)
   @IsOptional()
+  subject_id?: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
   created_by?: number;
+
+  @IsString()
+  @IsOptional()
+  created_by_type?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -881,6 +891,91 @@ class CreateTestDto {
   @IsString()
   @IsNotEmpty()
   test_type!: string;
+
+  @IsString()
+  @IsOptional()
+  description?: string;
+
+  @IsString()
+  @IsOptional()
+  instructions?: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  total_marks?: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  passing_marks?: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  duration_minutes?: number;
+
+  @IsString()
+  @IsOptional()
+  assignment_type?: string;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  is_timed?: boolean;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  shuffle_questions?: boolean;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  show_results_immediately?: boolean;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  allow_retake?: boolean;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  max_retakes?: number;
+
+  @IsOptional()
+  test_data?: any;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  is_active?: boolean;
+
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  is_private?: boolean;
+
+  @IsDateString()
+  @IsOptional()
+  start_date?: string;
+
+  @IsDateString()
+  @IsOptional()
+  end_date?: string;
+
+  @IsArray()
+  @IsOptional()
+  questions?: any[];
+
+  @IsArray()
+  @IsOptional()
+  passages?: any[];
 }
 
 class CreateAttendanceDto {
