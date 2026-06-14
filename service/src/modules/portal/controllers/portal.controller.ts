@@ -10,6 +10,15 @@ const testService = require('../../tests/services/test.service');
 const assignmentService = require('../../assignments/services/assignment.service');
 const roomsRepository = require('../../rooms/repositories/rooms.repository');
 
+const safeDashboardSection = async (name: string, fallback: any, loader: () => Promise<any>) => {
+  try {
+    return await loader();
+  } catch (error: any) {
+    console.error(`Error loading student dashboard ${name}:`, error?.message || error);
+    return fallback;
+  }
+};
+
 const getDashboardData = async (req: any, res: any) => {
 
   try {
@@ -23,7 +32,8 @@ const getDashboardData = async (req: any, res: any) => {
     const classId = student.class_id;
     const teacherId = student.teacher_id;
 
-    // Fetch everything in parallel
+    // Fetch optional dashboard sections in parallel. A failure in one widget
+    // should not block the rest of the student portal from loading.
     const [
       attendance,
       grades,
@@ -37,16 +47,16 @@ const getDashboardData = async (req: any, res: any) => {
       schedule,
     ] = await Promise.all([
 
-      attendanceService.byStudent(studentId, centerId),
-      gradeService.listByStudent(studentId, centerId),
-      debtService.listByStudent(studentId, centerId),
-      paymentService.listByStudent(studentId, centerId),
-      testService.getAssignedTests('student', studentId),
-      assignmentService.getAllAssignments(centerId),
-      classId ? classService.getClass(classId, centerId) : Promise.resolve(null),
-      classId ? subjectService.listByClass(classId) : Promise.resolve([]),
-      teacherId ? teacherService.getTeacher(teacherId, centerId) : Promise.resolve(null),
-      classId ? roomsRepository.findByClassId(classId, centerId) : Promise.resolve([]),
+      safeDashboardSection('attendance', [], () => attendanceService.byStudent(studentId, centerId)),
+      safeDashboardSection('grades', [], () => gradeService.listByStudent(studentId, centerId)),
+      safeDashboardSection('debts', [], () => debtService.listByStudent(studentId, centerId)),
+      safeDashboardSection('payments', [], () => paymentService.listByStudent(studentId, centerId)),
+      safeDashboardSection('tests', [], () => testService.getAssignedTests('student', studentId, centerId)),
+      safeDashboardSection('assignments', [], () => assignmentService.getAllAssignments(centerId)),
+      classId ? safeDashboardSection('class info', null, () => classService.getClass(classId, centerId)) : Promise.resolve(null),
+      classId ? safeDashboardSection('subjects', [], () => subjectService.listByClass(classId, centerId)) : Promise.resolve([]),
+      teacherId ? safeDashboardSection('teacher', null, () => teacherService.getTeacher(teacherId, centerId)) : Promise.resolve(null),
+      classId ? safeDashboardSection('schedule', [], () => roomsRepository.findByClassId(classId, centerId)) : Promise.resolve([]),
     ]);
 
 
@@ -100,7 +110,8 @@ const getMyGrades = async (req: any, res: any) => {
 const getMyTests = async (req: any, res: any) => {
   try {
     const studentId = req.user.id;
-    const tests = await testService.getAssignedTests('student', studentId);
+    const centerId = req.user.center_id;
+    const tests = await testService.getAssignedTests('student', studentId, centerId);
     res.json(tests);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
