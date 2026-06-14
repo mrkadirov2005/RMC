@@ -403,7 +403,7 @@ const upsertResult = async (params: any[]) => {
 const findAssignedTests = async (type: string, id: number, centerId?: number) => {
   let query: string;
   if (type === 'student') {
-    const queryParams: any[] = [type, id];
+    const queryParams: any[] = [id];
     let centerCond = '';
     if (centerId) {
       queryParams.push(centerId);
@@ -422,7 +422,7 @@ const findAssignedTests = async (type: string, id: number, centerId?: number) =>
         ta.notes
       FROM tests t
       LEFT JOIN test_assignments ta ON ta.test_id = t.test_id
-      LEFT JOIN students s ON s.student_id = $2
+      LEFT JOIN students s ON s.student_id = $1
       WHERE t.is_active = true
       ${centerCond}
       AND (
