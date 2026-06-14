@@ -333,7 +333,7 @@ const insertAnswer = async (params: any[]) => {
       feedback, graded, graded_at
     ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
     RETURNING *`,
-    params
+    params.map((val, idx) => (idx === 3 ? toJsonb(val) : val))
   );
   return result.rows[0];
 };

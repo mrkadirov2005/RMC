@@ -271,11 +271,11 @@ const getSubmissionDetails = async (req: any, res: any) => {
     if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     const data = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
     if (!data) return res.status(404).json({ error: 'Submission not found' });
-    if (req.user?.userType === 'student' && data.submission.student_id !== req.user?.id) {
+    if (req.user?.userType === 'student' && Number(data.student_id) !== Number(req.user?.id)) {
       return res.status(403).json({ error: 'Access denied.' });
     }
     if (req.user?.userType === 'teacher') {
-      const ok = await studentBelongsToTeacher(data.submission.student_id, req.user?.id);
+      const ok = await studentBelongsToTeacher(data.student_id, req.user?.id);
       if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
     }
     res.json(data);

@@ -352,7 +352,14 @@ const startTest = async (testId: number, body: any, reqMeta: any = {}, centerId?
 const submitTest = async (submissionId: number, body: any, centerId?: number) => {
   const existing = await testRepository.findSubmissionById(submissionId, centerId);
   if (!existing) return null;
-  const answers = Array.isArray(body.answers) ? body.answers : [];
+  const answers = Array.isArray(body.answers)
+    ? body.answers
+    : body.answers && typeof body.answers === 'object'
+      ? Object.entries(body.answers).map(([questionId, studentAnswer]) => ({
+        question_id: Number(questionId),
+        student_answer: studentAnswer,
+      }))
+      : [];
   const submissionData = normalizeJson(body.submission_data, existing.submission_data || {});
 
   const questions = answers.length > 0
