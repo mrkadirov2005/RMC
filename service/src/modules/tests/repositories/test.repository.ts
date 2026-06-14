@@ -460,7 +460,16 @@ const insertAssignment = async (params: any[]) => {
   const result = await pool.query(
     `INSERT INTO test_assignments (
       center_id, test_id, assigned_to_type, assigned_to_id, assigned_by, due_date, is_mandatory, notes
-    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+    ON CONFLICT (test_id, assigned_to_type, assigned_to_id)
+    DO UPDATE SET
+      center_id = EXCLUDED.center_id,
+      assigned_by = EXCLUDED.assigned_by,
+      due_date = EXCLUDED.due_date,
+      is_mandatory = EXCLUDED.is_mandatory,
+      notes = EXCLUDED.notes,
+      assigned_at = CURRENT_TIMESTAMP
+    RETURNING *`,
     params
   );
   return result.rows[0];
