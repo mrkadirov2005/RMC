@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  ArrowLeft,
   Play,
   Clock,
   CheckCircle,
@@ -118,20 +119,41 @@ const StudentTestsPage = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="min-h-screen space-y-6 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.16),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef6ff_50%,#f8fafc_100%)] p-4 sm:p-6 dark:bg-none">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-sky-50/80 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+      <div className="relative overflow-hidden rounded-lg border border-white/70 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-400 p-6 text-white shadow-[0_24px_70px_-42px_rgba(14,165,233,0.95)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-amber-100/45 via-fuchsia-100/35 to-transparent dark:hidden" />
-        <div className="relative flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
-            <BookOpenCheck className="h-6 w-6" />
+        <div className="pointer-events-none absolute right-0 top-0 h-full w-96 bg-gradient-to-l from-amber-300/35 via-white/10 to-transparent dark:hidden" />
+        <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate('/student-portal')}
+              aria-label="Back to student portal"
+              className="rounded-lg border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-white shadow-lg shadow-indigo-900/10 ring-1 ring-white/25 dark:shadow-none">
+              <BookOpenCheck className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold tracking-normal text-white">My Tests</h1>
+              <p className="mt-1 max-w-xl text-sm font-medium text-white/80">
+                Track assigned tests, continue work in progress, and review completed results.
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">My Tests</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Track assigned tests, continue work in progress, and review completed results.
-            </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/student-portal')}
+              className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Portal
+            </Button>
           </div>
         </div>
       </div>
@@ -154,7 +176,7 @@ const StudentTestsPage = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Card className={cn(testStatCardClass, 'border-indigo-100 dark:border-border')}>
+        <Card className={cn(testStatCardClass, 'border-indigo-100 bg-gradient-to-br from-white to-indigo-50 dark:border-border dark:bg-none')}>
           <CardContent className="pt-5">
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
               <FileQuestion className="h-5 w-5" />
@@ -163,7 +185,7 @@ const StudentTestsPage = () => {
             <p className="text-sm text-muted-foreground">Available</p>
           </CardContent>
         </Card>
-        <Card className={cn(testStatCardClass, 'border-amber-100 dark:border-border')}>
+        <Card className={cn(testStatCardClass, 'border-amber-100 bg-gradient-to-br from-white to-amber-50 dark:border-border dark:bg-none')}>
           <CardContent className="pt-5">
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-muted dark:text-muted-foreground">
               <Timer className="h-5 w-5" />
@@ -172,7 +194,7 @@ const StudentTestsPage = () => {
             <p className="text-sm text-muted-foreground">In Progress</p>
           </CardContent>
         </Card>
-        <Card className={cn(testStatCardClass, 'border-emerald-100 dark:border-border')}>
+        <Card className={cn(testStatCardClass, 'border-emerald-100 bg-gradient-to-br from-white to-emerald-50 dark:border-border dark:bg-none')}>
           <CardContent className="pt-5">
             <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
               <CheckCircle className="h-5 w-5" />
@@ -225,7 +247,7 @@ const StudentTestsPage = () => {
               <Card
                 key={test.test_id}
                 className={cn(
-                  'h-full overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm',
+                  'h-full overflow-hidden rounded-lg border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm',
                   getTestTypeTheme(test.test_type).panel,
                   'dark:bg-none'
                 )}
