@@ -23,6 +23,7 @@ const Layout = memo(({ children }: LayoutProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
   const isOwner = user?.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner';
+  const isStudent = user?.userType === 'student';
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -42,14 +43,14 @@ const Layout = memo(({ children }: LayoutProps) => {
     return () => window.removeEventListener('sidebar-toggled', handler);
   }, []);
 
-  const marginLeft = isMobile ? 0 : sidebarOpen ? 280 : 72;
+  const marginLeft = isStudent || isMobile ? 0 : sidebarOpen ? 280 : 72;
 
   return (
     <div className="flex min-h-screen bg-background">
-      <Sidebar />
+      {!isStudent && <Sidebar />}
       <TranslationEditMode isOwner={isOwner} />
       <main
-        className="flex-1 overflow-auto p-3 sm:p-5 md:p-6 bg-background transition-all duration-300"
+        className={`flex-1 overflow-auto bg-background transition-all duration-300 ${isStudent ? 'p-0' : 'p-3 sm:p-5 md:p-6'}`}
         style={{ marginLeft }}
       >
         {children}
