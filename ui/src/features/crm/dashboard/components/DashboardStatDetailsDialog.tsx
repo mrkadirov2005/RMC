@@ -250,14 +250,14 @@ export const DashboardStatDetailsDialog = ({
     const id = getStudentId(student);
     if (!id) return;
     onOpenChange(false);
-    navigate(`/student/${id}`);
+    navigate(`/students/${id}/profile`);
   };
 
   const goToTeacher = (teacher: DashboardRecord) => {
     const id = getTeacherId(teacher);
     if (!id) return;
     onOpenChange(false);
-    navigate(`/teacher/${id}`);
+    navigate(`/teachers/${id}/profile`);
   };
 
   const title = card?.label || 'Details';

@@ -136,6 +136,7 @@ const TeachersPage = () => {
   } = useTeachersPage();
   const canImportTeachers = isOwner || user?.userType === 'superuser';
   const getTeacherId = (teacher: Teacher) => Number(teacher.teacher_id || teacher.id || 0);
+  const getTeacherProfilePath = (teacher: Teacher) => `/teachers/${getTeacherId(teacher)}/profile`;
   const filteredTeachers = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     if (!search) return state.items;
@@ -234,9 +235,9 @@ const TeachersPage = () => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)} className="gap-2">
+          <DropdownMenuItem onClick={() => navigate(getTeacherProfilePath(teacher))} className="gap-2">
             <Eye className="h-4 w-4 text-cyan-600" />
-            View
+            Profile
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleOpenModal(teacher)} className="gap-2">
             <Pencil className="h-4 w-4 text-blue-500" />
@@ -478,7 +479,7 @@ const TeachersPage = () => {
                     <button
                       type="button"
                       className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
-                      onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
+                      onClick={() => navigate(getTeacherProfilePath(teacher))}
                     >
                       {teacher.first_name} {teacher.last_name}
                     </button>
@@ -515,7 +516,7 @@ const TeachersPage = () => {
               <Card
                 key={teacher.teacher_id || teacher.id}
                 className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
-                onClick={() => navigate(`/teacher/${teacher.teacher_id || teacher.id}`)}
+                onClick={() => navigate(getTeacherProfilePath(teacher))}
               >
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
                   <input

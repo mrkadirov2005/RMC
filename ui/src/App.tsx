@@ -261,6 +261,34 @@ function AppContent() {
         />
 
         <Route
+          path="/students/:studentId/profile"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+
+                  <StudentDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/students/:studentId"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+
+                  <StudentDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/archive"
           element={
             <ProtectedRoute allowedUserTypes={['superuser']}>
@@ -297,6 +325,32 @@ function AppContent() {
 
         <Route
           path="/teacher/:teacherId"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TeacherDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teachers/:teacherId/profile"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TeacherDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teachers/:teacherId"
           element={
             <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
               <Layout>

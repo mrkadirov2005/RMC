@@ -357,7 +357,7 @@ const StudentsPage = () => {
             students={s.displayedStudents}
             loading={s.state.loading}
             hasActiveFilters={s.hasActiveFilters}
-            onView={(id) => navigate(`/student/${id}`)}
+            onView={(id) => navigate(`/students/${id}/profile`)}
             onEdit={s.handleOpenModal}
             onDelete={s.handleDelete}
             onTransfer={handleTransferStudent}
