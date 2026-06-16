@@ -293,7 +293,7 @@ const AttendancePage = () => {
     viewMode === 'list'
       ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
       : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3'
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
         : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
   return (
     <div className="container mx-auto p-6">
@@ -320,7 +320,7 @@ const AttendancePage = () => {
       </div>
 
       {/* Overall Summary Cards - Always Visible */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -444,61 +444,81 @@ const AttendancePage = () => {
                   </div>
                 </div>
 
-                {/* Bar Chart */}
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                  <p className="text-sm font-medium mb-4">Attendance Breakdown</p>
-                  <div className="flex items-end gap-4 h-48">
-                    {attendanceStatistics.segments.filter(s => s.count > 0).map((segment) => {
-                      const maxCount = Math.max(...attendanceStatistics.segments.map(s => s.count), 1);
-                      const heightPercent = (segment.count / maxCount) * 100;
-                      return (
-                        <div key={segment.label} className="flex-1 flex flex-col items-center gap-1">
-                          <span className="text-xs font-bold">{segment.count}</span>
-                          <div className="w-full relative rounded-t-lg overflow-hidden" style={{ height: `${Math.max(heightPercent, 4)}%` }}>
-                            <div className={`absolute inset-0 ${segment.className} opacity-90`} />
-                          </div>
-                          <span className="text-xs text-muted-foreground mt-1">{segment.label}</span>
-                          <span className="text-xs font-medium">{segment.percent.toFixed(0)}%</span>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">Attendance Breakdown</p>
+                        <p className="text-xs text-muted-foreground">Compact view of present, late, absent, and other records.</p>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        <p>{attendanceStatistics.totalRecords} total records</p>
+                        <p>{attendanceStatistics.attendanceRate}% attendance rate</p>
+                      </div>
+                    </div>
+                    <div className="flex min-h-[9rem] items-end gap-3">
+                      {attendanceStatistics.segments.some((segment) => segment.count > 0) ? (
+                        attendanceStatistics.segments.map((segment) => {
+                          const maxCount = Math.max(...attendanceStatistics.segments.map((entry) => entry.count), 1);
+                          const heightPercent = segment.count > 0 ? (segment.count / maxCount) * 100 : 12;
+                          return (
+                            <div key={segment.label} className="flex flex-1 flex-col items-center gap-2">
+                              <span className="text-xs font-semibold text-foreground">{segment.count}</span>
+                              <div className="flex h-28 w-full items-end rounded-xl bg-muted/30 p-1.5">
+                                <div
+                                  className={`w-full rounded-lg ${segment.className} shadow-sm`}
+                                  style={{ height: `${Math.max(heightPercent, 12)}%` }}
+                                />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs font-medium">{segment.label}</p>
+                                <p className="text-[11px] text-muted-foreground">{segment.percent.toFixed(0)}%</p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+                          No attendance data yet
                         </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Horizontal Mix Bar */}
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                      <p className="text-sm font-medium">Attendance Mix</p>
-                      <p className="text-xs text-muted-foreground">Relative share of attendance statuses</p>
-                    </div>
-                    <div className="text-right text-xs text-muted-foreground">
-                      <p>{attendanceStatistics.counts.present} present</p>
-                      <p>{attendanceStatistics.counts.late} late</p>
-                      <p>{attendanceStatistics.counts.absent} absent</p>
+                      )}
                     </div>
                   </div>
 
-                  <div className="h-4 w-full overflow-hidden rounded-full bg-muted shadow-inner">
-                    <div className="flex h-full w-full">
+                  <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">Attendance Mix</p>
+                        <p className="text-xs text-muted-foreground">Relative share of attendance statuses.</p>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        <p>{attendanceStatistics.counts.present} present</p>
+                        <p>{attendanceStatistics.counts.late} late</p>
+                        <p>{attendanceStatistics.counts.absent} absent</p>
+                      </div>
+                    </div>
+
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+                      <div className="flex h-full w-full">
+                        {attendanceStatistics.segments.map((segment) => (
+                          <div
+                            key={segment.label}
+                            className={`h-full transition-all duration-300 ${segment.className}`}
+                            style={{ width: `${segment.percent}%` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm xl:grid-cols-4">
                       {attendanceStatistics.segments.map((segment) => (
-                        <div
-                          key={segment.label}
-                          className={`h-full transition-all duration-300 ${segment.className}`}
-                          style={{ width: `${segment.percent}%` }}
-                        />
+                        <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground">{segment.label}</p>
+                          <p className="font-semibold">{segment.count}</p>
+                          <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
+                        </div>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-                    {attendanceStatistics.segments.map((segment) => (
-                      <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
-                        <p className="text-xs text-muted-foreground">{segment.label}</p>
-                        <p className="font-semibold">{segment.count}</p>
-                        <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
