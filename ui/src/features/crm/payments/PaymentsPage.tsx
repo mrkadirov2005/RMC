@@ -714,10 +714,10 @@ const PaymentsPage = () => {
   const displayedPendingAmount = Math.max(totalAmount - displayedPaidAmount, 0);
   const folderGridClass =
     viewMode === 'list'
-      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'
+      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
       : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
-        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3'
+        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4';
 
 // Handles clear filters.
   const clearFilters = () => {
@@ -1004,7 +1004,7 @@ const PaymentsPage = () => {
                             </div>
                             <div className="space-y-1">
                               <h3 className="text-sm font-semibold">{cls.class_name}</h3>
-                              <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
+                              <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
                             <div className="mt-2 flex items-center justify-between border-t pt-2">
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -1072,7 +1072,7 @@ const PaymentsPage = () => {
                             </div>
                             <div className="space-y-1">
                               <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
+                              <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
                             </div>
                             {isTeacher ? (
                               <div className="flex justify-between items-center mt-2 pt-2 border-t">
@@ -1317,19 +1317,19 @@ const PaymentsPage = () => {
                       >
                         <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
                         <CardContent className="folder-card-content p-3">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
                               <Folder className="h-4 w-4" />
                             </div>
                           </div>
                           <div className="space-y-1">
                             <h3 className="text-sm font-semibold">{cls.class_name}</h3>
-                            <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
+                            <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                           </div>
-                          <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <CreditCard className="h-3.5 w-3.5" />
-                              <span>{paymentCount} payments</span>
+                          <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <CreditCard className="h-3 w-3" />
+                              <span>{paymentCount} {t('payments')}</span>
                             </div>
                             <div className="flex items-center gap-1 text-xs font-semibold text-cyan-700 dark:text-primary">
                               <DollarSign className="h-3 w-3" />

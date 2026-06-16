@@ -34,6 +34,7 @@ import {
   ArrowLeft,
   Plus,
   BookOpen,
+  BookMarked,
   Users,
   User,
   Folder,
@@ -47,6 +48,10 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  Clock,
+  UserCheck,
+  UserX,
+  TrendingUp,
 } from 'lucide-react';
 import { useAttendancePage } from './hooks/useAttendancePage';
 import { useEffect, useMemo, useState } from 'react';
@@ -172,6 +177,7 @@ const AttendancePage = () => {
     teachers,
     classes,
     students,
+    subjects,
     activeTab,
     setActiveTab,
     selectedFolder,
@@ -190,6 +196,8 @@ const AttendancePage = () => {
     setFilterStatus,
     filterDate,
     setFilterDate,
+    filterAgeRange,
+    setFilterAgeRange,
     showFilters,
     setShowFilters,
     displayedAttendance,
@@ -219,7 +227,7 @@ const AttendancePage = () => {
 // Runs side effects for this component.
   useEffect(() => {
     setAttendancePage(1);
-  }, [searchTerm, filterStatus, filterDate, selectedFolder?.type, selectedFolder?.id]);
+  }, [searchTerm, filterStatus, filterDate, filterAgeRange, selectedFolder?.type, selectedFolder?.id]);
 
   const paginatedStudents = useMemo(
     () => paginateItems(students, folderPage, folderPageSize),
@@ -232,6 +240,10 @@ const AttendancePage = () => {
   const paginatedTeachers = useMemo(
     () => paginateItems(teachers, folderPage, folderPageSize),
     [teachers, folderPage, folderPageSize]
+  );
+  const paginatedSubjects = useMemo(
+    () => paginateItems(subjects, folderPage, folderPageSize),
+    [subjects, folderPage, folderPageSize]
   );
   const paginatedAttendance = useMemo(
     () => paginateItems(displayedAttendance, attendancePage, attendancePageSize),
@@ -279,10 +291,10 @@ const AttendancePage = () => {
   }, [state.items]);
   const folderGridClass =
     viewMode === 'list'
-      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.p-4]:p-2.5 [&_.h-9]:h-5 [&_.w-9]:w-5 [&_.mb-3]:mb-1.5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5 [&_.space-y-1]:space-y-0'
+      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
       : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
-        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3'
+        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
   return (
     <div className="container mx-auto p-6">
       {/* Header */}
@@ -301,21 +313,70 @@ const AttendancePage = () => {
         </div>
         <div className="flex items-center gap-2">
           <ViewModeToggle value={viewMode} onChange={setViewMode} />
-          <Button onClick={() => handleOpenModal()}>
+          <Button onClick={() => handleOpenModal()} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-teal-700 border-0">
             <Plus className="h-4 w-4 mr-2" /> Add Attendance
           </Button>
         </div>
+      </div>
+
+      {/* Overall Summary Cards - Always Visible */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 mb-6">
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Total Records</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{attendanceStatistics.totalRecords}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Attendance Rate</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{attendanceStatistics.attendanceRate}%</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-500 via-cyan-600 to-blue-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <UserCheck className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Present</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{attendanceStatistics.counts.present}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Late</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{attendanceStatistics.counts.late}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <UserX className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Absent</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{attendanceStatistics.counts.absent}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {!selectedFolder ? (
         <>
           {/* Tab Navigation */}
           <div className="border-b border-border mb-6">
-            <div className="flex space-x-1">
+            <div className="flex space-x-1 overflow-x-auto">
               <Button
                 variant={activeTab === 'students' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('students')}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'students' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-lg shadow-blue-500/30' : ''}`}
               >
                 <Users className="h-4 w-4 mr-2" />
                 By Students
@@ -323,7 +384,7 @@ const AttendancePage = () => {
               <Button
                 variant={activeTab === 'classes' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('classes')}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'classes' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 shadow-lg shadow-emerald-500/30' : ''}`}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
                 By Classes
@@ -331,15 +392,23 @@ const AttendancePage = () => {
               <Button
                 variant={activeTab === 'teachers' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('teachers')}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'teachers' ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-lg shadow-violet-500/30' : ''}`}
               >
                 <User className="h-4 w-4 mr-2" />
                 By Teachers
               </Button>
               <Button
+                variant={activeTab === 'subjects' ? 'default' : 'ghost'}
+                onClick={() => setActiveTab('subjects')}
+                className={`rounded-b-none ${activeTab === 'subjects' ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white border-0 shadow-lg shadow-cyan-500/30' : ''}`}
+              >
+                <BookMarked className="h-4 w-4 mr-2" />
+                By Subjects
+              </Button>
+              <Button
                 variant={activeTab === 'statistics' ? 'default' : 'ghost'}
                 onClick={() => setActiveTab('statistics')}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'statistics' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-0 shadow-lg shadow-amber-500/30' : ''}`}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Statistics
@@ -352,35 +421,51 @@ const AttendancePage = () => {
             {/* Statistics Tab */}
             {activeTab === 'statistics' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Total Records</p>
-                      <p className="text-lg font-semibold">{attendanceStatistics.totalRecords}</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Attendance Rate</p>
-                      <p className="text-lg font-semibold text-emerald-600">{attendanceStatistics.attendanceRate}%</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Present / Late</p>
-                      <p className="text-lg font-semibold">
-                        {attendanceStatistics.counts.present + attendanceStatistics.counts.late}
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Unique Students</p>
-                      <p className="text-lg font-semibold">{attendanceStatistics.uniqueStudents}</p>
-                    </CardContent>
-                  </Card>
+                {/* Overview - Top */}
+                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                  <p className="text-sm font-medium mb-3">Overview</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3">
+                      <p className="text-xs text-white/70">Unique Students</p>
+                      <p className="text-lg font-bold text-white">{attendanceStatistics.uniqueStudents}</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3">
+                      <p className="text-xs text-white/70">Total Classes</p>
+                      <p className="text-lg font-bold text-white">{classes.length}</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-3">
+                      <p className="text-xs text-white/70">Total Teachers</p>
+                      <p className="text-lg font-bold text-white">{teachers.length}</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-3">
+                      <p className="text-xs text-white/70">Total Subjects</p>
+                      <p className="text-lg font-bold text-white">{subjects.length}</p>
+                    </div>
+                  </div>
                 </div>
 
+                {/* Bar Chart */}
+                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                  <p className="text-sm font-medium mb-4">Attendance Breakdown</p>
+                  <div className="flex items-end gap-4 h-48">
+                    {attendanceStatistics.segments.filter(s => s.count > 0).map((segment) => {
+                      const maxCount = Math.max(...attendanceStatistics.segments.map(s => s.count), 1);
+                      const heightPercent = (segment.count / maxCount) * 100;
+                      return (
+                        <div key={segment.label} className="flex-1 flex flex-col items-center gap-1">
+                          <span className="text-xs font-bold">{segment.count}</span>
+                          <div className="w-full relative rounded-t-lg overflow-hidden" style={{ height: `${Math.max(heightPercent, 4)}%` }}>
+                            <div className={`absolute inset-0 ${segment.className} opacity-90`} />
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1">{segment.label}</span>
+                          <span className="text-xs font-medium">{segment.percent.toFixed(0)}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Horizontal Mix Bar */}
                 <div className="rounded-2xl border bg-card p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <div>
@@ -440,23 +525,26 @@ const AttendancePage = () => {
                       return (
                         <Card
                           key={studentId}
-                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
                           onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Folder className="h-9 w-9 text-primary" />
+                          <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30">
+                                <Folder className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">ID: {studentId}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
+                              <p className="text-xs text-muted-foreground">ID: {studentId}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <CheckCircle className="h-3.5 w-3.5" />
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CheckCircle className="h-3 w-3" />
                                 <span>{presentCount}/{attendanceCount} present</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
+                              <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
                                 <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
                               </div>
                             </div>
@@ -504,23 +592,26 @@ const AttendancePage = () => {
                       return (
                         <Card
                           key={classId}
-                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
                           onClick={() => handleFolderClick('class', classId, cls.class_name)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Folder className="h-9 w-9 text-primary" />
+                          <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+                                <Folder className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{cls.class_name}</h3>
-                              <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{cls.class_name}</h3>
+                              <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <CheckCircle className="h-3.5 w-3.5" />
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CheckCircle className="h-3 w-3" />
                                 <span>{presentCount}/{attendanceCount} present</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold text-green-600">
+                              <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
                                 <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
                               </div>
                             </div>
@@ -567,24 +658,27 @@ const AttendancePage = () => {
                       return (
                         <Card
                           key={teacherId}
-                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
                           onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Folder className="h-9 w-9 text-primary" />
+                          <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-900/30">
+                                <Folder className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
+                              <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Users className="h-3.5 w-3.5" />
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Users className="h-3 w-3" />
                                 <span>{attendanceHelpers.getStudentIdsForTeacher(teacherId).length} students</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <CheckCircle className="h-3.5 w-3.5" />
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CheckCircle className="h-3 w-3" />
                                 <span>{attendanceCount} records</span>
                               </div>
                             </div>
@@ -600,6 +694,77 @@ const AttendancePage = () => {
                   totalPages={paginatedTeachers.totalPages}
                   start={paginatedTeachers.start}
                   end={paginatedTeachers.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
+              </div>
+            )}
+
+            {/* By Subjects Tab */}
+            {activeTab === 'subjects' && (
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading subjects...</p>
+                    </div>
+                  ) : subjects.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No subjects found</p>
+                    </div>
+                  ) : (
+                    paginatedSubjects.items.map((subject) => {
+                      const subjectId = subject.subject_id || subject.id || 0;
+                      const classStudents = students.filter((s) => s.class_id === subject.class_id);
+                      const studentIds = classStudents.map((s) => s.student_id || s.id || 0);
+                      const subjectAttendance = state.items.filter((a) => studentIds.includes(a.student_id));
+                      const presentCount = subjectAttendance.filter((a) => a.status === 'Present' || a.status === 'Late').length;
+                      const cls = classes.find((c) => (c.class_id || c.id) === subject.class_id);
+                      return (
+                        <Card
+                          key={subjectId}
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
+                          onClick={() => handleFolderClick('subject', subject.class_id, subject.subject_name)}
+                        >
+                          <div className="h-1 bg-gradient-to-r from-cyan-500 to-teal-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50 dark:bg-cyan-900/30">
+                                <BookMarked className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                              </div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{subject.subject_name}</h3>
+                              <p className="text-xs text-muted-foreground">{cls?.class_name || `Class ${subject.class_id}`} • {subject.subject_code}</p>
+                            </div>
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Users className="h-3 w-3" />
+                                <span>{classStudents.length} students</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CheckCircle className="h-3 w-3" />
+                                <span>{presentCount}/{subjectAttendance.length}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={subjects.length}
+                  currentPage={paginatedSubjects.currentPage}
+                  totalPages={paginatedSubjects.totalPages}
+                  start={paginatedSubjects.start}
+                  end={paginatedSubjects.end}
                   pageSize={folderPageSize}
                   pageSizeOptions={folderPageSizeOptions}
                   onPageChange={setFolderPage}
@@ -664,7 +829,7 @@ const AttendancePage = () => {
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
               <div className="space-y-2">
                 <Label>Status</Label>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
@@ -683,11 +848,27 @@ const AttendancePage = () => {
                 <Label>Date</Label>
                 <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
               </div>
+              <div className="space-y-2">
+                <Label>Age Range</Label>
+                <Select value={filterAgeRange} onValueChange={setFilterAgeRange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Ages" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Ages</SelectItem>
+                    <SelectItem value="3-6">3-6 years</SelectItem>
+                    <SelectItem value="7-10">7-10 years</SelectItem>
+                    <SelectItem value="11-14">11-14 years</SelectItem>
+                    <SelectItem value="15-18">15-18 years</SelectItem>
+                    <SelectItem value="19-25">19-25 years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 
           {/* Attendance Table */}
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-hidden [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
             <Table>
               <TableHeader>
                 <TableRow>

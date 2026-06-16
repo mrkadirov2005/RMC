@@ -35,10 +35,20 @@ export interface Student {
   last_name: string;
   class_id?: number;
   teacher_id?: number;
+  date_of_birth?: string;
 }
 
-export type AttendanceTabType = 'students' | 'classes' | 'teachers' | 'statistics';
-export type AttendanceFolderType = 'teacher' | 'class' | 'student';
+export interface Subject {
+  subject_id?: number;
+  id?: number;
+  class_id: number;
+  subject_name: string;
+  subject_code: string;
+  teacher_id?: number;
+}
+
+export type AttendanceTabType = 'students' | 'classes' | 'teachers' | 'subjects' | 'statistics';
+export type AttendanceFolderType = 'teacher' | 'class' | 'student' | 'subject';
 
 export interface AttendanceFolderSelection {
   type: AttendanceFolderType;

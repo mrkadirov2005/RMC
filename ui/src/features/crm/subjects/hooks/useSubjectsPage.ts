@@ -114,8 +114,13 @@ export const useSubjectsPage = () => {
 
   const handleExportSubjects = () => exportCsvEntity('subjects', 'Subjects');
 
+  const classes = useAppSelector((state) => state.classes.items) as { class_id?: number; id?: number; class_name: string; class_code: string; level: number }[];
+  const teachers = useAppSelector((state) => state.teachers.items) as { teacher_id?: number; id?: number; first_name: string; last_name: string }[];
+
   return {
     state,
+    classes,
+    teachers,
     isModalOpen,
     editingId,
     formData,

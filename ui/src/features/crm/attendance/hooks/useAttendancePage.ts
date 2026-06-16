@@ -14,6 +14,8 @@ import {
 import { fetchTeachers as fetchTeachersThunk } from '../../../../slices/teachersSlice';
 import { fetchClasses as fetchClassesThunk } from '../../../../slices/classesSlice';
 import { fetchStudents as fetchStudentsThunk } from '../../../../slices/studentsSlice';
+import { fetchSubjects as fetchSubjectsThunk } from '../../../../slices/subjectsSlice';
+import type { Subject as SubjectSlice } from '../../../../slices/subjectsSlice';
 import {
   selectClassOptions,
   selectStudentOptions,
@@ -25,6 +27,7 @@ import type {
   AttendanceTabType,
   Class,
   Student,
+  Subject,
   Teacher,
 } from '../types';
 import {
@@ -52,6 +55,9 @@ export const useAttendancePage = () => {
   const classItems = useAppSelector((state) => state.classes.items) as Class[];
   const studentItems = useAppSelector((state) => state.students.items) as Student[];
 
+  const subjectItems = useAppSelector((state) => state.subjects.items) as SubjectSlice[];
+  const subjects = subjectItems as unknown as Subject[];
+
   const state = { items: attendanceItems, loading: attendanceLoading, error: attendanceError };
   const teachers = teacherItems;
   const classes = classItems;
@@ -71,6 +77,7 @@ export const useAttendancePage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [filterAgeRange, setFilterAgeRange] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   // loadingData reflects whether supporting entities are being loaded
@@ -84,6 +91,7 @@ export const useAttendancePage = () => {
     dispatch(fetchTeachersThunk());
     dispatch(fetchClassesThunk());
     dispatch(fetchStudentsThunk());
+    dispatch(fetchSubjectsThunk());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -95,6 +103,7 @@ export const useAttendancePage = () => {
       dispatch(fetchTeachersThunk());
       dispatch(fetchClassesThunk());
       dispatch(fetchStudentsThunk());
+      dispatch(fetchSubjectsThunk());
     };
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
@@ -147,6 +156,26 @@ export const useAttendancePage = () => {
     [selectedFolder, attendanceItems, students]
   );
 
+  const getStudentAge = (student: Student): number | null => {
+    if (!student.date_of_birth) return null;
+    const dob = new Date(student.date_of_birth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+  };
+
+  const matchesAgeRange = (studentId: number, range: string): boolean => {
+    if (!range) return true;
+    const student = students.find((s) => (s.student_id || s.id) === studentId);
+    if (!student) return false;
+    const age = getStudentAge(student);
+    if (age === null) return false;
+    const [min, max] = range.split('-').map(Number);
+    return age >= min && age <= max;
+  };
+
 // Memoizes the displayed attendance derived value.
   const displayedAttendance = useMemo(() => {
     let records = getFiltered;
@@ -165,15 +194,18 @@ export const useAttendancePage = () => {
         return d === filterDate;
       });
     }
+    if (filterAgeRange) {
+      records = records.filter((r) => matchesAgeRange(r.student_id, filterAgeRange));
+    }
     return records;
-  }, [filterDate, filterStatus, getFiltered, searchTerm, students]);
+  }, [filterDate, filterStatus, filterAgeRange, getFiltered, searchTerm, students]);
 
-  const hasActiveFilters = Boolean(filterStatus || filterDate || searchTerm);
+  const hasActiveFilters = Boolean(filterStatus || filterDate || searchTerm || filterAgeRange);
 // Handles clear filters.
-  const clearFilters = () => { setSearchTerm(''); setFilterStatus(''); setFilterDate(''); };
+  const clearFilters = () => { setSearchTerm(''); setFilterStatus(''); setFilterDate(''); setFilterAgeRange(''); };
 
 // Handles folder click.
-  const handleFolderClick = (type: 'teacher' | 'class' | 'student', id: number, name: string) => {
+  const handleFolderClick = (type: 'teacher' | 'class' | 'student' | 'subject', id: number, name: string) => {
     setSelectedFolder({ type, id, name });
     clearFilters();
   };
@@ -186,6 +218,7 @@ export const useAttendancePage = () => {
     teachers,
     classes,
     students,
+    subjects,
     activeTab,
     setActiveTab,
     selectedFolder,
@@ -204,6 +237,8 @@ export const useAttendancePage = () => {
     setFilterStatus,
     filterDate,
     setFilterDate,
+    filterAgeRange,
+    setFilterAgeRange,
     showFilters,
     setShowFilters,
     displayedAttendance,
