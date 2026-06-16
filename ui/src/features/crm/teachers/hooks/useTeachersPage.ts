@@ -18,6 +18,7 @@ const getEmptyTeacherForm = (centerId: number): Partial<Teacher> => ({
   center_id: centerId,
   gender: 'Male',
   status: 'Active',
+  salary_percentage: 50,
   roles: ['teacher'],
   password: DEFAULT_TEACHER_PASSWORD,
 });

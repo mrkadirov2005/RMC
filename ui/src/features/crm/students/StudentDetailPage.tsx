@@ -19,7 +19,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react';
-import { studentAPI, classAPI } from '../../../shared/api/api';
+import { studentAPI, classAPI, teacherAPI } from '../../../shared/api/api';
 import { StudentInfoSection } from './components/StudentInfoSection';
 import { StatisticsSection } from './components/StatisticsSection';
 import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab } from './tabs';
@@ -66,7 +66,16 @@ interface Student {
   status: string;
   class_id?: number;
   center_id?: number;
+  teacher_id?: number;
   coins?: number;
+  username?: string;
+}
+
+interface Teacher {
+  teacher_id?: number;
+  id?: number;
+  first_name?: string;
+  last_name?: string;
   username?: string;
 }
 
@@ -138,6 +147,7 @@ const StudentDetailPage = () => {
   const navigate = useNavigate();
   const [student, setStudent] = useState<Student | null>(null);
   const [classData, setClassData] = useState<Class | null>(null);
+  const [teacherData, setTeacherData] = useState<Teacher | null>(null);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [payments, setPayments] = useState<Payment[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
@@ -152,7 +162,7 @@ const StudentDetailPage = () => {
   const [settingPassword, setSettingPassword] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState('attendance');
+  const [activeTab, setActiveTab] = useState('overview');
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -166,6 +176,8 @@ const StudentDetailPage = () => {
     setError(null);
     setCoinBalance(0);
     setCoinTransactions([]);
+    setClassData(null);
+    setTeacherData(null);
     try {
       const studentResponse = await studentAPI.getById(Number(studentId));
       const studentData = studentResponse.data || studentResponse;
@@ -176,8 +188,24 @@ const StudentDetailPage = () => {
           const classResponse = await classAPI.getById(studentData.class_id);
           const classDataResponse = classResponse.data || classResponse;
           setClassData(classDataResponse);
+          const teacherId = Number(classDataResponse?.teacher_id || studentData.teacher_id || 0);
+          if (teacherId) {
+            try {
+              const teacherResponse = await teacherAPI.getById(teacherId);
+              setTeacherData(teacherResponse.data || teacherResponse);
+            } catch (err) {
+              console.error('Error loading teacher data:', err);
+            }
+          }
         } catch (err) {
           console.error('Error loading class data:', err);
+        }
+      } else if (studentData.teacher_id) {
+        try {
+          const teacherResponse = await teacherAPI.getById(studentData.teacher_id);
+          setTeacherData(teacherResponse.data || teacherResponse);
+        } catch (err) {
+          console.error('Error loading teacher data:', err);
         }
       }
 
@@ -363,7 +391,10 @@ const StudentDetailPage = () => {
       ? (grades.reduce((sum, g) => sum + (Number(g.percentage) || 0), 0) / grades.length).toFixed(2)
       : 'N/A';
   const studentFullName = `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student';
+  const teacherName = teacherData ? [teacherData.first_name, teacherData.last_name].filter(Boolean).join(' ').trim() : '';
+  const groupName = classData?.class_name || '';
   const tabItems = [
+    { value: 'overview', label: 'Overview', icon: User },
     { value: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { value: 'payments', label: 'Payments', icon: Receipt },
     { value: 'assignments', label: 'Assignments', icon: ClipboardList },
@@ -373,27 +404,25 @@ const StudentDetailPage = () => {
   ];
 
   return (
-    <div className="min-h-full space-y-6 bg-gradient-to-br from-sky-50 via-white to-emerald-50 p-6 dark:bg-none">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="min-h-full space-y-3 bg-slate-50 p-3 dark:bg-background md:p-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Button
-          variant="outline"
           size="sm"
-          className="w-fit rounded-lg border-sky-200 bg-white/80 text-sky-900 shadow-sm hover:bg-sky-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+          className="h-8 w-fit rounded-lg bg-sky-600 text-xs text-white shadow-sm hover:bg-sky-700"
           onClick={() => navigate('/students')}
         >
-          <ArrowLeft className="mr-1.5 h-4 w-4" /> Back to Students
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Students
         </Button>
         <Button
-          variant="outline"
           size="sm"
-          className="w-fit rounded-lg border-emerald-200 bg-white/80 text-emerald-900 shadow-sm hover:bg-emerald-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+          className="h-8 w-fit rounded-lg bg-emerald-600 text-xs text-white shadow-sm hover:bg-emerald-700"
           onClick={handleResetPassword}
           disabled={resettingPassword}
         >
           {resettingPassword ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
           ) : (
-            <KeyRound className="mr-1.5 h-4 w-4" />
+            <KeyRound className="mr-1.5 h-3.5 w-3.5" />
           )}
           Reset Password
         </Button>
@@ -405,116 +434,142 @@ const StudentDetailPage = () => {
         </Alert>
       )}
 
-      <Card className="overflow-hidden rounded-lg border-0 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-500 text-white shadow-[0_24px_70px_-35px_rgba(14,165,233,0.9)] dark:border dark:border-border dark:bg-slate-950 dark:bg-none dark:shadow-lg">
-        <CardContent className="relative p-0">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-white/80 to-fuchsia-300 dark:hidden" />
-          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-amber-300/35 via-white/10 to-transparent dark:from-cyan-500/20 dark:via-emerald-500/10" />
-          <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between lg:p-8">
-            <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-white/40 bg-white/20 text-3xl font-bold shadow-inner">
-                {getInitials(student.first_name, student.last_name)}
-              </div>
-              <div className="min-w-0 space-y-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-white/70">Student Profile</p>
-                  <h1 className="break-words text-3xl font-bold tracking-normal text-white md:text-4xl">
-                    {studentFullName}
-                  </h1>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className={cn('border text-xs font-semibold', getStatusClasses(student.status))}>
-                    {student.status || 'Unknown'}
-                  </Badge>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/90">
-                    <User className="h-3.5 w-3.5" />
-                    Username: {student.username || '-'}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/90">
-                    <School className="h-3.5 w-3.5" />
-                    {student.enrollment_number || 'No enrollment'}
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/90">
-                    <BookOpen className="h-3.5 w-3.5" />
-                    {classData?.class_name || (student.class_id ? `Class #${student.class_id}` : 'Unassigned')}
-                  </span>
-                </div>
-              </div>
+      <Card className="overflow-hidden rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+        <CardContent className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-bold text-white">
+              {getInitials(student.first_name, student.last_name)}
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 md:w-[360px]">
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{student.email || '-'}</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Phone className="h-4 w-4" />
-                  Phone
-                </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{student.phone || '-'}</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <User className="h-4 w-4" />
-                  Parent
-                </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{student.parent_name || '-'}</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Coins className="h-4 w-4" />
-                  Coins
-                </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{coinBalance.toLocaleString()}</p>
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold text-slate-950 dark:text-foreground">{studentFullName}</h1>
+              <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
+                {student.username && <span className="rounded-md bg-fuchsia-100 px-2 py-0.5 text-fuchsia-800 dark:bg-muted dark:text-muted-foreground">Username: {student.username}</span>}
+                {groupName && <span className="rounded-md bg-sky-100 px-2 py-0.5 text-sky-800 dark:bg-muted dark:text-muted-foreground">Group: {groupName}</span>}
+                {teacherName && <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-muted dark:text-muted-foreground">Teacher: {teacherName}</span>}
               </div>
             </div>
           </div>
+          {student.status && (
+            <Badge variant="outline" className={cn('w-fit border text-[11px] font-semibold', getStatusClasses(student.status))}>
+              {student.status}
+            </Badge>
+          )}
         </CardContent>
       </Card>
 
-      <StudentInfoSection student={student} />
+      {activeTab === 'overview' && (
+        <>
+          <Card className="overflow-hidden rounded-lg border-0 bg-sky-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
+            <CardContent className="relative p-0">
+              <div className="relative flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/30 bg-white/20 text-xl font-bold shadow-inner">
+                    {getInitials(student.first_name, student.last_name)}
+                  </div>
+                  <div className="min-w-0 space-y-2">
+                    <div>
+                      <p className="text-xs font-semibold text-white/70">Student Profile</p>
+                      <h1 className="break-words text-xl font-bold tracking-normal text-white md:text-2xl">
+                        {studentFullName}
+                      </h1>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="outline" className={cn('border text-[11px] font-semibold', getStatusClasses(student.status))}>
+                        {student.status || 'Unknown'}
+                      </Badge>
+                      {student.username && <span className="inline-flex items-center gap-1 rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                        <User className="h-3 w-3" />
+                        Username: {student.username}
+                      </span>}
+                      {groupName && <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                        <BookOpen className="h-3 w-3" />
+                        Group: {groupName}
+                      </span>}
+                      {teacherName && <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                        <School className="h-3 w-3" />
+                        Teacher: {teacherName}
+                      </span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2 md:w-[330px]">
+                  {student.email && <div className="rounded-lg border border-white/25 bg-fuchsia-500 p-2.5 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
+                      <Mail className="h-3.5 w-3.5" />
+                      Email
+                    </div>
+                    <p className="mt-1 truncate text-xs font-semibold text-white">{student.email}</p>
+                  </div>}
+                  {student.phone && <div className="rounded-lg border border-white/25 bg-emerald-500 p-2.5 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
+                      <Phone className="h-3.5 w-3.5" />
+                      Phone
+                    </div>
+                    <p className="mt-1 truncate text-xs font-semibold text-white">{student.phone}</p>
+                  </div>}
+                  {student.parent_name && <div className="rounded-lg border border-white/25 bg-cyan-500 p-2.5 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
+                      <User className="h-3.5 w-3.5" />
+                      Parent
+                    </div>
+                    <p className="mt-1 truncate text-xs font-semibold text-white">{student.parent_name}</p>
+                  </div>}
+                  <div className="rounded-lg border border-white/25 bg-amber-500 p-2.5 shadow-sm">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
+                      <Coins className="h-3.5 w-3.5" />
+                      Coins
+                    </div>
+                    <p className="mt-1 truncate text-xs font-semibold text-white">{coinBalance.toLocaleString()}</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card className="rounded-lg border-emerald-100 bg-white/90 shadow-sm dark:border-border dark:bg-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
-            <KeyRound className="h-5 w-5" />
-            Account Password
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-          <div className="space-y-2">
-            <Label htmlFor="student-new-password">New Password</Label>
-            <Input
-              id="student-new-password"
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') handleSetPassword();
-              }}
-              placeholder="Enter new password"
-              disabled={settingPassword}
-            />
-          </div>
-          <Button onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
-            {settingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
-            Update Password
-          </Button>
-        </CardContent>
-      </Card>
+          <StudentInfoSection student={student} />
 
-      <StatisticsSection
-        attendanceStats={attendanceStats}
-        paymentStats={paymentStats}
-        assignmentStats={assignmentStats}
-        gradeAverage={gradeAverage}
-      />
+          <Card className="rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+            <CardHeader className="p-3 pb-1">
+              <CardTitle className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+                <KeyRound className="h-4 w-4" />
+                Account Password
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+              <div className="space-y-1">
+                <Label htmlFor="student-new-password" className="text-xs">New Password</Label>
+                <Input
+                  id="student-new-password"
+                  type="password"
+                  className="h-8 text-xs"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter') handleSetPassword();
+                  }}
+                  placeholder="Enter new password"
+                  disabled={settingPassword}
+                />
+              </div>
+              <Button className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
+                {settingPassword ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
+                Update Password
+              </Button>
+            </CardContent>
+          </Card>
 
-      <div className="overflow-hidden rounded-lg border border-sky-100 bg-white/90 shadow-[0_20px_55px_-40px_rgba(14,165,233,0.7)] dark:border-border dark:bg-card dark:shadow-sm">
+          <StatisticsSection
+            attendanceStats={attendanceStats}
+            paymentStats={paymentStats}
+            assignmentStats={assignmentStats}
+            gradeAverage={gradeAverage}
+          />
+        </>
+      )}
+
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="border-b border-sky-100 bg-gradient-to-r from-sky-50 via-white to-emerald-50 px-3 py-2 dark:border-border dark:bg-muted/40 dark:bg-none">
+          <div className="border-b border-slate-200 bg-white px-2 py-2 dark:border-border dark:bg-muted/40">
             <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none bg-transparent p-0">
               {tabItems.map((item) => {
                 const Icon = item.icon;
@@ -522,9 +577,9 @@ const StudentDetailPage = () => {
                   <TabsTrigger
                     key={item.value}
                     value={item.value}
-                    className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-sky-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground"
+                    className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-sky-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground"
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-3.5 w-3.5" />
                     {item.label}
                   </TabsTrigger>
                 );
@@ -532,7 +587,11 @@ const StudentDetailPage = () => {
             </TabsList>
           </div>
 
-          <div className="p-4 md:p-6">
+          <div className="p-3">
+            {activeTab === 'overview' && (
+              <div className="text-sm text-muted-foreground">Choose a menu above to manage attendance, payments, assignments, grades, or coins.</div>
+            )}
+
             {activeTab === 'attendance' && (
               <AttendanceTab
                 attendance={attendance}
@@ -580,29 +639,29 @@ const StudentDetailPage = () => {
             )}
 
             {activeTab === 'coins' && (
-              <div className="space-y-4">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
+              <div className="space-y-3">
+                <Card className="border-0 bg-amber-500 text-white shadow-sm">
+                  <CardHeader className="flex flex-row items-center justify-between p-3">
                     <CardTitle className="text-base">Coin Balance</CardTitle>
-                    <Button size="sm" onClick={() => setCoinDialogOpen(true)}>
+                    <Button size="sm" className="h-8 bg-white text-xs text-amber-700 hover:bg-white/90" onClick={() => setCoinDialogOpen(true)}>
                       Update Coins
                     </Button>
                   </CardHeader>
-                  <CardContent>
-                    <p className="text-3xl font-semibold">{coinBalance.toLocaleString()}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Latest balance for this student.</p>
+                  <CardContent className="p-3 pt-0">
+                    <p className="text-2xl font-semibold">{coinBalance.toLocaleString()}</p>
+                    <p className="mt-1 text-xs text-white/80">Latest balance for this student.</p>
                   </CardContent>
                 </Card>
 
-                <Card>
-                  <CardHeader>
+                <Card className="border-slate-200 shadow-sm dark:border-border">
+                  <CardHeader className="p-3">
                     <CardTitle className="text-base">Transaction History</CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="p-3 pt-0">
                     {coinTransactions.length === 0 ? (
                       <p className="text-sm text-muted-foreground">No coin transactions yet.</p>
                     ) : (
-                      <Table>
+                      <Table className="text-xs">
                         <TableHeader>
                           <TableRow>
                             <TableHead>Date</TableHead>

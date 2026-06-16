@@ -40,6 +40,7 @@ CREATE TABLE teachers (
     gender teacher_gender,
     qualification VARCHAR(255),
     specialization VARCHAR(100),
+    salary_percentage DECIMAL(5,2) NOT NULL DEFAULT 50 CHECK (salary_percentage >= 0 AND salary_percentage <= 100),
     status teacher_status DEFAULT 'Active',
     roles JSONB,
     username VARCHAR(100) UNIQUE,

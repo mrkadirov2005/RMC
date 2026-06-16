@@ -425,6 +425,7 @@ export interface CreateTeacherRequest {
   gender?: TeacherGender;
   qualification?: string;
   specialization?: string;
+  salary_percentage?: number;
   status?: TeacherStatus;
   roles?: string[];
 }

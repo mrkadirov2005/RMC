@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, MoreVertical, Upload, KeyRound, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, Upload, Download } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,12 +10,6 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PageToolbar } from '@/components/common/PageToolbar';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Dialog,
@@ -40,6 +34,9 @@ import { showToast } from '@/utils/toast';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import { useAppDispatch, useAppSelector } from '../hooks';
+import { fetchClasses } from '@/slices/classesSlice';
+import { fetchStudents } from '@/slices/studentsSlice';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -50,63 +47,23 @@ const buildTeacherUsername = (value: string) => {
   return cleaned.length >= 3 ? cleaned : cleaned.padEnd(3, '0');
 };
 
-const PasswordField = ({
-  teacher,
-  onSave,
-}: {
-  teacher: Teacher;
-  onSave: (teacher: Teacher, password: string) => Promise<void> | void;
-}) => {
-  const [value, setValue] = useState('');
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    setValue('');
-  }, [teacher.teacher_id, teacher.id]);
-
-  const save = async () => {
-    const next = value.trim();
-    if (!next || saving) return;
-
-    setSaving(true);
-    try {
-      await onSave(teacher, next);
-      setValue('');
-    } catch {
-      setValue('');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <div className="max-w-[240px]">
-      <div className="relative">
-        <KeyRound className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="password"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          onBlur={save}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') event.currentTarget.blur();
-            if (event.key === 'Escape') {
-              setValue('');
-              event.currentTarget.blur();
-            }
-          }}
-          disabled={saving}
-          placeholder="New password"
-          className="h-8 bg-white/80 pl-8 text-sm dark:bg-background"
-        />
-      </div>
-      {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
-    </div>
-  );
-};
+const headerActionClass = 'h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white shadow-sm';
+const headerActionIconClass = 'h-3.5 w-3.5';
+const teacherToneClasses = [
+  'bg-sky-600 hover:bg-sky-700',
+  'bg-emerald-600 hover:bg-emerald-700',
+  'bg-amber-500 hover:bg-amber-600',
+  'bg-fuchsia-600 hover:bg-fuchsia-700',
+  'bg-rose-600 hover:bg-rose-700',
+  'bg-cyan-600 hover:bg-cyan-700',
+];
+const getTeacherTone = (index: number) => teacherToneClasses[index % teacherToneClasses.length];
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
+  const dispatch = useAppDispatch();
+  const classItems = useAppSelector((rootState) => rootState.classes.items);
+  const studentItems = useAppSelector((rootState) => rootState.students.items);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
@@ -137,6 +94,33 @@ const TeachersPage = () => {
   const canImportTeachers = isOwner || user?.userType === 'superuser';
   const getTeacherId = (teacher: Teacher) => Number(teacher.teacher_id || teacher.id || 0);
   const getTeacherProfilePath = (teacher: Teacher) => `/teachers/${getTeacherId(teacher)}/profile`;
+  const teacherStats = useMemo(() => {
+    const map = new Map<number, { groups: string[]; students: number }>();
+    for (const teacher of state.items) {
+      const id = getTeacherId(teacher);
+      if (id) map.set(id, { groups: [], students: 0 });
+    }
+    for (const cls of classItems) {
+      const teacherId = Number(cls.teacher_id || 0);
+      if (!teacherId) continue;
+      const existing = map.get(teacherId) || { groups: [], students: 0 };
+      existing.groups.push(String(cls.class_name || cls.class_code || `Group #${cls.class_id || cls.id}`));
+      map.set(teacherId, existing);
+    }
+    for (const student of studentItems) {
+      const teacherId = Number(student.teacher_id || classItems.find((cls) => Number(cls.class_id || cls.id) === Number(student.class_id))?.teacher_id || 0);
+      if (!teacherId) continue;
+      const existing = map.get(teacherId) || { groups: [], students: 0 };
+      existing.students += 1;
+      map.set(teacherId, existing);
+    }
+    return map;
+  }, [classItems, state.items, studentItems]);
+
+  useEffect(() => {
+    dispatch(fetchClasses());
+    dispatch(fetchStudents());
+  }, [dispatch]);
   const filteredTeachers = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     if (!search) return state.items;
@@ -222,54 +206,26 @@ const TeachersPage = () => {
     },
   ];
   const renderTeacherActions = (teacher: Teacher) => (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
-            aria-label="Open teacher actions"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-40">
-          <DropdownMenuItem onClick={() => navigate(getTeacherProfilePath(teacher))} className="gap-2">
-            <Eye className="h-4 w-4 text-cyan-600" />
-            Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleOpenModal(teacher)} className="gap-2">
-            <Pencil className="h-4 w-4 text-blue-500" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
-            className="gap-2 text-red-600 focus:text-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex flex-wrap justify-end gap-1.5">
+      <Button type="button" size="sm" className="h-7 gap-1 bg-cyan-600 px-2 text-xs text-white hover:bg-cyan-700" onClick={() => navigate(getTeacherProfilePath(teacher))}>
+        <Eye className="h-3.5 w-3.5" />
+        Profile
+      </Button>
+      <Button type="button" size="sm" className="h-7 gap-1 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700" onClick={() => handleOpenModal(teacher)}>
+        <Pencil className="h-3.5 w-3.5" />
+        Edit
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700"
+        onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
+        Delete
+      </Button>
     </div>
   );
-  const handlePasswordUpdate = async (teacher: Teacher, password: string) => {
-    const id = teacher.teacher_id || teacher.id;
-    if (!id) throw new Error('Teacher ID is missing.');
-    const username = String(teacher.username || '').trim();
-    if (!username) {
-      showToast.error('Teacher username is required before setting a password.');
-      throw new Error('Teacher username is missing.');
-    }
-
-    try {
-      await teacherAPI.setPassword(id, { username, password });
-    } catch (error: any) {
-      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update password.');
-      throw error;
-    }
-  };
   const handleImportTeachers = async (file?: File) => {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.csv')) {
@@ -327,7 +283,7 @@ const TeachersPage = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title="Teachers"
         description="Manage instructors, specializations, access, and profile details in one place."
@@ -346,21 +302,22 @@ const TeachersPage = () => {
                 />
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isImporting}
+                  className={`${headerActionClass} bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:text-white`}
                 >
-                  {isImporting ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Upload className="mr-2 h-5 w-5" />}
+                  {isImporting ? <Loader2 className={`${headerActionIconClass} animate-spin`} /> : <Upload className={headerActionIconClass} />}
                   {isImporting ? t('Importing...') : t('Import CSV')}
                 </Button>
-                <Button type="button" variant="outline" onClick={handleExportTeachers}>
-                  <Download className="mr-2 h-5 w-5" />
+                <Button type="button" size="sm" className={`${headerActionClass} bg-emerald-600 hover:bg-emerald-700`} onClick={handleExportTeachers}>
+                  <Download className={headerActionIconClass} />
                   {t('Export CSV')}
                 </Button>
               </>
             )}
-            <Button onClick={() => handleOpenModal()}>
-              <Plus className="w-5 h-5 mr-2" />
+            <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+              <Plus className={headerActionIconClass} />
               Add Teacher
             </Button>
           </>
@@ -388,23 +345,23 @@ const TeachersPage = () => {
 
       <PageToolbar>
         <div className="relative max-w-xl">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Search teachers by name, ID, subject, email, phone..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="border-white/80 bg-white/90 pl-10 pr-10 shadow-sm dark:border-input dark:bg-background dark:shadow-none"
+            className="h-8 border-white/80 bg-white/90 pl-8 pr-8 text-xs shadow-sm dark:border-input dark:bg-background dark:shadow-none"
           />
           {searchTerm && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              className="absolute right-1 top-1/2 h-6 w-6 -translate-y-1/2"
               onClick={() => setSearchTerm('')}
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </Button>
           )}
         </div>
@@ -427,26 +384,25 @@ const TeachersPage = () => {
           <p className="text-sm">Try a different name, ID, email, or specialization</p>
         </div>
       ) : viewMode === 'list' ? (
-        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
+        <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
           {selectedTeacherIds.size > 0 && (
-            <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
-              <span className="font-medium">{selectedTeacherIds.size} selected</span>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
-                  <Trash2 className="mr-2 h-4 w-4" />
+            <div className="flex items-center justify-between border-b bg-slate-50 px-3 py-2 text-xs dark:bg-muted/50">
+              <span className="font-semibold">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-1.5">
+                <Button type="button" size="sm" className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={() => setSelectedTeacherIds(new Set())}>
                   Clear
                 </Button>
               </div>
             </div>
           )}
-          <Table>
+          <Table className="text-xs">
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
-                <TableHead className="w-10">
+                <TableHead className="h-8 w-10 px-2">
                   <input
                     type="checkbox"
                     checked={allVisibleTeachersSelected}
@@ -458,64 +414,95 @@ const TeachersPage = () => {
                     className="h-4 w-4"
                   />
                 </TableHead>
-                <TableHead>Teacher</TableHead>
-                <TableHead>Password</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="h-8 px-2">Teacher</TableHead>
+                <TableHead className="h-8 px-2">Groups</TableHead>
+                <TableHead className="h-8 px-2 text-right">Students</TableHead>
+                <TableHead className="h-8 px-2 text-right">Share</TableHead>
+                <TableHead className="h-8 px-2 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedTeachers.items.map((teacher) => (
-                <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
-                  <TableCell>
-                    <input
-                      type="checkbox"
-                      checked={selectedTeacherIds.has(getTeacherId(teacher))}
-                      onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
-                      aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
-                      className="h-4 w-4"
-                    />
-                  </TableCell>
-                  <TableCell className="font-medium">
-                    <button
-                      type="button"
-                      className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
-                      onClick={() => navigate(getTeacherProfilePath(teacher))}
-                    >
-                      {teacher.first_name} {teacher.last_name}
-                    </button>
-                  </TableCell>
-                  <TableCell>
-                    <PasswordField teacher={teacher} onSave={handlePasswordUpdate} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {renderTeacherActions(teacher)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {paginatedTeachers.items.map((teacher, index) => {
+                const stats = teacherStats.get(getTeacherId(teacher));
+                const groups = stats?.groups || [];
+                return (
+                  <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                    <TableCell className="px-2 py-2">
+                      <input
+                        type="checkbox"
+                        checked={selectedTeacherIds.has(getTeacherId(teacher))}
+                        onChange={(event) => toggleTeacher(getTeacherId(teacher), event.target.checked)}
+                        aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
+                        className="h-4 w-4"
+                      />
+                    </TableCell>
+                    <TableCell className="px-2 py-2 font-medium">
+                      <div className="flex min-w-0 items-center gap-2">
+                        <button type="button" className={`${getTeacherTone(index)} flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm`} onClick={() => navigate(getTeacherProfilePath(teacher))}>
+                          {getInitials(teacher.first_name, teacher.last_name)}
+                        </button>
+                        <div className="min-w-0">
+                          <button
+                            type="button"
+                            className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
+                            onClick={() => navigate(getTeacherProfilePath(teacher))}
+                          >
+                            {teacher.first_name} {teacher.last_name}
+                          </button>
+                          {teacher.username && <p className="truncate text-[11px] text-muted-foreground">@{teacher.username}</p>}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-2 py-2">
+                      <div className="flex flex-wrap gap-1.5">
+                        {groups.length > 0 ? groups.slice(0, 3).map((group) => (
+                          <span key={group} className="rounded-md bg-sky-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                            {group}
+                          </span>
+                        )) : (
+                          <span className="text-xs text-muted-foreground">No group</span>
+                        )}
+                        {groups.length > 3 && <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">+{groups.length - 3}</span>}
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 text-right">
+                      <span className="inline-flex rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">{stats?.students || 0}</span>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 text-right">
+                      <span className="inline-flex rounded-md bg-fuchsia-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">
+                        {Number(teacher.salary_percentage ?? 50)}%
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-2 py-2 text-right">
+                      {renderTeacherActions(teacher)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </Card>
       ) : viewMode === 'compact' ? (
         <>
           {selectedTeacherIds.size > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
-              <span className="font-medium">{selectedTeacherIds.size} selected</span>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
-                  <Trash2 className="mr-2 h-4 w-4" />
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm dark:border-border dark:bg-card">
+              <span className="font-semibold">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-1.5">
+                <Button type="button" size="sm" className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={() => setSelectedTeacherIds(new Set())}>
                   Clear
                 </Button>
               </div>
             </div>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-            {paginatedTeachers.items.map((teacher) => (
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {paginatedTeachers.items.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
-                className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
+                className="relative cursor-pointer overflow-hidden border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
                 onClick={() => navigate(getTeacherProfilePath(teacher))}
               >
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
@@ -527,17 +514,25 @@ const TeachersPage = () => {
                     className="h-4 w-4"
                   />
                 </div>
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-100 to-sky-100 text-sm font-bold text-indigo-700 dark:bg-primary/10 dark:bg-none dark:text-primary">
+                <CardContent className="p-2.5">
+                  <div className="flex items-center gap-2">
+                    <div className={`${getTeacherTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm`}>
                       {getInitials(teacher.first_name, teacher.last_name)}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                      <div className="mt-2">
-                        <PasswordField teacher={teacher} onSave={handlePasswordUpdate} />
-                      </div>
+                      <p className="truncate text-sm font-semibold">{teacher.first_name} {teacher.last_name}</p>
+                      <p className="truncate text-[11px] text-muted-foreground">
+                        {(teacherStats.get(getTeacherId(teacher))?.groups || [])[0] || 'No group'}
+                      </p>
                     </div>
+                  </div>
+                  <div className="mt-2 flex items-center gap-1.5 text-[11px]">
+                    <span className="rounded-md bg-blue-600 px-2 py-1 font-semibold text-white">{teacherStats.get(getTeacherId(teacher))?.groups.length || 0} groups</span>
+                    <span className="rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{teacherStats.get(getTeacherId(teacher))?.students || 0} students</span>
+                    <span className="rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
+                  </div>
+                  <div className="mt-2 border-t pt-2" onClick={(event) => event.stopPropagation()}>
+                    {renderTeacherActions(teacher)}
                   </div>
                 </CardContent>
               </Card>
@@ -547,24 +542,24 @@ const TeachersPage = () => {
       ) : (
         <>
           {selectedTeacherIds.size > 0 && (
-            <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
-              <span className="font-medium">{selectedTeacherIds.size} selected</span>
-              <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={handleBulkDeleteTeachers}>
-                  <Trash2 className="mr-2 h-4 w-4" />
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm dark:border-border dark:bg-card">
+              <span className="font-semibold">{selectedTeacherIds.size} selected</span>
+              <div className="flex items-center gap-1.5">
+                <Button type="button" size="sm" className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700" onClick={handleBulkDeleteTeachers}>
+                  <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => setSelectedTeacherIds(new Set())}>
+                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={() => setSelectedTeacherIds(new Set())}>
                   Clear
                 </Button>
               </div>
             </div>
           )}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {paginatedTeachers.items.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
-                className="relative h-full flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
+                className="relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
               >
                 <div className="absolute right-3 top-3 z-10">
                   <input
@@ -576,30 +571,41 @@ const TeachersPage = () => {
                   />
                 </div>
                 <div className={cn(
-                  'p-6 flex flex-col items-center relative text-white',
-                  index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
-                  index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
-                  index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                  index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
+                  'relative flex flex-col items-center p-3 text-white',
+                  index % 4 === 0 && 'bg-sky-600',
+                  index % 4 === 1 && 'bg-emerald-600',
+                  index % 4 === 2 && 'bg-amber-500',
+                  index % 4 === 3 && 'bg-fuchsia-600'
                 )}>
-                  <div className="w-20 h-20 rounded-full bg-white/20 border-[3px] border-white/40 flex items-center justify-center text-white text-xl font-bold mb-2">
+                  <div className="mb-1 flex h-12 w-12 items-center justify-center rounded-lg border border-white/30 bg-white/20 text-sm font-bold text-white">
                     {getInitials(teacher.first_name, teacher.last_name)}
                   </div>
-                  <h3 className="text-white font-semibold text-lg text-center">
+                  <h3 className="text-center text-sm font-semibold text-white">
                     {teacher.first_name} {teacher.last_name}
                   </h3>
                 </div>
 
-                <CardContent className="flex-grow p-5">
-                  <p className="text-center font-semibold text-slate-950 dark:text-card-foreground">
+                <CardContent className="flex-grow p-3">
+                  <p className="text-center text-sm font-semibold text-slate-950 dark:text-card-foreground">
                     {teacher.first_name} {teacher.last_name}
                   </p>
-                  <div className="mx-auto mt-3 flex justify-center">
-                    <PasswordField teacher={teacher} onSave={handlePasswordUpdate} />
+                  <div className="mt-2 grid grid-cols-2 gap-2 text-center text-xs">
+                    <div className="rounded-lg bg-blue-600 p-2 text-white shadow-sm">
+                      <p className="font-bold">{teacherStats.get(getTeacherId(teacher))?.groups.length || 0}</p>
+                      <p className="text-[11px] text-white/80">Groups</p>
+                    </div>
+                    <div className="rounded-lg bg-emerald-600 p-2 text-white shadow-sm">
+                      <p className="font-bold">{teacherStats.get(getTeacherId(teacher))?.students || 0}</p>
+                      <p className="text-[11px] text-white/80">Students</p>
+                    </div>
+                  </div>
+                  <div className="mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
+                    <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>
+                    <p className="text-[11px] text-white/80">Teacher share</p>
                   </div>
                 </CardContent>
 
-                <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-4 dark:border-border/10 dark:bg-muted/50">
+                <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 p-2.5 dark:border-border/10 dark:bg-muted/50">
                   {renderTeacherActions(teacher)}
                 </div>
               </Card>
@@ -626,95 +632,109 @@ const TeachersPage = () => {
       )}
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
-        <DialogContent className="max-w-2xl rounded-2xl p-0 gap-0 overflow-hidden">
-          <DialogHeader className="bg-gradient-to-br from-indigo-500 to-violet-500 px-6 py-4">
+        <DialogContent className="max-h-[88vh] max-w-2xl overflow-y-auto rounded-lg p-0 gap-0">
+          <DialogHeader className="bg-fuchsia-600 px-4 py-3">
             <div className="flex justify-between items-center">
-              <DialogTitle className="text-white font-semibold text-lg">
+              <DialogTitle className="text-base font-semibold text-white">
                 {editingId ? 'Edit Teacher' : 'Add New Teacher'}
               </DialogTitle>
               <button onClick={handleCloseModal} className="text-white hover:text-white/80 transition-colors">
-                <X className="w-6 h-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
           </DialogHeader>
           <form onSubmit={handleSubmit}>
-            <div className="p-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="first_name">First Name</Label>
-                  <Input id="first_name" required value={formData.first_name || ''} onChange={(e) => handleFirstNameChange(e.target.value)} />
+            <div className="p-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-1">
+                  <Label htmlFor="first_name" className="text-xs">First Name</Label>
+                  <Input id="first_name" className="h-8 text-xs" required value={formData.first_name || ''} onChange={(e) => handleFirstNameChange(e.target.value)} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="last_name">Last Name</Label>
-                  <Input id="last_name" required value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="last_name" className="text-xs">Last Name</Label>
+                  <Input id="last_name" className="h-8 text-xs" required value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="employee_id">Employee ID</Label>
-                  <Input id="employee_id" required value={formData.employee_id || ''} onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="employee_id" className="text-xs">Employee ID</Label>
+                  <Input id="employee_id" className="h-8 text-xs" required value={formData.employee_id || ''} onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" required value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-xs">Email</Label>
+                  <Input id="email" className="h-8 text-xs" type="email" required value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" required value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="phone" className="text-xs">Phone</Label>
+                  <Input id="phone" className="h-8 text-xs" required value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="date_of_birth">Date of Birth</Label>
-                  <Input id="date_of_birth" type="date" required value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="date_of_birth" className="text-xs">Date of Birth</Label>
+                  <Input id="date_of_birth" className="h-8 text-xs" type="date" required value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="qualification">Qualification</Label>
-                  <Input id="qualification" required value={formData.qualification || ''} onChange={(e) => setFormData({ ...formData, qualification: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="qualification" className="text-xs">Qualification</Label>
+                  <Input id="qualification" className="h-8 text-xs" required value={formData.qualification || ''} onChange={(e) => setFormData({ ...formData, qualification: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="specialization">Specialization</Label>
-                  <Input id="specialization" required value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="specialization" className="text-xs">Specialization</Label>
+                  <Input id="specialization" className="h-8 text-xs" required value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gender">Gender</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="salary_percentage" className="text-xs">Teacher Share (%)</Label>
+                  <Input
+                    id="salary_percentage"
+                    className="h-8 text-xs"
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.01"
+                    required
+                    value={formData.salary_percentage ?? 50}
+                    onChange={(e) => setFormData({ ...formData, salary_percentage: Number(e.target.value) })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="gender" className="text-xs">Gender</Label>
                   <Select value={formData.gender || 'Male'} onValueChange={(val) => setFormData({ ...formData, gender: val })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{genderOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                <div className="space-y-1">
+                  <Label htmlFor="status" className="text-xs">Status</Label>
                   <Select value={formData.status || 'Active'} onValueChange={(val) => setFormData({ ...formData, status: val })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{teacherStatusOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
                 {isOwner && (
-                  <div className="space-y-2 sm:col-span-2">
-                    <Label htmlFor="center">Center</Label>
+                  <div className="space-y-1 sm:col-span-2">
+                    <Label htmlFor="center" className="text-xs">Center</Label>
                     <Select value={String(formData.center_id || '')} onValueChange={(val) => setFormData({ ...formData, center_id: Number(val) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>{centerOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                     </Select>
                   </div>
                 )}
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input id="username" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
+                <div className="space-y-1">
+                  <Label htmlFor="username" className="text-xs">Username</Label>
+                  <Input id="username" className="h-8 text-xs" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
                 </div>
                 {!editingId && (
                   <>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input id="password" type="password" required value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                    <div className="space-y-1">
+                      <Label htmlFor="password" className="text-xs">Password</Label>
+                      <Input id="password" className="h-8 text-xs" type="password" required value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                     </div>
                   </>
                 )}
               </div>
             </div>
-            <DialogFooter className="px-6 py-4">
-              <Button type="button" variant="outline" onClick={handleCloseModal} className="rounded-lg">
+            <DialogFooter className="px-4 py-3">
+              <Button type="button" size="sm" className="h-8 rounded-lg bg-slate-700 px-3 text-xs text-white hover:bg-slate-800" onClick={handleCloseModal}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={state.loading} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 rounded-lg px-8">
-                {state.loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Save'}
+              <Button type="submit" size="sm" disabled={state.loading} className="h-8 rounded-lg bg-fuchsia-600 px-5 text-xs text-white hover:bg-fuchsia-700">
+                {state.loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
               </Button>
             </DialogFooter>
           </form>

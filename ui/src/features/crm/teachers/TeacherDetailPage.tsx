@@ -446,47 +446,48 @@ const TeacherDetailPage = () => {
   };
 
   return (
-    <div className="min-h-full space-y-6 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-6 dark:bg-none">
+    <div className="min-h-full space-y-3 bg-slate-50 p-3 dark:bg-background md:p-4">
       {/* Header */}
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <Button
-          variant="outline"
-          className="w-fit rounded-lg border-indigo-200 bg-white/80 text-indigo-900 shadow-sm hover:bg-indigo-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+          size="sm"
+          className="h-8 w-fit rounded-lg bg-sky-600 text-xs text-white shadow-sm hover:bg-sky-700"
           onClick={() => navigate('/teachers')}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
           Back to Teachers
         </Button>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-1.5">
           <Button
-            variant="outline"
-            className="rounded-lg border-sky-200 bg-white/80 text-sky-900 shadow-sm hover:bg-sky-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+            size="sm"
+            className="h-8 rounded-lg bg-cyan-600 px-2.5 text-xs text-white shadow-sm hover:bg-cyan-700"
             onClick={handleResetPassword}
             disabled={resettingPassword}
           >
             {resettingPassword ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
             ) : (
-              <KeyRound className="mr-2 h-4 w-4" />
+              <KeyRound className="mr-1.5 h-3.5 w-3.5" />
             )}
             Reset Password
           </Button>
           <Button
-            variant="outline"
-            className="rounded-lg border-emerald-200 bg-white/80 text-emerald-900 shadow-sm hover:bg-emerald-50 dark:border-border dark:bg-background dark:text-foreground dark:shadow-none"
+            size="sm"
+            className="h-8 rounded-lg bg-emerald-600 px-2.5 text-xs text-white shadow-sm hover:bg-emerald-700"
             onClick={() => {
               setPaymentTempPassword(generateTempPassword());
               setPaymentPasswordOpen(true);
             }}
           >
-            <KeyRound className="mr-2 h-4 w-4" />
+            <KeyRound className="mr-1.5 h-3.5 w-3.5" />
             Set Payment Password
           </Button>
           <Button
-            className="rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 hover:from-indigo-600 hover:to-sky-600 dark:shadow-none"
+            size="sm"
+            className="h-8 rounded-lg bg-fuchsia-600 px-2.5 text-xs text-white shadow-sm hover:bg-fuchsia-700"
             onClick={handleOpenGradeModal}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
             Add Grades
           </Button>
         </div>
@@ -499,85 +500,94 @@ const TeacherDetailPage = () => {
       )}
 
       {/* Teacher Profile Card */}
-      <Card className="overflow-hidden rounded-lg border-0 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-500 text-white shadow-[0_24px_70px_-35px_rgba(99,102,241,0.9)] dark:border dark:border-border dark:bg-slate-950 dark:bg-none dark:shadow-lg">
+      <Card className="overflow-hidden rounded-lg border-0 bg-indigo-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
         <CardContent className="relative p-0">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-amber-300 via-white/80 to-fuchsia-300 dark:hidden" />
-          <div className="absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-amber-300/35 via-white/10 to-transparent dark:from-cyan-500/20 dark:via-emerald-500/10" />
-          <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between lg:p-8">
-            <div className="flex min-w-0 flex-col gap-5 sm:flex-row sm:items-center">
-              <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-white/40 bg-white/20 text-3xl font-bold shadow-inner">
+          <div className="relative flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/30 bg-white/20 text-xl font-bold shadow-inner">
                 {getInitials(teacher.first_name, teacher.last_name)}
               </div>
-              <div className="min-w-0 space-y-3">
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-white/70">Teacher Profile</p>
-                  <h1 className="break-words text-3xl font-bold tracking-normal text-white md:text-4xl">
+              <div className="min-w-0 space-y-2">
+                <div>
+                  <p className="text-xs font-semibold text-white/70">Teacher Profile</p>
+                  <h1 className="break-words text-xl font-bold tracking-normal text-white md:text-2xl">
                     {teacher.first_name} {teacher.last_name}
                   </h1>
-                  <p className="text-sm font-medium text-white/80">{teacher.specialization || 'No specialization'}</p>
+                  {teacher.specialization && <p className="text-xs font-semibold text-white/80">{teacher.specialization}</p>}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <span className={cn('inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold', getStatusClasses(teacher.status))}>
+                <div className="flex flex-wrap gap-1.5">
+                  <span className={cn('inline-flex items-center rounded-lg border px-2 py-1 text-[11px] font-semibold', getStatusClasses(teacher.status))}>
                     {teacher.status}
                   </span>
-                  <span className="inline-flex items-center rounded-lg border border-white/30 bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
+                  <span className="inline-flex items-center rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                     {teacher.employee_id || 'No employee ID'}
                   </span>
-                  <span className="inline-flex items-center rounded-lg border border-white/30 bg-white/15 px-2.5 py-1 text-xs font-semibold text-white">
+                  <span className="inline-flex items-center rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                     Username: {teacher.username || '-'}
+                  </span>
+                  <span className="inline-flex items-center rounded-lg bg-cyan-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                    Share: {Number(teacher.salary_percentage ?? 50)}%
                   </span>
                 </div>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 md:w-[360px]">
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <BookOpen className="h-4 w-4" />
+            <div className="grid gap-2 sm:grid-cols-2 md:w-[330px]">
+              <div className="rounded-lg border border-white/25 bg-blue-600 p-2.5 shadow-sm">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/75">
+                  <BookOpen className="h-3.5 w-3.5" />
                   Classes
                 </div>
-                <p className="mt-2 text-2xl font-bold text-white">{classes.length}</p>
+                <p className="mt-1 text-lg font-bold text-white">{classes.length}</p>
               </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <User className="h-4 w-4" />
+              <div className="rounded-lg border border-white/25 bg-emerald-600 p-2.5 shadow-sm">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/75">
+                  <User className="h-3.5 w-3.5" />
                   Students
                 </div>
-                <p className="mt-2 text-2xl font-bold text-white">
+                <p className="mt-1 text-lg font-bold text-white">
                   {teacherStudents.length}
                 </p>
               </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Mail className="h-4 w-4" />
+              {teacher.email && <div className="rounded-lg border border-white/25 bg-cyan-600 p-2.5 shadow-sm">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/75">
+                  <Mail className="h-3.5 w-3.5" />
                   Email
                 </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{teacher.email || '-'}</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 shadow-sm backdrop-blur">
-                <div className="flex items-center gap-2 text-sm text-white/70">
-                  <Phone className="h-4 w-4" />
+                <p className="mt-1 truncate text-xs font-semibold text-white">{teacher.email}</p>
+              </div>}
+              {teacher.phone && <div className="rounded-lg border border-white/25 bg-rose-600 p-2.5 shadow-sm">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/75">
+                  <Phone className="h-3.5 w-3.5" />
                   Phone
                 </div>
-                <p className="mt-2 truncate text-sm font-semibold text-white">{teacher.phone || '-'}</p>
+                <p className="mt-1 truncate text-xs font-semibold text-white">{teacher.phone}</p>
+              </div>}
+              <div className="rounded-lg border border-white/25 bg-fuchsia-600 p-2.5 shadow-sm">
+                <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/75">
+                  <Wallet className="h-3.5 w-3.5" />
+                  Teacher Share
+                </div>
+                <p className="mt-1 truncate text-xs font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="rounded-lg border-emerald-100 bg-white/90 shadow-sm dark:border-border dark:bg-card">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
-            <KeyRound className="h-5 w-5" />
+      <Card className="rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+        <CardHeader className="p-3 pb-1">
+          <CardTitle className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+            <KeyRound className="h-4 w-4" />
             Account Password
           </CardTitle>
         </CardHeader>
-        <CardContent className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
-          <div className="space-y-2">
-            <Label htmlFor="teacher-new-password">New Password</Label>
+        <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+          <div className="space-y-1">
+            <Label htmlFor="teacher-new-password" className="text-xs">New Password</Label>
             <Input
               id="teacher-new-password"
               type="password"
+              className="h-8 text-xs"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
               onKeyDown={(event) => {
@@ -587,8 +597,8 @@ const TeacherDetailPage = () => {
               disabled={settingPassword}
             />
           </div>
-          <Button onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
-            {settingPassword ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
+          <Button className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
+            {settingPassword ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
             Update Password
           </Button>
         </CardContent>
@@ -596,30 +606,32 @@ const TeacherDetailPage = () => {
 
       {/* Payment Password Dialog */}
       <Dialog open={paymentPasswordOpen} onOpenChange={setPaymentPasswordOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="rounded-lg sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Set Payment Password</DialogTitle>
+            <DialogTitle className="text-base">Set Payment Password</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <Alert>
+          <div className="space-y-3">
+            <Alert className="py-3">
               <AlertDescription>
                 This password is used for the teacher&apos;s separate Payments login (required to access the Payments tab).
               </AlertDescription>
             </Alert>
-            <div className="space-y-2">
-              <Label htmlFor="payment-password">Payment Password</Label>
+            <div className="space-y-1">
+              <Label htmlFor="payment-password" className="text-xs">Payment Password</Label>
               <Input
                 id="payment-password"
                 type="text"
+                className="h-8 text-xs"
                 value={paymentTempPassword}
                 onChange={(e) => setPaymentTempPassword(e.target.value)}
                 placeholder="Enter or generate a password"
                 disabled={settingPaymentPassword}
               />
-              <div className="flex gap-2">
+              <div className="flex gap-1.5">
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
+                  className="h-8 bg-amber-500 text-xs text-white hover:bg-amber-600"
                   onClick={() => setPaymentTempPassword(generateTempPassword())}
                   disabled={settingPaymentPassword}
                 >
@@ -627,7 +639,8 @@ const TeacherDetailPage = () => {
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
+                  className="h-8 bg-cyan-600 text-xs text-white hover:bg-cyan-700"
                   onClick={handleCopyPaymentPassword}
                   disabled={!paymentTempPassword || settingPaymentPassword}
                 >
@@ -637,13 +650,13 @@ const TeacherDetailPage = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setPaymentPasswordOpen(false)} disabled={settingPaymentPassword}>
+            <Button size="sm" className="h-8 bg-slate-700 text-xs text-white hover:bg-slate-800" onClick={() => setPaymentPasswordOpen(false)} disabled={settingPaymentPassword}>
               Cancel
             </Button>
-            <Button onClick={handleSetPaymentPassword} disabled={settingPaymentPassword}>
+            <Button size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={handleSetPaymentPassword} disabled={settingPaymentPassword}>
               {settingPaymentPassword ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   Saving...
                 </>
               ) : (
@@ -655,96 +668,103 @@ const TeacherDetailPage = () => {
       </Dialog>
 
       {/* Tabs */}
-      <div className="overflow-hidden rounded-lg border border-indigo-100 bg-white/90 shadow-[0_20px_55px_-40px_rgba(99,102,241,0.7)] dark:border-border dark:bg-card dark:shadow-sm">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <Tabs value={tabValue} onValueChange={setTabValue}>
-          <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-emerald-50 px-3 py-2 dark:border-border dark:bg-muted/40 dark:bg-none">
-            <TabsTrigger value="info" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
-              <User className="h-4 w-4" />
+          <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-white px-2 py-2 dark:border-border dark:bg-muted/40">
+            <TabsTrigger value="info" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
+              <User className="h-3.5 w-3.5" />
               Information
             </TabsTrigger>
-            <TabsTrigger value="classes" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
-              <BookOpen className="h-4 w-4" />
+            <TabsTrigger value="classes" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
+              <BookOpen className="h-3.5 w-3.5" />
               Classes & Students
             </TabsTrigger>
-            <TabsTrigger value="assignments" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
-              <ClipboardList className="h-4 w-4" />
+            <TabsTrigger value="assignments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
+              <ClipboardList className="h-3.5 w-3.5" />
               Assignments
             </TabsTrigger>
-            <TabsTrigger value="tests" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
-              <FileQuestion className="h-4 w-4" />
+            <TabsTrigger value="tests" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
+              <FileQuestion className="h-3.5 w-3.5" />
               Tests
             </TabsTrigger>
-            <TabsTrigger value="payments" className="min-h-10 shrink-0 gap-2 rounded-lg px-3 text-sm font-semibold text-slate-700 data-[state=active]:bg-white data-[state=active]:text-indigo-900 data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
-              <Wallet className="h-4 w-4" />
+            <TabsTrigger value="payments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
+              <Wallet className="h-3.5 w-3.5" />
               Payments
             </TabsTrigger>
           </TabsList>
 
-          <div className="p-6">
+          <div className="p-3">
             {/* Tab: Information */}
             <TabsContent value="info">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="h-full rounded-lg border-sky-100 bg-gradient-to-br from-white via-sky-50/60 to-cyan-50/50 shadow-sm dark:border-border dark:bg-card dark:bg-none">
-                  <CardHeader>
-                    <CardTitle className="text-indigo-700 dark:text-indigo-300">Contact Information</CardTitle>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <Card className="h-full rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm text-indigo-700 dark:text-indigo-300">Contact Information</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <User className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Username</p>
-                        <p className="text-sm font-semibold">{teacher.username || '-'}</p>
+                  <CardContent className="grid gap-2 p-3 pt-1">
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-fuchsia-600 text-white"><User className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Username</p>
+                        <p className="truncate text-xs font-semibold">{teacher.username || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <Mail className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Email</p>
-                        <p className="break-all text-sm font-semibold">{teacher.email || '-'}</p>
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-600 text-white"><Mail className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Email</p>
+                        <p className="break-all text-xs font-semibold">{teacher.email || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <Phone className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Phone</p>
-                        <p className="text-sm font-semibold">{teacher.phone || '-'}</p>
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white"><Phone className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Phone</p>
+                        <p className="truncate text-xs font-semibold">{teacher.phone || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-sky-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <Calendar className="h-5 w-5 text-sky-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Date of Birth</p>
-                        <p className="text-sm font-semibold">
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white"><Calendar className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Date of Birth</p>
+                        <p className="text-xs font-semibold">
                           {teacher.date_of_birth ? new Date(teacher.date_of_birth).toLocaleDateString() : 'N/A'}
                         </p>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="h-full rounded-lg border-emerald-100 bg-gradient-to-br from-white via-emerald-50/60 to-teal-50/50 shadow-sm dark:border-border dark:bg-card dark:bg-none">
-                  <CardHeader>
-                    <CardTitle className="text-emerald-700 dark:text-emerald-300">Professional Details</CardTitle>
+                <Card className="h-full rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+                  <CardHeader className="p-3 pb-1">
+                    <CardTitle className="text-sm text-emerald-700 dark:text-emerald-300">Professional Details</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <BadgeCheck className="h-5 w-5 text-emerald-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Employee ID</p>
-                        <p className="text-sm font-semibold">{teacher.employee_id || '-'}</p>
+                  <CardContent className="grid gap-2 p-3 pt-1">
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500 text-white"><BadgeCheck className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Employee ID</p>
+                        <p className="truncate text-xs font-semibold">{teacher.employee_id || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Qualification</p>
-                        <p className="text-sm font-semibold">{teacher.qualification || '-'}</p>
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-600 text-white"><GraduationCap className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Qualification</p>
+                        <p className="truncate text-xs font-semibold">{teacher.qualification || '-'}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-white/75 p-3 dark:border-border dark:bg-background/70">
-                      <GraduationCap className="h-5 w-5 text-emerald-600 dark:text-muted-foreground" />
-                      <div>
-                        <p className="text-xs text-muted-foreground">Specialization</p>
-                        <p className="text-sm font-semibold">{teacher.specialization || '-'}</p>
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-rose-600 text-white"><GraduationCap className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Specialization</p>
+                        <p className="truncate text-xs font-semibold">{teacher.specialization || '-'}</p>
+                      </div>
+                    </div>
+                    <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-fuchsia-600 text-white"><Wallet className="h-3.5 w-3.5" /></div>
+                      <div className="min-w-0">
+                        <p className="text-[10px] font-semibold uppercase text-muted-foreground">Teacher Share</p>
+                        <p className="truncate text-xs font-semibold">{Number(teacher.salary_percentage ?? 50)}%</p>
                       </div>
                     </div>
                   </CardContent>
@@ -760,7 +780,7 @@ const TeacherDetailPage = () => {
                   <h3 className="text-lg font-semibold">No classes assigned to this teacher</h3>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {classes.map((classItem) => {
                     const classId = classItem.class_id || classItem.id || 0;
                     const classStudents = getStudentsByClass(classId);
@@ -768,44 +788,50 @@ const TeacherDetailPage = () => {
                     return (
                       <div
                         key={classId}
-                        className="overflow-hidden rounded-lg border border-indigo-100 bg-white shadow-sm dark:border-border dark:bg-card"
+                          className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card"
                       >
                         {/* Accordion Header */}
                         <button
                           type="button"
                           onClick={() => toggleClassExpanded(classId)}
-                          className="flex w-full items-center gap-4 bg-gradient-to-r from-indigo-50 via-white to-sky-50 p-4 text-left transition-colors hover:from-indigo-100 hover:to-sky-100 dark:bg-muted/40 dark:bg-none dark:hover:bg-muted/60"
+                          className="flex w-full items-center gap-2 bg-white p-2.5 text-left transition-colors hover:bg-sky-50 dark:bg-muted/40 dark:hover:bg-muted/60"
                         >
-                          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-sm">
-                            <BookOpen className="h-5 w-5" />
+                          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
+                            <BookOpen className="h-4 w-4" />
                           </div>
                           <div className="flex-grow">
-                            <h3 className="text-lg font-semibold">{classItem.class_name}</h3>
-                            <p className="text-sm text-muted-foreground">Level: {classItem.level || 'N/A'}</p>
+                            <h3 className="text-sm font-semibold">{classItem.class_name}</h3>
+                            <p className="text-xs text-muted-foreground">Level: {classItem.level || 'N/A'}</p>
                           </div>
-                          <Badge className="bg-indigo-100 text-indigo-800 hover:bg-indigo-100 font-semibold">
+                          <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
                             {classStudents.length} Students
                           </Badge>
-                          <ChevronDown className={cn('h-5 w-5 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
+                          <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
                         </button>
                         {/* Accordion Content */}
                         {isExpanded && (
-                          <div className="border-t border-indigo-100 bg-white p-4 dark:border-border dark:bg-card">
+                          <div className="border-t border-slate-200 bg-white p-2.5 dark:border-border dark:bg-card">
                             {detailStudentsLoading && classStudents.length === 0 ? (
                               <div className="py-6 text-center text-sm text-muted-foreground">Loading students...</div>
                             ) : classStudents.length === 0 ? (
                               <div className="py-6 text-center text-sm text-muted-foreground">No students in this class</div>
                             ) : (
-                              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                {classStudents.map((student) => (
+                              <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                                {classStudents.map((student, index) => (
                                   <div
                                     key={student.student_id || student.id}
-                                    className="flex items-center gap-2 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3 dark:border-border dark:bg-background/70"
+                                    className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70"
                                   >
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-100 text-xs font-semibold text-indigo-700 dark:bg-muted dark:text-primary">
+                                    <div className={cn(
+                                      'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-white shadow-sm',
+                                      index % 4 === 0 && 'bg-sky-600',
+                                      index % 4 === 1 && 'bg-emerald-600',
+                                      index % 4 === 2 && 'bg-amber-500',
+                                      index % 4 === 3 && 'bg-fuchsia-600'
+                                    )}>
                                       {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
                                     </div>
-                                    <span className="truncate text-sm font-semibold">
+                                    <span className="truncate text-xs font-semibold">
                                       {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
                                     </span>
                                   </div>
@@ -839,28 +865,29 @@ const TeacherDetailPage = () => {
 
             {/* Tab: Tests */}
             <TabsContent value="tests">
-              <div className="flex flex-col gap-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-lg font-semibold">Tests Management</h3>
-                  <div className="flex gap-3">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold">Tests Management</h3>
+                  <div className="flex gap-1.5">
                     <Button
-                      variant="outline"
-                      className="rounded-lg"
+                      size="sm"
+                      className="h-8 rounded-lg bg-cyan-600 text-xs text-white hover:bg-cyan-700"
                       onClick={() => navigate('/tests')}
                     >
-                      <FileQuestion className="mr-2 h-4 w-4" />
+                      <FileQuestion className="mr-1.5 h-3.5 w-3.5" />
                       View All Tests
                     </Button>
                     <Button
-                      className="bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg"
+                      size="sm"
+                      className="h-8 rounded-lg bg-fuchsia-600 text-xs text-white hover:bg-fuchsia-700"
                       onClick={() => navigate('/tests/create')}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
+                      <Plus className="mr-1.5 h-3.5 w-3.5" />
                       Create New Test
                     </Button>
                   </div>
                 </div>
-                <Alert className="rounded-lg border-blue-200 bg-blue-50 text-blue-800">
+                <Alert className="rounded-lg border-blue-200 bg-blue-50 py-3 text-blue-800">
                   <AlertDescription>
                     Navigate to the Tests section to create, assign, and manage tests for your classes and students.
                   </AlertDescription>
@@ -870,23 +897,23 @@ const TeacherDetailPage = () => {
 
             {/* Tab: Payments */}
             <TabsContent value="payments">
-              <div className="flex flex-col gap-6">
-                <div className="flex justify-between items-center sm:flex-row flex-col sm:items-center gap-4">
-                  <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <Wallet className="h-5 w-5 text-indigo-500" />
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
+                  <h3 className="flex items-center gap-2 text-base font-semibold">
+                    <Wallet className="h-4 w-4 text-indigo-500" />
                     Student Payments
                   </h3>
-                  <div className="flex items-center gap-3">
-                    <Label htmlFor="payment-month" className="font-semibold whitespace-nowrap">Select Month:</Label>
+                  <div className="flex items-center gap-2">
+                    <Label htmlFor="payment-month" className="whitespace-nowrap text-xs font-semibold">Select Month:</Label>
                     <div className="relative">
                       <Input
                         id="payment-month"
                         type="month"
                         value={selectedPaymentMonth}
                         onChange={(e) => setSelectedPaymentMonth(e.target.value)}
-                        className="w-[180px] pl-10"
+                        className="h-8 w-[160px] pl-8 text-xs"
                       />
-                      <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                      <Calendar className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                     </div>
                   </div>
                 </div>
@@ -897,38 +924,37 @@ const TeacherDetailPage = () => {
                     <h3 className="text-lg font-semibold">No classes assigned to this teacher</h3>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {classes.map((classItem) => {
                       const classId = classItem.class_id || classItem.id || 0;
                       const classStudents = getStudentsByClass(classId);
 
                       return (
-                        <div key={classId} className="rounded-2xl border shadow-sm overflow-hidden bg-card text-card-foreground hover:shadow-md transition-shadow duration-300">
-                          <div className="bg-gradient-to-r from-indigo-50/50 dark:from-indigo-950/30 to-card p-5 border-b relative">
-                            <div className="absolute right-0 top-0 h-full w-32 bg-gradient-to-l from-indigo-100/30 dark:from-indigo-900/20 to-transparent pointer-events-none" />
-                            <h4 className="text-lg font-bold text-foreground flex justify-between items-center relative z-10">
+                        <div key={classId} className="overflow-hidden rounded-lg border border-slate-200 bg-card text-card-foreground shadow-sm">
+                          <div className="relative border-b bg-white p-3 dark:bg-card">
+                            <h4 className="relative z-10 flex items-center justify-between text-sm font-bold text-foreground">
                               <div className="flex items-center gap-3">
-                                <div className="p-2 bg-background rounded-lg text-indigo-600 dark:text-indigo-400 shadow-sm border border-indigo-100 dark:border-indigo-900">
-                                  <BookOpen className="h-5 w-5" />
+                                <div className="rounded-lg bg-indigo-600 p-2 text-white shadow-sm">
+                                  <BookOpen className="h-4 w-4" />
                                 </div>
-                                <span>{classItem.class_name} <span className="text-muted-foreground text-sm font-normal ml-2 hidden sm:inline">({classItem.level})</span></span>
+                                <span>{classItem.class_name} <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">({classItem.level})</span></span>
                               </div>
-                              <Badge variant="secondary" className="bg-background hover:bg-muted shadow-sm border">{classStudents.length} Students</Badge>
+                              <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{classStudents.length} Students</Badge>
                             </h4>
                           </div>
                           <div className="p-0">
-                            <Table>
+                            <Table className="text-xs">
                               <TableHeader className="bg-muted/30">
                                 <TableRow className="border-b-border">
-                                  <TableHead className="font-semibold text-foreground pl-6">Student</TableHead>
-                                  <TableHead className="font-semibold text-foreground hidden sm:table-cell">Enrollment #</TableHead>
-                                  <TableHead className="font-semibold text-foreground text-right pr-6">Payment Status</TableHead>
+                                  <TableHead className="h-8 pl-3 font-semibold text-foreground">Student</TableHead>
+                                  <TableHead className="hidden h-8 font-semibold text-foreground sm:table-cell">Enrollment #</TableHead>
+                                  <TableHead className="h-8 pr-3 text-right font-semibold text-foreground">Payment Status</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
                                 {classStudents.length === 0 ? (
                                   <TableRow>
-                                    <TableCell colSpan={3} className="text-center py-6 text-muted-foreground">No students</TableCell>
+                                    <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">No students</TableCell>
                                   </TableRow>
                                 ) : (
                                   classStudents.map((student) => {
@@ -943,9 +969,9 @@ const TeacherDetailPage = () => {
 
                                     return (
                                       <TableRow key={studentId} className="hover:bg-muted/50 transition-colors border-b-border">
-                                        <TableCell className="pl-6 font-medium">
-                                          <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-100 dark:from-indigo-900/50 to-purple-100 dark:to-purple-900/50 text-indigo-700 dark:text-indigo-300 flex items-center justify-center text-xs font-bold shrink-0 border border-indigo-200/50 dark:border-indigo-800/50 shadow-sm">
+                                        <TableCell className="py-2 pl-3 font-medium">
+                                          <div className="flex items-center gap-2">
+                                            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm">
                                               {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
                                             </div>
                                             <div>
@@ -954,15 +980,15 @@ const TeacherDetailPage = () => {
                                             </div>
                                           </div>
                                         </TableCell>
-                                        <TableCell className="text-muted-foreground hidden sm:table-cell">{student.enrollment_number}</TableCell>
-                                        <TableCell className="text-right pr-6">
+                                        <TableCell className="hidden py-2 text-muted-foreground sm:table-cell">{student.enrollment_number}</TableCell>
+                                        <TableCell className="py-2 pr-3 text-right">
                                           {hasPaid ? (
-                                            <Badge className="bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border-emerald-200 dark:border-emerald-500/20 px-3 py-1 shadow-sm font-semibold">
-                                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" /> Paid
+                                            <Badge className="border-0 bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-600">
+                                              Paid
                                             </Badge>
                                           ) : (
-                                            <Badge className="bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border-rose-200 dark:border-rose-500/20 px-3 py-1 shadow-sm font-semibold">
-                                              <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mr-2" /> Unpaid
+                                            <Badge className="border-0 bg-rose-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-rose-600">
+                                              Unpaid
                                             </Badge>
                                           )}
                                         </TableCell>
@@ -985,35 +1011,36 @@ const TeacherDetailPage = () => {
       </div>
 
       <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
-        <DialogContent className="rounded-2xl">
+        <DialogContent className="rounded-lg">
           <DialogHeader>
-            <DialogTitle>Temporary Password</DialogTitle>
+            <DialogTitle className="text-base">Temporary Password</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            <Label htmlFor="teacher-temp-password">Share this password with the teacher.</Label>
+          <div className="space-y-2">
+            <Label htmlFor="teacher-temp-password" className="text-xs">Share this password with the teacher.</Label>
             <div className="flex gap-2">
               <Input
                 id="teacher-temp-password"
+                className="h-8 text-xs"
                 value={resetTempPassword}
                 readOnly
               />
-              <Button variant="outline" onClick={handleCopyTempPassword}>
+              <Button size="sm" className="h-8 bg-cyan-600 text-xs text-white hover:bg-cyan-700" onClick={handleCopyTempPassword}>
                 Copy
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setResetPasswordOpen(false)}>Done</Button>
+            <Button size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={() => setResetPasswordOpen(false)}>Done</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Grade Modal */}
       <Dialog open={isGradeModalOpen} onOpenChange={(open) => { if (!open) handleCloseGradeModal(); }}>
-        <DialogContent className="max-w-3xl rounded-2xl p-0 overflow-hidden">
-          <DialogHeader className="bg-gradient-to-br from-indigo-500 to-purple-500 p-6">
+        <DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto rounded-lg p-0">
+          <DialogHeader className="bg-fuchsia-600 p-4">
             <div className="flex items-center justify-between">
-              <DialogTitle className="text-white text-lg font-semibold">
+              <DialogTitle className="text-base font-semibold text-white">
                 Add Grades to Students
               </DialogTitle>
               <button onClick={handleCloseGradeModal} className="text-white hover:text-white/80">
@@ -1022,12 +1049,12 @@ const TeacherDetailPage = () => {
             </div>
           </DialogHeader>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Select Class</Label>
+          <div className="p-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Select Class</Label>
                 <Select value={String(selectedClassId || '')} onValueChange={(value) => handleClassSelect(Number(value))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Select class" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1039,10 +1066,10 @@ const TeacherDetailPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Select Subject</Label>
+              <div className="space-y-1">
+                <Label className="text-xs">Select Subject</Label>
                 <Select value={String(selectedSubjectId || '')} onValueChange={(value) => setSelectedSubjectId(Number(value))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Select subject" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1054,10 +1081,10 @@ const TeacherDetailPage = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label>Select Term</Label>
+              <div className="space-y-1">
+                <Label className="text-xs">Select Term</Label>
                 <Select value={selectedTerm} onValueChange={(value) => setSelectedTerm(value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-8 text-xs">
                     <SelectValue placeholder="Select term" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1073,16 +1100,16 @@ const TeacherDetailPage = () => {
             </div>
 
             {selectedClassId && gradeEntries.length > 0 && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3">Enter Grades for Students</h3>
-                <div className="border rounded-lg overflow-hidden">
-                  <Table>
+              <div className="mt-4">
+                <h3 className="mb-2 text-sm font-semibold">Enter Grades for Students</h3>
+                <div className="overflow-hidden rounded-lg border">
+                  <Table className="text-xs">
                     <TableHeader>
-                      <TableRow className="bg-indigo-50/50">
-                        <TableHead className="font-semibold">Enrollment #</TableHead>
-                        <TableHead className="font-semibold">Student Name</TableHead>
-                        <TableHead className="font-semibold">Percentage</TableHead>
-                        <TableHead className="font-semibold">Grade</TableHead>
+                      <TableRow className="bg-slate-50">
+                        <TableHead className="h-8 font-semibold">Enrollment #</TableHead>
+                        <TableHead className="h-8 font-semibold">Student Name</TableHead>
+                        <TableHead className="h-8 font-semibold">Percentage</TableHead>
+                        <TableHead className="h-8 font-semibold">Grade</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -1099,7 +1126,7 @@ const TeacherDetailPage = () => {
                                 max={100}
                                 value={entry.percentage}
                                 onChange={(e) => handlePercentageChange(index, Number(e.target.value))}
-                                className="w-24"
+                                className="h-8 w-20 text-xs"
                               />
                             </TableCell>
                             <TableCell>
@@ -1117,16 +1144,17 @@ const TeacherDetailPage = () => {
             )}
           </div>
 
-          <DialogFooter className="p-6 pt-0">
-            <Button variant="outline" className="rounded-lg" onClick={handleCloseGradeModal}>
+          <DialogFooter className="p-4 pt-0">
+            <Button size="sm" className="h-8 rounded-lg bg-slate-700 text-xs text-white hover:bg-slate-800" onClick={handleCloseGradeModal}>
               Cancel
             </Button>
             <Button
-              className="bg-gradient-to-br from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white rounded-lg px-8"
+              size="sm"
+              className="h-8 rounded-lg bg-fuchsia-600 px-5 text-xs text-white hover:bg-fuchsia-700"
               onClick={handleSaveGrades}
               disabled={isSavingGrades || !selectedClassId || !selectedSubjectId || gradeEntries.length === 0}
             >
-              {isSavingGrades ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Save Grades'}
+              {isSavingGrades ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save Grades'}
             </Button>
           </DialogFooter>
         </DialogContent>

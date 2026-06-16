@@ -19,6 +19,7 @@ export interface Teacher {
   gender: string;
   qualification: string;
   specialization: string;
+  salary_percentage?: number;
   status: string;
   roles?: string[];
   username?: string;

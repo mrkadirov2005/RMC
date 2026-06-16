@@ -34,8 +34,8 @@ const findByUsername = (username: string) =>
 const insert = (params: any[]) =>
   pool
     .query(
-      `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, roles, username, password_hash)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING *`,
+      `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, salary_percentage, status, roles, username, password_hash)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
       params
     )
     .then((r: any) => r.rows[0]);
@@ -45,10 +45,10 @@ const countByUsername = (username: string) =>
 
 const update = (id: number, fields: any[], centerId?: number) => {
   let query =
-    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), status = COALESCE($6, status), roles = COALESCE($7, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $8 AND deleted_at IS NULL';
+    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), salary_percentage = COALESCE($6, salary_percentage), status = COALESCE($7, status), roles = COALESCE($8, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $9 AND deleted_at IS NULL';
   const params: any[] = [...fields, id];
   if (centerId) {
-    query += ' AND center_id = $9';
+    query += ' AND center_id = $10';
     params.push(centerId);
   }
   query += ' RETURNING *';

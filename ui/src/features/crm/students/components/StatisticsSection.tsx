@@ -30,26 +30,26 @@ const statCards = [
   {
     key: 'attendance',
     icon: Calendar,
-    shell: 'border-sky-100 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-[0_16px_42px_-34px_rgba(14,165,233,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
-    iconShell: 'bg-gradient-to-br from-sky-500 to-cyan-500 text-white dark:bg-sky-500 dark:bg-none',
+    shell: 'border-0 bg-sky-600 text-white shadow-sm',
+    iconShell: 'bg-white/20 text-white',
   },
   {
     key: 'payments',
     icon: DollarSign,
-    shell: 'border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-teal-50 shadow-[0_16px_42px_-34px_rgba(16,185,129,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
-    iconShell: 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white dark:bg-emerald-500 dark:bg-none',
+    shell: 'border-0 bg-emerald-600 text-white shadow-sm',
+    iconShell: 'bg-white/20 text-white',
   },
   {
     key: 'assignments',
     icon: CheckCircle,
-    shell: 'border-amber-100 bg-gradient-to-br from-amber-50 via-white to-orange-50 shadow-[0_16px_42px_-34px_rgba(245,158,11,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
-    iconShell: 'bg-gradient-to-br from-amber-500 to-orange-500 text-white dark:bg-amber-500 dark:bg-none',
+    shell: 'border-0 bg-amber-500 text-white shadow-sm',
+    iconShell: 'bg-white/20 text-white',
   },
   {
     key: 'grades',
     icon: Star,
-    shell: 'border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-fuchsia-50 shadow-[0_16px_42px_-34px_rgba(99,102,241,0.9)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm',
-    iconShell: 'bg-gradient-to-br from-indigo-500 to-fuchsia-500 text-white dark:bg-indigo-500 dark:bg-none',
+    shell: 'border-0 bg-fuchsia-600 text-white shadow-sm',
+    iconShell: 'bg-white/20 text-white',
   },
 ] as const;
 
@@ -84,20 +84,20 @@ export const StatisticsSection = ({
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4">
       {data.map((item, index) => {
         const config = statCards[index];
         const Icon = config.icon;
         return (
           <Card key={config.key} className={cn('rounded-lg shadow-sm', config.shell)}>
-            <CardContent className="flex min-h-[116px] items-center gap-4 p-5">
-              <div className={cn('flex h-11 w-11 shrink-0 items-center justify-center rounded-lg', config.iconShell)}>
-                <Icon className="h-5 w-5" />
+            <CardContent className="flex min-h-[74px] items-center gap-2.5 p-3">
+              <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', config.iconShell)}>
+                <Icon className="h-4 w-4" />
               </div>
-              <div className="min-w-0 space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">{item.label}</p>
-                <p className="truncate text-2xl font-bold text-foreground">{item.value}</p>
-                <p className="text-xs text-muted-foreground">{item.sub}</p>
+              <div className="min-w-0">
+                <p className="text-xs font-semibold text-white/80">{item.label}</p>
+                <p className="truncate text-lg font-bold text-white">{item.value}</p>
+                <p className="truncate text-xs text-white/75">{item.sub}</p>
               </div>
             </CardContent>
           </Card>

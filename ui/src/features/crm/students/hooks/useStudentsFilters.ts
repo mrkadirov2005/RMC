@@ -2,6 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Class, Student } from '../types';
 import { getStudentCount, getStatusVariant } from '../queries';
 
+const normalizeLimit = (value: number) => {
+  if (!Number.isFinite(value)) return 20;
+  return Math.min(100, Math.max(1, Math.floor(value)));
+};
+
 // Provides students filters.
 export const useStudentsFilters = (students: Student[]) => {
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
@@ -33,7 +38,7 @@ export const useStudentsFilters = (students: Student[]) => {
     gender: filterGender || undefined,
     status: filterStatus || undefined,
     page,
-    limit,
+    limit: normalizeLimit(limit),
   }), [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, limit, page, searchTerm]);
 
 // Handles clear filters.
@@ -76,7 +81,7 @@ export const useStudentsFilters = (students: Student[]) => {
     page,
     setPage,
     limit,
-    setLimit,
+    setLimit: (value: number) => setLimit(normalizeLimit(value)),
     studentParams,
     showFilters,
     setShowFilters,

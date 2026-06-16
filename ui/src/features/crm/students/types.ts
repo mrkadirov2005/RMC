@@ -36,4 +36,5 @@ export interface Class {
   level: number;
   capacity: number;
   center_id?: number;
+  teacher_id?: number;
 }

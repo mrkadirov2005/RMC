@@ -1,19 +1,13 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, Coins, Folder, Info, KeyRound, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, Coins, Folder, Info, KeyRound, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
@@ -65,9 +59,9 @@ const PasswordField = ({
   };
 
   return (
-    <div className="max-w-[240px]">
+    <div className="max-w-[180px]">
       <div className="relative">
-        <KeyRound className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <KeyRound className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="password"
           value={value}
@@ -84,7 +78,7 @@ const PasswordField = ({
           }}
           disabled={saving}
           placeholder="New password"
-          className="h-8 bg-white/80 pl-8 text-sm dark:bg-background"
+          className="h-7 bg-white/80 pl-7 text-xs dark:bg-background"
         />
       </div>
       {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
@@ -175,47 +169,38 @@ export const StudentsTableView = ({
     }
   };
 
+  const actionButtonClass = 'h-7 gap-1 rounded-md px-2 text-xs font-semibold text-white shadow-sm';
+  const actionIconClass = 'h-3 w-3';
+
   const renderActions = (student: Student) => (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
-            aria-label="Open student actions"
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-44">
-          <DropdownMenuItem onClick={() => openCoins(student)} className="gap-2">
-            <Coins className="h-4 w-4 text-amber-600" />
-            Coins
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onView(student.student_id || student.id || 0)} className="gap-2">
-            <Info className="h-4 w-4 text-cyan-600" />
-            View
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => onEdit(student)} className="gap-2">
-            <Pencil className="h-4 w-4 text-blue-500" />
-            Edit
-          </DropdownMenuItem>
-          {onTransfer && (
-            <DropdownMenuItem onClick={() => openTransfer(student)} className="gap-2">
-              <ArrowRightLeft className="h-4 w-4 text-emerald-600" />
-              Transfer
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem
-            onClick={() => onDelete(student.student_id || student.id || 0)}
-            className="gap-2 text-red-600 focus:text-red-600"
-          >
-            <Trash2 className="h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex flex-wrap justify-end gap-1.5">
+      <Button type="button" size="sm" className={`${actionButtonClass} bg-amber-500 hover:bg-amber-600`} onClick={() => openCoins(student)}>
+        <Coins className={actionIconClass} />
+        Coins
+      </Button>
+      <Button type="button" size="sm" className={`${actionButtonClass} bg-cyan-600 hover:bg-cyan-700`} onClick={() => onView(student.student_id || student.id || 0)}>
+        <Info className={actionIconClass} />
+        View
+      </Button>
+      <Button type="button" size="sm" className={`${actionButtonClass} bg-blue-600 hover:bg-blue-700`} onClick={() => onEdit(student)}>
+        <Pencil className={actionIconClass} />
+        Edit
+      </Button>
+      {onTransfer && (
+        <Button type="button" size="sm" className={`${actionButtonClass} bg-emerald-600 hover:bg-emerald-700`} onClick={() => openTransfer(student)}>
+          <ArrowRightLeft className={actionIconClass} />
+          Transfer
+        </Button>
+      )}
+      <Button
+        type="button"
+        size="sm"
+        className={`${actionButtonClass} bg-rose-600 hover:bg-rose-700`}
+        onClick={() => onDelete(student.student_id || student.id || 0)}
+      >
+        <Trash2 className={actionIconClass} />
+        Delete
+      </Button>
     </div>
   );
 
@@ -292,7 +277,7 @@ export const StudentsTableView = ({
                   Delete
                 </Button>
               )}
-              <Button type="button" variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
                 Clear
               </Button>
             </div>
@@ -303,63 +288,63 @@ export const StudentsTableView = ({
         ) : students.length === 0 ? (
           <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center text-muted-foreground">{emptyText}</CardContent></Card>
         ) : (
-          <div className={viewMode === 'compact' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5'}>
+          <div className={viewMode === 'compact' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2' : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'}>
             {students.map((student, index) => (
               <Card
                 key={student.student_id || student.id}
                 className={cn(
                   'relative overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0',
-                  viewMode === 'cards' && 'border-border/60'
+                  viewMode === 'cards' && [
+                    'border-0 text-white',
+                    index % 4 === 0 && 'bg-sky-600',
+                    index % 4 === 1 && 'bg-emerald-600',
+                    index % 4 === 2 && 'bg-amber-600',
+                    index % 4 === 3 && 'bg-fuchsia-600',
+                  ]
                 )}
               >
-                <div className="absolute right-3 top-3 z-10">
+                <div className="absolute right-2 top-2 z-10">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(getStudentId(student))}
                     onChange={(event) => toggleStudent(getStudentId(student), event.target.checked)}
-                    className="h-4 w-4"
+                    className="h-3.5 w-3.5"
                     aria-label={`Select ${student.first_name} ${student.last_name}`}
                   />
                 </div>
                 {viewMode === 'cards' && (
-                  <div className={cn(
-                    'p-5 text-white',
-                    index % 4 === 0 && 'bg-gradient-to-br from-indigo-500 to-sky-500',
-                    index % 4 === 1 && 'bg-gradient-to-br from-emerald-500 to-teal-500',
-                    index % 4 === 2 && 'bg-gradient-to-br from-amber-500 to-orange-500',
-                    index % 4 === 3 && 'bg-gradient-to-br from-cyan-500 to-fuchsia-500'
-                  )}>
+                  <div className="p-3 text-white">
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <h3 className="font-semibold text-lg">{student.first_name} {student.last_name}</h3>
+                        <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
                       </div>
                     </div>
                   </div>
                 )}
-                <CardContent className={viewMode === 'compact' ? 'p-3' : 'p-5 space-y-4'}>
+                <CardContent className={cn(viewMode === 'compact' ? 'p-2.5' : 'space-y-3 p-3', viewMode === 'cards' && 'pt-0')}>
                   {viewMode === 'compact' ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-sky-100 to-emerald-100 text-sky-700 dark:bg-muted dark:bg-none dark:text-primary">
-                        <Folder className="h-5 w-5" />
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white dark:bg-primary dark:text-primary-foreground">
+                        <Folder className="h-4 w-4" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate font-semibold">{student.first_name} {student.last_name}</p>
-                        <div className="mt-2">
+                        <p className="truncate text-sm font-semibold">{student.first_name} {student.last_name}</p>
+                        <div className="mt-1.5">
                           <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div>
-                      <h3 className="font-semibold text-lg text-slate-950 dark:text-card-foreground">
+                      <h3 className={cn('text-sm font-semibold text-slate-950 dark:text-card-foreground', viewMode === 'cards' && 'text-white dark:text-white')}>
                         {student.first_name} {student.last_name}
                       </h3>
-                      <div className="mt-3">
+                      <div className="mt-2">
                         <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                       </div>
                     </div>
                   )}
-                  <div className={viewMode === 'compact' ? 'mt-3 flex justify-end border-t pt-2' : 'border-t pt-3'}>
+                  <div className={cn(viewMode === 'compact' ? 'mt-2 flex justify-end border-t pt-2' : 'border-t pt-2', viewMode === 'cards' && 'border-white/25')}>
                     {renderActions(student)}
                   </div>
                 </CardContent>
@@ -374,27 +359,26 @@ export const StudentsTableView = ({
 
   return (
     <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-      <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
       {selectedIds.size > 0 && (
-        <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
+        <div className="flex items-center justify-between border-b bg-sky-50/70 px-3 py-1.5 text-xs dark:bg-muted/50">
           <span className="font-medium">{selectedIds.size} selected</span>
           <div className="flex items-center gap-2">
             {onBulkDelete && (
-              <Button type="button" variant="outline" size="sm" onClick={deleteSelected}>
-                <Trash2 className="mr-2 h-4 w-4" />
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={deleteSelected}>
+                <Trash2 className="mr-1.5 h-3.5 w-3.5" />
                 Delete
               </Button>
             )}
-            <Button type="button" variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
               Clear
             </Button>
           </div>
         </div>
       )}
-      <Table>
+      <Table className="text-xs">
         <TableHeader className="bg-slate-50/90 dark:bg-transparent">
           <TableRow>
-            <TableHead className="w-10">
+            <TableHead className="h-8 w-8 px-2">
               <input
                 type="checkbox"
                 checked={allVisibleSelected}
@@ -403,40 +387,40 @@ export const StudentsTableView = ({
                 }}
                 onChange={(event) => toggleAllVisible(event.target.checked)}
                 aria-label="Select all visible students"
-                className="h-4 w-4"
+                className="h-3.5 w-3.5"
               />
             </TableHead>
-            <TableHead>Name</TableHead>
-            <TableHead>Password</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+            <TableHead className="h-8 px-2 text-xs">Password</TableHead>
+            <TableHead className="h-8 px-2 text-right text-xs">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-12">
+              <TableCell colSpan={4} className="py-8 text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="text-center py-12 text-muted-foreground">
+              <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
           ) : (
             students.map((student) => (
               <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
-                <TableCell>
+                <TableCell className="px-2 py-2">
                   <input
                     type="checkbox"
                     checked={selectedIds.has(getStudentId(student))}
                     onChange={(event) => toggleStudent(getStudentId(student), event.target.checked)}
                     aria-label={`Select ${student.first_name} ${student.last_name}`}
-                    className="h-4 w-4"
+                    className="h-3.5 w-3.5"
                   />
                 </TableCell>
-                <TableCell className="font-medium">
+                <TableCell className="px-2 py-2 font-medium">
                   <button
                     type="button"
                     className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
@@ -445,10 +429,10 @@ export const StudentsTableView = ({
                     {student.first_name} {student.last_name}
                   </button>
                 </TableCell>
-                <TableCell>
+                <TableCell className="px-2 py-2">
                   <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="px-2 py-2 text-right">
                   {renderActions(student)}
                 </TableCell>
               </TableRow>

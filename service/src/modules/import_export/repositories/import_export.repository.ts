@@ -241,8 +241,8 @@ const insertStudent = (params: any[]) =>
 
 const insertTeacher = (params: any[]) =>
   pool.query(
-    `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, username, password_hash)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+    `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, salary_percentage, status, username, password_hash)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
      ON CONFLICT (employee_id) WHERE deleted_at IS NULL DO UPDATE SET
        center_id = EXCLUDED.center_id,
        first_name = EXCLUDED.first_name,
@@ -253,6 +253,7 @@ const insertTeacher = (params: any[]) =>
        gender = EXCLUDED.gender,
        qualification = EXCLUDED.qualification,
        specialization = EXCLUDED.specialization,
+       salary_percentage = EXCLUDED.salary_percentage,
        status = EXCLUDED.status,
        username = EXCLUDED.username,
        password_hash = EXCLUDED.password_hash,
@@ -370,8 +371,8 @@ const upsertStudent = (params: any[], hasStudentId: boolean) => {
 const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
   if (hasTeacherId) {
     return pool.query(
-      `INSERT INTO teachers (teacher_id, center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, status, username, password_hash)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+      `INSERT INTO teachers (teacher_id, center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, salary_percentage, status, username, password_hash)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
        ON CONFLICT (teacher_id) DO UPDATE SET
          center_id = EXCLUDED.center_id,
          employee_id = EXCLUDED.employee_id,
@@ -383,6 +384,7 @@ const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
          gender = EXCLUDED.gender,
          qualification = EXCLUDED.qualification,
          specialization = EXCLUDED.specialization,
+         salary_percentage = EXCLUDED.salary_percentage,
          status = EXCLUDED.status,
          username = EXCLUDED.username,
          password_hash = EXCLUDED.password_hash,

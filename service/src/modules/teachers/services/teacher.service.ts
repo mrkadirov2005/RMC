@@ -22,6 +22,12 @@ const getAvailableUsername = async (base: string) => {
   return candidate;
 };
 
+const normalizeSalaryPercentage = (value: any) => {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return 50;
+  return Math.min(Math.max(number, 0), 100);
+};
+
 const listTeachers = (centerId?: number) => teacherRepository.findAll(centerId);
 
 const getTeacher = (id: number, centerId?: number) => teacherRepository.findById(id, centerId);
@@ -35,6 +41,7 @@ const createTeacher = async (body: any) => {
     roles: body?.roles || [],
     username: explicitUsername || defaultUsername,
     password: body?.password || DEFAULT_TEACHER_PASSWORD,
+    salary_percentage: normalizeSalaryPercentage(body?.salary_percentage),
   };
   const shouldAutoResolveUsername = !explicitUsername || explicitUsername === defaultUsername;
   const username = shouldAutoResolveUsername ? await getAvailableUsername(d.username) : d.username;
@@ -52,6 +59,7 @@ const createTeacher = async (body: any) => {
     d.gender,
     d.qualification,
     d.specialization,
+    d.salary_percentage,
     d.status,
     JSON.stringify(d.roles || []),
     username,
@@ -62,7 +70,12 @@ const createTeacher = async (body: any) => {
 
 const updateTeacher = (id: number, body: any, centerId?: number) => {
   const { first_name, last_name, username, email, phone, status, roles } = body;
-  return teacherRepository.update(id, [first_name, last_name, username, email, phone, status, roles ? JSON.stringify(roles) : null], centerId);
+  const salaryPercentage = body.salary_percentage == null ? null : normalizeSalaryPercentage(body.salary_percentage);
+  return teacherRepository.update(
+    id,
+    [first_name, last_name, username, email, phone, salaryPercentage, status, roles ? JSON.stringify(roles) : null],
+    centerId
+  );
 };
 
 const deleteTeacher = async (id: number, centerId?: number, options?: { force?: boolean }) => {

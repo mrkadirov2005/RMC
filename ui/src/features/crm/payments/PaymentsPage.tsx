@@ -129,6 +129,7 @@ interface Teacher {
   first_name: string;
   last_name: string;
   employee_id: string;
+  salary_percentage?: number;
 }
 
 interface Class {
@@ -446,10 +447,25 @@ const PaymentsPage = () => {
 
   // Get student IDs for a teacher
   const getStudentIdsForTeacher = (teacherId: number): number[] => {
+    const teacherClassIds = new Set(
+      classes
+        .filter((cls) => Number(cls.teacher_id) === Number(teacherId))
+        .map((cls) => Number(cls.class_id || cls.id))
+        .filter(Boolean)
+    );
     return students
-      .filter((s) => Number(s.teacher_id) === Number(teacherId))
+      .filter((s) => Number(s.teacher_id) === Number(teacherId) || teacherClassIds.has(Number(s.class_id)))
       .map((s) => s.student_id || s.id || 0);
   };
+
+  const getTeacherSalaryPercentage = (teacherId: number): number => {
+    const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId));
+    const percentage = Number(teacher?.salary_percentage ?? 50);
+    return Number.isFinite(percentage) ? Math.min(Math.max(percentage, 0), 100) : 50;
+  };
+
+  const getTeacherEarningsAmount = (amount: number, teacherId: number): number =>
+    (amount * getTeacherSalaryPercentage(teacherId)) / 100;
 
   // Get student IDs for a class
   const getStudentIdsForClass = (classId: number): number[] => {
@@ -489,9 +505,12 @@ const PaymentsPage = () => {
       paidStudents: paidStudentIdSet.size,
       unpaidStudents: Math.max(studentIds.length - paidStudentIdSet.size, 0),
       paymentCount: payments.length,
+      salaryPercentage: getTeacherSalaryPercentage(teacherId),
       totalWorked: payments.reduce((sum, payment) => sum + getPaymentAmount(payment), 0),
       paidAmount: paidPayments.reduce((sum, payment) => sum + getPaymentAmount(payment), 0),
       unpaidAmount: unpaidPayments.reduce((sum, payment) => sum + getPaymentAmount(payment), 0),
+      earnedAmount: paidPayments.reduce((sum, payment) => sum + getTeacherEarningsAmount(getPaymentAmount(payment), teacherId), 0),
+      pendingEarnedAmount: unpaidPayments.reduce((sum, payment) => sum + getTeacherEarningsAmount(getPaymentAmount(payment), teacherId), 0),
     };
   };
 
@@ -530,7 +549,7 @@ const PaymentsPage = () => {
     if (selectedFolder.type === 'teacher') return getStudentIdsForTeacher(selectedFolder.id);
     if (selectedFolder.type === 'class') return getStudentIdsForClass(selectedFolder.id);
     return [selectedFolder.id];
-  }, [selectedFolder, students]);
+  }, [classes, selectedFolder, students]);
 
 // Memoizes the selected folder payments derived value.
   const selectedFolderPayments = useMemo(() => {
@@ -539,7 +558,7 @@ const PaymentsPage = () => {
     if (selectedFolder.type === 'class') return getPaymentsForClass(selectedFolder.id);
     const idSet = new Set(selectedFolderStudentIds.map((id) => Number(id)));
     return state.items.filter((payment) => idSet.has(Number(payment.student_id)));
-  }, [selectedFolder, selectedFolderStudentIds, state.items]);
+  }, [classes, selectedFolder, selectedFolderStudentIds, state.items]);
 
 // Memoizes the teacher overall stats derived value.
   const teacherOverallStats = useMemo(
@@ -551,7 +570,7 @@ const PaymentsPage = () => {
           return { teacher, teacherId, stats };
         })
         .sort((a, b) => b.stats.totalWorked - a.stats.totalWorked),
-    [teachers, students, state.items]
+    [classes, teachers, students, state.items]
   );
 
   const rootSearch = searchTerm.trim().toLowerCase();
@@ -632,7 +651,7 @@ const PaymentsPage = () => {
   const selectedTeacherStats = useMemo(() => {
     if (!selectedFolder || selectedFolder.type !== 'teacher') return null;
     return getTeacherPaymentStats(selectedFolder.id);
-  }, [selectedFolder, students, state.items]);
+  }, [classes, selectedFolder, students, state.items, teachers]);
 
 // Memoizes the selected teacher progress derived value.
   const selectedTeacherProgress = useMemo(() => {
@@ -1091,20 +1110,32 @@ const PaymentsPage = () => {
                               <>
                                 <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t text-xs">
                                   <div className="rounded-md bg-muted/40 p-2">
-                                    <p className="text-muted-foreground">Worked</p>
+                                    <p className="text-muted-foreground">Gross</p>
                                     <p className="font-semibold">{formatMoney(teacherStats.totalWorked)}</p>
                                   </div>
                                   <div className="rounded-md bg-green-50 p-2">
-                                    <p className="text-green-700">Paid</p>
+                                    <p className="text-green-700">Gross Paid</p>
                                     <p className="font-semibold text-green-700">{formatMoney(teacherStats.paidAmount)}</p>
                                   </div>
-                                  <div className="rounded-md bg-red-50 p-2">
-                                    <p className="text-red-700">Unpaid</p>
-                                    <p className="font-semibold text-red-700">{formatMoney(teacherStats.unpaidAmount)}</p>
+                                  <div className="rounded-md bg-fuchsia-50 p-2">
+                                    <p className="text-fuchsia-700">Earned ({teacherStats.salaryPercentage}%)</p>
+                                    <p className="font-semibold text-fuchsia-700">{formatMoney(teacherStats.earnedAmount)}</p>
                                   </div>
-                                  <div className="rounded-md bg-muted/40 p-2">
-                                    <p className="text-muted-foreground">Students</p>
-                                    <p className="font-semibold">{teacherStats.paidStudents}/{teacherStats.totalStudents} paid</p>
+                                  <div className="rounded-md bg-red-50 p-2">
+                                    <p className="text-red-700">Pending Earn</p>
+                                    <p className="font-semibold text-red-700">{formatMoney(teacherStats.pendingEarnedAmount)}</p>
+                                  </div>
+                                  <div className="rounded-md bg-amber-50 p-2">
+                                    <p className="text-amber-700">Share</p>
+                                    <p className="font-semibold text-amber-700">{teacherStats.salaryPercentage}%</p>
+                                  </div>
+                                  <div className="rounded-md bg-cyan-50 p-2">
+                                    <p className="text-cyan-700">Students</p>
+                                    <p className="font-semibold text-cyan-700">{teacherStats.paidStudents}/{teacherStats.totalStudents} paid</p>
+                                  </div>
+                                  <div className="rounded-md bg-rose-50 p-2">
+                                    <p className="text-rose-700">Gross Unpaid</p>
+                                    <p className="font-semibold text-red-700">{formatMoney(teacherStats.unpaidAmount)}</p>
                                   </div>
                                 </div>
                                 <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
@@ -1204,9 +1235,11 @@ const PaymentsPage = () => {
                         <TableRow>
                           <TableHead>Teacher</TableHead>
                           <TableHead>Students</TableHead>
-                          <TableHead>Worked</TableHead>
-                          <TableHead>Paid</TableHead>
-                          <TableHead>Unpaid</TableHead>
+                          <TableHead>Gross</TableHead>
+                          <TableHead>Share</TableHead>
+                          <TableHead>Teacher Earned</TableHead>
+                          <TableHead>Gross Paid</TableHead>
+                          <TableHead>Pending Earn</TableHead>
                           <TableHead>Paid Students</TableHead>
                           <TableHead>Unpaid Students</TableHead>
                         </TableRow>
@@ -1214,14 +1247,14 @@ const PaymentsPage = () => {
                       <TableBody>
                         {loadingData ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-8">
+                            <TableCell colSpan={9} className="text-center py-8">
                               <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                               <p className="text-muted-foreground">Loading statistics...</p>
                             </TableCell>
                           </TableRow>
                         ) : filteredTeacherOverallStats.length === 0 ? (
                           <TableRow>
-                            <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                            <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                               {searchTerm ? 'No teachers match your search' : 'No teachers found'}
                             </TableCell>
                           </TableRow>
@@ -1242,8 +1275,10 @@ const PaymentsPage = () => {
                               </TableCell>
                               <TableCell>{stats.totalStudents}</TableCell>
                               <TableCell className="font-semibold">{formatMoney(stats.totalWorked)}</TableCell>
+                              <TableCell>{stats.salaryPercentage}%</TableCell>
+                              <TableCell className="font-medium text-fuchsia-700">{formatMoney(stats.earnedAmount)}</TableCell>
                               <TableCell className="font-medium text-emerald-700">{formatMoney(stats.paidAmount)}</TableCell>
-                              <TableCell className="font-medium text-rose-700">{formatMoney(stats.unpaidAmount)}</TableCell>
+                              <TableCell className="font-medium text-rose-700">{formatMoney(stats.pendingEarnedAmount)}</TableCell>
                               <TableCell>{stats.paidStudents}</TableCell>
                               <TableCell>{stats.unpaidStudents}</TableCell>
                             </TableRow>
@@ -1360,7 +1395,7 @@ const PaymentsPage = () => {
           ) : (
             <>
               {selectedTeacherStats && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6 mb-6">
                   <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
                       <p className="text-xs text-muted-foreground">Groups</p>
@@ -1369,20 +1404,32 @@ const PaymentsPage = () => {
                   </Card>
                   <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Worked</p>
+                      <p className="text-xs text-muted-foreground">Gross</p>
                       <p className="text-lg font-semibold">{formatMoney(selectedTeacherStats.totalWorked)}</p>
                     </CardContent>
                   </Card>
                   <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Paid Amount</p>
+                      <p className="text-xs text-muted-foreground">Share</p>
+                      <p className="text-lg font-semibold">{selectedTeacherStats.salaryPercentage}%</p>
+                    </CardContent>
+                  </Card>
+                  <Card className={paymentStatCardClass}>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Teacher Earned</p>
+                      <p className="text-lg font-semibold text-fuchsia-700">{formatMoney(selectedTeacherStats.earnedAmount)}</p>
+                    </CardContent>
+                  </Card>
+                  <Card className={paymentStatCardClass}>
+                    <CardContent className="p-4">
+                      <p className="text-xs text-muted-foreground">Gross Paid</p>
                       <p className="text-lg font-semibold text-green-700">{formatMoney(selectedTeacherStats.paidAmount)}</p>
                     </CardContent>
                   </Card>
                   <Card className={paymentStatCardClass}>
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Unpaid Amount</p>
-                      <p className="text-lg font-semibold text-red-700">{formatMoney(selectedTeacherStats.unpaidAmount)}</p>
+                      <p className="text-xs text-muted-foreground">Pending Earn</p>
+                      <p className="text-lg font-semibold text-red-700">{formatMoney(selectedTeacherStats.pendingEarnedAmount)}</p>
                     </CardContent>
                   </Card>
                   <Card className={paymentStatCardClass}>
@@ -1424,15 +1471,15 @@ const PaymentsPage = () => {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/10">
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300">Paid amount</p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300">Gross paid amount</p>
                         <p className="text-lg font-semibold text-emerald-700 dark:text-emerald-300">
                           {formatMoney(selectedTeacherStats.paidAmount)}
                         </p>
                       </div>
-                      <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-500/10">
-                        <p className="text-xs text-rose-700 dark:text-rose-300">Unpaid amount</p>
-                        <p className="text-lg font-semibold text-rose-700 dark:text-rose-300">
-                          {formatMoney(selectedTeacherStats.unpaidAmount)}
+                      <div className="rounded-xl bg-fuchsia-50 p-3 dark:bg-fuchsia-500/10">
+                        <p className="text-xs text-fuchsia-700 dark:text-fuchsia-300">Teacher earned ({selectedTeacherStats.salaryPercentage}%)</p>
+                        <p className="text-lg font-semibold text-fuchsia-700 dark:text-fuchsia-300">
+                          {formatMoney(selectedTeacherStats.earnedAmount)}
                         </p>
                       </div>
                     </div>

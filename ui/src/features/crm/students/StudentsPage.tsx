@@ -10,7 +10,7 @@ import { MetricCard } from '@/components/common/MetricCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { dataAPI, studentAPI } from '@/shared/api/api';
+import { classAPI, dataAPI, studentAPI } from '@/shared/api/api';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
@@ -18,9 +18,19 @@ import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentsFormDialog } from './components/StudentsFormDialog';
 import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
 import { StudentsTableView } from './components/StudentsTableView';
+import { StudentsTeacherGroupsTab } from './components/StudentsTeacherGroupsTab';
 import { useStudentsPage } from './hooks/useStudentsPage';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
+
+const readStudentList = (response: unknown): Student[] => {
+  const data = (response as any)?.data ?? response;
+  if (Array.isArray(data)) return data;
+  return Array.isArray(data?.data) ? data.data : [];
+};
+
+const headerActionClass = 'h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white shadow-sm';
+const headerActionIconClass = 'h-3.5 w-3.5';
 
 // Renders the students page screen.
 const StudentsPage = () => {
@@ -118,13 +128,12 @@ const StudentsPage = () => {
   ];
 
   useEffect(() => {
-    if (activeTab !== 'statistics') return;
+    if (activeTab !== 'statistics' && activeTab !== 'teachers') return;
     let cancelled = false;
     setStatisticsLoading(true);
     studentAPI.getAll()
       .then((response) => {
-        const data = (response as any).data ?? response;
-        if (!cancelled) setStatisticsStudents(Array.isArray(data) ? data : []);
+        if (!cancelled) setStatisticsStudents(readStudentList(response));
       })
       .finally(() => {
         if (!cancelled) setStatisticsLoading(false);
@@ -147,10 +156,9 @@ const StudentsPage = () => {
       await dataAPI.importEntity('students', csv);
       s.actions.fetchAll();
       s.actions.fetchClasses();
-      if (activeTab === 'statistics') {
+      if (activeTab === 'statistics' || activeTab === 'teachers') {
         const response = await studentAPI.getAll();
-        const data = (response as any).data ?? response;
-        setStatisticsStudents(Array.isArray(data) ? data : []);
+        setStatisticsStudents(readStudentList(response));
       }
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import students.');
@@ -163,10 +171,9 @@ const StudentsPage = () => {
   const refreshStudents = async () => {
     s.actions.fetchAll();
     s.actions.fetchClasses();
-    if (activeTab === 'statistics') {
+    if (activeTab === 'statistics' || activeTab === 'teachers') {
       const response = await studentAPI.getAll();
-      const data = (response as any).data ?? response;
-      setStatisticsStudents(Array.isArray(data) ? data : []);
+      setStatisticsStudents(readStudentList(response));
     }
   };
 
@@ -247,10 +254,20 @@ const StudentsPage = () => {
       throw error;
     }
   };
+  const handleTransferGroupOwner = async (classId: number, teacherId: number) => {
+    try {
+      await classAPI.update(classId, { teacher_id: teacherId });
+      showToast.success('Group teacher updated successfully.');
+      await refreshStudents();
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update group teacher.');
+      throw error;
+    }
+  };
   const handleExportStudents = () => exportCsvEntity('students', 'Students');
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PageHeader
         title={title}
         description={t('Browse, filter, and manage student profiles with quick access to classes, schools, status, and coin balances.')}
@@ -269,39 +286,43 @@ const StudentsPage = () => {
                 />
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isImporting}
+                  className={`${headerActionClass} bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:text-white`}
                 >
-                  <Upload className="w-5 h-5 mr-2" /> {isImporting ? t('Importing...') : t('Import CSV')}
+                  <Upload className={headerActionIconClass} /> {isImporting ? t('Importing...') : t('Import CSV')}
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
                   onClick={handleExportStudents}
+                  className={`${headerActionClass} bg-emerald-600 hover:bg-emerald-700`}
                 >
-                  <Download className="w-5 h-5 mr-2" /> {t('Export CSV')}
+                  <Download className={headerActionIconClass} /> {t('Export CSV')}
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
                   onClick={handlePushStudentsToSheets}
                   disabled={isSheetsPushing || isSheetsPulling}
+                  className={`${headerActionClass} bg-fuchsia-600 hover:bg-fuchsia-700 disabled:bg-fuchsia-400 disabled:text-white`}
                 >
-                  <FileSpreadsheet className="w-5 h-5 mr-2" /> {isSheetsPushing ? t('Updating...') : t('Update Sheets')}
+                  <FileSpreadsheet className={headerActionIconClass} /> {isSheetsPushing ? t('Updating...') : t('Update Sheets')}
                 </Button>
                 <Button
                   type="button"
-                  variant="outline"
+                  size="sm"
                   onClick={handlePullStudentsFromSheets}
                   disabled={isSheetsPushing || isSheetsPulling}
+                  className={`${headerActionClass} bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:text-white`}
                 >
-                  <Download className="w-5 h-5 mr-2" /> {isSheetsPulling ? t('Importing...') : t('Import Sheets')}
+                  <Download className={headerActionIconClass} /> {isSheetsPulling ? t('Importing...') : t('Import Sheets')}
                 </Button>
               </>
             )}
-            <Button onClick={() => s.handleOpenModal()}>
-              <Plus className="w-5 h-5 mr-2" /> {t('Add Student')}
+            <Button size="sm" onClick={() => s.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+              <Plus className={headerActionIconClass} /> {t('Add Student')}
             </Button>
           </>
         }
@@ -324,6 +345,7 @@ const StudentsPage = () => {
         <TabsList className="mb-5 bg-slate-100/80 dark:bg-muted">
           <TabsTrigger value="students">{t('Students')}</TabsTrigger>
           <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
+          <TabsTrigger value="teachers">Teachers</TabsTrigger>
         </TabsList>
         <TabsContent value="students" className="mt-0">
           <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} activeCount={activeCount} onClearAll={s.clearFilters} />
@@ -390,6 +412,23 @@ const StudentsPage = () => {
         </TabsContent>
         <TabsContent value="statistics" className="mt-0">
           <StudentsStatisticsTab students={statisticsStudents} teacherOptions={s.teacherOptions} loading={statisticsLoading} />
+        </TabsContent>
+        <TabsContent value="teachers" className="mt-0">
+          <StudentsTeacherGroupsTab
+            students={statisticsStudents}
+            classes={s.classes}
+            teacherOptions={s.teacherOptions}
+            loading={statisticsLoading || s.loadingClasses || s.isLoadingOptions}
+            viewMode={viewMode}
+            onView={(id) => navigate(`/students/${id}/profile`)}
+            onEdit={s.handleOpenModal}
+            onDelete={s.handleDelete}
+            onTransfer={handleTransferStudent}
+            onBulkDelete={handleBulkDeleteStudents}
+            onPasswordUpdate={handlePasswordUpdate}
+            onCoinsUpdated={s.actions.fetchAll}
+            onTransferGroup={handleTransferGroupOwner}
+          />
         </TabsContent>
       </Tabs>
       <StudentsFormDialog open={s.isModalOpen} editing={Boolean(s.editingId)} formData={s.formData} setFormData={s.setFormData} centerOptions={s.centerOptions} classOptions={s.classOptions} teacherOptions={s.teacherOptions} genderOptions={s.genderOptions} statusOptions={s.statusOptions} onClose={s.handleCloseModal} onSubmit={s.handleSubmit} loading={s.state.loading} showCenterField={s.isOwner} error={s.state.error} />

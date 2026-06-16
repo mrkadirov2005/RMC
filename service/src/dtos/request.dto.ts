@@ -339,6 +339,13 @@ class CreateTeacherDto {
   specialization?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  salary_percentage?: number;
+
+  @IsOptional()
   @IsString()
   status?: string;
 
@@ -378,6 +385,13 @@ class UpdateTeacherDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  salary_percentage?: number;
 
   @IsOptional()
   @IsString()
