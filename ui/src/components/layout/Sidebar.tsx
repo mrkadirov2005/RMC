@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppDispatch, useAppSelector, useRBAC } from '../../features/crm/hooks';
@@ -61,7 +60,7 @@ const Sidebar = memo(() => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { toggleTheme, isDark } = useThemeMode();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const { canAccess } = useRBAC();
   const normalizedRole = String(user?.role || '').toLowerCase();
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
@@ -135,7 +134,7 @@ const Sidebar = memo(() => {
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'teacher', 'student'] },
 
 
-    { label: 'Settings', path: '/settings', iconName: 'Settings', roles: ['superuser'], permission: 'MANAGE_USERS' },
+    // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Finance', path: '/finance', iconName: 'Finance', roles: ['superuser'], permission: 'VIEW_FINANCE' },
@@ -192,19 +191,19 @@ const Sidebar = memo(() => {
             <div className="flex items-center gap-1">
               <button
                 type="button"
+                onClick={() => handleNavigation('/settings')}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                aria-label="Settings"
+              >
+                <SettingsIcon className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
                 onClick={toggleTheme}
                 className="flex h-8 w-8 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-              </button>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="flex h-8 w-8 items-center justify-center rounded-md border border-rose-500/20 text-rose-600 transition-colors hover:bg-rose-500/10 dark:text-rose-300"
-                aria-label="Logout"
-              >
-                <LogOut className="w-4 h-4" />
               </button>
               <button
                 type="button"
@@ -221,43 +220,24 @@ const Sidebar = memo(() => {
           <div className="mt-3 flex flex-col items-center gap-2">
             <button
               type="button"
+              onClick={() => handleNavigation('/settings')}
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              aria-label="Settings"
+            >
+              <SettingsIcon className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="flex h-9 w-9 items-center justify-center rounded-md border border-rose-500/20 text-rose-600 transition-colors hover:bg-rose-500/10 dark:text-rose-300"
-              aria-label="Logout"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
           </div>
         )}
       </div>
 
-      {/* User Info */}
-      {user && isExpanded && (
-        <div className="mx-3 mt-3 rounded-lg border border-sidebar-border bg-sidebar-accent/60 px-3 py-2">
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Avatar className="w-9 h-9">
-                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-400 text-white text-sm font-semibold">
-                  {user.first_name?.[0]}{user.last_name?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-sidebar" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold leading-tight">{user.first_name} {user.last_name}</p>
-              <p className="truncate text-[0.7rem] font-medium text-indigo-400 uppercase tracking-wider">{user.role || user.userType}</p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {user && isGlobalSuperuser && isExpanded && (
         <div className="mx-3 mt-2">
@@ -284,29 +264,6 @@ const Sidebar = memo(() => {
 
       {/* Navigation */}
       <ScrollArea className="flex-1 pt-2 px-2">
-        {isExpanded && (
-          <div className="mb-2 px-1">
-            <div className="flex rounded-xl border border-sidebar-border bg-sidebar-accent/70 p-1 shadow-inner shadow-black/5">
-              {(['en', 'uz'] as const).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setLanguage(option)}
-                  aria-pressed={language === option}
-                  className={cn(
-                    'flex-1 rounded-lg px-2 py-1.5 text-xs font-bold tracking-wide transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400/40',
-                    language === option
-                      ? 'bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-sm shadow-indigo-500/25'
-                      : 'text-muted-foreground hover:-translate-y-0.5 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-                  )}
-                  aria-label={`${t('Language')}: ${option === 'en' ? t('English') : t('Uzbek')}`}
-                >
-                  {option === 'en' ? 'EN' : 'UZ'}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
         <TooltipProvider delayDuration={0}>
           <nav className="space-y-0.5">
             {filteredMenuItems.map((item) => {
@@ -339,7 +296,49 @@ const Sidebar = memo(() => {
         </TooltipProvider>
       </ScrollArea>
 
-      <Separator className="bg-sidebar-border" />
+      {/* Bottom: User profile + Logout */}
+      <div className={cn('border-t border-sidebar-border', isExpanded ? 'p-3' : 'p-2')}>
+        {user && isExpanded ? (
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              <Avatar className="w-9 h-9">
+                <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-violet-400 text-white text-sm font-semibold">
+                  {user.first_name?.[0]}{user.last_name?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-500 ring-2 ring-sidebar" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-sm font-semibold leading-tight">{user.first_name} {user.last_name}</p>
+              <p className="truncate text-[0.7rem] font-medium text-indigo-400 uppercase tracking-wider">{user.role || user.userType}</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-rose-500/20 text-rose-500 transition-colors hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-400"
+              aria-label="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        ) : (
+          <TooltipProvider delayDuration={0}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="flex h-9 w-9 mx-auto items-center justify-center rounded-md border border-rose-500/20 text-rose-500 transition-colors hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-400"
+                  aria-label="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Logout</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+      </div>
     </div>
   );
 

@@ -155,11 +155,8 @@ type TeacherDetailView = 'groups' | 'total';
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
 
-const paymentStatCardClass =
-  'overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card';
-
 const folderCardClass =
-  'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm';
+  'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm [&_.folder-card-content]:p-3';
 
 const folderPageSizeOptions = [12, 24, 48];
 const paymentPageSizeOptions = [10, 25, 50, 100];
@@ -207,11 +204,12 @@ const PaginationBar = ({
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }) => {
+  const { t } = useLanguage();
   if (total === 0) return null;
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
       <div className="text-muted-foreground">
-        Showing {start + 1}-{end} of {total}
+        {t('Showing')} {start + 1}-{end} {t('of')} {total}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
@@ -221,7 +219,7 @@ const PaginationBar = ({
           <SelectContent>
             {pageSizeOptions.map((option) => (
               <SelectItem key={option} value={String(option)}>
-                {option} / page
+                {option} / {t('page')}
               </SelectItem>
             ))}
           </SelectContent>
@@ -234,7 +232,7 @@ const PaginationBar = ({
           disabled={currentPage <= 1}
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
-          Previous
+          {t('Prev')}
         </Button>
         <div className="flex items-center gap-1">
           {buildPageNumbers(currentPage, totalPages).map((page, index, pages) => (
@@ -261,7 +259,7 @@ const PaginationBar = ({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
         >
-          Next
+          {t('Next')}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>
@@ -673,10 +671,10 @@ const PaymentsPage = () => {
   }, [state.items]);
 
   const pageTitle = !selectedFolder
-    ? 'Payments Management'
+    ? t('Payments Management')
     : selectedFolder.type === 'teacher'
-      ? `${selectedFolder.name} - ${teacherDetailView === 'groups' ? 'Groups' : 'Total'}`
-      : `${selectedFolder.name} - Payments`;
+      ? `${selectedFolder.name} - ${teacherDetailView === 'groups' ? t('Groups') : t('Total')}`
+      : `${selectedFolder.name} - ${t('Payments')}`;
 
   // Apply search and filters
   const displayedPayments = useMemo(() => {
@@ -716,7 +714,7 @@ const PaymentsPage = () => {
   const displayedPendingAmount = Math.max(totalAmount - displayedPaidAmount, 0);
   const folderGridClass =
     viewMode === 'list'
-      ? 'space-y-2 [&_.folder-icon]:h-8 [&_.folder-icon]:w-8 [&_.folder-card-content]:p-3 [&_.folder-meta-grid]:hidden'
+      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3'
       : viewMode === 'compact'
         ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
         : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
@@ -769,13 +767,13 @@ const PaymentsPage = () => {
     <div className="container mx-auto space-y-6">
       <PageHeader
         title={pageTitle}
-        description="Organize payments by student, class, teacher, and collection status."
+        description={t('Organize payments by student, class, teacher, and collection status.')}
         icon={Wallet}
         actions={
           <>
             {selectedFolder && (
               <Button variant="outline" size="sm" onClick={handleBackToFolders}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                <ArrowLeft className="mr-2 h-4 w-4" /> {t('Back')}
               </Button>
             )}
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
@@ -801,8 +799,8 @@ const PaymentsPage = () => {
                   <Download className="mr-2 h-4 w-4" />
                   {t('Export CSV')}
                 </Button>
-                <Button onClick={() => handleOpenModal()}>
-                  <Plus className="mr-2 h-4 w-4" /> Add Payment
+                <Button onClick={() => handleOpenModal()} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-teal-700 border-0">
+                  <Plus className="mr-2 h-4 w-4" /> {t('Add Payment')}
                 </Button>
               </>
             )}
@@ -813,7 +811,7 @@ const PaymentsPage = () => {
       {isTeacher && (
         <Alert className="mb-4">
           <AlertDescription>
-            Teacher view is limited to payment status only.
+            {t('Teacher view is limited to payment status only.')}
           </AlertDescription>
         </Alert>
       )}
@@ -825,10 +823,10 @@ const PaymentsPage = () => {
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Payment Records" value={overallPaymentStats.totalPayments} detail="All visible records" icon={ReceiptText} tone="green" />
-        <MetricCard label="Total Amount" value={formatMoney(overallPaymentStats.totalAmount)} detail="Across current scope" icon={DollarSign} tone="blue" />
-        <MetricCard label="Paid Share" value={`${overallPaymentStats.paidPercent}%`} detail="Completed payments" icon={TrendingUp} tone="neutral" />
-        <MetricCard label="Collected" value={formatMoney(overallPaymentStats.paidAmount)} detail="Completed amount" icon={ShieldCheck} tone="amber" />
+        <MetricCard label={t('Payment Records')} value={overallPaymentStats.totalPayments} detail={t('All visible records')} icon={ReceiptText} tone="green" />
+        <MetricCard label={t('Total Amount')} value={formatMoney(overallPaymentStats.totalAmount)} detail={t('Across current scope')} icon={DollarSign} tone="blue" />
+        <MetricCard label={t('Paid Share')} value={`${overallPaymentStats.paidPercent}%`} detail={t('Completed payments')} icon={TrendingUp} tone="neutral" />
+        <MetricCard label={t('Collected')} value={formatMoney(overallPaymentStats.paidAmount)} detail={t('Completed amount')} icon={ShieldCheck} tone="amber" />
       </div>
 
       {!selectedFolder ? (
@@ -841,10 +839,10 @@ const PaymentsPage = () => {
                   type="text"
                   placeholder={
                     activeTab === 'classes'
-                      ? 'Search classes by name, code, level...'
+                      ? t('Search classes by name, code, level...')
                       : activeTab === 'teachers' || activeTab === 'statistics'
-                        ? 'Search teachers by name or employee ID...'
-                        : 'Search students by name or ID...'
+                        ? t('Search teachers by name or employee ID...')
+                        : t('Search students by name or ID...')
                   }
                   value={searchTerm}
                   onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
@@ -871,7 +869,7 @@ const PaymentsPage = () => {
                 className={cn(activeTab === 'students' && 'bg-emerald-600 text-white hover:bg-emerald-700')}
               >
                 <Users className="h-4 w-4 mr-2" />
-                By Students
+                {t('By Students')}
               </Button>
               <Button
                 variant={activeTab === 'classes' ? 'default' : 'ghost'}
@@ -879,7 +877,7 @@ const PaymentsPage = () => {
                 className={cn(activeTab === 'classes' && 'bg-cyan-600 text-white hover:bg-cyan-700')}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
-                By Classes
+                {t('By Classes')}
               </Button>
               <Button
                 variant={activeTab === 'teachers' ? 'default' : 'ghost'}
@@ -887,7 +885,7 @@ const PaymentsPage = () => {
                 className={cn(activeTab === 'teachers' && 'bg-indigo-600 text-white hover:bg-indigo-700')}
               >
                 <User className="h-4 w-4 mr-2" />
-                By Teachers
+                {t('By Teachers')}
               </Button>
               {!isTeacher && (
                 <Button
@@ -896,7 +894,7 @@ const PaymentsPage = () => {
                   className={cn(activeTab === 'statistics' && 'bg-slate-800 text-white hover:bg-slate-900')}
                 >
                   <BarChart3 className="h-4 w-4 mr-2" />
-                  Statistics
+                  {t('Statistics')}
                 </Button>
               )}
               </div>
@@ -912,11 +910,11 @@ const PaymentsPage = () => {
                   {loadingData ? (
                     <div className="col-span-full text-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading students...</p>
+                      <p className="text-muted-foreground">{t('Loading students...')}</p>
                     </div>
                   ) : filteredRootStudents.length === 0 ? (
                     <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">{searchTerm ? 'No students match your search' : 'No students found'}</p>
+                      <p className="text-muted-foreground">{searchTerm ? t('No students match your search') : t('No students found')}</p>
                     </div>
                   ) : (
                     paginatedRootStudents.items.map((student) => {
@@ -930,23 +928,23 @@ const PaymentsPage = () => {
                           onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
                         >
                           <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
-                          <CardContent className="folder-card-content p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-                                <Folder className="h-5 w-5" />
+                          <CardContent className="folder-card-content p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
+                                <Folder className="h-4 w-4" />
                               </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">ID: {studentId}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
+                              <p className="text-xs text-muted-foreground">ID: {studentId}</p>
                             </div>
-                            <div className="mt-3 flex items-center justify-between border-t pt-3">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <CreditCard className="h-3.5 w-3.5" />
-                                <span>{paymentCount} payments</span>
+                            <div className="mt-2 flex items-center justify-between border-t pt-2">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CreditCard className="h-3 w-3" />
+                                <span>{paymentCount} {t('payments')}</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold text-emerald-700 dark:text-primary">
-                                <DollarSign className="h-3.5 w-3.5" />
+                              <div className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-primary">
+                                <DollarSign className="h-3 w-3" />
                                 <span>{formatMoney(totalAmount)}</span>
                               </div>
                             </div>
@@ -980,11 +978,11 @@ const PaymentsPage = () => {
                   {loadingData ? (
                     <div className="col-span-full text-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading classes...</p>
+                      <p className="text-muted-foreground">{t('Loading classes...')}</p>
                     </div>
                   ) : filteredRootClasses.length === 0 ? (
                     <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">{searchTerm ? 'No classes match your search' : 'No classes found'}</p>
+                      <p className="text-muted-foreground">{searchTerm ? t('No classes match your search') : t('No classes found')}</p>
                     </div>
                   ) : (
                     paginatedRootClasses.items.map((cls) => {
@@ -998,23 +996,23 @@ const PaymentsPage = () => {
                           onClick={() => handleFolderClick('class', classId, cls.class_name)}
                         >
                           <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
-                          <CardContent className="folder-card-content p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
-                                <Folder className="h-5 w-5" />
+                          <CardContent className="folder-card-content p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                                <Folder className="h-4 w-4" />
                               </div>
                             </div>
                             <div className="space-y-1">
-                              <h3 className="font-semibold">{cls.class_name}</h3>
+                              <h3 className="text-sm font-semibold">{cls.class_name}</h3>
                               <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
-                            <div className="mt-3 flex items-center justify-between border-t pt-3">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <CreditCard className="h-3.5 w-3.5" />
-                                <span>{paymentCount} payments</span>
+                            <div className="mt-2 flex items-center justify-between border-t pt-2">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CreditCard className="h-3 w-3" />
+                                <span>{paymentCount} {t('payments')}</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
-                                <DollarSign className="h-3.5 w-3.5" />
+                              <div className="flex items-center gap-1 text-xs font-semibold text-cyan-700 dark:text-primary">
+                                <DollarSign className="h-3 w-3" />
                                 <span>{formatMoney(totalAmount)}</span>
                               </div>
                             </div>
@@ -1048,11 +1046,11 @@ const PaymentsPage = () => {
                   {loadingData ? (
                     <div className="col-span-full text-center py-8">
                       <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading teachers...</p>
+                      <p className="text-muted-foreground">{t('Loading teachers...')}</p>
                     </div>
                   ) : filteredRootTeachers.length === 0 ? (
                     <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">{searchTerm ? 'No teachers match your search' : 'No teachers found'}</p>
+                      <p className="text-muted-foreground">{searchTerm ? t('No teachers match your search') : t('No teachers found')}</p>
                     </div>
                   ) : (
                     paginatedRootTeachers.items.map((teacher) => {
@@ -1066,50 +1064,50 @@ const PaymentsPage = () => {
                           onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
                         >
                           <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500 dark:hidden" />
-                          <CardContent className="folder-card-content p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-                                <Folder className="h-5 w-5" />
+                          <CardContent className="folder-card-content p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
+                                <Folder className="h-4 w-4" />
                               </div>
                             </div>
                             <div className="space-y-1">
-                              <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
+                              <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
                               <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
                             </div>
                             {isTeacher ? (
-                              <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                  <Users className="h-3.5 w-3.5" />
-                                  <span>{teacherStats.totalStudents} students</span>
+                              <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                  <Users className="h-3 w-3" />
+                                  <span>{teacherStats.totalStudents} {t('students')}</span>
                                 </div>
-                                <div className="flex items-center gap-1 text-sm font-semibold text-primary">
-                                  <CreditCard className="h-3.5 w-3.5" />
-                                  <span>{paymentCount} payments</span>
+                                <div className="flex items-center gap-1 text-xs font-semibold text-primary">
+                                  <CreditCard className="h-3 w-3" />
+                                  <span>{paymentCount} {t('payments')}</span>
                                 </div>
                               </div>
                             ) : (
                               <>
-                                <div className="grid grid-cols-2 gap-2 mt-3 pt-3 border-t text-xs">
-                                  <div className="rounded-md bg-muted/40 p-2">
-                                    <p className="text-muted-foreground">Worked</p>
-                                    <p className="font-semibold">{formatMoney(teacherStats.totalWorked)}</p>
+                                <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t text-[11px]">
+                                  <div className="rounded bg-gradient-to-r from-indigo-500 to-violet-500 px-2 py-1.5 text-white">
+                                    <p className="text-white/70">{t('Worked')}</p>
+                                    <p className="font-bold">{formatMoney(teacherStats.totalWorked)}</p>
                                   </div>
-                                  <div className="rounded-md bg-green-50 p-2">
-                                    <p className="text-green-700">Paid</p>
-                                    <p className="font-semibold text-green-700">{formatMoney(teacherStats.paidAmount)}</p>
+                                  <div className="rounded bg-gradient-to-r from-emerald-500 to-teal-500 px-2 py-1.5 text-white">
+                                    <p className="text-white/70">{t('Paid')}</p>
+                                    <p className="font-bold">{formatMoney(teacherStats.paidAmount)}</p>
                                   </div>
-                                  <div className="rounded-md bg-red-50 p-2">
-                                    <p className="text-red-700">Unpaid</p>
-                                    <p className="font-semibold text-red-700">{formatMoney(teacherStats.unpaidAmount)}</p>
+                                  <div className="rounded bg-gradient-to-r from-rose-500 to-pink-500 px-2 py-1.5 text-white">
+                                    <p className="text-white/70">{t('Unpaid')}</p>
+                                    <p className="font-bold">{formatMoney(teacherStats.unpaidAmount)}</p>
                                   </div>
-                                  <div className="rounded-md bg-muted/40 p-2">
-                                    <p className="text-muted-foreground">Students</p>
-                                    <p className="font-semibold">{teacherStats.paidStudents}/{teacherStats.totalStudents} paid</p>
+                                  <div className="rounded bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-1.5 text-white">
+                                    <p className="text-white/70">{t('Students')}</p>
+                                    <p className="font-bold">{teacherStats.paidStudents}/{teacherStats.totalStudents} {t('paid')}</p>
                                   </div>
                                 </div>
-                                <div className="flex justify-between items-center mt-2 text-xs text-muted-foreground">
-                                  <span>{teacherStats.unpaidStudents} unpaid students</span>
-                                  <span>{paymentCount} payments</span>
+                                <div className="flex justify-between items-center mt-1.5 text-[11px] text-muted-foreground">
+                                  <span>{teacherStats.unpaidStudents} {t('unpaid')}</span>
+                                  <span>{paymentCount} {t('payments')}</span>
                                 </div>
                               </>
                             )}
@@ -1139,35 +1137,35 @@ const PaymentsPage = () => {
             {/* Statistics Tab */}
             {activeTab === 'statistics' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3">
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Payments</p>
-                      <p className="text-lg font-semibold">{overallPaymentStats.totalPayments}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3">
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">{t('Payments')}</p>
+                      <p className="text-lg font-bold text-white">{overallPaymentStats.totalPayments}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Total Amount</p>
-                      <p className="text-lg font-semibold">{formatMoney(overallPaymentStats.totalAmount)}</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">{t('Total Amount')}</p>
+                      <p className="text-lg font-bold text-white">{formatMoney(overallPaymentStats.totalAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Paid Amount</p>
-                      <p className="text-lg font-semibold text-emerald-700">{formatMoney(overallPaymentStats.paidAmount)}</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">{t('Paid Amount')}</p>
+                      <p className="text-lg font-bold text-white">{formatMoney(overallPaymentStats.paidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Unpaid Amount</p>
-                      <p className="text-lg font-semibold text-rose-700">{formatMoney(overallPaymentStats.unpaidAmount)}</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-400 via-rose-500 to-pink-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">{t('Unpaid Amount')}</p>
+                      <p className="text-lg font-bold text-white">{formatMoney(overallPaymentStats.unpaidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Paid Share</p>
-                      <p className="text-lg font-semibold">{overallPaymentStats.paidPercent}%</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-400 via-orange-500 to-orange-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">{t('Paid Share')}</p>
+                      <p className="text-lg font-bold text-white">{overallPaymentStats.paidPercent}%</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -1175,12 +1173,12 @@ const PaymentsPage = () => {
                 <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none">
                   <div className="flex items-center justify-between gap-3 mb-3">
                     <div>
-                      <p className="text-sm font-medium">Paid vs Unpaid</p>
-                      <p className="text-xs text-muted-foreground">Relative payment amount across all records</p>
+                      <p className="text-sm font-medium">{t('Paid vs Unpaid')}</p>
+                      <p className="text-xs text-muted-foreground">{t('Relative payment amount across all records')}</p>
                     </div>
                     <div className="text-right text-xs text-muted-foreground">
-                      <p>{overallPaymentStats.paidPercent}% paid</p>
-                      <p>{overallPaymentStats.unpaidPercent}% unpaid</p>
+                      <p>{overallPaymentStats.paidPercent}% {t('paid')}</p>
+                      <p>{overallPaymentStats.unpaidPercent}% {t('unpaid')}</p>
                     </div>
                   </div>
                   <div className="h-4 w-full overflow-hidden rounded-full bg-muted shadow-inner">
@@ -1198,7 +1196,7 @@ const PaymentsPage = () => {
                 </div>
 
                 {!isTeacher && (
-                  <div className={cn(paymentSurfaceClass, 'rounded-lg')}>
+                  <div className={cn(paymentSurfaceClass, 'rounded-lg [&_table]:text-xs [&_th]:text-xs [&_td]:py-2')}>
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -1270,13 +1268,14 @@ const PaymentsPage = () => {
               <p className="text-sm text-muted-foreground">
                 {teacherDetailView === 'groups'
                   ? `${selectedTeacherClasses.length} groups available`
-                  : 'Teacher payment summary'}
+                  : t('Teacher payment summary')}
               </p>
               </div>
               <div className="flex items-center gap-2">
               <Button
                 variant={teacherDetailView === 'groups' ? 'default' : 'outline'}
                 onClick={() => setTeacherDetailView('groups')}
+                className={cn(teacherDetailView === 'groups' && 'bg-gradient-to-r from-cyan-500 to-sky-600 text-white border-0 shadow-lg shadow-cyan-500/30 hover:from-cyan-600 hover:to-sky-700')}
               >
                 <Folder className="h-4 w-4 mr-2" />
                 Groups
@@ -1284,6 +1283,7 @@ const PaymentsPage = () => {
               <Button
                 variant={teacherDetailView === 'total' ? 'default' : 'outline'}
                 onClick={() => setTeacherDetailView('total')}
+                className={cn(teacherDetailView === 'total' && 'bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-lg shadow-violet-500/30 hover:from-violet-600 hover:to-purple-700')}
               >
                 <DollarSign className="h-4 w-4 mr-2" />
                 Total
@@ -1316,14 +1316,14 @@ const PaymentsPage = () => {
                         onClick={() => handleFolderClick('class', classId, cls.class_name)}
                       >
                         <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
-                        <CardContent className="folder-card-content p-4">
+                        <CardContent className="folder-card-content p-3">
                           <div className="flex items-center gap-3 mb-3">
                             <div className="folder-icon flex h-10 w-10 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
-                              <Folder className="h-5 w-5" />
+                              <Folder className="h-4 w-4" />
                             </div>
                           </div>
                           <div className="space-y-1">
-                            <h3 className="font-semibold">{cls.class_name}</h3>
+                            <h3 className="text-sm font-semibold">{cls.class_name}</h3>
                             <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                           </div>
                           <div className="flex justify-between items-center mt-3 pt-3 border-t">
@@ -1331,8 +1331,8 @@ const PaymentsPage = () => {
                               <CreditCard className="h-3.5 w-3.5" />
                               <span>{paymentCount} payments</span>
                             </div>
-                            <div className="flex items-center gap-1 text-sm font-semibold text-cyan-700 dark:text-primary">
-                              <DollarSign className="h-3.5 w-3.5" />
+                            <div className="flex items-center gap-1 text-xs font-semibold text-cyan-700 dark:text-primary">
+                              <DollarSign className="h-3 w-3" />
                               <span>{formatMoney(totalAmount)}</span>
                             </div>
                           </div>
@@ -1360,35 +1360,35 @@ const PaymentsPage = () => {
           ) : (
             <>
               {selectedTeacherStats && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-6">
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Groups</p>
-                      <p className="text-lg font-semibold">{selectedTeacherClasses.length}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-400 via-cyan-500 to-sky-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">Groups</p>
+                      <p className="text-lg font-bold text-white">{selectedTeacherClasses.length}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Worked</p>
-                      <p className="text-lg font-semibold">{formatMoney(selectedTeacherStats.totalWorked)}</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">Worked</p>
+                      <p className="text-lg font-bold text-white">{formatMoney(selectedTeacherStats.totalWorked)}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Paid Amount</p>
-                      <p className="text-lg font-semibold text-green-700">{formatMoney(selectedTeacherStats.paidAmount)}</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">Paid Amount</p>
+                      <p className="text-lg font-bold text-white">{formatMoney(selectedTeacherStats.paidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Unpaid Amount</p>
-                      <p className="text-lg font-semibold text-red-700">{formatMoney(selectedTeacherStats.unpaidAmount)}</p>
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-400 via-rose-500 to-pink-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">Unpaid Amount</p>
+                      <p className="text-lg font-bold text-white">{formatMoney(selectedTeacherStats.unpaidAmount)}</p>
                     </CardContent>
                   </Card>
-                  <Card className={paymentStatCardClass}>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Students Paid</p>
-                      <p className="text-lg font-semibold">
+                  <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-400 via-orange-500 to-orange-600">
+                    <CardContent className="p-3">
+                      <p className="text-xs text-white/70">Students Paid</p>
+                      <p className="text-lg font-bold text-white">
                         {selectedTeacherStats.paidStudents}/{selectedTeacherStats.totalStudents}
                       </p>
                     </CardContent>
@@ -1440,7 +1440,7 @@ const PaymentsPage = () => {
                 </div>
               )}
               <div className="text-sm text-muted-foreground mb-4">
-                Open a group to see the existing payment list.
+                {t('Open a group to see the existing payment list.')}
               </div>
             </>
           )}
@@ -1452,18 +1452,18 @@ const PaymentsPage = () => {
           <Card className={paymentSurfaceClass}>
             <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-indigo-500 dark:hidden" />
             <CardContent className="space-y-4 p-4">
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-3 dark:border-border dark:bg-muted/20">
-                  <p className="text-xs text-emerald-700 dark:text-muted-foreground">Visible Records</p>
-                  <p className="text-xl font-semibold text-emerald-800 dark:text-foreground">{displayedPayments.length}</p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                <div className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-white">
+                  <p className="text-[11px] text-white/70">{t('Visible Records')}</p>
+                  <p className="text-base font-bold">{displayedPayments.length}</p>
                 </div>
-                <div className="rounded-xl border border-sky-100 bg-sky-50/70 p-3 dark:border-border dark:bg-muted/20">
-                  <p className="text-xs text-sky-700 dark:text-muted-foreground">Visible Total</p>
-                  <p className="text-xl font-semibold text-sky-800 dark:text-foreground">{formatMoney(totalAmount)}</p>
+                <div className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 text-white">
+                  <p className="text-[11px] text-white/70">{t('Visible Total')}</p>
+                  <p className="text-base font-bold">{formatMoney(totalAmount)}</p>
                 </div>
-                <div className="rounded-xl border border-amber-100 bg-amber-50/70 p-3 dark:border-border dark:bg-muted/20">
-                  <p className="text-xs text-amber-700 dark:text-muted-foreground">Pending or Unpaid</p>
-                  <p className="text-xl font-semibold text-amber-800 dark:text-foreground">{formatMoney(displayedPendingAmount)}</p>
+                <div className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white">
+                  <p className="text-[11px] text-white/70">{t('Pending or Unpaid')}</p>
+                  <p className="text-base font-bold">{formatMoney(displayedPendingAmount)}</p>
                 </div>
               </div>
 
@@ -1472,7 +1472,7 @@ const PaymentsPage = () => {
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Search by student, receipt, reference..."
+                    placeholder={t('Search by student, receipt, reference...')}
                     value={searchTerm}
                     onChange={(e) => dispatch(setPaymentsSearchTerm(e.target.value))}
                     className="pl-10"
@@ -1494,7 +1494,7 @@ const PaymentsPage = () => {
                   onClick={() => dispatch(setPaymentsShowFilters(!showFilters))}
                 >
                   <Filter className="mr-2 h-4 w-4" />
-                  Filters
+                  {t('Filters')}
                   {hasActiveFilters && (
                     <span className="ml-2 rounded-full bg-primary px-2 py-0.5 text-xs text-primary-foreground">
                       {(filterStatus ? 1 : 0) + (filterMethod ? 1 : 0)}
@@ -1504,7 +1504,7 @@ const PaymentsPage = () => {
 
                 {hasActiveFilters && (
                   <Button variant="outline" size="sm" onClick={clearFilters}>
-                    <X className="mr-2 h-4 w-4" /> Clear All
+                    <X className="mr-2 h-4 w-4" /> {t('Clear All')}
                   </Button>
                 )}
               </div>
@@ -1517,13 +1517,13 @@ const PaymentsPage = () => {
           {showFilters && (
             <div className="grid grid-cols-1 gap-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4 dark:border-border dark:bg-muted/20 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Payment Status</Label>
+                <Label>{t('Payment Status')}</Label>
                 <Select value={filterStatus} onValueChange={(value) => dispatch(setPaymentsFilterStatus(value))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
+                    <SelectValue placeholder={t('All Status')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
+                    <SelectItem value="">{t('All Status')}</SelectItem>
                     {paymentStatusOptions.map((opt) => (
                       <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
                     ))}
@@ -1532,13 +1532,13 @@ const PaymentsPage = () => {
               </div>
               {!isTeacher && (
                 <div className="space-y-2">
-                  <Label>Payment Method</Label>
+                  <Label>{t('Payment Method')}</Label>
                   <Select value={filterMethod} onValueChange={(value) => dispatch(setPaymentsFilterMethod(value))}>
                     <SelectTrigger>
-                      <SelectValue placeholder="All Methods" />
+                      <SelectValue placeholder={t('All Methods')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Methods</SelectItem>
+                      <SelectItem value="">{t('All Methods')}</SelectItem>
                       {paymentMethodOptions.map((opt) => (
                         <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
                       ))}
@@ -1550,29 +1550,29 @@ const PaymentsPage = () => {
           )}
 
           {/* Payments Table */}
-          <div className={cn(paymentSurfaceClass, 'rounded-lg')}>
+          <div className={cn(paymentSurfaceClass, 'rounded-lg [&_table]:text-xs [&_th]:text-xs [&_td]:py-2')}>
             <Table>
               <TableHeader>
                 <TableRow>
-                  {!isTeacher && <TableHead>Receipt #</TableHead>}
-                  <TableHead>Student</TableHead>
-                  <TableHead>Date</TableHead>
-                  {!isTeacher && <TableHead>Amount</TableHead>}
-                  {!isTeacher && <TableHead>Method</TableHead>}
-                  {!isTeacher && <TableHead>Type</TableHead>}
-                  <TableHead>Status</TableHead>
-                  {!isTeacher && <TableHead className="w-24">Actions</TableHead>}
+                  {!isTeacher && <TableHead>{t('Receipt #')}</TableHead>}
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Date')}</TableHead>
+                  {!isTeacher && <TableHead>{t('Amount')}</TableHead>}
+                  {!isTeacher && <TableHead>{t('Method')}</TableHead>}
+                  {!isTeacher && <TableHead>{t('Type')}</TableHead>}
+                  <TableHead>{t('Status')}</TableHead>
+                  {!isTeacher && <TableHead className="w-24">{t('Actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {state.loading ? (
                   <TableRow>
-                    <TableCell colSpan={isTeacher ? 4 : 8} className="text-center py-6">Loading...</TableCell>
+                    <TableCell colSpan={isTeacher ? 4 : 8} className="text-center py-6">{t('Loading...')}</TableCell>
                   </TableRow>
                 ) : displayedPayments.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={isTeacher ? 4 : 8} className="text-center py-6 text-muted-foreground">
-                      {hasActiveFilters ? 'No payments match your criteria' : 'No payments found'}
+                      {hasActiveFilters ? t('No payments match your criteria') : t('No payments found')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -1648,7 +1648,7 @@ const PaymentsPage = () => {
       >
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Payment' : 'Add New Payment'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Payment') : t('Add New Payment')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             {isOwner && (
@@ -1662,7 +1662,7 @@ const PaymentsPage = () => {
                 options={centerOptions}
                 isLoading={isLoadingOptions}
                 required
-                placeholder="Select a center"
+                placeholder={t('Select a center')}
               />
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1676,10 +1676,10 @@ const PaymentsPage = () => {
                 options={studentOptions}
                 isLoading={isLoadingOptions}
                 required
-                placeholder="Select a student"
+                placeholder={t('Select a student')}
               />
               <SelectField
-                label="Payment Method"
+                label={t('Payment Method')}
                 name="payment_method"
                 value={formData.payment_method || ''}
                 onChange={(value) =>
@@ -1687,12 +1687,12 @@ const PaymentsPage = () => {
                 }
                 options={paymentMethodOptions}
                 required
-                placeholder="Select method"
+                placeholder={t('Select method')}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount *</Label>
+                <Label htmlFor="amount">{t('Amount')} *</Label>
                 <Input
                   type="number"
                   id="amount"
@@ -1704,7 +1704,7 @@ const PaymentsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="payment_date">Payment Date *</Label>
+                <Label htmlFor="payment_date">{t('Payment Date')} *</Label>
                 <Input
                   type="date"
                   id="payment_date"
@@ -1716,7 +1716,7 @@ const PaymentsPage = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <SelectField
-                label="Payment Type"
+                label={t('Payment Type')}
                 name="payment_type"
                 value={formData.payment_type || ''}
                 onChange={(value) =>
@@ -1724,7 +1724,7 @@ const PaymentsPage = () => {
                 }
                 options={paymentTypeOptions}
                 required
-                placeholder="Select type"
+                placeholder={t('Select type')}
               />
               <SelectField
                 label="Status"
@@ -1735,12 +1735,12 @@ const PaymentsPage = () => {
                 }
                 options={paymentStatusOptions}
                 required
-                placeholder="Select status"
+                placeholder={t('Select status')}
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="receipt_number">Receipt Number *</Label>
+                <Label htmlFor="receipt_number">{t('Receipt Number')} *</Label>
                 <Input
                   type="text"
                   id="receipt_number"
@@ -1750,7 +1750,7 @@ const PaymentsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="reference_number">Reference Number</Label>
+                <Label htmlFor="reference_number">{t('Reference Number')}</Label>
                 <Input
                   type="text"
                   id="reference_number"
@@ -1760,12 +1760,12 @@ const PaymentsPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t('Notes')}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes || ''}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Additional notes..."
+                placeholder={t('Additional notes...')}
               />
             </div>
           </form>

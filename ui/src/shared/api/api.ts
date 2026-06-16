@@ -253,7 +253,7 @@ export const archiveAPI = {
 
 export const telegramRegistrationAPI = {
   getAll: (params?: { status?: string }) => apiClient.get('/telegram-registrations', { params }),
-  convert: (id: number) => apiClient.post(`/telegram-registrations/${id}/convert`),
+  convert: (id: number, data?: { class_id?: number; teacher_id?: number }) => apiClient.post(`/telegram-registrations/${id}/convert`, data),
   reject: (id: number) => apiClient.post(`/telegram-registrations/${id}/reject`),
 };
 

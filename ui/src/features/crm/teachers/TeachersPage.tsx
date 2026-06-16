@@ -193,30 +193,30 @@ const TeachersPage = () => {
   const qualifiedTeachers = filteredTeachers.filter((teacher) => String(teacher.qualification || '').trim()).length;
   const summaryCards = [
     {
-      label: 'Teachers shown',
+      label: t('Teachers shown'),
       value: filteredTeachers.length.toLocaleString(),
-      detail: `${activeTeachers.toLocaleString()} active`,
+      detail: `${activeTeachers.toLocaleString()} ${t('active')}`,
       icon: Users,
       tone: 'blue' as const,
     },
     {
-      label: 'Specializations',
+      label: t('Specializations'),
       value: specializations.toLocaleString(),
-      detail: 'Across current view',
+      detail: t('Across current view'),
       icon: GraduationCap,
       tone: 'green' as const,
     },
     {
-      label: 'Qualified',
+      label: t('Qualified'),
       value: qualifiedTeachers.toLocaleString(),
-      detail: 'With qualification',
+      detail: t('With qualification'),
       icon: Award,
       tone: 'amber' as const,
     },
     {
-      label: 'Status health',
+      label: t('Status health'),
       value: filteredTeachers.length > 0 ? `${Math.round((activeTeachers / filteredTeachers.length) * 100)}%` : '0%',
-      detail: 'Active ratio',
+      detail: t('Active ratio'),
       icon: ShieldCheck,
       tone: 'neutral' as const,
     },
@@ -229,7 +229,7 @@ const TeachersPage = () => {
             variant="ghost"
             size="icon"
             className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
-            aria-label="Open teacher actions"
+            aria-label={t('Open teacher actions')}
           >
             <MoreVertical className="h-4 w-4" />
           </Button>
@@ -237,18 +237,18 @@ const TeachersPage = () => {
         <DropdownMenuContent align="end" className="w-40">
           <DropdownMenuItem onClick={() => navigate(getTeacherProfilePath(teacher))} className="gap-2">
             <Eye className="h-4 w-4 text-cyan-600" />
-            Profile
+            {t('Profile')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => handleOpenModal(teacher)} className="gap-2">
             <Pencil className="h-4 w-4 text-blue-500" />
-            Edit
+            {t('Edit')}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
             className="gap-2 text-red-600 focus:text-red-600"
           >
             <Trash2 className="h-4 w-4" />
-            Delete
+            {t('Delete')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -329,8 +329,8 @@ const TeachersPage = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Teachers"
-        description="Manage instructors, specializations, access, and profile details in one place."
+        title={t('Teachers')}
+        description={t('Manage instructors, specializations, access, and profile details in one place.')}
         icon={GraduationCap}
         actions={
           <>
@@ -361,7 +361,7 @@ const TeachersPage = () => {
             )}
             <Button onClick={() => handleOpenModal()}>
               <Plus className="w-5 h-5 mr-2" />
-              Add Teacher
+              {t('Add Teacher')}
             </Button>
           </>
         }
@@ -391,7 +391,7 @@ const TeachersPage = () => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search teachers by name, ID, subject, email, phone..."
+            placeholder={t('Search teachers by name, ID, subject, email, phone...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="border-white/80 bg-white/90 pl-10 pr-10 shadow-sm dark:border-input dark:bg-background dark:shadow-none"
@@ -417,13 +417,13 @@ const TeachersPage = () => {
       ) : state.items.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
-          <h3 className="text-lg font-semibold">No teachers found</h3>
-          <p className="text-sm">Click &quot;Add Teacher&quot; to get started</p>
+          <h3 className="text-lg font-semibold">{t('No teachers found')}</h3>
+          <p className="text-sm">{t('Click "Add Teacher" to get started')}</p>
         </div>
       ) : filteredTeachers.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
-          <h3 className="text-lg font-semibold">No teachers match your search</h3>
+          <h3 className="text-lg font-semibold">{t('No teachers match your search')}</h3>
           <p className="text-sm">Try a different name, ID, email, or specialization</p>
         </div>
       ) : viewMode === 'list' ? (

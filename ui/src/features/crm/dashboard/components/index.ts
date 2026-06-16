@@ -11,3 +11,4 @@ export * from './DashboardScopeSelector';
 export * from './DashboardStatDetailsDialog';
 export * from './DashboardStatCards';
 export * from './DashboardStudentGrowthChart';
+export * from './DashboardTeacherChart';

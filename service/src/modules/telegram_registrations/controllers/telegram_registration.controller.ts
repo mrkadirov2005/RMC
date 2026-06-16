@@ -22,7 +22,11 @@ const convertRegistration = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
-    const result = await service.convertRegistration(Number(req.params.id), centerId ?? undefined);
+    const assignData = {
+      class_id: req.body?.class_id ? Number(req.body.class_id) : undefined,
+      teacher_id: req.body?.teacher_id ? Number(req.body.teacher_id) : undefined,
+    };
+    const result = await service.convertRegistration(Number(req.params.id), centerId ?? undefined, assignData);
     if (result?.error === 'not_found') return res.status(404).json({ error: 'Registration not found' });
     if (result?.error === 'already_imported') return res.status(409).json({ error: 'Registration is already imported' });
     if (result?.error === 'center_required') return res.status(400).json({ error: 'Center is required to import this registration' });

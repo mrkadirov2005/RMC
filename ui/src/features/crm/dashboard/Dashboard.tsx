@@ -11,6 +11,7 @@ import {
   DashboardStatDetailsDialog,
   DashboardStatCards,
   DashboardStudentGrowthChart,
+  DashboardTeacherChart,
 } from './components';
 import { useDashboardData } from './hooks/useDashboardData';
 import type { DashboardScope, DashboardStatCard } from './types';
@@ -75,8 +76,12 @@ const Dashboard = memo(() => {
             onMetricClick={setDetailsCard}
           /></div>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_380px] animate-fade-in animation-delay-400">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 animate-fade-in animation-delay-400">
             <DashboardStudentGrowthChart points={studentGrowth} />
+            <DashboardTeacherChart collections={scopedCollections} />
+          </div>
+
+          <div className="animate-fade-in animation-delay-400">
             <DashboardSchoolsOverview schools={schoolDistribution} />
           </div>
         </>
