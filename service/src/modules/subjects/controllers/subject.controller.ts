@@ -71,6 +71,9 @@ const createSubject = async (req: any, res: any) => {
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Class does not belong to this center.' });
     }
+    if (out && out.error === 'class_subject_exists') {
+      return res.status(409).json({ message: 'This class already has an assigned subject.' });
+    }
     res.status(201).json(out);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -89,6 +92,12 @@ const updateSubject = async (req: any, res: any) => {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
     const row = await subjectService.updateSubject(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
+    if (row && row.error === 'invalid_center') {
+      return res.status(400).json({ error: 'Class does not belong to this center.' });
+    }
+    if (row && row.error === 'class_subject_exists') {
+      return res.status(409).json({ message: 'This class already has an assigned subject.' });
+    }
     if (!row) return res.status(404).json({ error: 'Subject not found' });
     res.json(row);
   } catch (error: any) {

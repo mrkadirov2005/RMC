@@ -321,9 +321,9 @@ const StudentsPage = () => {
       </div>
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
-        <TabsList className="mb-5 bg-slate-100/80 dark:bg-muted">
-          <TabsTrigger value="students">{t('Students')}</TabsTrigger>
-          <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
+        <TabsList className="mb-5 gap-2 bg-slate-100/80 dark:bg-muted">
+          <TabsTrigger value="students" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Students')}</TabsTrigger>
+          <TabsTrigger value="statistics" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Statistics')}</TabsTrigger>
         </TabsList>
         <TabsContent value="students" className="mt-0">
           <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} activeCount={activeCount} onClearAll={s.clearFilters} />

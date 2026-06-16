@@ -60,7 +60,7 @@ const list = async (centerId?: number, status?: string) => {
   return result.rows;
 };
 
-const convertToStudent = async (id: number, centerId?: number) => {
+const convertToStudent = async (id: number, centerId?: number, assignData?: { class_id?: number; teacher_id?: number }) => {
   await ensureTable();
   const client = await pool.connect();
   try {
@@ -115,7 +115,7 @@ const convertToStudent = async (id: number, centerId?: number) => {
          school_class,
          is_frozen
        )
-       VALUES ($1, $2, $3, $4, $5, $6, NULL, $7, $8, $9, $10, $11, 'Active', NULL, NULL, $12, $13, false)
+       VALUES ($1, $2, $3, $4, $5, $6, NULL, $7, $8, $9, $10, $11, 'Active', $14, $15, $12, $13, false)
        RETURNING *`,
       [
         targetCenterId,
@@ -131,6 +131,8 @@ const convertToStudent = async (id: number, centerId?: number) => {
         registration.gender,
         registration.school_name,
         registration.school_class,
+        assignData?.teacher_id || null,
+        assignData?.class_id || null,
       ]
     );
     const student = inserted.rows[0];

@@ -1,7 +1,7 @@
 // Page component for the grades screen in the crm feature.
 
 import { useState, useEffect, useMemo } from 'react';
-import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, Plus, Loader2, X, Users, BarChart3, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Pencil, Trash2, ArrowLeft, Folder, Search, Filter, User, BookOpen, BookMarked, Plus, Loader2, X, Users, BarChart3, ChevronLeft, ChevronRight, Award, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
 import {
   createGrade,
   deleteGrade,
@@ -103,9 +103,19 @@ interface Student {
   last_name: string;
   class_id?: number;
   teacher_id?: number;
+  date_of_birth?: string;
 }
 
-type FolderType = 'teacher' | 'class' | 'student';
+interface Subject {
+  subject_id?: number;
+  id?: number;
+  class_id: number;
+  subject_name: string;
+  subject_code: string;
+  teacher_id?: number;
+}
+
+type FolderType = 'teacher' | 'class' | 'student' | 'subject';
 
 const folderPageSizeOptions = [12, 24, 48];
 const gradePageSizeOptions = [10, 25, 50, 100];
@@ -226,6 +236,7 @@ const GradesPage = () => {
   const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
   const classes = useAppSelector((state) => state.classes.items) as Class[];
   const students = useAppSelector((state) => state.students.items) as Student[];
+  const subjects = useAppSelector((state) => state.subjects.items) as Subject[];
   const loadingData = useAppSelector(
     (state) => state.teachers.loading || state.classes.loading || state.students.loading
   );
@@ -260,6 +271,27 @@ const GradesPage = () => {
   const [folderPageSize, setFolderPageSize] = useState(12);
   const [gradesPage, setGradesPage] = useState(1);
   const [gradesPageSize, setGradesPageSize] = useState(25);
+  const [filterAgeRange, setFilterAgeRange] = useState('');
+
+  const getStudentAge = (student: Student): number | null => {
+    if (!student.date_of_birth) return null;
+    const dob = new Date(student.date_of_birth);
+    const today = new Date();
+    let age = today.getFullYear() - dob.getFullYear();
+    const m = today.getMonth() - dob.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) age--;
+    return age;
+  };
+
+  const matchesAgeRange = (studentId: number, range: string): boolean => {
+    if (!range) return true;
+    const student = students.find((s) => (s.student_id || s.id) === studentId);
+    if (!student) return false;
+    const age = getStudentAge(student);
+    if (age === null) return false;
+    const [min, max] = range.split('-').map(Number);
+    return age >= min && age <= max;
+  };
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -412,6 +444,10 @@ const GradesPage = () => {
       studentIds = getStudentIdsForClass(selectedFolder.id);
     } else if (selectedFolder.type === 'student') {
       studentIds = [selectedFolder.id];
+    } else if (selectedFolder.type === 'subject') {
+      studentIds = students
+        .filter((s) => s.class_id === selectedFolder.id)
+        .map((s) => s.student_id || s.id || 0);
     }
     return state.items.filter((g) => studentIds.includes(g.student_id));
   };
@@ -440,8 +476,12 @@ const GradesPage = () => {
       grades = grades.filter((g) => g.grade_letter === filterGrade);
     }
 
+    if (filterAgeRange) {
+      grades = grades.filter((g) => matchesAgeRange(g.student_id, filterAgeRange));
+    }
+
     return grades;
-  }, [searchTerm, filterTerm, filterGrade, selectedFolder, state.items, students]);
+  }, [searchTerm, filterTerm, filterGrade, filterAgeRange, selectedFolder, state.items, students]);
 
   const paginatedStudents = useMemo(
     () => paginateItems(students, folderPage, folderPageSize),
@@ -455,6 +495,10 @@ const GradesPage = () => {
     () => paginateItems(teachers, folderPage, folderPageSize),
     [teachers, folderPage, folderPageSize]
   );
+  const paginatedSubjects = useMemo(
+    () => paginateItems(subjects, folderPage, folderPageSize),
+    [subjects, folderPage, folderPageSize]
+  );
   const paginatedGrades = useMemo(
     () => paginateItems(displayedGrades, gradesPage, gradesPageSize),
     [displayedGrades, gradesPage, gradesPageSize]
@@ -463,6 +507,7 @@ const GradesPage = () => {
 // Handles clear filters.
   const clearFilters = () => {
     dispatch(clearGradesFilters());
+    setFilterAgeRange('');
   };
 
 // Handles folder click.
@@ -550,10 +595,10 @@ const GradesPage = () => {
   }, [state.items]);
   const folderGridClass =
     viewMode === 'list'
-      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.p-4]:p-2.5 [&_.h-9]:h-5 [&_.w-9]:w-5 [&_.mb-3]:mb-1.5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5 [&_.space-y-1]:space-y-0'
+      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
       : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
-        : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
+        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
 
   return (
     <div className="container mx-auto p-6">
@@ -573,21 +618,70 @@ const GradesPage = () => {
         </div>
         <div className="flex items-center gap-2">
           <ViewModeToggle value={viewMode} onChange={setViewMode} />
-          <Button onClick={() => handleOpenModal()}>
+          <Button onClick={() => handleOpenModal()} className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-violet-700 border-0">
             <Plus className="h-4 w-4 mr-2" /> Add Grade
           </Button>
         </div>
+      </div>
+
+      {/* Overall Summary Cards - Always Visible */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Award className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Total Grades</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{gradeStatistics.totalGrades}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-violet-500 via-violet-600 to-purple-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Average</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{gradeStatistics.averagePercentage.toFixed(1)}%</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Passing</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{gradeStatistics.passingGrades}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <XCircle className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Failing</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{gradeStatistics.failingGrades}</p>
+          </CardContent>
+        </Card>
+        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-5 w-5 text-white/70" />
+              <p className="text-sm text-white/70">Pass Rate</p>
+            </div>
+            <p className="text-2xl font-bold text-white">{gradeStatistics.passRate}%</p>
+          </CardContent>
+        </Card>
       </div>
 
       {!selectedFolder ? (
         <>
           {/* Tab Navigation */}
           <div className="border-b border-border mb-6">
-            <div className="flex space-x-1">
+            <div className="flex space-x-1 overflow-x-auto">
               <Button
                 variant={activeTab === 'students' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setGradesActiveTab('students'))}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'students' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-lg shadow-blue-500/30' : ''}`}
               >
                 <Users className="h-4 w-4 mr-2" />
                 By Students
@@ -595,7 +689,7 @@ const GradesPage = () => {
               <Button
                 variant={activeTab === 'classes' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setGradesActiveTab('classes'))}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'classes' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 shadow-lg shadow-emerald-500/30' : ''}`}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
                 By Classes
@@ -603,15 +697,23 @@ const GradesPage = () => {
               <Button
                 variant={activeTab === 'teachers' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setGradesActiveTab('teachers'))}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'teachers' ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-lg shadow-violet-500/30' : ''}`}
               >
                 <User className="h-4 w-4 mr-2" />
                 By Teachers
               </Button>
               <Button
+                variant={activeTab === 'subjects' ? 'default' : 'ghost'}
+                onClick={() => dispatch(setGradesActiveTab('subjects'))}
+                className={`rounded-b-none ${activeTab === 'subjects' ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white border-0 shadow-lg shadow-cyan-500/30' : ''}`}
+              >
+                <BookMarked className="h-4 w-4 mr-2" />
+                By Subjects
+              </Button>
+              <Button
                 variant={activeTab === 'statistics' ? 'default' : 'ghost'}
                 onClick={() => dispatch(setGradesActiveTab('statistics'))}
-                className="rounded-b-none"
+                className={`rounded-b-none ${activeTab === 'statistics' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-0 shadow-lg shadow-amber-500/30' : ''}`}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
                 Statistics
@@ -624,65 +726,103 @@ const GradesPage = () => {
             {/* Statistics Tab */}
             {activeTab === 'statistics' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Total Grades</p>
-                      <p className="text-lg font-semibold">{gradeStatistics.totalGrades}</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Average Percentage</p>
-                      <p className="text-lg font-semibold text-indigo-600">{gradeStatistics.averagePercentage.toFixed(1)}%</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Passing Rate</p>
-                      <p className="text-lg font-semibold text-emerald-600">{gradeStatistics.passRate}%</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Failing Grades</p>
-                      <p className="text-lg font-semibold text-rose-600">{gradeStatistics.failingGrades}</p>
-                    </CardContent>
-                  </Card>
+                {/* Overview - Top */}
+                <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                  <p className="text-sm font-medium mb-3">Overview</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3">
+                      <p className="text-xs text-white/70">Students</p>
+                      <p className="text-lg font-bold text-white">{students.length}</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3">
+                      <p className="text-xs text-white/70">Classes</p>
+                      <p className="text-lg font-bold text-white">{classes.length}</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-3">
+                      <p className="text-xs text-white/70">Teachers</p>
+                      <p className="text-lg font-bold text-white">{teachers.length}</p>
+                    </div>
+                    <div className="rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-3">
+                      <p className="text-xs text-white/70">Subjects</p>
+                      <p className="text-lg font-bold text-white">{subjects.length}</p>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                      <p className="text-sm font-medium">Grade Distribution</p>
-                      <p className="text-xs text-muted-foreground">Relative share of grade letters</p>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">Grade Distribution</p>
+                        <p className="text-xs text-muted-foreground">Compact breakdown of A to F grade volume.</p>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        <p>{gradeStatistics.totalGrades} total grades</p>
+                        <p>{gradeStatistics.averagePercentage.toFixed(1)}% average</p>
+                      </div>
                     </div>
-                    <div className="text-right text-xs text-muted-foreground">
-                      <p>{gradeStatistics.passingGrades} passing</p>
-                      <p>{gradeStatistics.failingGrades} failing</p>
+                    <div className="flex min-h-[9rem] items-end gap-3">
+                      {gradeStatistics.segments.some((segment) => segment.count > 0) ? (
+                        gradeStatistics.segments.map((segment) => {
+                          const maxCount = Math.max(...gradeStatistics.segments.map((entry) => entry.count), 1);
+                          const heightPercent = segment.count > 0 ? (segment.count / maxCount) * 100 : 12;
+                          return (
+                            <div key={segment.label} className="flex flex-1 flex-col items-center gap-2">
+                              <span className="text-xs font-semibold text-foreground">{segment.count}</span>
+                              <div className="flex h-28 w-full items-end rounded-xl bg-muted/30 p-1.5">
+                                <div
+                                  className={`w-full rounded-lg ${segment.className} shadow-sm`}
+                                  style={{ height: `${Math.max(heightPercent, 12)}%` }}
+                                />
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs font-medium">Grade {segment.label}</p>
+                                <p className="text-[11px] text-muted-foreground">{segment.percent.toFixed(0)}%</p>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
+                          No grade data yet
+                        </div>
+                      )}
                     </div>
                   </div>
 
-                  <div className="h-4 w-full overflow-hidden rounded-full bg-muted shadow-inner">
-                    <div className="flex h-full w-full">
+                  <div className="rounded-2xl border bg-card p-4 shadow-sm">
+                    <div className="mb-3 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium">Grade Mix</p>
+                        <p className="text-xs text-muted-foreground">Relative share of grade letters.</p>
+                      </div>
+                      <div className="text-right text-xs text-muted-foreground">
+                        <p>{gradeStatistics.passingGrades} passing</p>
+                        <p>{gradeStatistics.failingGrades} failing</p>
+                      </div>
+                    </div>
+
+                    <div className="h-3 w-full overflow-hidden rounded-full bg-muted shadow-inner">
+                      <div className="flex h-full w-full">
+                        {gradeStatistics.segments.map((segment) => (
+                          <div
+                            key={segment.label}
+                            className={`h-full transition-all duration-300 ${segment.className}`}
+                            style={{ width: `${segment.percent}%` }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm xl:grid-cols-4">
                       {gradeStatistics.segments.map((segment) => (
-                        <div
-                          key={segment.label}
-                          className={`h-full transition-all duration-300 ${segment.className}`}
-                          style={{ width: `${segment.percent}%` }}
-                        />
+                        <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
+                          <p className="text-xs text-muted-foreground">Grade {segment.label}</p>
+                          <p className="font-semibold">{segment.count}</p>
+                          <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
+                        </div>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="mt-4 grid grid-cols-2 lg:grid-cols-5 gap-3 text-sm">
-                    {gradeStatistics.segments.map((segment) => (
-                      <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
-                        <p className="text-xs text-muted-foreground">Grade {segment.label}</p>
-                        <p className="font-semibold">{segment.count}</p>
-                        <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
-                      </div>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -709,23 +849,26 @@ const GradesPage = () => {
                       return (
                         <Card
                           key={studentId}
-                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
                           onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Folder className="h-9 w-9 text-primary" />
+                          <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30">
+                                <Folder className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{student.first_name} {student.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">ID: {studentId}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
+                              <p className="text-xs text-muted-foreground">ID: {studentId}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <BookOpen className="h-3.5 w-3.5" />
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <BookOpen className="h-3 w-3" />
                                 <span>{gradeCount} grades</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: getGradeColor('A') }}>
+                              <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: getGradeColor('A') }}>
                                 <span>{avgPercentage.toFixed(1)}%</span>
                               </div>
                             </div>
@@ -773,23 +916,26 @@ const GradesPage = () => {
                       return (
                         <Card
                           key={classId}
-                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
                           onClick={() => handleFolderClick('class', classId, cls.class_name)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Folder className="h-9 w-9 text-primary" />
+                          <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+                                <Folder className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{cls.class_name}</h3>
-                              <p className="text-sm text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{cls.class_name}</h3>
+                              <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <BookOpen className="h-3.5 w-3.5" />
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <BookOpen className="h-3 w-3" />
                                 <span>{gradeCount} grades</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm font-semibold" style={{ color: getGradeColor('A') }}>
+                              <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: getGradeColor('A') }}>
                                 <span>{avgPercentage.toFixed(1)}%</span>
                               </div>
                             </div>
@@ -836,24 +982,27 @@ const GradesPage = () => {
                       return (
                         <Card
                           key={teacherId}
-                          className="cursor-pointer hover:shadow-md transition-shadow"
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
                           onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-3 mb-3">
-                              <Folder className="h-9 w-9 text-primary" />
+                          <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-900/30">
+                                <Folder className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                              </div>
                             </div>
-                            <div className="space-y-1">
-                              <h3 className="font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                              <p className="text-sm text-muted-foreground">{teacher.employee_id}</p>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
+                              <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
                             </div>
-                            <div className="flex justify-between items-center mt-3 pt-3 border-t">
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <Users className="h-3.5 w-3.5" />
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Users className="h-3 w-3" />
                                 <span>{getStudentIdsForTeacher(teacherId).length} students</span>
                               </div>
-                              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                                <BookOpen className="h-3.5 w-3.5" />
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <BookOpen className="h-3 w-3" />
                                 <span>{gradeCount} grades</span>
                               </div>
                             </div>
@@ -869,6 +1018,78 @@ const GradesPage = () => {
                   totalPages={paginatedTeachers.totalPages}
                   start={paginatedTeachers.start}
                   end={paginatedTeachers.end}
+                  pageSize={folderPageSize}
+                  pageSizeOptions={folderPageSizeOptions}
+                  onPageChange={setFolderPage}
+                  onPageSizeChange={(pageSize) => {
+                    setFolderPageSize(pageSize);
+                    setFolderPage(1);
+                  }}
+                />
+              </div>
+            )}
+
+            {/* By Subjects Tab */}
+            {activeTab === 'subjects' && (
+              <div className="space-y-4">
+                <div className={folderGridClass}>
+                  {loadingData ? (
+                    <div className="col-span-full text-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                      <p className="text-muted-foreground">Loading subjects...</p>
+                    </div>
+                  ) : subjects.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-muted-foreground">No subjects found</p>
+                    </div>
+                  ) : (
+                    paginatedSubjects.items.map((subject) => {
+                      const subjectId = subject.subject_id || subject.id || 0;
+                      const classStudents = students.filter((s) => s.class_id === subject.class_id);
+                      const studentIds = classStudents.map((s) => s.student_id || s.id || 0);
+                      const subjectGrades = state.items.filter((g) => studentIds.includes(g.student_id));
+                      const avgPercent = subjectGrades.length > 0
+                        ? subjectGrades.reduce((acc, g) => acc + (g.percentage || 0), 0) / subjectGrades.length
+                        : 0;
+                      const cls = classes.find((c) => (c.class_id || c.id) === subject.class_id);
+                      return (
+                        <Card
+                          key={subjectId}
+                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
+                          onClick={() => handleFolderClick('subject', subject.class_id, subject.subject_name)}
+                        >
+                          <div className="h-1 bg-gradient-to-r from-cyan-500 to-teal-500 dark:hidden" />
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-2 mb-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50 dark:bg-cyan-900/30">
+                                <BookMarked className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+                              </div>
+                            </div>
+                            <div className="space-y-0.5">
+                              <h3 className="text-sm font-semibold">{subject.subject_name}</h3>
+                              <p className="text-xs text-muted-foreground">{cls?.class_name || `Class ${subject.class_id}`} • {subject.subject_code}</p>
+                            </div>
+                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Users className="h-3 w-3" />
+                                <span>{classStudents.length} students</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-xs font-semibold" style={{ color: getGradeColor('A') }}>
+                                <span>{avgPercent.toFixed(1)}%</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })
+                  )}
+                </div>
+                <PaginationBar
+                  total={subjects.length}
+                  currentPage={paginatedSubjects.currentPage}
+                  totalPages={paginatedSubjects.totalPages}
+                  start={paginatedSubjects.start}
+                  end={paginatedSubjects.end}
                   pageSize={folderPageSize}
                   pageSizeOptions={folderPageSizeOptions}
                   onPageChange={setFolderPage}
@@ -933,7 +1154,7 @@ const GradesPage = () => {
 
           {/* Filter Options */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
               <div className="space-y-2">
                 <Label>Term</Label>
                 <Select value={filterTerm} onValueChange={(value) => dispatch(setGradesFilterTerm(value))}>
@@ -964,11 +1185,27 @@ const GradesPage = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2">
+                <Label>Age Range</Label>
+                <Select value={filterAgeRange} onValueChange={setFilterAgeRange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All Ages" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">All Ages</SelectItem>
+                    <SelectItem value="3-6">3-6 years</SelectItem>
+                    <SelectItem value="7-10">7-10 years</SelectItem>
+                    <SelectItem value="11-14">11-14 years</SelectItem>
+                    <SelectItem value="15-18">15-18 years</SelectItem>
+                    <SelectItem value="19-25">19-25 years</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           )}
 
           {/* Grades Table */}
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-hidden [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
             <Table>
               <TableHeader>
                 <TableRow>

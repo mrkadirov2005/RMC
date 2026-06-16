@@ -10,6 +10,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { archiveAPI } from '@/shared/api/api';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
 
@@ -55,6 +56,7 @@ const EmptyRow = ({ colSpan, label }: { colSpan: number; label: string }) => (
 type ArchiveEntity = 'students' | 'teachers' | 'classes' | 'payments' | 'sessions';
 
 const ArchivePage = () => {
+  const { t } = useLanguage();
   const { user } = useAppSelector((state) => state.auth);
   const [archive, setArchive] = useState<ArchivePayload>(emptyArchive);
   const [loading, setLoading] = useState(true);
@@ -86,7 +88,7 @@ const ArchivePage = () => {
         setArchive(response?.data || emptyArchive);
       })
       .catch((err) => {
-        if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load archive.');
+        if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || t('Failed to load archive.'));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -108,7 +110,7 @@ const ArchivePage = () => {
       const response = await archiveAPI.getAll();
       setArchive(response?.data || emptyArchive);
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load archive.');
+      setError(err?.response?.data?.error || err?.response?.data?.details || t('Failed to load archive.'));
     } finally {
       setLoading(false);
     }
@@ -122,14 +124,14 @@ const ArchivePage = () => {
       await archiveAPI.restore(entity, id);
       await refreshArchive();
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to restore record.');
+      setError(err?.response?.data?.error || err?.response?.data?.details || t('Failed to restore record.'));
     } finally {
       setActionKey('');
     }
   };
 
   const handlePurge = async (entity: ArchiveEntity, id: number) => {
-    if (!window.confirm('Permanently delete this archived record? This cannot be undone.')) return;
+    if (!window.confirm(t('Permanently delete this archived record? This cannot be undone.'))) return;
     const key = `${entity}:${id}:purge`;
     setActionKey(key);
     setError('');
@@ -137,7 +139,7 @@ const ArchivePage = () => {
       await archiveAPI.purge(entity, id);
       await refreshArchive();
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to permanently delete record.');
+      setError(err?.response?.data?.error || err?.response?.data?.details || t('Failed to permanently delete record.'));
     } finally {
       setActionKey('');
     }
@@ -153,7 +155,7 @@ const ArchivePage = () => {
         disabled={Boolean(actionKey)}
       >
         {actionKey === `${entity}:${id}:restore` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
-        Restore
+        {t('Restore')}
       </Button>
       {isOwner && (
         <Button
@@ -164,7 +166,7 @@ const ArchivePage = () => {
           disabled={Boolean(actionKey)}
         >
           {actionKey === `${entity}:${id}:purge` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-          Delete
+          {t('Delete')}
         </Button>
       )}
     </div>
@@ -208,10 +210,10 @@ const ArchivePage = () => {
   );
 
   const cards = [
-    { label: 'Students', value: archive.counts.students || 0, detail: 'Soft-deleted profiles', icon: Users, tone: 'blue' as const },
-    { label: 'Teachers', value: archive.counts.teachers || 0, detail: 'Archived staff', icon: GraduationCap, tone: 'green' as const },
-    { label: 'Classes', value: archive.counts.classes || 0, detail: 'Archived groups', icon: BookOpen, tone: 'amber' as const },
-    { label: 'Payments', value: archive.counts.payments || 0, detail: 'Archived payments', icon: CreditCard, tone: 'neutral' as const },
+    { label: t('Students'), value: archive.counts.students || 0, detail: t('Soft-deleted profiles'), icon: Users, tone: 'blue' as const },
+    { label: t('Teachers'), value: archive.counts.teachers || 0, detail: t('Archived staff'), icon: GraduationCap, tone: 'green' as const },
+    { label: t('Classes'), value: archive.counts.classes || 0, detail: t('Archived groups'), icon: BookOpen, tone: 'amber' as const },
+    { label: t('Payments'), value: archive.counts.payments || 0, detail: t('Archived payments'), icon: CreditCard, tone: 'neutral' as const },
   ];
 
   if (loading) {
@@ -225,13 +227,13 @@ const ArchivePage = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Archive"
-        description="Soft-deleted records across students, teachers, classes, payments, and calendar sessions."
+        title={t('Archive')}
+        description={t('Soft-deleted records across students, teachers, classes, payments, and calendar sessions.')}
         icon={Archive}
         actions={
           <Button type="button" variant="outline" size="sm" onClick={refreshArchive} disabled={loading || Boolean(actionKey)}>
             <RefreshCcw className="mr-2 h-4 w-4" />
-            Refresh
+            {t('Refresh')}
           </Button>
         }
       />
@@ -243,7 +245,7 @@ const ArchivePage = () => {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard label="Total archived" value={totalArchived.toLocaleString()} detail="All record types" icon={Archive} tone="neutral" />
+        <MetricCard label={t('Total archived')} value={totalArchived.toLocaleString()} detail={t('All record types')} icon={Archive} tone="neutral" />
         {cards.map((card) => (
           <MetricCard
             key={card.label}
@@ -256,36 +258,36 @@ const ArchivePage = () => {
         ))}
       </div>
 
-      <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
+      <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
         <CardContent className="p-0">
           <Tabs defaultValue="students">
-            <TabsList className="h-auto w-full justify-start rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
-              <TabsTrigger value="students">Students</TabsTrigger>
-              <TabsTrigger value="teachers">Teachers</TabsTrigger>
-              <TabsTrigger value="classes">Classes</TabsTrigger>
-              <TabsTrigger value="payments">Payments</TabsTrigger>
-              <TabsTrigger value="sessions">Calendar Sessions</TabsTrigger>
+            <TabsList className="h-auto w-full justify-start rounded-none border-b bg-slate-50 p-2 gap-2 dark:bg-muted/40">
+              <TabsTrigger value="students" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Students')}</TabsTrigger>
+              <TabsTrigger value="teachers" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Teachers')}</TabsTrigger>
+              <TabsTrigger value="classes" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Classes')}</TabsTrigger>
+              <TabsTrigger value="payments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-violet-500 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Payments')}</TabsTrigger>
+              <TabsTrigger value="sessions" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-rose-500 data-[state=active]:to-pink-600 data-[state=active]:text-white data-[state=active]:shadow-md">{t('Calendar Sessions')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="students" className="m-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Enrollment</TableHead>
-                    <TableHead>Group</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Archived At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('Student')}</TableHead>
+                    <TableHead>{t('Enrollment')}</TableHead>
+                    <TableHead>{t('Group')}</TableHead>
+                    <TableHead>{t('Status')}</TableHead>
+                    <TableHead>{t('Archived At')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.students.length === 0 ? <EmptyRow colSpan={6} label="No archived students." /> : paginatedArchive.students.items.map((student) => (
+                  {archive.students.length === 0 ? <EmptyRow colSpan={6} label={t('No archived students.')} /> : paginatedArchive.students.items.map((student) => (
                     <TableRow key={student.student_id}>
                       <TableCell className="font-medium">{fullName(student)}</TableCell>
                       <TableCell>{student.enrollment_number || '-'}</TableCell>
                       <TableCell>{[student.class_name, student.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
-                      <TableCell><Badge variant="outline">{student.status || 'Archived'}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{student.status || t('Archived')}</Badge></TableCell>
                       <TableCell>{formatDate(student.deleted_at)}</TableCell>
                       <TableCell>{rowActions('students', Number(student.student_id))}</TableCell>
                     </TableRow>
@@ -299,21 +301,21 @@ const ArchivePage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Employee ID</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Archived At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('Teacher')}</TableHead>
+                    <TableHead>{t('Employee ID')}</TableHead>
+                    <TableHead>{t('Email')}</TableHead>
+                    <TableHead>{t('Status')}</TableHead>
+                    <TableHead>{t('Archived At')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.teachers.length === 0 ? <EmptyRow colSpan={6} label="No archived teachers." /> : paginatedArchive.teachers.items.map((teacher) => (
+                  {archive.teachers.length === 0 ? <EmptyRow colSpan={6} label={t('No archived teachers.')} /> : paginatedArchive.teachers.items.map((teacher) => (
                     <TableRow key={teacher.teacher_id}>
                       <TableCell className="font-medium">{fullName(teacher)}</TableCell>
                       <TableCell>{teacher.employee_id || '-'}</TableCell>
                       <TableCell>{teacher.email || '-'}</TableCell>
-                      <TableCell><Badge variant="outline">{teacher.status || 'Archived'}</Badge></TableCell>
+                      <TableCell><Badge variant="outline">{teacher.status || t('Archived')}</Badge></TableCell>
                       <TableCell>{formatDate(teacher.deleted_at)}</TableCell>
                       <TableCell>{rowActions('teachers', Number(teacher.teacher_id))}</TableCell>
                     </TableRow>
@@ -327,16 +329,16 @@ const ArchivePage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Group</TableHead>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Archived At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('Group')}</TableHead>
+                    <TableHead>{t('Teacher')}</TableHead>
+                    <TableHead>{t('Room')}</TableHead>
+                    <TableHead>{t('Payment')}</TableHead>
+                    <TableHead>{t('Archived At')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.classes.length === 0 ? <EmptyRow colSpan={6} label="No archived classes." /> : paginatedArchive.classes.items.map((cls) => (
+                  {archive.classes.length === 0 ? <EmptyRow colSpan={6} label={t('No archived classes.')} /> : paginatedArchive.classes.items.map((cls) => (
                     <TableRow key={cls.class_id}>
                       <TableCell className="font-medium">{[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
                       <TableCell>{teacherName(cls)}</TableCell>
@@ -355,16 +357,16 @@ const ArchivePage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Receipt</TableHead>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Archived At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('Receipt')}</TableHead>
+                    <TableHead>{t('Student')}</TableHead>
+                    <TableHead>{t('Amount')}</TableHead>
+                    <TableHead>{t('Status')}</TableHead>
+                    <TableHead>{t('Archived At')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.payments.length === 0 ? <EmptyRow colSpan={6} label="No archived payments." /> : paginatedArchive.payments.items.map((payment) => (
+                  {archive.payments.length === 0 ? <EmptyRow colSpan={6} label={t('No archived payments.')} /> : paginatedArchive.payments.items.map((payment) => (
                     <TableRow key={payment.payment_id}>
                       <TableCell className="font-medium">{payment.receipt_number || `#${payment.payment_id}`}</TableCell>
                       <TableCell>{[payment.student_first_name, payment.student_last_name].filter(Boolean).join(' ').trim() || payment.enrollment_number || '-'}</TableCell>
@@ -383,16 +385,16 @@ const ArchivePage = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Group</TableHead>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead>Archived At</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>{t('Date')}</TableHead>
+                    <TableHead>{t('Group')}</TableHead>
+                    <TableHead>{t('Teacher')}</TableHead>
+                    <TableHead>{t('Time')}</TableHead>
+                    <TableHead>{t('Archived At')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label="No archived calendar sessions." /> : paginatedArchive.sessions.items.map((session) => (
+                  {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label={t('No archived calendar sessions.')} /> : paginatedArchive.sessions.items.map((session) => (
                     <TableRow key={session.session_id}>
                       <TableCell className="font-medium">{formatDate(session.session_date)}</TableCell>
                       <TableCell>{[session.class_name, session.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>

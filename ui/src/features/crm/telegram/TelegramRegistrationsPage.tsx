@@ -4,13 +4,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
-import { telegramRegistrationAPI } from '@/shared/api/api';
+import { telegramRegistrationAPI, classAPI, teacherAPI } from '@/shared/api/api';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { showToast } from '@/utils/toast';
 
 type TelegramRegistration = {
@@ -51,6 +54,7 @@ const statusTone = (status: string) => {
 };
 
 const TelegramRegistrationsPage = () => {
+  const { t } = useLanguage();
   const [rows, setRows] = useState<TelegramRegistration[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -59,6 +63,16 @@ const TelegramRegistrationsPage = () => {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [actionId, setActionId] = useState<number | null>(null);
+  const [assignDialogId, setAssignDialogId] = useState<number | null>(null);
+  const [assignClassId, setAssignClassId] = useState('');
+  const [assignTeacherId, setAssignTeacherId] = useState('');
+  const [classes, setClasses] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+
+  useEffect(() => {
+    classAPI.getAll().then((res: any) => setClasses(Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])).catch(() => {});
+    teacherAPI.getAll().then((res: any) => setTeachers(Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])).catch(() => {});
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -68,7 +82,7 @@ const TelegramRegistrationsPage = () => {
       const data = response?.data ?? response;
       setRows(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load Telegram registrations.');
+      setError(err?.response?.data?.error || err?.response?.data?.details || t('Failed to load Telegram registrations.'));
     } finally {
       setLoading(false);
     }
@@ -120,11 +134,22 @@ const TelegramRegistrationsPage = () => {
     );
   }, [rows]);
 
-  const handleConvert = async (id: number) => {
-    setActionId(id);
+  const openAssignDialog = (id: number) => {
+    setAssignDialogId(id);
+    setAssignClassId('');
+    setAssignTeacherId('');
+  };
+
+  const handleConvert = async () => {
+    if (!assignDialogId) return;
+    setActionId(assignDialogId);
+    setAssignDialogId(null);
     try {
-      await telegramRegistrationAPI.convert(id);
-      showToast.success('Telegram registration moved into students.');
+      await telegramRegistrationAPI.convert(assignDialogId, {
+        class_id: assignClassId ? Number(assignClassId) : undefined,
+        teacher_id: assignTeacherId ? Number(assignTeacherId) : undefined,
+      });
+      showToast.success(t('Telegram registration moved into students.'));
       await load();
     } catch {
       // API interceptor shows the backend message.
@@ -134,11 +159,11 @@ const TelegramRegistrationsPage = () => {
   };
 
   const handleReject = async (id: number) => {
-    if (!window.confirm('Reject this Telegram registration?')) return;
+    if (!window.confirm(t('Reject this Telegram registration?'))) return;
     setActionId(id);
     try {
       await telegramRegistrationAPI.reject(id);
-      showToast.success('Telegram registration rejected.');
+      showToast.success(t('Telegram registration rejected.'));
       await load();
     } catch {
       // API interceptor shows the backend message.
@@ -150,13 +175,13 @@ const TelegramRegistrationsPage = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Telegram Registrations"
-        description="Review student registrations sent from the Telegram bot and move approved records into Students."
+        title={t('Telegram Registrations')}
+        description={t('Review student registrations sent from the Telegram bot and move approved records into Students.')}
         icon={MessageCircle}
         actions={
           <Button type="button" variant="outline" onClick={load} disabled={loading}>
             <RefreshCcw className="mr-2 h-4 w-4" />
-            Refresh
+            {t('Refresh')}
           </Button>
         }
       />
@@ -168,10 +193,10 @@ const TelegramRegistrationsPage = () => {
       )}
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Visible" value={rows.length.toLocaleString()} detail="Current status filter" icon={MessageCircle} tone="neutral" />
-        <MetricCard label="Pending" value={counts.pending.toLocaleString()} detail="Waiting for action" icon={UserPlus} tone="amber" />
-        <MetricCard label="Imported" value={counts.imported.toLocaleString()} detail="Moved into students" icon={CheckCircle} tone="green" />
-        <MetricCard label="Rejected" value={counts.rejected.toLocaleString()} detail="Declined requests" icon={XCircle} tone="neutral" />
+        <MetricCard label={t('Visible')} value={rows.length.toLocaleString()} detail={t('Current status filter')} icon={MessageCircle} tone="neutral" />
+        <MetricCard label={t('Pending')} value={counts.pending.toLocaleString()} detail={t('Waiting for action')} icon={UserPlus} tone="amber" />
+        <MetricCard label={t('Imported')} value={counts.imported.toLocaleString()} detail={t('Moved into students')} icon={CheckCircle} tone="green" />
+        <MetricCard label={t('Rejected')} value={counts.rejected.toLocaleString()} detail={t('Declined requests')} icon={XCircle} tone="neutral" />
       </div>
 
       <Card className="border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
@@ -182,7 +207,7 @@ const TelegramRegistrationsPage = () => {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search by name, phone, username, school..."
+                placeholder={t('Search by name, phone, username, school...')}
                 className="pl-10"
               />
             </div>
@@ -205,13 +230,13 @@ const TelegramRegistrationsPage = () => {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Parent</TableHead>
-              <TableHead>School</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>{t('Student')}</TableHead>
+              <TableHead>{t('Contact')}</TableHead>
+              <TableHead>{t('Parent')}</TableHead>
+              <TableHead>{t('School')}</TableHead>
+              <TableHead>{t('Status')}</TableHead>
+              <TableHead>{t('Created')}</TableHead>
+              <TableHead className="text-right">{t('Actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -219,13 +244,13 @@ const TelegramRegistrationsPage = () => {
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center">
                   <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-primary" />
-                  Loading registrations...
+                  {t('Loading registrations...')}
                 </TableCell>
               </TableRow>
             ) : filteredRows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  No Telegram registrations found.
+                  {t('No Telegram registrations found.')}
                 </TableCell>
               </TableRow>
             ) : (
@@ -264,11 +289,12 @@ const TelegramRegistrationsPage = () => {
                         <Button
                           type="button"
                           size="sm"
-                          onClick={() => handleConvert(row.registration_id)}
+                          className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:from-blue-600 hover:to-indigo-700 border-0"
+                          onClick={() => openAssignDialog(row.registration_id)}
                           disabled={imported || rejected || actionId === row.registration_id}
                         >
                           {actionId === row.registration_id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
-                          Move to Students
+                          {t('Move to Students')}
                         </Button>
                         {!imported && !rejected && (
                           <Button
@@ -278,7 +304,7 @@ const TelegramRegistrationsPage = () => {
                             onClick={() => handleReject(row.registration_id)}
                             disabled={actionId === row.registration_id}
                           >
-                            Reject
+                            {t('Reject')}
                           </Button>
                         )}
                       </div>
@@ -304,6 +330,52 @@ const TelegramRegistrationsPage = () => {
           setPage(1);
         }}
       />
+
+      <Dialog open={assignDialogId !== null} onOpenChange={(open) => { if (!open) setAssignDialogId(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('Assign to Group & Teacher')}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label>{t('Group (Class)')}</Label>
+              <Select value={assignClassId} onValueChange={setAssignClassId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('Select a group (optional)')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {classes.map((cls: any) => (
+                    <SelectItem key={cls.class_id} value={String(cls.class_id)}>
+                      {[cls.class_name, cls.class_code].filter(Boolean).join(' / ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>{t('Teacher')}</Label>
+              <Select value={assignTeacherId} onValueChange={setAssignTeacherId}>
+                <SelectTrigger>
+                  <SelectValue placeholder={t('Select a teacher (optional)')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {teachers.map((t: any) => (
+                    <SelectItem key={t.teacher_id} value={String(t.teacher_id)}>
+                      {[t.first_name, t.last_name].filter(Boolean).join(' ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAssignDialogId(null)}>{t('Cancel')}</Button>
+            <Button className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0" onClick={handleConvert}>
+              <UserPlus className="mr-2 h-4 w-4" /> {t('Confirm & Move')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

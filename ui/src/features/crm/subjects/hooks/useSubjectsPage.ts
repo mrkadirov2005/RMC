@@ -16,6 +16,7 @@ import { selectClassOptions, selectTeacherOptions } from '../../../../store/sele
 import type { Subject } from '../types';
 import { getStoredActiveCenterId } from '../../../../shared/auth/authStorage';
 import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
+import { showToast } from '../../../../utils/toast';
 
 // Provides subjects page.
 export const useSubjectsPage = () => {
@@ -84,6 +85,17 @@ export const useSubjectsPage = () => {
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const normalizedClassId = Number(formData.class_id || 0);
+    const hasDifferentSubjectForClass = items.some((subject) => {
+      const subjectId = Number(subject.subject_id || subject.id || 0);
+      return Number(subject.class_id || 0) === normalizedClassId && subjectId !== Number(editingId || 0);
+    });
+
+    if (normalizedClassId && hasDifferentSubjectForClass) {
+      showToast.error('This class already has an assigned subject.');
+      return;
+    }
+
     try {
       if (editingId) {
         await dispatch(updateSubject({ id: editingId, data: formData })).unwrap();
@@ -114,8 +126,13 @@ export const useSubjectsPage = () => {
 
   const handleExportSubjects = () => exportCsvEntity('subjects', 'Subjects');
 
+  const classes = useAppSelector((state) => state.classes.items) as { class_id?: number; id?: number; class_name: string; class_code: string; level: number }[];
+  const teachers = useAppSelector((state) => state.teachers.items) as { teacher_id?: number; id?: number; first_name: string; last_name: string }[];
+
   return {
     state,
+    classes,
+    teachers,
     isModalOpen,
     editingId,
     formData,
