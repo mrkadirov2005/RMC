@@ -149,7 +149,7 @@ const StudentPortal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.18),transparent_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.18),transparent_30%),linear-gradient(180deg,#f8fafc_0%,#eef6ff_45%,#f8fafc_100%)] dark:bg-none">
+    <div className="min-h-screen bg-[linear-gradient(120deg,rgba(251,113,133,0.22)_0%,transparent_28%),linear-gradient(240deg,rgba(234,179,8,0.2)_0%,transparent_26%),linear-gradient(135deg,#fff7ed_0%,#fdf2f8_28%,#ecfeff_62%,#f7fee7_100%)] dark:bg-[linear-gradient(135deg,#101018_0%,#18112a_45%,#09251f_100%)]">
       <StudentTopHeader initials={initials} studentName={studentName} t={t} onHome={goHome} onTests={goTests} onCalendar={goCalendar} onProfile={() => setProfileOpen(true)} onLogout={handleLogout} />
       <StudentProfileDialog
         open={profileOpen}

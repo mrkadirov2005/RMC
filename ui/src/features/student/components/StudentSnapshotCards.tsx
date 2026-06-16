@@ -32,18 +32,18 @@ export const StudentSnapshotCards = ({ student, teacher, classInfo, subjects, t 
         [UserRound, teacher?.first_name ? `${t('Teacher')}: ${teacher.first_name} ${teacher.last_name || ''}` : ''],
       ]}
     />
-    <Card>
+    <Card className="overflow-hidden border-0 bg-gradient-to-br from-teal-500 via-emerald-500 to-lime-300 text-white shadow-lg shadow-emerald-200/50">
       <CardHeader>
-        <CardTitle className="text-base">{t('Subjects')}</CardTitle>
+        <CardTitle className="text-base text-white">{t('Subjects')}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 text-sm">
         {subjects.length === 0 ? (
-          <p className="text-sm text-muted-foreground">{t('No subjects assigned yet.')}</p>
+          <p className="text-sm text-white/75">{t('No subjects assigned yet.')}</p>
         ) : (
           subjects.slice(0, 6).map((subject) => (
-            <div key={subject.subject_id || subject.id} className="flex items-center justify-between">
+            <div key={subject.subject_id || subject.id} className="flex items-center justify-between rounded-md bg-white/16 px-3 py-2">
               <span>{subject.subject_name}</span>
-              <Badge variant="outline">{t('Active')}</Badge>
+              <Badge className="border-white/20 bg-white/20 text-white">{t('Active')}</Badge>
             </div>
           ))
         )}
@@ -53,14 +53,14 @@ export const StudentSnapshotCards = ({ student, teacher, classInfo, subjects, t 
 );
 
 const InfoCard = ({ title, rows }: { title: string; rows: [ElementType, string | undefined][] }) => (
-  <Card>
+  <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#32164f] via-[#7c2d12] to-[#be123c] text-white shadow-lg shadow-rose-200/45">
     <CardHeader>
-      <CardTitle className="text-base">{title}</CardTitle>
+      <CardTitle className="text-base text-white">{title}</CardTitle>
     </CardHeader>
     <CardContent className="space-y-3 text-sm">
       {rows.filter(([, value]) => value).map(([Icon, value], index) => (
-        <div key={index} className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-muted-foreground" />
+        <div key={index} className="flex items-center gap-2 rounded-md bg-white/12 px-3 py-2">
+          <Icon className="h-4 w-4 text-amber-200" />
           <span>{value}</span>
         </div>
       ))}

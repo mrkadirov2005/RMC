@@ -7,13 +7,13 @@ import { formatMoney } from '@/utils/helpers';
 import type { AttendanceStats, ClassInfo, StudentProfile, Subject, Teacher } from '../types';
 
 const ProfileRow = ({ label, value, icon: Icon }: { label: string; value?: string | number | null; icon: ElementType }) => (
-  <div className="flex items-start gap-3 rounded-lg border border-slate-200 bg-white/80 p-3 dark:border-border dark:bg-muted/20">
-    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-muted dark:text-primary">
+  <div className="flex items-start gap-3 rounded-lg border border-white/25 bg-white/16 p-3 text-white">
+    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-300 text-[#32164f]">
       <Icon className="h-4 w-4" />
     </div>
     <div className="min-w-0">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 break-words text-sm font-semibold text-slate-950 dark:text-foreground">{value || '-'}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-white/65">{label}</p>
+      <p className="mt-1 break-words text-sm font-semibold text-white">{value || '-'}</p>
     </div>
   </div>
 );
@@ -54,11 +54,11 @@ export const StudentProfileDialog = ({
   t,
 }: StudentProfileDialogProps) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto p-0">
-      <DialogHeader className="rounded-t-xl bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-400 p-6 text-white">
+    <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto border-0 bg-[#27133f] p-0 text-white">
+      <DialogHeader className="rounded-t-xl bg-[linear-gradient(135deg,#be123c_0%,#7e22ce_48%,#0f766e_100%)] p-6 text-white">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
           <Avatar className="h-20 w-20 rounded-lg border border-white/30">
-            <AvatarFallback className="rounded-lg bg-white/20 text-2xl font-bold text-white">{initials}</AvatarFallback>
+            <AvatarFallback className="rounded-lg bg-amber-300 text-2xl font-bold text-[#32164f]">{initials}</AvatarFallback>
           </Avatar>
           <div>
             <DialogTitle className="text-2xl text-white">{studentName}</DialogTitle>
@@ -70,7 +70,7 @@ export const StudentProfileDialog = ({
           </div>
         </div>
       </DialogHeader>
-      <div className="space-y-5 p-6">
+      <div className="space-y-5 bg-[linear-gradient(135deg,rgba(251,191,36,0.16)_0%,transparent_30%),linear-gradient(315deg,rgba(45,212,191,0.14)_0%,transparent_32%)] p-6">
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <ProfileRow label={t('Username')} value={username || student?.enrollment_number} icon={UserRound} />
           <ProfileRow label={t('Email')} value={student?.email} icon={Mail} />
@@ -84,31 +84,31 @@ export const StudentProfileDialog = ({
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-lg border bg-sky-50 p-4 dark:bg-muted/20">
-            <p className="text-xs font-semibold uppercase text-sky-700 dark:text-primary">{t('Attendance')}</p>
+          <div className="rounded-lg border border-cyan-200/25 bg-cyan-300/20 p-4">
+            <p className="text-xs font-semibold uppercase text-cyan-100">{t('Attendance')}</p>
             <p className="mt-2 text-3xl font-bold">{attendanceStats.rate}%</p>
-            <p className="text-sm text-muted-foreground">{attendanceStats.present}/{attendanceStats.total} {t('present')}</p>
+            <p className="text-sm text-white/70">{attendanceStats.present}/{attendanceStats.total} {t('present')}</p>
           </div>
-          <div className="rounded-lg border bg-emerald-50 p-4 dark:bg-muted/20">
-            <p className="text-xs font-semibold uppercase text-emerald-700 dark:text-primary">{t('Average Grade')}</p>
+          <div className="rounded-lg border border-emerald-200/25 bg-emerald-300/20 p-4">
+            <p className="text-xs font-semibold uppercase text-emerald-100">{t('Average Grade')}</p>
             <p className="mt-2 text-3xl font-bold">{averageGrade}%</p>
-            <p className="text-sm text-muted-foreground">{gradesCount} {t('records')}</p>
+            <p className="text-sm text-white/70">{gradesCount} {t('records')}</p>
           </div>
-          <div className="rounded-lg border bg-rose-50 p-4 dark:bg-muted/20">
-            <p className="text-xs font-semibold uppercase text-rose-700 dark:text-primary">{t('Outstanding Debt')}</p>
+          <div className="rounded-lg border border-rose-200/25 bg-rose-300/20 p-4">
+            <p className="text-xs font-semibold uppercase text-rose-100">{t('Outstanding Debt')}</p>
             <p className="mt-2 text-3xl font-bold">{formatMoney(outstandingDebt)}</p>
-            <p className="text-sm text-muted-foreground">{debtsCount} {t('debt records')}</p>
+            <p className="text-sm text-white/70">{debtsCount} {t('debt records')}</p>
           </div>
         </div>
 
         <div>
-          <p className="mb-2 text-sm font-semibold">{t('Subjects')}</p>
+          <p className="mb-2 text-sm font-semibold text-white">{t('Subjects')}</p>
           <div className="flex flex-wrap gap-2">
             {subjects.length === 0 ? (
-              <Badge variant="outline">{t('No subjects assigned yet.')}</Badge>
+              <Badge className="border-white/20 bg-white/15 text-white">{t('No subjects assigned yet.')}</Badge>
             ) : (
               subjects.map((subject) => (
-                <Badge key={subject.subject_id || subject.id} variant="outline" className="bg-white dark:bg-background">
+                <Badge key={subject.subject_id || subject.id} className="border-white/20 bg-white/15 text-white hover:bg-white/20">
                   {subject.subject_name}
                 </Badge>
               ))
