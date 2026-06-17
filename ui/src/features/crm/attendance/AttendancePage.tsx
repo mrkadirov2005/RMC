@@ -1,35 +1,8 @@
 // Page component for the attendance screen in the crm feature.
 
-import { SelectField } from '../students/components/SelectField';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   ArrowLeft,
   Plus,
@@ -37,132 +10,22 @@ import {
   BookMarked,
   Users,
   User,
-  Folder,
-  CheckCircle,
-  Filter,
-  Search,
-  Pencil,
-  Trash2,
-  X,
-  Loader2,
   BarChart3,
-  ChevronLeft,
-  ChevronRight,
   Clock,
   UserCheck,
   UserX,
   TrendingUp,
 } from 'lucide-react';
 import { useAttendancePage } from './hooks/useAttendancePage';
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+
+const AttendanceFormDialog = lazy(() => import('./components/AttendanceFormDialog'));
+const AttendanceStatisticsSection = lazy(() => import('./components/AttendanceStatisticsSection'));
+const AttendanceFolderTabs = lazy(() => import('./components/AttendanceFolderTabs'));
+const AttendanceListView = lazy(() => import('./components/AttendanceListView'));
 
 const folderPageSizeOptions = [12, 24, 48];
 const attendancePageSizeOptions = [10, 25, 50, 100];
-
-const clampPage = (page: number, totalPages: number) => Math.min(Math.max(page, 1), Math.max(totalPages, 1));
-
-const paginateItems = <T,>(items: T[], page: number, pageSize: number) => {
-  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
-  const currentPage = clampPage(page, totalPages);
-  const start = (currentPage - 1) * pageSize;
-  return {
-    currentPage,
-    totalPages,
-    start,
-    end: Math.min(start + pageSize, items.length),
-    items: items.slice(start, start + pageSize),
-  };
-};
-
-const buildPageNumbers = (currentPage: number, totalPages: number) => {
-  const pages = new Set<number>([1, totalPages, currentPage - 1, currentPage, currentPage + 1]);
-  return Array.from(pages)
-    .filter((page) => page >= 1 && page <= totalPages)
-    .sort((a, b) => a - b);
-};
-
-const PaginationBar = ({
-  total,
-  currentPage,
-  totalPages,
-  start,
-  end,
-  pageSize,
-  pageSizeOptions,
-  onPageChange,
-  onPageSizeChange,
-}: {
-  total: number;
-  currentPage: number;
-  totalPages: number;
-  start: number;
-  end: number;
-  pageSize: number;
-  pageSizeOptions: number[];
-  onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
-}) => {
-  if (total === 0) return null;
-  return (
-    <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
-      <div className="text-muted-foreground">
-        Showing {start + 1}-{end} of {total}
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
-          <SelectTrigger className="h-8 w-[92px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {pageSizeOptions.map((option) => (
-              <SelectItem key={option} value={String(option)}>
-                {option} / page
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage <= 1}
-        >
-          <ChevronLeft className="mr-1 h-4 w-4" />
-          Previous
-        </Button>
-        <div className="flex items-center gap-1">
-          {buildPageNumbers(currentPage, totalPages).map((page, index, pages) => (
-            <div key={page} className="flex items-center gap-1">
-              {index > 0 && page - pages[index - 1] > 1 && (
-                <span className="px-1 text-muted-foreground">...</span>
-              )}
-              <Button
-                type="button"
-                variant={page === currentPage ? 'default' : 'outline'}
-                size="sm"
-                className="h-8 min-w-8 px-2"
-                onClick={() => onPageChange(page)}
-              >
-                {page}
-              </Button>
-            </div>
-          ))}
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage >= totalPages}
-        >
-          Next
-          <ChevronRight className="ml-1 h-4 w-4" />
-        </Button>
-      </div>
-    </div>
-  );
-};
 
 // Renders the attendance page screen.
 const AttendancePage = () => {
@@ -219,37 +82,17 @@ const AttendancePage = () => {
     attendanceStatusOptions,
   } = attendanceHelpers;
 
-// Runs side effects for this component.
+  // Runs side effects for this component.
   useEffect(() => {
     setFolderPage(1);
   }, [activeTab, viewMode]);
 
-// Runs side effects for this component.
+  // Runs side effects for this component.
   useEffect(() => {
     setAttendancePage(1);
   }, [searchTerm, filterStatus, filterDate, filterAgeRange, selectedFolder?.type, selectedFolder?.id]);
 
-  const paginatedStudents = useMemo(
-    () => paginateItems(students, folderPage, folderPageSize),
-    [students, folderPage, folderPageSize]
-  );
-  const paginatedClasses = useMemo(
-    () => paginateItems(classes, folderPage, folderPageSize),
-    [classes, folderPage, folderPageSize]
-  );
-  const paginatedTeachers = useMemo(
-    () => paginateItems(teachers, folderPage, folderPageSize),
-    [teachers, folderPage, folderPageSize]
-  );
-  const paginatedSubjects = useMemo(
-    () => paginateItems(subjects, folderPage, folderPageSize),
-    [subjects, folderPage, folderPageSize]
-  );
-  const paginatedAttendance = useMemo(
-    () => paginateItems(displayedAttendance, attendancePage, attendancePageSize),
-    [displayedAttendance, attendancePage, attendancePageSize]
-  );
-// Memoizes the attendance statistics derived value.
+  // Memoizes the attendance statistics derived value.
   const attendanceStatistics = useMemo(() => {
     const totalRecords = state.items.length;
     const uniqueStudents = new Set(state.items.map((record) => Number(record.student_id))).size;
@@ -289,12 +132,9 @@ const AttendancePage = () => {
       ],
     };
   }, [state.items]);
-  const folderGridClass =
-    viewMode === 'list'
-      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
-      : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
-        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
+
+  const folderGridClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
+
   return (
     <div className="container mx-auto p-6">
       {/* Header */}
@@ -418,636 +258,92 @@ const AttendancePage = () => {
 
           {/* Tab Content */}
           <div>
-            {/* Statistics Tab */}
             {activeTab === 'statistics' && (
-              <div className="space-y-6">
-                {/* Overview - Top */}
-                <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                  <p className="text-sm font-medium mb-3">Overview</p>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div className="rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-3">
-                      <p className="text-xs text-white/70">Unique Students</p>
-                      <p className="text-lg font-bold text-white">{attendanceStatistics.uniqueStudents}</p>
-                    </div>
-                    <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3">
-                      <p className="text-xs text-white/70">Total Classes</p>
-                      <p className="text-lg font-bold text-white">{classes.length}</p>
-                    </div>
-                    <div className="rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 p-3">
-                      <p className="text-xs text-white/70">Total Teachers</p>
-                      <p className="text-lg font-bold text-white">{teachers.length}</p>
-                    </div>
-                    <div className="rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 p-3">
-                      <p className="text-xs text-white/70">Total Subjects</p>
-                      <p className="text-lg font-bold text-white">{subjects.length}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium">Attendance Breakdown</p>
-                        <p className="text-xs text-muted-foreground">Compact view of present, late, absent, and other records.</p>
-                      </div>
-                      <div className="text-right text-xs text-muted-foreground">
-                        <p>{attendanceStatistics.totalRecords} total records</p>
-                        <p>{attendanceStatistics.attendanceRate}% attendance rate</p>
-                      </div>
-                    </div>
-                    <div className="flex min-h-[9rem] items-end gap-3">
-                      {attendanceStatistics.segments.some((segment) => segment.count > 0) ? (
-                        attendanceStatistics.segments.map((segment) => {
-                          const maxCount = Math.max(...attendanceStatistics.segments.map((entry) => entry.count), 1);
-                          const heightPercent = segment.count > 0 ? (segment.count / maxCount) * 100 : 12;
-                          return (
-                            <div key={segment.label} className="flex flex-1 flex-col items-center gap-2">
-                              <span className="text-xs font-semibold text-foreground">{segment.count}</span>
-                              <div className="flex h-28 w-full items-end rounded-xl bg-muted/30 p-1.5">
-                                <div
-                                  className={`w-full rounded-lg ${segment.className} shadow-sm`}
-                                  style={{ height: `${Math.max(heightPercent, 12)}%` }}
-                                />
-                              </div>
-                              <div className="text-center">
-                                <p className="text-xs font-medium">{segment.label}</p>
-                                <p className="text-[11px] text-muted-foreground">{segment.percent.toFixed(0)}%</p>
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
-                          No attendance data yet
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border bg-card p-4 shadow-sm">
-                    <div className="mb-3 flex items-start justify-between gap-3">
-                      <div>
-                        <p className="text-sm font-medium">Attendance Mix</p>
-                        <p className="text-xs text-muted-foreground">Relative share of attendance statuses.</p>
-                      </div>
-                      <div className="text-right text-xs text-muted-foreground">
-                        <p>{attendanceStatistics.counts.present} present</p>
-                        <p>{attendanceStatistics.counts.late} late</p>
-                        <p>{attendanceStatistics.counts.absent} absent</p>
-                      </div>
-                    </div>
-
-                    <div className="h-3 w-full overflow-hidden rounded-full bg-muted shadow-inner">
-                      <div className="flex h-full w-full">
-                        {attendanceStatistics.segments.map((segment) => (
-                          <div
-                            key={segment.label}
-                            className={`h-full transition-all duration-300 ${segment.className}`}
-                            style={{ width: `${segment.percent}%` }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm xl:grid-cols-4">
-                      {attendanceStatistics.segments.map((segment) => (
-                        <div key={segment.label} className="rounded-xl border bg-muted/30 p-3">
-                          <p className="text-xs text-muted-foreground">{segment.label}</p>
-                          <p className="font-semibold">{segment.count}</p>
-                          <p className="text-xs text-muted-foreground">{segment.percent.toFixed(0)}%</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <Suspense fallback={<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">Loading statistics...</div>}>
+                <AttendanceStatisticsSection
+                  attendanceStatistics={attendanceStatistics}
+                  classesCount={classes.length}
+                  teachersCount={teachers.length}
+                  subjectsCount={subjects.length}
+                />
+              </Suspense>
             )}
 
-            {/* By Students Tab */}
-            {activeTab === 'students' && (
-              <div className="space-y-4">
-                <div className={folderGridClass}>
-                  {loadingData ? (
-                    <div className="col-span-full text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading students...</p>
-                    </div>
-                  ) : students.length === 0 ? (
-                    <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">No students found</p>
-                    </div>
-                  ) : (
-                    paginatedStudents.items.map((student) => {
-                      const studentId = student.student_id || student.id || 0;
-                      const attendanceCount = getAttendanceCountForStudent(studentId);
-                      const presentCount = getPresentCountForStudent(studentId);
-                      return (
-                        <Card
-                          key={studentId}
-                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
-                          onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
-                        >
-                          <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500 dark:hidden" />
-                          <CardContent className="p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30">
-                                <Folder className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                              </div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
-                              <p className="text-xs text-muted-foreground">ID: {studentId}</p>
-                            </div>
-                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <CheckCircle className="h-3 w-3" />
-                                <span>{presentCount}/{attendanceCount} present</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
-                                <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-                <PaginationBar
-                  total={students.length}
-                  currentPage={paginatedStudents.currentPage}
-                  totalPages={paginatedStudents.totalPages}
-                  start={paginatedStudents.start}
-                  end={paginatedStudents.end}
-                  pageSize={folderPageSize}
-                  pageSizeOptions={folderPageSizeOptions}
-                  onPageChange={setFolderPage}
-                  onPageSizeChange={(pageSize) => {
-                    setFolderPageSize(pageSize);
-                    setFolderPage(1);
-                  }}
+            {activeTab !== 'statistics' && (
+              <Suspense fallback={<div className="text-sm text-muted-foreground p-6">Loading...</div>}>
+                <AttendanceFolderTabs
+                  activeTab={activeTab}
+                  students={students}
+                  classes={classes}
+                  teachers={teachers}
+                  subjects={subjects}
+                  loadingData={loadingData}
+                  folderPage={folderPage}
+                  folderPageSize={folderPageSize}
+                  folderPageSizeOptions={folderPageSizeOptions}
+                  folderGridClass={folderGridClass}
+                  stateItems={state.items}
+                  onFolderPageChange={setFolderPage}
+                  onFolderPageSizeChange={setFolderPageSize}
+                  handleFolderClick={handleFolderClick}
+                  getAttendanceCountForStudent={getAttendanceCountForStudent}
+                  getPresentCountForStudent={getPresentCountForStudent}
+                  getAttendanceCountForClass={getAttendanceCountForClass}
+                  getPresentCountForClass={getPresentCountForClass}
+                  getAttendanceCountForTeacher={getAttendanceCountForTeacher}
+                  getStudentIdsForTeacher={attendanceHelpers.getStudentIdsForTeacher}
                 />
-              </div>
-            )}
-
-            {/* By Classes Tab */}
-            {activeTab === 'classes' && (
-              <div className="space-y-4">
-                <div className={folderGridClass}>
-                  {loadingData ? (
-                    <div className="col-span-full text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading classes...</p>
-                    </div>
-                  ) : classes.length === 0 ? (
-                    <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">No classes found</p>
-                    </div>
-                  ) : (
-                    paginatedClasses.items.map((cls) => {
-                      const classId = cls.class_id || cls.id || 0;
-                      const attendanceCount = getAttendanceCountForClass(classId);
-                      const presentCount = getPresentCountForClass(classId);
-                      return (
-                        <Card
-                          key={classId}
-                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
-                          onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                        >
-                          <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
-                          <CardContent className="p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
-                                <Folder className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                              </div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <h3 className="text-sm font-semibold">{cls.class_name}</h3>
-                              <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                            </div>
-                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <CheckCircle className="h-3 w-3" />
-                                <span>{presentCount}/{attendanceCount} present</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
-                                <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-                <PaginationBar
-                  total={classes.length}
-                  currentPage={paginatedClasses.currentPage}
-                  totalPages={paginatedClasses.totalPages}
-                  start={paginatedClasses.start}
-                  end={paginatedClasses.end}
-                  pageSize={folderPageSize}
-                  pageSizeOptions={folderPageSizeOptions}
-                  onPageChange={setFolderPage}
-                  onPageSizeChange={(pageSize) => {
-                    setFolderPageSize(pageSize);
-                    setFolderPage(1);
-                  }}
-                />
-              </div>
-            )}
-
-            {/* By Teachers Tab */}
-            {activeTab === 'teachers' && (
-              <div className="space-y-4">
-                <div className={folderGridClass}>
-                  {loadingData ? (
-                    <div className="col-span-full text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading teachers...</p>
-                    </div>
-                  ) : teachers.length === 0 ? (
-                    <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">No teachers found</p>
-                    </div>
-                  ) : (
-                    paginatedTeachers.items.map((teacher) => {
-                      const teacherId = teacher.teacher_id || teacher.id || 0;
-                      const attendanceCount = getAttendanceCountForTeacher(teacherId);
-                      return (
-                        <Card
-                          key={teacherId}
-                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
-                          onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
-                        >
-                          <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500 dark:hidden" />
-                          <CardContent className="p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-900/30">
-                                <Folder className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-                              </div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                              <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
-                            </div>
-                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Users className="h-3 w-3" />
-                                <span>{attendanceHelpers.getStudentIdsForTeacher(teacherId).length} students</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <CheckCircle className="h-3 w-3" />
-                                <span>{attendanceCount} records</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-                <PaginationBar
-                  total={teachers.length}
-                  currentPage={paginatedTeachers.currentPage}
-                  totalPages={paginatedTeachers.totalPages}
-                  start={paginatedTeachers.start}
-                  end={paginatedTeachers.end}
-                  pageSize={folderPageSize}
-                  pageSizeOptions={folderPageSizeOptions}
-                  onPageChange={setFolderPage}
-                  onPageSizeChange={(pageSize) => {
-                    setFolderPageSize(pageSize);
-                    setFolderPage(1);
-                  }}
-                />
-              </div>
-            )}
-
-            {/* By Subjects Tab */}
-            {activeTab === 'subjects' && (
-              <div className="space-y-4">
-                <div className={folderGridClass}>
-                  {loadingData ? (
-                    <div className="col-span-full text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                      <p className="text-muted-foreground">Loading subjects...</p>
-                    </div>
-                  ) : subjects.length === 0 ? (
-                    <div className="col-span-full text-center py-8">
-                      <p className="text-muted-foreground">No subjects found</p>
-                    </div>
-                  ) : (
-                    paginatedSubjects.items.map((subject) => {
-                      const subjectId = subject.subject_id || subject.id || 0;
-                      const classStudents = students.filter((s) => s.class_id === subject.class_id);
-                      const studentIds = classStudents.map((s) => s.student_id || s.id || 0);
-                      const subjectAttendance = state.items.filter((a) => studentIds.includes(a.student_id));
-                      const presentCount = subjectAttendance.filter((a) => a.status === 'Present' || a.status === 'Late').length;
-                      const cls = classes.find((c) => (c.class_id || c.id) === subject.class_id);
-                      return (
-                        <Card
-                          key={subjectId}
-                          className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
-                          onClick={() => handleFolderClick('subject', subject.class_id, subject.subject_name)}
-                        >
-                          <div className="h-1 bg-gradient-to-r from-cyan-500 to-teal-500 dark:hidden" />
-                          <CardContent className="p-3">
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50 dark:bg-cyan-900/30">
-                                <BookMarked className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
-                              </div>
-                            </div>
-                            <div className="space-y-0.5">
-                              <h3 className="text-sm font-semibold">{subject.subject_name}</h3>
-                              <p className="text-xs text-muted-foreground">{cls?.class_name || `Class ${subject.class_id}`} • {subject.subject_code}</p>
-                            </div>
-                            <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Users className="h-3 w-3" />
-                                <span>{classStudents.length} students</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <CheckCircle className="h-3 w-3" />
-                                <span>{presentCount}/{subjectAttendance.length}</span>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })
-                  )}
-                </div>
-                <PaginationBar
-                  total={subjects.length}
-                  currentPage={paginatedSubjects.currentPage}
-                  totalPages={paginatedSubjects.totalPages}
-                  start={paginatedSubjects.start}
-                  end={paginatedSubjects.end}
-                  pageSize={folderPageSize}
-                  pageSizeOptions={folderPageSizeOptions}
-                  onPageChange={setFolderPage}
-                  onPageSizeChange={(pageSize) => {
-                    setFolderPageSize(pageSize);
-                    setFolderPage(1);
-                  }}
-                />
-              </div>
+              </Suspense>
             )}
           </div>
         </>
       ) : (
-        // ATTENDANCE LIST VIEW
-        <>
-          {/* Search and Filter Bar */}
-          <div className="flex flex-col sm:flex-row gap-4 mb-6">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="text"
-                placeholder="Search by student name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-              {searchTerm && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-7 w-7 p-0"
-                  onClick={() => setSearchTerm('')}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-
-            <Button
-              variant={showFilters ? "default" : "outline"}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-              {hasActiveFilters && (
-                <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-                  {(filterStatus ? 1 : 0) + (filterDate ? 1 : 0)}
-                </span>
-              )}
-            </Button>
-
-            {hasActiveFilters && (
-              <Button variant="outline" size="sm" onClick={clearFilters}>
-                <X className="h-4 w-4 mr-2" /> Clear All
-              </Button>
-            )}
-
-            <div className="text-sm text-muted-foreground flex items-center gap-4">
-              <span>{displayedAttendance.length} records</span>
-            </div>
-          </div>
-
-          {/* Filter Options */}
-          {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Status</SelectItem>
-                    {attendanceStatusOptions.map((opt) => (
-                      <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Date</Label>
-                <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Age Range</Label>
-                <Select value={filterAgeRange} onValueChange={setFilterAgeRange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Ages" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Ages</SelectItem>
-                    <SelectItem value="3-6">3-6 years</SelectItem>
-                    <SelectItem value="7-10">7-10 years</SelectItem>
-                    <SelectItem value="11-14">11-14 years</SelectItem>
-                    <SelectItem value="15-18">15-18 years</SelectItem>
-                    <SelectItem value="19-25">19-25 years</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          {/* Attendance Table */}
-          <div className="border rounded-lg overflow-hidden [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Remarks</TableHead>
-                  <TableHead className="w-24">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {state.loading ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6">Loading...</TableCell>
-                  </TableRow>
-                ) : displayedAttendance.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                      {hasActiveFilters ? 'No attendance records match your criteria' : 'No attendance records found'}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  paginatedAttendance.items.map((attendance) => (
-                    <TableRow key={attendance.attendance_id || attendance.id}>
-                      <TableCell>{getStudentName(attendance.student_id)}</TableCell>
-                      <TableCell>{new Date(attendance.attendance_date).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={getStatusBadgeClasses(attendance.status)}>
-                          {attendance.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{attendance.remarks || '-'}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex gap-2 justify-end">
-                          <Button variant="ghost" size="sm" onClick={() => handleOpenModal(attendance)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(attendance.attendance_id || attendance.id || 0)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="mt-4">
-            <PaginationBar
-              total={displayedAttendance.length}
-              currentPage={paginatedAttendance.currentPage}
-              totalPages={paginatedAttendance.totalPages}
-              start={paginatedAttendance.start}
-              end={paginatedAttendance.end}
-              pageSize={attendancePageSize}
-              pageSizeOptions={attendancePageSizeOptions}
-              onPageChange={setAttendancePage}
-              onPageSizeChange={(pageSize) => {
-                setAttendancePageSize(pageSize);
-                setAttendancePage(1);
-              }}
-            />
-          </div>
-        </>
+        <Suspense fallback={<div className="text-sm text-muted-foreground p-6">Loading...</div>}>
+          <AttendanceListView
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            hasActiveFilters={hasActiveFilters}
+            clearFilters={clearFilters}
+            filterStatus={filterStatus}
+            setFilterStatus={setFilterStatus}
+            filterDate={filterDate}
+            setFilterDate={setFilterDate}
+            filterAgeRange={filterAgeRange}
+            setFilterAgeRange={setFilterAgeRange}
+            displayedAttendance={displayedAttendance}
+            attendancePage={attendancePage}
+            attendancePageSize={attendancePageSize}
+            attendancePageSizeOptions={attendancePageSizeOptions}
+            onAttendancePageChange={setAttendancePage}
+            onAttendancePageSizeChange={setAttendancePageSize}
+            stateLoading={state.loading}
+            getStudentName={getStudentName}
+            getStatusBadgeClasses={getStatusBadgeClasses}
+            handleOpenModal={handleOpenModal}
+            handleDelete={handleDelete}
+            attendanceStatusOptions={attendanceStatusOptions}
+          />
+        </Suspense>
       )}
 
-      {/* Add/Edit Modal */}
-      <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Attendance' : 'Add New Attendance'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SelectField
-                label="Student"
-                name="student_id"
-                value={formData.student_id || ''}
-                onChange={(value) =>
-                  setFormData({ ...formData, student_id: Number(value) })
-                }
-                options={studentOptions}
-                isLoading={isLoadingOptions}
-                required
-                placeholder="Select a student"
-              />
-              <SelectField
-                label="Teacher"
-                name="teacher_id"
-                value={formData.teacher_id || ''}
-                onChange={(value) =>
-                  setFormData({ ...formData, teacher_id: Number(value) })
-                }
-                options={teacherOptions}
-                isLoading={isLoadingOptions}
-                required
-                placeholder="Select a teacher"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <SelectField
-                label="Class"
-                name="class_id"
-                value={formData.class_id || ''}
-                onChange={(value) =>
-                  setFormData({ ...formData, class_id: Number(value) })
-                }
-                options={classOptions}
-                isLoading={isLoadingOptions}
-                required
-                placeholder="Select a class"
-              />
-              <div className="space-y-2">
-                <Label htmlFor="attendance_date">Attendance Date *</Label>
-                <Input
-                  type="date"
-                  id="attendance_date"
-                  required
-                  value={formData.attendance_date || ''}
-                  onChange={(e) => setFormData({ ...formData, attendance_date: e.target.value })}
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="status">Status *</Label>
-                <Select required value={formData.status || 'Present'} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {attendanceStatusOptions.map((opt) => (
-                      <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="remarks">Remarks</Label>
-              <Textarea
-                id="remarks"
-                value={formData.remarks || ''}
-                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                placeholder="Additional remarks..."
-              />
-            </div>
-          </form>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleCloseModal}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={state.loading} onClick={handleSubmit}>
-              {state.loading ? 'Saving...' : 'Save'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <Suspense fallback={null}>
+        <AttendanceFormDialog
+          open={isModalOpen}
+          editingId={editingId}
+          loading={state.loading}
+          formData={formData}
+          setFormData={setFormData}
+          studentOptions={studentOptions}
+          teacherOptions={teacherOptions}
+          classOptions={classOptions}
+          isLoadingOptions={isLoadingOptions}
+          attendanceStatusOptions={attendanceStatusOptions}
+          onClose={handleCloseModal}
+          onSubmit={handleSubmit}
+        />
+      </Suspense>
     </div>
   );
 };
