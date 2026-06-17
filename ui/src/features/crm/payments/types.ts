@@ -1,0 +1,55 @@
+export interface Payment {
+  payment_id?: number;
+  id?: number;
+  student_id: number;
+  center_id?: number;
+  payment_date?: string;
+  amount?: number;
+  currency?: string;
+  payment_method?: string;
+  payment_type?: string;
+  status?: string;
+  payment_status?: string;
+  receipt_number?: string;
+  reference_number?: string;
+  notes?: string;
+  student_first_name?: string;
+  student_last_name?: string;
+  student_class_id?: number;
+  student_teacher_id?: number;
+  student_status?: string;
+  student_deleted_at?: string;
+  student_class_name?: string;
+  coverage_days?: number;
+  coverage_total_days?: number;
+  transfer_effective_date?: string;
+}
+
+export interface Teacher {
+  teacher_id?: number;
+  id?: number;
+  first_name: string;
+  last_name: string;
+  employee_id: string;
+}
+
+export interface Class {
+  class_id?: number;
+  id?: number;
+  class_name: string;
+  class_code: string;
+  level: number;
+  teacher_id?: number;
+}
+
+export interface Student {
+  student_id?: number;
+  id?: number;
+  first_name: string;
+  last_name: string;
+  class_id?: number;
+  teacher_id?: number;
+}
+
+export type FolderType = 'teacher' | 'class' | 'student';
+export type TeacherDetailView = 'groups' | 'total';
