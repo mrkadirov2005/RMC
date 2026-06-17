@@ -22,12 +22,38 @@ const scopeTypes: Array<{
   value: DashboardScopeType;
   label: string;
   icon: typeof Layers3;
+  activeClass: string;
 }> = [
-  { value: 'all', label: 'All', icon: Layers3 },
-  { value: 'teacher', label: 'Teacher', icon: GraduationCap },
-  { value: 'class', label: 'Class', icon: BookOpen },
-  { value: 'school', label: 'School', icon: School },
-  { value: 'status', label: 'Status', icon: ShieldCheck },
+  {
+    value: 'all',
+    label: 'All',
+    icon: Layers3,
+    activeClass: 'border-transparent bg-gradient-to-r from-slate-700 to-slate-900 text-white shadow-md shadow-slate-900/15',
+  },
+  {
+    value: 'teacher',
+    label: 'Teacher',
+    icon: GraduationCap,
+    activeClass: 'border-transparent bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-md shadow-emerald-900/15',
+  },
+  {
+    value: 'class',
+    label: 'Class',
+    icon: BookOpen,
+    activeClass: 'border-transparent bg-gradient-to-r from-cyan-500 to-sky-600 text-white shadow-md shadow-cyan-900/15',
+  },
+  {
+    value: 'school',
+    label: 'School',
+    icon: School,
+    activeClass: 'border-transparent bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-md shadow-violet-900/15',
+  },
+  {
+    value: 'status',
+    label: 'Status',
+    icon: ShieldCheck,
+    activeClass: 'border-transparent bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-amber-900/15',
+  },
 ];
 
 const getOptionsForScope = (options: DashboardScopeOptions, type: DashboardScopeType) => {
@@ -84,7 +110,7 @@ export const DashboardScopeSelector = ({ scope, options, onScopeChange }: Dashbo
                   size="sm"
                   className={
                     active
-                      ? 'gap-2 shadow-md shadow-sky-900/10 dark:shadow-none'
+                      ? `gap-2 ${item.activeClass} dark:shadow-none`
                       : 'gap-2 border-transparent bg-transparent text-slate-600 shadow-none hover:bg-white hover:text-slate-950 dark:border-input dark:bg-background dark:text-foreground dark:shadow-sm dark:hover:bg-accent dark:hover:text-accent-foreground'
                   }
                   onClick={() => onScopeChange({ type: item.value, value: 'all' })}

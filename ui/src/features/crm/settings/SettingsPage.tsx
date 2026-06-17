@@ -1,7 +1,7 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, Clock, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { CalendarDays, Clock, Globe, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { showToast } from '@/utils/toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SectionPanel } from '@/components/common/SectionPanel';
+import { useLanguage } from '../../../i18n/LanguageContext';
+import { cn } from '@/lib/utils';
 import {
   CALENDAR_DAY_END_HOUR_KEY,
   CALENDAR_DAY_START_HOUR_KEY,
@@ -53,6 +55,7 @@ const hourOptions = Array.from({ length: 24 }, (_, hour) => ({
 
 // Renders the settings page screen.
 const SettingsPage = () => {
+  const { language, setLanguage, t } = useLanguage();
   const [defaultDuration, setDefaultDuration] = useState(90);
   const [overrideDuration, setOverrideDuration] = useState<number | ''>('');
   const [calendarDefaultView, setCalendarDefaultView] = useState<'month' | 'week'>('month');
@@ -139,6 +142,42 @@ const SettingsPage = () => {
           </div>
         }
       />
+
+      <SectionPanel
+        title={
+          <span className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm">
+              <Globe className="h-4 w-4" />
+            </span>
+            {t('Language')}
+          </span>
+        }
+      >
+        <div className="space-y-3">
+          <Label>{t('Select interface language')}</Label>
+          <div className="flex gap-3">
+            {([
+              { code: 'en' as const, label: 'English', flag: '🇬🇧' },
+              { code: 'uz' as const, label: "O'zbekcha", flag: '🇺🇿' },
+            ]).map((option) => (
+              <button
+                key={option.code}
+                type="button"
+                onClick={() => { setLanguage(option.code); showToast.success(`Language changed to ${option.label}`); }}
+                className={cn(
+                  'flex items-center gap-3 rounded-xl border-2 px-5 py-3 text-sm font-semibold transition-all',
+                  language === option.code
+                    ? 'border-violet-500 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30'
+                    : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
+                )}
+              >
+                <span className="text-xl">{option.flag}</span>
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </SectionPanel>
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionPanel

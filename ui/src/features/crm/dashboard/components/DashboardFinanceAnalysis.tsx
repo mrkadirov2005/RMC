@@ -29,33 +29,33 @@ const financeMetrics: Array<{
     label: 'Expected',
     valueKey: 'expectedPayments',
     detailsType: 'expectedPayments',
-    labelClass: 'text-slate-500 dark:text-muted-foreground',
-    valueClass: 'text-slate-950 dark:text-card-foreground',
-    shellClass: 'border-slate-200 bg-white/80 dark:border-border dark:bg-muted/30',
+    labelClass: 'text-white/80',
+    valueClass: 'text-white',
+    shellClass: 'border-cyan-500/20 bg-gradient-to-br from-cyan-500 via-cyan-600 to-sky-700 shadow-cyan-500/40',
   },
   {
     label: 'Collected',
     valueKey: 'paidPayments',
     detailsType: 'collectedPayments',
-    labelClass: 'text-emerald-700 dark:text-emerald-300',
-    valueClass: 'text-emerald-700 dark:text-emerald-300',
-    shellClass: 'border-emerald-100 bg-emerald-50/80 dark:border-border dark:bg-emerald-500/5',
+    labelClass: 'text-white/80',
+    valueClass: 'text-white',
+    shellClass: 'border-teal-500/20 bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-700 shadow-teal-500/40',
   },
   {
     label: 'Remaining',
     valueKey: 'remainingPayments',
     detailsType: 'remainingPayments',
-    labelClass: 'text-rose-700 dark:text-rose-300',
-    valueClass: 'text-rose-700 dark:text-rose-300',
-    shellClass: 'border-rose-100 bg-rose-50/80 dark:border-border dark:bg-rose-500/5',
+    labelClass: 'text-white/80',
+    valueClass: 'text-white',
+    shellClass: 'border-amber-500/20 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 shadow-amber-500/40',
   },
   {
     label: 'Outstanding debt',
     valueKey: 'outstandingDebt',
     detailsType: 'outstandingDebts',
-    labelClass: 'text-amber-700 dark:text-amber-300',
-    valueClass: 'text-amber-700 dark:text-amber-300',
-    shellClass: 'border-amber-100 bg-amber-50/80 dark:border-border dark:bg-amber-500/5',
+    labelClass: 'text-white/80',
+    valueClass: 'text-white',
+    shellClass: 'border-red-500/20 bg-gradient-to-br from-red-500 via-red-600 to-rose-700 shadow-red-500/40',
   },
 ];
 
@@ -91,11 +91,11 @@ export const DashboardFinanceAnalysis = ({
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-1 dark:border-transparent dark:bg-transparent dark:p-0">
-          <Button type="button" variant="outline" size="icon" onClick={onPreviousMonth} aria-label={t('Previous month')}>
+          <Button type="button" size="icon" onClick={onPreviousMonth} aria-label={t('Previous month')} className="bg-gradient-to-br from-cyan-500 to-sky-600 text-white shadow-md hover:from-cyan-600 hover:to-sky-700 border-0">
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <div className="min-w-36 text-center text-sm font-semibold">{localizedMonthLabel}</div>
-          <Button type="button" variant="outline" size="icon" onClick={onNextMonth} aria-label={t('Next month')}>
+          <Button type="button" size="icon" onClick={onNextMonth} aria-label={t('Next month')} className="bg-gradient-to-br from-cyan-500 to-sky-600 text-white shadow-md hover:from-cyan-600 hover:to-sky-700 border-0">
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
@@ -121,7 +121,7 @@ export const DashboardFinanceAnalysis = ({
               <p className={`mt-1 text-xl font-bold ${metric.valueClass}`}>
                 {formatMoney(Number(finance[metric.valueKey]) || 0)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-sky-700 dark:text-muted-foreground">{t('View details')}</p>
+              <p className="mt-1 text-[11px] font-medium text-white/70">{t('View details')}</p>
             </button>
           ))}
         </div>

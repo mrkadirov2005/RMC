@@ -64,7 +64,7 @@ const insert = (params: any[]) =>
 
 const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
   let query =
-    'UPDATE subjects SET subject_name = COALESCE($1, subject_name), subject_code = COALESCE($2, subject_code), teacher_id = COALESCE($3, teacher_id), total_marks = COALESCE($4, total_marks), passing_marks = COALESCE($5, passing_marks) WHERE subject_id = $6';
+    'UPDATE subjects SET class_id = COALESCE($1, class_id), subject_name = COALESCE($2, subject_name), subject_code = COALESCE($3, subject_code), teacher_id = COALESCE($4, teacher_id), total_marks = COALESCE($5, total_marks), passing_marks = COALESCE($6, passing_marks) WHERE subject_id = $7';
   const values: any[] = [...params, id];
   if (centerId || teacherId) {
     query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';

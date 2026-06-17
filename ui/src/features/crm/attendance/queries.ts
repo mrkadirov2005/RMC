@@ -79,6 +79,10 @@ export const getFilteredAttendance = (
     studentIds = getStudentIdsForClass(students, selectedFolder.id);
   } else if (selectedFolder.type === 'student') {
     studentIds = [selectedFolder.id];
+  } else if (selectedFolder.type === 'subject') {
+    studentIds = students
+      .filter((s) => s.class_id === selectedFolder.id)
+      .map((s) => s.student_id || s.id || 0);
   }
 
   return attendance.filter((record) => studentIds.includes(record.student_id));
