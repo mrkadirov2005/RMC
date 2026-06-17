@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const DATA_DIR = path.join(ROOT, 'docs', 'data');
+const NEW_DATA_DIR = path.join(ROOT, 'docs', 'new-data');
+const DATA_DIR = fs.existsSync(NEW_DATA_DIR) ? NEW_DATA_DIR : path.join(ROOT, 'docs', 'data');
 const OUT_DIR = path.join(ROOT, 'docs', 'normalized');
 const DEFAULT_PASSWORD = '012345678';
 
@@ -94,14 +95,23 @@ const createUsername = (firstName, usedNames) => {
 const teacherNameFromFile = (fileName) =>
   compact(
     path
-      .basename(fileName, '.csv')
+      .basename(fileName, path.extname(fileName))
       .replace(/^TEMURBEK SCHOOL\s*-\s*/i, '')
-      .replace(/\d+\s*%/g, '')
+      .replace(/\([^)]*\)/g, '')
+      .replace(/\d+(?:[.,]\d+)?\s*%/g, '')
       .replace(/%/g, '')
       .replace(/\b\d{2,4}\b/g, '')
       .replace(/\bnew\b/gi, '')
       .replace(/\bsummer\b/gi, '')
   );
+
+const teacherSalaryPercentageFromFile = (fileName) => {
+  const match = path.basename(fileName, path.extname(fileName)).match(/(\d+(?:[.,]\d+)?)\s*%/);
+  if (!match) return 50;
+  const value = Number(match[1].replace(',', '.'));
+  if (!Number.isFinite(value)) return 50;
+  return Math.min(Math.max(value, 0), 100);
+};
 
 const splitPersonName = (name) => {
   const parts = compact(name).split(' ').filter(Boolean);
@@ -128,6 +138,20 @@ const looksLikeHeader = (row) => {
 
 const isNameColumnHeader = (value) => /^(ismi\s+familiyasi|ism\s+familiya|fio|full\s+name|name)$/i.test(compact(value));
 
+const isExcludedClassName = (value) =>
+  /sentabr\s+oyidan\s+yangi\s+guruhlari|\bketganlar\b|\bindividual\b/i.test(compact(value));
+
+const isNoteOrPaymentText = (value) => {
+  const text = compact(value);
+  return (
+    /^(jami|summa|total|dekabr|yanvar?|fevral|mart|aprel|may|iyun|iyul|avgust|sentabr|oktabr|noyabr|berilmagan|oyliklar)$/i.test(
+      text
+    ) ||
+    /\b(oylik|to'?landi|to'?lansin|qarzdor|berildi)\b/i.test(text) ||
+    /^\d{1,2}[-.\s]*(fev|mart|apr|may|okt|noy|dek|yan)/i.test(text)
+  );
+};
+
 const indexOf = (row, patterns) => {
   for (let index = 0; index < row.length; index += 1) {
     const cell = compact(row[index]).toLowerCase();
@@ -147,10 +171,13 @@ const usefulTitle = (row) => {
 };
 
 const isRealStudentRow = (row, nameIndex) => {
+  const marker = compact(row[nameIndex - 1]);
+  if (!/^\d+$/.test(marker)) return false;
   const name = compact(row[nameIndex]);
   if (!name || name.length < 3) return false;
   if (/^\d+$/.test(name)) return false;
   if (/^(jami|summa|total|dekabr|yan|fevral|mart|aprel|may)$/i.test(name)) return false;
+  if (isNoteOrPaymentText(name)) return false;
   return /[A-Za-z\u0400-\u04FF'ʻ`-]/.test(name);
 };
 
@@ -164,9 +191,13 @@ const classes = [];
 const classByCode = new Map();
 const students = [];
 const studentUsernames = new Set();
+const studentIdentityKeys = new Set();
+
+const studentIdentityKey = (fullName, phone) => `${slug(fullName)}|${phone || ''}`;
 
 for (const file of files) {
   const teacherName = teacherNameFromFile(file);
+  const salaryPercentage = teacherSalaryPercentageFromFile(file);
   if (!teacherByName.has(teacherName.toLowerCase())) {
     const teacherNumber = teachers.length + 1;
     const employeeId = `TCH-${String(teacherNumber).padStart(3, '0')}`;
@@ -181,12 +212,15 @@ for (const file of files) {
       gender: '',
       qualification: '',
       specialization: '',
+      salary_percentage: salaryPercentage,
       status: 'Active',
     };
     teacher.username = createUsername(teacher.first_name, teacherUsernames);
     teacher.password = DEFAULT_PASSWORD;
     teachers.push(teacher);
     teacherByName.set(teacherName.toLowerCase(), teacher);
+  } else {
+    teacherByName.get(teacherName.toLowerCase()).salary_percentage = salaryPercentage;
   }
 
   const teacher = teacherByName.get(teacherName.toLowerCase());
@@ -213,6 +247,7 @@ for (const file of files) {
     const headerName = compact(row[nameIndex]);
     const className = isScheduleText(headerName) || isNameColumnHeader(headerName) ? previousTitle : headerName || previousTitle;
     if (!className) continue;
+    if (isExcludedClassName(className)) continue;
 
     if (isScheduleText(headerName)) previousSchedule = headerName;
     const classCode = `${teacher.employee_id}-${slug(className)}`.slice(0, 50);
@@ -243,8 +278,11 @@ for (const file of files) {
 
       const fullName = compact(dataRow[nameIndex]).replace(/\s+\d+$/, '');
       const studentName = splitPersonName(fullName);
-      const studentNumber = students.length + 1;
       const phone = phoneIndex >= 0 ? normalizePhone(dataRow[phoneIndex]) : '';
+      const identityKey = studentIdentityKey(fullName, phone);
+      if (studentIdentityKeys.has(identityKey)) continue;
+      studentIdentityKeys.add(identityKey);
+      const studentNumber = students.length + 1;
       const student = {
         enrollment_number: `STU-${String(studentNumber).padStart(5, '0')}`,
         first_name: studentName.first_name || fullName,
@@ -280,6 +318,7 @@ writeCsv(path.join(OUT_DIR, 'teachers_import.csv'), teachers, [
   'gender',
   'qualification',
   'specialization',
+  'salary_percentage',
   'status',
   'username',
   'password',
