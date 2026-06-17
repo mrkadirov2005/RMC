@@ -138,7 +138,7 @@ const ClassDetailPage = () => {
   const teacherName = classData?.teacher_name || 'No teacher assigned';
   const scheduleText = [schedule.days.join(', '), schedule.time].filter(Boolean).join(' / ') || 'No schedule';
   const studentRows = students.filter((student) => !student.deleted_at);
-  const recentSessions = sessions.slice(0, 80);
+  // const recentSessions = sessions.slice(0, 80);
   const statTiles = [
     { label: 'Active students', value: activeStudents, detail: `${transferredStudents} transferred`, icon: Users, color: 'bg-blue-600' },
     { label: 'Capacity', value: capacity || '-', detail: `${fillRate}% used`, icon: BookOpen, color: 'bg-emerald-600' },
