@@ -58,6 +58,13 @@ const teacherToneClasses = [
   'bg-cyan-600 hover:bg-cyan-700',
 ];
 const getTeacherTone = (index: number) => teacherToneClasses[index % teacherToneClasses.length];
+const generatedGroupCodePattern = /^TCH-\d{3}(?:-[A-Z0-9]+)+$/i;
+const getReadableGroupName = (cls: any) => {
+  const className = String(cls?.class_name || '').trim();
+  if (className && !generatedGroupCodePattern.test(className)) return className;
+  const id = cls?.class_id || cls?.id;
+  return id ? `Group #${id}` : 'Group';
+};
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
@@ -104,7 +111,7 @@ const TeachersPage = () => {
       const teacherId = Number(cls.teacher_id || 0);
       if (!teacherId) continue;
       const existing = map.get(teacherId) || { groups: [], students: 0 };
-      existing.groups.push(String(cls.class_name || cls.class_code || `Group #${cls.class_id || cls.id}`));
+      existing.groups.push(getReadableGroupName(cls));
       map.set(teacherId, existing);
     }
     for (const student of studentItems) {

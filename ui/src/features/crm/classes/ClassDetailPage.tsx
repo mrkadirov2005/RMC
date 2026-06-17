@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, FileQuestion, Loader2, MapPin, PlayCircle, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, FileQuestion, Loader2, MapPin, PlayCircle, UserRound, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -135,6 +135,16 @@ const ClassDetailPage = () => {
   const capacity = Number(classData?.capacity || 0);
   const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
   const todayKey = new Date().toISOString().split('T')[0];
+  const teacherName = classData?.teacher_name || 'No teacher assigned';
+  const scheduleText = [schedule.days.join(', '), schedule.time].filter(Boolean).join(' / ') || 'No schedule';
+  const studentRows = students.filter((student) => !student.deleted_at);
+  const recentSessions = sessions.slice(0, 80);
+  const statTiles = [
+    { label: 'Active students', value: activeStudents, detail: `${transferredStudents} transferred`, icon: Users, color: 'bg-blue-600' },
+    { label: 'Capacity', value: capacity || '-', detail: `${fillRate}% used`, icon: BookOpen, color: 'bg-emerald-600' },
+    { label: 'Room', value: classData?.room_number || 'Not specified', detail: 'Classroom', icon: MapPin, color: 'bg-amber-500' },
+    { label: 'Tuition', value: formatMoney(classData?.payment_amount), detail: classData?.payment_frequency || 'Monthly', icon: DollarSign, color: 'bg-fuchsia-600' },
+  ];
 
   const openSessionWorkflow = (session: any) => {
     const nextSessionId = Number(session.session_id || session.id);
@@ -206,79 +216,81 @@ const ClassDetailPage = () => {
   }
 
   return (
-    <div className="min-h-full space-y-6 bg-gradient-to-br from-indigo-50 via-white to-emerald-50 p-6 dark:bg-none">
-      <Button
-        variant="outline"
-        className="rounded-lg border-indigo-200 bg-white/80 text-indigo-900 shadow-sm hover:bg-indigo-50 dark:border-border dark:bg-background dark:text-foreground"
-        onClick={() => navigate('/classes')}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Classes
-      </Button>
-
-      <Card className="overflow-hidden rounded-lg border-0 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-500 text-white shadow-[0_24px_70px_-35px_rgba(99,102,241,0.9)]">
-        <CardContent className="relative p-6 lg:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-3">
-              <p className="text-sm font-medium text-white/70">Class Profile</p>
-              <h1 className="text-3xl font-bold md:text-4xl">{className}</h1>
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="outline" className="border-white/30 bg-white/15 text-white">Code: {classData.class_code || '-'}</Badge>
-                <Badge variant="outline" className="border-white/30 bg-white/15 text-white">Level {classData.level || '-'}</Badge>
-                <Badge variant="outline" className="border-white/30 bg-white/15 text-white">{classData.teacher_name || 'No teacher assigned'}</Badge>
-              </div>
-              <Button
-                onClick={handleStartLesson}
-                disabled={startingLesson}
-                className="mt-2 bg-white text-indigo-700 hover:bg-white/90"
-              >
-                {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-                Start Lesson
-              </Button>
+    <div className="min-h-full space-y-4 bg-slate-50 p-4 dark:bg-background">
+      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-border dark:bg-card">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button
+              type="button"
+              size="sm"
+              className="h-8 shrink-0 bg-slate-800 px-2.5 text-xs font-semibold text-white hover:bg-slate-900"
+              onClick={() => navigate('/classes')}
+            >
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
+              Back
+            </Button>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
+              <BookOpen className="h-5 w-5" />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 lg:w-[460px]">
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
-                <Users className="mb-2 h-5 w-5 text-white/75" />
-                <p className="text-2xl font-bold">{activeStudents}</p>
-                <p className="text-xs text-white/70">{transferredStudents} transferred records</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
-                <BookOpen className="mb-2 h-5 w-5 text-white/75" />
-                <p className="text-2xl font-bold">{fillRate}%</p>
-                <p className="text-xs text-white/70">{activeStudents} / {capacity || '-'} seats</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
-                <MapPin className="mb-2 h-5 w-5 text-white/75" />
-                <p className="truncate text-sm font-semibold">{classData.room_number || 'No room'}</p>
-              </div>
-              <div className="rounded-lg border border-white/30 bg-white/15 p-4 backdrop-blur">
-                <DollarSign className="mb-2 h-5 w-5 text-white/75" />
-                <p className="truncate text-sm font-semibold">{formatMoney(classData.payment_amount)} {classData.payment_frequency || ''}</p>
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-bold text-slate-950 dark:text-card-foreground">{className}</h1>
+              <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] font-semibold">
+                <span className="rounded-md bg-violet-600 px-2 py-1 text-white">{teacherName}</span>
+                {classData.level ? <span className="rounded-md bg-blue-600 px-2 py-1 text-white">Level {classData.level}</span> : null}
+                <span className="rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <Button
+            onClick={handleStartLesson}
+            disabled={startingLesson}
+            className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
+          >
+            {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+            Start Lesson
+          </Button>
+        </div>
+      </div>
 
-      <Tabs defaultValue="overview" className="overflow-hidden rounded-lg border border-indigo-100 bg-white/90 shadow-sm dark:border-border dark:bg-card">
-        <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-indigo-50/70 p-2 dark:bg-muted/40">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
-          <TabsTrigger value="subjects">Subjects</TabsTrigger>
-          <TabsTrigger value="tests">Tests</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {statTiles.map((tile) => {
+          const Icon = tile.icon;
+          return (
+            <div key={tile.label} className={`${tile.color} rounded-lg p-3 text-white shadow-sm`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-semibold uppercase text-white/75">{tile.label}</p>
+                  <p className="mt-0.5 truncate text-lg font-bold">{tile.value}</p>
+                  <p className="truncate text-[11px] text-white/80">{tile.detail}</p>
+                </div>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20">
+                  <Icon className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <Tabs defaultValue="students" className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+        <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
+          <TabsTrigger value="students" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white">Students</TabsTrigger>
+          <TabsTrigger value="overview" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Overview</TabsTrigger>
+          <TabsTrigger value="subjects" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white">Subjects</TabsTrigger>
+          <TabsTrigger value="tests" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white">Tests</TabsTrigger>
+          <TabsTrigger value="sessions" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white">Sessions</TabsTrigger>
         </TabsList>
 
-        <div className="p-5">
+        <div className="p-3">
           <TabsContent value="overview" className="mt-0 grid gap-4 lg:grid-cols-2">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><CalendarDays className="h-5 w-5" /> Schedule</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <p className="text-sm text-muted-foreground">Days</p>
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="space-y-3 p-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white"><CalendarDays className="h-4 w-4" /></div>
+                  <p className="text-sm font-bold">Schedule</p>
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {schedule.days.length > 0 ? schedule.days.map((day) => <Badge key={day} variant="secondary">{day}</Badge>) : <span className="text-sm text-muted-foreground">No days set</span>}
+                  {schedule.days.length > 0 ? schedule.days.map((day) => <span key={day} className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">{day}</span>) : <span className="text-sm text-muted-foreground">No days set</span>}
                 </div>
                 <p className="flex items-center gap-2 text-sm font-semibold">
                   <Clock className="h-4 w-4 text-muted-foreground" />
@@ -286,13 +298,14 @@ const ClassDetailPage = () => {
                 </p>
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Capacity Health</CardTitle>
-              </CardHeader>
-              <CardContent>
+            <Card className="border-slate-200 shadow-sm">
+              <CardContent className="p-3">
+                <div className="mb-3 flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white"><Users className="h-4 w-4" /></div>
+                  <p className="text-sm font-bold">Capacity health</p>
+                </div>
                 <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-emerald-500" style={{ width: `${fillRate}%` }} />
+                  <div className="h-full rounded-full bg-blue-600" style={{ width: `${fillRate}%` }} />
                 </div>
                 <p className="mt-3 text-sm text-muted-foreground">{fillRate}% of class capacity is currently used.</p>
               </CardContent>
@@ -304,22 +317,27 @@ const ClassDetailPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Student</TableHead>
-                  <TableHead>Enrollment</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Phone</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {students.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
-                ) : students.map((student) => {
+                {studentRows.length === 0 ? (
+                  <TableRow><TableCell colSpan={3} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
+                ) : studentRows.map((student, index) => {
                   const isTransferred = String(student.status || '').toLowerCase() === 'transferred';
                   return (
-                  <TableRow key={student.student_id || student.id} className={isTransferred ? 'bg-amber-50/60 text-muted-foreground dark:bg-amber-950/10' : undefined}>
-                    <TableCell className="font-semibold">{student.first_name} {student.last_name}</TableCell>
-                    <TableCell>{student.enrollment_number || '-'}</TableCell>
+                  <TableRow key={student.student_id || student.id} className={isTransferred ? 'bg-amber-50/60 text-muted-foreground dark:bg-amber-950/10' : 'hover:bg-sky-50/60'}>
+                    <TableCell className="py-2 font-semibold">
+                      <div className="flex items-center gap-2">
+                        <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
+                          {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                        </div>
+                        <span>{student.first_name} {student.last_name}</span>
+                      </div>
+                    </TableCell>
                     <TableCell>
-                      <Badge variant={isTransferred ? 'outline' : 'secondary'} className={isTransferred ? 'border-amber-300 text-amber-700 dark:border-amber-400/30 dark:text-amber-200' : undefined}>
+                      <Badge className={isTransferred ? 'bg-amber-500 text-white hover:bg-amber-500' : 'bg-emerald-600 text-white hover:bg-emerald-600'}>
                         {isTransferred ? 'Transferred' : student.status || '-'}
                       </Badge>
                     </TableCell>

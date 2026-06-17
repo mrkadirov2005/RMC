@@ -412,7 +412,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Room Number</p>
-                  <p className="font-semibold">{classData.room_number}</p>
+                  <p className="font-semibold">{classData.room_number || 'Not specified'}</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Payment Amount</p>

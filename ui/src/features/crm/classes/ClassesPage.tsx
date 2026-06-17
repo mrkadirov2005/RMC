@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, MoreVertical, Search, X, BookOpen, Users, MapPin, DollarSign, Upload, Download } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, Search, X, BookOpen, Users, MapPin, DollarSign, Upload, Download, UserRound, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,12 +25,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
   Select,
   SelectContent,
   SelectItem,
@@ -44,13 +38,16 @@ import { exportCsvEntity } from '@/shared/dataCsv';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import { cn } from '@/lib/utils';
 
 // Renders the classes page screen.
 const ClassesPage = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [groupView, setGroupView] = useState<'groups' | 'teachers'>('groups');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
+  const [expandedTeacherIds, setExpandedTeacherIds] = useState<Set<number>>(new Set());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -110,6 +107,30 @@ const ClassesPage = () => {
     });
   }, [searchTerm, state.items, teacherFilter]);
   const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
+  const teacherById = useMemo(() => {
+    const map = new Map<number, string>();
+    teacherOptions.forEach((teacher) => map.set(Number(teacher.value), teacher.label));
+    return map;
+  }, [teacherOptions]);
+  const getTeacherName = (teacherId?: number | string | null) => {
+    const id = Number(teacherId);
+    return id > 0 ? teacherById.get(id) || t('Unknown teacher') : t('No teacher');
+  };
+  const teacherRows = useMemo(() => {
+    const rows = new Map<number, { id: number; name: string; classes: any[] }>();
+    teacherOptions.forEach((teacher) => {
+      rows.set(Number(teacher.value), { id: Number(teacher.value), name: teacher.label, classes: [] });
+    });
+    filteredClasses.forEach((cls) => {
+      const teacherId = Number(cls.teacher_id || 0);
+      const key = teacherId > 0 ? teacherId : 0;
+      if (!rows.has(key)) rows.set(key, { id: key, name: key === 0 ? t('No teacher') : getTeacherName(key), classes: [] });
+      rows.get(key)?.classes.push(cls);
+    });
+    return Array.from(rows.values())
+      .filter((row) => row.classes.length > 0)
+      .sort((a, b) => b.classes.length - a.classes.length || a.name.localeCompare(b.name));
+  }, [filteredClasses, getTeacherName, t, teacherOptions]);
   const paginatedClasses = useMemo(
     () => paginateItems(filteredClasses, page, pageSize),
     [filteredClasses, page, pageSize]
@@ -119,7 +140,7 @@ const ClassesPage = () => {
   const allVisibleClassesSelected = visibleClassIds.length > 0 && selectedVisibleClassCount === visibleClassIds.length;
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, teacherFilter, viewMode]);
+  }, [searchTerm, teacherFilter, viewMode, groupView]);
   const toggleClass = (id: number, checked: boolean) => {
     setSelectedClassIds((current) => {
       const next = new Set(current);
@@ -135,6 +156,14 @@ const ClassesPage = () => {
         if (checked) next.add(id);
         else next.delete(id);
       }
+      return next;
+    });
+  };
+  const toggleTeacherExpanded = (id: number) => {
+    setExpandedTeacherIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
       return next;
     });
   };
@@ -186,40 +215,43 @@ const ClassesPage = () => {
     },
   ];
   const renderClassActions = (cls: any) => (
-    <div className="flex justify-end">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-sky-50 hover:text-sky-700 dark:hover:bg-muted"
-            aria-label={t('Open class actions')}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuItem onClick={() => navigate(`/classes/${getClassId(cls)}`)} className="gap-2">
-            <Info className="h-4 w-4 text-cyan-600" />
-            {t('Details')}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleGenerateSessions(cls)} className="gap-2">
-            <CalendarDays className="h-4 w-4 text-indigo-600" />
-            {t('Generate Sessions')}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleOpenModal(cls)} className="gap-2">
-            <Pencil className="h-4 w-4 text-blue-500" />
-            {t('Edit')}
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
-            className="gap-2 text-destructive focus:text-destructive"
-          >
-            <Trash2 className="h-4 w-4" />
-            {t('Delete')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex flex-wrap justify-end gap-1.5">
+      <Button
+        type="button"
+        size="sm"
+        onClick={() => navigate(`/classes/${getClassId(cls)}`)}
+        className="h-7 rounded-md bg-cyan-600 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-cyan-700"
+      >
+        <Info className="mr-1 h-3.5 w-3.5" />
+        {t('View')}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        onClick={() => handleGenerateSessions(cls)}
+        className="h-7 rounded-md bg-indigo-600 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-700"
+      >
+        <CalendarDays className="mr-1 h-3.5 w-3.5" />
+        {t('Sessions')}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        onClick={() => handleOpenModal(cls)}
+        className="h-7 rounded-md bg-amber-500 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-600"
+      >
+        <Pencil className="mr-1 h-3.5 w-3.5" />
+        {t('Edit')}
+      </Button>
+      <Button
+        type="button"
+        size="sm"
+        onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
+        className="h-7 rounded-md bg-rose-600 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-rose-700"
+      >
+        <Trash2 className="mr-1 h-3.5 w-3.5" />
+        {t('Delete')}
+      </Button>
     </div>
   );
 
@@ -303,6 +335,28 @@ const ClassesPage = () => {
       )}
 
       <div className="flex flex-col gap-3 rounded-lg border border-sky-100 bg-gradient-to-r from-white via-sky-50/60 to-emerald-50/40 p-3 shadow-sm lg:flex-row lg:items-center dark:border-border dark:bg-card dark:bg-none dark:shadow-none">
+        <div className="flex w-full rounded-lg bg-white p-1 shadow-sm ring-1 ring-slate-200 lg:w-auto dark:bg-background dark:ring-border">
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setGroupView('groups')}
+            className={`h-8 rounded-md px-3 text-xs font-semibold ${groupView === 'groups' ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+          >
+            <BookOpen className="mr-1.5 h-3.5 w-3.5" />
+            {t('Groups')}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => setGroupView('teachers')}
+            className={`h-8 rounded-md px-3 text-xs font-semibold ${groupView === 'teachers' ? 'bg-emerald-600 text-white hover:bg-emerald-700 hover:text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+          >
+            <UserRound className="mr-1.5 h-3.5 w-3.5" />
+            {t('By teachers')}
+          </Button>
+        </div>
         <div className="relative max-w-xl flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -351,6 +405,101 @@ const ClassesPage = () => {
         <Alert className="mb-4">
           <AlertDescription>{t('No classes match your search.')}</AlertDescription>
         </Alert>
+      ) : groupView === 'teachers' ? (
+        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 dark:hidden" />
+          <Table>
+            <TableHeader className="bg-slate-50/90 dark:bg-transparent">
+              <TableRow>
+                <TableHead className="min-w-[180px]">{t('Teacher')}</TableHead>
+                <TableHead className="w-[90px] text-center">{t('Groups')}</TableHead>
+                <TableHead className="w-[100px] text-center">{t('Capacity')}</TableHead>
+                <TableHead className="w-[120px] text-center">{t('Scheduled')}</TableHead>
+                <TableHead className="w-[90px] text-right">{t('Open')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {teacherRows.map((row, index) => {
+                const capacity = row.classes.reduce((sum, cls) => sum + (Number(cls.capacity) || 0), 0);
+                const scheduled = row.classes.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
+                const accent = index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600';
+                const isExpanded = expandedTeacherIds.has(row.id);
+                return (
+                  <Fragment key={row.id || row.name}>
+                    <TableRow className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                      <TableCell className="py-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleTeacherExpanded(row.id)}
+                          className="flex min-w-0 items-center gap-2 text-left"
+                        >
+                          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${accent} text-white shadow-sm`}>
+                            <UserRound className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="truncate text-sm font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{row.name}</span>
+                        </button>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <span className="inline-flex min-w-14 justify-center rounded-md bg-blue-600 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                          {row.classes.length}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <span className="inline-flex min-w-14 justify-center rounded-md bg-emerald-600 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                          {capacity}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <span className="inline-flex min-w-14 justify-center rounded-md bg-amber-500 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                          {scheduled}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2 text-right">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => toggleTeacherExpanded(row.id)}
+                          className={`h-7 rounded-md px-2 text-[11px] font-semibold text-white ${isExpanded ? 'bg-rose-600 hover:bg-rose-700' : 'bg-cyan-600 hover:bg-cyan-700'}`}
+                        >
+                          <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isExpanded && 'rotate-180')} />
+                          {isExpanded ? t('Close') : t('Open')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="bg-slate-50/70 p-2 dark:bg-muted/30">
+                          <div className="grid gap-2">
+                            {row.classes.map((cls, classIndex) => (
+                              <div
+                                key={cls.class_id || cls.id}
+                                className="grid gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 shadow-sm md:grid-cols-[minmax(220px,1fr)_100px_120px_minmax(260px,auto)] md:items-center dark:border-border dark:bg-background"
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => navigate(`/classes/${getClassId(cls)}`)}
+                                  className="min-w-0 text-left"
+                                >
+                                  <span className={`mr-2 inline-flex h-5 min-w-5 items-center justify-center rounded ${classIndex % 4 === 0 ? 'bg-cyan-600' : classIndex % 4 === 1 ? 'bg-violet-600' : classIndex % 4 === 2 ? 'bg-orange-500' : 'bg-rose-600'} px-1.5 text-[10px] font-bold text-white`}>
+                                    {classIndex + 1}
+                                  </span>
+                                  <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
+                                </button>
+                                <span className="rounded-md bg-emerald-600 px-2 py-1 text-center text-[11px] font-semibold text-white">{Number(cls.capacity) || 0} {t('seats')}</span>
+                                <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{cls.room_number || t('No room')}</span>
+                                {renderClassActions(cls)}
+                              </div>
+                            ))}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
@@ -384,6 +533,11 @@ const ClassesPage = () => {
                   />
                 </TableHead>
                 <TableHead>{t('Class')}</TableHead>
+                <TableHead>{t('Teacher')}</TableHead>
+                <TableHead>{t('Schedule')}</TableHead>
+                <TableHead>{t('Room')}</TableHead>
+                <TableHead>{t('Capacity')}</TableHead>
+                <TableHead>{t('Tuition')}</TableHead>
                 <TableHead className="text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -399,7 +553,7 @@ const ClassesPage = () => {
                       className="h-4 w-4"
                     />
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="py-2 font-medium">
                     <button
                       type="button"
                       className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
@@ -407,7 +561,19 @@ const ClassesPage = () => {
                     >
                       {cls.class_name}
                     </button>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{cls.class_code || '-'}</p>
                   </TableCell>
+                  <TableCell className="py-2">
+                    <span className="rounded-md bg-violet-600 px-2 py-1 text-[11px] font-semibold text-white">{getTeacherName(cls.teacher_id)}</span>
+                  </TableCell>
+                  <TableCell className="max-w-[180px] py-2 text-xs text-muted-foreground">{formatSchedule(cls)}</TableCell>
+                  <TableCell className="py-2">
+                    <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white">{cls.room_number || '-'}</span>
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <span className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white">{Number(cls.capacity) || 0}</span>
+                  </TableCell>
+                  <TableCell className="py-2 text-xs font-semibold">{formatMoney(Number(cls.payment_amount) || 0)}</TableCell>
                   <TableCell className="text-right">
                     {renderClassActions(cls)}
                   </TableCell>
@@ -514,7 +680,7 @@ const ClassesPage = () => {
         </>
       )}
 
-      {!state.loading && filteredClasses.length > 0 && (
+      {!state.loading && groupView === 'groups' && filteredClasses.length > 0 && (
         <PaginationBar
           total={filteredClasses.length}
           currentPage={paginatedClasses.currentPage}
