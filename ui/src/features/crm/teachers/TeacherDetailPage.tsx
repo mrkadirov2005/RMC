@@ -133,13 +133,26 @@ const TeacherDetailPage = () => {
     }
     return Array.from(byId.values());
   }, [detailStudents, storeStudents]);
+  const teacherClassIds = useMemo(
+    () => new Set(classes.map((c) => Number(c.class_id || c.id)).filter(Boolean)),
+    [classes]
+  );
   const teacherStudents = useMemo(() => {
-    const classIds = new Set(classes.map((c) => Number(c.class_id || c.id)).filter(Boolean));
     return studentsSource.filter((student) =>
       Number(student.teacher_id) === teacherIdNum ||
-      (student.class_id != null && classIds.has(Number(student.class_id)))
+      (student.class_id != null && teacherClassIds.has(Number(student.class_id)))
     );
-  }, [classes, studentsSource, teacherIdNum]);
+  }, [studentsSource, teacherClassIds, teacherIdNum]);
+  const directAssignedStudents = useMemo(() => {
+    return teacherStudents
+      .filter((student) =>
+        Number(student.teacher_id) === teacherIdNum &&
+        (!student.class_id || !teacherClassIds.has(Number(student.class_id)))
+      )
+      .sort((a, b) =>
+        `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`)
+      );
+  }, [teacherClassIds, teacherIdNum, teacherStudents]);
   const classStudentsByClassId = useMemo(() => {
     const map = new Map<number, TeacherStudent[]>();
     for (const student of studentsSource) {
@@ -774,10 +787,10 @@ const TeacherDetailPage = () => {
 
             {/* Tab: Classes & Students */}
             <TabsContent value="classes">
-              {classes.length === 0 ? (
+              {classes.length === 0 && directAssignedStudents.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-16 w-16 mx-auto opacity-30 mb-4" />
-                  <h3 className="text-lg font-semibold">No classes assigned to this teacher</h3>
+                  <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -843,6 +856,45 @@ const TeacherDetailPage = () => {
                       </div>
                     );
                   })}
+                  {directAssignedStudents.length > 0 && (
+                    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+                      <div className="flex w-full items-center gap-2 bg-white p-2.5 text-left dark:bg-muted/40">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
+                          <User className="h-4 w-4" />
+                        </div>
+                        <div className="flex-grow">
+                          <h3 className="text-sm font-semibold">Directly assigned students</h3>
+                          <p className="text-xs text-muted-foreground">Students connected to this teacher outside their groups</p>
+                        </div>
+                        <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
+                          {directAssignedStudents.length} Students
+                        </Badge>
+                      </div>
+                      <div className="border-t border-slate-200 bg-white p-2.5 dark:border-border dark:bg-card">
+                        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                          {directAssignedStudents.map((student, index) => (
+                            <div
+                              key={student.student_id || student.id}
+                              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70"
+                            >
+                              <div className={cn(
+                                'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-white shadow-sm',
+                                index % 4 === 0 && 'bg-sky-600',
+                                index % 4 === 1 && 'bg-emerald-600',
+                                index % 4 === 2 && 'bg-amber-500',
+                                index % 4 === 3 && 'bg-fuchsia-600'
+                              )}>
+                                {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                              </div>
+                              <span className="truncate text-xs font-semibold">
+                                {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </TabsContent>
@@ -918,10 +970,10 @@ const TeacherDetailPage = () => {
                   </div>
                 </div>
 
-                {classes.length === 0 ? (
+                {classes.length === 0 && directAssignedStudents.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Wallet className="h-16 w-16 mx-auto opacity-30 mb-4" />
-                    <h3 className="text-lg font-semibold">No classes assigned to this teacher</h3>
+                    <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -1002,6 +1054,72 @@ const TeacherDetailPage = () => {
                         </div>
                       );
                     })}
+                    {directAssignedStudents.length > 0 && (
+                      <div className="overflow-hidden rounded-lg border border-slate-200 bg-card text-card-foreground shadow-sm">
+                        <div className="relative border-b bg-white p-3 dark:bg-card">
+                          <h4 className="relative z-10 flex items-center justify-between text-sm font-bold text-foreground">
+                            <div className="flex items-center gap-3">
+                              <div className="rounded-lg bg-emerald-600 p-2 text-white shadow-sm">
+                                <User className="h-4 w-4" />
+                              </div>
+                              <span>Directly assigned students</span>
+                            </div>
+                            <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{directAssignedStudents.length} Students</Badge>
+                          </h4>
+                        </div>
+                        <div className="p-0">
+                          <Table className="text-xs">
+                            <TableHeader className="bg-muted/30">
+                              <TableRow className="border-b-border">
+                                <TableHead className="h-8 pl-3 font-semibold text-foreground">Student</TableHead>
+                                <TableHead className="hidden h-8 font-semibold text-foreground sm:table-cell">Enrollment #</TableHead>
+                                <TableHead className="h-8 pr-3 text-right font-semibold text-foreground">Payment Status</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {directAssignedStudents.map((student) => {
+                                const studentId = student.student_id || student.id;
+                                const [year, month] = selectedPaymentMonth.split('-');
+                                const hasPaid = payments.some(p => {
+                                  if (p.student_id !== studentId) return false;
+                                  if (p.payment_status?.toLowerCase() !== 'completed') return false;
+                                  const pDate = new Date(p.payment_date);
+                                  return pDate.getFullYear() === parseInt(year) && (pDate.getMonth() + 1) === parseInt(month);
+                                });
+
+                                return (
+                                  <TableRow key={studentId} className="hover:bg-muted/50 transition-colors border-b-border">
+                                    <TableCell className="py-2 pl-3 font-medium">
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-xs font-bold text-white shadow-sm">
+                                          {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                                        </div>
+                                        <div>
+                                          <p>{student.first_name} {student.last_name}</p>
+                                          <p className="text-xs text-muted-foreground font-normal sm:hidden">{student.enrollment_number}</p>
+                                        </div>
+                                      </div>
+                                    </TableCell>
+                                    <TableCell className="hidden py-2 text-muted-foreground sm:table-cell">{student.enrollment_number}</TableCell>
+                                    <TableCell className="py-2 pr-3 text-right">
+                                      {hasPaid ? (
+                                        <Badge className="border-0 bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-600">
+                                          Paid
+                                        </Badge>
+                                      ) : (
+                                        <Badge className="border-0 bg-rose-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-rose-600">
+                                          Unpaid
+                                        </Badge>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
