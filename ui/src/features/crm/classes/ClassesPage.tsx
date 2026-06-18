@@ -165,6 +165,13 @@ const ClassesPage = () => {
     const id = Number(teacherId);
     return id > 0 ? teacherById.get(id) || t('Unknown teacher') : t('No teacher');
   };
+  const getClassRoomLabel = (cls: any) => {
+    const roomNumber = String(cls.room_number || '').trim();
+    if (roomNumber) return roomNumber;
+    const assignments = Array.isArray(cls.room_assignments) ? cls.room_assignments : [];
+    const rooms = Array.from(new Set(assignments.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)));
+    return rooms.join(', ');
+  };
   const toDateInputValue = (value?: string | null) => {
     if (!value) return '';
     return String(value).split('T')[0];
@@ -237,7 +244,7 @@ const ClassesPage = () => {
     setSelectedClassIds(new Set());
   };
   const handleExportClasses = () => exportCsvEntity('classes', 'Classes');
-  const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
+  const roomsInView = new Set(filteredClasses.map((cls) => getClassRoomLabel(cls)).filter(Boolean)).size;
   const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
   useEffect(() => {
     if (groupView !== 'teachers') return;
@@ -546,7 +553,7 @@ const ClassesPage = () => {
                                       </span>
                                       <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
                                     </button>
-                                    <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{cls.room_number || t('No room')}</span>
+                                    <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{getClassRoomLabel(cls) || t('No room')}</span>
                                     {renderClassActions(cls)}
                                     <Button
                                       type="button"
@@ -661,7 +668,7 @@ const ClassesPage = () => {
                   </TableCell>
                   <TableCell className="max-w-[180px] py-2 text-xs text-muted-foreground">{formatSchedule(cls)}</TableCell>
                   <TableCell className="py-2">
-                    <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white">{cls.room_number || '-'}</span>
+                    <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white">{getClassRoomLabel(cls) || '-'}</span>
                   </TableCell>
                   <TableCell className="text-right">
                     {renderClassActions(cls)}
