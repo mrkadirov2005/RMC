@@ -57,6 +57,14 @@ const getStudentSearchText = (student: Student) =>
     student.phone,
   ].filter(Boolean).join(' ');
 
+type TeacherClassRow = {
+  cls: Partial<Class> & { class_name?: string; class_code?: string; level?: number | null };
+  classId: number;
+  teacherId: number | null;
+  students: Student[];
+  isDirect?: boolean;
+};
+
 export const StudentsTeacherGroupsTab = ({
   students,
   classes,
@@ -88,14 +96,44 @@ export const StudentsTeacherGroupsTab = ({
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [teacherOptions]);
 
-  const classRows = useMemo(() => classes
-    .map((cls) => {
-      const classId = toId(cls.class_id || cls.id) || 0;
-      const teacherId = toId(cls.teacher_id);
-      const groupStudents = students.filter((student) => toId(student.class_id) === classId);
-      return { cls, classId, teacherId, students: groupStudents };
-    })
-    .filter((row) => row.classId > 0), [classes, students]);
+  const classRows = useMemo<TeacherClassRow[]>(() => {
+    const realRows = classes
+      .map((cls) => {
+        const classId = toId(cls.class_id || cls.id) || 0;
+        const teacherId = toId(cls.teacher_id);
+        const groupStudents = students.filter((student) => toId(student.class_id) === classId);
+        return { cls, classId, teacherId, students: groupStudents };
+      })
+      .filter((row) => row.classId > 0);
+
+    const teacherClassIds = new Map<number, Set<number>>();
+    realRows.forEach((row) => {
+      if (!row.teacherId) return;
+      const ids = teacherClassIds.get(row.teacherId) || new Set<number>();
+      ids.add(row.classId);
+      teacherClassIds.set(row.teacherId, ids);
+    });
+
+    const directRows = teachers
+      .map((teacher) => {
+        const classIdsForTeacher = teacherClassIds.get(teacher.id) || new Set<number>();
+        const directStudents = students.filter((student) => {
+          const studentTeacherId = toId(student.teacher_id);
+          const studentClassId = toId(student.class_id);
+          return studentTeacherId === teacher.id && (!studentClassId || !classIdsForTeacher.has(studentClassId));
+        });
+        return {
+          cls: { class_name: 'Directly assigned students' },
+          classId: -teacher.id,
+          teacherId: teacher.id,
+          students: directStudents,
+          isDirect: true,
+        };
+      })
+      .filter((row) => row.students.length > 0);
+
+    return [...realRows, ...directRows];
+  }, [classes, students, teachers]);
 
   const selectedTeacher = selectedTeacherId ? teachers.find((teacher) => teacher.id === selectedTeacherId) : null;
   const selectedClass = selectedClassId ? classRows.find((row) => row.classId === selectedClassId) : null;
@@ -131,7 +169,7 @@ export const StudentsTeacherGroupsTab = ({
         ].filter(Boolean).join(' ');
         return normalizeSearch(haystack).includes(normalizedSearch);
       })
-      .sort((a, b) => String(a.cls.class_name || '').localeCompare(String(b.cls.class_name || '')))
+      .sort((a, b) => Number(a.isDirect) - Number(b.isDirect) || String(a.cls.class_name || '').localeCompare(String(b.cls.class_name || '')))
     : [];
 
   const applySearch = () => {
@@ -259,7 +297,7 @@ export const StudentsTeacherGroupsTab = ({
               <span className="text-center">Students</span>
               <span className="text-right">Teacher transfer</span>
             </div>
-            {selectedTeacherClasses.map(({ cls, classId, teacherId, students: groupStudents }, index) => (
+            {selectedTeacherClasses.map(({ cls, classId, teacherId, students: groupStudents, isDirect }, index) => (
               <div key={classId} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_minmax(260px,320px)] lg:items-center">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => setSelectedClassId(classId)} aria-label={`Open ${cls.class_name || `Class #${classId}`}`}>
@@ -269,7 +307,7 @@ export const StudentsTeacherGroupsTab = ({
                     <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => setSelectedClassId(classId)}>
                       {cls.class_name || `Class #${classId}`}
                     </button>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{[cls.class_code, cls.level ? `Level ${cls.level}` : null].filter(Boolean).join(' / ') || 'Group'}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{isDirect ? 'Students assigned to this teacher outside their groups' : [cls.class_code, cls.level ? `Level ${cls.level}` : null].filter(Boolean).join(' / ') || 'Group'}</p>
                   </div>
                 </div>
 
@@ -277,30 +315,34 @@ export const StudentsTeacherGroupsTab = ({
                   {groupStudents.length} students
                 </button>
 
-                <div className="flex flex-col gap-1.5 sm:flex-row" onClick={(event) => event.stopPropagation()}>
-                  <Select
-                    value={targetTeachers[classId] || ''}
-                    onValueChange={(value) => setTargetTeachers((current) => ({ ...current, [classId]: value }))}
-                    disabled={savingClassId === classId}
-                  >
-                    <SelectTrigger className="h-7 bg-white text-xs dark:bg-background">
-                      <SelectValue placeholder="Transfer teacher" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teachers
-                        .filter((teacher) => teacher.id !== teacherId)
-                        .map((teacher) => (
-                          <SelectItem key={teacher.id} value={String(teacher.id)}>
-                            {teacher.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <Button type="button" size="sm" className={`${getTone(index)} h-7 gap-1.5 px-2 text-xs text-white`} onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
-                    {savingClassId === classId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
-                    Transfer
-                  </Button>
-                </div>
+                {isDirect ? (
+                  <div className="text-right text-xs font-medium text-muted-foreground">Direct assignment</div>
+                ) : (
+                  <div className="flex flex-col gap-1.5 sm:flex-row" onClick={(event) => event.stopPropagation()}>
+                    <Select
+                      value={targetTeachers[classId] || ''}
+                      onValueChange={(value) => setTargetTeachers((current) => ({ ...current, [classId]: value }))}
+                      disabled={savingClassId === classId}
+                    >
+                      <SelectTrigger className="h-7 bg-white text-xs dark:bg-background">
+                        <SelectValue placeholder="Transfer teacher" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teachers
+                          .filter((teacher) => teacher.id !== teacherId)
+                          .map((teacher) => (
+                            <SelectItem key={teacher.id} value={String(teacher.id)}>
+                              {teacher.name}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" size="sm" className={`${getTone(index)} h-7 gap-1.5 px-2 text-xs text-white`} onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
+                      {savingClassId === classId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
+                      Transfer
+                    </Button>
+                  </div>
+                )}
               </div>
             ))}
           </div>
