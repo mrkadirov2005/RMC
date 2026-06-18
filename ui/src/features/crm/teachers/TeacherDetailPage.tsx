@@ -86,6 +86,7 @@ const TeacherDetailPage = () => {
   const teacher = useAppSelector((state) =>
     state.teachers.items.find((t) => String(t.teacher_id || t.id) === String(teacherId))
   );
+  const allClasses = useAppSelector((state) => state.classes.items);
   const classes = useAppSelector((state) =>
     state.classes.items.filter((c) => String(c.teacher_id) === String(teacherId))
   );
@@ -137,6 +138,14 @@ const TeacherDetailPage = () => {
     () => new Set(classes.map((c) => Number(c.class_id || c.id)).filter(Boolean)),
     [classes]
   );
+  const classById = useMemo(() => {
+    const map = new Map<number, any>();
+    for (const classItem of allClasses) {
+      const id = Number(classItem.class_id || classItem.id);
+      if (id) map.set(id, classItem);
+    }
+    return map;
+  }, [allClasses]);
   const teacherStudents = useMemo(() => {
     return studentsSource.filter((student) =>
       Number(student.teacher_id) === teacherIdNum ||
@@ -147,15 +156,15 @@ const TeacherDetailPage = () => {
     return teacherStudents
       .filter((student) =>
         Number(student.teacher_id) === teacherIdNum &&
-        (!student.class_id || !teacherClassIds.has(Number(student.class_id)))
+        !student.class_id
       )
       .sort((a, b) =>
         `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`)
       );
-  }, [teacherClassIds, teacherIdNum, teacherStudents]);
+  }, [teacherIdNum, teacherStudents]);
   const classStudentsByClassId = useMemo(() => {
     const map = new Map<number, TeacherStudent[]>();
-    for (const student of studentsSource) {
+    for (const student of teacherStudents) {
       const classId = Number(student.class_id);
       if (!classId) continue;
       if (!map.has(classId)) map.set(classId, []);
@@ -167,7 +176,38 @@ const TeacherDetailPage = () => {
       );
     }
     return map;
-  }, [studentsSource]);
+  }, [teacherStudents]);
+  const studentClassGroups = useMemo(() => {
+    const ids = new Set<number>();
+    for (const classItem of classes) {
+      const id = Number(classItem.class_id || classItem.id);
+      if (id) ids.add(id);
+    }
+    for (const student of teacherStudents) {
+      const id = Number(student.class_id);
+      if (id) ids.add(id);
+    }
+
+    return Array.from(ids)
+      .map((classId) => {
+        const fallbackClass = classes.find((classItem) => Number(classItem.class_id || classItem.id) === classId);
+        const classItem = classById.get(classId) || fallbackClass || {
+          class_id: classId,
+          class_name: `Group #${classId}`,
+          level: null,
+        };
+        return {
+          classId,
+          classItem,
+          students: classStudentsByClassId.get(classId) || [],
+          isTeacherOwned: teacherClassIds.has(classId),
+        };
+      })
+      .sort((a, b) =>
+        Number(b.isTeacherOwned) - Number(a.isTeacherOwned) ||
+        String(a.classItem.class_name || '').localeCompare(String(b.classItem.class_name || ''))
+      );
+  }, [classById, classStudentsByClassId, classes, teacherClassIds, teacherStudents]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -787,16 +827,14 @@ const TeacherDetailPage = () => {
 
             {/* Tab: Classes & Students */}
             <TabsContent value="classes">
-              {classes.length === 0 && directAssignedStudents.length === 0 ? (
+              {studentClassGroups.length === 0 && directAssignedStudents.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <BookOpen className="h-16 w-16 mx-auto opacity-30 mb-4" />
                   <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  {classes.map((classItem) => {
-                    const classId = classItem.class_id || classItem.id || 0;
-                    const classStudents = getStudentsByClass(classId);
+                  {studentClassGroups.map(({ classId, classItem, students: classStudents, isTeacherOwned }) => {
                     const isExpanded = expandedClassIds.has(classId);
                     return (
                       <div
@@ -814,7 +852,9 @@ const TeacherDetailPage = () => {
                           </div>
                           <div className="flex-grow">
                             <h3 className="text-sm font-semibold">{classItem.class_name}</h3>
-                            <p className="text-xs text-muted-foreground">Level: {classItem.level || 'N/A'}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {isTeacherOwned ? 'Teacher group' : 'Student group'} / Level: {classItem.level || 'N/A'}
+                            </p>
                           </div>
                           <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
                             {classStudents.length} Students
@@ -864,7 +904,7 @@ const TeacherDetailPage = () => {
                         </div>
                         <div className="flex-grow">
                           <h3 className="text-sm font-semibold">Directly assigned students</h3>
-                          <p className="text-xs text-muted-foreground">Students connected to this teacher outside their groups</p>
+                          <p className="text-xs text-muted-foreground">Students connected to this teacher without a group</p>
                         </div>
                         <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
                           {directAssignedStudents.length} Students
@@ -970,17 +1010,14 @@ const TeacherDetailPage = () => {
                   </div>
                 </div>
 
-                {classes.length === 0 && directAssignedStudents.length === 0 ? (
+                {studentClassGroups.length === 0 && directAssignedStudents.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Wallet className="h-16 w-16 mx-auto opacity-30 mb-4" />
                     <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {classes.map((classItem) => {
-                      const classId = classItem.class_id || classItem.id || 0;
-                      const classStudents = getStudentsByClass(classId);
-
+                    {studentClassGroups.map(({ classId, classItem, students: classStudents, isTeacherOwned }) => {
                       return (
                         <div key={classId} className="overflow-hidden rounded-lg border border-slate-200 bg-card text-card-foreground shadow-sm">
                           <div className="relative border-b bg-white p-3 dark:bg-card">
@@ -989,7 +1026,12 @@ const TeacherDetailPage = () => {
                                 <div className="rounded-lg bg-indigo-600 p-2 text-white shadow-sm">
                                   <BookOpen className="h-4 w-4" />
                                 </div>
-                                <span>{classItem.class_name} <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">({classItem.level})</span></span>
+                                <span>
+                                  {classItem.class_name}
+                                  <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">
+                                    ({isTeacherOwned ? 'teacher group' : 'student group'}{classItem.level ? `, level ${classItem.level}` : ''})
+                                  </span>
+                                </span>
                               </div>
                               <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{classStudents.length} Students</Badge>
                             </h4>
