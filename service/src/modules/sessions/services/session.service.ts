@@ -28,14 +28,15 @@ const normalizeDayName = (value: unknown) => {
 };
 
 const parseSchedule = (section?: string) => {
-  if (!section) return { days: [], time: '' };
+  if (!section) return { days: [], time: '', endTime: '' };
   try {
     const parsed = JSON.parse(section);
     const days = Array.isArray(parsed.days) ? parsed.days : [];
     const time = typeof parsed.time === 'string' ? parsed.time : '';
-    return { days, time };
+    const endTime = typeof parsed.endTime === 'string' ? parsed.endTime : '';
+    return { days, time, endTime };
   } catch {
-    return { days: [], time: '' };
+    return { days: [], time: '', endTime: '' };
   }
 };
 
@@ -55,6 +56,20 @@ const addMinutesToTime = (time: string, minutes: number) => {
   const nextHours = Math.floor(total / 60) % 24;
   const nextMins = total % 60;
   return `${String(nextHours).padStart(2, '0')}:${String(nextMins).padStart(2, '0')}`;
+};
+
+const minutesBetweenTimes = (startTime: string, endTime?: string) => {
+  if (!endTime) return null;
+  const [startHoursRaw, startMinutesRaw] = startTime.split(':');
+  const [endHoursRaw, endMinutesRaw] = endTime.split(':');
+  const startHours = Number(startHoursRaw);
+  const startMinutes = Number(startMinutesRaw);
+  const endHours = Number(endHoursRaw);
+  const endMinutes = Number(endMinutesRaw);
+  if (![startHours, startMinutes, endHours, endMinutes].every(Number.isFinite)) return null;
+  const startTotal = startHours * 60 + startMinutes;
+  const endTotal = endHours * 60 + endMinutes;
+  return endTotal > startTotal ? endTotal - startTotal : null;
 };
 
 const generateMonthlySessions = async (params: {
@@ -81,6 +96,8 @@ const generateMonthlySessions = async (params: {
   const monthIndex = month - 1;
   const daysInMonth = new Date(year, month, 0).getDate();
   const sessions: any[] = [];
+  const startDate = cls.start_date ? toLocalDateKey(new Date(cls.start_date)) : null;
+  const endDate = cls.end_date ? toLocalDateKey(new Date(cls.end_date)) : null;
 
   for (let day = 1; day <= daysInMonth; day += 1) {
     const dateObj = new Date(year, monthIndex, day);
@@ -89,14 +106,17 @@ const generateMonthlySessions = async (params: {
     if (!matches) continue;
 
     const sessionDate = toLocalDateKey(dateObj);
+    if (startDate && sessionDate < startDate) continue;
+    if (endDate && sessionDate > endDate) continue;
+    const scheduleDuration = minutesBetweenTimes(schedule.time, schedule.endTime) || durationMinutes;
     sessions.push({
       center_id: cls.center_id,
       class_id: cls.class_id,
       teacher_id: cls.teacher_id || null,
       session_date: sessionDate,
       start_time: schedule.time,
-      duration_minutes: durationMinutes,
-      end_time: addMinutesToTime(schedule.time, durationMinutes),
+      duration_minutes: scheduleDuration,
+      end_time: schedule.endTime || addMinutesToTime(schedule.time, scheduleDuration),
     });
   }
 

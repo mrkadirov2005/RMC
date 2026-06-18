@@ -263,8 +263,8 @@ const insertTeacher = (params: any[]) =>
 
 const upsertClassByCode = (params: any[]) =>
   pool.query(
-    `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, payment_amount, payment_frequency)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+    `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
      ON CONFLICT (class_code) WHERE deleted_at IS NULL DO UPDATE SET
        center_id = EXCLUDED.center_id,
        class_name = EXCLUDED.class_name,
@@ -273,6 +273,8 @@ const upsertClassByCode = (params: any[]) =>
        capacity = EXCLUDED.capacity,
        teacher_id = EXCLUDED.teacher_id,
        room_number = EXCLUDED.room_number,
+       start_date = EXCLUDED.start_date,
+       end_date = EXCLUDED.end_date,
        payment_amount = EXCLUDED.payment_amount,
        payment_frequency = EXCLUDED.payment_frequency,
        updated_at = CURRENT_TIMESTAMP`,
@@ -300,8 +302,8 @@ const insertPayment = (params: any[]) =>
 
 const insertRoom = (params: any[]) =>
   pool.query(
-    `INSERT INTO rooms (center_id, room_number, class_id, day, time)
-     VALUES ($1,$2,$3,$4,$5)`,
+    `INSERT INTO rooms (center_id, room_number, class_id, day, time, end_time)
+     VALUES ($1,$2,$3,$4,$5,$6)`,
     params
   );
 
@@ -422,14 +424,15 @@ const upsertPayment = (params: any[], hasPaymentId: boolean) => {
 const upsertRoom = (params: any[], hasRoomId: boolean) => {
   if (hasRoomId) {
     return pool.query(
-      `INSERT INTO rooms (room_id, center_id, room_number, class_id, day, time)
-       VALUES ($1,$2,$3,$4,$5,$6)
+      `INSERT INTO rooms (room_id, center_id, room_number, class_id, day, time, end_time)
+       VALUES ($1,$2,$3,$4,$5,$6,$7)
        ON CONFLICT (room_id) DO UPDATE SET
          center_id = EXCLUDED.center_id,
          room_number = EXCLUDED.room_number,
          class_id = EXCLUDED.class_id,
          day = EXCLUDED.day,
          time = EXCLUDED.time,
+         end_time = EXCLUDED.end_time,
          updated_at = CURRENT_TIMESTAMP`,
       params
     );

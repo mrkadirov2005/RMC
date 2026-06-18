@@ -1,5 +1,5 @@
-room_id,center_id,room_number,class_id,class_name,class_code,day,time
-,,101,,IELTS Morning,IELTS-MOR,Monday,09:00
-,,101,,IELTS Morning,IELTS-MOR,Wednesday,09:00
-,,202,,SAT Evening,SAT-EVE,Tuesday,17:30
-,,103,,Math Foundation,MATH-FND,Monday,15:00
+room_id,center_id,room_number,class_id,class_name,class_code,day,time,end_time
+,,101,,IELTS Morning,IELTS-MOR,Monday,09:00,10:30
+,,101,,IELTS Morning,IELTS-MOR,Wednesday,09:00,10:30
+,,202,,SAT Evening,SAT-EVE,Tuesday,17:30,19:00
+,,103,,Math Foundation,MATH-FND,Monday,15:00,16:00

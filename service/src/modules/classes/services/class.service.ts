@@ -5,8 +5,10 @@ const listClasses = (centerId?: number, teacherId?: number) => classRepository.f
 
 const getClass = (id: number, centerId?: number, teacherId?: number) => classRepository.findById(id, centerId, teacherId);
 
+const generateClassCode = () => `CLS-${Date.now().toString(36).toUpperCase()}`;
+
 const createClass = async (body: any, centerId?: number) => {
-  const { center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, payment_amount, payment_frequency } = body;
+  const { center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency } = body;
   let validatedTeacherId = teacher_id || null;
   if (teacher_id) {
     const ok = await classRepository.teacherExists(teacher_id, centerId || center_id);
@@ -15,12 +17,14 @@ const createClass = async (body: any, centerId?: number) => {
   const row = await classRepository.insert([
     centerId || center_id,
     class_name,
-    class_code,
+    String(class_code || '').trim() || generateClassCode(),
     level,
     section,
     capacity,
     validatedTeacherId,
     room_number,
+    start_date || null,
+    end_date || null,
     payment_amount,
     payment_frequency || 'Monthly',
   ]);
@@ -28,8 +32,12 @@ const createClass = async (body: any, centerId?: number) => {
 };
 
 const updateClass = (id: number, body: any, centerId?: number) => {
-  const { class_name, level, section, capacity, teacher_id, room_number, payment_amount } = body;
-  return classRepository.update(id, [class_name, level, section, capacity, teacher_id, room_number, payment_amount], centerId);
+  const { class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
+  return classRepository.update(
+    id,
+    [class_name, class_code ? String(class_code).trim() : undefined, level, section, capacity, teacher_id, room_number, start_date || null, end_date || null, payment_amount],
+    centerId
+  );
 };
 
 const deleteClass = async (id: number, centerId?: number, options?: { force?: boolean }) => {

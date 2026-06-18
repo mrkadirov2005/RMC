@@ -15,5 +15,7 @@ Recommended import order for a fresh test center:
 Notes:
 
 - Leave ID columns blank when creating new records.
+- Classes support `start_date` / `end_date`; schedule JSON should include `time` and `endTime`.
+- Rooms support `time` / `end_time`; the backend uses the full range for availability checks.
 - For payments and student-specific assignments, update `student_id` after students exist, or export students first and copy the generated IDs.
 - For global superuser imports, use the active center in the UI; the backend will scope rows to that center.

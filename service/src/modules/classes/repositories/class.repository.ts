@@ -46,18 +46,18 @@ const teacherExists = (teacherId: number, centerId?: number) => {
 const insert = (params: any[]) =>
   pool
     .query(
-      `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, payment_amount, payment_frequency)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
       params
     )
     .then((r: any) => r.rows[0]);
 
 const update = (id: number, params: any[], centerId?: number) => {
   let query =
-    'UPDATE classes SET class_name = COALESCE($1, class_name), level = COALESCE($2, level), section = COALESCE($3, section), capacity = COALESCE($4, capacity), teacher_id = COALESCE($5, teacher_id), room_number = COALESCE($6, room_number), payment_amount = COALESCE($7, payment_amount), updated_at = CURRENT_TIMESTAMP WHERE class_id = $8 AND deleted_at IS NULL';
+    'UPDATE classes SET class_name = COALESCE($1, class_name), class_code = COALESCE($2, class_code), level = COALESCE($3, level), section = COALESCE($4, section), capacity = COALESCE($5, capacity), teacher_id = COALESCE($6, teacher_id), room_number = COALESCE($7, room_number), start_date = $8, end_date = $9, payment_amount = COALESCE($10, payment_amount), updated_at = CURRENT_TIMESTAMP WHERE class_id = $11 AND deleted_at IS NULL';
   const values: any[] = [...params, id];
   if (centerId) {
-    query += ' AND center_id = $9';
+    query += ' AND center_id = $12';
     values.push(centerId);
   }
   query += ' RETURNING *';

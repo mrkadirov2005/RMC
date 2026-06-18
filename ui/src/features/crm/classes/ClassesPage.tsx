@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, Search, X, BookOpen, Users, MapPin, DollarSign, Upload, Download, UserRound, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, Search, X, BookOpen, MapPin, DollarSign, Upload, Download, UserRound, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +35,6 @@ import { Switch } from '@/components/ui/switch';
 import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
 import { exportCsvEntity } from '@/shared/dataCsv';
-import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { cn } from '@/lib/utils';
@@ -178,9 +177,7 @@ const ClassesPage = () => {
     setSelectedClassIds(new Set());
   };
   const handleExportClasses = () => exportCsvEntity('classes', 'Classes');
-  const totalCapacity = filteredClasses.reduce((sum, cls) => sum + (Number(cls.capacity) || 0), 0);
   const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
-  const monthlyTuition = filteredClasses.reduce((sum, cls) => sum + (Number(cls.payment_amount) || 0), 0);
   const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
   const summaryCards = [
     {
@@ -193,15 +190,6 @@ const ClassesPage = () => {
       text: 'text-indigo-950',
     },
     {
-      label: t('Capacity'),
-      value: totalCapacity.toLocaleString(),
-      detail: t('Total seats'),
-      icon: Users,
-      shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
-      iconShell: 'from-emerald-500 to-teal-500',
-      text: 'text-emerald-950',
-    },
-    {
       label: t('Rooms'),
       value: roomsInView.toLocaleString(),
       detail: t('In current view'),
@@ -209,15 +197,6 @@ const ClassesPage = () => {
       shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
       iconShell: 'from-amber-500 to-orange-500',
       text: 'text-amber-950',
-    },
-    {
-      label: t('Monthly tuition'),
-      value: formatMoney(monthlyTuition),
-      detail: t('Listed amounts'),
-      icon: DollarSign,
-      shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
-      iconShell: 'from-cyan-500 to-fuchsia-500',
-      text: 'text-slate-950',
     },
   ];
   const renderClassActions = (cls: any) => (
@@ -419,14 +398,12 @@ const ClassesPage = () => {
               <TableRow>
                 <TableHead className="min-w-[180px]">{t('Teacher')}</TableHead>
                 <TableHead className="w-[90px] text-center">{t('Groups')}</TableHead>
-                <TableHead className="w-[100px] text-center">{t('Capacity')}</TableHead>
                 <TableHead className="w-[120px] text-center">{t('Scheduled')}</TableHead>
                 <TableHead className="w-[90px] text-right">{t('Open')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {teacherRows.map((row, index) => {
-                const capacity = row.classes.reduce((sum, cls) => sum + (Number(cls.capacity) || 0), 0);
                 const scheduled = row.classes.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
                 const accent = index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600';
                 const isExpanded = expandedTeacherIds.has(row.id);
@@ -451,11 +428,6 @@ const ClassesPage = () => {
                         </span>
                       </TableCell>
                       <TableCell className="py-2 text-center">
-                        <span className="inline-flex min-w-14 justify-center rounded-md bg-emerald-600 px-2 py-1 text-xs font-bold text-white shadow-sm">
-                          {capacity}
-                        </span>
-                      </TableCell>
-                      <TableCell className="py-2 text-center">
                         <span className="inline-flex min-w-14 justify-center rounded-md bg-amber-500 px-2 py-1 text-xs font-bold text-white shadow-sm">
                           {scheduled}
                         </span>
@@ -474,12 +446,12 @@ const ClassesPage = () => {
                     </TableRow>
                     {isExpanded && (
                       <TableRow>
-                        <TableCell colSpan={5} className="bg-slate-50/70 p-2 dark:bg-muted/30">
+                        <TableCell colSpan={4} className="bg-slate-50/70 p-2 dark:bg-muted/30">
                           <div className="grid gap-2">
                             {row.classes.map((cls, classIndex) => (
                               <div
                                 key={cls.class_id || cls.id}
-                                className="grid gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 shadow-sm md:grid-cols-[minmax(220px,1fr)_100px_120px_minmax(260px,auto)] md:items-center dark:border-border dark:bg-background"
+                                className="grid gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 shadow-sm md:grid-cols-[minmax(220px,1fr)_120px_minmax(260px,auto)] md:items-center dark:border-border dark:bg-background"
                               >
                                 <button
                                   type="button"
@@ -491,7 +463,6 @@ const ClassesPage = () => {
                                   </span>
                                   <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
                                 </button>
-                                <span className="rounded-md bg-emerald-600 px-2 py-1 text-center text-[11px] font-semibold text-white">{Number(cls.capacity) || 0} {t('seats')}</span>
                                 <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{cls.room_number || t('No room')}</span>
                                 {renderClassActions(cls)}
                               </div>
@@ -542,8 +513,6 @@ const ClassesPage = () => {
                 <TableHead>{t('Teacher')}</TableHead>
                 <TableHead>{t('Schedule')}</TableHead>
                 <TableHead>{t('Room')}</TableHead>
-                <TableHead>{t('Capacity')}</TableHead>
-                <TableHead>{t('Tuition')}</TableHead>
                 <TableHead className="text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -567,7 +536,6 @@ const ClassesPage = () => {
                     >
                       {cls.class_name}
                     </button>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">{cls.class_code || '-'}</p>
                   </TableCell>
                   <TableCell className="py-2">
                     <span className="rounded-md bg-violet-600 px-2 py-1 text-[11px] font-semibold text-white">{getTeacherName(cls.teacher_id)}</span>
@@ -576,10 +544,6 @@ const ClassesPage = () => {
                   <TableCell className="py-2">
                     <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white">{cls.room_number || '-'}</span>
                   </TableCell>
-                  <TableCell className="py-2">
-                    <span className="rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white">{Number(cls.capacity) || 0}</span>
-                  </TableCell>
-                  <TableCell className="py-2 text-xs font-semibold">{formatMoney(Number(cls.payment_amount) || 0)}</TableCell>
                   <TableCell className="text-right">
                     {renderClassActions(cls)}
                   </TableCell>
@@ -627,7 +591,6 @@ const ClassesPage = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{cls.class_name}</p>
-                      <p className="sr-only">{cls.class_code || t('Class details')}</p>
                     </div>
                   </div>
                 </CardContent>

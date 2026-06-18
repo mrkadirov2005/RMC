@@ -27,6 +27,12 @@ const createRoom = async (req: any, res: any) => {
   try {
     const centerId = req.body.center_id || req.user.center_id;
     const room = await roomsService.createRoom({ ...req.body, center_id: centerId });
+    if (room?.error === 'bad_time_window') {
+      return res.status(400).json({ error: 'End time must be after start time.' });
+    }
+    if (room?.error === 'room_unavailable') {
+      return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
+    }
     res.status(201).json(room);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -38,6 +44,12 @@ const updateRoom = async (req: any, res: any) => {
     const { id } = req.params;
     const centerId = req.body.center_id || req.user.center_id;
     const room = await roomsService.updateRoom(id, req.body, centerId);
+    if (room?.error === 'bad_time_window') {
+      return res.status(400).json({ error: 'End time must be after start time.' });
+    }
+    if (room?.error === 'room_unavailable') {
+      return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
+    }
     if (!room) return res.status(404).json({ error: 'Room not found' });
     res.json(room);
   } catch (error: any) {

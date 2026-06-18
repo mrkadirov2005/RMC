@@ -1,28 +1,43 @@
-import * as React from "react"
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
+import * as React from 'react';
 
-import { cn } from "@/lib/utils"
+import { cn } from '@/lib/utils';
 
-const Checkbox = React.forwardRef<
-  React.ElementRef<typeof CheckboxPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>
->(({ className, ...props }, ref) => (
-  <CheckboxPrimitive.Root
-    ref={ref}
-    className={cn(
-      "peer h-4 w-4 shrink-0 border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-      className
-    )}
-    {...props}
-  >
-    <CheckboxPrimitive.Indicator
-      className={cn("flex items-center justify-center text-current")}
-    >
-      <Check className="h-4 w-4" />
-    </CheckboxPrimitive.Indicator>
-  </CheckboxPrimitive.Root>
-))
-Checkbox.displayName = CheckboxPrimitive.Root.displayName
+type CheckedState = boolean | 'indeterminate';
 
-export { Checkbox }
+type CheckboxProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'checked' | 'onChange' | 'type'> & {
+  checked?: CheckedState;
+  onCheckedChange?: (checked: CheckedState) => void;
+};
+
+const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
+  ({ className, checked = false, onCheckedChange, disabled, ...props }, ref) => {
+    const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+    React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement);
+
+    React.useEffect(() => {
+      if (inputRef.current) {
+        inputRef.current.indeterminate = checked === 'indeterminate';
+      }
+    }, [checked]);
+
+    return (
+      <input
+        ref={inputRef}
+        type="checkbox"
+        checked={checked === true}
+        disabled={disabled}
+        onChange={(event) => onCheckedChange?.(event.target.checked)}
+        className={cn(
+          'h-4 w-4 shrink-0 rounded border border-primary accent-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+          className
+        )}
+        {...props}
+      />
+    );
+  }
+);
+
+Checkbox.displayName = 'Checkbox';
+
+export { Checkbox };

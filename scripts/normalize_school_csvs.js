@@ -131,6 +131,44 @@ const normalizePhone = (value) => {
 const isScheduleText = (value) =>
   /\b(dush|sesh|chor|pay|paysh|juma|shanba|yak|du|se|ch|ju)\b/i.test(value) || /\d{1,2}[:.]\d{2}/.test(value);
 
+const addMinutesToTime = (time, minutes) => {
+  const [hoursRaw, minutesRaw] = String(time || '').split(':');
+  const hours = Number(hoursRaw);
+  const mins = Number(minutesRaw);
+  if (!Number.isFinite(hours) || !Number.isFinite(mins)) return '';
+  const total = hours * 60 + mins + minutes;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+};
+
+const parseScheduleText = (value) => {
+  const text = compact(value).toLowerCase();
+  const days = [];
+  const dayAliases = [
+    [/dush|du\b/, 'Monday'],
+    [/sesh|se\b/, 'Tuesday'],
+    [/chor|ch\b/, 'Wednesday'],
+    [/pay|paysh/, 'Thursday'],
+    [/juma|ju\b/, 'Friday'],
+    [/shanba/, 'Saturday'],
+    [/yak/, 'Sunday'],
+  ];
+  dayAliases.forEach(([pattern, day]) => {
+    if (pattern.test(text) && !days.includes(day)) days.push(day);
+  });
+  const timeMatch = text.match(/(\d{1,2})[:.](\d{2})/);
+  const time = timeMatch ? `${String(Number(timeMatch[1])).padStart(2, '0')}:${timeMatch[2]}` : '';
+  return {
+    days,
+    time,
+    endTime: time ? addMinutesToTime(time, 60) : '',
+  };
+};
+
+const serializeSchedule = (value) => {
+  const schedule = parseScheduleText(value);
+  return schedule.days.length || schedule.time ? JSON.stringify(schedule) : compact(value);
+};
+
 const looksLikeHeader = (row) => {
   const cells = row.map((cell) => compact(cell).toLowerCase());
   return cells.some((cell) => /^t\/?r$|^n\/?r$/.test(cell)) && cells.some((cell) => /tel|raqam|maktab|sinfi|sana/.test(cell));
@@ -258,9 +296,11 @@ for (const file of files) {
         class_code: classCode,
         teacher_employee_id: teacher.employee_id,
         level: '',
-        section: previousSchedule,
+        section: serializeSchedule(previousSchedule),
         capacity: 0,
         room_number: '',
+        start_date: '',
+        end_date: '',
         payment_amount: '',
         payment_frequency: 'Monthly',
       };
@@ -332,6 +372,8 @@ writeCsv(path.join(OUT_DIR, 'classes_import.csv'), classes, [
   'section',
   'capacity',
   'room_number',
+  'start_date',
+  'end_date',
   'payment_amount',
   'payment_frequency',
 ]);

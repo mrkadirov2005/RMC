@@ -444,6 +444,14 @@ class CreateClassDto {
   room_number?: string;
 
   @IsOptional()
+  @IsDateString()
+  start_date?: string;
+
+  @IsOptional()
+  @IsDateString()
+  end_date?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsNumber()
   @Min(0)
@@ -458,6 +466,10 @@ class UpdateClassDto {
   @IsOptional()
   @IsString()
   class_name?: string;
+
+  @IsOptional()
+  @IsString()
+  class_code?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -483,6 +495,14 @@ class UpdateClassDto {
   @IsOptional()
   @IsString()
   room_number?: string;
+
+  @IsOptional()
+  @IsDateString()
+  start_date?: string;
+
+  @IsOptional()
+  @IsDateString()
+  end_date?: string;
 
   @IsOptional()
   @Type(() => Number)

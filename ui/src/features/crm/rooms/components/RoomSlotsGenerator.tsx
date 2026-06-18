@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -19,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { showToast } from '@/utils/toast';
-import { Calendar, Plus, Loader2 } from 'lucide-react';
+import { Calendar, Loader2 } from 'lucide-react';
 
 interface RoomSlotsGeneratorProps {
   roomId: number;
@@ -76,12 +75,12 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
 
   const handleGenerateSlots = async () => {
     if (!startDate || !endDate || selectedDays.length === 0) {
-      showToast('Please fill all required fields', 'error');
+      showToast.error('Please fill all required fields');
       return;
     }
 
     if (new Date(startDate) > new Date(endDate)) {
-      showToast('Start date must be before end date', 'error');
+      showToast.error('Start date must be before end date');
       return;
     }
 
@@ -112,7 +111,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
       }
 
       const result = await response.json();
-      showToast(result.message, 'success');
+      showToast.success(result.message);
       setShowGenerator(false);
       
       // Reset form
@@ -125,7 +124,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
       
       onSlotsGenerated?.();
     } catch (err: any) {
-      showToast(err.message || 'Failed to generate slots', 'error');
+      showToast.error(err.message || 'Failed to generate slots');
     } finally {
       setLoading(false);
     }

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, AlertCircle } from 'lucide-react';
-import { RoomSlotsCalendar } from './RoomSlotsCalendar';
-import { RoomSlotsGenerator } from './RoomSlotsGenerator';
+import { AlertCircle } from 'lucide-react';
+import { RoomSlotsCalendar } from './components/RoomSlotsCalendar';
+import { RoomSlotsGenerator } from './components/RoomSlotsGenerator';
 import { useAppSelector } from '@/features/crm/hooks';
 
 interface RoomSlotsPageProps {
@@ -18,7 +18,6 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
   const rooms = useAppSelector((state) => state.rooms.items) as any[];
   
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(roomId || null);
-  const [loading, setLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const selectedRoom = rooms.find(r => r.room_id === selectedRoomId);

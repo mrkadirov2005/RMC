@@ -1,4 +1,4 @@
-class_id,center_id,class_name,class_code,level,section,capacity,teacher_id,teacher_employee_id,room_number,payment_amount,payment_frequency
-,,IELTS Morning,IELTS-MOR,7,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""09:00""}",18,,TCH-001,101,650000,Monthly
-,,SAT Evening,SAT-EVE,8,"{""days"":[""Tuesday"",""Thursday""],""time"":""17:30""}",16,,TCH-002,202,750000,Monthly
-,,Math Foundation,MATH-FND,6,"{""days"":[""Monday"",""Wednesday""],""time"":""15:00""}",20,,TCH-003,103,500000,Monthly
+class_id,center_id,class_name,class_code,level,section,capacity,teacher_id,teacher_employee_id,room_number,start_date,end_date,payment_amount,payment_frequency
+,,IELTS Morning,IELTS-MOR,7,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""09:00"",""endTime"":""10:30""}",18,,TCH-001,101,2026-01-05,2026-06-30,650000,Monthly
+,,SAT Evening,SAT-EVE,8,"{""days"":[""Tuesday"",""Thursday""],""time"":""17:30"",""endTime"":""19:00""}",16,,TCH-002,202,2026-01-06,2026-06-25,750000,Monthly
+,,Math Foundation,MATH-FND,6,"{""days"":[""Monday"",""Wednesday""],""time"":""15:00"",""endTime"":""16:00""}",20,,TCH-003,103,2026-01-05,2026-05-27,500000,Monthly

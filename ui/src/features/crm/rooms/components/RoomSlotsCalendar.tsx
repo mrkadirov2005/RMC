@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, BookCheck, X } from 'lucide-react';
+import { Calendar, BookCheck, X } from 'lucide-react';
 import { useRoomSlots } from '../hooks/useRoomSlots';
 import {
   Dialog,
@@ -26,11 +26,6 @@ interface RoomSlotsCalendarProps {
   roomId: number;
   centerId: number;
   roomNumber: string;
-}
-
-interface TimeSlot {
-  hour: number;
-  minute: number;
 }
 
 export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
@@ -103,7 +98,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
         duration_minutes: 30
       });
       
-      showToast('Slot created successfully', 'success');
+      showToast.success('Slot created successfully');
       setShowCreateSlot(false);
       setNewSlotTime({ start: '09:00', end: '09:30' });
       
@@ -111,23 +106,23 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
       const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).toISOString().split('T')[0];
       fetchSlots(firstDay, lastDay);
     } catch (err) {
-      showToast('Failed to create slot', 'error');
+      showToast.error('Failed to create slot');
     }
   };
 
   const handleBookSlot = async () => {
     if (!selectedSlotId || !bookingClassId) {
-      showToast('Please select both slot and class', 'error');
+      showToast.error('Please select both slot and class');
       return;
     }
     
     try {
       await bookSlot(selectedSlotId, parseInt(bookingClassId));
-      showToast('Slot booked successfully', 'success');
+      showToast.success('Slot booked successfully');
       setShowBookSlot(false);
       setBookingClassId('');
     } catch (err: any) {
-      showToast(err.message || 'Failed to book slot', 'error');
+      showToast.error(err.message || 'Failed to book slot');
     }
   };
 
@@ -136,9 +131,9 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
     
     try {
       await cancelBooking(bookingId);
-      showToast('Booking cancelled successfully', 'success');
+      showToast.success('Booking cancelled successfully');
     } catch (err: any) {
-      showToast(err.message || 'Failed to cancel booking', 'error');
+      showToast.error(err.message || 'Failed to cancel booking');
     }
   };
 
@@ -311,7 +306,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
           <div className="space-y-4">
             <div>
               <Label>Date</Label>
-              <Input value={selectedDate} disabled />
+              <Input value={selectedDate || ''} disabled />
             </div>
             <div>
               <Label>Start Time</Label>

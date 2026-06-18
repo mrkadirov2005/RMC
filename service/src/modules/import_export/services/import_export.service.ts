@@ -146,6 +146,8 @@ const CLASS_COLS = [
   'teacher_id',
   'teacher_employee_id',
   'room_number',
+  'start_date',
+  'end_date',
   'payment_amount',
   'payment_frequency',
 ];
@@ -175,6 +177,7 @@ const ROOM_COLS = [
   'class_code',
   'day',
   'time',
+  'end_time',
 ];
 
 const ASSIGNMENT_COLS = [
@@ -474,6 +477,8 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         toOptionalNumber(getRowValue(row, ['capacity'])),
         teacherId,
         getRowValue(row, ['room_number', 'room']),
+        getRowValue(row, ['start_date', 'class_start_date']),
+        getRowValue(row, ['end_date', 'class_end_date']),
         getRowValue(row, ['payment_amount', 'price', 'tuition']),
         getRowValue(row, ['payment_frequency']) || 'Monthly',
       ];
@@ -530,6 +535,7 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         classId,
         getRowValue(row, ['day', 'weekday']) || 'Monday',
         getRowValue(row, ['time', 'start_time']) || null,
+        getRowValue(row, ['end_time', 'finish_time']) || null,
       ];
       const roomId = Number(row.room_id);
       const hasRoomId = upsert && Number.isFinite(roomId) && roomId > 0;

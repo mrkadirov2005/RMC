@@ -1,5 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
-import { roomAPI } from '@/shared/api/api';
+import { useState, useCallback } from 'react';
 
 export const useRoomSlots = (roomId?: number, centerId?: number) => {
   const [slots, setSlots] = useState<any[]>([]);
