@@ -49,6 +49,7 @@ export const useClassesPage = () => {
   });
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [scheduleTime, setScheduleTime] = useState('09:00');
+  const [scheduleEndTime, setScheduleEndTime] = useState('10:00');
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const defaultDurationKey = 'lesson_duration_default';
@@ -91,11 +92,13 @@ export const useClassesPage = () => {
       const schedule = parseSchedule(cls.section);
       setSelectedDays(schedule.days);
       setScheduleTime(schedule.time);
+      setScheduleEndTime(schedule.endTime || '10:00');
     } else {
       setEditingId(null);
       setFormData({ center_id: defaultCenterId, payment_frequency: 'Monthly' });
       setSelectedDays([]);
       setScheduleTime('09:00');
+      setScheduleEndTime('10:00');
     }
     setIsModalOpen(true);
   };
@@ -107,6 +110,7 @@ export const useClassesPage = () => {
     setFormData({ center_id: defaultCenterId, payment_frequency: 'Monthly' });
     setSelectedDays([]);
     setScheduleTime('09:00');
+    setScheduleEndTime('10:00');
   };
 
 // Handles day change.
@@ -121,7 +125,7 @@ export const useClassesPage = () => {
     e.preventDefault();
     const dataToSubmit = {
       ...formData,
-      section: JSON.stringify({ days: selectedDays, time: scheduleTime }),
+      section: JSON.stringify({ days: selectedDays, time: scheduleTime, endTime: scheduleEndTime }),
     };
     try {
       if (editingId) {
@@ -281,7 +285,9 @@ export const useClassesPage = () => {
     teacherOptions,
     selectedDays,
     scheduleTime,
+    scheduleEndTime,
     setScheduleTime,
+    setScheduleEndTime,
     handleDayChange,
     weekDays,
     handleOpenModal,

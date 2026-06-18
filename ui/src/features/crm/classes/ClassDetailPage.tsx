@@ -42,7 +42,7 @@ type StudentItem = {
   deleted_at?: string | null;
 };
 
-type ClassSchedule = { days: string[]; time: string };
+type ClassSchedule = { days: string[]; time: string; endTime?: string };
 
 type AssignedTestItem = {
   test_id?: number;
@@ -61,15 +61,16 @@ type AssignedTestItem = {
 };
 
 const parseSchedule = (section?: string): ClassSchedule => {
-  if (!section) return { days: [] as string[], time: '' };
+  if (!section) return { days: [] as string[], time: '', endTime: '' };
   try {
     const parsed = JSON.parse(section);
     return {
       days: Array.isArray(parsed?.days) ? parsed.days.map((day: unknown) => String(day)) : [],
       time: String(parsed?.time || ''),
+      endTime: String(parsed?.endTime || ''),
     };
   } catch {
-    return { days: [] as string[], time: '' };
+    return { days: [] as string[], time: '', endTime: '' };
   }
 };
 
@@ -136,7 +137,20 @@ const ClassDetailPage = () => {
   const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
   const todayKey = new Date().toISOString().split('T')[0];
   const teacherName = classData?.teacher_name || 'No teacher assigned';
-  const scheduleText = [schedule.days.join(', '), schedule.time].filter(Boolean).join(' / ') || 'No schedule';
+  const scheduleRange = schedule.time ? `${schedule.time}${schedule.endTime ? ` - ${schedule.endTime}` : ''}` : '';
+  const scheduleText = [schedule.days.join(', '), scheduleRange].filter(Boolean).join(' / ') || 'No schedule';
+  const scheduleDurationMinutes = useMemo(() => {
+    if (!schedule.time || !schedule.endTime) return 90;
+    const [startHoursRaw, startMinutesRaw] = schedule.time.split(':');
+    const [endHoursRaw, endMinutesRaw] = schedule.endTime.split(':');
+    const startHours = Number(startHoursRaw);
+    const startMinutes = Number(startMinutesRaw);
+    const endHours = Number(endHoursRaw);
+    const endMinutes = Number(endMinutesRaw);
+    if (![startHours, startMinutes, endHours, endMinutes].every(Number.isFinite)) return 90;
+    const duration = endHours * 60 + endMinutes - (startHours * 60 + startMinutes);
+    return duration > 0 ? duration : 90;
+  }, [schedule.endTime, schedule.time]);
   const studentRows = students.filter((student) => !student.deleted_at);
   // const recentSessions = sessions.slice(0, 80);
   const statTiles = [
@@ -179,7 +193,7 @@ const ClassDetailPage = () => {
         center_id: targetCenterId,
         session_date: todayKey,
         start_time: schedule.time || new Date().toTimeString().slice(0, 5),
-        duration_minutes: 90,
+        duration_minutes: scheduleDurationMinutes,
         teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData.teacher_id || 0) || undefined,
       });
       const nextSession = response?.data ?? response;
@@ -294,7 +308,7 @@ const ClassDetailPage = () => {
                 </div>
                 <p className="flex items-center gap-2 text-sm font-semibold">
                   <Clock className="h-4 w-4 text-muted-foreground" />
-                  {schedule.time || 'No time set'}
+                  {scheduleRange || 'No time set'}
                 </p>
               </CardContent>
             </Card>

@@ -69,6 +69,7 @@ const RoomsPage = () => {
     class_id: '',
     day: 'Monday',
     time: '09:00',
+    end_time: '10:00',
   });
   const [isImporting, setIsImporting] = useState(false);
   const [page, setPage] = useState(1);
@@ -146,6 +147,7 @@ const RoomsPage = () => {
         class_id: room.class_id ? String(room.class_id) : 'none',
         day: room.day,
         time: room.time?.substring(0, 5) || '09:00',
+        end_time: room.end_time?.substring(0, 5) || '10:00',
       });
     } else {
       dispatch(setRoomsPageEditingId(null));
@@ -154,6 +156,7 @@ const RoomsPage = () => {
         class_id: 'none',
         day: 'Monday',
         time: '09:00',
+        end_time: '10:00',
       });
     }
     dispatch(setRoomsPageModalOpen(true));
@@ -185,7 +188,12 @@ const RoomsPage = () => {
       handleCloseModal();
       dispatch(fetchRoomsForce());
     } catch (err: any) {
-      showToast.error(err.response?.data?.error || 'Operation failed');
+      const status = err.response?.status;
+      showToast.error(
+        status === 409
+          ? 'Room is not available for this time.'
+          : err.response?.data?.error || 'Operation failed'
+      );
     } finally {
       dispatch(setRoomsPageSubmitting(false));
     }
@@ -336,7 +344,9 @@ const RoomsPage = () => {
                         </TableCell>
                         <TableCell className={room.class_name ? 'font-medium' : 'text-muted-foreground'}>{room.class_name || 'Unassigned'}</TableCell>
                         <TableCell>{room.day}</TableCell>
-                        <TableCell className="font-mono text-sm text-cyan-700 dark:text-muted-foreground">{room.time?.substring(0, 5)}</TableCell>
+                        <TableCell className="font-mono text-sm text-cyan-700 dark:text-muted-foreground">
+                          {room.time?.substring(0, 5)} - {(room.end_time || '').substring(0, 5) || '-'}
+                        </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             <Button variant="ghost" size="sm" onClick={() => handleOpenModal(room)}>
@@ -425,7 +435,7 @@ const RoomsPage = () => {
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="day">Day *</Label>
                 <Select
@@ -445,7 +455,7 @@ const RoomsPage = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="time">Time *</Label>
+                <Label htmlFor="time">Start Time *</Label>
                 <Input
                   id="time"
                   type="time"
@@ -453,6 +463,19 @@ const RoomsPage = () => {
                   value={formData.time}
                   onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="end_time">End Time *</Label>
+                <Input
+                  id="end_time"
+                  type="time"
+                  required
+                  value={formData.end_time}
+                  onChange={(e) => setFormData({ ...formData, end_time: e.target.value })}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Availability is checked for the whole time range.
+                </p>
               </div>
             </div>
 

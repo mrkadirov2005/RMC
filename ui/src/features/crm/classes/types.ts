@@ -11,6 +11,8 @@ export interface Class {
   capacity: number;
   teacher_id?: number;
   room_number: string;
+  start_date?: string | null;
+  end_date?: string | null;
   payment_amount: number;
   payment_frequency: string;
 }
@@ -18,5 +20,5 @@ export interface Class {
 export interface ClassSchedule {
   days: string[];
   time: string;
+  endTime?: string;
 }
-

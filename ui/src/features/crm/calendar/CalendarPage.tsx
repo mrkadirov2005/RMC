@@ -139,9 +139,12 @@ const CalendarPage = () => {
           .map(r => ({
             day: r.day,
             time: r.time,
+            end_time: r.end_time,
             room_number: r.room_number,
             class_id: r.class_id,
-            class_name: r.class_name
+            class_name: r.class_name,
+            start_date: r.start_date,
+            end_date: r.end_date,
           }));
         setSchedule(teacherSchedule);
       }
@@ -251,11 +254,24 @@ const CalendarPage = () => {
   const canViewDetails = isSuperuser || user?.userType === 'teacher' || isStudent;
 
   // Handlers
-  const handleStartLesson = async (classId: number, date: string, time: string) => {
+  const getDurationFromRange = (startTime: string, endTime?: string) => {
+    if (!endTime) return getConfiguredLessonDurationMinutes();
+    const [startHoursRaw, startMinutesRaw] = startTime.split(':');
+    const [endHoursRaw, endMinutesRaw] = endTime.split(':');
+    const startHours = Number(startHoursRaw);
+    const startMinutes = Number(startMinutesRaw);
+    const endHours = Number(endHoursRaw);
+    const endMinutes = Number(endMinutesRaw);
+    if (![startHours, startMinutes, endHours, endMinutes].every(Number.isFinite)) return getConfiguredLessonDurationMinutes();
+    const duration = endHours * 60 + endMinutes - (startHours * 60 + startMinutes);
+    return duration > 0 ? duration : getConfiguredLessonDurationMinutes();
+  };
+
+  const handleStartLesson = async (classId: number, date: string, time: string, endTime?: string) => {
     try {
       const cls = classes.find(c => Number(c.class_id || c.id) === classId);
       if (!cls) return;
-      const durationMinutes = getConfiguredLessonDurationMinutes();
+      const durationMinutes = getDurationFromRange(time, endTime);
 
       const res = await classAPI.createSession(classId, {
         session_date: date,

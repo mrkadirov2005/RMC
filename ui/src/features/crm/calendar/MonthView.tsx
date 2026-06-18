@@ -24,6 +24,14 @@ interface MonthViewProps {
   schedule?: any[];
 }
 
+const isWithinScheduleRange = (item: any, isoDate: string) => {
+  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
+  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
+  if (startDate && isoDate < startDate) return false;
+  if (endDate && isoDate > endDate) return false;
+  return true;
+};
+
 // Renders the month view view.
 export const MonthView: React.FC<MonthViewProps> = ({
   weeks,
@@ -87,6 +95,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                       .filter(item => {
                         const isPlannedForDay = item.day === day.dayName;
                         if (!isPlannedForDay) return false;
+                        if (!isWithinScheduleRange(item, day.isoDate)) return false;
                         // Avoid showing planned if a real session exists for this class on this day
                         const hasSession = events.some(e => 
                           Number(e.cls.class_id || e.cls.id) === Number(item.class_id)
@@ -99,12 +108,12 @@ export const MonthView: React.FC<MonthViewProps> = ({
                           className="rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1 text-[0.6rem] font-medium leading-tight text-amber-900 shadow-sm dark:bg-amber-500/10 dark:text-amber-300"
                         >
                           <div className="font-bold">Regular Class</div>
-                          <div>{item.time} - {item.room_number}</div>
+                          <div>{item.time}{item.end_time ? ` - ${String(item.end_time).substring(0, 5)}` : ''} - {item.room_number}</div>
                         </div>
                       ))}
 
 
-                    {events.length === 0 && schedule.filter(item => item.day === day.dayName).length === 0 ? (
+                    {events.length === 0 && schedule.filter(item => item.day === day.dayName && isWithinScheduleRange(item, day.isoDate)).length === 0 ? (
                       <span className="text-[0.7rem] text-muted-foreground">No classes</span>
                     ) : (
 

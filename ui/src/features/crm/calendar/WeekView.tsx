@@ -41,6 +41,20 @@ type RenderedSession = {
 const SLOT_HEIGHT_REM = 5;
 const SLOT_MINUTES = 60;
 
+const getPlannedEndMinutes = (item: any, startMinutes: number) => {
+  if (!item.end_time) return startMinutes + SLOT_MINUTES;
+  const endMinutes = parseTimeToMinutes(String(item.end_time).substring(0, 5));
+  return endMinutes > startMinutes ? endMinutes : startMinutes + SLOT_MINUTES;
+};
+
+const isWithinScheduleRange = (item: any, isoDate: string) => {
+  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
+  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
+  if (startDate && isoDate < startDate) return false;
+  if (endDate && isoDate > endDate) return false;
+  return true;
+};
+
 // Renders the week view view.
 export const WeekView: React.FC<WeekViewProps> = ({
   weekDays,
@@ -169,6 +183,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                   const recurringItems = schedule.filter((item) => {
                     const isPlanned = item.day === day.dayName && item.time === timeSlot;
                     if (!isPlanned) return false;
+                    if (!isWithinScheduleRange(item, day.isoDate)) return false;
                     const hasSession = activeSessions.some(
                       (s) => Number(s.cls.class_id || s.cls.id) === Number(item.class_id)
                     );
@@ -194,13 +209,22 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     >
                       <div className="space-y-1 h-full overflow-visible">
                         {recurringItems.map((item, idx) => (
-                          <div
-                            key={`recurring-${day.isoDate}-${timeSlot}-${idx}`}
-                            className="mb-1 rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1 text-[0.6rem] font-semibold leading-tight text-amber-900 shadow-sm dark:bg-amber-500/10 dark:text-amber-300"
-                          >
-                            <div className="font-bold">Regular Class</div>
-                            <div>{item.room_number}</div>
-                          </div>
+                          (() => {
+                            const endMinutes = getPlannedEndMinutes(item, slotStartMinutes);
+                            const spanSlots = Math.max(1, Math.ceil((endMinutes - slotStartMinutes) / SLOT_MINUTES));
+                            const blockHeight = `calc(${spanSlots} * ${SLOT_HEIGHT_REM}rem - ${Math.max(0, spanSlots - 1)}px)`;
+                            return (
+                              <div
+                                key={`recurring-${day.isoDate}-${timeSlot}-${idx}`}
+                                className="mb-1 rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1 text-[0.6rem] font-semibold leading-tight text-amber-900 shadow-sm dark:bg-amber-500/10 dark:text-amber-300"
+                                style={{ minHeight: blockHeight }}
+                              >
+                                <div className="font-bold">Regular Class</div>
+                                <div>{item.time}{item.end_time ? ` - ${String(item.end_time).substring(0, 5)}` : ''}</div>
+                                <div>{item.room_number}</div>
+                              </div>
+                            );
+                          })()
                         ))}
 
                         {startingSessions.map(({ cls, session, startMinutes, endMinutes }) => {

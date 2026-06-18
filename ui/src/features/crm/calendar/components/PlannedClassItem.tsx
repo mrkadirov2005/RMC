@@ -6,7 +6,7 @@ import type { ClassItem } from '../types';
 interface PlannedClassItemProps {
   item: any;
   selectedDay: string;
-  onStartLesson?: (classId: number, date: string, time: string) => void;
+  onStartLesson?: (classId: number, date: string, time: string, endTime?: string) => void;
   onOpenDetails: (cls: ClassItem, isoDate: string) => void;
   onOpenChange: (open: boolean) => void;
   isStudent: boolean;
@@ -34,7 +34,9 @@ export const PlannedClassItem = ({
     >
       <div>
         <div className="font-semibold text-amber-900">{item.class_name || 'Regular Class'}</div>
-        <div className="text-xs text-amber-700">{item.time}</div>
+        <div className="text-xs text-amber-700">
+          {item.time}{item.end_time ? ` - ${String(item.end_time).substring(0, 5)}` : ''}
+        </div>
       </div>
       <div className="flex items-center gap-2">
         {!isStudent && onStartLesson && (
@@ -42,7 +44,7 @@ export const PlannedClassItem = ({
             size="sm"
             variant="default"
             className="bg-amber-600 hover:bg-amber-700 text-white border-none"
-            onClick={() => onStartLesson(Number(item.class_id), selectedDay, item.time)}
+            onClick={() => onStartLesson(Number(item.class_id), selectedDay, item.time, item.end_time)}
           >
             Start Lesson
           </Button>

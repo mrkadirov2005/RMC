@@ -20,10 +20,18 @@ interface DayModalProps {
   onDeleteSession: (classId: number, sessionId: number) => void;
   onOpenDetails: (cls: ClassItem, isoDate: string) => void;
   onOpenChange: (open: boolean) => void;
-  onStartLesson?: (classId: number, date: string, time: string) => void;
+  onStartLesson?: (classId: number, date: string, time: string, endTime?: string) => void;
   classes?: ClassItem[];
   schedule?: any[];
 }
+
+const isWithinScheduleRange = (item: any, isoDate: string) => {
+  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
+  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
+  if (startDate && isoDate < startDate) return false;
+  if (endDate && isoDate > endDate) return false;
+  return true;
+};
 
 // Renders the day modal modal.
 export const DayModal = ({
@@ -50,7 +58,7 @@ export const DayModal = ({
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
     
     // Find schedule items for this day
-    const daySchedule = schedule.filter(s => s.day === dayName);
+    const daySchedule = schedule.filter(s => s.day === dayName && isWithinScheduleRange(s, selectedDay));
     
     // Filter out those that already have a session in selectedDayEvents
     return daySchedule.filter(s => {

@@ -11,6 +11,8 @@ export type ClassItem = {
   section?: string;
   capacity?: number;
   room_number?: string;
+  start_date?: string | null;
+  end_date?: string | null;
   payment_amount?: number;
   payment_frequency?: string;
 };
