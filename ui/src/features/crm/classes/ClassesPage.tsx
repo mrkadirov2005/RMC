@@ -1,7 +1,7 @@
 // Page component for the classes screen in the crm feature.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, Search, X, BookOpen, MapPin, DollarSign, Upload, Download, UserRound } from 'lucide-react';
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Plus, Pencil, Trash2, Info, Loader2, CalendarDays, Search, X, BookOpen, MapPin, DollarSign, Upload, Download, UserRound, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,12 +32,20 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { studentAPI } from '@/shared/api/api';
 import { useClassesPage } from './hooks/useClassesPage';
 import { formatSchedule } from './queries';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { cn } from '@/lib/utils';
+import type { Student } from '@/slices/studentsSlice';
+
+const readStudentList = (response: unknown): Student[] => {
+  const data = (response as any)?.data ?? response;
+  if (Array.isArray(data)) return data;
+  return Array.isArray(data?.data) ? data.data : [];
+};
 
 // Renders the classes page screen.
 const ClassesPage = () => {
@@ -46,6 +54,10 @@ const ClassesPage = () => {
   const [groupView, setGroupView] = useState<'groups' | 'teachers'>('teachers');
   const [searchTerm, setSearchTerm] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
+  const [expandedTeacherIds, setExpandedTeacherIds] = useState<Set<number>>(new Set());
+  const [expandedClassIds, setExpandedClassIds] = useState<Set<number>>(new Set());
+  const [classStudents, setClassStudents] = useState<Student[]>([]);
+  const [classStudentsLoading, setClassStudentsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -167,6 +179,22 @@ const ClassesPage = () => {
       return next;
     });
   };
+  const toggleTeacherExpanded = (id: number) => {
+    setExpandedTeacherIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+  const toggleClassExpanded = (id: number) => {
+    setExpandedClassIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   const deleteSelectedClasses = async () => {
     await handleBulkDelete(Array.from(selectedClassIds));
     setSelectedClassIds(new Set());
@@ -174,6 +202,39 @@ const ClassesPage = () => {
   const handleExportClasses = () => exportCsvEntity('classes', 'Classes');
   const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
   const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
+  const studentsByClassId = useMemo(() => {
+    const map = new Map<number, Student[]>();
+    for (const student of classStudents) {
+      const classId = Number(student.class_id);
+      if (!classId) continue;
+      if (!map.has(classId)) map.set(classId, []);
+      map.get(classId)?.push(student);
+    }
+    for (const students of map.values()) {
+      students.sort((a, b) =>
+        `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`)
+      );
+    }
+    return map;
+  }, [classStudents]);
+  useEffect(() => {
+    if (groupView !== 'teachers') return;
+    let cancelled = false;
+    setClassStudentsLoading(true);
+    studentAPI.getAll()
+      .then((response) => {
+        if (!cancelled) setClassStudents(readStudentList(response));
+      })
+      .catch(() => {
+        if (!cancelled) setClassStudents([]);
+      })
+      .finally(() => {
+        if (!cancelled) setClassStudentsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [groupView]);
   const summaryCards = [
     {
       label: t('Classes shown'),
@@ -386,55 +447,133 @@ const ClassesPage = () => {
           <AlertDescription>{t('No classes match your search.')}</AlertDescription>
         </Alert>
       ) : groupView === 'teachers' ? (
-        <div className="space-y-3">
-          {teacherRows.map((row, index) => {
-            const scheduled = row.classes.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
-            const accent = index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600';
-            return (
-              <section
-                key={row.id || row.name}
-                className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm"
-              >
-                <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 dark:hidden" />
-                <div className="flex flex-col gap-2 border-b border-slate-100 bg-slate-50/90 px-3 py-2 sm:flex-row sm:items-center sm:justify-between dark:border-border dark:bg-muted/30">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md ${accent} text-white shadow-sm`}>
-                      <UserRound className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="truncate text-sm font-bold text-slate-950 dark:text-card-foreground">{row.name}</h3>
-                      <p className="text-xs text-muted-foreground">{row.classes.length} {t('groups')} / {scheduled} {t('scheduled')}</p>
-                    </div>
-                  </div>
-                  <span className="w-fit rounded-md bg-blue-600 px-2 py-1 text-xs font-bold text-white shadow-sm">
-                    {row.classes.length} {t('Groups')}
-                  </span>
-                </div>
-                <div className="grid gap-2 p-2">
-                  {row.classes.map((cls, classIndex) => (
-                    <div
-                      key={cls.class_id || cls.id}
-                      className="grid gap-2 rounded-lg border border-slate-200 bg-white px-2 py-2 shadow-sm md:grid-cols-[minmax(220px,1fr)_120px_minmax(260px,auto)] md:items-center dark:border-border dark:bg-background"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/classes/${getClassId(cls)}`)}
-                        className="min-w-0 text-left"
-                      >
-                        <span className={`mr-2 inline-flex h-5 min-w-5 items-center justify-center rounded ${classIndex % 4 === 0 ? 'bg-cyan-600' : classIndex % 4 === 1 ? 'bg-violet-600' : classIndex % 4 === 2 ? 'bg-orange-500' : 'bg-rose-600'} px-1.5 text-[10px] font-bold text-white`}>
-                          {classIndex + 1}
+        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 dark:hidden" />
+          <Table>
+            <TableHeader className="bg-slate-50/90 dark:bg-transparent">
+              <TableRow>
+                <TableHead className="min-w-[180px]">{t('Teacher')}</TableHead>
+                <TableHead className="w-[90px] text-center">{t('Groups')}</TableHead>
+                <TableHead className="w-[120px] text-center">{t('Scheduled')}</TableHead>
+                <TableHead className="w-[90px] text-right">{t('Open')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {teacherRows.map((row, index) => {
+                const scheduled = row.classes.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
+                const accent = index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600';
+                const isTeacherExpanded = expandedTeacherIds.has(row.id);
+                return (
+                  <Fragment key={row.id || row.name}>
+                    <TableRow className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                      <TableCell className="py-2">
+                        <button
+                          type="button"
+                          onClick={() => toggleTeacherExpanded(row.id)}
+                          className="flex min-w-0 items-center gap-2 text-left"
+                        >
+                          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${accent} text-white shadow-sm`}>
+                            <UserRound className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="truncate text-sm font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{row.name}</span>
+                        </button>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <span className="inline-flex min-w-14 justify-center rounded-md bg-blue-600 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                          {row.classes.length}
                         </span>
-                        <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
-                      </button>
-                      <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{cls.room_number || t('No room')}</span>
-                      {renderClassActions(cls)}
-                    </div>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <span className="inline-flex min-w-14 justify-center rounded-md bg-amber-500 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                          {scheduled}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-2 text-right">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => toggleTeacherExpanded(row.id)}
+                          className={`h-7 rounded-md px-2 text-[11px] font-semibold text-white ${isTeacherExpanded ? 'bg-rose-600 hover:bg-rose-700' : 'bg-cyan-600 hover:bg-cyan-700'}`}
+                        >
+                          <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isTeacherExpanded && 'rotate-180')} />
+                          {isTeacherExpanded ? t('Close') : t('Open')}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                    {isTeacherExpanded && (
+                      <TableRow>
+                        <TableCell colSpan={4} className="bg-slate-50/70 p-2 dark:bg-muted/30">
+                          <div className="grid gap-2">
+                            {row.classes.map((cls, classIndex) => {
+                              const classId = getClassId(cls);
+                              const isClassExpanded = expandedClassIds.has(classId);
+                              const students = studentsByClassId.get(classId) || [];
+                              return (
+                                <div
+                                  key={classId || cls.class_name}
+                                  className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-background"
+                                >
+                                  <div className="grid gap-2 px-2 py-2 md:grid-cols-[minmax(220px,1fr)_120px_minmax(260px,auto)_90px] md:items-center">
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleClassExpanded(classId)}
+                                      className="min-w-0 text-left"
+                                    >
+                                      <span className={`mr-2 inline-flex h-5 min-w-5 items-center justify-center rounded ${classIndex % 4 === 0 ? 'bg-cyan-600' : classIndex % 4 === 1 ? 'bg-violet-600' : classIndex % 4 === 2 ? 'bg-orange-500' : 'bg-rose-600'} px-1.5 text-[10px] font-bold text-white`}>
+                                        {classIndex + 1}
+                                      </span>
+                                      <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
+                                    </button>
+                                    <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{cls.room_number || t('No room')}</span>
+                                    {renderClassActions(cls)}
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      onClick={() => toggleClassExpanded(classId)}
+                                      className={`h-7 rounded-md px-2 text-[11px] font-semibold text-white ${isClassExpanded ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                                    >
+                                      <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isClassExpanded && 'rotate-180')} />
+                                      {students.length}
+                                    </Button>
+                                  </div>
+                                  {isClassExpanded && (
+                                    <div className="border-t border-slate-100 bg-slate-50/80 p-2 dark:border-border dark:bg-muted/20">
+                                      {classStudentsLoading && students.length === 0 ? (
+                                        <div className="py-3 text-center text-xs text-muted-foreground">{t('Loading students...')}</div>
+                                      ) : students.length === 0 ? (
+                                        <div className="py-3 text-center text-xs text-muted-foreground">{t('No students in this group')}</div>
+                                      ) : (
+                                        <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                                          {students.map((student, studentIndex) => (
+                                            <div
+                                              key={student.student_id || student.id}
+                                              className="flex min-w-0 items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs shadow-sm dark:border-border dark:bg-background"
+                                            >
+                                              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white ${studentIndex % 4 === 0 ? 'bg-sky-600' : studentIndex % 4 === 1 ? 'bg-emerald-600' : studentIndex % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'}`}>
+                                                {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                                              </span>
+                                              <span className="truncate font-semibold text-slate-950 dark:text-card-foreground">
+                                                {[student.first_name, student.last_name].filter(Boolean).join(' ') || t('Unnamed student')}
+                                              </span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </Card>
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
