@@ -7,6 +7,7 @@ import { handleApiError, showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
+import { fetchRooms, fetchRoomsForce } from '../../../../slices/roomsSlice';
 import { fetchTeachers } from '../../../../slices/teachersSlice';
 import { fetchCenters } from '../../../../slices/centersSlice';
 import { selectCenterOptions, selectTeacherOptions } from '../../../../store/selectors';
@@ -34,6 +35,7 @@ export const useClassesPage = () => {
   const defaultCenterId = getResolvedCenterId(user) ?? 0;
 
   const items = useAppSelector((state) => state.classes.items) as Class[];
+  const rooms = useAppSelector((state) => state.rooms.items) as any[];
   const loading = useAppSelector((state) => state.classes.loading);
   const error = useAppSelector((state) => state.classes.error);
   const state = { items, loading, error };
@@ -63,6 +65,7 @@ export const useClassesPage = () => {
 // Runs side effects for this component.
   useEffect(() => {
     dispatch(fetchClasses());
+    dispatch(fetchRooms());
     dispatch(fetchTeachers());
     if (isOwner) {
       dispatch(fetchCenters());
@@ -75,6 +78,7 @@ export const useClassesPage = () => {
 // Handles active center changed.
     const handleActiveCenterChanged = () => {
       dispatch(fetchClassesForce());
+      dispatch(fetchRoomsForce());
       dispatch(fetchTeachers());
       if (isOwner) {
         dispatch(fetchCenters());
@@ -277,6 +281,7 @@ export const useClassesPage = () => {
 
   return {
     state,
+    rooms,
     isModalOpen,
     editingId,
     formData,

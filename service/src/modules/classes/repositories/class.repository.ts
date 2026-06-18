@@ -9,20 +9,43 @@ const findAll = (centerId?: number, teacherId?: number) => {
     FROM classes c
     LEFT JOIN LATERAL (
       SELECT
-        STRING_AGG(DISTINCT r.room_number, ', ' ORDER BY r.room_number) AS room_numbers,
+        STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number) AS room_numbers,
         JSON_AGG(
           JSON_BUILD_OBJECT(
-            'room_id', r.room_id,
-            'room_number', r.room_number,
-            'day', r.day,
-            'time', r.time,
-            'end_time', r.end_time
+            'room_id', assigned_rooms.room_id,
+            'room_number', assigned_rooms.room_number,
+            'day', assigned_rooms.day,
+            'time', assigned_rooms.time,
+            'end_time', assigned_rooms.end_time,
+            'slot_date', assigned_rooms.slot_date
           )
-          ORDER BY r.day, r.time, r.room_number
+          ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
         ) AS room_assignments
-      FROM rooms r
-      WHERE r.class_id = c.class_id
-        AND r.center_id = c.center_id
+      FROM (
+        SELECT
+          r.room_id,
+          r.room_number,
+          r.day,
+          r.time,
+          r.end_time,
+          NULL::TEXT AS slot_date
+        FROM rooms r
+        WHERE r.class_id = c.class_id
+          AND r.center_id = c.center_id
+        UNION
+        SELECT
+          r.room_id,
+          r.room_number,
+          TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
+          rs.start_time AS time,
+          rs.end_time,
+          rs.slot_date::TEXT AS slot_date
+        FROM room_bookings rb
+        JOIN room_slots rs ON rs.slot_id = rb.slot_id
+        JOIN rooms r ON r.room_id = rs.room_id
+        WHERE rb.class_id = c.class_id
+          AND rb.center_id = c.center_id
+      ) assigned_rooms
     ) rooms ON TRUE
   `;
   const params: any[] = [];
@@ -51,20 +74,43 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
     FROM classes c
     LEFT JOIN LATERAL (
       SELECT
-        STRING_AGG(DISTINCT r.room_number, ', ' ORDER BY r.room_number) AS room_numbers,
+        STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number) AS room_numbers,
         JSON_AGG(
           JSON_BUILD_OBJECT(
-            'room_id', r.room_id,
-            'room_number', r.room_number,
-            'day', r.day,
-            'time', r.time,
-            'end_time', r.end_time
+            'room_id', assigned_rooms.room_id,
+            'room_number', assigned_rooms.room_number,
+            'day', assigned_rooms.day,
+            'time', assigned_rooms.time,
+            'end_time', assigned_rooms.end_time,
+            'slot_date', assigned_rooms.slot_date
           )
-          ORDER BY r.day, r.time, r.room_number
+          ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
         ) AS room_assignments
-      FROM rooms r
-      WHERE r.class_id = c.class_id
-        AND r.center_id = c.center_id
+      FROM (
+        SELECT
+          r.room_id,
+          r.room_number,
+          r.day,
+          r.time,
+          r.end_time,
+          NULL::TEXT AS slot_date
+        FROM rooms r
+        WHERE r.class_id = c.class_id
+          AND r.center_id = c.center_id
+        UNION
+        SELECT
+          r.room_id,
+          r.room_number,
+          TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
+          rs.start_time AS time,
+          rs.end_time,
+          rs.slot_date::TEXT AS slot_date
+        FROM room_bookings rb
+        JOIN room_slots rs ON rs.slot_id = rb.slot_id
+        JOIN rooms r ON r.room_id = rs.room_id
+        WHERE rb.class_id = c.class_id
+          AND rb.center_id = c.center_id
+      ) assigned_rooms
     ) rooms ON TRUE
     WHERE c.class_id = $1 AND c.deleted_at IS NULL
   `;

@@ -453,6 +453,11 @@ export const roomAPI = {
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/rooms/${id}`, { params }),
 };
 
+export const roomSlotAPI = {
+  getBookingsByClass: (classId: number, params?: { center_id?: number }) =>
+    apiClient.get(`/room-slots/bookings/class/${classId}`, { params }),
+};
+
 export type TranslationRow = {
   id: string;
   english: string;

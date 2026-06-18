@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { classAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
+import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
@@ -25,6 +25,7 @@ type ClassItem = {
   teacher_id?: number;
   teacher_name?: string;
   room_number?: string;
+  room_assignments?: any[];
   payment_amount?: number;
   payment_frequency?: string;
   section?: string;
@@ -103,16 +104,33 @@ const ClassDetailPage = () => {
       setLoading(true);
       setError('');
       try {
-        const [classResponse, studentsResponse, subjectsResponse, sessionsResponse, testsResponse] = await Promise.all([
+        const targetClassId = Number(classId);
+        const centerId = getResolvedCenterId(authUser) || undefined;
+        const [classResponse, studentsResponse, subjectsResponse, sessionsResponse, testsResponse, roomsResponse, bookingResponse] = await Promise.all([
           classAPI.getById(Number(classId)),
-          studentAPI.getByClassWithTransfers(Number(classId)).catch(() => ({ data: [] })),
-          subjectAPI.getByClass(Number(classId)).catch(() => ({ data: [] })),
-          classAPI.getSessions(Number(classId)).catch(() => ({ data: [] })),
-          testAPI.getAssignedTests('class', Number(classId)).catch(() => ({ data: [] })),
+          studentAPI.getByClassWithTransfers(targetClassId).catch(() => ({ data: [] })),
+          subjectAPI.getByClass(targetClassId).catch(() => ({ data: [] })),
+          classAPI.getSessions(targetClassId).catch(() => ({ data: [] })),
+          testAPI.getAssignedTests('class', targetClassId).catch(() => ({ data: [] })),
+          roomAPI.getAll(centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
+          roomSlotAPI.getBookingsByClass(targetClassId, centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
         ]);
         if (cancelled) return;
         const nextClass = classResponse?.data ?? classResponse;
-        setClassData(nextClass);
+        const roomNumbers = new Set<string>();
+        String(nextClass?.room_number || '').split(',').map((room: string) => room.trim()).filter(Boolean).forEach((room) => roomNumbers.add(room));
+        const roomAssignments = Array.isArray(nextClass?.room_assignments) ? nextClass.room_assignments : [];
+        roomAssignments.map((room: any) => String(room.room_number || '').trim()).filter(Boolean).forEach((room: string) => roomNumbers.add(room));
+        unwrapRows(roomsResponse)
+          .filter((room: any) => Number(room.class_id) === targetClassId)
+          .map((room: any) => String(room.room_number || '').trim())
+          .filter(Boolean)
+          .forEach((room: string) => roomNumbers.add(room));
+        unwrapRows(bookingResponse)
+          .map((booking: any) => String(booking.room_number || '').trim())
+          .filter(Boolean)
+          .forEach((room: string) => roomNumbers.add(room));
+        setClassData({ ...nextClass, room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number });
         setStudents(unwrapRows(studentsResponse));
         setSubjects(unwrapRows(subjectsResponse));
         setSessions(unwrapRows(sessionsResponse));
