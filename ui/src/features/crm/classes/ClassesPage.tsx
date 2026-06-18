@@ -95,12 +95,50 @@ const ClassesPage = () => {
     frequencyOptions,
     isOwner,
   } = useClassesPage();
+  const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
+  const studentsByClassId = useMemo(() => {
+    const map = new Map<number, Student[]>();
+    for (const student of classStudents) {
+      const classId = Number(student.class_id);
+      if (!classId) continue;
+      if (!map.has(classId)) map.set(classId, []);
+      map.get(classId)?.push(student);
+    }
+    for (const students of map.values()) {
+      students.sort((a, b) =>
+        `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`)
+      );
+    }
+    return map;
+  }, [classStudents]);
+  const effectiveTeacherByClassId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const cls of state.items) {
+      const classId = getClassId(cls);
+      if (!classId) continue;
+      const explicitTeacherId = Number(cls.teacher_id || 0);
+      if (explicitTeacherId > 0) {
+        map.set(classId, explicitTeacherId);
+        continue;
+      }
+
+      const counts = new Map<number, number>();
+      for (const student of studentsByClassId.get(classId) || []) {
+        const studentTeacherId = Number(student.teacher_id || 0);
+        if (studentTeacherId > 0) counts.set(studentTeacherId, (counts.get(studentTeacherId) || 0) + 1);
+      }
+      const inferredTeacherId = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || 0;
+      map.set(classId, inferredTeacherId);
+    }
+    return map;
+  }, [state.items, studentsByClassId]);
+  const getEffectiveTeacherId = (cls: any) => effectiveTeacherByClassId.get(getClassId(cls)) || Number(cls.teacher_id || 0);
   const filteredClasses = useMemo(() => {
     const search = searchTerm.trim().toLowerCase();
     const teacherId = teacherFilter === 'all' ? null : Number(teacherFilter);
 
     return state.items.filter((cls) => {
-      if (teacherId != null && Number(cls.teacher_id) !== teacherId) return false;
+      if (teacherId != null && getEffectiveTeacherId(cls) !== teacherId) return false;
       if (!search) return true;
 
       const schedule = formatSchedule(cls);
@@ -117,8 +155,7 @@ const ClassesPage = () => {
         .filter((value) => value != null)
         .some((value) => String(value).toLowerCase().includes(search));
     });
-  }, [searchTerm, state.items, teacherFilter]);
-  const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
+  }, [effectiveTeacherByClassId, searchTerm, state.items, teacherFilter]);
   const teacherById = useMemo(() => {
     const map = new Map<number, string>();
     teacherOptions.forEach((teacher) => map.set(Number(teacher.value), teacher.label));
@@ -138,7 +175,7 @@ const ClassesPage = () => {
       rows.set(Number(teacher.value), { id: Number(teacher.value), name: teacher.label, classes: [] });
     });
     filteredClasses.forEach((cls) => {
-      const teacherId = Number(cls.teacher_id || 0);
+      const teacherId = getEffectiveTeacherId(cls);
       const key = teacherId > 0 ? teacherId : 0;
       if (!rows.has(key)) rows.set(key, { id: key, name: key === 0 ? t('No teacher') : getTeacherName(key), classes: [] });
       rows.get(key)?.classes.push(cls);
@@ -150,7 +187,7 @@ const ClassesPage = () => {
         classes: [...row.classes].sort((a, b) => String(a.class_name || '').localeCompare(String(b.class_name || ''))),
       }))
       .sort((a, b) => b.classes.length - a.classes.length || a.name.localeCompare(b.name));
-  }, [filteredClasses, getTeacherName, t, teacherOptions]);
+  }, [effectiveTeacherByClassId, filteredClasses, getTeacherName, t, teacherOptions]);
   const paginatedClasses = useMemo(
     () => paginateItems(filteredClasses, page, pageSize),
     [filteredClasses, page, pageSize]
@@ -202,21 +239,6 @@ const ClassesPage = () => {
   const handleExportClasses = () => exportCsvEntity('classes', 'Classes');
   const roomsInView = new Set(filteredClasses.map((cls) => String(cls.room_number || '').trim()).filter(Boolean)).size;
   const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
-  const studentsByClassId = useMemo(() => {
-    const map = new Map<number, Student[]>();
-    for (const student of classStudents) {
-      const classId = Number(student.class_id);
-      if (!classId) continue;
-      if (!map.has(classId)) map.set(classId, []);
-      map.get(classId)?.push(student);
-    }
-    for (const students of map.values()) {
-      students.sort((a, b) =>
-        `${a.first_name || ''} ${a.last_name || ''}`.localeCompare(`${b.first_name || ''} ${b.last_name || ''}`)
-      );
-    }
-    return map;
-  }, [classStudents]);
   useEffect(() => {
     if (groupView !== 'teachers') return;
     let cancelled = false;
