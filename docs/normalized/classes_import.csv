@@ -1,57 +1,57 @@
 class_name,class_code,teacher_employee_id,level,section,capacity,room_number,start_date,end_date,payment_amount,payment_frequency
-Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""16:00"",""endTime"":""17:00""}",9,,,,,Monthly
-Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""16:00"",""endTime"":""17:00""}",5,,,,,Monthly
-Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""16:00"",""endTime"":""17:00""}",9,,,,,Monthly
-Boshlang'ich (3oylik),TCH-001-BOSHLANG-ICH-3OYLIK,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""16:00"",""endTime"":""17:00""}",6,,,,,Monthly
-Kids Farangiz,TCH-003-KIDS-FARANGIZ,TCH-003,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:00""}",32,,,,,Monthly
-A2 flyers,TCH-004-A2-FLYERS,TCH-004,,"{""days"":[""Tuesday"",""Thursday""],""time"":""14:00"",""endTime"":""15:00""}",19,,,,,Monthly
-A2 Plus new,TCH-004-A2-PLUS-NEW,TCH-004,,"{""days"":[""Tuesday"",""Thursday""],""time"":""15:30"",""endTime"":""16:30""}",15,,,,,Monthly
-starter,TCH-004-STARTER,TCH-004,,"{""days"":[""Tuesday"",""Thursday""],""time"":""14:00"",""endTime"":""15:00""}",21,,,,,Monthly
-A2 plus,TCH-005-A2-PLUS,TCH-005,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""16:00"",""endTime"":""17:00""}",13,,,,,Monthly
-A1 plus new,TCH-005-A1-PLUS-NEW,TCH-005,,"{""days"":[""Tuesday"",""Thursday""],""time"":""16:00"",""endTime"":""17:00""}",14,,,,,Monthly
-Starter 1,TCH-006-STARTER-1,TCH-006,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:30"",""endTime"":""11:30""}",20,,,,,Monthly
-Starter 2,TCH-006-STARTER-2,TCH-006,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""12:30"",""endTime"":""13:30""}",20,,,,,Monthly
-Grammar special,TCH-006-GRAMMAR-SPECIAL,TCH-006,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":"""",""endTime"":""""}",16,,,,,Monthly
-B1 plus,TCH-006-B1-PLUS,TCH-006,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""16:00"",""endTime"":""17:00""}",12,,,,,Monthly
-Kids Laylo,TCH-007-KIDS-LAYLO,TCH-007,,"{""days"":[""Monday"",""Friday""],""time"":""13:30"",""endTime"":""14:30""}",20,,,,,Monthly
-Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,TCH-008,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:30"",""endTime"":""11:30""}",2,,,,,Monthly
-Kids Zubayda,TCH-009-KIDS-ZUBAYDA,TCH-009,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:00"",""endTime"":""11:00""}",31,,,,,Monthly
-Arab tili 1.0 New 60,TCH-010-ARAB-TILI-1-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday""],""time"":""08:00"",""endTime"":""09:00""}",23,,,,,Monthly
-Arab tili 3.0 New 60,TCH-010-ARAB-TILI-3-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday""],""time"":""08:00"",""endTime"":""09:00""}",19,,,,,Monthly
-Arab tili 4.0 New 60,TCH-010-ARAB-TILI-4-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday""],""time"":""08:00"",""endTime"":""09:00""}",28,,,,,Monthly
-Arab tili 5.0 New 60,TCH-010-ARAB-TILI-5-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday""],""time"":""08:00"",""endTime"":""09:00""}",15,,,,,Monthly
-Arab tili 2,TCH-010-ARAB-TILI-2,TCH-010,,"{""days"":[""Tuesday"",""Thursday""],""time"":""15:30"",""endTime"":""16:30""}",20,,,,,Monthly
-Arab tili 1,TCH-010-ARAB-TILI-1,TCH-010,,"{""days"":[""Tuesday"",""Thursday""],""time"":""14:00"",""endTime"":""15:00""}",20,,,,,Monthly
-KIDS English,TCH-012-KIDS-ENGLISH,TCH-012,,"{""days"":[""Tuesday"",""Thursday""],""time"":""08:00"",""endTime"":""09:00""}",21,,,,,Monthly
-KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,TCH-012,,"{""days"":[""Tuesday"",""Thursday""],""time"":""10:00"",""endTime"":""11:00""}",15,,,,,Monthly
-Matematika 10,TCH-013-MATEMATIKA-10,TCH-013,,"{""days"":[""Tuesday"",""Thursday""],""time"":"""",""endTime"":""""}",18,,,,,Monthly
-Matematika 1,TCH-013-MATEMATIKA-1,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""08:00"",""endTime"":""09:00""}",16,,,,,Monthly
-Matematika 2,TCH-013-MATEMATIKA-2,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:00""}",15,,,,,Monthly
-Matematika 3,TCH-013-MATEMATIKA-3,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""12:00"",""endTime"":""13:00""}",9,,,,,Monthly
-Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,TCH-014,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""13:30"",""endTime"":""14:30""}",20,,,,,Monthly
-Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,TCH-014,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:00""}",8,,,,,Monthly
-A2 flyers morning,TCH-015-A2-FLYERS-MORNING,TCH-015,,"{""days"":[""Tuesday"",""Thursday""],""time"":"""",""endTime"":""""}",18,,,,,Monthly
-A1 movers morning,TCH-015-A1-MOVERS-MORNING,TCH-015,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":"""",""endTime"":""""}",19,,,,,Monthly
-A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,TCH-015,,"{""days"":[""Tuesday"",""Thursday""],""time"":""13:30"",""endTime"":""14:30""}",21,,,,,Monthly
-B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""07:30"",""endTime"":""08:30""}",27,,,,,Monthly
-Starter New,TCH-016-STARTER-NEW,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""09:00"",""endTime"":""10:00""}",41,,,,,Monthly
-Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""14:00"",""endTime"":""15:00""}",39,,,,,Monthly
-IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""15:30"",""endTime"":""16:30""}",36,,,,,Monthly
-B1 plus Morning,TCH-016-B1-PLUS-MORNING,TCH-016,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""09:15"",""endTime"":""10:15""}",28,,,,,Monthly
-A2 Plus Morning,TCH-016-A2-PLUS-MORNING,TCH-016,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:45"",""endTime"":""11:45""}",32,,,,,Monthly
-IELTS Introduction,TCH-016-IELTS-INTRODUCTION,TCH-016,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""14:00"",""endTime"":""15:00""}",28,,,,,Monthly
-B2 intro,TCH-018-B2-INTRO,TCH-018,,,12,,,,,Monthly
-B1 intro,TCH-018-B1-INTRO,TCH-018,,,19,,,,,Monthly
-A2 Flyers,TCH-018-A2-FLYERS,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":"""",""endTime"":""""}",18,,,,,Monthly
-fun for movers,TCH-018-FUN-FOR-MOVERS,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":"""",""endTime"":""""}",11,,,,,Monthly
-Starter teens,TCH-018-STARTER-TEENS,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""08:00"",""endTime"":""09:00""}",23,,,,,Monthly
-Grammatika,TCH-018-GRAMMATIKA,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:00"",""endTime"":""11:00""}",15,,,,,Monthly
-B1 Plus,TCH-018-B1-PLUS,TCH-018,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:00""}",18,,,,,Monthly
-Starters New,TCH-018-STARTERS-NEW,TCH-018,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""14:00"",""endTime"":""15:00""}",26,,,,,Monthly
-Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:00"",""endTime"":""11:00""}",20,,,,,Monthly
-A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Tuesday"",""Thursday""],""time"":""08:30"",""endTime"":""09:30""}",18,,,,,Monthly
-Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Monday"",""Wednesday""],""time"":""08:30"",""endTime"":""09:30""}",20,,,,,Monthly
-Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Tuesday"",""Thursday""],""time"":""10:00"",""endTime"":""11:00""}",20,,,,,Monthly
-Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,TCH-021,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""14:00"",""endTime"":""15:00""}",16,,,,,Monthly
-Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,TCH-021,,"{""days"":[""Tuesday"",""Thursday""],""time"":""14:00"",""endTime"":""15:00""}",15,,,,,Monthly
-Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,TCH-021,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:30"",""endTime"":""11:30""}",0,,,,,Monthly
+Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""15:00"",""endTime"":""17:00""}",9,6 xona,,,,Monthly
+Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""13:30"",""endTime"":""15:00""}",5,6 xona,,,,Monthly
+Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""17:00"",""endTime"":""18:00""}",9,6 xona,,,,Monthly
+Boshlang'ich (3oylik),TCH-001-BOSHLANG-ICH-3OYLIK,TCH-001,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""12:30"",""endTime"":""13:30""}",6,6 xona,,,,Monthly
+Kids Farangiz,TCH-003-KIDS-FARANGIZ,TCH-003,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:30""}",32,3 xona,,,,Monthly
+A2 flyers,TCH-004-A2-FLYERS,TCH-004,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""14:00"",""endTime"":""15:30""}",19,5 xona,,,,Monthly
+A2 Plus new,TCH-004-A2-PLUS-NEW,TCH-004,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""15:30"",""endTime"":""17:00""}",15,5 xona,,,,Monthly
+starter,TCH-004-STARTER,TCH-004,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""08:00"",""endTime"":""09:30""}",21,1 xona,,,,Monthly
+A2 plus,TCH-005-A2-PLUS,TCH-005,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""16:00"",""endTime"":""17:00""}",13,3 xona,,,,Monthly
+A1 plus new,TCH-005-A1-PLUS-NEW,TCH-005,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""08:00"",""endTime"":""09:30""}",14,2 xona,,,,Monthly
+Starter 1,TCH-006-STARTER-1,TCH-006,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""15:00"",""endTime"":""16:30""}",20,1 xona,,,,Monthly
+Starter 2,TCH-006-STARTER-2,TCH-006,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""15:30"",""endTime"":""17:00""}",20,7 xona,,,,Monthly
+Grammar special,TCH-006-GRAMMAR-SPECIAL,TCH-006,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""13:30"",""endTime"":""15:00""}",16,1 xona,,,,Monthly
+B1 plus,TCH-006-B1-PLUS,TCH-006,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""07:30"",""endTime"":""09:00""}",12,3 xona,,,,Monthly
+Kids Laylo,TCH-007-KIDS-LAYLO,TCH-007,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""13:30"",""endTime"":""14:30""}",20,10 xona,,,,Monthly
+Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,TCH-008,,"{""days"":[""Monday"",""Wednesday"",""Friday"",""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:30""}",2,10 xona,,,,Monthly
+Kids Zubayda,TCH-009-KIDS-ZUBAYDA,TCH-009,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:00"",""endTime"":""11:30""}",31,3 xona,,,,Monthly
+Arab tili 1.0 New 60,TCH-010-ARAB-TILI-1-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""17:00"",""endTime"":""18:30""}",23,1 xona,,,,Monthly
+Arab tili 3.0 New 60,TCH-010-ARAB-TILI-3-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""13:30"",""endTime"":""15:00""}",19,2 xona,,,,Monthly
+Arab tili 4.0 New 60,TCH-010-ARAB-TILI-4-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""11:00"",""endTime"":""12:30""}",28,2 xona,,,,Monthly
+Arab tili 5.0 New 60,TCH-010-ARAB-TILI-5-0-NEW-60,TCH-010,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""15:30"",""endTime"":""17:00""}",15,2 xona,,,,Monthly
+Arab tili 2,TCH-010-ARAB-TILI-2,TCH-010,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""09:30"",""endTime"":""11:00""}",20,2 xona,,,,Monthly
+Arab tili 1,TCH-010-ARAB-TILI-1,TCH-010,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""08:00"",""endTime"":""09:30""}",20,2 xona,,,,Monthly
+KIDS English,TCH-012-KIDS-ENGLISH,TCH-012,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""13:30"",""endTime"":""15:00""}",21,3 xona,,,,Monthly
+KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,TCH-012,,"{""days"":[""Tuesday"",""Thursday""],""time"":""10:00"",""endTime"":""11:00""}",15,1 xona,,,,Monthly
+Matematika 10,TCH-013-MATEMATIKA-10,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""08:00"",""endTime"":""10:00""}",18,8 xona,,,,Monthly
+Matematika 1,TCH-013-MATEMATIKA-1,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""12:00""}",16,8 xona,,,,Monthly
+Matematika 2,TCH-013-MATEMATIKA-2,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""14:00"",""endTime"":""15:30""}",15,8 xona,,,,Monthly
+Matematika 3,TCH-013-MATEMATIKA-3,TCH-013,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""15:30"",""endTime"":""17:00""}",9,8 xona,,,,Monthly
+Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,TCH-014,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""12:00"",""endTime"":""13:30""}",20,6 xona,,,,Monthly
+Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,TCH-014,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:30"",""endTime"":""12:00""}",8,6 xona,,,,Monthly
+A2 flyers morning,TCH-015-A2-FLYERS-MORNING,TCH-015,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:00"",""endTime"":""11:30""}",18,1 xona,,,,Monthly
+A1 movers morning,TCH-015-A1-MOVERS-MORNING,TCH-015,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""08:00"",""endTime"":""10:00""}",19,1 xona,,,,Monthly
+A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,TCH-015,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""14:00"",""endTime"":""15:30""}",21,7 xona,,,,Monthly
+B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""07:30"",""endTime"":""09:00""}",27,9 xona,,,,Monthly
+Starter New,TCH-016-STARTER-NEW,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""09:00"",""endTime"":""10:30""}",41,9 xona,,,,Monthly
+Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""14:00"",""endTime"":""15:30""}",39,9 xona,,,,Monthly
+IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,TCH-016,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""15:30"",""endTime"":""17:30""}",36,9 xona,,,,Monthly
+B1 plus Morning,TCH-016-B1-PLUS-MORNING,TCH-016,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""15:00"",""endTime"":""16:30""}",28,9 xona,,,,Monthly
+A2 Plus Morning,TCH-016-A2-PLUS-MORNING,TCH-016,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""11:00"",""endTime"":""12:30""}",32,9 xona,,,,Monthly
+IELTS Introduction,TCH-016-IELTS-INTRODUCTION,TCH-016,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""13:30"",""endTime"":""15:00""}",28,9 xona,,,,Monthly
+B2 intro,TCH-018-B2-INTRO,TCH-018,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""09:30"",""endTime"":""11:00""}",12,4 xona,,,,Monthly
+B1 intro,TCH-018-B1-INTRO,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:30"",""endTime"":""12:00""}",19,9 xona,,,,Monthly
+A2 Flyers,TCH-018-A2-FLYERS,TCH-018,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""11:00"",""endTime"":""12:30""}",18,1 xona,,,,Monthly
+fun for movers,TCH-018-FUN-FOR-MOVERS,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""13:30"",""endTime"":""15:00""}",11,2 xona,,,,Monthly
+Starter teens,TCH-018-STARTER-TEENS,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""08:00"",""endTime"":""09:00""}",23,3 xona,,,,Monthly
+Grammatika,TCH-018-GRAMMATIKA,TCH-018,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""12:30"",""endTime"":""14:00""}",15,1 xona,,,,Monthly
+B1 Plus,TCH-018-B1-PLUS,TCH-018,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""15:30"",""endTime"":""17:00""}",18,2 xona,,,,Monthly
+Starters New,TCH-018-STARTERS-NEW,TCH-018,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""08:00"",""endTime"":""09:30""}",26,7 xona,,,,Monthly
+Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""10:00"",""endTime"":""11:00""}",20,2 xona,,,,Monthly
+A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""08:30"",""endTime"":""10:00""}",18,6 xona,,,,Monthly
+Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Monday"",""Wednesday""],""time"":""08:30"",""endTime"":""09:30""}",20,4 xona,,,,Monthly
+Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,TCH-019,,"{""days"":[""Tuesday"",""Thursday"",""Saturday""],""time"":""10:00"",""endTime"":""11:30""}",20,7 xona,,,,Monthly
+Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,TCH-021,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""13:30"",""endTime"":""15:00""}",16,3 xona,,,,Monthly
+Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,TCH-021,,"{""days"":[""Tuesday"",""Thursday""],""time"":""14:00"",""endTime"":""15:00""}",15,1 xona,,,,Monthly
+Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,TCH-021,,"{""days"":[""Monday"",""Wednesday"",""Friday""],""time"":""11:00"",""endTime"":""12:30""}",0,6 xona,,,,Monthly

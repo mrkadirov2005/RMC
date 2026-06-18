@@ -131,11 +131,14 @@ const CalendarPage = () => {
         } catch (error) {
           console.error('Failed to load schedule:', error);
         }
-      } else if (user?.userType === 'teacher') {
-        // For teachers, we derive schedule from rooms which we already loaded
-        const teacherId = Number(user.id);
-        const teacherSchedule = rooms
-          .filter(r => Number(r.teacher_id) === teacherId && r.day && r.time)
+      } else {
+        const teacherId = Number(user?.id);
+        const roomSchedule = rooms
+          .filter(r => {
+            if (!r.day || !r.time) return false;
+            if (user?.userType === 'teacher') return Number(r.teacher_id) === teacherId;
+            return true;
+          })
           .map(r => ({
             day: r.day,
             time: r.time,
@@ -146,11 +149,16 @@ const CalendarPage = () => {
             start_date: r.start_date,
             end_date: r.end_date,
           }));
-        setSchedule(teacherSchedule);
+        setSchedule(roomSchedule);
       }
     };
     loadSchedule();
   }, [user, rooms]);
+
+  const visibleSchedule = useMemo(() => {
+    if (selectedRoom === 'all') return schedule;
+    return schedule.filter((item) => String(item.room_number) === selectedRoom);
+  }, [schedule, selectedRoom]);
 
 
 
@@ -452,7 +460,7 @@ const CalendarPage = () => {
                 isSuperuser={isSuperuser}
                 isStudent={isStudent || false}
                 canViewDetails={canViewDetails}
-                schedule={schedule}
+                schedule={visibleSchedule}
                 onOpenDay={handleOpenDay}
                 onDeleteSession={handleDeleteSession}
               />
@@ -466,7 +474,7 @@ const CalendarPage = () => {
                 displayMonth={displayMonth}
                 displayYear={displayYear}
                 isSuperuser={isSuperuser}
-                schedule={schedule}
+                schedule={visibleSchedule}
                 onOpenSessionModal={handleOpenSessionModal}
               />
 
@@ -498,7 +506,7 @@ const CalendarPage = () => {
         onOpenChange={setDayModalOpen}
         onStartLesson={handleStartLesson}
         classes={classes}
-        schedule={schedule}
+        schedule={visibleSchedule}
       />
 
 

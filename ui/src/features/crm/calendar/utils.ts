@@ -137,10 +137,10 @@ const readStoredHour = (key: string, fallback: number) => {
 // Returns time slots.
 export const getTimeSlots = (): string[] => {
   const slots: string[] = [];
-  const startHour = readStoredHour(CALENDAR_DAY_START_HOUR_KEY, 8);
-  const endHour = Math.max(startHour, readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 18));
-  for (let h = startHour; h <= endHour; h++) {
-    slots.push(`${String(h).padStart(2, '0')}:00`);
+  const startHour = readStoredHour(CALENDAR_DAY_START_HOUR_KEY, 7);
+  const endHour = Math.max(startHour, readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 19));
+  for (let minutes = startHour * 60; minutes <= endHour * 60; minutes += 30) {
+    slots.push(`${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`);
   }
   return slots;
 };

@@ -38,8 +38,8 @@ type RenderedSession = {
   endMinutes: number;
 };
 
-const SLOT_HEIGHT_REM = 5;
-const SLOT_MINUTES = 60;
+const SLOT_HEIGHT_REM = 3.5;
+const SLOT_MINUTES = 30;
 
 const getPlannedEndMinutes = (item: any, startMinutes: number) => {
   if (!item.end_time) return startMinutes + SLOT_MINUTES;
