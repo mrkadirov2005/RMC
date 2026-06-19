@@ -4,6 +4,7 @@ import {
   Building2,
   BarChart3,
   CircleUserRound,
+  DollarSign,
   GraduationCap,
   Shield,
   Users,
@@ -41,6 +42,11 @@ export const OWNER_MANAGER_TAB_META: Record<OwnerManagerTabType, OwnerManagerMet
     description: 'Student enrollment and assignment coverage.',
     icon: GraduationCap,
   },
+  finance: {
+    label: 'Finance',
+    description: 'Payment collection, teacher finance, and monthly status.',
+    icon: DollarSign,
+  },
   statistics: {
     label: 'Analytics',
     description: 'Combined performance charts across every branch.',
@@ -54,6 +60,7 @@ export const OWNER_MANAGER_STATUS_OPTIONS: Record<OwnerManagerTabType, string[]>
   superusers: ['Active', 'Inactive', 'Suspended'],
   teachers: ['Active', 'Inactive', 'Retired'],
   students: ['Active', 'Inactive', 'Graduated', 'Removed'],
+  finance: ['Active'],
   statistics: ['Active'],
 };
 
@@ -129,5 +136,6 @@ export const OWNER_MANAGER_FIELDS: Record<OwnerManagerTabType, OwnerManagerField
     { name: 'teacher_id', label: 'Teacher ID', type: 'number', required: true },
     { name: 'class_id', label: 'Class ID', type: 'number', required: true },
   ],
+  finance: [],
   statistics: [],
 };

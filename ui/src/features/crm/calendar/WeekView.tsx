@@ -1,13 +1,12 @@
 // View component for the calendar screen in the crm feature.
 
-import { useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import type { ClassItem, CalendarDay, SessionItem } from './types';
 import {
   getConfiguredLessonDurationMinutes,
-  getCalendarGroupColorTheme,
   getTimeSlots,
   parseTimeToMinutes,
   toLocalDateKey,
@@ -17,6 +16,8 @@ interface WeekViewProps {
   weekDays: CalendarDay[];
   sessions: SessionItem[];
   classes: ClassItem[];
+  students: any[];
+  teachers: any[];
   today: Date;
   displayMonth: number;
   displayYear: number;
@@ -29,6 +30,8 @@ type SelectedSlot = {
   day: CalendarDay;
   timeSlot: string;
   sessions: Array<{ cls: ClassItem; session: SessionItem }>;
+  item: any;
+  cls?: ClassItem;
 };
 
 type RenderedSession = {
@@ -38,21 +41,51 @@ type RenderedSession = {
   endMinutes: number;
 };
 
-const SLOT_HEIGHT_REM = 3.5;
-const SLOT_MINUTES = 30;
+const SHEET_ROOM_WIDTH = 190;
+const TIME_COLUMN_WIDTH = 82;
+const SHEET_DAY_GROUPS = [
+  { label: 'Dush chor juma', days: ['Monday', 'Wednesday', 'Friday'] },
+  { label: 'Sesh pay shanba', days: ['Tuesday', 'Thursday', 'Saturday'] },
+];
+const ROOM_BANDS = [
+  ['1 xona', '2 xona', '3 xona', '4 xona', '5 xona'],
+  ['6 xona', '7 xona', '8 xona', '9 xona', '10 xona'],
+];
+const SHEET_MIN_WIDTH = TIME_COLUMN_WIDTH + SHEET_ROOM_WIDTH * ROOM_BANDS[0].length;
+const CLASS_COLORS = [
+  'bg-blue-600 text-white hover:bg-blue-700',
+  'bg-emerald-600 text-white hover:bg-emerald-700',
+  'bg-orange-500 text-white hover:bg-orange-600',
+  'bg-fuchsia-600 text-white hover:bg-fuchsia-700',
+  'bg-cyan-600 text-white hover:bg-cyan-700',
+  'bg-rose-600 text-white hover:bg-rose-700',
+  'bg-violet-600 text-white hover:bg-violet-700',
+  'bg-lime-500 text-slate-950 hover:bg-lime-600',
+  'bg-amber-500 text-slate-950 hover:bg-amber-600',
+  'bg-teal-600 text-white hover:bg-teal-700',
+  'bg-red-600 text-white hover:bg-red-700',
+  'bg-sky-600 text-white hover:bg-sky-700',
+  'bg-purple-600 text-white hover:bg-purple-700',
+  'bg-green-600 text-white hover:bg-green-700',
+  'bg-pink-600 text-white hover:bg-pink-700',
+  'bg-indigo-600 text-white hover:bg-indigo-700',
+];
 
-const getPlannedEndMinutes = (item: any, startMinutes: number) => {
+const getPlannedEndMinutes = (item: any) => {
+  const startMinutes = parseTimeToMinutes(String(item.time || '').substring(0, 5));
   if (!item.end_time) return startMinutes + SLOT_MINUTES;
   const endMinutes = parseTimeToMinutes(String(item.end_time).substring(0, 5));
   return endMinutes > startMinutes ? endMinutes : startMinutes + SLOT_MINUTES;
 };
 
-const isWithinScheduleRange = (item: any, isoDate: string) => {
-  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
-  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
-  if (startDate && isoDate < startDate) return false;
-  if (endDate && isoDate > endDate) return false;
-  return true;
+const SLOT_MINUTES = 30;
+const getClassColor = (value: unknown) => {
+  const raw = String(value || '0');
+  const numeric = Number(raw);
+  const hash = Number.isFinite(numeric)
+    ? numeric
+    : raw.split('').reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  return CLASS_COLORS[Math.abs(hash) % CLASS_COLORS.length];
 };
 
 // Renders the week view view.
@@ -60,9 +93,11 @@ export const WeekView: React.FC<WeekViewProps> = ({
   weekDays,
   sessions,
   classes,
-  today,
-  displayMonth,
-  displayYear,
+  students,
+  teachers,
+  today: _today,
+  displayMonth: _displayMonth,
+  displayYear: _displayYear,
   isSuperuser,
   onOpenSessionModal,
   schedule = [],
@@ -70,7 +105,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
 
   const fallbackDurationMinutes = getConfiguredLessonDurationMinutes();
-  const timeSlots = getTimeSlots();
+  const configuredTimeSlots = getTimeSlots();
 
 // Memoizes the day sessions by date derived value.
   const daySessionsByDate = useMemo(() => {
@@ -107,160 +142,184 @@ export const WeekView: React.FC<WeekViewProps> = ({
     return map;
   }, [classes, fallbackDurationMinutes, sessions, weekDays]);
 
+  const getGroupRows = (days: string[], bandRooms: string[]) => {
+    const boundaries = new Set<number>();
+    schedule
+      .filter((item) => days.includes(item.day) && bandRooms.includes(String(item.room_number)))
+      .forEach((item) => {
+        boundaries.add(parseTimeToMinutes(String(item.time || '').substring(0, 5)));
+        boundaries.add(getPlannedEndMinutes(item));
+      });
+
+    configuredTimeSlots.forEach((slot) => boundaries.add(parseTimeToMinutes(slot)));
+
+    const sorted = Array.from(boundaries)
+      .filter((value) => Number.isFinite(value) && value > 0)
+      .sort((a, b) => a - b);
+
+    return sorted.slice(0, -1).map((start, index) => ({
+      start,
+      end: sorted[index + 1],
+      label: `${formatMinutes(start)}-${formatMinutes(sorted[index + 1])}`,
+    }));
+  };
+
+  const getScheduleForCell = (days: string[], room: string, start: number, end: number) =>
+    schedule.find((item) => {
+      if (!days.includes(item.day) || String(item.room_number) !== room) return false;
+      const itemStart = parseTimeToMinutes(String(item.time || '').substring(0, 5));
+      const itemEnd = getPlannedEndMinutes(item);
+      return itemStart < end && itemEnd > start;
+    });
+
+  const getSessionsForCell = (day: CalendarDay, item: any, start: number, end: number) => {
+    const daySessions = daySessionsByDate.get(day.isoDate) || [];
+    return daySessions
+      .filter((entry) => {
+        const classMatches = Number(entry.cls.class_id || entry.cls.id) === Number(item?.class_id);
+        return classMatches && entry.startMinutes < end && entry.endMinutes > start;
+      })
+      .map((entry) => ({ cls: entry.cls, session: entry.session }));
+  };
+
+  const formatMinutes = (minutes: number) =>
+    `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+
+  const getTeacherName = (teacherId?: number | string | null) => {
+    const id = Number(teacherId);
+    const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === id);
+    return [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ') || 'No teacher assigned';
+  };
+
+  const getStudentCount = (classId?: number | string | null) => {
+    const id = Number(classId);
+    return students.filter((student) => Number(student.class_id) === id && !student.deleted_at).length;
+  };
+
   const activeSlot = selectedSlot;
   const activeSlotDate = activeSlot?.day.isoDate ?? '';
   const activeSlotSessions = activeSlot?.sessions ?? [];
+  const activeClass = activeSlot?.cls;
+  const activeSession = activeSlotSessions[0]?.session;
+  const activeTeacherName = getTeacherName(activeClass?.teacher_id || activeSlot?.item?.teacher_id);
+  const activeClassId = activeClass?.class_id || activeClass?.id || activeSlot?.item?.class_id;
 
 // Opens slot.
   const openSlot = (
     day: CalendarDay,
     timeSlot: string,
-    sessionsAtSlot: Array<{ cls: ClassItem; session: SessionItem }>
+    sessionsAtSlot: Array<{ cls: ClassItem; session: SessionItem }>,
+    item: any,
+    cls?: ClassItem
   ) => {
-    setSelectedSlot({ day, timeSlot, sessions: sessionsAtSlot });
+    setSelectedSlot({ day, timeSlot, sessions: sessionsAtSlot, item, cls });
   };
 
   return (
     <>
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card dark:shadow-none">
-        <div className="inline-block min-w-full">
-          <div className="flex gap-0 border-b border-slate-200 dark:border-border">
-            <div className="w-20 flex-shrink-0 border-r border-slate-200 bg-slate-50/90 p-2 text-center text-xs font-semibold dark:border-border dark:bg-muted/50">
-              Time
-            </div>
-            {weekDays.map((day) => {
-              const isToday =
-                day.date === today.getDate() &&
-                today.getMonth() === displayMonth &&
-                today.getFullYear() === displayYear;
-
-              return (
-                <div
-                  key={day.isoDate}
-                  className={cn(
-                    'flex-1 min-w-[140px] border-r border-slate-200 p-3 text-center dark:border-border',
-                    isToday ? 'bg-gradient-to-br from-amber-50 to-white dark:bg-amber-950/20 dark:bg-none' : 'bg-white dark:bg-background',
-                    !day.isCurrentMonth && 'bg-slate-50/70 dark:bg-muted/30'
-                  )}
-                >
-                  <div className="text-xs font-semibold uppercase text-muted-foreground">
-                    {day.dayName.substring(0, 3)}
-                  </div>
-                  <div className={cn('mt-1 text-lg font-bold', isToday ? 'text-amber-900' : 'text-foreground')}>
-                    {day.date}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {timeSlots.map((timeSlot) => {
-            const slotStartMinutes = parseTimeToMinutes(timeSlot);
-            const slotEndMinutes = slotStartMinutes + SLOT_MINUTES;
-
-            return (
-              <div key={timeSlot} className="flex gap-0 border-b border-slate-200 dark:border-border">
-                <div className="w-20 flex-shrink-0 border-r border-slate-200 bg-slate-50/90 p-2 text-center text-xs font-medium dark:border-border dark:bg-muted/50">
-                  {timeSlot}
-                </div>
-
-                {weekDays.map((day) => {
-                  const sessionsForDay = daySessionsByDate.get(day.isoDate) || [];
-
-                  const activeSessions = sessionsForDay
-                    .filter((entry) => entry.startMinutes < slotEndMinutes && entry.endMinutes > slotStartMinutes)
-                    .map((entry) => ({ cls: entry.cls, session: entry.session }));
-
-                  const startingSessions = sessionsForDay.filter(
-                    (entry) => entry.startMinutes >= slotStartMinutes && entry.startMinutes < slotEndMinutes
-                  );
-
-                  const isToday =
-                    day.date === today.getDate() &&
-                    today.getMonth() === displayMonth &&
-                    today.getFullYear() === displayYear;
-
-                  const recurringItems = schedule.filter((item) => {
-                    const isPlanned = item.day === day.dayName && item.time === timeSlot;
-                    if (!isPlanned) return false;
-                    if (!isWithinScheduleRange(item, day.isoDate)) return false;
-                    const hasSession = activeSessions.some(
-                      (s) => Number(s.cls.class_id || s.cls.id) === Number(item.class_id)
-                    );
-                    return !hasSession;
-                  });
-
-                  const hasSessions = activeSessions.length > 0;
-
+      <div className="w-full overflow-hidden rounded-lg border-2 border-slate-500 bg-white shadow-sm dark:border-border dark:bg-card">
+        <div className="overflow-x-auto">
+          <div className="w-full" style={{ minWidth: SHEET_MIN_WIDTH }}>
+            {SHEET_DAY_GROUPS.map((group) => (
+              <div key={group.label} className="border-b-4 border-yellow-300 last:border-b-0">
+                {ROOM_BANDS.map((bandRooms, bandIndex) => {
+                  const rows = getGroupRows(group.days, bandRooms);
+                  const template = `${TIME_COLUMN_WIDTH}px repeat(${bandRooms.length}, minmax(${SHEET_ROOM_WIDTH}px, 1fr))`;
                   return (
-                    <div
-                      key={`${day.isoDate}-${timeSlot}`}
-                      className={cn(
-                        'flex-1 min-w-[140px] border-r border-slate-200 p-2 relative h-20 overflow-visible transition-colors dark:border-border',
-                        isToday ? 'bg-amber-50/40 dark:bg-amber-950/20' : 'bg-white hover:bg-sky-50/50 dark:bg-background dark:hover:bg-muted/40',
-                        !day.isCurrentMonth && 'bg-slate-50/70 dark:bg-muted/30',
-                        hasSessions && 'cursor-pointer'
+                    <Fragment key={`${group.label}-${bandIndex}`}>
+                      {bandIndex > 0 && (
+                        <div className="grid" style={{ gridTemplateColumns: template }}>
+                          <div className="min-h-7 border-b border-r border-slate-500 bg-yellow-300" />
+                          {bandRooms.map((room) => (
+                            <div
+                              key={`${group.label}-${room}-separator`}
+                              className="min-h-7 border-b border-r border-slate-500 bg-yellow-300"
+                            />
+                          ))}
+                        </div>
                       )}
-                      onClick={() => {
-                        if (hasSessions) {
-                          openSlot(day, timeSlot, activeSessions);
-                        }
-                      }}
-                    >
-                      <div className="space-y-1 h-full overflow-visible">
-                        {recurringItems.map((item, idx) => (
-                          (() => {
-                            const endMinutes = getPlannedEndMinutes(item, slotStartMinutes);
-                            const spanSlots = Math.max(1, Math.ceil((endMinutes - slotStartMinutes) / SLOT_MINUTES));
-                            const blockHeight = `calc(${spanSlots} * ${SLOT_HEIGHT_REM}rem - ${Math.max(0, spanSlots - 1)}px)`;
-                            return (
-                              <div
-                                key={`recurring-${day.isoDate}-${timeSlot}-${idx}`}
-                                className="mb-1 rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1 text-[0.6rem] font-semibold leading-tight text-amber-900 shadow-sm dark:bg-amber-500/10 dark:text-amber-300"
-                                style={{ minHeight: blockHeight }}
-                              >
-                                <div className="font-bold">Regular Class</div>
-                                <div>{item.time}{item.end_time ? ` - ${String(item.end_time).substring(0, 5)}` : ''}</div>
-                                <div>{item.room_number}</div>
-                              </div>
-                            );
-                          })()
+
+                      <div
+                        className="grid"
+                        style={{ gridTemplateColumns: template }}
+                      >
+                        <div className="border-b border-r border-slate-500 bg-yellow-300 px-1 py-1 text-center text-[11px] font-black leading-tight text-slate-950">
+                          <div>TEMURBEK</div>
+                          <div>SCHOOL</div>
+                        </div>
+                        {bandRooms.map((room) => (
+                          <div key={`${group.label}-${room}-day`} className="border-b border-r border-slate-500 bg-yellow-300 px-1.5 py-1 text-center text-[12px] font-black text-slate-950">
+                            {group.label}
+                          </div>
                         ))}
 
-                        {startingSessions.map(({ cls, session, startMinutes, endMinutes }) => {
-                          const durationMinutes = Math.max(1, endMinutes - startMinutes);
-                          const spanSlots = Math.max(1, Math.ceil(durationMinutes / SLOT_MINUTES));
-                          const blockHeight = `calc(${spanSlots} * ${SLOT_HEIGHT_REM}rem - ${Math.max(0, spanSlots - 1)}px)`;
+                        <div className="border-b border-r border-slate-500 bg-yellow-300 px-1 py-1 text-center text-[11px] font-black text-slate-950" />
+                        {bandRooms.map((room) => (
+                          <div key={`${group.label}-${room}-room`} className="border-b border-r border-slate-500 bg-yellow-300 px-1.5 py-1 text-center text-[12px] font-black text-slate-950">
+                            {room}
+                          </div>
+                        ))}
 
+                        {rows.map((row) => {
+                          const isBreak = row.start >= parseTimeToMinutes('13:00') && row.start < parseTimeToMinutes('13:30');
                           return (
-                            <div
-                              key={session.session_id}
-                              className={cn('pointer-events-none relative z-20 rounded-md border p-1 text-[0.65rem] font-semibold shadow-sm', getCalendarGroupColorTheme(cls.class_id || cls.id).light, getCalendarGroupColorTheme(cls.class_id || cls.id).dark)}
-                              style={{ minHeight: blockHeight }}
-                              title={`${cls.class_name} - ${session.start_time} to ${session.end_time}`}
-                            >
-                              <div className="flex items-center gap-1.5 truncate font-bold">
-                                <span className={cn('h-2 w-2 shrink-0 rounded-full', getCalendarGroupColorTheme(cls.class_id || cls.id).dot)} />
-                                <span className="truncate">{cls.class_name}</span>
+                            <Fragment key={`${group.label}-${bandIndex}-${row.label}`}>
+                              <div className={cn('border-b border-r border-slate-500 px-1 py-0.5 text-center text-[11px] font-black text-slate-950', isBreak ? 'bg-orange-500' : 'bg-emerald-300')}>
+                                {row.label}
                               </div>
-                              <div className="text-[0.6rem] opacity-80">
-                                {session.start_time} - {session.end_time}
-                              </div>
-                              <div className="mt-1 text-[0.58rem] font-medium opacity-70">
-                                {spanSlots > 1 ? `${spanSlots} hours` : '1 hour'}
-                              </div>
-                            </div>
+                              {bandRooms.map((room) => {
+                                const item = getScheduleForCell(group.days, room, row.start, row.end);
+                                const day = weekDays.find((weekDay) => group.days.includes(weekDay.dayName)) || weekDays[0];
+                                const cellSessions = getSessionsForCell(day, item, row.start, row.end);
+                                const cls = classes.find((classItem) => Number(classItem.class_id || classItem.id) === Number(item?.class_id));
+                                const teacherName = getTeacherName(cls?.teacher_id || item?.teacher_id);
+                                const className = cls?.class_name || item?.class_name;
+                                const color = getClassColor(item?.class_id || item?.class_code || room);
+                                return (
+                                  <button
+                                    key={`${group.label}-${room}-${row.label}`}
+                                    type="button"
+                                    disabled={!item}
+                                    title={item ? `${className} - ${teacherName}` : undefined}
+                                    onClick={() => {
+                                      if (item) openSlot(day, row.label, cellSessions, item, cls);
+                                    }}
+                                    className={cn(
+                                      'min-h-7 border-b border-r border-slate-500 px-1 py-0.5 text-center text-[11px] font-black leading-tight transition-colors',
+                                      isBreak && !item && 'bg-orange-500',
+                                      !isBreak && !item && 'bg-white text-slate-950 hover:bg-slate-50',
+                                      item && color,
+                                      item && 'cursor-pointer',
+                                      cellSessions.length > 0 && 'ring-2 ring-inset ring-cyan-500'
+                                    )}
+                                  >
+                                    {item ? (
+                                      <span className="flex min-w-0 flex-col items-center gap-0.5">
+                                        <span className="line-clamp-1 max-w-full">{className}</span>
+                                        <span className="line-clamp-1 max-w-full text-[9px] font-extrabold opacity-90">
+                                          {teacherName}
+                                        </span>
+                                      </span>
+                                    ) : (
+                                      <span>bo'sh</span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </Fragment>
                           );
                         })}
-
-                        {!hasSessions && recurringItems.length === 0 && <div className="h-full" />}
+                        <div className="border-r border-slate-500 bg-emerald-300 py-1" />
+                        {bandRooms.map((room) => (
+                          <div key={`${group.label}-${room}-footer`} className="min-h-8 border-r border-slate-500 bg-white" />
+                        ))}
                       </div>
-                    </div>
+                    </Fragment>
                   );
                 })}
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
       </div>
 
@@ -273,37 +332,58 @@ export const WeekView: React.FC<WeekViewProps> = ({
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              Planned lessons at {activeSlot?.timeSlot} on {activeSlot?.day.dayName}, {activeSlot?.day.date}
+              {activeClass?.class_name || activeSlot?.item?.class_name || 'Class'}
             </DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3">
-            {activeSlotSessions.map(({ cls, session }) => (
-              <div
-                key={session.session_id}
-                className={cn(
-                  'flex items-center justify-between rounded-lg border p-3 text-sm',
-                  isSuperuser ? 'border-sky-200 bg-sky-50 text-sky-900' : 'border-border bg-background'
-                )}
-              >
+          <div className="space-y-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-border dark:bg-muted/30">
+                <p className="text-xs font-bold uppercase text-muted-foreground">Teacher</p>
+                <p className="mt-1 font-black text-slate-950 dark:text-card-foreground">{activeTeacherName}</p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-border dark:bg-muted/30">
+                <p className="text-xs font-bold uppercase text-muted-foreground">Students</p>
+                <p className="mt-1 font-black text-slate-950 dark:text-card-foreground">
+                  {getStudentCount(activeClassId)}
+                  {activeClass?.capacity ? ` / ${activeClass.capacity}` : ''}
+                </p>
+              </div>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-border dark:bg-muted/30">
+                <p className="text-xs font-bold uppercase text-muted-foreground">Room and time</p>
+                <p className="mt-1 font-black text-slate-950 dark:text-card-foreground">
+                  {activeSlot?.item?.room_number} · {activeSlot?.item?.time} - {activeSlot?.item?.end_time}
+                </p>
+              </div>
+              <div className={cn('rounded-lg border p-3 text-sm', activeSession ? 'border-emerald-200 bg-emerald-50 text-emerald-950' : 'border-amber-200 bg-amber-50 text-amber-950')}>
+                <p className="text-xs font-bold uppercase opacity-70">Lesson status</p>
+                <p className="mt-1 font-black">{activeSession ? 'Conducted' : 'Not conducted yet'}</p>
+              </div>
+            </div>
+
+            {activeSession && activeClass ? (
+              <div className={cn('flex items-center justify-between rounded-lg border p-3 text-sm', isSuperuser ? 'border-sky-200 bg-sky-50 text-sky-900' : 'border-border bg-background')}>
                 <div>
-                  <div className="font-semibold">{cls.class_name}</div>
+                  <div className="font-semibold">Attendance session</div>
                   <div className="text-xs text-muted-foreground">
-                    {session.start_time} - {session.end_time}
+                    {activeSession.start_time} - {activeSession.end_time}
                   </div>
                 </div>
-
                 <Button
                   size="sm"
                   onClick={() => {
-                    onOpenSessionModal(cls, session.session_id, activeSlotDate);
+                    onOpenSessionModal(activeClass, activeSession.session_id, activeSlotDate);
                     setSelectedSlot(null);
                   }}
                 >
-                  Open
+                  Open attendance
                 </Button>
               </div>
-            ))}
+            ) : (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
+                No attendance session has been created for this lesson yet.
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

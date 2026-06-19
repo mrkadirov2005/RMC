@@ -1,7 +1,7 @@
 // Page component for the rooms screen in the crm feature.
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Building2, CalendarDays, DoorOpen, Clock, Upload, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Building2, CalendarDays, DoorOpen, Clock, Upload, Download, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -15,14 +15,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -43,7 +35,7 @@ import { showToast } from '@/utils/toast';
 import { selectRoomsPageUi } from '../../../store/selectors';
 import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import { cn } from '@/lib/utils';
 
 const weekDays = [
   'Monday',
@@ -72,19 +64,62 @@ const RoomsPage = () => {
     end_time: '10:00',
   });
   const [isImporting, setIsImporting] = useState(false);
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(25);
+  const [selectedRoomNumber, setSelectedRoomNumber] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLanguage();
-  const paginatedRooms = useMemo(
-    () => paginateItems(rooms, page, pageSize),
-    [rooms, page, pageSize]
+
+  const roomGroups = useMemo(() => {
+    const map = new Map<string, any[]>();
+    rooms.forEach((room: any) => {
+      const roomNumber = String(room.room_number || '').trim();
+      if (!roomNumber) return;
+      const list = map.get(roomNumber) || [];
+      list.push(room);
+      map.set(roomNumber, list);
+    });
+
+    return Array.from(map.entries())
+      .map(([roomNumber, assignments]) => {
+        const classIds = new Set(assignments.map((room) => Number(room.class_id || 0)).filter(Boolean));
+        const days = new Set(assignments.map((room) => String(room.day || '').trim()).filter(Boolean));
+        return {
+          roomNumber,
+          assignments: assignments.sort((a, b) => `${a.day || ''}${a.time || ''}`.localeCompare(`${b.day || ''}${b.time || ''}`)),
+          classCount: classIds.size,
+          assignmentCount: assignments.length,
+          dayCount: days.size,
+        };
+      })
+      .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }));
+  }, [rooms]);
+
+  const selectedRoom = useMemo(
+    () => roomGroups.find((room) => room.roomNumber === selectedRoomNumber) || roomGroups[0] || null,
+    [roomGroups, selectedRoomNumber]
   );
+
+  const selectedRoomClasses = useMemo(() => {
+    if (!selectedRoom) return [];
+    const map = new Map<number | string, { id: number | string; name: string; assignments: any[] }>();
+    selectedRoom.assignments.forEach((assignment: any) => {
+      const id = assignment.class_id || assignment.class_name || `unassigned-${assignment.room_id}`;
+      const existing = map.get(id) || {
+        id,
+        name: assignment.class_name || 'Unassigned',
+        assignments: [] as any[],
+      };
+      existing.assignments.push(assignment);
+      map.set(id, existing);
+    });
+    return Array.from(map.values());
+  }, [selectedRoom]);
 
 // Runs side effects for this component.
   useEffect(() => {
-    setPage(1);
-  }, [rooms.length]);
+    if (!selectedRoomNumber && roomGroups[0]?.roomNumber) {
+      setSelectedRoomNumber(roomGroups[0].roomNumber);
+    }
+  }, [roomGroups, selectedRoomNumber]);
 
   const summaryCards = useMemo(() => {
     const uniqueRooms = new Set(rooms.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)).size;
@@ -141,11 +176,11 @@ const RoomsPage = () => {
 // Handles open modal.
   const handleOpenModal = (room?: any) => {
     if (room) {
-      dispatch(setRoomsPageEditingId(room.room_id));
+      dispatch(setRoomsPageEditingId(room.room_id || null));
       setFormData({
-        room_number: room.room_number,
+        room_number: room.room_number || '',
         class_id: room.class_id ? String(room.class_id) : 'none',
-        day: room.day,
+        day: room.day || 'Monday',
         time: room.time?.substring(0, 5) || '09:00',
         end_time: room.end_time?.substring(0, 5) || '10:00',
       });
@@ -223,6 +258,97 @@ const RoomsPage = () => {
   };
 
   const handleExportRooms = () => exportCsvEntity('rooms', 'Rooms');
+
+  const renderSelectedRoomDetails = () => (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 text-slate-950 shadow-sm dark:border-border dark:bg-card dark:text-card-foreground">
+      <div className="mb-3 grid gap-2 lg:grid-cols-[220px_1fr]">
+        <div className="rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 p-3 text-white shadow-md">
+          <div className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white/20">
+              <DoorOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase text-white/75">Selected room</p>
+              <h3 className="text-xl font-black">{selectedRoom?.roomNumber}</h3>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-1.5 text-center">
+            <div className="rounded-md bg-white/18 p-1.5">
+              <p className="text-lg font-black">{selectedRoom?.classCount || 0}</p>
+              <p className="text-[9px] font-bold text-white/75">Classes</p>
+            </div>
+            <div className="rounded-md bg-white/18 p-1.5">
+              <p className="text-lg font-black">{selectedRoom?.assignmentCount || 0}</p>
+              <p className="text-[9px] font-bold text-white/75">Slots</p>
+            </div>
+            <div className="rounded-md bg-white/18 p-1.5">
+              <p className="text-lg font-black">{selectedRoom?.dayCount || 0}</p>
+              <p className="text-[9px] font-bold text-white/75">Days</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-border dark:bg-muted/20 sm:flex-row sm:items-center">
+          <div>
+            <h3 className="text-lg font-black text-slate-950 dark:text-card-foreground">Registered classes</h3>
+            <p className="text-xs text-muted-foreground">Compact schedule list for this room.</p>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => handleOpenModal({ room_number: selectedRoom?.roomNumber, day: 'Monday', time: '09:00', end_time: '10:00' })}>
+            <Plus className="mr-2 h-4 w-4" />
+            Add here
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        {selectedRoomClasses.map((group, index) => (
+          <div key={group.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+            <div className="flex items-center justify-between gap-2 border-b bg-slate-50 px-3 py-2 dark:bg-muted/20">
+              <div className="flex min-w-0 items-center gap-2">
+                <span className={cn('flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-black text-white', index % 3 === 0 ? 'bg-blue-600' : index % 3 === 1 ? 'bg-emerald-600' : 'bg-orange-500')}>
+                  {index + 1}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-black text-slate-950 dark:text-card-foreground">{group.name}</p>
+                  <p className="text-xs font-semibold text-muted-foreground">{group.assignments.length} scheduled slot(s)</p>
+                </div>
+              </div>
+              <Users className="h-5 w-5 text-slate-400" />
+            </div>
+            <div className="divide-y">
+              {group.assignments.map((assignment: any) => (
+                <div key={assignment.room_id} className="grid gap-2 px-3 py-2 text-sm md:grid-cols-[1fr_120px_110px_auto] md:items-center">
+                  <div>
+                    <p className="font-bold text-slate-900 dark:text-card-foreground">{assignment.class_name || 'Unassigned'}</p>
+                    <p className="text-xs text-muted-foreground">Assignment #{assignment.room_id}</p>
+                  </div>
+                  <span className="rounded-full bg-cyan-50 px-2.5 py-1 text-xs font-black text-cyan-700 dark:bg-muted dark:text-card-foreground">
+                    {assignment.day || 'No day'}
+                  </span>
+                  <span className="font-mono text-xs font-bold text-slate-600 dark:text-muted-foreground">
+                    {assignment.time?.substring(0, 5)} - {(assignment.end_time || '').substring(0, 5) || '-'}
+                  </span>
+                  <div className="flex justify-start gap-1 md:justify-end">
+                    <Button variant="ghost" size="sm" onClick={() => handleOpenModal(assignment)}>
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => handleDelete(assignment.room_id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
@@ -315,75 +441,62 @@ const RoomsPage = () => {
               Physical Rooms & Schedules
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white dark:border-border dark:bg-card">
-              <Table>
-                <TableHeader className="bg-slate-50/90 dark:bg-transparent">
-                  <TableRow>
-                    <TableHead>Room Number</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Day</TableHead>
-                    <TableHead>Time</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {rooms.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No room assignments found.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    paginatedRooms.items.map((room) => (
-                      <TableRow key={room.room_id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
-                        <TableCell className="font-semibold text-slate-950 dark:text-card-foreground">
-                          <span className="inline-flex items-center rounded-md bg-indigo-50 px-2 py-1 text-indigo-700 dark:bg-muted dark:text-card-foreground">
-                            {room.room_number}
-                          </span>
-                        </TableCell>
-                        <TableCell className={room.class_name ? 'font-medium' : 'text-muted-foreground'}>{room.class_name || 'Unassigned'}</TableCell>
-                        <TableCell>{room.day}</TableCell>
-                        <TableCell className="font-mono text-sm text-cyan-700 dark:text-muted-foreground">
-                          {room.time?.substring(0, 5)} - {(room.end_time || '').substring(0, 5) || '-'}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => handleOpenModal(room)}>
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => handleDelete(room.room_id)}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
+          <CardContent className="space-y-5">
+            {rooms.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 py-12 text-center text-muted-foreground dark:border-border dark:bg-muted/20">
+                No room assignments found.
+              </div>
+            ) : (
+              <>
+                <div className="-mx-2 overflow-x-auto px-2 pb-2">
+                  <div className="flex min-w-max gap-2">
+                  {roomGroups.map((room, index) => {
+                    const active = room.roomNumber === selectedRoom?.roomNumber;
+                    const tones = [
+                      'from-blue-600 to-cyan-500',
+                      'from-emerald-600 to-teal-500',
+                      'from-orange-500 to-amber-400',
+                      'from-fuchsia-600 to-violet-500',
+                      'from-rose-600 to-pink-500',
+                    ];
+                    return (
+                      <button
+                        key={room.roomNumber}
+                        type="button"
+                        onClick={() => setSelectedRoomNumber(room.roomNumber)}
+                        className={cn(
+                          'w-36 shrink-0 rounded-xl border bg-gradient-to-br p-3 text-left text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md',
+                          active
+                            ? 'border-white/80 ring-2 ring-slate-900/15'
+                            : 'border-transparent',
+                          tones[index % tones.length]
+                        )}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-[10px] font-black uppercase text-white/80">Room</p>
+                            <p className="mt-0.5 text-xl font-black text-white">
+                              {room.roomNumber}
+                            </p>
                           </div>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="mt-4">
-              <PaginationBar
-                total={rooms.length}
-                currentPage={paginatedRooms.currentPage}
-                totalPages={paginatedRooms.totalPages}
-                start={paginatedRooms.start}
-                end={paginatedRooms.end}
-                pageSize={pageSize}
-                pageSizeOptions={defaultPageSizeOptions}
-                onPageChange={setPage}
-                onPageSizeChange={(nextPageSize) => {
-                  setPageSize(nextPageSize);
-                  setPage(1);
-                }}
-              />
-            </div>
+                          <DoorOpen className="h-5 w-5 text-white/90" />
+                        </div>
+                        <div className="mt-3 grid grid-cols-2 gap-1.5 text-[10px] font-bold">
+                          <span className="rounded-md bg-white/22 px-1.5 py-1 text-white">
+                            {room.classCount} classes
+                          </span>
+                          <span className="rounded-md bg-white/22 px-1.5 py-1 text-white">
+                            {room.dayCount} days
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  </div>
+                </div>
+                {renderSelectedRoomDetails()}
+              </>
+            )}
           </CardContent>
         </Card>
       )}

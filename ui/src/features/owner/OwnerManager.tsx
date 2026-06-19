@@ -8,6 +8,7 @@ import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerManagerStatistics } from './components/OwnerManagerStatistics';
 import { OwnerManagerTabStats } from './components/OwnerManagerTabStats';
 import { OwnerSystemSettings } from './components/OwnerSystemSettings';
+import { OwnerFinancePanel } from './components/OwnerFinancePanel';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -34,6 +35,11 @@ const OwnerManager = memo(() => {
         {vm.activeTab === 'statistics' ? (
           <OwnerManagerStatistics
             summary={vm.statistics}
+            collections={vm.statisticsCollections}
+            loading={vm.loading}
+          />
+        ) : vm.activeTab === 'finance' ? (
+          <OwnerFinancePanel
             collections={vm.statisticsCollections}
             loading={vm.loading}
           />
@@ -69,7 +75,7 @@ const OwnerManager = memo(() => {
           </>
         )}
 
-        {vm.activeTab !== 'statistics' && (
+        {vm.activeTab !== 'statistics' && vm.activeTab !== 'finance' && (
           <OwnerManagerDialog
             activeTab={vm.activeTab}
             currentMeta={vm.currentMeta}

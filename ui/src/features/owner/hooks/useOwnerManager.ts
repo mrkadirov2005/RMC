@@ -93,7 +93,7 @@ export const useOwnerManager = () => {
 // Memoizes the columns derived value.
   const columns = useMemo(() => buildColumns(activeTab), [activeTab]);
   const activeCenterLabel =
-    activeTab === 'statistics'
+    activeTab === 'statistics' || activeTab === 'finance'
       ? 'All centers'
       : activeCenterId
         ? centerLookup.get(Number(activeCenterId)) || `Center ${activeCenterId}`
@@ -101,7 +101,7 @@ export const useOwnerManager = () => {
   const isScopedAndMissingCenter = needsCenterScope && !activeCenterId;
   const scopedMessage = isScopedAndMissingCenter
     ? 'Select an active branch first to load and manage this section.'
-    : activeTab === 'statistics'
+    : activeTab === 'statistics' || activeTab === 'finance'
       ? 'Showing combined data from every center.'
       : `Working inside ${activeCenterLabel}.`;
 // Memoizes the selected permissions derived value.
@@ -142,7 +142,7 @@ export const useOwnerManager = () => {
         return;
       }
 
-      if (activeTab === 'statistics') {
+      if (activeTab === 'statistics' || activeTab === 'finance') {
         const [studentsRes, teachersRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
           ownerManagerApi.students.getAllAcrossCenters(),
           ownerManagerApi.teachers.getAllAcrossCenters(),
@@ -158,7 +158,7 @@ export const useOwnerManager = () => {
         const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
 
         setStatisticsCollections({ students, teachers, classes, payments, deletedStudents });
-        dispatch(setOwnerManagerData(students));
+        dispatch(setOwnerManagerData(activeTab === 'finance' ? teachers : students));
         return;
       }
 

@@ -4,6 +4,7 @@ import {
   BarChart3,
   Building2,
   CircleUserRound,
+  DollarSign,
   GraduationCap,
   Plus,
   Shield,
@@ -34,6 +35,7 @@ const tabs: { value: OwnerManagerTabType; label: string; icon: typeof Building2 
   { value: 'superusers', label: 'Admins', icon: CircleUserRound },
   { value: 'teachers', label: 'Teachers', icon: Users },
   { value: 'students', label: 'Students', icon: GraduationCap },
+  { value: 'finance', label: 'Finance', icon: DollarSign },
   { value: 'statistics', label: 'Statistics', icon: BarChart3 },
 ];
 
@@ -53,7 +55,7 @@ export const OwnerManagerContentHeader = ({
   const { t } = useLanguage();
   const helperMessage = isScopedAndMissingCenter
     ? t(scopedMessage)
-    : activeTab === 'statistics'
+    : activeTab === 'statistics' || activeTab === 'finance'
       ? t('Showing combined data from every center.')
       : `${t('Working inside')} ${activeCenterLabel}.`;
 
@@ -81,7 +83,7 @@ export const OwnerManagerContentHeader = ({
             {t('Branch')}: {activeCenterLabel}
           </Badge>
 
-          {activeTab !== 'statistics' && (
+          {activeTab !== 'statistics' && activeTab !== 'finance' && (
             <Button
               onClick={onAdd}
               disabled={loading || isScopedAndMissingCenter}

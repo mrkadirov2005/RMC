@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
 
-export type OwnerManagerTabType = 'centers' | 'owners' | 'superusers' | 'teachers' | 'students' | 'statistics';
+export type OwnerManagerTabType = 'centers' | 'owners' | 'superusers' | 'teachers' | 'students' | 'finance' | 'statistics';
 
 export interface OwnerManagerFormData {
   [key: string]: string | number | boolean | string[] | Record<string, boolean> | undefined;

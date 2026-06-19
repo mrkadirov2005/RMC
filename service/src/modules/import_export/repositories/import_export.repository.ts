@@ -285,7 +285,7 @@ const insertPayment = (params: any[]) =>
   pool.query(
     `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-     ON CONFLICT (receipt_number) DO UPDATE SET
+     ON CONFLICT (receipt_number) WHERE receipt_number IS NOT NULL AND deleted_at IS NULL DO UPDATE SET
        student_id = EXCLUDED.student_id,
        center_id = EXCLUDED.center_id,
        payment_date = EXCLUDED.payment_date,

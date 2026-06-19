@@ -64,7 +64,7 @@ interface TeacherPortalUiState {
   tabValue: string;
 }
 
-type OwnerManagerTabType = 'centers' | 'owners' | 'superusers' | 'teachers' | 'students' | 'statistics';
+type OwnerManagerTabType = 'centers' | 'owners' | 'superusers' | 'teachers' | 'students' | 'finance' | 'statistics';
 
 interface OwnerManagerUiState {
   activeTab: OwnerManagerTabType;

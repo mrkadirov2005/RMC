@@ -6,3 +6,4 @@ export { OwnerManagerDialog } from './OwnerManagerDialog';
 export { OwnerManagerStatistics } from './OwnerManagerStatistics';
 export { OwnerManagerTabStats } from './OwnerManagerTabStats';
 export { OwnerSystemSettings } from './OwnerSystemSettings';
+export { OwnerFinancePanel } from './OwnerFinancePanel';

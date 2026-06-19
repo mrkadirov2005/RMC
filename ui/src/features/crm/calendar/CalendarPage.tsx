@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
 import { fetchStudents, fetchStudentsForce } from '@/slices/studentsSlice';
 import { fetchGrades, fetchGradesForce } from '@/slices/gradesSlice';
 import { fetchRooms, fetchRoomsForce } from '@/slices/roomsSlice';
+import { fetchTeachers, fetchTeachersForce } from '@/slices/teachersSlice';
 import { showToast } from '@/utils/toast';
 import ClassDetailModal from '@/features/crm/classes/ClassDetailModal';
 import SessionModal from '@/features/crm/classes/SessionModal';
@@ -18,7 +19,7 @@ import { WeekView } from './WeekView';
 import { DayModal } from './DayModal';
 import { DetailsModal } from './DetailsModal';
 import { useCalendarData } from './hooks/useCalendarData';
-import { buildCalendarDays, CALENDAR_DEFAULT_VIEW_KEY, getConfiguredLessonDurationMinutes, toLocalDateKey } from './utils';
+import { buildCalendarDays, getConfiguredLessonDurationMinutes, toLocalDateKey } from './utils';
 import type { ClassItem, AttendanceItem, GradeItem, SessionItem, StudentItem } from './types';
 import { RoomFilter } from './components/RoomFilter';
 import { CalendarPageHeader } from './components/CalendarPageHeader';
@@ -32,6 +33,7 @@ const CalendarPage = () => {
   const allAttendance = useAppSelector((state) => state.attendance.items) as AttendanceItem[];
   const allGrades = useAppSelector((state) => state.grades.items) as GradeItem[];
   const allStudents = useAppSelector((state) => state.students.items) as StudentItem[];
+  const allTeachers = useAppSelector((state) => state.teachers.items) as any[];
   const rooms = useAppSelector((state) => state.rooms.items) as any[];
   const [loading, setLoading] = useState(true);
 
@@ -39,13 +41,7 @@ const CalendarPage = () => {
   const today = new Date();
   const [displayMonth, setDisplayMonth] = useState(today.getMonth());
   const [displayYear, setDisplayYear] = useState(today.getFullYear());
-  const [calendarView, setCalendarView] = useState<'month' | 'week'>(() => {
-    try {
-      return localStorage.getItem(CALENDAR_DEFAULT_VIEW_KEY) === 'week' ? 'week' : 'month';
-    } catch {
-      return 'month';
-    }
-  });
+  const [calendarView, setCalendarView] = useState<'month' | 'week'>('week');
   const [weekStartDate, setWeekStartDate] = useState(() => {
     const d = new Date(today);
     d.setDate(d.getDate() - d.getDay());
@@ -103,6 +99,7 @@ const CalendarPage = () => {
     if (user?.userType !== 'student') {
       dispatch(fetchStudents());
       dispatch(fetchGrades());
+      dispatch(fetchTeachers());
     }
   }, [dispatch, user?.userType]);
 
@@ -114,6 +111,7 @@ const CalendarPage = () => {
       if (user?.userType !== 'student') {
         dispatch(fetchStudentsForce());
         dispatch(fetchGradesForce());
+        dispatch(fetchTeachersForce());
       }
     };
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
@@ -470,6 +468,8 @@ const CalendarPage = () => {
                 weekDays={getWeekDays()}
                 sessions={filteredSessions}
                 classes={classes}
+                students={allStudents}
+                teachers={allTeachers}
                 today={today}
                 displayMonth={displayMonth}
                 displayYear={displayYear}
