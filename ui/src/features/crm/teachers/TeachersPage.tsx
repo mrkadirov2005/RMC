@@ -58,12 +58,13 @@ const teacherToneClasses = [
   'bg-cyan-600 hover:bg-cyan-700',
 ];
 const getTeacherTone = (index: number) => teacherToneClasses[index % teacherToneClasses.length];
-const generatedGroupCodePattern = /^TCH-\d{3}(?:-[A-Z0-9]+)+$/i;
-const getReadableGroupName = (cls: any) => {
-  const className = String(cls?.class_name || '').trim();
-  if (className && !generatedGroupCodePattern.test(className)) return className;
-  const id = cls?.class_id || cls?.id;
-  return id ? `Group #${id}` : 'Group';
+const getTeacherSubtitle = (teacher: Teacher) => {
+  const specialization = String(teacher.specialization || '').trim();
+  if (specialization) return specialization;
+  const qualification = String(teacher.qualification || '').trim();
+  if (qualification) return qualification;
+  const username = String(teacher.username || '').trim();
+  return username ? `@${username}` : 'Teacher';
 };
 
 // Renders the teachers page screen.
@@ -102,22 +103,15 @@ const TeachersPage = () => {
   const getTeacherId = (teacher: Teacher) => Number(teacher.teacher_id || teacher.id || 0);
   const getTeacherProfilePath = (teacher: Teacher) => `/teachers/${getTeacherId(teacher)}/profile`;
   const teacherStats = useMemo(() => {
-    const map = new Map<number, { groups: string[]; students: number }>();
+    const map = new Map<number, { students: number }>();
     for (const teacher of state.items) {
       const id = getTeacherId(teacher);
-      if (id) map.set(id, { groups: [], students: 0 });
-    }
-    for (const cls of classItems) {
-      const teacherId = Number(cls.teacher_id || 0);
-      if (!teacherId) continue;
-      const existing = map.get(teacherId) || { groups: [], students: 0 };
-      existing.groups.push(getReadableGroupName(cls));
-      map.set(teacherId, existing);
+      if (id) map.set(id, { students: 0 });
     }
     for (const student of studentItems) {
       const teacherId = Number(student.teacher_id || classItems.find((cls) => Number(cls.class_id || cls.id) === Number(student.class_id))?.teacher_id || 0);
       if (!teacherId) continue;
-      const existing = map.get(teacherId) || { groups: [], students: 0 };
+      const existing = map.get(teacherId) || { students: 0 };
       existing.students += 1;
       map.set(teacherId, existing);
     }
@@ -422,7 +416,6 @@ const TeachersPage = () => {
                   />
                 </TableHead>
                 <TableHead className="h-8 px-2">Teacher</TableHead>
-                <TableHead className="h-8 px-2">Groups</TableHead>
                 <TableHead className="h-8 px-2 text-right">Students</TableHead>
                 <TableHead className="h-8 px-2 text-right">Share</TableHead>
                 <TableHead className="h-8 px-2 text-right">Actions</TableHead>
@@ -431,7 +424,6 @@ const TeachersPage = () => {
             <TableBody>
               {paginatedTeachers.items.map((teacher, index) => {
                 const stats = teacherStats.get(getTeacherId(teacher));
-                const groups = stats?.groups || [];
                 return (
                   <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                     <TableCell className="px-2 py-2">
@@ -458,18 +450,6 @@ const TeachersPage = () => {
                           </button>
                           {teacher.username && <p className="truncate text-[11px] text-muted-foreground">@{teacher.username}</p>}
                         </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-2 py-2">
-                      <div className="flex flex-wrap gap-1.5">
-                        {groups.length > 0 ? groups.slice(0, 3).map((group) => (
-                          <span key={group} className="rounded-md bg-sky-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
-                            {group}
-                          </span>
-                        )) : (
-                          <span className="text-xs text-muted-foreground">No group</span>
-                        )}
-                        {groups.length > 3 && <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">+{groups.length - 3}</span>}
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
@@ -529,12 +509,11 @@ const TeachersPage = () => {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-semibold">{teacher.first_name} {teacher.last_name}</p>
                       <p className="truncate text-[11px] text-muted-foreground">
-                        {(teacherStats.get(getTeacherId(teacher))?.groups || [])[0] || 'No group'}
+                        {getTeacherSubtitle(teacher)}
                       </p>
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-[11px]">
-                    <span className="rounded-md bg-blue-600 px-2 py-1 font-semibold text-white">{teacherStats.get(getTeacherId(teacher))?.groups.length || 0} groups</span>
                     <span className="rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{teacherStats.get(getTeacherId(teacher))?.students || 0} students</span>
                     <span className="rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
                   </div>
@@ -594,17 +573,11 @@ const TeachersPage = () => {
 
                 <CardContent className="flex-grow p-3">
                   <p className="text-center text-sm font-semibold text-slate-950 dark:text-card-foreground">
-                    {teacher.first_name} {teacher.last_name}
+                    {getTeacherSubtitle(teacher)}
                   </p>
-                  <div className="mt-2 grid grid-cols-2 gap-2 text-center text-xs">
-                    <div className="rounded-lg bg-blue-600 p-2 text-white shadow-sm">
-                      <p className="font-bold">{teacherStats.get(getTeacherId(teacher))?.groups.length || 0}</p>
-                      <p className="text-[11px] text-white/80">Groups</p>
-                    </div>
-                    <div className="rounded-lg bg-emerald-600 p-2 text-white shadow-sm">
-                      <p className="font-bold">{teacherStats.get(getTeacherId(teacher))?.students || 0}</p>
-                      <p className="text-[11px] text-white/80">Students</p>
-                    </div>
+                  <div className="mt-2 rounded-lg bg-emerald-600 p-2 text-center text-xs text-white shadow-sm">
+                    <p className="font-bold">{teacherStats.get(getTeacherId(teacher))?.students || 0}</p>
+                    <p className="text-[11px] text-white/80">Students</p>
                   </div>
                   <div className="mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>

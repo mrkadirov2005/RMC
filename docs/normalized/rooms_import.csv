@@ -44,9 +44,9 @@ room_number,class_name,class_code,day,time,end_time
 1-xona,B2 intro,TCH-018-B2-INTRO,Monday,,
 1-xona,B2 intro,TCH-018-B2-INTRO,Wednesday,,
 1-xona,B2 intro,TCH-018-B2-INTRO,Friday,,
-1-xona,B1 intro,TCH-018-B1-INTRO,Tuesday,,
-1-xona,B1 intro,TCH-018-B1-INTRO,Thursday,,
-1-xona,B1 intro,TCH-018-B1-INTRO,Saturday,,
+1-xona,B1 intro (Xurshid),TCH-018-B1-INTRO,Tuesday,,
+1-xona,B1 intro (Xurshid),TCH-018-B1-INTRO,Thursday,,
+1-xona,B1 intro (Xurshid),TCH-018-B1-INTRO,Saturday,,
 5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,Monday,08:00,09:30
 5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,Wednesday,08:00,09:30
 5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,Friday,08:00,09:30
