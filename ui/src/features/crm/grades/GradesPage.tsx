@@ -41,50 +41,50 @@ const GradesPage = () => {
       </div>
 
       {/* Overall Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Award className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Total Grades</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <Award className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Total Grades</p>
             </div>
-            <p className="text-2xl font-bold text-white">{g.gradeStatistics.totalGrades}</p>
+            <p className="text-lg font-black text-white">{g.gradeStatistics.totalGrades}</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-violet-500 via-violet-600 to-purple-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Average</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Average</p>
             </div>
-            <p className="text-2xl font-bold text-white">{g.gradeStatistics.averagePercentage.toFixed(1)}%</p>
+            <p className="text-lg font-black text-white">{g.gradeStatistics.averagePercentage.toFixed(1)}%</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Passing</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <CheckCircle className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Passing</p>
             </div>
-            <p className="text-2xl font-bold text-white">{g.gradeStatistics.passingGrades}</p>
+            <p className="text-lg font-black text-white">{g.gradeStatistics.passingGrades}</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <XCircle className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Failing</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <XCircle className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Failing</p>
             </div>
-            <p className="text-2xl font-bold text-white">{g.gradeStatistics.failingGrades}</p>
+            <p className="text-lg font-black text-white">{g.gradeStatistics.failingGrades}</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Pass Rate</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Pass Rate</p>
             </div>
-            <p className="text-2xl font-bold text-white">{g.gradeStatistics.passRate}%</p>
+            <p className="text-lg font-black text-white">{g.gradeStatistics.passRate}%</p>
           </CardContent>
         </Card>
       </div>

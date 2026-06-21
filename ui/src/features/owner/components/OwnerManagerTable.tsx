@@ -32,16 +32,16 @@ const renderStatusBadge = (status: any, t: (value: string) => string) => {
   const normalized = value.toLowerCase();
   const tone =
     normalized === 'active'
-      ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+      ? 'bg-emerald-600 text-white border-emerald-600'
       : normalized === 'inactive'
-        ? 'bg-slate-500/10 text-slate-500 border-slate-500/20'
+        ? 'bg-slate-600 text-white border-slate-600'
         : normalized === 'graduated'
-          ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20'
+          ? 'bg-indigo-600 text-white border-indigo-600'
           : normalized === 'removed'
-            ? 'bg-rose-500/10 text-rose-500 border-rose-500/20'
+            ? 'bg-rose-600 text-white border-rose-600'
             : normalized === 'suspended' || normalized === 'retired'
-              ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
-              : 'bg-sky-500/10 text-sky-500 border-sky-500/20';
+              ? 'bg-amber-500 text-white border-amber-500'
+              : 'bg-sky-600 text-white border-sky-600';
 
   return (
     <Badge variant="outline" className={cn('font-medium', tone)}>
@@ -67,7 +67,7 @@ export const OwnerManagerTable = ({
   const { t } = useLanguage();
 
   return (
-    <Card className="border-slate-200/60 bg-white/80 shadow-xl shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/10">
+    <Card className="overflow-hidden rounded-md border-slate-200/80 bg-white shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.03] dark:shadow-black/10">
       <CardContent className="space-y-4 p-0">
         {loading && !showForm ? (
           <div className="flex justify-center py-12">
@@ -87,22 +87,22 @@ export const OwnerManagerTable = ({
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow className="border-slate-200/70 bg-slate-100/80 hover:bg-slate-100/80 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/5">
+                <TableRow className="border-slate-200/70 bg-slate-100/90 hover:bg-slate-100/90 dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/5">
                   {columns.map((column) => (
-                    <TableHead key={column.key} className="whitespace-nowrap font-semibold text-slate-600 dark:text-white/70">
+                    <TableHead key={column.key} className="h-9 whitespace-nowrap text-xs font-black text-slate-600 dark:text-white/70">
                       {t(column.label)}
                     </TableHead>
                   ))}
-                  <TableHead className="w-[120px] text-right font-semibold text-slate-600 dark:text-white/70">{t('Actions')}</TableHead>
+                  <TableHead className="h-9 w-[120px] text-right text-xs font-black text-slate-600 dark:text-white/70">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {data.map((item) => {
                   const rowId = getOwnerManagerRowId(item);
                   return (
-                    <TableRow key={rowId} className="border-slate-200/60 hover:bg-slate-100/70 dark:border-white/5 dark:hover:bg-white/5">
+                    <TableRow key={rowId} className="border-slate-200/60 text-xs hover:bg-cyan-50/70 dark:border-white/5 dark:hover:bg-white/5">
                       {columns.map((column) => (
-                        <TableCell key={column.key} className="whitespace-nowrap text-slate-800 dark:text-white/85">
+                        <TableCell key={column.key} className="whitespace-nowrap py-1.5 font-semibold text-slate-800 dark:text-white/85">
                           {column.render
                             ? column.render(item)
                             : column.key === 'status'
@@ -110,7 +110,7 @@ export const OwnerManagerTable = ({
                               : String(item[column.key] ?? '-')}
                         </TableCell>
                       ))}
-                      <TableCell className="text-right">
+                      <TableCell className="py-1.5 text-right">
                         <div className="inline-flex items-center gap-1">
                           {(activeTab === 'teachers' || activeTab === 'students') && (
                             <Button
@@ -118,7 +118,7 @@ export const OwnerManagerTable = ({
                               size="icon"
                               onClick={() => onResetPassword(item)}
                               disabled={loading}
-                              className="text-amber-600 hover:bg-amber-500/10 hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+                              className="h-7 w-7 rounded bg-amber-100 text-amber-700 hover:bg-amber-500 hover:text-white"
                               title={t('Reset password')}
                             >
                               <KeyRound className="h-4 w-4" />
@@ -128,7 +128,7 @@ export const OwnerManagerTable = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onEdit(item)}
-                            className="text-sky-600 hover:bg-sky-500/10 hover:text-sky-700 dark:text-sky-400 dark:hover:text-sky-300"
+                            className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white"
                             title={t('Edit')}
                           >
                             <Pencil className="h-4 w-4" />
@@ -137,7 +137,7 @@ export const OwnerManagerTable = ({
                             variant="ghost"
                             size="icon"
                             onClick={() => onDelete(Number(rowId))}
-                            className="text-rose-600 hover:bg-rose-500/10 hover:text-rose-700 dark:text-rose-400 dark:hover:text-rose-300"
+                            className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white"
                             title={t('Delete')}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -147,7 +147,7 @@ export const OwnerManagerTable = ({
                               variant="ghost"
                               size="icon"
                               onClick={() => onHardDelete(Number(rowId))}
-                              className="text-red-700 hover:bg-red-600/10 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200"
+                              className="h-7 w-7 rounded bg-red-100 text-red-700 hover:bg-red-700 hover:text-white"
                               title={t('Hard delete')}
                             >
                               <ShieldX className="h-4 w-4" />

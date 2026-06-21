@@ -5,7 +5,6 @@ import {
   Users,
   BookOpen,
   User,
-  DollarSign,
   CreditCard,
   Loader2,
   BarChart3,
@@ -32,7 +31,15 @@ const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
 
 const folderCardClass =
-  'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm [&_.folder-card-content]:p-3';
+  'cursor-pointer overflow-hidden rounded-none border-0 border-b border-slate-200/80 bg-white shadow-none transition-colors last:border-b-0 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/30 [&_.folder-card-content]:p-0';
+
+const folderListClass = 'overflow-hidden rounded-md border border-slate-200/80 bg-white dark:border-border dark:bg-card';
+const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
+const rowClass = 'flex flex-nowrap items-center gap-1.5 border-l-4 px-2 py-1 text-xs';
+const rowIconClass = 'folder-icon flex h-6 w-6 shrink-0 items-center justify-center rounded bg-opacity-80';
+const rowNameClass = 'w-44 shrink-0 truncate text-xs font-semibold';
+const rowMetaClass = 'flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden';
+const rowStatsClass = 'ml-auto flex shrink-0 items-center gap-1.5 text-right';
 
 interface PaymentsFolderTabsProps {
   hook: UsePaymentsPageReturn;
@@ -48,8 +55,9 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     searchTerm,
     isTeacher,
     loadingData,
-    folderGridClass,
     folderPageSizeOptions,
+    teachers,
+    classes,
     // students tab
     filteredRootStudents,
     paginatedRootStudents,
@@ -75,6 +83,24 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     // handlers
     handleFolderClick,
   } = hook;
+
+  const getTeacherName = (teacherId?: number | null) => {
+    const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId));
+    return [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ') || t('No teacher');
+  };
+
+  const getClassName = (classId?: number | null) => {
+    const cls = classes.find((item) => Number(item.class_id || item.id) === Number(classId));
+    return cls?.class_name || t('No group');
+  };
+
+  const getTeacherNameForStudent = (student: any) => {
+    const cls = classes.find((item) => Number(item.class_id || item.id) === Number(student?.class_id));
+    return getTeacherName(student?.teacher_id || cls?.teacher_id);
+  };
+
+  const getClassCountForTeacher = (teacherId: number) =>
+    classes.filter((cls) => Number(cls.teacher_id) === Number(teacherId)).length;
 
   return (
     <>
@@ -153,7 +179,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
         {/* By Students Tab */}
         {activeTab === 'students' && (
           <div className="space-y-4">
-            <div className={folderGridClass}>
+            <div className={folderListClass}>
               {loadingData ? (
                 <div className="col-span-full text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -168,31 +194,32 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                   const studentId = student.student_id || student.id || 0;
                   const paymentCount = getPaymentCountForStudent(studentId);
                   const totalAmount = getTotalAmountForStudent(studentId);
+                  const className = getClassName(student.class_id);
+                  const teacherName = getTeacherNameForStudent(student);
                   return (
                     <Card
                       key={studentId}
                       className={cn(folderCardClass, 'border-emerald-100 dark:border-border')}
                       onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
                     >
-                      <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
-                      <CardContent className="folder-card-content p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-                            <Folder className="h-4 w-4" />
+                      <CardContent className="folder-card-content">
+                        <div className={cn(rowClass, 'border-emerald-500')}>
+                          <div className={cn(rowIconClass, 'bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground')}>
+                            <Folder className="h-3.5 w-3.5" />
+                            </div>
+                          <h3 className={rowNameClass}>{student.first_name} {student.last_name}</h3>
+                          <div className={rowMetaClass}>
+                            <span className={cn(infoPillClass, 'bg-cyan-100 text-cyan-700')}>{className}</span>
+                            <span className={cn(infoPillClass, 'bg-violet-100 text-violet-700')}>{teacherName}</span>
                           </div>
-                        </div>
-                        <div className="space-y-0.5">
-                          <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
-                          <p className="text-xs text-muted-foreground">ID: {studentId}</p>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between border-t pt-2">
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <CreditCard className="h-3 w-3" />
-                            <span>{paymentCount} {t('payments')}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-primary">
-                            <DollarSign className="h-3 w-3" />
-                            <span>{formatMoney(totalAmount)}</span>
+                          <div className={rowStatsClass}>
+                            <span className={cn(infoPillClass, 'bg-amber-100 text-amber-700')}>
+                              <CreditCard className="mr-1 inline h-3 w-3" />
+                              {paymentCount}
+                            </span>
+                            <span className={cn(infoPillClass, 'bg-emerald-100 text-emerald-700')}>
+                              {formatMoney(totalAmount)}
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -221,7 +248,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
         {/* By Classes Tab */}
         {activeTab === 'classes' && (
           <div className="space-y-4">
-            <div className={folderGridClass}>
+            <div className={folderListClass}>
               {loadingData ? (
                 <div className="col-span-full text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -236,31 +263,31 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                   const classId = cls.class_id || cls.id || 0;
                   const paymentCount = getPaymentCountForClass(classId);
                   const totalAmount = getTotalAmountForClass(classId);
+                  const teacherName = getTeacherName(cls.teacher_id);
                   return (
                     <Card
                       key={classId}
                       className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
                       onClick={() => handleFolderClick('class', classId, cls.class_name)}
                     >
-                      <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
-                      <CardContent className="folder-card-content p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
-                            <Folder className="h-4 w-4" />
+                      <CardContent className="folder-card-content">
+                        <div className={cn(rowClass, 'border-cyan-500')}>
+                          <div className={cn(rowIconClass, 'bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground')}>
+                              <Folder className="h-3.5 w-3.5" />
+                            </div>
+                          <h3 className={rowNameClass}>{cls.class_name}</h3>
+                          <div className={rowMetaClass}>
+                            <span className={cn(infoPillClass, 'bg-violet-100 text-violet-700')}>{teacherName}</span>
+                            <span className={cn(infoPillClass, 'bg-sky-100 text-sky-700')}>Level {cls.level}</span>
                           </div>
-                        </div>
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-semibold">{cls.class_name}</h3>
-                          <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                        </div>
-                        <div className="mt-2 flex items-center justify-between border-t pt-2">
-                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <CreditCard className="h-3 w-3" />
-                            <span>{paymentCount} {t('payments')}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-xs font-semibold text-cyan-700 dark:text-primary">
-                            <DollarSign className="h-3 w-3" />
-                            <span>{formatMoney(totalAmount)}</span>
+                          <div className={rowStatsClass}>
+                            <span className={cn(infoPillClass, 'bg-amber-100 text-amber-700')}>
+                              <CreditCard className="mr-1 inline h-3 w-3" />
+                              {paymentCount}
+                            </span>
+                            <span className={cn(infoPillClass, 'bg-emerald-100 text-emerald-700')}>
+                              {formatMoney(totalAmount)}
+                            </span>
                           </div>
                         </div>
                       </CardContent>
@@ -289,7 +316,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
         {/* By Teachers Tab */}
         {activeTab === 'teachers' && (
           <div className="space-y-4">
-            <div className={folderGridClass}>
+            <div className={folderListClass}>
               {loadingData ? (
                 <div className="col-span-full text-center py-8">
                   <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -304,60 +331,42 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                   const teacherId = teacher.teacher_id || teacher.id || 0;
                   const paymentCount = getPaymentCountForTeacher(teacherId);
                   const teacherStats = getTeacherPaymentStats(teacherId);
+                  const classCount = getClassCountForTeacher(teacherId);
                   return (
                     <Card
                       key={teacherId}
                       className={cn(folderCardClass, 'border-indigo-100 dark:border-border')}
                       onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
                     >
-                      <div className="h-1 bg-gradient-to-r from-indigo-500 to-violet-500 dark:hidden" />
-                      <CardContent className="folder-card-content p-3">
-                        <div className="flex items-center gap-2 mb-2">
-                          <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-                            <Folder className="h-4 w-4" />
+                      <CardContent className="folder-card-content">
+                        <div className={cn(rowClass, 'border-indigo-500')}>
+                          <div className={cn(rowIconClass, 'bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground')}>
+                              <Folder className="h-3.5 w-3.5" />
+                            </div>
+                          <h3 className={rowNameClass}>{teacher.first_name} {teacher.last_name}</h3>
+                          <div className={rowMetaClass}>
+                            <span className={cn(infoPillClass, 'bg-indigo-100 text-indigo-700')}>{classCount} {t('classes')}</span>
+                            <span className={cn(infoPillClass, 'bg-sky-100 text-sky-700')}>{teacherStats.totalStudents} {t('students')}</span>
                           </div>
+                          {isTeacher ? (
+                            <div className={rowStatsClass}>
+                              <span className={cn(infoPillClass, 'bg-sky-100 text-sky-700')}>
+                                <Users className="mr-1 inline h-3 w-3" />
+                                {teacherStats.totalStudents}
+                              </span>
+                              <span className={cn(infoPillClass, 'bg-amber-100 text-amber-700')}>
+                                <CreditCard className="mr-1 inline h-3 w-3" />
+                                {paymentCount}
+                              </span>
+                            </div>
+                          ) : (
+                            <div className={rowStatsClass}>
+                              <span className={cn(infoPillClass, 'bg-emerald-100 text-emerald-700')}>{teacherStats.paidStudents} {t('paid')}</span>
+                              <span className={cn(infoPillClass, 'bg-rose-100 text-rose-700')}>{teacherStats.unpaidStudents} {t('unpaid')}</span>
+                              <span className={cn(infoPillClass, 'bg-amber-100 text-amber-700')}>{paymentCount} {t('payments')}</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="space-y-1">
-                          <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                          <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
-                        </div>
-                        {isTeacher ? (
-                          <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Users className="h-3 w-3" />
-                              <span>{teacherStats.totalStudents} {t('students')}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-xs font-semibold text-primary">
-                              <CreditCard className="h-3 w-3" />
-                              <span>{paymentCount} {t('payments')}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="grid grid-cols-2 gap-1.5 mt-2 pt-2 border-t text-[11px]">
-                              <div className="rounded bg-gradient-to-r from-indigo-500 to-violet-500 px-2 py-1.5 text-white">
-                                <p className="text-white/70">{t('Worked')}</p>
-                                <p className="font-bold">{formatMoney(teacherStats.totalWorked)}</p>
-                              </div>
-                              <div className="rounded bg-gradient-to-r from-emerald-500 to-teal-500 px-2 py-1.5 text-white">
-                                <p className="text-white/70">{t('Paid')}</p>
-                                <p className="font-bold">{formatMoney(teacherStats.paidAmount)}</p>
-                              </div>
-                              <div className="rounded bg-gradient-to-r from-rose-500 to-pink-500 px-2 py-1.5 text-white">
-                                <p className="text-white/70">{t('Unpaid')}</p>
-                                <p className="font-bold">{formatMoney(teacherStats.unpaidAmount)}</p>
-                              </div>
-                              <div className="rounded bg-gradient-to-r from-amber-500 to-orange-500 px-2 py-1.5 text-white">
-                                <p className="text-white/70">{t('Students')}</p>
-                                <p className="font-bold">{teacherStats.paidStudents}/{teacherStats.totalStudents} {t('paid')}</p>
-                              </div>
-                            </div>
-                            <div className="flex justify-between items-center mt-1.5 text-[11px] text-muted-foreground">
-                              <span>{teacherStats.unpaidStudents} {t('unpaid')}</span>
-                              <span>{paymentCount} {t('payments')}</span>
-                            </div>
-                          </>
-                        )}
                       </CardContent>
                     </Card>
                   );
@@ -482,7 +491,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                           <TableCell>
                             <div>
                               <p className="font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                              <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
                             </div>
                           </TableCell>
                           <TableCell>{stats.totalStudents}</TableCell>

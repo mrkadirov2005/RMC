@@ -123,11 +123,11 @@ const PaymentsPage = () => {
         </Alert>
       )}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Payment Records" value={overallPaymentStats.totalPayments} detail="All visible records" icon={ReceiptText} tone="green" />
-        <MetricCard label="Total Amount" value={formatMoney(overallPaymentStats.totalAmount)} detail="Across current scope" icon={DollarSign} tone="blue" />
-        <MetricCard label="Paid Share" value={`${overallPaymentStats.paidPercent}%`} detail="Completed payments" icon={TrendingUp} tone="neutral" />
-        <MetricCard label="Collected" value={formatMoney(overallPaymentStats.paidAmount)} detail="Completed amount" icon={ShieldCheck} tone="amber" />
+      <div className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+        <MetricCard className="rounded-md p-2 [&_p]:text-[10px] [&_div.mt-1]:mt-0 [&_div.text-2xl]:text-lg [&_div.text-xs]:text-[10px] [&_svg]:h-3 [&_svg]:w-3 [&_.h-9]:h-7 [&_.w-9]:w-7" label="Payment Records" value={overallPaymentStats.totalPayments} detail="All visible records" icon={ReceiptText} tone="green" />
+        <MetricCard className="rounded-md p-2 [&_p]:text-[10px] [&_div.mt-1]:mt-0 [&_div.text-2xl]:text-lg [&_div.text-xs]:text-[10px] [&_svg]:h-3 [&_svg]:w-3 [&_.h-9]:h-7 [&_.w-9]:w-7" label="Total Amount" value={formatMoney(overallPaymentStats.totalAmount)} detail="Across current scope" icon={DollarSign} tone="blue" />
+        <MetricCard className="rounded-md p-2 [&_p]:text-[10px] [&_div.mt-1]:mt-0 [&_div.text-2xl]:text-lg [&_div.text-xs]:text-[10px] [&_svg]:h-3 [&_svg]:w-3 [&_.h-9]:h-7 [&_.w-9]:w-7" label="Paid Share" value={`${overallPaymentStats.paidPercent}%`} detail="Completed payments" icon={TrendingUp} tone="neutral" />
+        <MetricCard className="rounded-md p-2 [&_p]:text-[10px] [&_div.mt-1]:mt-0 [&_div.text-2xl]:text-lg [&_div.text-xs]:text-[10px] [&_svg]:h-3 [&_svg]:w-3 [&_.h-9]:h-7 [&_.w-9]:w-7" label="Collected" value={formatMoney(overallPaymentStats.paidAmount)} detail="Completed amount" icon={ShieldCheck} tone="amber" />
       </div>
 
       {!selectedFolder ? (

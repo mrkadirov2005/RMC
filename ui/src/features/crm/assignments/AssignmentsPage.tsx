@@ -1,7 +1,24 @@
 // Page component for the assignments screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Pencil, Trash2, Plus, X, ArrowLeft, Folder, Search, Filter, FileText, Users, Loader2, Upload, Download } from 'lucide-react';
+import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Download,
+  FileText,
+  Filter,
+  Folder,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  Target,
+  Trash2,
+  Upload,
+  Users,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -30,6 +47,22 @@ import { useAssignmentsPage } from './hooks/useAssignmentsPage';
 import { getStatusColor } from './queries';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultCardPageSizeOptions, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+
+const folderListClass = 'overflow-hidden rounded-md border border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card';
+const folderCardClass =
+  'cursor-pointer overflow-hidden rounded-none border-0 border-b border-slate-200/80 bg-white shadow-none transition-colors last:border-b-0 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/30 [&_.folder-card-content]:p-0';
+const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
+const rowClass = 'flex flex-nowrap items-center gap-1.5 border-l-4 px-2 py-1 text-xs';
+const rowIconClass = 'flex h-6 w-6 shrink-0 items-center justify-center rounded';
+const rowNameClass = 'w-56 shrink-0 truncate text-xs font-semibold';
+const rowMetaClass = 'flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden';
+const rowStatsClass = 'ml-auto flex shrink-0 items-center gap-1.5 text-right';
+
+const formatDate = (value?: string) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
+};
 
 // Renders the assignments page screen.
 const AssignmentsPage = () => {
@@ -76,12 +109,7 @@ const AssignmentsPage = () => {
     getCompletedCountForClass,
     assignmentStatusOptions,
   } = useAssignmentsPage();
-  const folderGridClass =
-    viewMode === 'list'
-      ? 'space-y-1 [&_.rounded-lg]:rounded-md [&_.pt-4]:pt-2.5 [&_.pb-4]:pb-2.5 [&_.px-4]:px-2.5 [&_.p-2]:p-1.5 [&_.h-8]:h-5 [&_.w-8]:w-5 [&_.mt-3]:mt-1.5 [&_.pt-3]:pt-1.5'
-      : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
-        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4';
+  const folderGridClass = folderListClass;
   const rootSearch = !selectedFolder ? searchTerm.trim().toLowerCase() : '';
   const filteredClasses = useMemo(() => {
     if (!rootSearch) return classes;
@@ -107,6 +135,21 @@ const AssignmentsPage = () => {
     () => paginateItems(displayedAssignments, assignmentPage, assignmentPageSize),
     [displayedAssignments, assignmentPage, assignmentPageSize]
   );
+  const assignmentStats = useMemo(() => {
+    const total = state.items.length;
+    const completed = state.items.filter((item) => item.status === 'Completed').length;
+    const pending = state.items.filter((item) => item.status === 'Pending').length;
+    const submitted = state.items.filter((item) => item.status === 'Submitted').length;
+    const graded = state.items.filter((item) => item.status === 'Graded').length;
+    return {
+      total,
+      completed,
+      pending,
+      submitted,
+      graded,
+      completeRate: total > 0 ? Math.round((completed / total) * 100) : 0,
+    };
+  }, [state.items]);
 
   useEffect(() => {
     setFolderPage(1);
@@ -117,22 +160,29 @@ const AssignmentsPage = () => {
   }, [searchTerm, filterStatus, selectedFolder?.type, selectedFolder?.id]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-6 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="overflow-hidden rounded-lg border border-indigo-200 bg-gradient-to-br from-indigo-50 via-sky-50 to-emerald-50 p-4 shadow-sm dark:border-border dark:from-card dark:via-card dark:to-card">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           {selectedFolder && (
-            <Button variant="ghost" size="sm" onClick={handleBackToFolders}>
+            <Button variant="secondary" size="sm" onClick={handleBackToFolders} className="h-9 bg-slate-900 text-white hover:bg-slate-800">
               <ArrowLeft className="mr-1 h-4 w-4" /> Back
             </Button>
           )}
+          <div className="flex h-11 w-11 items-center justify-center rounded-md bg-gradient-to-br from-fuchsia-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25">
+            <Target className="h-5 w-5" />
+          </div>
+          <div>
           <h1 className="text-2xl font-bold tracking-tight">
             {selectedFolder
-              ? `${selectedFolder.name} - Assignments`
-              : 'Assignments Management'}
+              ? `${selectedFolder.name} - Vazifalar`
+              : 'Vazifalarni boshqarish'}
           </h1>
+            <p className="text-sm text-muted-foreground">Sinf vazifalari, shaxsiy topshiriqlar va bajarilish holatini boshqaring.</p>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-end gap-2">
           <ViewModeToggle value={viewMode} onChange={setViewMode} />
           <input
             ref={fileInputRef}
@@ -149,17 +199,33 @@ const AssignmentsPage = () => {
             variant="outline"
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
+            className="h-9 bg-white/90 shadow-sm"
           >
             {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
             {isImporting ? t('Importing...') : t('Import CSV')}
           </Button>
-          <Button type="button" variant="outline" onClick={handleExportAssignments}>
+          <Button type="button" variant="outline" onClick={handleExportAssignments} className="h-9 bg-white/90 shadow-sm">
             <Download className="mr-2 h-4 w-4" />
             {t('Export CSV')}
           </Button>
-          <Button onClick={() => handleOpenModal()}>
+          <Button onClick={() => handleOpenModal()} className="h-9 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white shadow-lg shadow-indigo-500/25 hover:from-fuchsia-700 hover:to-indigo-700">
             <Plus className="mr-2 h-4 w-4" /> Add Assignment
           </Button>
+        </div>
+      </div>
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-5">
+          {[
+            ['Jami', assignmentStats.total, 'from-indigo-500 to-blue-600'],
+            ['Bajarildi', assignmentStats.completed, 'from-emerald-500 to-teal-600'],
+            ['Kutilmoqda', assignmentStats.pending, 'from-amber-500 to-orange-600'],
+            ['Topshirildi', assignmentStats.submitted, 'from-sky-500 to-cyan-600'],
+            ['Baholandi', assignmentStats.graded || `${assignmentStats.completeRate}%`, 'from-fuchsia-500 to-pink-600'],
+          ].map(([label, value, color]) => (
+            <div key={label} className={cn('rounded-md bg-gradient-to-br p-2 text-white shadow-sm', color as string)}>
+              <p className="text-[10px] font-black uppercase text-white/75">{label}</p>
+              <p className="text-lg font-black leading-tight">{value}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -171,7 +237,7 @@ const AssignmentsPage = () => {
 
       {!selectedFolder ? (
         <>
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap rounded-md border border-cyan-100 bg-white p-2 shadow-sm dark:border-border dark:bg-card">
             <div className="relative flex-1 min-w-[220px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -179,7 +245,7 @@ const AssignmentsPage = () => {
                 placeholder={activeTab === 'classes' ? 'Search classes by name or code...' : 'Search personal tasks...'}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-8"
+                className="h-9 border-cyan-100 bg-cyan-50/40 pl-9 pr-8 text-sm shadow-none"
               />
               {searchTerm && (
                 <button
@@ -193,14 +259,14 @@ const AssignmentsPage = () => {
           </div>
 
           {/* Tab Navigation */}
-          <div className="border-b">
+          <div className="rounded-md border border-slate-200 bg-white p-1 shadow-sm dark:border-border dark:bg-card">
             <div className="flex gap-1">
               <button
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                  'flex items-center gap-2 rounded px-3 py-2 text-sm font-black transition-colors',
                   activeTab === 'classes'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                    ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md shadow-indigo-500/20'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
                 onClick={() => setActiveTab('classes')}
               >
@@ -209,10 +275,10 @@ const AssignmentsPage = () => {
               </button>
               <button
                 className={cn(
-                  'flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 transition-colors',
+                  'flex items-center gap-2 rounded px-3 py-2 text-sm font-black transition-colors',
                   activeTab === 'personal'
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-md shadow-orange-500/20'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
                 onClick={() => setActiveTab('personal')}
               >
@@ -246,29 +312,28 @@ const AssignmentsPage = () => {
                     return assignmentCount > 0 ? (
                       <Card
                         key={classId}
-                        className="cursor-pointer hover:shadow-md transition-shadow border-l-4 border-l-indigo-500"
+                        className={cn(folderCardClass, 'border-indigo-100 dark:border-border')}
                         onClick={() => handleFolderClick('class', classId, cls.class_name)}
                       >
-                        <CardContent className="pt-4">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg bg-indigo-50">
-                              <Folder className="h-8 w-8 text-indigo-500" />
+                        <CardContent className="folder-card-content">
+                          <div className={cn(rowClass, 'border-indigo-600 bg-gradient-to-r from-indigo-50/80 via-white to-white dark:from-card dark:via-card dark:to-card')}>
+                            <div className={cn(rowIconClass, 'bg-indigo-600 text-white')}>
+                              <Folder className="h-3.5 w-3.5" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold truncate">{cls.class_name}</h3>
-                              <p className="text-sm text-muted-foreground">
-                                {cls.class_code} &bull; Level {cls.level}
-                              </p>
+                            <h3 className={rowNameClass}>{cls.class_name}</h3>
+                            <div className={rowMetaClass}>
+                              <span className={cn(infoPillClass, 'bg-violet-600 text-white')}>Level {cls.level || '-'}</span>
+                              <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{assignmentCount} vazifa</span>
                             </div>
-                          </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <FileText className="h-3.5 w-3.5" />
-                              <span>{assignmentCount} assignment{assignmentCount !== 1 ? 's' : ''}</span>
+                            <div className={rowStatsClass}>
+                              <span className={cn(infoPillClass, 'bg-emerald-600 text-white')}>
+                                <CheckCircle2 className="mr-1 inline h-3 w-3" />
+                                {completedCount}
+                              </span>
+                              <span className={cn(infoPillClass, 'bg-fuchsia-600 text-white')}>
+                                {completionPercentage.toFixed(0)}%
+                              </span>
                             </div>
-                            <span className="text-sm font-bold text-green-600">
-                              {completionPercentage.toFixed(0)}%
-                            </span>
                           </div>
                         </CardContent>
                       </Card>
@@ -312,29 +377,23 @@ const AssignmentsPage = () => {
 
                     return personalCount > 0 ? (
                       <Card
-                        className="cursor-pointer hover:shadow-md transition-shadow bg-amber-50 border-l-4 border-l-amber-500"
+                        className={cn(folderCardClass, 'border-amber-100 dark:border-border')}
                         onClick={() => handleFolderClick('personal', undefined, 'Personal Tasks')}
                       >
-                        <CardContent className="pt-4">
-                          <div className="flex items-start gap-3">
-                            <div className="p-2 rounded-lg bg-amber-100">
-                              <Folder className="h-8 w-8 text-amber-500" />
+                        <CardContent className="folder-card-content">
+                          <div className={cn(rowClass, 'border-amber-500 bg-gradient-to-r from-amber-50/90 via-white to-white')}>
+                            <div className={cn(rowIconClass, 'bg-amber-500 text-white')}>
+                              <Folder className="h-3.5 w-3.5" />
                             </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="font-semibold">Personal Tasks</h3>
-                              <p className="text-sm text-muted-foreground">
-                                Independent assignments without class
-                              </p>
+                            <h3 className={rowNameClass}>Personal Tasks</h3>
+                            <div className={rowMetaClass}>
+                              <span className={cn(infoPillClass, 'bg-orange-600 text-white')}>Independent</span>
+                              <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{personalCount} task</span>
                             </div>
-                          </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t">
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                              <FileText className="h-3.5 w-3.5" />
-                              <span>{personalCount} task{personalCount !== 1 ? 's' : ''}</span>
+                            <div className={rowStatsClass}>
+                              <span className={cn(infoPillClass, 'bg-emerald-600 text-white')}>{personalCompleted} done</span>
+                              <span className={cn(infoPillClass, 'bg-fuchsia-600 text-white')}>{completionPercentage.toFixed(0)}%</span>
                             </div>
-                            <span className="text-sm font-bold text-green-600">
-                              {completionPercentage.toFixed(0)}%
-                            </span>
                           </div>
                         </CardContent>
                       </Card>
@@ -353,7 +412,7 @@ const AssignmentsPage = () => {
         /* ASSIGNMENTS LIST VIEW */
         <>
           {/* Search and Filter Bar */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-3 flex-wrap rounded-md border border-fuchsia-100 bg-white p-2 shadow-sm dark:border-border dark:bg-card">
             <div className="relative flex-1 min-w-[200px] max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -361,7 +420,7 @@ const AssignmentsPage = () => {
                 placeholder="Search by title or description..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9 pr-8"
+                className="h-9 border-fuchsia-100 bg-fuchsia-50/40 pl-9 pr-8 text-sm shadow-none"
               />
               {searchTerm && (
                 <button
@@ -377,6 +436,7 @@ const AssignmentsPage = () => {
               variant={showFilters ? 'default' : 'outline'}
               size="sm"
               onClick={() => setShowFilters(!showFilters)}
+              className={cn(showFilters && 'bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white')}
             >
               <Filter className="mr-1 h-4 w-4" />
               Filters
@@ -388,7 +448,7 @@ const AssignmentsPage = () => {
             </Button>
 
             {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-rose-600 hover:bg-rose-50 hover:text-rose-700">
                 <X className="mr-1 h-4 w-4" /> Clear All
               </Button>
             )}
@@ -400,15 +460,15 @@ const AssignmentsPage = () => {
 
           {/* Filter Options */}
           {showFilters && (
-            <Card>
-              <CardContent className="pt-4 pb-4">
+            <Card className="border-fuchsia-100 bg-gradient-to-r from-fuchsia-50 to-indigo-50 shadow-sm dark:border-border dark:bg-card dark:bg-none">
+              <CardContent className="py-2">
                 <div className="flex items-center gap-4">
                   <div className="space-y-1">
                     <Label className="text-xs">Status</Label>
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
-                      className="flex h-9 w-[180px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      className="flex h-8 w-[180px] rounded-md border border-fuchsia-100 bg-white px-3 py-1 text-xs font-semibold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
                       <option value="">All Status</option>
                       {assignmentStatusOptions.map((opt) => (
@@ -422,19 +482,19 @@ const AssignmentsPage = () => {
           )}
 
           {/* Assignments Table */}
-          <Card>
+          <Card className="overflow-hidden border-slate-200/80 shadow-sm">
             <CardContent className="p-0">
-              <div className="rounded-md border">
+              <div className="border-t-4 border-t-fuchsia-500">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Description</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Submission Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Grade</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                    <TableRow className="bg-slate-50 hover:bg-slate-50">
+                      <TableHead className="h-9 text-xs">Title</TableHead>
+                      <TableHead className="h-9 text-xs">Description</TableHead>
+                      <TableHead className="h-9 text-xs">Due</TableHead>
+                      <TableHead className="h-9 text-xs">Submit</TableHead>
+                      <TableHead className="h-9 text-xs">Status</TableHead>
+                      <TableHead className="h-9 text-xs">Grade</TableHead>
+                      <TableHead className="h-9 text-right text-xs">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -452,31 +512,45 @@ const AssignmentsPage = () => {
                       </TableRow>
                     ) : (
                       paginatedAssignments.items.map((assignment) => (
-                        <TableRow key={assignment.assignment_id || assignment.id}>
-                          <TableCell className="font-semibold">{assignment.assignment_title}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate">
+                        <TableRow key={assignment.assignment_id || assignment.id} className="text-xs hover:bg-fuchsia-50/40">
+                          <TableCell className="py-1.5 font-black">
+                            <div className="flex items-center gap-1.5">
+                              <span className="h-5 w-1 rounded bg-gradient-to-b from-fuchsia-500 to-indigo-600" />
+                              <span className="truncate">{assignment.assignment_title}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="max-w-[240px] truncate py-1.5 text-xs text-muted-foreground">
                             {assignment.description?.substring(0, 50)}...
                           </TableCell>
-                          <TableCell>{new Date(assignment.due_date).toLocaleDateString()}</TableCell>
-                          <TableCell>{new Date(assignment.submission_date).toLocaleDateString()}</TableCell>
-                          <TableCell>
+                          <TableCell className="py-1.5">
+                            <span className="inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-700">
+                              <CalendarDays className="mr-1 h-3 w-3" />
+                              {formatDate(assignment.due_date)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-1.5">{formatDate(assignment.submission_date)}</TableCell>
+                          <TableCell className="py-1.5">
                             <span
                               className={cn(
-                                'inline-flex items-center px-2 py-1 rounded text-xs font-bold text-white',
+                                'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black text-white shadow-sm',
                                 getStatusColor(assignment.status)
                               )}
                             >
                               {assignment.status}
                             </span>
                           </TableCell>
-                          <TableCell>{assignment.grade || '-'}</TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="py-1.5">
+                            <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-black text-indigo-700">
+                              {assignment.grade || '-'}
+                            </span>
+                          </TableCell>
+                          <TableCell className="py-1.5 text-right">
                             <div className="flex justify-end gap-1">
                               <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleOpenModal(assignment)}
-                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white"
                                 title="Edit"
                               >
                                 <Pencil className="h-4 w-4" />
@@ -485,7 +559,7 @@ const AssignmentsPage = () => {
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => handleDelete(assignment.assignment_id || assignment.id || 0)}
-                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white"
                                 title="Delete"
                               >
                                 <Trash2 className="h-4 w-4" />

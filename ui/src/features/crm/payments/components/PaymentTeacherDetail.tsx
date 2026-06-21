@@ -16,7 +16,7 @@ const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
 
 const folderCardClass =
-  'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm [&_.folder-card-content]:p-3';
+  'cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:border-cyan-300 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/30 [&_.folder-card-content]:p-0';
 
 interface PaymentTeacherDetailProps {
   hook: UsePaymentsPageReturn;
@@ -33,7 +33,6 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
     selectedTeacherStats,
     selectedTeacherProgress,
     loadingData,
-    folderGridClass,
     folderPageSizeOptions,
     setFolderPage,
     folderPageSize,
@@ -84,7 +83,7 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
 
       {teacherDetailView === 'groups' ? (
         <div className="space-y-4">
-          <div className={folderGridClass}>
+          <div className="overflow-hidden rounded-md border border-slate-200/80 bg-white dark:border-border dark:bg-card">
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
@@ -105,25 +104,25 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
                     className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
                     onClick={() => handleFolderClick('class', classId, cls.class_name)}
                   >
-                    <div className="h-1 bg-gradient-to-r from-cyan-500 to-sky-500 dark:hidden" />
-                    <CardContent className="folder-card-content p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="folder-icon flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
-                          <Folder className="h-4 w-4" />
+                    <CardContent className="folder-card-content">
+                      <div className="flex items-center justify-between gap-2 border-l-4 border-cyan-500 px-2 py-1">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <div className="folder-icon flex h-6 w-6 shrink-0 items-center justify-center rounded bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground">
+                            <Folder className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <h3 className="w-44 truncate text-xs font-semibold">{cls.class_name}</h3>
+                            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">Level {cls.level}</span>
+                          </div>
                         </div>
-                      </div>
-                      <div className="space-y-1">
-                        <h3 className="text-sm font-semibold">{cls.class_name}</h3>
-                        <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
-                      </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <CreditCard className="h-3 w-3" />
-                          <span>{paymentCount} {t('payments')}</span>
-                        </div>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-cyan-700 dark:text-primary">
-                          <DollarSign className="h-3 w-3" />
-                          <span>{formatMoney(totalAmount)}</span>
+                        <div className="flex shrink-0 items-center gap-1.5 text-right">
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                            <CreditCard className="mr-1 inline h-3 w-3" />
+                            {paymentCount}
+                          </span>
+                          <span className="rounded bg-cyan-100 px-1.5 py-0.5 text-[10px] font-black text-cyan-700">
+                            {formatMoney(totalAmount)}
+                          </span>
                         </div>
                       </div>
                     </CardContent>

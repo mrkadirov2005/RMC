@@ -39,6 +39,16 @@ const tabs: { value: OwnerManagerTabType; label: string; icon: typeof Building2 
   { value: 'statistics', label: 'Statistics', icon: BarChart3 },
 ];
 
+const tabTone: Record<OwnerManagerTabType, string> = {
+  centers: 'from-cyan-600 to-blue-600 shadow-cyan-500/25',
+  owners: 'from-violet-600 to-fuchsia-600 shadow-violet-500/25',
+  superusers: 'from-indigo-600 to-blue-600 shadow-indigo-500/25',
+  teachers: 'from-emerald-600 to-teal-600 shadow-emerald-500/25',
+  students: 'from-amber-500 to-orange-600 shadow-orange-500/25',
+  finance: 'from-rose-600 to-pink-600 shadow-rose-500/25',
+  statistics: 'from-slate-800 to-slate-950 shadow-slate-500/25',
+};
+
 export const OwnerManagerContentHeader = ({
   currentMeta,
   activeTab,
@@ -60,26 +70,26 @@ export const OwnerManagerContentHeader = ({
       : `${t('Working inside')} ${activeCenterLabel}.`;
 
   return (
-    <div className="space-y-4">
+    <div className="overflow-hidden rounded-lg border border-cyan-200 bg-gradient-to-br from-white via-cyan-50 to-fuchsia-50 p-4 shadow-sm dark:border-white/10 dark:from-white/[0.06] dark:via-white/[0.03] dark:to-white/[0.04]">
       {/* Title row */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/15 text-amber-600 dark:bg-amber-400/10 dark:text-amber-400">
+          <div className={cn('flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br text-white shadow-lg', tabTone[activeTab])}>
             <CurrentIcon className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
               {t(currentMeta.label)}
             </h1>
             <p className="text-sm text-slate-500 dark:text-white/55">{t(currentMeta.description)}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Badge variant="outline" className="border-slate-200/70 bg-slate-100/70 text-xs text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Badge variant="outline" className="border-blue-200 bg-blue-600 px-2 py-1 text-xs font-black text-white dark:border-blue-400/20">
             {dataCount} {t('records')}
           </Badge>
-          <Badge variant="outline" className="border-slate-200/70 bg-slate-100/70 text-xs text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-white/70">
+          <Badge variant="outline" className="border-emerald-200 bg-emerald-600 px-2 py-1 text-xs font-black text-white dark:border-emerald-400/20">
             {t('Branch')}: {activeCenterLabel}
           </Badge>
 
@@ -88,7 +98,7 @@ export const OwnerManagerContentHeader = ({
               onClick={onAdd}
               disabled={loading || isScopedAndMissingCenter}
               size="sm"
-              className={cn('ml-1 bg-amber-400 text-slate-950 hover:bg-amber-300', isScopedAndMissingCenter && 'opacity-70')}
+              className={cn('ml-1 h-8 border-0 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white shadow-lg shadow-indigo-500/25 hover:from-fuchsia-700 hover:to-indigo-700', isScopedAndMissingCenter && 'opacity-70')}
             >
               <Plus className="mr-1.5 h-4 w-4" />
               {t('Add')}
@@ -98,8 +108,8 @@ export const OwnerManagerContentHeader = ({
       </div>
 
       {/* Horizontal tabs */}
-      <div className="overflow-x-auto">
-        <div className="flex w-full gap-1 rounded-xl border border-slate-200/70 bg-white/80 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="mt-4 overflow-x-auto">
+        <div className="flex w-full gap-1 rounded-md border border-slate-200/70 bg-white/90 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.value;
@@ -109,9 +119,9 @@ export const OwnerManagerContentHeader = ({
                 type="button"
                 onClick={() => onTabChange(tab.value)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors whitespace-nowrap',
+                  'flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-black transition-colors whitespace-nowrap',
                   isActive
-                    ? 'bg-amber-400 text-slate-950 shadow-sm'
+                    ? cn('bg-gradient-to-r text-white shadow-md', tabTone[tab.value])
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white'
                 )}
                 >
@@ -124,7 +134,7 @@ export const OwnerManagerContentHeader = ({
       </div>
 
       {isScopedAndMissingCenter && (
-        <p className="rounded-xl border border-amber-400/30 bg-amber-400/10 px-4 py-3 text-sm text-amber-700 dark:border-amber-400/20 dark:text-amber-100">
+        <p className="mt-3 rounded-md border border-amber-300 bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-100">
           {helperMessage}
         </p>
       )}

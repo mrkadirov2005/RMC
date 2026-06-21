@@ -1,11 +1,23 @@
 // Page component for the subjects screen in the crm feature.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Search, X, Upload, Download, BookOpen, GraduationCap, Layers3 } from 'lucide-react';
+import {
+  BookOpen,
+  CheckCircle2,
+  Download,
+  GraduationCap,
+  Layers3,
+  Loader2,
+  Pencil,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  Upload,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MetricCard } from '@/components/common/MetricCard';
-import { PageHeader } from '@/components/common/PageHeader';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -28,6 +40,9 @@ import { SelectField } from '../students/components/SelectField';
 import { useSubjectsPage } from './hooks/useSubjectsPage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+
+const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
+const statTileClass = 'rounded-md bg-gradient-to-br p-2 text-white shadow-sm';
 
 // Renders the subjects page screen.
 const SubjectsPage = () => {
@@ -83,7 +98,7 @@ const SubjectsPage = () => {
       new Map(
         classes.map((cls) => [
           Number(cls.class_id || cls.id || 0),
-          `${cls.class_name}${cls.class_code ? ` (${cls.class_code})` : ''}`,
+          cls.class_name,
         ])
       ),
     [classes]
@@ -116,13 +131,21 @@ const SubjectsPage = () => {
   }, [searchTerm]);
 
   return (
-    <div className="space-y-6 p-6">
-      <PageHeader
-        title={t('Subjects Management')}
-        description={t('Keep one subject per class, monitor assignment coverage, and quickly spot classes that still need a subject.')}
-        icon={BookOpen}
-        actions={
-          <div className="flex items-center gap-2">
+    <div className="space-y-4 p-6">
+      <div className="overflow-hidden rounded-lg border border-violet-200 bg-gradient-to-br from-violet-50 via-cyan-50 to-emerald-50 p-4 shadow-sm dark:border-border dark:from-card dark:via-card dark:to-card">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-md bg-gradient-to-br from-violet-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/25">
+              <BookOpen className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight">{t('Subjects Management')}</h1>
+              <p className="text-sm text-muted-foreground">
+                {t('Keep one subject per class, monitor assignment coverage, and quickly spot classes that still need a subject.')}
+              </p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <input
               id="subjects-csv-import"
               type="file"
@@ -138,32 +161,51 @@ const SubjectsPage = () => {
               variant="outline"
               onClick={() => document.getElementById('subjects-csv-import')?.click()}
               disabled={isImporting}
+              className="h-9 bg-white/90 shadow-sm"
             >
               {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
               {isImporting ? t('Importing...') : t('Import CSV')}
             </Button>
-            <Button type="button" variant="outline" onClick={handleExportSubjects}>
+            <Button type="button" variant="outline" onClick={handleExportSubjects} className="h-9 bg-white/90 shadow-sm">
               <Download className="mr-2 h-4 w-4" />
               {t('Export CSV')}
             </Button>
-            <Button onClick={() => handleOpenModal()} className="border-0 bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-lg shadow-violet-500/25 hover:from-violet-700 hover:to-indigo-700">
+            <Button onClick={() => handleOpenModal()} className="h-9 border-0 bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-lg shadow-cyan-500/25 hover:from-violet-700 hover:to-cyan-700">
               <Plus className="mr-2 h-4 w-4" /> {t('Add Subject')}
             </Button>
           </div>
-        }
-      />
+        </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label={t('Total Subjects')} value={state.items.length.toLocaleString()} detail={t('Subject rows currently assigned')} icon={BookOpen} tone="blue" />
-        <MetricCard label={t('Assigned Classes')} value={assignedClasses.toLocaleString()} detail={t('Classes that already have a subject')} icon={Layers3} tone="green" />
-        <MetricCard label={t('Unassigned Classes')} value={unassignedClasses.toLocaleString()} detail={t('Classes still waiting for a subject')} icon={BookOpen} tone="amber" />
-        <MetricCard
-          label={t('Subjects Without Teacher')}
-          value={subjectsWithoutTeacher.toLocaleString()}
-          detail={duplicateAssignments > 0 ? `${duplicateAssignments} ${t('duplicate class assignments')}` : t('Class assignments are currently unique')}
-          icon={GraduationCap}
-          tone={duplicateAssignments > 0 ? 'red' : 'purple'}
-        />
+        <div className="mt-4 grid grid-cols-2 gap-2 xl:grid-cols-4">
+          <div className={`${statTileClass} from-blue-500 to-indigo-600`}>
+            <div className="flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5 text-white/75" />
+              <p className="text-[10px] font-black uppercase text-white/75">{t('Total Subjects')}</p>
+            </div>
+            <p className="text-lg font-black leading-tight">{state.items.length.toLocaleString()}</p>
+          </div>
+          <div className={`${statTileClass} from-emerald-500 to-teal-600`}>
+            <div className="flex items-center gap-1.5">
+              <Layers3 className="h-3.5 w-3.5 text-white/75" />
+              <p className="text-[10px] font-black uppercase text-white/75">{t('Assigned Classes')}</p>
+            </div>
+            <p className="text-lg font-black leading-tight">{assignedClasses.toLocaleString()}</p>
+          </div>
+          <div className={`${statTileClass} from-amber-500 to-orange-600`}>
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-white/75" />
+              <p className="text-[10px] font-black uppercase text-white/75">{t('Unassigned Classes')}</p>
+            </div>
+            <p className="text-lg font-black leading-tight">{unassignedClasses.toLocaleString()}</p>
+          </div>
+          <div className={`${statTileClass} ${duplicateAssignments > 0 ? 'from-rose-500 to-pink-600' : 'from-fuchsia-500 to-violet-600'}`}>
+            <div className="flex items-center gap-1.5">
+              <GraduationCap className="h-3.5 w-3.5 text-white/75" />
+              <p className="text-[10px] font-black uppercase text-white/75">{t('Without Teacher')}</p>
+            </div>
+            <p className="text-lg font-black leading-tight">{subjectsWithoutTeacher.toLocaleString()}</p>
+          </div>
+        </div>
       </div>
 
       {duplicateAssignments > 0 && (
@@ -178,8 +220,8 @@ const SubjectsPage = () => {
         </Alert>
       )}
 
-      <Card className="border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
-        <CardContent className="space-y-4 p-4">
+      <Card className="border-cyan-100 bg-white shadow-sm dark:border-border dark:bg-card">
+        <CardContent className="p-2">
           <div className="relative max-w-xl">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -187,7 +229,7 @@ const SubjectsPage = () => {
               placeholder={t('Search subjects by name, code, class, teacher...')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-10"
+              className="h-9 border-cyan-100 bg-cyan-50/40 pl-10 pr-10 text-sm shadow-none"
             />
             {searchTerm && (
               <Button
@@ -204,20 +246,17 @@ const SubjectsPage = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
-        <CardHeader>
-          <CardTitle>{t('All Subjects')}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="rounded-md border">
+      <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
+        <CardContent className="p-0">
+          <div className="border-t-4 border-t-violet-500">
             <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead>{t('Name')}</TableHead>
-                  <TableHead>{t('Class')}</TableHead>
-                  <TableHead>{t('Teacher')}</TableHead>
-                  <TableHead>{t('Marks')}</TableHead>
-                  <TableHead className="text-right">{t('Actions')}</TableHead>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="h-9 text-xs">{t('Name')}</TableHead>
+                  <TableHead className="h-9 text-xs">{t('Class')}</TableHead>
+                  <TableHead className="h-9 text-xs">{t('Teacher')}</TableHead>
+                  <TableHead className="h-9 text-xs">{t('Marks')}</TableHead>
+                  <TableHead className="h-9 text-right text-xs">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -235,17 +274,37 @@ const SubjectsPage = () => {
                   </TableRow>
                 ) : (
                   paginatedSubjects.items.map((subject) => (
-                    <TableRow key={subject.subject_id || subject.id}>
-                      <TableCell className="font-medium">{subject.subject_name}</TableCell>
-                      <TableCell>{classLabelMap.get(Number(subject.class_id || 0)) || '-'}</TableCell>
-                      <TableCell>{teacherLabelMap.get(Number(subject.teacher_id || 0)) || t('Unassigned')}</TableCell>
-                      <TableCell>{subject.passing_marks}/{subject.total_marks}</TableCell>
-                      <TableCell className="text-right">
+                    <TableRow key={subject.subject_id || subject.id} className="text-xs hover:bg-violet-50/50">
+                      <TableCell className="py-1.5 font-black">
+                        <div className="flex items-center gap-1.5">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-violet-600 text-white">
+                            <BookOpen className="h-3.5 w-3.5" />
+                          </span>
+                          <span className="truncate">{subject.subject_name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-1.5">
+                        <span className={`${infoPillClass} inline-block bg-cyan-600 text-white`}>
+                          {classLabelMap.get(Number(subject.class_id || 0)) || '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-1.5">
+                        <span className={`${infoPillClass} inline-block ${subject.teacher_id ? 'bg-fuchsia-600 text-white' : 'bg-rose-600 text-white'}`}>
+                          {teacherLabelMap.get(Number(subject.teacher_id || 0)) || t('Unassigned')}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-1.5">
+                        <span className={`${infoPillClass} inline-flex items-center bg-emerald-600 text-white`}>
+                          <CheckCircle2 className="mr-1 h-3 w-3" />
+                          {subject.passing_marks}/{subject.total_marks}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-1.5 text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(subject)} className="h-8 w-8 text-blue-600 hover:bg-blue-50 hover:text-blue-700">
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(subject)} className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.subject_id || subject.id || 0)} className="h-8 w-8 text-red-600 hover:bg-red-50 hover:text-red-700">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.subject_id || subject.id || 0)} className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -256,7 +315,7 @@ const SubjectsPage = () => {
               </TableBody>
             </Table>
           </div>
-          <div className="mt-4">
+          <div className="border-t p-2">
             <PaginationBar
               total={filteredSubjects.length}
               currentPage={paginatedSubjects.currentPage}

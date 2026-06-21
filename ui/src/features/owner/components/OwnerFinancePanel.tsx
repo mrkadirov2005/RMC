@@ -1,8 +1,15 @@
 // Finance panel for owner-level payment review.
 
 import { useMemo, useState } from 'react';
-import { ArrowLeft, CheckCircle2, ChevronRight, DollarSign, Search, Users, XCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import {
+  CheckCircle2,
+  ChevronDown,
+  DollarSign,
+  Search,
+  TrendingUp,
+  Users,
+  XCircle,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
@@ -15,6 +22,7 @@ interface Props {
   loading: boolean;
 }
 
+const salaryPercent = 20;
 const getId = (item: any, key: string) => Number(item?.[key] || item?.id || 0);
 const getName = (item: any, fallback: string) =>
   [item?.first_name, item?.last_name].filter(Boolean).join(' ').trim() || item?.class_name || fallback;
@@ -27,11 +35,18 @@ const isPaidPayment = (payment: any) => {
   const status = String(payment?.status || payment?.payment_status || '').toLowerCase();
   return status === 'paid' || status === 'completed';
 };
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .join('') || 'T';
 
 export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [mode, setMode] = useState<'stats' | 'teachers' | 'detail'>('stats');
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const paymentStats = useMemo(
@@ -50,165 +65,260 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
     [collections.classes, collections.payments, collections.students, collections.teachers, selectedMonth]
   );
 
-  const totalEarned = teacherRows.reduce((sum, row) => sum + row.earnedAmount, 0);
-  const selectedTeacher = collections.teachers.find((teacher) => getId(teacher, 'teacher_id') === selectedTeacherId);
-  const selectedTeacherName = selectedTeacher ? getName(selectedTeacher, `Teacher ${selectedTeacherId}`) : 'Teacher';
-  const filteredTeachers = teacherRows.filter((row) => row.teacherName.toLowerCase().includes(searchTerm.toLowerCase()));
+  const monthPayments = useMemo(
+    () =>
+      collections.payments.filter(
+        (payment) =>
+          isPaidPayment(payment) &&
+          getMonthKey(payment?.payment_date || payment?.created_at) === selectedMonth
+      ),
+    [collections.payments, selectedMonth]
+  );
 
-  const classGroups = useMemo(() => {
+  const totalCollected = monthPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
+  const totalSalary = Math.round((totalCollected * salaryPercent) / 100);
+  const filteredTeachers = teacherRows.filter((row) =>
+    row.teacherName.toLowerCase().includes(searchTerm.trim().toLowerCase())
+  );
+
+  const selectedTeacherRow = teacherRows.find((teacher) => teacher.teacherId === selectedTeacherId) || null;
+  const selectedTeacher = collections.teachers.find((teacher) => getId(teacher, 'teacher_id') === selectedTeacherId);
+  const selectedTeacherName = selectedTeacherRow?.teacherName || (selectedTeacher ? getName(selectedTeacher, 'Teacher') : '');
+
+  const teacherGroups = useMemo(() => {
     if (!selectedTeacherId) return [];
     const teacherClasses = collections.classes.filter((cls) => Number(cls?.teacher_id || 0) === selectedTeacherId);
+
     return teacherClasses.map((cls) => {
       const classId = getId(cls, 'class_id');
       const classStudents = collections.students.filter((student) => Number(student?.class_id || 0) === classId);
-      const rows = classStudents.map((student) => {
+      const students = classStudents.map((student) => {
         const studentId = getId(student, 'student_id');
-        const studentPayments = collections.payments.filter((payment) =>
-          Number(payment?.student_id || 0) === studentId &&
-          getMonthKey(payment?.payment_date || payment?.created_at) === selectedMonth &&
-          isPaidPayment(payment)
-        );
+        const studentPayments = monthPayments.filter((payment) => Number(payment?.student_id || 0) === studentId);
         const paidAmount = studentPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
         return {
           id: studentId,
           name: getName(student, `Student ${studentId}`),
           paid: studentPayments.length > 0,
           paidAmount,
-          expectedAmount: Number(cls?.payment_amount || 0),
+          expectedAmount: Number(student?.payment_amount || cls?.payment_amount || 0),
         };
       });
+      const paidCount = students.filter((student) => student.paid).length;
+      const groupCollected = students.reduce((sum, student) => sum + student.paidAmount, 0);
       return {
         id: classId,
-        name: cls?.class_name || `Class ${classId}`,
-        paidCount: rows.filter((row) => row.paid).length,
-        students: rows,
+        name: cls?.class_name || `Group ${classId}`,
+        paidCount,
+        unpaidCount: Math.max(students.length - paidCount, 0),
+        totalStudents: students.length,
+        groupCollected,
+        salaryAmount: Math.round((groupCollected * salaryPercent) / 100),
+        students,
       };
     });
-  }, [collections.classes, collections.payments, collections.students, selectedMonth, selectedTeacherId]);
+  }, [collections.classes, collections.students, monthPayments, selectedTeacherId]);
 
-  const statCards = [
-    { label: 'Collected', value: formatMoney(totalEarned), detail: `${paymentStats.paidPercent}% paid`, icon: DollarSign, tone: 'from-emerald-500 to-teal-500' },
-    { label: 'Paid students', value: paymentStats.paidStudents.toLocaleString(), detail: `${paymentStats.unpaidStudents} unpaid`, icon: CheckCircle2, tone: 'from-blue-500 to-cyan-500' },
-    { label: 'Unpaid students', value: paymentStats.unpaidStudents.toLocaleString(), detail: `${paymentStats.unpaidPercent}% remaining`, icon: XCircle, tone: 'from-rose-500 to-orange-500' },
-    { label: 'Teachers', value: teacherRows.length.toLocaleString(), detail: 'Open teacher finance', icon: Users, tone: 'from-violet-500 to-fuchsia-500' },
-  ];
+  const selectedGroup = teacherGroups.find((group) => group.id === selectedGroupId) || null;
 
   if (loading) {
-    return <div className="rounded-xl border bg-white p-8 text-center text-sm font-semibold text-slate-500">Loading finance...</div>;
+    return (
+      <div className="rounded-md border bg-white p-6 text-center text-sm font-black text-slate-500">
+        Loading finance...
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.03] sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-2xl font-black text-slate-950 dark:text-white">Finance dashboard</h2>
-          <p className="text-sm text-slate-500 dark:text-white/55">Monthly collection overview first, teacher details when needed.</p>
+    <div className="space-y-3">
+      <div className="rounded-md border border-blue-100 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+        <div className="flex flex-wrap items-center gap-2 border-b bg-gradient-to-r from-blue-50 via-white to-emerald-50 p-3 dark:border-white/10 dark:from-white/[0.04] dark:via-white/[0.03] dark:to-white/[0.04]">
+          <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 text-white">
+            <DollarSign className="h-4 w-4" />
+          </div>
+          <p className="mr-2 text-sm font-black text-slate-950 dark:text-white">Maoshlar</p>
+          <Input
+            type="month"
+            value={selectedMonth}
+            onChange={(event) => {
+              setSelectedMonth(event.target.value);
+              setSelectedGroupId(null);
+            }}
+            className="h-8 w-40 bg-slate-100 text-xs font-bold"
+          />
+          <div className="ml-auto flex flex-wrap gap-1.5">
+            <span className="rounded bg-blue-100 px-2 py-1 text-[11px] font-black text-blue-700">
+              <Users className="mr-1 inline h-3 w-3" />
+              {teacherRows.length} o'qituvchi
+            </span>
+            <span className="rounded bg-emerald-100 px-2 py-1 text-[11px] font-black text-emerald-700">
+              <DollarSign className="mr-1 inline h-3 w-3" />
+              {formatMoney(totalCollected)}
+            </span>
+            <span className="rounded bg-lime-100 px-2 py-1 text-[11px] font-black text-lime-700">
+              <TrendingUp className="mr-1 inline h-3 w-3" />
+              {formatMoney(totalSalary)}
+            </span>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Input type="month" value={selectedMonth} onChange={(event) => setSelectedMonth(event.target.value)} className="w-40" />
-          {mode !== 'stats' && <Button variant="outline" onClick={() => setMode('stats')}><ArrowLeft className="mr-2 h-4 w-4" />Stats</Button>}
-          <Button onClick={() => setMode('teachers')} className="bg-emerald-600 text-white hover:bg-emerald-700">
-            <Users className="mr-2 h-4 w-4" />Teachers
-          </Button>
+
+        <div className="grid grid-cols-2 gap-1.5 p-2 md:grid-cols-5">
+          {[
+            ['Jami tolov', formatMoney(totalCollected), 'bg-blue-600'],
+            ['Maosh 20%', formatMoney(totalSalary), 'bg-emerald-600'],
+            ["To'lagan", paymentStats.paidStudents, 'bg-cyan-600'],
+            ['Qarzdor', paymentStats.unpaidStudents, 'bg-rose-600'],
+            ['Ulash', `${paymentStats.paidPercent}%`, 'bg-violet-600'],
+          ].map(([label, value, tone]) => (
+            <div key={label} className={cn('rounded px-2 py-1.5 text-white', tone as string)}>
+              <p className="text-[10px] font-black uppercase text-white/75">{label}</p>
+              <p className="text-sm font-black leading-tight">{value}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {(mode === 'stats' || mode === 'teachers') && (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          {statCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <Card key={card.label} className={cn('overflow-hidden border-0 bg-gradient-to-br text-white shadow-lg', card.tone)}>
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-bold uppercase text-white/80">{card.label}</p>
-                      <p className="mt-2 text-3xl font-black">{card.value}</p>
-                      <p className="mt-1 text-sm font-semibold text-white/80">{card.detail}</p>
-                    </div>
-                    <Icon className="h-8 w-8 text-white/85" />
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-      )}
-
-      {mode === 'stats' && (
-        <Card>
-          <CardContent className="flex flex-col items-start justify-between gap-4 p-5 sm:flex-row sm:items-center">
-            <div>
-              <p className="text-lg font-black text-slate-950 dark:text-white">Teacher finance is hidden until you need it.</p>
-              <p className="text-sm text-slate-500 dark:text-white/55">Click Teachers to choose a teacher and inspect grouped class payments.</p>
-            </div>
-            <Button onClick={() => setMode('teachers')} className="bg-violet-600 text-white hover:bg-violet-700">
-              Open teachers <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
-      )}
-
-      {mode === 'teachers' && (
-        <div className="space-y-3">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-            <Input className="pl-9" placeholder="Search teachers..." value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} />
+      <div className="rounded-md border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+        <div className="flex flex-wrap items-center gap-2 border-b p-2 dark:border-white/10">
+          <div className="relative w-full max-w-xs">
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <Input
+              className="h-8 bg-slate-100 pl-8 text-xs font-semibold"
+              placeholder="Qidirish..."
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+            />
           </div>
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {filteredTeachers.map((teacher) => (
+          <span className="text-xs font-bold text-slate-500">{filteredTeachers.length} ta o'qituvchi</span>
+        </div>
+
+        <div className="flex gap-2 overflow-x-auto p-2">
+          {filteredTeachers.map((teacher, index) => {
+            const active = selectedTeacherId === teacher.teacherId;
+            const teacherSalary = Math.round((teacher.earnedAmount * salaryPercent) / 100);
+            return (
               <button
                 key={teacher.teacherId}
                 type="button"
                 onClick={() => {
                   setSelectedTeacherId(teacher.teacherId);
-                  setMode('detail');
+                  setSelectedGroupId(null);
                 }}
-                className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md dark:border-white/10 dark:bg-white/[0.03]"
+                className={cn(
+                  'flex min-w-[190px] items-center gap-2 rounded-md border px-2 py-1.5 text-left transition',
+                  active
+                    ? 'border-blue-500 bg-blue-50 shadow-sm'
+                    : 'border-slate-200 bg-white hover:border-cyan-300 hover:bg-cyan-50'
+                )}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-black text-slate-950 dark:text-white">{teacher.teacherName}</p>
-                    <p className="mt-1 text-sm text-slate-500">{teacher.classCount} groups · {teacher.totalStudents} students</p>
-                  </div>
-                  <p className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-black text-emerald-700">{formatMoney(teacher.earnedAmount)}</p>
-                </div>
-                <div className="mt-3 flex gap-2 text-xs font-bold">
-                  <span className="rounded-full bg-blue-100 px-2 py-1 text-blue-700">{teacher.paidStudents} paid</span>
-                  <span className="rounded-full bg-rose-100 px-2 py-1 text-rose-700">{teacher.unpaidStudents} unpaid</span>
-                </div>
+                <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-black text-white', index % 2 ? 'bg-orange-600' : 'bg-blue-600')}>
+                  {initials(teacher.teacherName)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-xs font-black text-slate-950">{teacher.teacherName}</span>
+                  <span className="block truncate text-[10px] font-bold text-slate-500">
+                    {teacher.classCount} guruh · {teacher.totalStudents} talaba
+                  </span>
+                </span>
+                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-emerald-700">
+                  {formatMoney(teacherSalary)}
+                </span>
               </button>
-            ))}
+            );
+          })}
+        </div>
+      </div>
+
+      {selectedTeacherRow && (
+        <div className="rounded-md border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+          <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
+            <p className="text-sm font-black text-slate-950 dark:text-white">{selectedTeacherName}</p>
+            <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">{selectedTeacherRow.classCount} guruh</span>
+            <span className="rounded bg-cyan-100 px-2 py-1 text-[10px] font-black text-cyan-700">{selectedTeacherRow.totalStudents} talaba</span>
+            <span className="ml-auto rounded bg-blue-100 px-2 py-1 text-[10px] font-black text-blue-700">
+              Jami to'lov: {formatMoney(selectedTeacherRow.earnedAmount)}
+            </span>
+            <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
+              Maosh ({salaryPercent}%): {formatMoney(Math.round((selectedTeacherRow.earnedAmount * salaryPercent) / 100))}
+            </span>
+          </div>
+
+          <div className="divide-y dark:divide-white/10">
+            {teacherGroups.length === 0 ? (
+              <div className="p-4 text-sm font-semibold text-slate-500">Bu o'qituvchida guruh topilmadi.</div>
+            ) : (
+              teacherGroups.map((group, index) => {
+                const active = selectedGroupId === group.id;
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => setSelectedGroupId(active ? null : group.id)}
+                    className={cn(
+                      'grid w-full grid-cols-[36px_1fr_auto_auto_auto] items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-blue-50/70',
+                      active && 'bg-blue-50'
+                    )}
+                  >
+                    <span className="text-center font-black text-slate-400">{index + 1}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate font-black text-slate-950">{group.name}</span>
+                      <span className="text-[10px] font-semibold text-slate-500">{group.totalStudents} talaba</span>
+                    </span>
+                    <span className="rounded bg-blue-100 px-2 py-1 font-black text-blue-700">{formatMoney(group.groupCollected)}</span>
+                    <span className={cn('rounded px-2 py-1 font-black', group.unpaidCount ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700')}>
+                      {group.unpaidCount ? `${group.unpaidCount} qarzdor` : "hammasi to'lagan"}
+                    </span>
+                    <ChevronDown className={cn('h-4 w-4 text-slate-400 transition', active && 'rotate-180')} />
+                  </button>
+                );
+              })
+            )}
           </div>
         </div>
       )}
 
-      {mode === 'detail' && (
-        <div className="space-y-3">
-          <Button variant="outline" onClick={() => setMode('teachers')}><ArrowLeft className="mr-2 h-4 w-4" />Teachers</Button>
-          <h3 className="text-xl font-black text-slate-950 dark:text-white">{selectedTeacherName}</h3>
-          {classGroups.map((group) => (
-            <Card key={group.id}>
-              <CardContent className="p-3">
-                <div className="mb-2 flex items-center justify-between gap-3">
-                  <p className="font-black text-slate-950 dark:text-white">{group.name}</p>
-                  <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-black text-slate-700">{group.paidCount}/{group.students.length} paid</span>
+      {selectedGroup && (
+        <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+          <CardContent className="p-0">
+            <div className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] border-b bg-slate-100 px-3 py-2 text-[11px] font-black uppercase text-slate-500">
+              <span>#</span>
+              <span>Talaba</span>
+              <span>Guruh</span>
+              <span className="text-right">To'lov</span>
+              <span className="text-center">Holat</span>
+            </div>
+            <div className="divide-y dark:divide-white/10">
+              {selectedGroup.students.map((student, index) => (
+                <div
+                  key={student.id}
+                  className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] items-center px-3 py-1.5 text-xs hover:bg-cyan-50/50"
+                >
+                  <span className="font-semibold text-slate-400">{index + 1}</span>
+                  <span className="truncate font-black text-slate-950 dark:text-white">{student.name}</span>
+                  <span className="truncate text-slate-500">{selectedGroup.name}</span>
+                  <span className="text-right font-black text-slate-700">
+                    {student.paid ? formatMoney(student.paidAmount) : '-'}
+                  </span>
+                  <span className="text-center">
+                    <span className={cn('inline-flex items-center rounded px-2 py-1 text-[10px] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>
+                      {student.paid ? (
+                        <>
+                          <CheckCircle2 className="mr-1 h-3 w-3" />
+                          Tolagan
+                        </>
+                      ) : (
+                        <>
+                          <XCircle className="mr-1 h-3 w-3" />
+                          Qarzdor
+                        </>
+                      )}
+                    </span>
+                  </span>
                 </div>
-                <div className="divide-y rounded-lg border">
-                  {group.students.map((student) => (
-                    <div key={student.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 px-3 py-2 text-sm">
-                      <span className="truncate font-semibold">{student.name}</span>
-                      <span className="text-xs font-bold text-slate-500">{formatMoney(student.paid ? student.paidAmount : student.expectedAmount)}</span>
-                      <span className={cn('rounded-full px-2 py-1 text-xs font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>
-                        {student.paid ? 'Paid' : 'Not paid'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

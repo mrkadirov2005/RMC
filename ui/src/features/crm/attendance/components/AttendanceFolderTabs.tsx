@@ -44,6 +44,13 @@ interface AttendanceFolderTabsProps {
   getStudentIdsForTeacher: (id: number) => number[];
 }
 
+const folderRowCardClass =
+  'cursor-pointer overflow-hidden rounded-none border-0 border-b border-slate-200/80 bg-white shadow-none transition-colors last:border-b-0 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/30 [&>div:first-child]:hidden';
+const rowIconClass = 'flex h-6 w-6 shrink-0 items-center justify-center rounded';
+const rowBodyClass = 'flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden';
+const rowTitleClass = 'w-44 shrink-0 truncate text-xs font-semibold';
+const rowStatsClass = 'ml-auto flex shrink-0 items-center gap-1.5 text-[10px] font-bold';
+
 const AttendanceFolderTabs = ({
   activeTab,
   students,
@@ -111,26 +118,25 @@ const AttendanceFolderTabs = ({
                 return (
                   <Card
                     key={studentId}
-                    className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
+                    className={folderRowCardClass}
                     onClick={() => handleFolderClick('student', studentId, `${student.first_name} ${student.last_name}`)}
                   >
                     <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500 dark:hidden" />
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/30">
+                    <CardContent className="flex items-center gap-1.5 px-2 py-1 text-xs">
+                      <div className="flex shrink-0 items-center">
+                        <div className={`${rowIconClass} bg-blue-100 dark:bg-blue-900/30`}>
                           <Folder className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                         </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <h3 className="text-sm font-semibold">{student.first_name} {student.last_name}</h3>
-                        <p className="text-xs text-muted-foreground">ID: {studentId}</p>
+                      <div className={rowBodyClass}>
+                        <h3 className={rowTitleClass}>{student.first_name} {student.last_name}</h3>
                       </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className={rowStatsClass}>
+                        <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
                           <span>{presentCount}/{attendanceCount} present</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
+                        <div className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">
                           <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
                         </div>
                       </div>
@@ -175,26 +181,25 @@ const AttendanceFolderTabs = ({
                 return (
                   <Card
                     key={classId}
-                    className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
+                    className={folderRowCardClass}
                     onClick={() => handleFolderClick('class', classId, cls.class_name)}
                   >
                     <div className="h-1 bg-gradient-to-r from-emerald-500 to-cyan-500 dark:hidden" />
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+                    <CardContent className="flex items-center gap-1.5 px-2 py-1 text-xs">
+                      <div className="flex shrink-0 items-center">
+                        <div className={`${rowIconClass} bg-emerald-100 dark:bg-emerald-900/30`}>
                           <Folder className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <h3 className="text-sm font-semibold">{cls.class_name}</h3>
-                        <p className="text-xs text-muted-foreground">{cls.class_code} • Level {cls.level}</p>
+                      <div className={rowBodyClass}>
+                        <h3 className={rowTitleClass}>{cls.class_name}</h3>
                       </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className={rowStatsClass}>
+                        <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
                           <span>{presentCount}/{attendanceCount} present</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-green-600">
+                        <div className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">
                           <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
                         </div>
                       </div>
@@ -238,26 +243,25 @@ const AttendanceFolderTabs = ({
                 return (
                   <Card
                     key={teacherId}
-                    className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
+                    className={folderRowCardClass}
                     onClick={() => handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)}
                   >
                     <div className="h-1 bg-gradient-to-r from-violet-500 to-purple-500 dark:hidden" />
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-900/30">
+                    <CardContent className="flex items-center gap-1.5 px-2 py-1 text-xs">
+                      <div className="flex shrink-0 items-center">
+                        <div className={`${rowIconClass} bg-violet-100 dark:bg-violet-900/30`}>
                           <Folder className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                         </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <h3 className="text-sm font-semibold">{teacher.first_name} {teacher.last_name}</h3>
-                        <p className="text-xs text-muted-foreground">{teacher.employee_id}</p>
+                      <div className={rowBodyClass}>
+                        <h3 className={rowTitleClass}>{teacher.first_name} {teacher.last_name}</h3>
                       </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className={rowStatsClass}>
+                        <div className="flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-sky-700">
                           <Users className="h-3 w-3" />
                           <span>{getStudentIdsForTeacher(teacherId).length} students</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
                           <span>{attendanceCount} records</span>
                         </div>
@@ -306,26 +310,28 @@ const AttendanceFolderTabs = ({
                 return (
                   <Card
                     key={subjectId}
-                    className="cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm"
+                    className={folderRowCardClass}
                     onClick={() => handleFolderClick('subject', subject.class_id, subject.subject_name)}
                   >
                     <div className="h-1 bg-gradient-to-r from-cyan-500 to-teal-500 dark:hidden" />
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-cyan-50 dark:bg-cyan-900/30">
+                    <CardContent className="flex items-center gap-1.5 px-2 py-1 text-xs">
+                      <div className="flex shrink-0 items-center">
+                        <div className={`${rowIconClass} bg-cyan-100 dark:bg-cyan-900/30`}>
                           <BookMarked className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                         </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <h3 className="text-sm font-semibold">{subject.subject_name}</h3>
-                        <p className="text-xs text-muted-foreground">{cls?.class_name || `Class ${subject.class_id}`} • {subject.subject_code}</p>
+                      <div className={rowBodyClass}>
+                        <h3 className={rowTitleClass}>{subject.subject_name}</h3>
+                        <p className="truncate rounded bg-cyan-100 px-1.5 py-0.5 text-[10px] font-bold text-cyan-700">
+                          {cls?.class_name || 'Class'}
+                        </p>
                       </div>
-                      <div className="flex justify-between items-center mt-2 pt-2 border-t">
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className={rowStatsClass}>
+                        <div className="flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-sky-700">
                           <Users className="h-3 w-3" />
                           <span>{classStudents.length} students</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
                           <span>{presentCount}/{subjectAttendance.length}</span>
                         </div>

@@ -1,12 +1,15 @@
 // Layout component for the application shell.
 
 import { useState, useEffect, memo } from 'react';
+import type { ElementType } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, Users, BookOpen, CreditCard, BarChart3, DollarSign,
   ClipboardList, CheckCircle, Building2, AlertTriangle, FileQuestion,
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
-  Archive, MessageCircle,
+  Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
+  DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
+  School, BadgeAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,8 +23,11 @@ import { useThemeMode } from '../../theme/ThemeContext';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-const iconMap: Record<string, React.ElementType> = {
+const iconMap: Record<string, ElementType> = {
   Dashboard: LayoutDashboard,
+  PortalTeacher: Presentation,
+  PortalStudent: User,
+  Students: GraduationCap,
   MdPeople: Users,
   MdPerson: User,
   MdBook: BookOpen,
@@ -37,10 +43,42 @@ const iconMap: Record<string, React.ElementType> = {
   Settings: SettingsIcon,
   Archive,
   Telegram: MessageCircle,
-  Rooms: Building2,
-  Logs: ClipboardList,
+  Teachers: UserRoundCheck,
+  Classes: BookOpen,
+  Rooms: DoorOpen,
+  Logs: NotebookTabs,
+  Attendance: UserCheck,
+  Assignments: ListTodo,
+  Subjects: BookMarked,
+  Debts: BadgeAlert,
+  Owner: Crown,
+  Centers: School,
 };
 
+const iconToneMap: Record<string, string> = {
+  Dashboard: 'from-blue-600 to-indigo-600 shadow-blue-500/25',
+  PortalTeacher: 'from-violet-600 to-fuchsia-600 shadow-violet-500/25',
+  PortalStudent: 'from-cyan-500 to-sky-600 shadow-cyan-500/25',
+  Students: 'from-emerald-500 via-cyan-500 to-blue-600 shadow-cyan-500/30',
+  MdQuiz: 'from-amber-500 to-orange-600 shadow-amber-500/25',
+  Telegram: 'from-sky-500 to-cyan-600 shadow-sky-500/25',
+  Archive: 'from-slate-500 to-slate-700 shadow-slate-500/20',
+  Teachers: 'from-purple-600 to-pink-600 shadow-purple-500/25',
+  Classes: 'from-blue-500 to-violet-600 shadow-blue-500/25',
+  Rooms: 'from-orange-500 to-red-500 shadow-orange-500/25',
+  Logs: 'from-stone-500 to-zinc-700 shadow-stone-500/20',
+  Calendar: 'from-teal-500 to-emerald-600 shadow-teal-500/25',
+  MdPayment: 'from-indigo-600 to-blue-700 shadow-indigo-500/25',
+  MdBarChart: 'from-lime-500 to-green-600 shadow-lime-500/25',
+  Attendance: 'from-green-500 to-emerald-700 shadow-green-500/25',
+  Assignments: 'from-rose-500 to-pink-600 shadow-rose-500/25',
+  Subjects: 'from-yellow-500 to-amber-600 shadow-yellow-500/25',
+  Debts: 'from-red-600 to-rose-700 shadow-red-500/25',
+  Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
+  Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
+};
+
+const filledIconNames = new Set(['Students', 'PortalStudent', 'Attendance', 'Owner']);
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 72;
@@ -121,14 +159,14 @@ const Sidebar = memo(() => {
 
   const menuItems = [
     { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'] },
-    { label: 'My Portal', path: '/teacher-portal', iconName: 'MdPeople', roles: ['teacher'] },
-    { label: 'My Portal', path: '/student-portal', iconName: 'MdPerson', roles: ['student'] },
+    { label: 'My Portal', path: '/teacher-portal', iconName: 'PortalTeacher', roles: ['teacher'] },
+    { label: 'My Portal', path: '/student-portal', iconName: 'PortalStudent', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
-    { label: 'Students', path: '/students', iconName: 'MdPeople', roles: ['superuser'], permission: 'CRUD_STUDENT' },
+    { label: 'Students', path: '/students', iconName: 'Students', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'] },
-    { label: 'Teachers', path: '/teachers', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_TEACHER' },
-    { label: 'Classes', path: '/classes', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_CLASS' },
+    { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
+    { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
     { label: 'Logs', path: '/logs', iconName: 'Logs', roles: ['superuser'] },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'teacher', 'student'] },
@@ -138,12 +176,12 @@ const Sidebar = memo(() => {
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'], permission: 'CRUD_GRADE' },
-    { label: 'Attendance', path: '/attendance', iconName: 'MdAssignment', roles: ['superuser'], permission: 'CRUD_ATTENDANCE' },
-    { label: 'Assignments', path: '/assignments', iconName: 'MdChecklist', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
-    { label: 'Subjects', path: '/subjects', iconName: 'MdBook', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
-    { label: 'Debts', path: '/debts', iconName: 'MdWarning', roles: ['superuser'], permission: 'CRUD_DEBT' },
-    { label: 'Owner Panel', path: '/owner/manage', iconName: 'Settings', roles: ['superuser'], ownerOnly: true },
-    { label: 'Centers', path: '/centers', iconName: 'MdBusiness', roles: ['superuser'], ownerOnly: true },
+    { label: 'Attendance', path: '/attendance', iconName: 'Attendance', roles: ['superuser'], permission: 'CRUD_ATTENDANCE' },
+    { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
+    { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
+    { label: 'Debts', path: '/debts', iconName: 'Debts', roles: ['superuser'], permission: 'CRUD_DEBT' },
+    { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
+    { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], ownerOnly: true },
   ];
 
 
@@ -268,6 +306,7 @@ const Sidebar = memo(() => {
             {filteredMenuItems.map((item) => {
               const Icon = iconMap[item.iconName] || Users;
               const isActive = location.pathname === item.path;
+              const iconTone = iconToneMap[item.iconName] || 'from-slate-500 to-slate-700 shadow-slate-500/20';
               return (
                 <Tooltip key={item.path}>
                   <TooltipTrigger asChild>
@@ -281,7 +320,20 @@ const Sidebar = memo(() => {
                           : 'border-transparent text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                       )}
                     >
-                      <Icon className={cn('h-5 w-5 shrink-0', isActive ? 'text-indigo-500 dark:text-indigo-400' : 'text-muted-foreground')} />
+                      <span
+                        className={cn(
+                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-[9px] bg-gradient-to-br text-white shadow-md ring-1 ring-white/20 transition-transform duration-200',
+                          iconTone,
+                          isActive && 'scale-105 ring-2 ring-white/70'
+                        )}
+                      >
+                        <Icon
+                          className={cn(
+                            'h-4 w-4 stroke-[2.4]',
+                            filledIconNames.has(item.iconName) && 'fill-white/25'
+                          )}
+                        />
+                      </span>
                       {isExpanded && <span>{t(item.label)}</span>}
                     </button>
                   </TooltipTrigger>

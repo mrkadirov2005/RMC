@@ -133,7 +133,7 @@ const AttendancePage = () => {
     };
   }, [state.items]);
 
-  const folderGridClass = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
+  const folderGridClass = 'overflow-hidden rounded-md border border-slate-200/80 bg-white dark:border-border dark:bg-card';
 
   return (
     <div className="container mx-auto p-6">
@@ -160,50 +160,50 @@ const AttendancePage = () => {
       </div>
 
       {/* Overall Summary Cards - Always Visible */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Total Records</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Total Records</p>
             </div>
-            <p className="text-2xl font-bold text-white">{attendanceStatistics.totalRecords}</p>
+            <p className="text-lg font-black text-white">{attendanceStatistics.totalRecords}</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Attendance Rate</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Attendance Rate</p>
             </div>
-            <p className="text-2xl font-bold text-white">{attendanceStatistics.attendanceRate}%</p>
+            <p className="text-lg font-black text-white">{attendanceStatistics.attendanceRate}%</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-500 via-cyan-600 to-blue-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <UserCheck className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Present</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <UserCheck className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Present</p>
             </div>
-            <p className="text-2xl font-bold text-white">{attendanceStatistics.counts.present}</p>
+            <p className="text-lg font-black text-white">{attendanceStatistics.counts.present}</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Late</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Late</p>
             </div>
-            <p className="text-2xl font-bold text-white">{attendanceStatistics.counts.late}</p>
+            <p className="text-lg font-black text-white">{attendanceStatistics.counts.late}</p>
           </CardContent>
         </Card>
         <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <UserX className="h-5 w-5 text-white/70" />
-              <p className="text-sm text-white/70">Absent</p>
+          <CardContent className="p-2">
+            <div className="flex items-center gap-1.5">
+              <UserX className="h-3.5 w-3.5 text-white/70" />
+              <p className="text-[10px] font-bold uppercase text-white/70">Absent</p>
             </div>
-            <p className="text-2xl font-bold text-white">{attendanceStatistics.counts.absent}</p>
+            <p className="text-lg font-black text-white">{attendanceStatistics.counts.absent}</p>
           </CardContent>
         </Card>
       </div>

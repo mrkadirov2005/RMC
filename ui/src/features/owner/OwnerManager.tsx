@@ -15,8 +15,8 @@ const OwnerManager = memo(() => {
   const vm = useOwnerManager();
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/70 to-fuchsia-50/60 text-foreground dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
+      <div className="mx-auto max-w-7xl space-y-4 px-4 py-4 sm:px-6 lg:px-8">
         <OwnerManagerContentHeader
           currentMeta={vm.currentMeta}
           activeTab={vm.activeTab}
@@ -57,7 +57,7 @@ const OwnerManager = memo(() => {
               onResetPassword={vm.handleResetPassword}
               canHardDelete={vm.canHardDelete}
             />
-            {vm.activeTab !== 'teachers' && (
+            {vm.activeTab !== 'teachers' && vm.activeTab !== 'students' && (
               <OwnerManagerTable
                 activeTab={vm.activeTab}
                 columns={vm.columns}

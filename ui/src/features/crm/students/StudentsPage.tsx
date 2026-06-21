@@ -387,6 +387,7 @@ const StudentsPage = () => {
             onPasswordUpdate={handlePasswordUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             classOptions={s.classes}
+            teacherOptions={s.teacherOptions}
             viewMode={viewMode}
           />
           <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-border dark:bg-transparent">

@@ -1,10 +1,11 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, Coins, Folder, Info, KeyRound, Pencil, Trash2 } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Coins, GraduationCap, Info, KeyRound, MoreVertical, Pencil, School, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +14,12 @@ import { cn } from '@/lib/utils';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
+
+type TeacherOption = {
+  id?: string | number;
+  value?: string | number;
+  label: string;
+};
 
 interface Props {
   students: Student[];
@@ -26,6 +33,8 @@ interface Props {
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   classOptions?: Class[];
+  teacherOptions?: TeacherOption[];
+  hideTeacherGroup?: boolean;
   viewMode?: ViewMode;
 }
 
@@ -99,6 +108,8 @@ export const StudentsTableView = ({
   onPasswordUpdate,
   onCoinsUpdated,
   classOptions = [],
+  teacherOptions = [],
+  hideTeacherGroup = false,
   viewMode = 'list',
 }: Props) => {
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
@@ -169,39 +180,59 @@ export const StudentsTableView = ({
     }
   };
 
-  const actionButtonClass = 'h-7 gap-1 rounded-md px-2 text-xs font-semibold text-white shadow-sm';
   const actionIconClass = 'h-3 w-3';
+  const getTeacherName = (student: Student) => {
+    const teacherId = Number(student.teacher_id || 0);
+    if (!teacherId) return 'No teacher';
+    return teacherOptions.find((teacher) => Number(teacher.value || teacher.id || 0) === teacherId)?.label || 'No teacher';
+  };
+  const getAge = (student: Student) => {
+    if (!student.date_of_birth) return '-';
+    const birthDate = new Date(student.date_of_birth);
+    if (Number.isNaN(birthDate.getTime())) return '-';
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDelta = today.getMonth() - birthDate.getMonth();
+    if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birthDate.getDate())) age -= 1;
+    return age > 0 && age < 120 ? String(age) : '-';
+  };
+  const getGroupName = (student: Student) => student.class_name || 'No group';
+  const getSchoolName = (student: Student) => student.school_name || student.school_class || 'No school';
+  const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none';
 
   const renderActions = (student: Student) => (
-    <div className="flex flex-wrap justify-end gap-1.5">
-      <Button type="button" size="sm" className={`${actionButtonClass} bg-amber-500 hover:bg-amber-600`} onClick={() => openCoins(student)}>
-        <Coins className={actionIconClass} />
-        Coins
-      </Button>
-      <Button type="button" size="sm" className={`${actionButtonClass} bg-cyan-600 hover:bg-cyan-700`} onClick={() => onView(student.student_id || student.id || 0)}>
-        <Info className={actionIconClass} />
-        View
-      </Button>
-      <Button type="button" size="sm" className={`${actionButtonClass} bg-blue-600 hover:bg-blue-700`} onClick={() => onEdit(student)}>
-        <Pencil className={actionIconClass} />
-        Edit
-      </Button>
-      {onTransfer && (
-        <Button type="button" size="sm" className={`${actionButtonClass} bg-emerald-600 hover:bg-emerald-700`} onClick={() => openTransfer(student)}>
-          <ArrowRightLeft className={actionIconClass} />
-          Transfer
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="h-7 w-7 rounded-md p-0">
+          <MoreVertical className="h-4 w-4" />
+          <span className="sr-only">Open actions</span>
         </Button>
-      )}
-      <Button
-        type="button"
-        size="sm"
-        className={`${actionButtonClass} bg-rose-600 hover:bg-rose-700`}
-        onClick={() => onDelete(student.student_id || student.id || 0)}
-      >
-        <Trash2 className={actionIconClass} />
-        Delete
-      </Button>
-    </div>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem onClick={() => openCoins(student)}>
+          <Coins className={actionIconClass} />
+          Coins
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onView(student.student_id || student.id || 0)}>
+          <Info className={actionIconClass} />
+          View
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onEdit(student)}>
+          <Pencil className={actionIconClass} />
+          Edit
+        </DropdownMenuItem>
+        {onTransfer && (
+          <DropdownMenuItem onClick={() => openTransfer(student)}>
+            <ArrowRightLeft className={actionIconClass} />
+            Transfer
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem className="text-rose-600 focus:text-rose-700" onClick={() => onDelete(student.student_id || student.id || 0)}>
+          <Trash2 className={actionIconClass} />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 
   const emptyText = hasActiveFilters ? 'No students match your search criteria' : 'No students found in this class';
@@ -324,11 +355,17 @@ export const StudentsTableView = ({
                 <CardContent className={cn(viewMode === 'compact' ? 'p-2.5' : 'space-y-3 p-3', viewMode === 'cards' && 'pt-0')}>
                   {viewMode === 'compact' ? (
                     <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-white dark:bg-primary dark:text-primary-foreground">
-                        <Folder className="h-4 w-4" />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-600 text-white shadow-sm">
+                        <GraduationCap className="h-4 w-4 fill-white/20" />
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{student.first_name} {student.last_name}</p>
+                        <div className="mt-1 flex flex-wrap gap-1">
+                          {!hideTeacherGroup && <span className={`${chipClass} bg-cyan-100 text-cyan-800`}><BookOpen className="h-3 w-3" />{getGroupName(student)}</span>}
+                          {!hideTeacherGroup && <span className={`${chipClass} bg-violet-100 text-violet-800`}><UserCheck className="h-3 w-3" />{getTeacherName(student)}</span>}
+                          <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
+                          <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
+                        </div>
                         <div className="mt-1.5">
                           <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                         </div>
@@ -339,6 +376,12 @@ export const StudentsTableView = ({
                       <h3 className={cn('text-sm font-semibold text-slate-950 dark:text-card-foreground', viewMode === 'cards' && 'text-white dark:text-white')}>
                         {student.first_name} {student.last_name}
                       </h3>
+                      <div className={cn('mt-2 flex flex-wrap gap-1', viewMode === 'cards' && 'text-slate-950')}>
+                        {!hideTeacherGroup && <span className={`${chipClass} bg-cyan-100 text-cyan-800`}><BookOpen className="h-3 w-3" />{getGroupName(student)}</span>}
+                        {!hideTeacherGroup && <span className={`${chipClass} bg-violet-100 text-violet-800`}><UserCheck className="h-3 w-3" />{getTeacherName(student)}</span>}
+                        <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
+                        <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
+                      </div>
                       <div className="mt-2">
                         <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                       </div>
@@ -391,20 +434,24 @@ export const StudentsTableView = ({
               />
             </TableHead>
             <TableHead className="h-8 px-2 text-xs">Name</TableHead>
+            {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Group</TableHead>}
+            {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Teacher</TableHead>}
+            <TableHead className="h-8 px-2 text-xs">School</TableHead>
+            <TableHead className="h-8 px-2 text-xs">Age</TableHead>
             <TableHead className="h-8 px-2 text-xs">Password</TableHead>
-            <TableHead className="h-8 px-2 text-right text-xs">Actions</TableHead>
+            <TableHead className="h-8 px-2 text-right text-xs"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center">
+              <TableCell colSpan={hideTeacherGroup ? 6 : 8} className="py-8 text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={4} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={hideTeacherGroup ? 6 : 8} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
@@ -428,6 +475,31 @@ export const StudentsTableView = ({
                   >
                     {student.first_name} {student.last_name}
                   </button>
+                </TableCell>
+                {!hideTeacherGroup && (
+                  <TableCell className="px-2 py-2">
+                    <span className={`${chipClass} bg-cyan-100 text-cyan-800`}>
+                      <BookOpen className="h-3 w-3" />
+                      <span className="max-w-[160px] truncate">{getGroupName(student)}</span>
+                    </span>
+                  </TableCell>
+                )}
+                {!hideTeacherGroup && (
+                  <TableCell className="px-2 py-2">
+                    <span className={`${chipClass} bg-violet-100 text-violet-800`}>
+                      <UserCheck className="h-3 w-3" />
+                      <span className="max-w-[150px] truncate">{getTeacherName(student)}</span>
+                    </span>
+                  </TableCell>
+                )}
+                <TableCell className="px-2 py-2">
+                  <span className={`${chipClass} bg-amber-100 text-amber-800`}>
+                    <School className="h-3 w-3" />
+                    <span className="max-w-[140px] truncate">{getSchoolName(student)}</span>
+                  </span>
+                </TableCell>
+                <TableCell className="px-2 py-2">
+                  <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)}</span>
                 </TableCell>
                 <TableCell className="px-2 py-2">
                   <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />

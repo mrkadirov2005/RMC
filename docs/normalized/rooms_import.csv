@@ -1,169 +1,70 @@
 room_number,class_name,class_code,day,time,end_time
-1 xona,A1 movers morning,TCH-015-A1-MOVERS-MORNING,Monday,08:00,10:00
-1 xona,A2 flyers morning,TCH-015-A2-FLYERS-MORNING,Monday,10:00,11:30
-1 xona,Grammar special,TCH-006-GRAMMAR-SPECIAL,Monday,13:30,15:00
-1 xona,Starter 1,TCH-006-STARTER-1,Monday,15:00,16:30
-1 xona,starter,TCH-004-STARTER,Tuesday,08:00,09:30
-1 xona,KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,Tuesday,10:00,11:00
-1 xona,A2 Flyers,TCH-018-A2-FLYERS,Tuesday,11:00,12:30
-1 xona,Grammatika,TCH-018-GRAMMATIKA,Tuesday,12:30,14:00
-1 xona,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,Tuesday,14:00,15:00
-1 xona,Arab tili 1.0 New 60,TCH-010-ARAB-TILI-1-0-NEW-60,Tuesday,17:00,18:30
-1 xona,A1 movers morning,TCH-015-A1-MOVERS-MORNING,Wednesday,08:00,10:00
-1 xona,A2 flyers morning,TCH-015-A2-FLYERS-MORNING,Wednesday,10:00,11:30
-1 xona,Grammar special,TCH-006-GRAMMAR-SPECIAL,Wednesday,13:30,15:00
-1 xona,Starter 1,TCH-006-STARTER-1,Wednesday,15:00,16:30
-1 xona,starter,TCH-004-STARTER,Thursday,08:00,09:30
-1 xona,KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,Thursday,10:00,11:00
-1 xona,A2 Flyers,TCH-018-A2-FLYERS,Thursday,11:00,12:30
-1 xona,Grammatika,TCH-018-GRAMMATIKA,Thursday,12:30,14:00
-1 xona,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,Thursday,14:00,15:00
-1 xona,Arab tili 1.0 New 60,TCH-010-ARAB-TILI-1-0-NEW-60,Thursday,17:00,18:30
-1 xona,A1 movers morning,TCH-015-A1-MOVERS-MORNING,Friday,08:00,10:00
-1 xona,A2 flyers morning,TCH-015-A2-FLYERS-MORNING,Friday,10:00,11:30
-1 xona,Grammar special,TCH-006-GRAMMAR-SPECIAL,Friday,13:30,15:00
-1 xona,Starter 1,TCH-006-STARTER-1,Friday,15:00,16:30
-1 xona,starter,TCH-004-STARTER,Saturday,08:00,09:30
-1 xona,A2 Flyers,TCH-018-A2-FLYERS,Saturday,11:00,12:30
-1 xona,Grammatika,TCH-018-GRAMMATIKA,Saturday,12:30,14:00
-1 xona,Arab tili 1.0 New 60,TCH-010-ARAB-TILI-1-0-NEW-60,Saturday,17:00,18:30
-2 xona,A1 plus new,TCH-005-A1-PLUS-NEW,Monday,08:00,09:30
-2 xona,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,Monday,10:00,11:00
-2 xona,fun for movers,TCH-018-FUN-FOR-MOVERS,Monday,13:30,15:00
-2 xona,B1 Plus,TCH-018-B1-PLUS,Monday,15:30,17:00
-2 xona,Arab tili 1,TCH-010-ARAB-TILI-1,Tuesday,08:00,09:30
-2 xona,Arab tili 2,TCH-010-ARAB-TILI-2,Tuesday,09:30,11:00
-2 xona,Arab tili 4.0 New 60,TCH-010-ARAB-TILI-4-0-NEW-60,Tuesday,11:00,12:30
-2 xona,Arab tili 3.0 New 60,TCH-010-ARAB-TILI-3-0-NEW-60,Tuesday,13:30,15:00
-2 xona,Arab tili 5.0 New 60,TCH-010-ARAB-TILI-5-0-NEW-60,Tuesday,15:30,17:00
-2 xona,A1 plus new,TCH-005-A1-PLUS-NEW,Wednesday,08:00,09:30
-2 xona,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,Wednesday,10:00,11:00
-2 xona,fun for movers,TCH-018-FUN-FOR-MOVERS,Wednesday,13:30,15:00
-2 xona,B1 Plus,TCH-018-B1-PLUS,Wednesday,15:30,17:00
-2 xona,Arab tili 1,TCH-010-ARAB-TILI-1,Thursday,08:00,09:30
-2 xona,Arab tili 2,TCH-010-ARAB-TILI-2,Thursday,09:30,11:00
-2 xona,Arab tili 4.0 New 60,TCH-010-ARAB-TILI-4-0-NEW-60,Thursday,11:00,12:30
-2 xona,Arab tili 3.0 New 60,TCH-010-ARAB-TILI-3-0-NEW-60,Thursday,13:30,15:00
-2 xona,Arab tili 5.0 New 60,TCH-010-ARAB-TILI-5-0-NEW-60,Thursday,15:30,17:00
-2 xona,A1 plus new,TCH-005-A1-PLUS-NEW,Friday,08:00,09:30
-2 xona,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,Friday,10:00,11:00
-2 xona,fun for movers,TCH-018-FUN-FOR-MOVERS,Friday,13:30,15:00
-2 xona,B1 Plus,TCH-018-B1-PLUS,Friday,15:30,17:00
-2 xona,Arab tili 1,TCH-010-ARAB-TILI-1,Saturday,08:00,09:30
-2 xona,Arab tili 2,TCH-010-ARAB-TILI-2,Saturday,09:30,11:00
-2 xona,Arab tili 4.0 New 60,TCH-010-ARAB-TILI-4-0-NEW-60,Saturday,11:00,12:30
-2 xona,Arab tili 3.0 New 60,TCH-010-ARAB-TILI-3-0-NEW-60,Saturday,13:30,15:00
-2 xona,Arab tili 5.0 New 60,TCH-010-ARAB-TILI-5-0-NEW-60,Saturday,15:30,17:00
-3 xona,Starter teens,TCH-018-STARTER-TEENS,Monday,08:00,09:00
-3 xona,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,Monday,10:00,11:30
-3 xona,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,Monday,13:30,15:00
-3 xona,A2 plus,TCH-005-A2-PLUS,Monday,16:00,17:00
-3 xona,B1 plus,TCH-006-B1-PLUS,Tuesday,07:30,09:00
-3 xona,Kids Farangiz,TCH-003-KIDS-FARANGIZ,Tuesday,10:00,11:30
-3 xona,KIDS English,TCH-012-KIDS-ENGLISH,Tuesday,13:30,15:00
-3 xona,Starter teens,TCH-018-STARTER-TEENS,Wednesday,08:00,09:00
-3 xona,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,Wednesday,10:00,11:30
-3 xona,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,Wednesday,13:30,15:00
-3 xona,A2 plus,TCH-005-A2-PLUS,Wednesday,16:00,17:00
-3 xona,B1 plus,TCH-006-B1-PLUS,Thursday,07:30,09:00
-3 xona,Kids Farangiz,TCH-003-KIDS-FARANGIZ,Thursday,10:00,11:30
-3 xona,KIDS English,TCH-012-KIDS-ENGLISH,Thursday,13:30,15:00
-3 xona,Starter teens,TCH-018-STARTER-TEENS,Friday,08:00,09:00
-3 xona,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,Friday,10:00,11:30
-3 xona,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,Friday,13:30,15:00
-3 xona,A2 plus,TCH-005-A2-PLUS,Friday,16:00,17:00
-3 xona,B1 plus,TCH-006-B1-PLUS,Saturday,07:30,09:00
-3 xona,Kids Farangiz,TCH-003-KIDS-FARANGIZ,Saturday,10:00,11:30
-3 xona,KIDS English,TCH-012-KIDS-ENGLISH,Saturday,13:30,15:00
-4 xona,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,Monday,08:30,09:30
-4 xona,B2 intro,TCH-018-B2-INTRO,Tuesday,09:30,11:00
-4 xona,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,Wednesday,08:30,09:30
-4 xona,B2 intro,TCH-018-B2-INTRO,Thursday,09:30,11:00
-4 xona,B2 intro,TCH-018-B2-INTRO,Saturday,09:30,11:00
-5 xona,A2 flyers,TCH-004-A2-FLYERS,Tuesday,14:00,15:30
-5 xona,A2 Plus new,TCH-004-A2-PLUS-NEW,Tuesday,15:30,17:00
-5 xona,A2 flyers,TCH-004-A2-FLYERS,Thursday,14:00,15:30
-5 xona,A2 Plus new,TCH-004-A2-PLUS-NEW,Thursday,15:30,17:00
-5 xona,A2 flyers,TCH-004-A2-FLYERS,Saturday,14:00,15:30
-5 xona,A2 Plus new,TCH-004-A2-PLUS-NEW,Saturday,15:30,17:00
-6 xona,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,Monday,11:00,12:30
-6 xona,Boshlang'ich (3oylik),TCH-001-BOSHLANG-ICH-3OYLIK,Monday,12:30,13:30
-6 xona,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,Monday,13:30,15:00
-6 xona,Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,Monday,15:00,17:00
-6 xona,Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,Monday,17:00,18:00
-6 xona,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,Tuesday,08:30,10:00
-6 xona,Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,Tuesday,10:30,12:00
-6 xona,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,Tuesday,12:00,13:30
-6 xona,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,Wednesday,11:00,12:30
-6 xona,Boshlang'ich (3oylik),TCH-001-BOSHLANG-ICH-3OYLIK,Wednesday,12:30,13:30
-6 xona,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,Wednesday,13:30,15:00
-6 xona,Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,Wednesday,15:00,17:00
-6 xona,Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,Wednesday,17:00,18:00
-6 xona,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,Thursday,08:30,10:00
-6 xona,Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,Thursday,10:30,12:00
-6 xona,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,Thursday,12:00,13:30
-6 xona,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,Friday,11:00,12:30
-6 xona,Boshlang'ich (3oylik),TCH-001-BOSHLANG-ICH-3OYLIK,Friday,12:30,13:30
-6 xona,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,Friday,13:30,15:00
-6 xona,Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,Friday,15:00,17:00
-6 xona,Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,Friday,17:00,18:00
-6 xona,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,Saturday,08:30,10:00
-6 xona,Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,Saturday,10:30,12:00
-6 xona,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,Saturday,12:00,13:30
-7 xona,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,Monday,14:00,15:30
-7 xona,Starters New,TCH-018-STARTERS-NEW,Tuesday,08:00,09:30
-7 xona,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,Tuesday,10:00,11:30
-7 xona,Starter 2,TCH-006-STARTER-2,Tuesday,15:30,17:00
-7 xona,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,Wednesday,14:00,15:30
-7 xona,Starters New,TCH-018-STARTERS-NEW,Thursday,08:00,09:30
-7 xona,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,Thursday,10:00,11:30
-7 xona,Starter 2,TCH-006-STARTER-2,Thursday,15:30,17:00
-7 xona,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,Friday,14:00,15:30
-7 xona,Starters New,TCH-018-STARTERS-NEW,Saturday,08:00,09:30
-7 xona,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,Saturday,10:00,11:30
-7 xona,Starter 2,TCH-006-STARTER-2,Saturday,15:30,17:00
-8 xona,Matematika 10,TCH-013-MATEMATIKA-10,Tuesday,08:00,10:00
-8 xona,Matematika 1,TCH-013-MATEMATIKA-1,Tuesday,10:00,12:00
-8 xona,Matematika 2,TCH-013-MATEMATIKA-2,Tuesday,14:00,15:30
-8 xona,Matematika 3,TCH-013-MATEMATIKA-3,Tuesday,15:30,17:00
-8 xona,Matematika 10,TCH-013-MATEMATIKA-10,Thursday,08:00,10:00
-8 xona,Matematika 1,TCH-013-MATEMATIKA-1,Thursday,10:00,12:00
-8 xona,Matematika 2,TCH-013-MATEMATIKA-2,Thursday,14:00,15:30
-8 xona,Matematika 3,TCH-013-MATEMATIKA-3,Thursday,15:30,17:00
-8 xona,Matematika 10,TCH-013-MATEMATIKA-10,Saturday,08:00,10:00
-8 xona,Matematika 1,TCH-013-MATEMATIKA-1,Saturday,10:00,12:00
-8 xona,Matematika 2,TCH-013-MATEMATIKA-2,Saturday,14:00,15:30
-8 xona,Matematika 3,TCH-013-MATEMATIKA-3,Saturday,15:30,17:00
-9 xona,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,Monday,07:30,09:00
-9 xona,Starter New,TCH-016-STARTER-NEW,Monday,09:00,10:30
-9 xona,B1 intro,TCH-018-B1-INTRO,Monday,10:30,12:00
-9 xona,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,Monday,14:00,15:30
-9 xona,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,Monday,15:30,17:30
-9 xona,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,Tuesday,11:00,12:30
-9 xona,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,Tuesday,13:30,15:00
-9 xona,B1 plus Morning,TCH-016-B1-PLUS-MORNING,Tuesday,15:00,16:30
-9 xona,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,Wednesday,07:30,09:00
-9 xona,Starter New,TCH-016-STARTER-NEW,Wednesday,09:00,10:30
-9 xona,B1 intro,TCH-018-B1-INTRO,Wednesday,10:30,12:00
-9 xona,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,Wednesday,14:00,15:30
-9 xona,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,Wednesday,15:30,17:30
-9 xona,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,Thursday,11:00,12:30
-9 xona,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,Thursday,13:30,15:00
-9 xona,B1 plus Morning,TCH-016-B1-PLUS-MORNING,Thursday,15:00,16:30
-9 xona,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,Friday,07:30,09:00
-9 xona,Starter New,TCH-016-STARTER-NEW,Friday,09:00,10:30
-9 xona,B1 intro,TCH-018-B1-INTRO,Friday,10:30,12:00
-9 xona,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,Friday,14:00,15:30
-9 xona,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,Friday,15:30,17:30
-9 xona,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,Saturday,11:00,12:30
-9 xona,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,Saturday,13:30,15:00
-9 xona,B1 plus Morning,TCH-016-B1-PLUS-MORNING,Saturday,15:00,16:30
-10 xona,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,Monday,10:00,11:30
-10 xona,Kids Laylo,TCH-007-KIDS-LAYLO,Monday,13:30,14:30
-10 xona,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,Tuesday,10:00,11:30
-10 xona,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,Wednesday,10:00,11:30
-10 xona,Kids Laylo,TCH-007-KIDS-LAYLO,Wednesday,13:30,14:30
-10 xona,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,Thursday,10:00,11:30
-10 xona,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,Friday,10:00,11:30
-10 xona,Kids Laylo,TCH-007-KIDS-LAYLO,Friday,13:30,14:30
-10 xona,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,Saturday,10:00,11:30
+7-xona,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,Tuesday,14:00,15:30
+7-xona,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,Thursday,14:00,15:30
+7-xona,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,Tuesday,15:30,17:00
+7-xona,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,Thursday,15:30,17:00
+7-xona,Starter 15:30,TCH-006-STARTER-15-30,Tuesday,15:30,17:00
+7-xona,Starter 15:30,TCH-006-STARTER-15-30,Thursday,15:30,17:00
+3-xona,A1 Movers morning 08:00,TCH-011-A1-MOVERS-MORNING-08-00,Monday,08:00,09:30
+3-xona,A1 Movers morning 08:00,TCH-011-A1-MOVERS-MORNING-08-00,Wednesday,08:00,09:30
+3-xona,A1 Movers morning 08:00,TCH-011-A1-MOVERS-MORNING-08-00,Friday,08:00,09:30
+6-xona,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,Wednesday,08:00,09:30
+6-xona,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,Saturday,08:00,09:30
+6-xona,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,Sunday,08:00,09:30
+6-xona,Matematika 10,TCH-013-MATEMATIKA-10,Tuesday,,
+6-xona,Matematika 10,TCH-013-MATEMATIKA-10,Thursday,,
+6-xona,Matematika 10,TCH-013-MATEMATIKA-10,Saturday,,
+6-xona,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,Tuesday,16:00,17:30
+6-xona,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,Thursday,16:00,17:30
+6-xona,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,Saturday,16:00,17:30
+6-xona,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,Tuesday,17:30,19:00
+6-xona,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,Thursday,17:30,19:00
+6-xona,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,Saturday,17:30,19:00
+5-Xona,A2 FLYERS morning 08:00,TCH-015-A2-FLYERS-MORNING-08-00,Monday,08:00,09:30
+5-Xona,A2 FLYERS morning 08:00,TCH-015-A2-FLYERS-MORNING-08-00,Wednesday,08:00,09:30
+5-Xona,A2 FLYERS morning 08:00,TCH-015-A2-FLYERS-MORNING-08-00,Friday,08:00,09:30
+5-Xona,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,Monday,09:30,11:00
+5-Xona,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,Wednesday,09:30,11:00
+5-Xona,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,Friday,09:30,11:00
+5-Xona,A2 flyers morning,TCH-015-A2-FLYERS-MORNING,Tuesday,,
+5-Xona,A2 flyers morning,TCH-015-A2-FLYERS-MORNING,Thursday,,
+5-Xona,A2 flyers morning,TCH-015-A2-FLYERS-MORNING,Saturday,,
+5-Xona,Starter New morning 08:00,TCH-015-STARTER-NEW-MORNING-08-00,Tuesday,08:00,09:30
+5-Xona,Starter New morning 08:00,TCH-015-STARTER-NEW-MORNING-08-00,Thursday,08:00,09:30
+5-Xona,Starter New morning 08:00,TCH-015-STARTER-NEW-MORNING-08-00,Saturday,08:00,09:30
+7-xona,A1 movers morning,TCH-015-A1-MOVERS-MORNING,Monday,,
+7-xona,A1 movers morning,TCH-015-A1-MOVERS-MORNING,Wednesday,,
+7-xona,A1 movers morning,TCH-015-A1-MOVERS-MORNING,Friday,,
+2-guruh,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,Monday,16:00,17:30
+2-guruh,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,Wednesday,16:00,17:30
+2-guruh,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,Friday,16:00,17:30
+1-guruh,Odiljon ustoz 14:00,TCH-017-ODILJON-USTOZ-14-00,Monday,14:00,15:30
+1-guruh,Odiljon ustoz 14:00,TCH-017-ODILJON-USTOZ-14-00,Wednesday,14:00,15:30
+1-guruh,Odiljon ustoz 14:00,TCH-017-ODILJON-USTOZ-14-00,Friday,14:00,15:30
+1-xona,B2 intro,TCH-018-B2-INTRO,Monday,,
+1-xona,B2 intro,TCH-018-B2-INTRO,Wednesday,,
+1-xona,B2 intro,TCH-018-B2-INTRO,Friday,,
+1-xona,B1 intro,TCH-018-B1-INTRO,Tuesday,,
+1-xona,B1 intro,TCH-018-B1-INTRO,Thursday,,
+1-xona,B1 intro,TCH-018-B1-INTRO,Saturday,,
+5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,Monday,08:00,09:30
+5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,Wednesday,08:00,09:30
+5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,Friday,08:00,09:30
+1-xona,A2 Flyers,TCH-018-A2-FLYERS,Tuesday,,
+1-xona,A2 Flyers,TCH-018-A2-FLYERS,Thursday,,
+1-xona,A2 Flyers,TCH-018-A2-FLYERS,Saturday,,
+5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,Monday,08:00,09:30
+5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,Wednesday,08:00,09:30
+5-Xona,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,Friday,08:00,09:30
+2 xona,fun for movers,TCH-018-FUN-FOR-MOVERS,Monday,,
+2 xona,fun for movers,TCH-018-FUN-FOR-MOVERS,Wednesday,,
+2 xona,fun for movers,TCH-018-FUN-FOR-MOVERS,Friday,,
+6-xona,Matematika 3 16:00 (1),TCH-020-MATEMATIKA-3-16-00,Monday,16:00,17:30
+6-xona,Matematika 3 16:00 (1),TCH-020-MATEMATIKA-3-16-00,Thursday,16:00,17:30
+6-xona,Matematika 3 16:00 (1),TCH-020-MATEMATIKA-3-16-00,Sunday,16:00,17:30
+6-xona,Matematika 3 16:00 (2),TCH-020-MATEMATIKA-3-16-00-2,Monday,16:00,17:30
+6-xona,Matematika 3 16:00 (2),TCH-020-MATEMATIKA-3-16-00-2,Thursday,16:00,17:30
+6-xona,Matematika 3 16:00 (2),TCH-020-MATEMATIKA-3-16-00-2,Sunday,16:00,17:30
+6-xona,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,Monday,16:00,17:30
+6-xona,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,Thursday,16:00,17:30
+6-xona,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,Sunday,16:00,17:30

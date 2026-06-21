@@ -341,12 +341,7 @@ export const useGradesPage = () => {
     };
   }, [stateObj.items]);
 
-  const folderGridClass =
-    viewMode === 'list'
-      ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
-      : viewMode === 'compact'
-        ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'
-        : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
+  const folderGridClass = 'overflow-hidden rounded-md border border-slate-200/80 bg-white dark:border-border dark:bg-card';
 
   // ---- Action helpers ----
   const clearFilters = () => {
