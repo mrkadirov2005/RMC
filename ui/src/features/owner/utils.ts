@@ -114,13 +114,30 @@ const isCompletedPayment = (payment: any) => {
   return status === 'completed' || status === 'paid';
 };
 
+// Reads the most reliable date field available on a payment row.
+export const getOwnerPaymentDateValue = (payment: any) =>
+  payment?.payment_date || payment?.paid_at || payment?.date || payment?.created_at || payment?.updated_at;
+
+// Reads the payment amount across API/import variants.
+export const getOwnerPaymentAmount = (payment: any) =>
+  Number(payment?.amount || payment?.paid_amount || payment?.payment_amount || 0);
+
 // Returns the `YYYY-MM` month key for date-like values.
-const getMonthKey = (value: unknown): string | null => {
+export const getOwnerMonthKey = (value: unknown): string | null => {
   if (!value) return null;
+  const raw = String(value).trim();
+  const isoMonth = raw.match(/^(\d{4})-(\d{2})(?:-\d{2})?/);
+  if (isoMonth) return `${isoMonth[1]}-${isoMonth[2]}`;
+  const dottedMonth = raw.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{4})$/);
+  if (dottedMonth) return `${dottedMonth[3]}-${dottedMonth[2].padStart(2, '0')}`;
   const date = new Date(String(value));
   if (Number.isNaN(date.getTime())) return null;
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
+
+// Returns the payment's month key from all known date fields.
+export const getOwnerPaymentMonthKey = (payment: any): string | null =>
+  getOwnerMonthKey(getOwnerPaymentDateValue(payment));
 
 // Builds payments graph stats for the selected month.
 export const buildOwnerPaymentMonthStats = (
@@ -132,7 +149,7 @@ export const buildOwnerPaymentMonthStats = (
 
   payments.forEach((payment) => {
     if (!isCompletedPayment(payment)) return;
-    if (getMonthKey(payment?.payment_date) !== selectedMonth) return;
+    if (getOwnerPaymentMonthKey(payment) !== selectedMonth) return;
 
     const studentId = Number(payment?.student_id || 0);
     if (studentId > 0) {
@@ -182,7 +199,7 @@ export const buildOwnerTeacherEarnings = (
       const teacherStudents = students.filter((student) => teacherClassIds.has(Number(student?.class_id || 0)));
       const monthPayments = payments.filter((payment) => {
         if (!isCompletedPayment(payment)) return false;
-        if (getMonthKey(payment?.payment_date) !== selectedMonth) return false;
+        if (getOwnerPaymentMonthKey(payment) !== selectedMonth) return false;
         const studentId = Number(payment?.student_id || 0);
         const student = studentLookup.get(studentId);
         return Boolean(student && teacherClassIds.has(Number(student.class_id || 0)));
@@ -195,7 +212,7 @@ export const buildOwnerTeacherEarnings = (
         if (studentId > 0) {
           paidStudentIds.add(studentId);
         }
-        earnedAmount += Number(payment?.amount || 0);
+        earnedAmount += getOwnerPaymentAmount(payment);
       });
 
       const totalStudents = teacherStudents.length;

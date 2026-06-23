@@ -121,6 +121,30 @@
   from { opacity: 0; transform: translateX(16px); }
   to { opacity: 1; transform: translateX(0); }
 }
+@keyframes chart-open {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+@keyframes chart-bar-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes chart-line-draw {
+  from { stroke-dashoffset: 100; }
+  to { stroke-dashoffset: 0; }
+}
+@keyframes chart-point-pop {
+  from { opacity: 0; transform: scale(0.2); }
+  to { opacity: 1; transform: scale(1); }
+}
 
 @layer utilities {
   .animate-fade-in {
@@ -134,6 +158,23 @@
   }
   .animate-slide-right {
     animation: slide-in-right 0.5s ease-out both;
+  }
+  .animate-chart-open {
+    animation: chart-open 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-chart-bar-fill {
+    animation: chart-bar-fill 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+    transform-origin: left center;
+  }
+  .animate-chart-line-draw {
+    animation: chart-line-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+  }
+  .animate-chart-point-pop {
+    animation: chart-point-pop 0.35s ease-out both;
+    transform-box: fill-box;
+    transform-origin: center;
   }
   .animation-delay-100 {
     animation-delay: 100ms;
@@ -152,6 +193,15 @@
   }
   .animation-delay-600 {
     animation-delay: 600ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-chart-open,
+  .animate-chart-bar-fill,
+  .animate-chart-line-draw,
+  .animate-chart-point-pop {
+    animation: none;
   }
 }
 

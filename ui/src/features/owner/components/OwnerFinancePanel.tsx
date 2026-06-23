@@ -2,20 +2,23 @@
 
 import { useMemo, useState } from 'react';
 import {
-  CheckCircle2,
-  ChevronDown,
+  BarChart3,
   DollarSign,
-  Search,
   TrendingUp,
   Users,
-  XCircle,
 } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
-import { buildOwnerPaymentMonthStats, buildOwnerTeacherEarnings } from '../utils';
+import {
+  buildOwnerPaymentMonthStats,
+  buildOwnerTeacherEarnings,
+  getOwnerPaymentAmount,
+  getOwnerPaymentMonthKey,
+} from '../utils';
 import type { OwnerManagerStatisticsCollections } from '../types';
+import { FinanceStatsView } from './finance/FinanceStatsView';
+import { FinanceTeachersView } from './finance/FinanceTeachersView';
 
 interface Props {
   collections: OwnerManagerStatisticsCollections;
@@ -26,11 +29,6 @@ const salaryPercent = 20;
 const getId = (item: any, key: string) => Number(item?.[key] || item?.id || 0);
 const getName = (item: any, fallback: string) =>
   [item?.first_name, item?.last_name].filter(Boolean).join(' ').trim() || item?.class_name || fallback;
-const getMonthKey = (value: unknown) => {
-  const date = value ? new Date(String(value)) : null;
-  if (!date || Number.isNaN(date.getTime())) return '';
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-};
 const isPaidPayment = (payment: any) => {
   const status = String(payment?.status || payment?.payment_status || '').toLowerCase();
   return status === 'paid' || status === 'completed';
@@ -43,10 +41,57 @@ const initials = (name: string) =>
     .map((part) => part[0]?.toUpperCase())
     .join('') || 'T';
 
+const buildTeacherGroups = (
+  collections: OwnerManagerStatisticsCollections,
+  monthPayments: any[],
+  teacherId: number | null
+) => {
+  if (!teacherId) return [];
+  const teacherClasses = collections.classes.filter((cls) => Number(cls?.teacher_id || 0) === teacherId);
+
+  return teacherClasses.map((cls) => {
+    const classId = getId(cls, 'class_id');
+    const classStudents = collections.students.filter((student) => Number(student?.class_id || 0) === classId);
+    const students = classStudents.map((student) => {
+      const studentId = getId(student, 'student_id');
+      const studentPayments = monthPayments.filter((payment) => Number(payment?.student_id || 0) === studentId);
+      const paidAmount = studentPayments.reduce((sum, payment) => sum + getOwnerPaymentAmount(payment), 0);
+      return {
+        id: studentId,
+        name: getName(student, `Student ${studentId}`),
+        paid: studentPayments.length > 0,
+        paidAmount,
+        expectedAmount: Number(student?.payment_amount || cls?.payment_amount || 0),
+      };
+    });
+    const paidCount = students.filter((student) => student.paid).length;
+    const groupCollected = students.reduce((sum, student) => sum + student.paidAmount, 0);
+    const expectedAmount = students.reduce((sum, student) => sum + student.expectedAmount, 0);
+    const unpaidCount = Math.max(students.length - paidCount, 0);
+    const paidPercent = students.length > 0 ? Math.round((paidCount / students.length) * 100) : 0;
+
+    return {
+      id: classId,
+      name: cls?.class_name || `Group ${classId}`,
+      paidCount,
+      unpaidCount,
+      totalStudents: students.length,
+      groupCollected,
+      expectedAmount,
+      paidPercent,
+      salaryAmount: Math.round((groupCollected * salaryPercent) / 100),
+      students,
+    };
+  });
+};
+
 export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [financeView, setFinanceView] = useState<'statistics' | 'teachers'>('statistics');
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
+  const [selectedStatsTeacherId, setSelectedStatsTeacherId] = useState<number | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [chartMode, setChartMode] = useState<'pie' | 'bar' | 'line'>('pie');
   const [searchTerm, setSearchTerm] = useState('');
 
   const paymentStats = useMemo(
@@ -68,15 +113,15 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const monthPayments = useMemo(
     () =>
       collections.payments.filter(
-        (payment) =>
-          isPaidPayment(payment) &&
-          getMonthKey(payment?.payment_date || payment?.created_at) === selectedMonth
+        (payment) => isPaidPayment(payment) && getOwnerPaymentMonthKey(payment) === selectedMonth
       ),
     [collections.payments, selectedMonth]
   );
 
-  const totalCollected = monthPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
+  const totalCollected = monthPayments.reduce((sum, payment) => sum + getOwnerPaymentAmount(payment), 0);
   const totalSalary = Math.round((totalCollected * salaryPercent) / 100);
+  const expectedMonthlyTotal = collections.students.reduce((sum, student) => sum + Number(student?.payment_amount || 0), 0);
+  const unpaidEstimate = Math.max(expectedMonthlyTotal - totalCollected, 0);
   const filteredTeachers = teacherRows.filter((row) =>
     row.teacherName.toLowerCase().includes(searchTerm.trim().toLowerCase())
   );
@@ -85,41 +130,79 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const selectedTeacher = collections.teachers.find((teacher) => getId(teacher, 'teacher_id') === selectedTeacherId);
   const selectedTeacherName = selectedTeacherRow?.teacherName || (selectedTeacher ? getName(selectedTeacher, 'Teacher') : '');
 
-  const teacherGroups = useMemo(() => {
-    if (!selectedTeacherId) return [];
-    const teacherClasses = collections.classes.filter((cls) => Number(cls?.teacher_id || 0) === selectedTeacherId);
-
-    return teacherClasses.map((cls) => {
-      const classId = getId(cls, 'class_id');
-      const classStudents = collections.students.filter((student) => Number(student?.class_id || 0) === classId);
-      const students = classStudents.map((student) => {
-        const studentId = getId(student, 'student_id');
-        const studentPayments = monthPayments.filter((payment) => Number(payment?.student_id || 0) === studentId);
-        const paidAmount = studentPayments.reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
-        return {
-          id: studentId,
-          name: getName(student, `Student ${studentId}`),
-          paid: studentPayments.length > 0,
-          paidAmount,
-          expectedAmount: Number(student?.payment_amount || cls?.payment_amount || 0),
-        };
-      });
-      const paidCount = students.filter((student) => student.paid).length;
-      const groupCollected = students.reduce((sum, student) => sum + student.paidAmount, 0);
-      return {
-        id: classId,
-        name: cls?.class_name || `Group ${classId}`,
-        paidCount,
-        unpaidCount: Math.max(students.length - paidCount, 0),
-        totalStudents: students.length,
-        groupCollected,
-        salaryAmount: Math.round((groupCollected * salaryPercent) / 100),
-        students,
-      };
-    });
-  }, [collections.classes, collections.students, monthPayments, selectedTeacherId]);
+  const teacherGroups = useMemo(
+    () => buildTeacherGroups(collections, monthPayments, selectedTeacherId),
+    [collections, monthPayments, selectedTeacherId]
+  );
 
   const selectedGroup = teacherGroups.find((group) => group.id === selectedGroupId) || null;
+  const statsTeacherId = selectedStatsTeacherId ?? teacherRows[0]?.teacherId ?? null;
+  const selectedStatsTeacher = teacherRows.find((teacher) => teacher.teacherId === statsTeacherId) || null;
+  const statsTeacherGroups = useMemo(
+    () => buildTeacherGroups(collections, monthPayments, statsTeacherId),
+    [collections, monthPayments, statsTeacherId]
+  );
+  const statsPaidStudents = statsTeacherGroups.reduce((sum, group) => sum + group.paidCount, 0);
+  const statsUnpaidStudents = statsTeacherGroups.reduce((sum, group) => sum + group.unpaidCount, 0);
+  const statsCollected = statsTeacherGroups.reduce((sum, group) => sum + group.groupCollected, 0);
+  const statsExpected = statsTeacherGroups.reduce((sum, group) => sum + group.expectedAmount, 0);
+  const statsPaidPercent = statsPaidStudents + statsUnpaidStudents > 0
+    ? Math.round((statsPaidStudents / (statsPaidStudents + statsUnpaidStudents)) * 100)
+    : 0;
+  const mostPaidGroups = [...statsTeacherGroups].sort((a, b) => b.paidPercent - a.paidPercent || b.groupCollected - a.groupCollected);
+  const mostUnpaidGroups = [...statsTeacherGroups].sort((a, b) => b.unpaidCount - a.unpaidCount || a.paidPercent - b.paidPercent);
+
+  const monthKeys = useMemo(() => {
+    const keys = new Set<string>();
+    collections.payments.forEach((payment) => {
+      const key = getOwnerPaymentMonthKey(payment);
+      if (key) keys.add(key);
+    });
+    keys.add(selectedMonth);
+    return Array.from(keys).sort().slice(-8);
+  }, [collections.payments, selectedMonth]);
+
+  const monthlyTrend = useMemo(
+    () => {
+      const teacherClassIds = new Set(
+        collections.classes
+          .filter((cls) => Number(cls?.teacher_id || 0) === Number(statsTeacherId || 0))
+          .map((cls) => Number(cls?.class_id || cls?.id || 0))
+          .filter(Boolean)
+      );
+      const teacherStudentIds = new Set(
+        collections.students
+          .filter((student) => teacherClassIds.has(Number(student?.class_id || 0)))
+          .map((student) => Number(student?.student_id || student?.id || 0))
+          .filter(Boolean)
+      );
+
+      return monthKeys.map((month) => {
+        const payments = collections.payments.filter(
+          (payment) =>
+            isPaidPayment(payment) &&
+            getOwnerPaymentMonthKey(payment) === month &&
+            (!statsTeacherId || teacherStudentIds.has(Number(payment?.student_id || 0)))
+        );
+        const collected = payments.reduce((sum, payment) => sum + getOwnerPaymentAmount(payment), 0);
+        const paidStudents = new Set(payments.map((payment) => Number(payment?.student_id || 0)).filter(Boolean)).size;
+        const totalStudents = statsTeacherId ? teacherStudentIds.size : collections.students.length;
+        const paidPercent = totalStudents > 0 ? Math.round((paidStudents / totalStudents) * 100) : 0;
+        return { month, collected, paidStudents, paidPercent };
+      });
+    },
+    [collections.classes, collections.payments, collections.students, monthKeys, statsTeacherId]
+  );
+  const maxTrendCollected = Math.max(...monthlyTrend.map((item) => item.collected), 1);
+  const linePoints = monthlyTrend.length > 1
+    ? monthlyTrend
+        .map((item, index) => {
+          const x = (index / (monthlyTrend.length - 1)) * 100;
+          const y = 92 - (item.collected / maxTrendCollected) * 84;
+          return `${x},${y}`;
+        })
+        .join(' ')
+    : '';
 
   if (loading) {
     return (
@@ -142,6 +225,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             value={selectedMonth}
             onChange={(event) => {
               setSelectedMonth(event.target.value);
+              setSelectedTeacherId(null);
               setSelectedGroupId(null);
             }}
             className="h-8 w-40 bg-slate-100 text-xs font-bold"
@@ -176,149 +260,96 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             </div>
           ))}
         </div>
-      </div>
 
-      <div className="rounded-md border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-        <div className="flex flex-wrap items-center gap-2 border-b p-2 dark:border-white/10">
-          <div className="relative w-full max-w-xs">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <Input
-              className="h-8 bg-slate-100 pl-8 text-xs font-semibold"
-              placeholder="Qidirish..."
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
+        <div className="border-t p-2 dark:border-white/10">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setFinanceView('statistics');
+                setSelectedTeacherId(null);
+                setSelectedGroupId(null);
+              }}
+              className={cn(
+                'inline-flex h-8 items-center rounded-md border px-3 text-xs font-black transition',
+                financeView === 'statistics'
+                  ? 'border-blue-500 bg-blue-600 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-blue-300 hover:bg-blue-50'
+              )}
+            >
+              <BarChart3 className="mr-1.5 h-3.5 w-3.5" />
+              Statistika
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFinanceView('teachers');
+                setSelectedGroupId(null);
+              }}
+              className={cn(
+                'inline-flex h-8 items-center rounded-md border px-3 text-xs font-black transition',
+                financeView === 'teachers'
+                  ? 'border-cyan-500 bg-cyan-600 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:bg-cyan-50'
+              )}
+            >
+              <Users className="mr-1.5 h-3.5 w-3.5" />
+              O'qituvchilar
+            </button>
           </div>
-          <span className="text-xs font-bold text-slate-500">{filteredTeachers.length} ta o'qituvchi</span>
-        </div>
-
-        <div className="flex gap-2 overflow-x-auto p-2">
-          {filteredTeachers.map((teacher, index) => {
-            const active = selectedTeacherId === teacher.teacherId;
-            const teacherSalary = Math.round((teacher.earnedAmount * salaryPercent) / 100);
-            return (
-              <button
-                key={teacher.teacherId}
-                type="button"
-                onClick={() => {
-                  setSelectedTeacherId(teacher.teacherId);
-                  setSelectedGroupId(null);
-                }}
-                className={cn(
-                  'flex min-w-[190px] items-center gap-2 rounded-md border px-2 py-1.5 text-left transition',
-                  active
-                    ? 'border-blue-500 bg-blue-50 shadow-sm'
-                    : 'border-slate-200 bg-white hover:border-cyan-300 hover:bg-cyan-50'
-                )}
-              >
-                <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-black text-white', index % 2 ? 'bg-orange-600' : 'bg-blue-600')}>
-                  {initials(teacher.teacherName)}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-xs font-black text-slate-950">{teacher.teacherName}</span>
-                  <span className="block truncate text-[10px] font-bold text-slate-500">
-                    {teacher.classCount} guruh · {teacher.totalStudents} talaba
-                  </span>
-                </span>
-                <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-black text-emerald-700">
-                  {formatMoney(teacherSalary)}
-                </span>
-              </button>
-            );
-          })}
         </div>
       </div>
 
-      {selectedTeacherRow && (
-        <div className="rounded-md border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-          <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
-            <p className="text-sm font-black text-slate-950 dark:text-white">{selectedTeacherName}</p>
-            <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">{selectedTeacherRow.classCount} guruh</span>
-            <span className="rounded bg-cyan-100 px-2 py-1 text-[10px] font-black text-cyan-700">{selectedTeacherRow.totalStudents} talaba</span>
-            <span className="ml-auto rounded bg-blue-100 px-2 py-1 text-[10px] font-black text-blue-700">
-              Jami to'lov: {formatMoney(selectedTeacherRow.earnedAmount)}
-            </span>
-            <span className="rounded bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
-              Maosh ({salaryPercent}%): {formatMoney(Math.round((selectedTeacherRow.earnedAmount * salaryPercent) / 100))}
-            </span>
-          </div>
-
-          <div className="divide-y dark:divide-white/10">
-            {teacherGroups.length === 0 ? (
-              <div className="p-4 text-sm font-semibold text-slate-500">Bu o'qituvchida guruh topilmadi.</div>
-            ) : (
-              teacherGroups.map((group, index) => {
-                const active = selectedGroupId === group.id;
-                return (
-                  <button
-                    key={group.id}
-                    type="button"
-                    onClick={() => setSelectedGroupId(active ? null : group.id)}
-                    className={cn(
-                      'grid w-full grid-cols-[36px_1fr_auto_auto_auto] items-center gap-2 px-3 py-2 text-left text-xs transition hover:bg-blue-50/70',
-                      active && 'bg-blue-50'
-                    )}
-                  >
-                    <span className="text-center font-black text-slate-400">{index + 1}</span>
-                    <span className="min-w-0">
-                      <span className="block truncate font-black text-slate-950">{group.name}</span>
-                      <span className="text-[10px] font-semibold text-slate-500">{group.totalStudents} talaba</span>
-                    </span>
-                    <span className="rounded bg-blue-100 px-2 py-1 font-black text-blue-700">{formatMoney(group.groupCollected)}</span>
-                    <span className={cn('rounded px-2 py-1 font-black', group.unpaidCount ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700')}>
-                      {group.unpaidCount ? `${group.unpaidCount} qarzdor` : "hammasi to'lagan"}
-                    </span>
-                    <ChevronDown className={cn('h-4 w-4 text-slate-400 transition', active && 'rotate-180')} />
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </div>
+      {financeView === 'statistics' && (
+        <FinanceStatsView
+          selectedMonth={selectedMonth}
+          expectedMonthlyTotal={expectedMonthlyTotal}
+          totalCollected={totalCollected}
+          unpaidEstimate={unpaidEstimate}
+          paymentStats={paymentStats}
+          teacherRows={teacherRows}
+          statsTeacherId={statsTeacherId}
+          selectedStatsTeacher={selectedStatsTeacher}
+          statsTeacherGroups={statsTeacherGroups}
+          statsPaidPercent={statsPaidPercent}
+          statsPaidStudents={statsPaidStudents}
+          statsUnpaidStudents={statsUnpaidStudents}
+          statsCollected={statsCollected}
+          statsExpected={statsExpected}
+          chartMode={chartMode}
+          mostPaidGroups={mostPaidGroups}
+          mostUnpaidGroups={mostUnpaidGroups}
+          monthlyTrend={monthlyTrend}
+          maxTrendCollected={maxTrendCollected}
+          linePoints={linePoints}
+          initials={initials}
+          onTeacherSelect={(teacherId) => {
+            setSelectedStatsTeacherId(teacherId);
+            setChartMode('pie');
+          }}
+          onChartModeChange={setChartMode}
+        />
       )}
 
-      {selectedGroup && (
-        <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-          <CardContent className="p-0">
-            <div className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] border-b bg-slate-100 px-3 py-2 text-[11px] font-black uppercase text-slate-500">
-              <span>#</span>
-              <span>Talaba</span>
-              <span>Guruh</span>
-              <span className="text-right">To'lov</span>
-              <span className="text-center">Holat</span>
-            </div>
-            <div className="divide-y dark:divide-white/10">
-              {selectedGroup.students.map((student, index) => (
-                <div
-                  key={student.id}
-                  className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] items-center px-3 py-1.5 text-xs hover:bg-cyan-50/50"
-                >
-                  <span className="font-semibold text-slate-400">{index + 1}</span>
-                  <span className="truncate font-black text-slate-950 dark:text-white">{student.name}</span>
-                  <span className="truncate text-slate-500">{selectedGroup.name}</span>
-                  <span className="text-right font-black text-slate-700">
-                    {student.paid ? formatMoney(student.paidAmount) : '-'}
-                  </span>
-                  <span className="text-center">
-                    <span className={cn('inline-flex items-center rounded px-2 py-1 text-[10px] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>
-                      {student.paid ? (
-                        <>
-                          <CheckCircle2 className="mr-1 h-3 w-3" />
-                          Tolagan
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="mr-1 h-3 w-3" />
-                          Qarzdor
-                        </>
-                      )}
-                    </span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {financeView === 'teachers' && (
+        <FinanceTeachersView
+          searchTerm={searchTerm}
+          selectedTeacherId={selectedTeacherId}
+          selectedGroupId={selectedGroupId}
+          selectedTeacherRow={selectedTeacherRow}
+          selectedTeacherName={selectedTeacherName}
+          filteredTeachers={filteredTeachers}
+          teacherGroups={teacherGroups}
+          selectedGroup={selectedGroup}
+          salaryPercent={salaryPercent}
+          initials={initials}
+          onSearchChange={setSearchTerm}
+          onTeacherSelect={(teacherId) => {
+            setSelectedTeacherId(teacherId);
+            setSelectedGroupId(null);
+          }}
+          onGroupToggle={(groupId) => setSelectedGroupId(selectedGroupId === groupId ? null : groupId)}
+        />
       )}
     </div>
   );

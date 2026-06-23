@@ -60,7 +60,7 @@ export const PieChart = memo(({ data, size = 220, strokeWidth = 26 }: PieChartPr
           stroke="rgba(255,255,255,0.08)"
           strokeWidth={strokeWidth}
         />
-        {segments.map((slice) => (
+        {segments.map((slice, index) => (
           <circle
             key={slice.label}
             cx={size / 2}
@@ -71,7 +71,18 @@ export const PieChart = memo(({ data, size = 220, strokeWidth = 26 }: PieChartPr
             strokeWidth={strokeWidth}
             strokeDasharray={`${slice.length} ${circumference}`}
             strokeDashoffset={-slice.offset}
-          />
+          >
+            <animate
+              attributeName="stroke-dasharray"
+              from={`0 ${circumference}`}
+              to={`${slice.length} ${circumference}`}
+              dur="850ms"
+              begin={`${index * 110}ms`}
+              fill="freeze"
+              calcMode="spline"
+              keySplines="0.22 1 0.36 1"
+            />
+          </circle>
         ))}
       </g>
     </svg>
@@ -79,4 +90,3 @@ export const PieChart = memo(({ data, size = 220, strokeWidth = 26 }: PieChartPr
 });
 
 PieChart.displayName = 'PieChart';
-
