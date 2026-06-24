@@ -161,6 +161,9 @@ const TeacherGroupsHeader = ({
       ) : (
         teacherGroups.map((group) => {
           const active = selectedGroupId === group.id;
+          const paidPercent = group.totalStudents > 0
+            ? Math.round(((group.totalStudents - group.unpaidCount) / group.totalStudents) * 100)
+            : 0;
           return (
             <button
               key={group.id}
@@ -171,7 +174,11 @@ const TeacherGroupsHeader = ({
                 active ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-slate-200 bg-white text-slate-700 hover:border-cyan-300 hover:bg-cyan-50'
               )}
             >
-              {group.name}
+              <span className="block truncate">{group.name}</span>
+              <span className="mt-1 flex h-1 overflow-hidden rounded-full bg-slate-100">
+                <span className="block h-full bg-emerald-500" style={{ width: `${paidPercent}%` }} />
+                <span className="block h-full bg-rose-500" style={{ width: `${Math.max(100 - paidPercent, 0)}%` }} />
+              </span>
             </button>
           );
         })
@@ -184,17 +191,17 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
   <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
     <CardContent className="p-0">
       <div className="overflow-x-auto">
-        <div className="min-w-[720px]">
-          <div className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] border-b bg-slate-100 px-3 py-2 text-[11px] font-black uppercase text-slate-500">
-            <span>#</span>
-            <span>Talaba</span>
-            <span>Guruh</span>
-            <span className="text-right">To'lov</span>
-            <span className="text-center">Holat</span>
+        <div className="min-w-[640px]">
+          <div className="flex items-center justify-start gap-5 border-b bg-slate-100 px-3 py-2 text-[11px] font-black uppercase text-slate-500">
+            <span className="w-8 shrink-0">#</span>
+            <span className="w-52 shrink-0">Talaba</span>
+            <span className="w-44 shrink-0">Guruh</span>
+            <span className="w-28 shrink-0">To'lov</span>
+            <span className="w-24 shrink-0">Holat</span>
           </div>
-          <div className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] items-center border-b bg-blue-50/70 px-3 py-2 text-xs">
-            <span className="font-black text-slate-400">-</span>
-            <span className="truncate font-black text-slate-950">
+          <div className="flex items-center justify-start gap-5 border-b bg-blue-50/70 px-3 py-2 text-xs">
+            <span className="w-8 shrink-0 font-black text-slate-400">-</span>
+            <span className="w-52 shrink-0 truncate font-black text-slate-950">
               {selectedGroup.name}
               {selectedGroup.unpaidCount > 0 && (
                 <span className="ml-2 rounded bg-rose-100 px-2 py-0.5 text-[10px] font-black text-rose-700">
@@ -202,9 +209,9 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
                 </span>
               )}
             </span>
-            <span className="truncate text-slate-500">{selectedGroup.name}</span>
-            <span className="text-right font-black text-blue-700">{formatMoney(selectedGroup.groupCollected)}</span>
-            <span className="text-center text-[10px] font-black text-slate-500">{selectedGroup.totalStudents} ta</span>
+            <span className="w-44 shrink-0 truncate text-slate-500">{selectedGroup.name}</span>
+            <span className="w-28 shrink-0 font-black text-blue-700">{formatMoney(selectedGroup.groupCollected)}</span>
+            <span className="w-24 shrink-0 text-[10px] font-black text-slate-500">{selectedGroup.totalStudents} ta</span>
           </div>
           <div className="divide-y dark:divide-white/10">
             {selectedGroup.students.map((student, index) => (
@@ -218,12 +225,12 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
 );
 
 const StudentPaymentRow = ({ student, groupName, index }: { student: StudentPaymentRow; groupName: string; index: number }) => (
-  <div className="grid grid-cols-[44px_1.2fr_1fr_130px_120px] items-center px-3 py-1.5 text-xs hover:bg-cyan-50/50">
-    <span className="font-semibold text-slate-400">{index + 1}</span>
-    <span className="truncate font-black text-slate-950 dark:text-white">{student.name}</span>
-    <span className="truncate text-slate-500">{groupName}</span>
-    <span className="text-right font-black text-slate-700">{student.paid ? formatMoney(student.paidAmount) : '-'}</span>
-    <span className="text-center">
+  <div className="flex items-center justify-start gap-5 px-3 py-1.5 text-xs hover:bg-cyan-50/50">
+    <span className="w-8 shrink-0 font-semibold text-slate-400">{index + 1}</span>
+    <span className="w-52 shrink-0 truncate font-black text-slate-950 dark:text-white">{student.name}</span>
+    <span className="w-44 shrink-0 truncate text-slate-500">{groupName}</span>
+    <span className="w-28 shrink-0 font-black text-slate-700">{student.paid ? formatMoney(student.paidAmount) : '-'}</span>
+    <span className="w-24 shrink-0">
       <span className={cn('inline-flex items-center rounded px-2 py-1 text-[10px] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>
         {student.paid ? (
           <>

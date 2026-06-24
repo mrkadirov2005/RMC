@@ -5,10 +5,8 @@ import { useOwnerManager } from './hooks/useOwnerManager';
 import { OwnerManagerContentHeader } from './components/OwnerManagerContentHeader';
 import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
-import { OwnerManagerStatistics } from './components/OwnerManagerStatistics';
 import { OwnerManagerTabStats } from './components/OwnerManagerTabStats';
 import { OwnerSystemSettings } from './components/OwnerSystemSettings';
-import { OwnerFinancePanel } from './components/OwnerFinancePanel';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -32,48 +30,31 @@ const OwnerManager = memo(() => {
 
         <OwnerSystemSettings />
 
-        {vm.activeTab === 'statistics' ? (
-          <OwnerManagerStatistics
-            summary={vm.statistics}
-            collections={vm.statisticsCollections}
-            loading={vm.loading}
-          />
-        ) : vm.activeTab === 'finance' ? (
-          <OwnerFinancePanel
-            collections={vm.statisticsCollections}
-            loading={vm.loading}
-          />
-        ) : (
-          <>
-            <OwnerManagerTabStats
-              activeTab={vm.activeTab}
-              data={vm.data}
-              loading={vm.loading}
-              crossCounts={vm.crossCounts}
-              collections={vm.statisticsCollections}
-              onEdit={vm.handleEdit}
-              onDelete={vm.handleDelete}
-              onHardDelete={vm.handleHardDelete}
-              onResetPassword={vm.handleResetPassword}
-              canHardDelete={vm.canHardDelete}
-            />
-            {vm.activeTab !== 'teachers' && vm.activeTab !== 'students' && (
-              <OwnerManagerTable
-                activeTab={vm.activeTab}
-                columns={vm.columns}
-                data={vm.data}
-                loading={vm.loading}
-                showForm={vm.showForm}
-                isScopedAndMissingCenter={vm.isScopedAndMissingCenter}
-                onEdit={vm.handleEdit}
-                onDelete={vm.handleDelete}
-                onHardDelete={vm.handleHardDelete}
-                onResetPassword={vm.handleResetPassword}
-                canHardDelete={vm.canHardDelete}
-              />
-            )}
-          </>
-        )}
+        <OwnerManagerTabStats
+          activeTab={vm.activeTab}
+          data={vm.data}
+          loading={vm.loading}
+          crossCounts={vm.crossCounts}
+          collections={vm.statisticsCollections}
+          onEdit={vm.handleEdit}
+          onDelete={vm.handleDelete}
+          onHardDelete={vm.handleHardDelete}
+          onResetPassword={vm.handleResetPassword}
+          canHardDelete={vm.canHardDelete}
+        />
+        <OwnerManagerTable
+          activeTab={vm.activeTab}
+          columns={vm.columns}
+          data={vm.data}
+          loading={vm.loading}
+          showForm={vm.showForm}
+          isScopedAndMissingCenter={vm.isScopedAndMissingCenter}
+          onEdit={vm.handleEdit}
+          onDelete={vm.handleDelete}
+          onHardDelete={vm.handleHardDelete}
+          onResetPassword={vm.handleResetPassword}
+          canHardDelete={vm.canHardDelete}
+        />
 
         {vm.activeTab !== 'statistics' && vm.activeTab !== 'finance' && (
           <OwnerManagerDialog

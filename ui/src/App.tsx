@@ -15,6 +15,7 @@ const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then(
 const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
+const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
 const StudentDetailPage = lazy(() => import('./features/crm/students/StudentDetailPage'));
 const TeachersPage = lazy(() => import('./features/crm/teachers/TeachersPage'));
@@ -211,6 +212,16 @@ function AppContent() {
             <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
               <Layout>
                 <OwnerManager />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/owner/reports"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+              <Layout>
+                <OwnerReports />
               </Layout>
             </ProtectedRoute>
           }

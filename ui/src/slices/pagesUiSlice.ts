@@ -136,7 +136,7 @@ const initialState: PagesUiState = {
     tabValue: 'students',
   },
   ownerManager: {
-    activeTab: 'statistics',
+    activeTab: 'superusers',
     showForm: false,
     editingId: null,
     loading: false,

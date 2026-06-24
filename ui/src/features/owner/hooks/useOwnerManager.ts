@@ -76,7 +76,7 @@ export const useOwnerManager = () => {
   });
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
 
-  const needsCenterScope = activeTab === 'superusers' || activeTab === 'teachers' || activeTab === 'students';
+  const needsCenterScope = activeTab === 'superusers' || activeTab === 'students';
 
 // Memoizes the center lookup derived value.
   const centerLookup = useMemo(() => {
@@ -93,7 +93,7 @@ export const useOwnerManager = () => {
 // Memoizes the columns derived value.
   const columns = useMemo(() => buildColumns(activeTab), [activeTab]);
   const activeCenterLabel =
-    activeTab === 'statistics' || activeTab === 'finance'
+    activeTab === 'statistics' || activeTab === 'finance' || activeTab === 'teachers'
       ? 'All centers'
       : activeCenterId
         ? centerLookup.get(Number(activeCenterId)) || `Center ${activeCenterId}`
@@ -101,7 +101,7 @@ export const useOwnerManager = () => {
   const isScopedAndMissingCenter = needsCenterScope && !activeCenterId;
   const scopedMessage = isScopedAndMissingCenter
     ? 'Select an active branch first to load and manage this section.'
-    : activeTab === 'statistics' || activeTab === 'finance'
+    : activeTab === 'statistics' || activeTab === 'finance' || activeTab === 'teachers'
       ? 'Showing combined data from every center.'
       : `Working inside ${activeCenterLabel}.`;
 // Memoizes the selected permissions derived value.
@@ -116,6 +116,12 @@ export const useOwnerManager = () => {
       String(user?.role || '').toLowerCase() === 'owner'
     );
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'centers' || activeTab === 'teachers' || activeTab === 'students' || activeTab === 'finance' || activeTab === 'statistics') {
+      dispatch(setOwnerManagerTab('superusers'));
+    }
+  }, [activeTab, dispatch]);
 
 // Memoizes the fetch data callback.
   const fetchData = useCallback(async () => {
@@ -164,7 +170,7 @@ export const useOwnerManager = () => {
 
       if (activeTab === 'teachers') {
         const [teachersRes, studentsRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
-          ownerManagerApi.teachers.getAll(),
+          ownerManagerApi.teachers.getAllAcrossCenters(),
           ownerManagerApi.students.getAllAcrossCenters(),
           ownerManagerApi.classes.getAllAcrossCenters(),
           ownerManagerApi.payments.getAllAcrossCenters(),

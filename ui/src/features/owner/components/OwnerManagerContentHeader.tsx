@@ -1,14 +1,9 @@
 // Compact content header with horizontal tabs for the owner manager.
 
 import {
-  BarChart3,
-  Building2,
   CircleUserRound,
-  DollarSign,
-  GraduationCap,
   Plus,
   Shield,
-  Users,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,14 +24,9 @@ interface OwnerManagerContentHeaderProps {
   loading: boolean;
 }
 
-const tabs: { value: OwnerManagerTabType; label: string; icon: typeof Building2 }[] = [
-  { value: 'centers', label: 'Centers', icon: Building2 },
-  { value: 'owners', label: 'Owners', icon: Shield },
+const tabs: { value: OwnerManagerTabType; label: string; icon: typeof Shield }[] = [
   { value: 'superusers', label: 'Admins', icon: CircleUserRound },
-  { value: 'teachers', label: 'Teachers', icon: Users },
-  { value: 'students', label: 'Students', icon: GraduationCap },
-  { value: 'finance', label: 'Finance', icon: DollarSign },
-  { value: 'statistics', label: 'Statistics', icon: BarChart3 },
+  { value: 'owners', label: 'Owners', icon: Shield },
 ];
 
 const tabTone: Record<OwnerManagerTabType, string> = {
@@ -61,33 +51,33 @@ export const OwnerManagerContentHeader = ({
   onTabChange,
   loading,
 }: OwnerManagerContentHeaderProps) => {
-  const CurrentIcon = currentMeta.icon;
   const { t } = useLanguage();
   const helperMessage = isScopedAndMissingCenter
     ? t(scopedMessage)
-    : activeTab === 'statistics' || activeTab === 'finance'
+    : activeTab === 'statistics' || activeTab === 'finance' || activeTab === 'teachers'
       ? t('Showing combined data from every center.')
       : `${t('Working inside')} ${activeCenterLabel}.`;
 
   return (
     <div className="overflow-hidden rounded-lg border border-cyan-200 bg-gradient-to-br from-white via-cyan-50 to-fuchsia-50 p-4 shadow-sm dark:border-white/10 dark:from-white/[0.06] dark:via-white/[0.03] dark:to-white/[0.04]">
-      {/* Title row */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div className="flex items-center gap-3">
-          <div className={cn('flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br text-white shadow-lg', tabTone[activeTab])}>
-            <CurrentIcon className="h-5 w-5" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-fuchsia-600 to-indigo-700 text-white shadow-lg shadow-fuchsia-500/25">
+            <Shield className="h-5 w-5" />
           </div>
           <div>
             <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">
-              {t(currentMeta.label)}
+              {t('Owner Panel')}
             </h1>
-            <p className="text-sm text-slate-500 dark:text-white/55">{t(currentMeta.description)}</p>
+            <p className="max-w-2xl text-sm text-slate-500 dark:text-white/55">
+              {t('Manage owner access and branch administrators. Use the sidebar Centers page for branch management and Reports for analytics.')}
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
+        <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
           <Badge variant="outline" className="border-blue-200 bg-blue-600 px-2 py-1 text-xs font-black text-white dark:border-blue-400/20">
-            {dataCount} {t('records')}
+            {t(currentMeta.label)}: {dataCount}
           </Badge>
           <Badge variant="outline" className="border-emerald-200 bg-emerald-600 px-2 py-1 text-xs font-black text-white dark:border-emerald-400/20">
             {t('Branch')}: {activeCenterLabel}
@@ -107,9 +97,9 @@ export const OwnerManagerContentHeader = ({
         </div>
       </div>
 
-      {/* Horizontal tabs */}
-      <div className="mt-4 overflow-x-auto">
-        <div className="flex w-full gap-1 rounded-md border border-slate-200/70 bg-white/90 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-black uppercase text-slate-500">{t('Manage')}</span>
+        <div className="inline-flex gap-1 rounded-md border border-slate-200/70 bg-white/90 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.value;
@@ -119,7 +109,7 @@ export const OwnerManagerContentHeader = ({
                 type="button"
                 onClick={() => onTabChange(tab.value)}
                 className={cn(
-                  'flex flex-1 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-black transition-colors whitespace-nowrap',
+                  'flex items-center justify-center gap-2 rounded px-3 py-1.5 text-xs font-black transition-colors whitespace-nowrap',
                   isActive
                     ? cn('bg-gradient-to-r text-white shadow-md', tabTone[tab.value])
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white'

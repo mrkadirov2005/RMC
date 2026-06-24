@@ -53,6 +53,7 @@ const iconMap: Record<string, ElementType> = {
   Debts: BadgeAlert,
   Owner: Crown,
   Centers: School,
+  Reports: BarChart3,
 };
 
 const iconToneMap: Record<string, string> = {
@@ -76,6 +77,7 @@ const iconToneMap: Record<string, string> = {
   Debts: 'from-red-600 to-rose-700 shadow-red-500/25',
   Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
   Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
+  Reports: 'from-slate-800 to-slate-950 shadow-slate-500/25',
 };
 
 const filledIconNames = new Set(['Students', 'PortalStudent', 'Attendance', 'Owner']);
@@ -180,6 +182,7 @@ const Sidebar = memo(() => {
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
     { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
     { label: 'Debts', path: '/debts', iconName: 'Debts', roles: ['superuser'], permission: 'CRUD_DEBT' },
+    { label: 'Reports', path: '/owner/reports', iconName: 'Reports', roles: ['superuser'], ownerOnly: true },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
     { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], ownerOnly: true },
   ];

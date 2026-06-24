@@ -238,16 +238,19 @@ const SuperuserBreakdown = ({ data }: { data: any[] }) => {
 
 export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, collections }: OwnerManagerTabStatsProps) => {
   const { t } = useLanguage();
+  const effectiveData = activeTab === 'teachers' && data.length === 0 && collections.teachers.length > 0
+    ? collections.teachers
+    : data;
   const stats = useMemo(() => {
     switch (activeTab) {
-      case 'centers': return buildCenterStats(data, crossCounts);
-      case 'owners': return buildOwnerStats(data);
-      case 'superusers': return buildSuperuserStats(data);
-      case 'teachers': return buildTeacherStats(data);
-      case 'students': return buildStudentStats(data);
+      case 'centers': return buildCenterStats(effectiveData, crossCounts);
+      case 'owners': return buildOwnerStats(effectiveData);
+      case 'superusers': return buildSuperuserStats(effectiveData);
+      case 'teachers': return buildTeacherStats(effectiveData);
+      case 'students': return buildStudentStats(effectiveData);
       default: return [];
     }
-  }, [activeTab, data, crossCounts]);
+  }, [activeTab, effectiveData, crossCounts]);
 
   if (stats.length === 0) return null;
 
@@ -285,12 +288,12 @@ export const OwnerManagerTabStats = ({ activeTab, data, loading, crossCounts, co
       )}
 
       {/* Mini dashboard breakdowns */}
-      {!loading && data.length > 0 && (
+      {!loading && effectiveData.length > 0 && (
         <>
-          {activeTab === 'centers' && <CentersBreakdown data={data} cross={crossCounts} />}
-          {activeTab === 'superusers' && <SuperuserBreakdown data={data} />}
-          {activeTab === 'teachers' && <TeacherStatsPanel data={data} collections={collections} />}
-          {activeTab === 'students' && <StudentStatsCarousel data={data} collections={collections} />}
+          {activeTab === 'centers' && <CentersBreakdown data={effectiveData} cross={crossCounts} />}
+          {activeTab === 'superusers' && <SuperuserBreakdown data={effectiveData} />}
+          {activeTab === 'teachers' && <TeacherStatsPanel data={effectiveData} collections={collections} />}
+          {activeTab === 'students' && <StudentStatsCarousel data={effectiveData} collections={collections} />}
         </>
       )}
     </div>
