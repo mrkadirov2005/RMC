@@ -39,9 +39,9 @@ interface GradesFolderTabsProps {
 const folderRowCardClass =
   'cursor-pointer overflow-hidden rounded-none border-0 border-b border-slate-200/80 bg-white shadow-none transition-colors last:border-b-0 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/30 [&>div:first-child]:hidden';
 const rowIconClass = 'flex h-6 w-6 shrink-0 items-center justify-center rounded';
-const rowBodyClass = 'flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden';
+const rowBodyClass = 'flex min-w-0 shrink-0 items-center gap-1.5 overflow-hidden';
 const rowTitleClass = 'w-44 shrink-0 truncate text-xs font-semibold';
-const rowStatsClass = 'ml-auto flex shrink-0 items-center gap-1.5 text-[10px] font-bold';
+const rowStatsClass = 'flex shrink-0 items-center justify-start gap-1.5 text-[10px] font-bold';
 
 const GradesFolderTabs = ({
   activeTab,

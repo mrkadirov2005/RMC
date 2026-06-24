@@ -55,8 +55,8 @@ const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none
 const rowClass = 'flex flex-nowrap items-center gap-1.5 border-l-4 px-2 py-1 text-xs';
 const rowIconClass = 'flex h-6 w-6 shrink-0 items-center justify-center rounded';
 const rowNameClass = 'w-56 shrink-0 truncate text-xs font-semibold';
-const rowMetaClass = 'flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden';
-const rowStatsClass = 'ml-auto flex shrink-0 items-center gap-1.5 text-right';
+const rowMetaClass = 'flex min-w-0 shrink-0 items-center gap-1.5 overflow-hidden';
+const rowStatsClass = 'flex shrink-0 items-center justify-start gap-1.5 text-left';
 
 const formatDate = (value?: string) => {
   if (!value) return '-';

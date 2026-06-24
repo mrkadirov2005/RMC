@@ -38,8 +38,8 @@ const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none
 const rowClass = 'flex flex-nowrap items-center gap-1.5 border-l-4 px-2 py-1 text-xs';
 const rowIconClass = 'folder-icon flex h-6 w-6 shrink-0 items-center justify-center rounded bg-opacity-80';
 const rowNameClass = 'w-44 shrink-0 truncate text-xs font-semibold';
-const rowMetaClass = 'flex min-w-0 flex-1 items-center gap-1.5 overflow-hidden';
-const rowStatsClass = 'ml-auto flex shrink-0 items-center gap-1.5 text-right';
+const rowMetaClass = 'flex min-w-0 shrink-0 items-center gap-1.5 overflow-hidden';
+const rowStatsClass = 'flex shrink-0 items-center justify-start gap-1.5 text-left';
 
 interface PaymentsFolderTabsProps {
   hook: UsePaymentsPageReturn;
