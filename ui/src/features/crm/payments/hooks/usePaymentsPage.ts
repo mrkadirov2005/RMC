@@ -157,8 +157,11 @@ export const usePaymentsPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const hasDiscount = Boolean(formData.discount_kind && Number(formData.discount_amount || 0) > 0);
     const payload = {
       ...formData,
+      amount: hasDiscount && formData.final_amount != null ? Number(formData.final_amount) : formData.amount,
+      original_amount: hasDiscount ? Number(formData.original_amount || formData.amount || 0) : formData.amount,
       center_id: formData.center_id ?? (getResolvedCenterId(user) ?? 0),
     };
     if (editingId) {

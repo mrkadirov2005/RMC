@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BarChart3, DollarSign, GraduationCap, Loader2, Users } from 'lucide-react';
+import { BadgePercent, BarChart3, DollarSign, GraduationCap, Loader2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ownerManagerApi } from './api';
 import type { OwnerManagerStatisticsCollections } from './types';
 import { OwnerFinancePanel } from './components/OwnerFinancePanel';
+import { DiscountStatsPanel } from './components/discount-stats/DiscountStatsPanel';
 import { StudentStatsCarousel } from './components/student-stats/StudentStatsCarousel';
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
 
-type ReportTab = 'finance' | 'students' | 'teachers';
+type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts';
 
 const tabs = [
   { value: 'finance', label: 'Moliya', Icon: DollarSign },
+  { value: 'discounts', label: 'Chegirmalar', Icon: BadgePercent },
   { value: 'students', label: "O'quvchilar", Icon: GraduationCap },
   { value: 'teachers', label: "O'qituvchilar", Icon: Users },
 ] as const;
@@ -123,6 +125,7 @@ const OwnerReports = () => {
         ) : (
           <>
             {activeTab === 'finance' && <OwnerFinancePanel collections={collections} loading={false} />}
+            {activeTab === 'discounts' && <DiscountStatsPanel collections={collections} />}
             {activeTab === 'students' && <StudentStatsCarousel data={collections.students} collections={collections} />}
             {activeTab === 'teachers' && <TeacherStatsPanel data={collections.teachers} collections={collections} />}
           </>

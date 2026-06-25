@@ -314,6 +314,15 @@ export const paymentAPI = {
   purge: (id: number) => apiClient.delete(`/payments/${id}/purge`),
 };
 
+export const discountAPI = {
+  getAll: (params?: Record<string, unknown>) => apiClient.get('/discounts', { params }),
+  getById: (id: number) => apiClient.get(`/discounts/${id}`),
+  getActiveSerialByStudent: (studentId: number) => apiClient.get(`/discounts/student/${studentId}/active`),
+  create: (data: any) => apiClient.post('/discounts', data),
+  update: (id: number, data: any) => apiClient.put(`/discounts/${id}`, data),
+  delete: (id: number) => apiClient.delete(`/discounts/${id}`),
+};
+
 export const gradeAPI = {
   getAll: () => apiClient.get('/grades'),
   getById: (id: number) => apiClient.get(`/grades/${id}`),

@@ -13,6 +13,15 @@ export interface Payment {
   receipt_number?: string;
   reference_number?: string;
   notes?: string;
+  discount_id?: number | null;
+  discount_kind?: 'serial_discount' | 'monthly_discount' | null;
+  discount_value_type?: 'percent' | 'fixed' | null;
+  discount_value?: number;
+  original_amount?: number;
+  discount_amount?: number;
+  final_amount?: number;
+  is_complete?: boolean;
+  use_monthly_discount?: boolean;
   student_first_name?: string;
   student_last_name?: string;
   student_class_id?: number;

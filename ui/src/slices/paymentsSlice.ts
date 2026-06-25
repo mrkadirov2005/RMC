@@ -20,6 +20,14 @@ export interface Payment {
   payment_status: string;
   payment_type: string;
   notes?: string;
+  discount_id?: number | null;
+  discount_kind?: 'serial_discount' | 'monthly_discount' | null;
+  discount_value_type?: 'percent' | 'fixed' | null;
+  discount_value?: number;
+  original_amount?: number;
+  discount_amount?: number;
+  final_amount?: number;
+  is_complete?: boolean;
 }
 
 interface PaymentsState {

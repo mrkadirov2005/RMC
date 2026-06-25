@@ -30,6 +30,20 @@ const getDiscountById = async (req: any, res: any) => {
   }
 };
 
+const getActiveSerialDiscountByStudent = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    const row = await discountService.getActiveSerialByStudent(Number(req.params.studentId), centerId ?? undefined);
+    res.json(row || null);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch active discount', details: error.message || String(error) });
+  }
+};
+
 const createDiscount = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -51,7 +65,12 @@ const createDiscount = async (req: any, res: any) => {
       entity_type: 'discount',
       entity_id: row?.discount_id,
       center_id: centerId ?? undefined,
-      details: { student_id: req.body.student_id, value: req.body.value, discount_type: req.body.discount_type },
+      details: {
+        student_id: req.body.student_id,
+        value: req.body.value,
+        discount_type: req.body.discount_type || req.body.value_type,
+        discount_kind: req.body.discount_kind,
+      },
       ip_address: req.ip,
     });
     res.status(201).json({ message: 'Discount created', discount: row });
@@ -94,6 +113,7 @@ const deleteDiscount = async (req: any, res: any) => {
 module.exports = {
   getAllDiscounts,
   getDiscountById,
+  getActiveSerialDiscountByStudent,
   createDiscount,
   updateDiscount,
   deleteDiscount,

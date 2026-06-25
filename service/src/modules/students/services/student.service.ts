@@ -1,6 +1,7 @@
 const { hashPassword } = require('../../../shared/password');
 const studentRepository = require('../repositories/student.repository');
 const studentCoinsRepository = require('../repositories/studentCoins.repository');
+const discountService = require('../../discounts/services/discount.service');
 
 const listStudents = (centerId?: number, teacherId?: number) => studentRepository.findAllWithClass(centerId, teacherId);
 
@@ -16,9 +17,9 @@ const listDeletedStudents = (centerId?: number) =>
 const listClassStudentsWithTransfers = (classId: number, centerId?: number, teacherId?: number) =>
   studentRepository.findByClassIncludingTransferred(classId, centerId, teacherId);
 
-const createStudent = (body: any) => {
+const createStudent = async (body: any) => {
   const password_hash = body.password ? hashPassword(body.password) : null;
-  return studentRepository.insert({
+  const student = await studentRepository.insert({
     center_id: body.center_id,
     enrollment_number: body.enrollment_number,
     first_name: body.first_name,
@@ -38,6 +39,26 @@ const createStudent = (body: any) => {
     school_class: body.school_class,
     is_frozen: body.is_frozen,
   });
+  if (body.is_discounted && body.discount_value != null) {
+    const originalPrice = Number(body.discount_original_price || body.original_price || 0);
+    const calculated = discountService.calculateDiscount(
+      originalPrice,
+      body.discount_value_type || 'fixed',
+      Number(body.discount_value || 0)
+    );
+    await discountService.create({
+      student_id: student.student_id || student.id,
+      center_id: student.center_id || body.center_id,
+      discount_type: body.discount_value_type || 'fixed',
+      discount_kind: 'serial_discount',
+      value: Number(body.discount_value || 0),
+      original_price: originalPrice,
+      final_price: calculated.finalAmount,
+      reason: body.discount_reason || null,
+      active: true,
+    });
+  }
+  return student;
 };
 
 const updateStudent = (id: number, body: any, centerId?: number, teacherId?: number) =>

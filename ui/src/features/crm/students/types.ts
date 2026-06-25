@@ -26,6 +26,11 @@ export interface Student {
   coins?: number;
   username?: string;
   password?: string;
+  is_discounted?: boolean;
+  discount_value_type?: 'percent' | 'fixed';
+  discount_value?: number;
+  discount_original_price?: number;
+  discount_reason?: string;
 }
 
 export interface Class {

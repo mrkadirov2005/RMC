@@ -54,8 +54,28 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
 const insert = (params: any[]) =>
   pool
     .query(
-      `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      `INSERT INTO payments (
+        student_id,
+        center_id,
+        payment_date,
+        amount,
+        currency,
+        payment_method,
+        transaction_reference,
+        receipt_number,
+        payment_status,
+        payment_type,
+        notes,
+        discount_id,
+        discount_kind,
+        discount_value_type,
+        discount_value,
+        original_amount,
+        discount_amount,
+        final_amount,
+        is_complete
+      )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *`,
       params
     )
     .then((r: any) => r.rows[0]);

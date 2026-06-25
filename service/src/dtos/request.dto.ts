@@ -109,6 +109,30 @@ class StudentListQueryDto {
   school_name?: string;
 
   @IsOptional()
+  @IsBoolean()
+  is_discounted?: boolean;
+
+  @IsOptional()
+  @IsIn(['percent', 'fixed'])
+  discount_value_type?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_value?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_original_price?: number;
+
+  @IsOptional()
+  @IsString()
+  discount_reason?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
   class_id?: number;
@@ -560,6 +584,48 @@ class CreatePaymentDto {
   amount!: number;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  discount_id?: number;
+
+  @IsOptional()
+  @IsIn(['serial_discount', 'monthly_discount'])
+  discount_kind?: string;
+
+  @IsOptional()
+  @IsIn(['percent', 'fixed'])
+  discount_value_type?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_value?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  original_amount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_amount?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  final_amount?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  is_complete?: boolean;
+
+  @IsOptional()
   @IsString()
   currency?: string;
 
@@ -797,9 +863,33 @@ class CreateDiscountDto {
   @IsNotEmpty()
   discount_type!: string;
 
+  @IsOptional()
+  @IsIn(['serial_discount', 'monthly_discount'])
+  discount_kind?: string;
+
+  @IsOptional()
+  @IsIn(['percent', 'fixed'])
+  value_type?: string;
+
   @Type(() => Number)
   @IsNumber()
   value!: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  original_price?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  final_price?: number;
+
+  @IsOptional()
+  @IsString()
+  payment_period?: string;
 }
 
 class CreateRefundDto {
