@@ -54,6 +54,39 @@ import { PERMISSION_CODES } from './types';
 import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
 import { useLanguage } from './i18n/LanguageContext';
 
+const scheduleIdleWork = (callback: () => void) => {
+  if (typeof window === 'undefined') return;
+  const requestIdle = (window as any).requestIdleCallback;
+  if (typeof requestIdle === 'function') {
+    requestIdle(() => callback());
+    return;
+  }
+  globalThis.setTimeout(callback, 250);
+};
+
+const prefetchPrimaryRoute = (user: any) => {
+  if (!user) return;
+
+  if (user.userType === 'student') {
+    void import('./features/student/StudentPortal');
+    return;
+  }
+
+  if (user.userType === 'teacher') {
+    void import('./features/teacher/TeacherPortal');
+    return;
+  }
+
+  if (user.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner') {
+    void import('./features/owner/OwnerManager');
+    return;
+  }
+
+  if (user.userType === 'superuser') {
+    void import('./features/crm/dashboard/Dashboard');
+  }
+};
+
 // Handles safe log arg.
 const safeLogArg = (value: unknown) => {
   if (typeof value === 'string') return value;
@@ -189,6 +222,12 @@ function AppContent() {
 
     ensureActiveCenter();
   }, [dispatch, isInitialized, user]);
+
+// Runs side effects for this component.
+  useEffect(() => {
+    if (!isInitialized || !centerReady || !user) return;
+    scheduleIdleWork(() => prefetchPrimaryRoute(user));
+  }, [centerReady, isInitialized, user]);
 
   if (!centerReady) {
     return <LoadingSpinner />;

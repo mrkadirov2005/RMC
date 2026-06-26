@@ -1,6 +1,6 @@
 // React hooks for the crm feature.
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { attendanceAPI, classAPI, portalAPI } from '@/shared/api/api';
 import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
 import { fetchClasses, fetchClassesForce } from '@/slices/classesSlice';
@@ -51,6 +51,15 @@ export const useCalendarData = ({
   const classesLoading = useAppSelector((state) => state.classes.loading);
   const attendanceItems = useAppSelector((state) => state.attendance.items) as AttendanceItem[];
   const attendanceLoading = useAppSelector((state) => state.attendance.loading);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
+  const classIds = useMemo(
+    () =>
+      classes
+        .map((cls) => Number(cls.class_id || cls.id))
+        .filter((classId) => Number.isFinite(classId) && classId > 0),
+    [classes]
+  );
+  const classIdsKey = useMemo(() => classIds.join(','), [classIds]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -80,8 +89,8 @@ export const useCalendarData = ({
 // Runs side effects for this component.
   useEffect(() => {
     if (!user || user?.userType === 'student') return;
-    setLoading(classesLoading || attendanceLoading);
-  }, [attendanceLoading, classesLoading, setLoading, user]);
+    setLoading(classesLoading || attendanceLoading || sessionsLoading);
+  }, [attendanceLoading, classesLoading, sessionsLoading, setLoading, user]);
 
   // Load student calendar data from portal
   useEffect(() => {
@@ -131,29 +140,26 @@ export const useCalendarData = ({
 
 // Loads sessions.
     const loadSessions = async () => {
+      setSessionsLoading(true);
       try {
-        if (classes.length === 0) {
+        if (classIds.length === 0) {
           setSessions([]);
           return;
         }
 
-        const sessionResults = await Promise.all(
-          classes.map((cls) => classAPI.getSessions(Number(cls.class_id || cls.id)).catch(() => ({ data: [] })))
-        );
+        const response = await classAPI.getSessionsBulk(classIds);
         if (cancelled) return;
 
-        const merged: SessionItem[] = [];
-        sessionResults.forEach((res) => {
-          const data = res.data || res || [];
-          if (Array.isArray(data)) {
-            merged.push(...data);
-          }
-        });
-        setSessions(merged);
+        const data = response.data || response || [];
+        setSessions(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error('Failed to load sessions:', error);
         if (!cancelled) {
           setSessions([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setSessionsLoading(false);
         }
       }
     };
@@ -162,7 +168,7 @@ export const useCalendarData = ({
     return () => {
       cancelled = true;
     };
-  }, [classes, setSessions, user]);
+  }, [classIdsKey, setSessions, user]);
 
   // Load attendance
   useEffect(() => {

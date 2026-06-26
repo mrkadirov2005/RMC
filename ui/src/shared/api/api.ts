@@ -283,6 +283,8 @@ export const classAPI = {
     }),
   getById: (id: number, params?: { center_id?: number }) => apiClient.get(`/classes/${id}`, { params }),
   getSessions: (id: number, params?: { center_id?: number }) => apiClient.get(`/classes/${id}/sessions`, { params }),
+  getSessionsBulk: (classIds: number[]) =>
+    apiClient.get('/classes/sessions/bulk', { params: { class_ids: classIds.join(',') } }),
   create: (data: any) => apiClient.post('/classes', data),
   update: (id: number, data: any) => apiClient.put(`/classes/${id}`, data),
   delete: (id: number, params?: { force?: boolean }) => apiClient.delete(`/classes/${id}`, { params }),

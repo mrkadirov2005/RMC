@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useAppDispatch, useAppSelector, useRBAC } from '../../features/crm/hooks';
 import { logout } from '../../slices/authSlice';
-import { fetchCentersForce } from '../../slices/centersSlice';
+import { fetchCenters } from '../../slices/centersSlice';
 import { selectCenterOptions } from '../../store/selectors';
 import { useThemeMode } from '../../theme/ThemeContext';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
@@ -130,7 +130,7 @@ const Sidebar = memo(() => {
 // Runs side effects for this component.
   useEffect(() => {
     if (!isGlobalSuperuser) return;
-    dispatch(fetchCentersForce());
+    dispatch(fetchCenters());
   }, [dispatch, isGlobalSuperuser]);
 
 // Runs side effects for this component.

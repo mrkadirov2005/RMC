@@ -154,6 +154,33 @@ const getClassSessions = async (req: any, res: any) => {
   }
 };
 
+const getBulkClassSessions = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (req.user?.userType === 'student') {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    const classIds = String(req.query.class_ids || '')
+      .split(',')
+      .map((id: string) => Number(id.trim()))
+      .filter((id: number) => Number.isFinite(id) && id > 0);
+
+    if (classIds.length === 0) {
+      return res.json([]);
+    }
+
+    res.json(await sessionService.listByClasses(classIds, centerId ?? undefined, teacherId));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch sessions', details: error.message || String(error) });
+  }
+};
+
 const generateClassSessions = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -337,6 +364,7 @@ module.exports = {
   createClassSession,
   generateClassSessions,
   getClassSessions,
+  getBulkClassSessions,
   deleteUpcomingClassSessions,
   deleteClassSessionById,
   purgeClassSessionById,

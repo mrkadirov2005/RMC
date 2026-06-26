@@ -131,6 +131,9 @@ const generateMonthlySessions = async (params: {
 const listByClass = (classId: number, centerId?: number, teacherId?: number) =>
   sessionRepository.findByClass(classId, centerId, teacherId);
 
+const listByClasses = (classIds: number[], centerId?: number, teacherId?: number) =>
+  sessionRepository.findByClasses(classIds, centerId, teacherId);
+
 const deleteUpcomingSessions = (params: {
   classId: number;
   fromDate: string;
@@ -190,6 +193,7 @@ module.exports = {
   createSession,
   generateMonthlySessions, 
   listByClass, 
+  listByClasses,
   deleteUpcomingSessions, 
   deleteSessionById,
   purgeSessionById

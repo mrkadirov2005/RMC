@@ -5,6 +5,7 @@ import { useOwnerManager } from './hooks/useOwnerManager';
 import { OwnerManagerContentHeader } from './components/OwnerManagerContentHeader';
 import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
+import { OwnerOverviewPanel } from './components/OwnerOverviewPanel';
 import { OwnerManagerTabStats } from './components/OwnerManagerTabStats';
 import { OwnerSystemSettings } from './components/OwnerSystemSettings';
 
@@ -26,6 +27,12 @@ const OwnerManager = memo(() => {
           onAdd={vm.handleOpenCreate}
           onTabChange={vm.handleTabChange}
           loading={vm.loading}
+        />
+
+        <OwnerOverviewPanel
+          collections={vm.overviewCollections}
+          activeCenterLabel={vm.activeCenterLabel}
+          loading={vm.overviewLoading}
         />
 
         <OwnerSystemSettings />

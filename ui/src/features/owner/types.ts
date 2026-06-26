@@ -56,6 +56,12 @@ export interface OwnerManagerStatisticsCollections {
   deletedStudents: any[];
 }
 
+export interface OwnerOverviewCollections extends OwnerManagerStatisticsCollections {
+  centers: any[];
+  owners: any[];
+  superusers: any[];
+}
+
 export type OwnerManagerStatisticsSection = 'overview' | 'payments' | 'teachers' | 'statistics';
 
 export interface OwnerManagerPaymentMonthStats {

@@ -1,9 +1,18 @@
 // Page component for the centers screen in the crm feature.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, Loader2, Search, X } from 'lucide-react';
+import {
+  BookOpen,
+  Building2,
+  GraduationCap,
+  Loader2,
+  Plus,
+  Search,
+  Users,
+  Wallet,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -14,15 +23,29 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { CRUDTable } from '../../../shared/components/CRUDComponents';
+import { formatMoney } from '@/utils/helpers';
+import { classAPI, paymentAPI, studentAPI, teacherAPI } from '@/shared/api/api';
 import { useCentersPage } from './hooks/useCentersPage';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import {
+  buildCenterSummaries,
+  CenterRow,
+  type CenterMetrics,
+  emptyMetrics,
+  getCenterId,
+  HeroSignal,
+  InsightCard,
+  isPaidPayment,
+  MetricTile,
+} from './components/CentersVisuals';
 
 // Renders the centers page screen.
 const CentersPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [metrics, setMetrics] = useState<CenterMetrics>(emptyMetrics);
+  const [metricsLoading, setMetricsLoading] = useState(true);
   const {
     state,
     isModalOpen,
@@ -35,8 +58,35 @@ const CentersPage = () => {
     handleDelete,
     activeCenterId,
     handleActivateCenter,
-    columns,
   } = useCentersPage();
+
+  useEffect(() => {
+    let alive = true;
+    const loadMetrics = async () => {
+      setMetricsLoading(true);
+      try {
+        const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
+          studentAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
+          teacherAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
+          classAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
+          paymentAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
+        ]);
+        if (!alive) return;
+        setMetrics({
+          students: toRows(studentsRes),
+          teachers: toRows(teachersRes),
+          classes: toRows(classesRes),
+          payments: toRows(paymentsRes),
+        });
+      } finally {
+        if (alive) setMetricsLoading(false);
+      }
+    };
+    loadMetrics();
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const activeCenter = state.items.find((center) => Number(center.center_id || center.id) === Number(activeCenterId));
   const activeCenterLabel = activeCenter
@@ -64,56 +114,89 @@ const CentersPage = () => {
     () => paginateItems(filteredCenters, page, pageSize),
     [filteredCenters, page, pageSize]
   );
+  const centerSummaries = useMemo(() => buildCenterSummaries(state.items, metrics), [state.items, metrics]);
+  const activeSummary = activeCenterId ? centerSummaries.get(Number(activeCenterId)) : undefined;
+  const totalCollected = metrics.payments.filter(isPaidPayment).reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
+  const topCenter = [...centerSummaries.values()].sort((a, b) => b.collected - a.collected)[0];
+  const totalCapacity = state.items.length;
 
   useEffect(() => {
     setPage(1);
   }, [searchTerm]);
 
   return (
-    <div className="max-w-7xl mx-auto py-6 px-4 space-y-6">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Centers Management</h1>
-          <p className="text-muted-foreground mt-1">Create a new branch, activate it, and start working inside it right away.</p>
-        </div>
-        <Button onClick={() => handleOpenModal()}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Center
-        </Button>
-      </div>
-
-      <Card className="border border-border/60 bg-card shadow-sm">
-        <CardContent className="pt-6">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Active Branch</p>
-              <h2 className="text-xl font-semibold mt-1">{activeCenterLabel}</h2>
-            </div>
-            <div className="flex flex-col gap-3 md:items-end">
-              <p className="text-sm text-muted-foreground">{state.items.length} centers available</p>
-              <div className="flex items-center gap-2 w-full md:w-auto">
-                <Label htmlFor="active-center-select" className="sr-only">Switch branch</Label>
-                <select
-                  id="active-center-select"
-                  className="h-10 w-full md:w-[260px] rounded-md border border-input bg-background px-3 text-sm"
-                  value={activeCenterId ?? ''}
-                  onChange={(e) => handleActivateCenter(Number(e.target.value))}
-                >
-                  <option value="" disabled>Select branch</option>
-                  {state.items.map((center) => {
-                    const centerId = Number(center.center_id || center.id);
-                    return (
-                      <option key={centerId} value={centerId}>
-                        {center.center_name || center.center_code || `Center ${centerId}`}
-                      </option>
-                    );
-                  })}
-                </select>
+    <div className="mx-auto max-w-7xl space-y-5 px-4 py-5">
+      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+        <div className="grid gap-0 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-950 p-5 text-white">
+            <div className="relative z-10">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded bg-white/10 px-2.5 py-1 text-xs font-black text-white/80">Markazlar</span>
+                <span className="rounded bg-cyan-400/15 px-2.5 py-1 text-xs font-black text-cyan-100">{state.items.length} centers</span>
+              </div>
+              <h1 className="mt-4 text-3xl font-black tracking-tight">Centers Management</h1>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-white/65">
+                Switch active branch, compare center performance, and manage branch details from one focused workspace.
+              </p>
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <HeroSignal Icon={GraduationCap} label="Students" value={metrics.students.length.toLocaleString()} />
+                <HeroSignal Icon={Users} label="Teachers" value={metrics.teachers.length.toLocaleString()} />
+                <HeroSignal Icon={Wallet} label="Collected" value={formatMoney(totalCollected)} />
               </div>
             </div>
+            <div className="absolute -right-24 -top-24 h-60 w-60 rounded-full bg-cyan-400/20 blur-3xl" />
+            <div className="absolute -bottom-28 left-16 h-56 w-56 rounded-full bg-emerald-400/20 blur-3xl" />
           </div>
-        </CardContent>
-      </Card>
+
+          <div className="p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-black uppercase text-slate-500">Active Branch</p>
+                <h2 className="mt-1 text-xl font-black text-slate-950 dark:text-white">{activeCenterLabel}</h2>
+                <p className="mt-1 text-sm font-semibold text-slate-500">
+                  {activeSummary ? `${activeSummary.students} students, ${activeSummary.teachers} teachers, ${formatMoney(activeSummary.collected)} collected` : 'Pick a branch to start working.'}
+                </p>
+              </div>
+              <Button onClick={() => handleOpenModal()} className="bg-slate-950 text-white hover:bg-slate-800">
+                <Plus className="mr-2 h-4 w-4" />
+                Add Center
+              </Button>
+            </div>
+
+            <div className="mt-4">
+              <Label htmlFor="active-center-select" className="text-xs font-black uppercase text-slate-500">Switch branch</Label>
+              <select
+                id="active-center-select"
+                className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold dark:border-white/10 dark:bg-slate-950"
+                value={activeCenterId ?? ''}
+                onChange={(e) => handleActivateCenter(Number(e.target.value))}
+              >
+                <option value="" disabled>Select branch</option>
+                {state.items.map((center) => {
+                  const centerId = Number(center.center_id || center.id);
+                  return (
+                    <option key={centerId} value={centerId}>
+                      {center.center_name || center.center_code || `Center ${centerId}`}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+              <InsightCard label="Top by revenue" value={topCenter?.center.center_name || 'No data'} detail={topCenter ? formatMoney(topCenter.collected) : '0'} />
+              <InsightCard label="Branches ready" value={`${totalCapacity}`} detail={metricsLoading ? 'Refreshing metrics...' : 'Available centers'} />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-4">
+        <MetricTile Icon={Building2} label="Centers" value={state.items.length.toLocaleString()} tone="from-blue-600 to-cyan-600" />
+        <MetricTile Icon={GraduationCap} label="Students" value={metrics.students.length.toLocaleString()} tone="from-emerald-600 to-teal-600" />
+        <MetricTile Icon={BookOpen} label="Groups" value={metrics.classes.length.toLocaleString()} tone="from-violet-600 to-fuchsia-600" />
+        <MetricTile Icon={Wallet} label="Revenue" value={formatMoney(totalCollected)} tone="from-amber-500 to-orange-600" />
+      </div>
 
       {state.error && (
         <Alert variant="destructive" className="mb-4">
@@ -121,26 +204,31 @@ const CentersPage = () => {
         </Alert>
       )}
 
-      <div className="relative max-w-xl">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          placeholder="Search centers by name, code, city, phone..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10 pr-10"
-        />
-        {searchTerm && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
-            onClick={() => setSearchTerm('')}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        )}
+      <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full md:max-w-xl">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search centers by name, code, city, phone..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 pr-10"
+          />
+          {searchTerm && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+              onClick={() => setSearchTerm('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        <span className="whitespace-nowrap rounded bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 dark:bg-white/10 dark:text-white/70">
+          Showing {paginatedCenters.start}-{paginatedCenters.end} of {filteredCenters.length}
+        </span>
       </div>
 
       {state.loading ? (
@@ -148,28 +236,24 @@ const CentersPage = () => {
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <CRUDTable
-          title=""
-          data={paginatedCenters.items}
-          columns={columns}
-          onAdd={() => handleOpenModal()}
-          onEdit={handleOpenModal}
-          onDelete={handleDelete}
-          extraActions={(center) => {
-            const centerId = Number(center.center_id || center.id);
-            const isActive = Number(activeCenterId) === centerId;
-            return (
-              <Button
-                variant={isActive ? 'secondary' : 'outline'}
-                size="sm"
-                onClick={() => handleActivateCenter(centerId)}
-                className={isActive ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' : ''}
-              >
-                {isActive ? 'Active' : 'Use Branch'}
-              </Button>
-            );
-          }}
-        />
+        <div className="grid gap-3">
+          {paginatedCenters.items.map((center) => (
+            <CenterRow
+              key={getCenterId(center)}
+              center={center}
+              summary={centerSummaries.get(getCenterId(center))}
+              active={Number(activeCenterId) === getCenterId(center)}
+              onActivate={() => handleActivateCenter(getCenterId(center))}
+              onEdit={() => handleOpenModal(center)}
+              onDelete={() => handleDelete(getCenterId(center))}
+            />
+          ))}
+          {paginatedCenters.items.length === 0 && (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-white py-10 text-center text-sm font-semibold text-slate-500 dark:border-white/10 dark:bg-white/[0.04]">
+              No centers found.
+            </div>
+          )}
+        </div>
       )}
 
       {!state.loading && filteredCenters.length > 0 && (
@@ -275,5 +359,7 @@ const CentersPage = () => {
     </div>
   );
 };
+
+const toRows = (response: any) => (Array.isArray(response) ? response : response?.data || []);
 
 export default CentersPage;

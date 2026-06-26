@@ -45,6 +45,27 @@ const findByClass = async (classId: number, centerId?: number, teacherId?: numbe
   return result.rows;
 };
 
+const findByClasses = async (classIds: number[], centerId?: number, teacherId?: number) => {
+  const uniqueClassIds = Array.from(new Set(classIds.filter((id) => Number.isFinite(id) && id > 0)));
+  if (uniqueClassIds.length === 0) return [];
+
+  const params: any[] = [uniqueClassIds];
+  let query = 'SELECT * FROM sessions WHERE class_id = ANY($1::int[]) AND deleted_at IS NULL';
+
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (teacherId) {
+    params.push(teacherId);
+    query += ` AND teacher_id = $${params.length}`;
+  }
+
+  query += ' ORDER BY session_date, start_time';
+  const result = await pool.query(query, params);
+  return result.rows;
+};
+
 const deleteUpcoming = async (classId: number, fromDate: string, toDate?: string, centerId?: number, teacherId?: number) => {
   let query = 'UPDATE sessions SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE class_id = $1 AND session_date >= $2 AND deleted_at IS NULL';
   const params: any[] = [classId, fromDate];
@@ -140,7 +161,7 @@ const purgeById = async (classId: number, sessionId: number, centerId?: number, 
   return { deleted: result.rowCount || 0 };
 };
 
-module.exports = { create, bulkInsert, findByClass, deleteUpcoming, deleteById, softDeleteByClass, purgeById };
+module.exports = { create, bulkInsert, findByClass, findByClasses, deleteUpcoming, deleteById, softDeleteByClass, purgeById };
 
 
 export {};

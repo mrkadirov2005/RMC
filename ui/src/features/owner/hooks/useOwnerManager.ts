@@ -18,7 +18,7 @@ import {
 } from '../../../slices/pagesUiSlice';
 import { selectOwnerManagerUi } from '../selectors';
 import { OWNER_MANAGER_TAB_META } from '../constants';
-import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType } from '../types';
+import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, OwnerOverviewCollections } from '../types';
 import { buildOwnerStudentStatistics, createInitialFormState, getOwnerManagerRowId, normalizePermissions } from '../utils';
 import { ownerManagerApi } from '../api';
 
@@ -74,6 +74,17 @@ export const useOwnerManager = () => {
     payments: [] as any[],
     deletedStudents: [] as any[],
   });
+  const [overviewCollections, setOverviewCollections] = useState<OwnerOverviewCollections>({
+    centers: [],
+    owners: [],
+    superusers: [],
+    students: [],
+    teachers: [],
+    classes: [],
+    payments: [],
+    deletedStudents: [],
+  });
+  const [overviewLoading, setOverviewLoading] = useState(false);
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
 
   const needsCenterScope = activeTab === 'superusers' || activeTab === 'students';
@@ -219,6 +230,45 @@ export const useOwnerManager = () => {
     }
   }, [activeCenterId, activeTab, canHardDelete, dispatch, needsCenterScope]);
 
+// Memoizes the overview data callback.
+  const fetchOverview = useCallback(async () => {
+    setOverviewLoading(true);
+    try {
+      const [
+        centersRes,
+        ownersRes,
+        superusersRes,
+        studentsRes,
+        teachersRes,
+        classesRes,
+        paymentsRes,
+        deletedStudentsRes,
+      ] = await Promise.all([
+        ownerManagerApi.centers.getAll().catch(() => ({ data: [] })),
+        ownerManagerApi.owners.getAll().catch(() => ({ data: [] })),
+        ownerManagerApi.superusers.getAll().catch(() => ({ data: [] })),
+        ownerManagerApi.students.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.teachers.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.classes.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.payments.getAllAcrossCenters().catch(() => ({ data: [] })),
+        canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+      ]);
+
+      setOverviewCollections({
+        centers: toRows(centersRes),
+        owners: toRows(ownersRes),
+        superusers: toRows(superusersRes),
+        students: toRows(studentsRes),
+        teachers: toRows(teachersRes),
+        classes: toRows(classesRes),
+        payments: toRows(paymentsRes),
+        deletedStudents: toRows(deletedStudentsRes),
+      });
+    } finally {
+      setOverviewLoading(false);
+    }
+  }, [canHardDelete]);
+
 // Memoizes the load centers callback.
   const loadCenters = useCallback(async () => {
     try {
@@ -264,6 +314,11 @@ export const useOwnerManager = () => {
   useEffect(() => {
     loadCenters();
   }, [loadCenters]);
+
+// Runs side effects for overview cards.
+  useEffect(() => {
+    fetchOverview();
+  }, [fetchOverview]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -375,13 +430,14 @@ export const useOwnerManager = () => {
       dispatch(setOwnerManagerShowForm(false));
 
       await fetchData();
+      await fetchOverview();
     } catch (err) {
       const errorMessage = handleApiError(err);
       showToast.error(errorMessage);
     } finally {
       dispatch(setOwnerManagerLoading(false));
     }
-  }, [activeTab, dispatch, editingId, fetchData, formData]);
+  }, [activeTab, dispatch, editingId, fetchData, fetchOverview, formData]);
 
 // Memoizes the handle delete callback.
   const handleDelete = useCallback(async (id: number) => {
@@ -408,13 +464,14 @@ export const useOwnerManager = () => {
       }
       showToast.success('Record deleted successfully.');
       await fetchData();
+      await fetchOverview();
     } catch (err) {
       const errorMessage = handleApiError(err);
       showToast.error(errorMessage);
     } finally {
       dispatch(setOwnerManagerLoading(false));
     }
-  }, [activeTab, dispatch, fetchData]);
+  }, [activeTab, dispatch, fetchData, fetchOverview]);
 
 // Memoizes the handle hard delete callback.
   const handleHardDelete = useCallback(async (id: number) => {
@@ -441,13 +498,14 @@ export const useOwnerManager = () => {
       }
       showToast.success('Record permanently deleted.');
       await fetchData();
+      await fetchOverview();
     } catch (err) {
       const errorMessage = handleApiError(err);
       showToast.error(errorMessage);
     } finally {
       dispatch(setOwnerManagerLoading(false));
     }
-  }, [activeTab, canHardDelete, dispatch, fetchData]);
+  }, [activeTab, canHardDelete, dispatch, fetchData, fetchOverview]);
 
 // Memoizes the handle reset password callback.
   const handleResetPassword = useCallback(async (item: any) => {
@@ -535,6 +593,8 @@ export const useOwnerManager = () => {
     needsCenterScope,
     isScopedAndMissingCenter,
     statisticsCollections,
+    overviewCollections,
+    overviewLoading,
     statistics,
     crossCounts,
     canHardDelete,
@@ -552,3 +612,5 @@ export const useOwnerManager = () => {
     handleTabChange,
   };
 };
+
+const toRows = (response: any) => (Array.isArray(response) ? response : response?.data || []);

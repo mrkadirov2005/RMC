@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { fetchStudentsForce } from '../../../../slices/studentsSlice';
+import { fetchStudents, fetchStudentsForce } from '../../../../slices/studentsSlice';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
 import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSlice';
 import { fetchPayments, fetchPaymentsForce } from '../../../../slices/paymentsSlice';
@@ -57,7 +57,7 @@ export const useDashboardData = (
 
 // Runs side effects for this component.
   useEffect(() => {
-    dispatch(fetchStudentsForce());
+    dispatch(fetchStudents());
     dispatch(fetchClasses());
     if (isSuperuser) {
       dispatch(fetchTeachers());

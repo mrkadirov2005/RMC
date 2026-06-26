@@ -33,6 +33,8 @@ const classController=require('../modules/classes/controllers/class.controller')
  */
 router_class.get('/', requireAuth, classController.getAllClasses);
 
+router_class.get('/sessions/bulk', requireAuth, classController.getBulkClassSessions);
+
 /**
  * @swagger
  * /classes/{id}:
