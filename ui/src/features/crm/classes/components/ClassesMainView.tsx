@@ -322,6 +322,7 @@ export const ClassesMainView = ({
                               const classId = getClassId(cls);
                               const isClassExpanded = expandedClassIds.has(classId);
                               const students = studentsByClassId.get(classId) || [];
+                              const studentCount = students.length || Number(cls.student_count || 0);
                               return (
                                 <div
                                   key={classId || cls.class_name}
@@ -347,7 +348,7 @@ export const ClassesMainView = ({
                                       className={`h-7 rounded-md px-2 text-[11px] font-semibold text-white ${isClassExpanded ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                                     >
                                       <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isClassExpanded && 'rotate-180')} />
-                                      {students.length}
+                                      {studentCount}
                                     </Button>
                                   </div>
                                   {isClassExpanded && (

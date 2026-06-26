@@ -100,6 +100,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
     if (!enabled || !isOwner) return;
 
     const onClick = (event: MouseEvent) => {
+      if (!event.altKey) return;
       const editableTarget = findEditableTarget(event.target);
       if (!editableTarget) return;
 
@@ -196,7 +197,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
           onClick={() => setEnabled((current) => !current)}
         >
           {enabled ? <Check className="h-4 w-4" /> : <PencilLine className="h-4 w-4" />}
-          {enabled ? 'Edit mode on' : 'Edit translations'}
+          {enabled ? 'Translation pick on' : 'Edit translations'}
         </Button>
         {enabled && (
           <Button type="button" size="icon" variant="outline" className="h-9 w-9 shadow-lg" onClick={() => setEnabled(false)}>
@@ -207,7 +208,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
 
       {enabled && (
         <div className="pointer-events-none fixed left-1/2 top-4 z-[1590] -translate-x-1/2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 shadow-lg dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
-          Click a label, button, heading, table header, or placeholder to edit its translation.
+          Hold Alt/Option and click text to edit its translation. Normal clicks still work.
         </div>
       )}
 

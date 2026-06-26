@@ -40,11 +40,11 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const loadClasses = async () => {
     try {
       setLoading(true);
-      const response = await classAPI.getAll();
-      const allClasses = response.data || [];
-      const scopedClasses = effectiveTeacherId
-        ? allClasses.filter((cls: ClassInfo) => Number(cls.teacher_id) === Number(effectiveTeacherId))
-        : allClasses;
+      const response = await classAPI.getAll(
+        effectiveTeacherId ? { teacher_id: Number(effectiveTeacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }
+      );
+      const payload = response.data || [];
+      const scopedClasses = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
       setClasses(scopedClasses);
     } catch (error) {
       console.error('Error loading classes:', error);

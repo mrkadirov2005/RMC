@@ -87,12 +87,13 @@ const TeacherPortal = () => {
   );
 // Memoizes the load stats callback.
   const loadStats = useCallback(() => {
+    const scopedParams = user?.id ? { teacher_id: Number(user.id), page: 1, limit: 100 } : undefined;
     dispatch(fetchTests());
-    dispatch(fetchStudents());
-    dispatch(fetchClasses());
+    dispatch(fetchStudents(scopedParams));
+    dispatch(fetchClasses(scopedParams));
     dispatch(fetchAttendance());
     dispatch(fetchAssignments());
-  }, [dispatch]);
+  }, [dispatch, user?.id]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -182,14 +183,6 @@ const TeacherPortal = () => {
     { value: 'payments', label: t('Payments'), icon: <Wallet className="h-4 w-4" /> },
   ];
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <div className="relative space-y-6">
       <PageHeader
@@ -235,16 +228,20 @@ const TeacherPortal = () => {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {statsCards.map((stat, index) => (
-          <MetricCard
-            key={index}
-            className={`animate-slide-up animation-delay-${(index + 1) * 100}`}
-            label={stat.title}
-            value={stat.value}
-            detail={stat.detail}
-            icon={stat.icon}
-            tone={stat.tone}
-            onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
-          />
+          <div key={stat.title} className="relative">
+            <MetricCard
+              className={`animate-slide-up animation-delay-${(index + 1) * 100}`}
+              label={stat.title}
+              value={loading ? '...' : stat.value}
+              detail={stat.detail}
+              icon={stat.icon}
+              tone={stat.tone}
+              onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
+            />
+            {loading && index === 0 && (
+              <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
+            )}
+          </div>
         ))}
       </div>
 

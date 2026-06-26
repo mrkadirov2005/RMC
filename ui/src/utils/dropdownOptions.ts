@@ -7,13 +7,20 @@ export interface DropdownOption {
   value: any;
 }
 
+const dropdownParams = { page: 1, limit: 100 };
+
+const toRows = (response: any) => {
+  const data = response?.data ?? response;
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
+  return [];
+};
+
 // Fetch Teachers
 export const fetchTeachers = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await teacherAPI.getAll();
-    const data = response.data || response;
-    const teacherList = Array.isArray(data) ? data : [];
-    console.log('Teachers fetched:', teacherList);
+    const response = await teacherAPI.getAll(dropdownParams);
+    const teacherList = toRows(response);
     return teacherList.map((teacher: any) => ({
       id: teacher.teacher_id || teacher.id,
       label: `${teacher.first_name} ${teacher.last_name}`,
@@ -28,10 +35,8 @@ export const fetchTeachers = async (): Promise<DropdownOption[]> => {
 // Fetch Students
 export const fetchStudents = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await studentAPI.getAll();
-    const data = response.data || response;
-    const studentList = Array.isArray(data) ? data : [];
-    console.log('Students fetched:', studentList);
+    const response = await studentAPI.getAll(dropdownParams);
+    const studentList = toRows(response);
     return studentList.map((student: any) => ({
       id: student.student_id || student.id,
       label: `${student.first_name} ${student.last_name} (${student.enrollment_number})`,
@@ -46,10 +51,8 @@ export const fetchStudents = async (): Promise<DropdownOption[]> => {
 // Fetch Classes
 export const fetchClasses = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await classAPI.getAll();
-    const data = response.data || response;
-    const classList = Array.isArray(data) ? data : [];
-    console.log('Classes fetched:', classList);
+    const response = await classAPI.getAll(dropdownParams);
+    const classList = toRows(response);
     return classList.map((cls: any) => ({
       id: cls.class_id || cls.id,
       label: `${cls.class_name} - ${cls.level}${cls.section ? ' ' + cls.section : ''}`,
@@ -65,9 +68,7 @@ export const fetchClasses = async (): Promise<DropdownOption[]> => {
 export const fetchCenters = async (): Promise<DropdownOption[]> => {
   try {
     const response = await centerAPI.getAll();
-    const data = response.data || response;
-    const centerList = Array.isArray(data) ? data : [];
-    console.log('Centers fetched:', centerList);
+    const centerList = toRows(response);
     return centerList.map((center: any) => ({
       id: center.center_id || center.id,
       label: center.center_name || `${center.city} - ${center.id}`,
@@ -83,9 +84,7 @@ export const fetchCenters = async (): Promise<DropdownOption[]> => {
 export const fetchSubjects = async (): Promise<DropdownOption[]> => {
   try {
     const response = await subjectAPI.getAll();
-    const data = response.data || response;
-    const subjectList = Array.isArray(data) ? data : [];
-    console.log('Subjects fetched:', subjectList);
+    const subjectList = toRows(response);
     return subjectList.map((subject: any) => ({
       id: subject.subject_id || subject.id,
       label: subject.subject_name,
@@ -100,10 +99,8 @@ export const fetchSubjects = async (): Promise<DropdownOption[]> => {
 // Fetch Payments
 export const fetchPayments = async (): Promise<DropdownOption[]> => {
   try {
-    const response = await paymentAPI.getAll();
-    const data = response.data || response;
-    const paymentList = Array.isArray(data) ? data : [];
-    console.log('Payments fetched:', paymentList);
+    const response = await paymentAPI.getAll(dropdownParams);
+    const paymentList = toRows(response);
     return paymentList.map((payment: any) => ({
       id: payment.payment_id || payment.id,
       label: `Receipt #${payment.receipt_number} - ${payment.amount}`,

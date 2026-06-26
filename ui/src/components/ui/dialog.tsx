@@ -56,10 +56,10 @@ const DialogOverlay = ({ className, ...props }: React.HTMLAttributes<HTMLDivElem
 const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => {
     const ctx = React.useContext(DialogContext);
-    if (!ctx?.open) return null;
 
 // Runs side effects for this component.
     React.useEffect(() => {
+      if (!ctx?.open) return undefined;
 // Handles on key down.
       const onKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') ctx?.onOpenChange?.(false);
@@ -67,6 +67,8 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
       document.addEventListener('keydown', onKeyDown);
       return () => document.removeEventListener('keydown', onKeyDown);
     }, [ctx]);
+
+    if (!ctx?.open) return null;
 
     if (typeof document === 'undefined') return null;
 

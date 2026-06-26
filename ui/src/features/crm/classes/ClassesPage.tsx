@@ -216,8 +216,26 @@ const ClassesPage = () => {
   const toggleClassExpanded = (id: number) => {
     setExpandedClassIds((current) => {
       const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        if (!studentsByClassId.has(id)) {
+          setClassStudentsLoading(true);
+          studentAPI.getAll({ class_id: id, page: 1, limit: 100 })
+            .then((response) => {
+              const students = readStudentList(response);
+              setClassStudents((currentStudents) => {
+                const others = currentStudents.filter((student) => Number(student.class_id) !== id);
+                return [...others, ...students];
+              });
+            })
+            .catch(() => {
+              setClassStudents((currentStudents) => currentStudents.filter((student) => Number(student.class_id) !== id));
+            })
+            .finally(() => setClassStudentsLoading(false));
+        }
+      }
       return next;
     });
   };
@@ -229,22 +247,11 @@ const ClassesPage = () => {
   const roomsInView = new Set(filteredClasses.map((cls) => getClassRoomLabel(cls)).filter(Boolean)).size;
   const scheduledClasses = filteredClasses.filter((cls) => formatSchedule(cls) !== 'No schedule').length;
   useEffect(() => {
-    if (groupView !== 'teachers') return;
-    let cancelled = false;
-    setClassStudentsLoading(true);
-    studentAPI.getAll()
-      .then((response) => {
-        if (!cancelled) setClassStudents(readStudentList(response));
-      })
-      .catch(() => {
-        if (!cancelled) setClassStudents([]);
-      })
-      .finally(() => {
-        if (!cancelled) setClassStudentsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
+    if (groupView !== 'teachers') {
+      setExpandedTeacherIds(new Set());
+      setExpandedClassIds(new Set());
+      setClassStudents([]);
+    }
   }, [groupView]);
   const summaryCards = [
     {

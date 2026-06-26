@@ -38,13 +38,15 @@ export default function TeacherPaymentsTab({ teacherId }: TeacherPaymentsTabProp
       setLoading(true);
       try {
         const [classesRes, studentsRes, paymentsRes] = await Promise.all([
-          classAPI.getAll().catch(() => ({ data: [] })),
-          studentAPI.getAll().catch(() => ({ data: [] })),
-          paymentAPI.getAll().catch(() => ({ data: [] })),
+          classAPI.getAll(teacherId ? { teacher_id: Number(teacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }).catch(() => ({ data: [] })),
+          studentAPI.getAll(teacherId ? { teacher_id: Number(teacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }).catch(() => ({ data: [] })),
+          paymentAPI.getAll({ page: 1, limit: 100 }).catch(() => ({ data: [] })),
         ]);
         
-        const allClasses = classesRes.data || [];
-        const allStudents = studentsRes.data || [];
+        const classPayload = classesRes.data || [];
+        const studentPayload = studentsRes.data || [];
+        const allClasses = Array.isArray(classPayload) ? classPayload : Array.isArray(classPayload.data) ? classPayload.data : [];
+        const allStudents = Array.isArray(studentPayload) ? studentPayload : Array.isArray(studentPayload.data) ? studentPayload.data : [];
         const allPayments = paymentsRes.data || [];
 
         const scopedClasses = teacherId

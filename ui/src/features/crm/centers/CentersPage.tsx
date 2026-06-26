@@ -160,8 +160,6 @@ const CentersPage = () => {
                 <HeroSignal Icon={Wallet} label="Collected" value={formatMoney(totalCollected)} />
               </div>
             </div>
-            <div className="absolute -right-24 -top-24 h-60 w-60 rounded-full bg-cyan-400/20 blur-3xl" />
-            <div className="absolute -bottom-28 left-16 h-56 w-56 rounded-full bg-emerald-400/20 blur-3xl" />
           </div>
 
           <div className="p-5">

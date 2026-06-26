@@ -349,7 +349,8 @@ export const attendanceAPI = {
 };
 
 export const assignmentAPI = {
-  getAll: () => apiClient.get('/assignments'),
+  getAll: (params?: { center_id?: number; teacher_id?: number; class_id?: number; page?: number; limit?: number }) =>
+    apiClient.get('/assignments', { params }),
   getById: (id: number) => apiClient.get(`/assignments/${id}`),
   create: (data: any) => apiClient.post('/assignments', data),
   update: (id: number, data: any) => apiClient.put(`/assignments/${id}`, data),

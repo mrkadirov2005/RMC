@@ -91,8 +91,11 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
   const loadClasses = async () => {
     try {
       setLoading(true);
-      const response = await classAPI.getAll();
-      setClasses(response.data || []);
+      const response = await classAPI.getAll(
+        teacherId ? { teacher_id: Number(teacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }
+      );
+      const payload = response.data || [];
+      setClasses(Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : []);
     } catch (error) {
       console.error('Error loading classes:', error);
     } finally {
@@ -104,11 +107,11 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
   const loadClassStudents = async () => {
     try {
       setStudentsLoading(true);
-      const response = await studentAPI.getAll();
-      const allStudents = response.data || [];
-      const classStudents = selectedClass
-        ? allStudents.filter((s: any) => s.class_id === selectedClass)
-        : allStudents;
+      const response = await studentAPI.getAll(
+        selectedClass ? { class_id: Number(selectedClass), page: 1, limit: 100 } : { page: 1, limit: 100 }
+      );
+      const payload = response.data || [];
+      const classStudents = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
       setStudents(classStudents);
 
       const initialAttendance = new Map<number, AttendanceRecord>();

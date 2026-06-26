@@ -30,47 +30,95 @@ const OwnerReports = () => {
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<ReportTab>('finance');
   const [collections, setCollections] = useState<OwnerManagerStatisticsCollections>(emptyCollections);
-  const [loading, setLoading] = useState(true);
+  const [summaryCounts, setSummaryCounts] = useState({ students: 0, teachers: 0, classes: 0, payments: 0 });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    const loadReports = async () => {
-      setLoading(true);
+    const loadSummary = async () => {
       try {
-        const [studentsRes, teachersRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
-          ownerManagerApi.students.getAllAcrossCenters(),
-          ownerManagerApi.teachers.getAllAcrossCenters(),
-          ownerManagerApi.classes.getAllAcrossCenters(),
-          ownerManagerApi.payments.getAllAcrossCenters(),
-          ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })),
-        ]);
+        const response = await ownerManagerApi.centerSummaries.getAllAcrossCenters();
         if (!alive) return;
-        setCollections({
-          students: toRows(studentsRes),
-          teachers: toRows(teachersRes),
-          classes: toRows(classesRes),
-          payments: toRows(paymentsRes),
-          deletedStudents: toRows(deletedStudentsRes),
+        const summaries = toRows(response);
+        setSummaryCounts({
+          students: summaries.reduce((sum: number, row: any) => sum + Number(row.students || 0), 0),
+          teachers: summaries.reduce((sum: number, row: any) => sum + Number(row.teachers || 0), 0),
+          classes: summaries.reduce((sum: number, row: any) => sum + Number(row.classes || 0), 0),
+          payments: summaries.reduce((sum: number, row: any) => sum + Number(row.payments || 0), 0),
         });
-      } finally {
-        if (alive) setLoading(false);
+      } catch {
+        if (alive) setSummaryCounts({ students: 0, teachers: 0, classes: 0, payments: 0 });
       }
     };
 
-    loadReports();
+    loadSummary();
     return () => {
       alive = false;
     };
   }, []);
 
+  useEffect(() => {
+    let alive = true;
+    const loadActiveReport = async () => {
+      setLoading(true);
+      try {
+        const nextCollections: OwnerManagerStatisticsCollections = { ...emptyCollections };
+        if (activeTab === 'finance') {
+          const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
+            ownerManagerApi.students.getAllAcrossCenters(),
+            ownerManagerApi.teachers.getAllAcrossCenters(),
+            ownerManagerApi.classes.getAllAcrossCenters(),
+            ownerManagerApi.payments.getAllAcrossCenters(),
+          ]);
+          nextCollections.students = toRows(studentsRes);
+          nextCollections.teachers = toRows(teachersRes);
+          nextCollections.classes = toRows(classesRes);
+          nextCollections.payments = toRows(paymentsRes);
+        } else if (activeTab === 'discounts') {
+          const paymentsRes = await ownerManagerApi.payments.getAllAcrossCenters();
+          nextCollections.payments = toRows(paymentsRes);
+        } else if (activeTab === 'students') {
+          const [studentsRes, classesRes, deletedStudentsRes] = await Promise.all([
+            ownerManagerApi.students.getAllAcrossCenters(),
+            ownerManagerApi.classes.getAllAcrossCenters(),
+            ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })),
+          ]);
+          nextCollections.students = toRows(studentsRes);
+          nextCollections.classes = toRows(classesRes);
+          nextCollections.deletedStudents = toRows(deletedStudentsRes);
+        } else if (activeTab === 'teachers') {
+          const [teachersRes, studentsRes, classesRes, paymentsRes] = await Promise.all([
+            ownerManagerApi.teachers.getAllAcrossCenters(),
+            ownerManagerApi.students.getAllAcrossCenters(),
+            ownerManagerApi.classes.getAllAcrossCenters(),
+            ownerManagerApi.payments.getAllAcrossCenters(),
+          ]);
+          nextCollections.teachers = toRows(teachersRes);
+          nextCollections.students = toRows(studentsRes);
+          nextCollections.classes = toRows(classesRes);
+          nextCollections.payments = toRows(paymentsRes);
+        }
+        if (!alive) return;
+        setCollections(nextCollections);
+      } finally {
+        if (alive) setLoading(false);
+      }
+    };
+
+    loadActiveReport();
+    return () => {
+      alive = false;
+    };
+  }, [activeTab]);
+
   const summary = useMemo(
     () => [
-      { label: 'Students', value: collections.students.length.toLocaleString(), tone: 'from-amber-500 to-orange-600' },
-      { label: 'Teachers', value: collections.teachers.length.toLocaleString(), tone: 'from-emerald-600 to-teal-600' },
-      { label: 'Groups', value: collections.classes.length.toLocaleString(), tone: 'from-blue-600 to-cyan-600' },
-      { label: 'Payments', value: collections.payments.length.toLocaleString(), tone: 'from-rose-600 to-pink-600' },
+      { label: 'Students', value: summaryCounts.students.toLocaleString(), tone: 'from-amber-500 to-orange-600' },
+      { label: 'Teachers', value: summaryCounts.teachers.toLocaleString(), tone: 'from-emerald-600 to-teal-600' },
+      { label: 'Groups', value: summaryCounts.classes.toLocaleString(), tone: 'from-blue-600 to-cyan-600' },
+      { label: 'Payments', value: summaryCounts.payments.toLocaleString(), tone: 'from-rose-600 to-pink-600' },
     ],
-    [collections]
+    [summaryCounts]
   );
 
   return (

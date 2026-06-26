@@ -143,11 +143,11 @@ const TeacherStudentsTab = ({ teacherId, onRefresh: _onRefresh }: TeacherStudent
   const loadStudents = async () => {
     try {
       setLoading(true);
-      const response = await studentAPI.getAll();
-      const allStudents = response.data || [];
-      const scopedStudents = effectiveTeacherId
-        ? allStudents.filter((student: Student) => Number(student.teacher_id) === Number(effectiveTeacherId))
-        : allStudents;
+      const response = await studentAPI.getAll(
+        effectiveTeacherId ? { teacher_id: Number(effectiveTeacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }
+      );
+      const payload = response.data || [];
+      const scopedStudents = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
       setStudents(scopedStudents);
       setFilteredStudents(scopedStudents);
     } catch (error) {

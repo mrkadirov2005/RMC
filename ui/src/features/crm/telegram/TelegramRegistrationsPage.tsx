@@ -70,8 +70,14 @@ const TelegramRegistrationsPage = () => {
   const [teachers, setTeachers] = useState<any[]>([]);
 
   useEffect(() => {
-    classAPI.getAll().then((res: any) => setClasses(Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])).catch(() => {});
-    teacherAPI.getAll().then((res: any) => setTeachers(Array.isArray(res?.data) ? res.data : Array.isArray(res) ? res : [])).catch(() => {});
+    const toRows = (res: any) => {
+      const data = res?.data ?? res;
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.data)) return data.data;
+      return [];
+    };
+    classAPI.getAll({ page: 1, limit: 100 }).then((res: any) => setClasses(toRows(res))).catch(() => {});
+    teacherAPI.getAll({ page: 1, limit: 100 }).then((res: any) => setTeachers(toRows(res))).catch(() => {});
   }, []);
 
   const load = async () => {

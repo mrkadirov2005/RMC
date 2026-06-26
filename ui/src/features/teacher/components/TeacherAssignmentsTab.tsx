@@ -94,6 +94,21 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     severity: 'success',
   });
 
+  const assignmentParams = {
+    ...(teacherId ? { teacher_id: Number(teacherId) } : {}),
+    ...(selectedClass ? { class_id: Number(selectedClass) } : {}),
+    page: 1,
+    limit: 100,
+  };
+
+  const toList = <T,>(response: any): T[] => {
+    const rows = response?.data;
+    if (Array.isArray(rows)) return rows;
+    if (Array.isArray(rows?.data)) return rows.data;
+    if (Array.isArray(response)) return response;
+    return [];
+  };
+
 // Runs side effects for this component.
   useEffect(() => {
     loadInitialData();
@@ -129,13 +144,13 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
     try {
       setLoading(true);
       const [classRes, subjectRes, assignmentRes] = await Promise.all([
-        classAPI.getAll(),
+        classAPI.getAll(teacherId ? { teacher_id: Number(teacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }),
         subjectAPI.getAll(),
-        assignmentAPI.getAll(),
+        assignmentAPI.getAll(assignmentParams),
       ]);
-      setClasses(classRes.data || []);
-      setSubjects(subjectRes.data || []);
-      setAssignments(assignmentRes.data || []);
+      setClasses(toList<ClassInfo>(classRes));
+      setSubjects(toList<SubjectInfo>(subjectRes));
+      setAssignments(toList<Assignment>(assignmentRes));
     } catch (error) {
       console.error('Error loading initial data:', error);
     } finally {
@@ -146,12 +161,8 @@ const TeacherAssignmentsTab = ({ teacherId, onRefresh }: TeacherAssignmentsTabPr
 // Loads assignments.
   const loadAssignments = async () => {
     try {
-      const response = await assignmentAPI.getAll();
-      let all = response.data || [];
-      if (selectedClass) {
-        all = all.filter((a: Assignment) => a.class_id === selectedClass);
-      }
-      setAssignments(all);
+      const response = await assignmentAPI.getAll(assignmentParams);
+      setAssignments(toList<Assignment>(response));
     } catch (error) {
       console.error('Error loading assignments:', error);
     }

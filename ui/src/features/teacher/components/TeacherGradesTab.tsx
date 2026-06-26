@@ -121,10 +121,11 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     try {
       setLoading(true);
       const [classRes, subjectRes] = await Promise.all([
-        classAPI.getAll(),
+        classAPI.getAll(teacherId ? { teacher_id: Number(teacherId), page: 1, limit: 100 } : { page: 1, limit: 100 }),
         subjectAPI.getAll(),
       ]);
-      setClasses(classRes.data || []);
+      const classPayload = classRes.data || [];
+      setClasses(Array.isArray(classPayload) ? classPayload : Array.isArray(classPayload.data) ? classPayload.data : []);
       setSubjects(subjectRes.data || []);
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -138,12 +139,14 @@ const TeacherGradesTab = ({ teacherId, onRefresh }: TeacherGradesTabProps) => {
     try {
       setLoading(true);
       const [studentsRes, gradesRes] = await Promise.all([
-        studentAPI.getAll(),
+        studentAPI.getAll(selectedClass ? { class_id: Number(selectedClass), page: 1, limit: 100 } : { page: 1, limit: 100 }),
         gradeAPI.getAll(),
       ]);
 
       // Filter students by class
-      const filteredStudents = (studentsRes.data || []).filter(
+      const studentPayload = studentsRes.data || [];
+      const rows = Array.isArray(studentPayload) ? studentPayload : Array.isArray(studentPayload.data) ? studentPayload.data : [];
+      const filteredStudents = rows.filter(
         (s: Student) => !selectedClass || s.class_id === selectedClass
       );
       setStudents(filteredStudents);
