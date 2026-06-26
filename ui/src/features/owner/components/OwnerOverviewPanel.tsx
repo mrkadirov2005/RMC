@@ -18,6 +18,13 @@ import type { OwnerOverviewCollections } from '../types';
 
 interface Props {
   collections: OwnerOverviewCollections;
+  summary?: {
+    totalStudents: number;
+    totalTeachers: number;
+    totalClasses: number;
+    totalPayments: number;
+    collected: number;
+  };
   activeCenterLabel: string;
   loading: boolean;
 }
@@ -25,9 +32,24 @@ interface Props {
 const isActive = (item: any) => String(item?.status || '').toLowerCase() === 'active';
 const isPaid = (payment: any) => ['completed', 'paid'].includes(String(payment?.payment_status || payment?.status || '').toLowerCase());
 
-export const OwnerOverviewPanel = ({ collections, activeCenterLabel, loading }: Props) => {
+export const OwnerOverviewPanel = ({ collections, summary, activeCenterLabel, loading }: Props) => {
   const { t } = useLanguage();
   const stats = useMemo(() => {
+    if (summary) {
+      return {
+        activeStudents: summary.totalStudents,
+        activeTeachers: summary.totalTeachers,
+        collected: summary.collected,
+        discountTotal: 0,
+        incompleteDiscounts: 0,
+        unassignedStudents: 0,
+        groupsWithoutTeacher: 0,
+        studentsPerTeacher: summary.totalTeachers > 0 ? Math.round(summary.totalStudents / summary.totalTeachers) : 0,
+        paymentCoverage: summary.totalStudents > 0 ? Math.min(100, Math.round((summary.totalPayments / summary.totalStudents) * 100)) : 0,
+        totalStudents: summary.totalStudents,
+        totalTeachers: summary.totalTeachers,
+      };
+    }
     const activeStudents = collections.students.filter(isActive).length;
     const activeTeachers = collections.teachers.filter(isActive).length;
     const paidPayments = collections.payments.filter(isPaid);
@@ -52,14 +74,16 @@ export const OwnerOverviewPanel = ({ collections, activeCenterLabel, loading }: 
       groupsWithoutTeacher,
       studentsPerTeacher,
       paymentCoverage,
+      totalStudents: collections.students.length,
+      totalTeachers: collections.teachers.length,
     };
-  }, [collections]);
+  }, [collections, summary]);
 
   const highlights = [
     {
       label: 'Active students',
       value: stats.activeStudents.toLocaleString(),
-      detail: `${collections.students.length.toLocaleString()} total`,
+      detail: `${stats.totalStudents.toLocaleString()} total`,
       Icon: GraduationCap,
       tone: 'from-blue-600 to-cyan-600',
     },

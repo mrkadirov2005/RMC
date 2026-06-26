@@ -411,7 +411,10 @@ export const testAPI = {
 
 export const centerAPI = {
   getAll: () => apiClient.get('/centers'),
-  getSummaries: () => apiClient.get('/centers/summaries'),
+  getSummaries: (options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/centers/summaries', {
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getById: (id: number) => apiClient.get(`/centers/${id}`),
   create: (data: any) => apiClient.post('/centers', data),
   update: (id: number, data: any) => apiClient.put(`/centers/${id}`, data),

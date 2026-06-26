@@ -31,6 +31,7 @@ const OwnerManager = memo(() => {
 
         <OwnerOverviewPanel
           collections={vm.overviewCollections}
+          summary={vm.overviewSummary}
           activeCenterLabel={vm.activeCenterLabel}
           loading={vm.overviewLoading}
         />

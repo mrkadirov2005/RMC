@@ -84,6 +84,13 @@ export const useOwnerManager = () => {
     payments: [],
     deletedStudents: [],
   });
+  const [overviewSummary, setOverviewSummary] = useState({
+    totalStudents: 0,
+    totalTeachers: 0,
+    totalClasses: 0,
+    totalPayments: 0,
+    collected: 0,
+  });
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
 
@@ -128,12 +135,6 @@ export const useOwnerManager = () => {
     );
   }, []);
 
-  useEffect(() => {
-    if (activeTab === 'centers' || activeTab === 'teachers' || activeTab === 'students' || activeTab === 'finance' || activeTab === 'statistics') {
-      dispatch(setOwnerManagerTab('superusers'));
-    }
-  }, [activeTab, dispatch]);
-
 // Memoizes the fetch data callback.
   const fetchData = useCallback(async () => {
     dispatch(setOwnerManagerLoading(true));
@@ -144,17 +145,17 @@ export const useOwnerManager = () => {
       }
 
       if (activeTab === 'centers') {
-        const [centersRes, studentsRes, teachersRes, classesRes] = await Promise.all([
+        const [centersRes, summariesRes] = await Promise.all([
           ownerManagerApi.centers.getAll(),
-          ownerManagerApi.students.getAllAcrossCenters(),
-          ownerManagerApi.teachers.getAllAcrossCenters(),
-          ownerManagerApi.classes.getAllAcrossCenters(),
+          ownerManagerApi.centerSummaries.getAllAcrossCenters(),
         ]);
         const centers = Array.isArray(centersRes) ? centersRes : centersRes.data || [];
-        const students = Array.isArray(studentsRes) ? studentsRes : studentsRes.data || [];
-        const teachers = Array.isArray(teachersRes) ? teachersRes : teachersRes.data || [];
-        const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
-        setCrossCounts({ students: students.length, teachers: teachers.length, classes: classes.length });
+        const summaries = toRows(summariesRes);
+        setCrossCounts({
+          students: summaries.reduce((sum: number, row: any) => sum + Number(row.students || 0), 0),
+          teachers: summaries.reduce((sum: number, row: any) => sum + Number(row.teachers || 0), 0),
+          classes: summaries.reduce((sum: number, row: any) => sum + Number(row.classes || 0), 0),
+        });
         dispatch(setOwnerManagerData(centers));
         return;
       }
@@ -238,30 +239,32 @@ export const useOwnerManager = () => {
         centersRes,
         ownersRes,
         superusersRes,
-        studentsRes,
-        teachersRes,
-        classesRes,
-        paymentsRes,
+        summariesRes,
         deletedStudentsRes,
       ] = await Promise.all([
         ownerManagerApi.centers.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.owners.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.superusers.getAll().catch(() => ({ data: [] })),
-        ownerManagerApi.students.getAllAcrossCenters().catch(() => ({ data: [] })),
-        ownerManagerApi.teachers.getAllAcrossCenters().catch(() => ({ data: [] })),
-        ownerManagerApi.classes.getAllAcrossCenters().catch(() => ({ data: [] })),
-        ownerManagerApi.payments.getAllAcrossCenters().catch(() => ({ data: [] })),
+        ownerManagerApi.centerSummaries.getAllAcrossCenters().catch(() => ({ data: [] })),
         canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
       ]);
+      const summaries = toRows(summariesRes);
+      setOverviewSummary({
+        totalStudents: summaries.reduce((sum: number, row: any) => sum + Number(row.students || 0), 0),
+        totalTeachers: summaries.reduce((sum: number, row: any) => sum + Number(row.teachers || 0), 0),
+        totalClasses: summaries.reduce((sum: number, row: any) => sum + Number(row.classes || 0), 0),
+        totalPayments: summaries.reduce((sum: number, row: any) => sum + Number(row.payments || 0), 0),
+        collected: summaries.reduce((sum: number, row: any) => sum + Number(row.collected || 0), 0),
+      });
 
       setOverviewCollections({
         centers: toRows(centersRes),
         owners: toRows(ownersRes),
         superusers: toRows(superusersRes),
-        students: toRows(studentsRes),
-        teachers: toRows(teachersRes),
-        classes: toRows(classesRes),
-        payments: toRows(paymentsRes),
+        students: [],
+        teachers: [],
+        classes: [],
+        payments: [],
         deletedStudents: toRows(deletedStudentsRes),
       });
     } finally {
@@ -594,6 +597,7 @@ export const useOwnerManager = () => {
     isScopedAndMissingCenter,
     statisticsCollections,
     overviewCollections,
+    overviewSummary,
     overviewLoading,
     statistics,
     crossCounts,

@@ -4,6 +4,9 @@ import { classAPI, centerAPI, ownerAPI, paymentAPI, superuserAPI, studentAPI, te
 
 export const ownerManagerApi = {
   centers: centerAPI,
+  centerSummaries: {
+    getAllAcrossCenters: () => centerAPI.getSummaries({ skipCenterScope: true }),
+  },
   owners: ownerAPI,
   superusers: superuserAPI,
   teachers: {
