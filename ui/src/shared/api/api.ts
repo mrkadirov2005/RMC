@@ -411,6 +411,7 @@ export const testAPI = {
 
 export const centerAPI = {
   getAll: () => apiClient.get('/centers'),
+  getSummaries: () => apiClient.get('/centers/summaries'),
   getById: (id: number) => apiClient.get(`/centers/${id}`),
   create: (data: any) => apiClient.post('/centers', data),
   update: (id: number, data: any) => apiClient.put(`/centers/${id}`, data),

@@ -16,41 +16,59 @@ import { formatMoney } from '@/utils/helpers';
 import type { Center } from '../types';
 
 export interface CenterMetrics {
-  students: any[];
-  teachers: any[];
-  classes: any[];
-  payments: any[];
+  summaries: CenterSummaryMetrics[];
+}
+
+export interface CenterSummaryMetrics {
+  center_id: number;
+  students: number;
+  teachers: number;
+  classes: number;
+  payments: number;
+  collected: number;
+}
+
+export interface CenterSummary extends CenterSummaryMetrics {
+  center: Center;
 }
 
 export const emptyMetrics: CenterMetrics = {
-  students: [],
-  teachers: [],
-  classes: [],
-  payments: [],
+  summaries: [],
 };
 
 export const getCenterId = (center: Center) => Number(center.center_id || center.id || 0);
 
-export const isPaidPayment = (payment: any) =>
-  ['completed', 'paid'].includes(String(payment?.payment_status || payment?.status || '').toLowerCase());
-
 export const buildCenterSummaries = (centers: Center[], metrics: CenterMetrics) => {
-  const map = new Map<number, ReturnType<typeof buildCenterSummary>>();
-  centers.forEach((center) => {
-    const summary = buildCenterSummary(center, metrics);
-    map.set(getCenterId(center), summary);
-  });
-  return map;
-};
+  const map = new Map<number, CenterSummary>();
+  const summaryByCenterId = new Map(
+    metrics.summaries.map((summary) => [
+      Number(summary.center_id),
+      {
+        center_id: Number(summary.center_id),
+        students: Number(summary.students || 0),
+        teachers: Number(summary.teachers || 0),
+        classes: Number(summary.classes || 0),
+        payments: Number(summary.payments || 0),
+        collected: Number(summary.collected || 0),
+      },
+    ])
+  );
 
-export const buildCenterSummary = (center: Center, metrics: CenterMetrics) => {
-  const centerId = getCenterId(center);
-  const students = metrics.students.filter((student) => Number(student?.center_id) === centerId);
-  const teachers = metrics.teachers.filter((teacher) => Number(teacher?.center_id || teacher?.branch_id) === centerId);
-  const classes = metrics.classes.filter((group) => Number(group?.center_id) === centerId);
-  const payments = metrics.payments.filter((payment) => Number(payment?.center_id) === centerId);
-  const collected = payments.filter(isPaidPayment).reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
-  return { center, students: students.length, teachers: teachers.length, classes: classes.length, payments: payments.length, collected };
+  centers.forEach((center) => {
+    const centerId = getCenterId(center);
+    const summary = summaryByCenterId.get(centerId);
+    map.set(centerId, {
+      center,
+      center_id: centerId,
+      students: summary?.students || 0,
+      teachers: summary?.teachers || 0,
+      classes: summary?.classes || 0,
+      payments: summary?.payments || 0,
+      collected: summary?.collected || 0,
+    });
+  });
+
+  return map;
 };
 
 export const HeroSignal = ({ Icon, label, value }: { Icon: LucideIcon; label: string; value: string }) => (
@@ -88,7 +106,7 @@ export const CenterRow = ({
   onDelete,
 }: {
   center: Center;
-  summary?: ReturnType<typeof buildCenterSummary>;
+  summary?: CenterSummary;
   active: boolean;
   onActivate: () => void;
   onEdit: () => void;

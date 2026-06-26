@@ -11,6 +11,11 @@ const getCenter = (id: number, user?: any) => {
   return centerRepository.findById(id, centerId);
 };
 
+const getCenterSummaries = (user?: any) => {
+  const centerId = isCenterAdmin(user) ? user?.center_id : undefined;
+  return centerRepository.getSummaries(centerId);
+};
+
 const createCenter = (body: any) => {
   const { center_name, center_code, email, phone, address, city, principal_name } = body;
   return centerRepository.insert([center_name, center_code, email, phone, address, city, principal_name]);
@@ -27,6 +32,6 @@ const deleteCenter = (id: number, user?: any) => {
   return centerRepository.remove(id, centerId);
 };
 
-module.exports = { listCenters, getCenter, createCenter, updateCenter, deleteCenter };
+module.exports = { listCenters, getCenter, getCenterSummaries, createCenter, updateCenter, deleteCenter };
 
 export {};

@@ -25,6 +25,60 @@ const findById = (id: number, centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
+const getSummaries = (centerId?: number) => {
+  const params: any[] = [];
+  const centerFilter = centerId ? 'WHERE ec.center_id = $1' : '';
+  if (centerId) params.push(centerId);
+
+  const query = `
+    SELECT
+      ec.center_id,
+      COALESCE(s.students, 0)::int AS students,
+      COALESCE(t.teachers, 0)::int AS teachers,
+      COALESCE(c.classes, 0)::int AS classes,
+      COALESCE(p.payments, 0)::int AS payments,
+      COALESCE(p.collected, 0)::numeric AS collected
+    FROM edu_centers ec
+    LEFT JOIN (
+      SELECT center_id, COUNT(*)::int AS students
+      FROM students
+      WHERE deleted_at IS NULL
+      GROUP BY center_id
+    ) s ON s.center_id = ec.center_id
+    LEFT JOIN (
+      SELECT center_id, COUNT(*)::int AS teachers
+      FROM teachers
+      WHERE deleted_at IS NULL
+      GROUP BY center_id
+    ) t ON t.center_id = ec.center_id
+    LEFT JOIN (
+      SELECT center_id, COUNT(*)::int AS classes
+      FROM classes
+      WHERE deleted_at IS NULL
+      GROUP BY center_id
+    ) c ON c.center_id = ec.center_id
+    LEFT JOIN (
+      SELECT
+        center_id,
+        COUNT(*)::int AS payments,
+        SUM(
+          CASE
+            WHEN LOWER(COALESCE(payment_status, '')) IN ('completed', 'paid')
+            THEN COALESCE(amount, 0)
+            ELSE 0
+          END
+        )::numeric AS collected
+      FROM payments
+      WHERE deleted_at IS NULL
+      GROUP BY center_id
+    ) p ON p.center_id = ec.center_id
+    ${centerFilter}
+    ORDER BY ec.center_id
+  `;
+
+  return pool.query(query, params).then((r: any) => r.rows);
+};
+
 const insert = (values: any[]) =>
   pool
     .query(
@@ -60,6 +114,6 @@ const remove = (id: number, centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-module.exports = { findAll, findById, insert, update, remove };
+module.exports = { findAll, findById, getSummaries, insert, update, remove };
 
 export {};

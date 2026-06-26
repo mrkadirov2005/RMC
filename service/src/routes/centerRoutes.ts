@@ -22,6 +22,8 @@ const centerController = require('../modules/centers/controllers/center.controll
  */
 router_center.get('/', centerController.getAllCenters);
 
+router_center.get('/summaries', centerController.getCenterSummaries);
+
 /**
  * @swagger
  * /centers/{id}:

@@ -25,6 +25,15 @@ const getCenterById = async (req: any, res: any) => {
   }
 };
 
+const getCenterSummaries = async (req: any, res: any) => {
+  try {
+    res.json(await centerService.getCenterSummaries(req.user));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch center summaries', details: error.message || String(error) });
+  }
+};
+
 const createCenter = async (req: any, res: any) => {
   try {
     if (isCenterAdmin(req.user)) {
@@ -70,6 +79,6 @@ const deleteCenter = async (req: any, res: any) => {
   }
 };
 
-module.exports = { getAllCenters, getCenterById, createCenter, updateCenter, deleteCenter };
+module.exports = { getAllCenters, getCenterById, getCenterSummaries, createCenter, updateCenter, deleteCenter };
 
 export {};

@@ -24,7 +24,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { formatMoney } from '@/utils/helpers';
-import { classAPI, paymentAPI, studentAPI, teacherAPI } from '@/shared/api/api';
+import { centerAPI } from '@/shared/api/api';
 import { useCentersPage } from './hooks/useCentersPage';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import {
@@ -35,7 +35,6 @@ import {
   getCenterId,
   HeroSignal,
   InsightCard,
-  isPaidPayment,
   MetricTile,
 } from './components/CentersVisuals';
 
@@ -65,18 +64,17 @@ const CentersPage = () => {
     const loadMetrics = async () => {
       setMetricsLoading(true);
       try {
-        const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
-          studentAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
-          teacherAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
-          classAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
-          paymentAPI.getAll(undefined, { skipCenterScope: true }).catch(() => ({ data: [] })),
-        ]);
+        const response = await centerAPI.getSummaries().catch(() => ({ data: [] }));
         if (!alive) return;
         setMetrics({
-          students: toRows(studentsRes),
-          teachers: toRows(teachersRes),
-          classes: toRows(classesRes),
-          payments: toRows(paymentsRes),
+          summaries: toRows(response).map((summary: any) => ({
+            center_id: Number(summary?.center_id || 0),
+            students: Number(summary?.students || 0),
+            teachers: Number(summary?.teachers || 0),
+            classes: Number(summary?.classes || 0),
+            payments: Number(summary?.payments || 0),
+            collected: Number(summary?.collected || 0),
+          })),
         });
       } finally {
         if (alive) setMetricsLoading(false);
@@ -116,8 +114,26 @@ const CentersPage = () => {
   );
   const centerSummaries = useMemo(() => buildCenterSummaries(state.items, metrics), [state.items, metrics]);
   const activeSummary = activeCenterId ? centerSummaries.get(Number(activeCenterId)) : undefined;
-  const totalCollected = metrics.payments.filter(isPaidPayment).reduce((sum, payment) => sum + Number(payment?.amount || 0), 0);
-  const topCenter = [...centerSummaries.values()].sort((a, b) => b.collected - a.collected)[0];
+  const totalCollected = useMemo(
+    () => metrics.summaries.reduce((sum, summary) => sum + Number(summary.collected || 0), 0),
+    [metrics.summaries]
+  );
+  const totalStudents = useMemo(
+    () => metrics.summaries.reduce((sum, summary) => sum + Number(summary.students || 0), 0),
+    [metrics.summaries]
+  );
+  const totalTeachers = useMemo(
+    () => metrics.summaries.reduce((sum, summary) => sum + Number(summary.teachers || 0), 0),
+    [metrics.summaries]
+  );
+  const totalClasses = useMemo(
+    () => metrics.summaries.reduce((sum, summary) => sum + Number(summary.classes || 0), 0),
+    [metrics.summaries]
+  );
+  const topCenter = useMemo(
+    () => [...centerSummaries.values()].sort((a, b) => b.collected - a.collected)[0],
+    [centerSummaries]
+  );
   const totalCapacity = state.items.length;
 
   useEffect(() => {
@@ -139,8 +155,8 @@ const CentersPage = () => {
                 Switch active branch, compare center performance, and manage branch details from one focused workspace.
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <HeroSignal Icon={GraduationCap} label="Students" value={metrics.students.length.toLocaleString()} />
-                <HeroSignal Icon={Users} label="Teachers" value={metrics.teachers.length.toLocaleString()} />
+                <HeroSignal Icon={GraduationCap} label="Students" value={totalStudents.toLocaleString()} />
+                <HeroSignal Icon={Users} label="Teachers" value={totalTeachers.toLocaleString()} />
                 <HeroSignal Icon={Wallet} label="Collected" value={formatMoney(totalCollected)} />
               </div>
             </div>
@@ -193,8 +209,8 @@ const CentersPage = () => {
 
       <div className="grid gap-3 md:grid-cols-4">
         <MetricTile Icon={Building2} label="Centers" value={state.items.length.toLocaleString()} tone="from-blue-600 to-cyan-600" />
-        <MetricTile Icon={GraduationCap} label="Students" value={metrics.students.length.toLocaleString()} tone="from-emerald-600 to-teal-600" />
-        <MetricTile Icon={BookOpen} label="Groups" value={metrics.classes.length.toLocaleString()} tone="from-violet-600 to-fuchsia-600" />
+        <MetricTile Icon={GraduationCap} label="Students" value={totalStudents.toLocaleString()} tone="from-emerald-600 to-teal-600" />
+        <MetricTile Icon={BookOpen} label="Groups" value={totalClasses.toLocaleString()} tone="from-violet-600 to-fuchsia-600" />
         <MetricTile Icon={Wallet} label="Revenue" value={formatMoney(totalCollected)} tone="from-amber-500 to-orange-600" />
       </div>
 
