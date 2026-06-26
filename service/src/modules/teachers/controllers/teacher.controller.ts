@@ -3,9 +3,33 @@ const teacherService = require('../services/teacher.service');
 const teacherPaymentService = require('../services/teacher_payment.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
 
+const toPositiveInt = (value: unknown) => {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) && numeric > 0 ? numeric : undefined;
+};
+
+const cleanString = (value: unknown) => {
+  const text = String(value ?? '').trim();
+  return text || undefined;
+};
+
+const hasTeacherListParams = (query: Record<string, unknown>) =>
+  ['q', 'search', 'status', 'page', 'limit'].some((key) => query[key] !== undefined && query[key] !== '');
+
+const parseTeacherListQuery = (query: Record<string, unknown>) => ({
+  q: cleanString(query.q || query.search),
+  status: cleanString(query.status),
+  page: toPositiveInt(query.page) || 1,
+  limit: Math.min(100, toPositiveInt(query.limit) || 20),
+});
+
 const getAllTeachers = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
+    if (hasTeacherListParams(req.query)) {
+      const result = await teacherService.listTeachersPaginated(parseTeacherListQuery(req.query), centerId ?? undefined);
+      return res.json(result);
+    }
     const rows = await teacherService.listTeachers(centerId ?? undefined);
     res.json(rows);
   } catch (error: any) {

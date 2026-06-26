@@ -33,10 +33,7 @@ import { dataAPI, teacherAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
-import { useAppDispatch, useAppSelector } from '../hooks';
-import { fetchClasses } from '@/slices/classesSlice';
-import { fetchStudents } from '@/slices/studentsSlice';
+import { PaginationBar, defaultCardPageSizeOptions } from '@/components/common/PaginationBar';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -69,17 +66,20 @@ const getTeacherSubtitle = (teacher: Teacher) => {
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
-  const dispatch = useAppDispatch();
-  const classItems = useAppSelector((rootState) => rootState.classes.items);
-  const studentItems = useAppSelector((rootState) => rootState.students.items);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<number>>(new Set());
   const { t } = useLanguage();
+  const teacherParams = useMemo(() => ({
+    q: debouncedSearchTerm.trim() || undefined,
+    page,
+    limit: pageSize,
+  }), [debouncedSearchTerm, page, pageSize]);
   const {
     navigate,
     state,
@@ -98,61 +98,25 @@ const TeachersPage = () => {
     teacherStatusOptions,
     isOwner,
     user,
-  } = useTeachersPage();
+  } = useTeachersPage(teacherParams);
   const canImportTeachers = isOwner || user?.userType === 'superuser';
   const getTeacherId = (teacher: Teacher) => Number(teacher.teacher_id || teacher.id || 0);
   const getTeacherProfilePath = (teacher: Teacher) => `/teachers/${getTeacherId(teacher)}/profile`;
-  const teacherStats = useMemo(() => {
-    const map = new Map<number, { students: number }>();
-    for (const teacher of state.items) {
-      const id = getTeacherId(teacher);
-      if (id) map.set(id, { students: 0 });
-    }
-    for (const student of studentItems) {
-      const teacherId = Number(student.teacher_id || classItems.find((cls) => Number(cls.class_id || cls.id) === Number(student.class_id))?.teacher_id || 0);
-      if (!teacherId) continue;
-      const existing = map.get(teacherId) || { students: 0 };
-      existing.students += 1;
-      map.set(teacherId, existing);
-    }
-    return map;
-  }, [classItems, state.items, studentItems]);
-
   useEffect(() => {
-    dispatch(fetchClasses());
-    dispatch(fetchStudents());
-  }, [dispatch]);
-  const filteredTeachers = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-    if (!search) return state.items;
-
-    return state.items.filter((teacher) =>
-      [
-        `${teacher.first_name || ''} ${teacher.last_name || ''}`,
-        teacher.first_name,
-        teacher.last_name,
-        teacher.employee_id,
-        teacher.specialization,
-        teacher.qualification,
-        teacher.email,
-        teacher.phone,
-        teacher.username,
-        teacher.status,
-      ]
-        .filter((value) => value != null)
-        .some((value) => String(value).toLowerCase().includes(search))
-    );
-  }, [searchTerm, state.items]);
-  const paginatedTeachers = useMemo(
-    () => paginateItems(filteredTeachers, page, pageSize),
-    [filteredTeachers, page, pageSize]
-  );
-  const visibleTeacherIds = paginatedTeachers.items.map(getTeacherId).filter((id) => id > 0);
+    const timeout = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+    return () => window.clearTimeout(timeout);
+  }, [searchTerm]);
+  const visibleTeachers = state.items;
+  const totalTeachers = Number(state.meta?.total || 0);
+  const totalPages = Math.max(1, Math.ceil(totalTeachers / pageSize));
+  const pageStart = totalTeachers === 0 ? 0 : (page - 1) * pageSize + 1;
+  const pageEnd = Math.min(totalTeachers, page * pageSize);
+  const visibleTeacherIds = visibleTeachers.map(getTeacherId).filter((id) => id > 0);
   const selectedVisibleTeacherCount = visibleTeacherIds.filter((id) => selectedTeacherIds.has(id)).length;
   const allVisibleTeachersSelected = visibleTeacherIds.length > 0 && selectedVisibleTeacherCount === visibleTeacherIds.length;
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, viewMode]);
+  }, [debouncedSearchTerm, viewMode]);
   const toggleTeacher = (id: number, checked: boolean) => {
     setSelectedTeacherIds((current) => {
       const next = new Set(current);
@@ -171,15 +135,15 @@ const TeachersPage = () => {
       return next;
     });
   };
-  const activeTeachers = filteredTeachers.filter((teacher) => String(teacher.status || '').toLowerCase() === 'active').length;
+  const activeTeachers = visibleTeachers.filter((teacher) => String(teacher.status || '').toLowerCase() === 'active').length;
   const specializations = new Set(
-    filteredTeachers.map((teacher) => String(teacher.specialization || '').trim()).filter(Boolean)
+    visibleTeachers.map((teacher) => String(teacher.specialization || '').trim()).filter(Boolean)
   ).size;
-  const qualifiedTeachers = filteredTeachers.filter((teacher) => String(teacher.qualification || '').trim()).length;
+  const qualifiedTeachers = visibleTeachers.filter((teacher) => String(teacher.qualification || '').trim()).length;
   const summaryCards = [
     {
       label: 'Teachers shown',
-      value: filteredTeachers.length.toLocaleString(),
+      value: totalTeachers.toLocaleString(),
       detail: `${activeTeachers.toLocaleString()} active`,
       icon: Users,
       tone: 'blue' as const,
@@ -200,8 +164,8 @@ const TeachersPage = () => {
     },
     {
       label: 'Status health',
-      value: filteredTeachers.length > 0 ? `${Math.round((activeTeachers / filteredTeachers.length) * 100)}%` : '0%',
-      detail: 'Active ratio',
+      value: visibleTeachers.length > 0 ? `${Math.round((activeTeachers / visibleTeachers.length) * 100)}%` : '0%',
+      detail: 'Current page active ratio',
       icon: ShieldCheck,
       tone: 'neutral' as const,
     },
@@ -378,7 +342,7 @@ const TeachersPage = () => {
           <h3 className="text-lg font-semibold">No teachers found</h3>
           <p className="text-sm">Click &quot;Add Teacher&quot; to get started</p>
         </div>
-      ) : filteredTeachers.length === 0 ? (
+      ) : visibleTeachers.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
           <h3 className="text-lg font-semibold">No teachers match your search</h3>
@@ -422,8 +386,7 @@ const TeachersPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedTeachers.items.map((teacher, index) => {
-                const stats = teacherStats.get(getTeacherId(teacher));
+              {visibleTeachers.map((teacher, index) => {
                 return (
                   <TableRow key={teacher.teacher_id || teacher.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                     <TableCell className="px-2 py-2">
@@ -453,7 +416,7 @@ const TeachersPage = () => {
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
-                      <span className="inline-flex rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">{stats?.students || 0}</span>
+                      <span className="inline-flex rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">{Number(teacher.student_count || 0)}</span>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
                       <span className="inline-flex rounded-md bg-fuchsia-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">
@@ -486,7 +449,7 @@ const TeachersPage = () => {
             </div>
           )}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {paginatedTeachers.items.map((teacher, index) => (
+            {visibleTeachers.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
                 className="relative cursor-pointer overflow-hidden border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
@@ -514,7 +477,7 @@ const TeachersPage = () => {
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-[11px]">
-                    <span className="rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{teacherStats.get(getTeacherId(teacher))?.students || 0} students</span>
+                    <span className="rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} students</span>
                     <span className="rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
                   </div>
                   <div className="mt-2 border-t pt-2" onClick={(event) => event.stopPropagation()}>
@@ -542,7 +505,7 @@ const TeachersPage = () => {
             </div>
           )}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {paginatedTeachers.items.map((teacher, index) => (
+            {visibleTeachers.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
                 className="relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
@@ -576,7 +539,7 @@ const TeachersPage = () => {
                     {getTeacherSubtitle(teacher)}
                   </p>
                   <div className="mt-2 rounded-lg bg-emerald-600 p-2 text-center text-xs text-white shadow-sm">
-                    <p className="font-bold">{teacherStats.get(getTeacherId(teacher))?.students || 0}</p>
+                    <p className="font-bold">{Number(teacher.student_count || 0)}</p>
                     <p className="text-[11px] text-white/80">Students</p>
                   </div>
                   <div className="mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
@@ -594,13 +557,13 @@ const TeachersPage = () => {
         </>
       )}
 
-      {!state.loading && filteredTeachers.length > 0 && (
+      {!state.loading && totalTeachers > 0 && (
         <PaginationBar
-          total={filteredTeachers.length}
-          currentPage={paginatedTeachers.currentPage}
-          totalPages={paginatedTeachers.totalPages}
-          start={paginatedTeachers.start}
-          end={paginatedTeachers.end}
+          total={totalTeachers}
+          currentPage={page}
+          totalPages={totalPages}
+          start={pageStart}
+          end={pageEnd}
           pageSize={pageSize}
           pageSizeOptions={defaultCardPageSizeOptions}
           onPageChange={setPage}

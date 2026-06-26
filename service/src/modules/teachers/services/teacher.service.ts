@@ -30,6 +30,9 @@ const normalizeSalaryPercentage = (value: any) => {
 
 const listTeachers = (centerId?: number) => teacherRepository.findAll(centerId);
 
+const listTeachersPaginated = (filters: Record<string, unknown>, centerId?: number) =>
+  teacherRepository.findPaginated(filters, centerId);
+
 const getTeacher = (id: number, centerId?: number) => teacherRepository.findById(id, centerId);
 
 const createTeacher = async (body: any) => {
@@ -119,6 +122,7 @@ const changePassword = async (id: number, old_password: string, new_password: st
 
 module.exports = {
   listTeachers,
+  listTeachersPaginated,
   getTeacher,
   createTeacher,
   updateTeacher,

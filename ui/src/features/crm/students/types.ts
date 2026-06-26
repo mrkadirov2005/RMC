@@ -42,4 +42,5 @@ export interface Class {
   capacity: number;
   center_id?: number;
   teacher_id?: number;
+  student_count?: number;
 }

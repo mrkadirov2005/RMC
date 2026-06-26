@@ -65,6 +65,114 @@ const findAll = (centerId?: number, teacherId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const findPaginated = async (filters: Record<string, any> = {}, centerId?: number, teacherId?: number) => {
+  let query = `
+    SELECT
+      c.*,
+      COALESCE(NULLIF(c.room_number, ''), rooms.room_numbers) AS room_number,
+      rooms.room_assignments,
+      COALESCE(student_counts.student_count, 0)::int AS student_count
+    FROM classes c
+    LEFT JOIN LATERAL (
+      SELECT
+        STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number) AS room_numbers,
+        JSON_AGG(
+          JSON_BUILD_OBJECT(
+            'room_id', assigned_rooms.room_id,
+            'room_number', assigned_rooms.room_number,
+            'day', assigned_rooms.day,
+            'time', assigned_rooms.time,
+            'end_time', assigned_rooms.end_time,
+            'slot_date', assigned_rooms.slot_date
+          )
+          ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
+        ) AS room_assignments
+      FROM (
+        SELECT
+          r.room_id,
+          r.room_number,
+          r.day,
+          r.time,
+          r.end_time,
+          NULL::TEXT AS slot_date
+        FROM rooms r
+        WHERE r.class_id = c.class_id
+          AND r.center_id = c.center_id
+        UNION
+        SELECT
+          r.room_id,
+          r.room_number,
+          TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
+          rs.start_time AS time,
+          rs.end_time,
+          rs.slot_date::TEXT AS slot_date
+        FROM room_bookings rb
+        JOIN room_slots rs ON rs.slot_id = rb.slot_id
+        JOIN rooms r ON r.room_id = rs.room_id
+        WHERE rb.class_id = c.class_id
+          AND rb.center_id = c.center_id
+      ) assigned_rooms
+    ) rooms ON TRUE
+    LEFT JOIN (
+      SELECT class_id, COUNT(*) AS student_count
+      FROM students
+      WHERE deleted_at IS NULL
+      GROUP BY class_id
+    ) student_counts ON student_counts.class_id = c.class_id
+  `;
+  let countQuery = 'SELECT COUNT(*)::int AS total FROM classes c';
+  const params: any[] = [];
+  const conditions: string[] = ['c.deleted_at IS NULL'];
+
+  if (centerId) {
+    params.push(centerId);
+    conditions.push(`c.center_id = $${params.length}`);
+  }
+  if (teacherId) {
+    params.push(teacherId);
+    conditions.push(`c.teacher_id = $${params.length}`);
+  }
+  if (filters.teacher_id != null) {
+    params.push(filters.teacher_id);
+    conditions.push(`c.teacher_id = $${params.length}`);
+  }
+
+  const search = String(filters.q || filters.search || '').trim();
+  if (search) {
+    params.push(`%${search}%`);
+    conditions.push(`(
+      c.class_name ILIKE $${params.length}
+      OR c.class_code ILIKE $${params.length}
+      OR c.section ILIKE $${params.length}
+      OR c.room_number ILIKE $${params.length}
+    )`);
+  }
+
+  if (filters.level != null) {
+    params.push(filters.level);
+    conditions.push(`c.level = $${params.length}`);
+  }
+
+  const where = ` WHERE ${conditions.join(' AND ')}`;
+  query += where;
+  countQuery += where;
+
+  const countResult = await pool.query(countQuery, params);
+  const total = Number(countResult.rows[0]?.total || 0);
+  const page = Math.max(1, Number(filters.page || 1));
+  const limit = Math.min(100, Math.max(1, Number(filters.limit || 20)));
+  const offset = (page - 1) * limit;
+
+  query += ' ORDER BY c.class_id DESC';
+  params.push(limit);
+  query += ` LIMIT $${params.length}`;
+  params.push(offset);
+  query += ` OFFSET $${params.length}`;
+
+  const result = await pool.query(query, params);
+  return { data: result.rows, total, page, limit };
+};
+
 const findById = (id: number, centerId?: number, teacherId?: number) => {
   let query = `
     SELECT
@@ -179,6 +287,6 @@ const purge = (id: number, centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-module.exports = { findAll, findById, teacherExists, insert, update, remove, purge };
+module.exports = { findAll, findPaginated, findById, teacherExists, insert, update, remove, purge };
 
 export {};

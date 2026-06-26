@@ -38,6 +38,7 @@ export interface StudentListParams {
   age?: number | string;
   gender?: string;
   status?: string;
+  teacher_id?: number | string;
   page?: number;
   limit?: number;
 }

@@ -1,6 +1,6 @@
 // Page component for the students screen in the crm feature.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Coins, Download, FileSpreadsheet, GraduationCap, Plus, School, Upload, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
@@ -23,12 +23,6 @@ import { useStudentsPage } from './hooks/useStudentsPage';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
 
-const readStudentList = (response: unknown): Student[] => {
-  const data = (response as any)?.data ?? response;
-  if (Array.isArray(data)) return data;
-  return Array.isArray(data?.data) ? data.data : [];
-};
-
 const headerActionClass = 'h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white shadow-sm';
 const headerActionIconClass = 'h-3.5 w-3.5';
 
@@ -37,8 +31,6 @@ const StudentsPage = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [activeTab, setActiveTab] = useState('students');
-  const [statisticsStudents, setStatisticsStudents] = useState<Student[]>([]);
-  const [statisticsLoading, setStatisticsLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isSheetsPushing, setIsSheetsPushing] = useState(false);
   const [isSheetsPulling, setIsSheetsPulling] = useState(false);
@@ -127,22 +119,6 @@ const StudentsPage = () => {
     },
   ];
 
-  useEffect(() => {
-    if (activeTab !== 'statistics' && activeTab !== 'teachers') return;
-    let cancelled = false;
-    setStatisticsLoading(true);
-    studentAPI.getAll()
-      .then((response) => {
-        if (!cancelled) setStatisticsStudents(readStudentList(response));
-      })
-      .finally(() => {
-        if (!cancelled) setStatisticsLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [activeTab]);
-
   const handleImportStudents = async (file?: File) => {
     if (!file) return;
     if (!file.name.toLowerCase().endsWith('.csv')) {
@@ -156,10 +132,6 @@ const StudentsPage = () => {
       await dataAPI.importEntity('students', csv);
       s.actions.fetchAll();
       s.actions.fetchClasses();
-      if (activeTab === 'statistics' || activeTab === 'teachers') {
-        const response = await studentAPI.getAll();
-        setStatisticsStudents(readStudentList(response));
-      }
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import students.');
     } finally {
@@ -171,10 +143,6 @@ const StudentsPage = () => {
   const refreshStudents = async () => {
     s.actions.fetchAll();
     s.actions.fetchClasses();
-    if (activeTab === 'statistics' || activeTab === 'teachers') {
-      const response = await studentAPI.getAll();
-      setStatisticsStudents(readStudentList(response));
-    }
   };
 
   const handlePushStudentsToSheets = async () => {
@@ -412,14 +380,14 @@ const StudentsPage = () => {
           </div>
         </TabsContent>
         <TabsContent value="statistics" className="mt-0">
-          <StudentsStatisticsTab students={statisticsStudents} teacherOptions={s.teacherOptions} loading={statisticsLoading} />
+          <StudentsStatisticsTab students={pageStudents} teacherOptions={s.teacherOptions} loading={s.state.loading} />
         </TabsContent>
         <TabsContent value="teachers" className="mt-0">
           <StudentsTeacherGroupsTab
-            students={statisticsStudents}
+            students={pageStudents}
             classes={s.classes}
             teacherOptions={s.teacherOptions}
-            loading={statisticsLoading || s.loadingClasses || s.isLoadingOptions}
+            loading={s.state.loading || s.loadingClasses || s.isLoadingOptions}
             viewMode={viewMode}
             onView={(id) => navigate(`/students/${id}/profile`)}
             onEdit={s.handleOpenModal}

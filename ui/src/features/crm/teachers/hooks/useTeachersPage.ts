@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { genderOptions, teacherStatusOptions } from '../../../../utils/dropdownOptions';
 import { useAppSelector } from '../../hooks';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { fetchTeachers, fetchTeachersForce, createTeacher, updateTeacher, deleteTeacher } from '../../../../slices/teachersSlice';
+import { fetchTeachers, fetchTeachersForce, createTeacher, updateTeacher, deleteTeacher, type TeacherListParams } from '../../../../slices/teachersSlice';
 import { fetchCenters } from '../../../../slices/centersSlice';
 import { selectCenterOptions } from '../../../../store/selectors';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
@@ -24,11 +24,11 @@ const getEmptyTeacherForm = (centerId: number): Partial<Teacher> => ({
 });
 
 // Provides teachers page.
-export const useTeachersPage = () => {
+export const useTeachersPage = (teacherParams?: TeacherListParams) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
-  const { items, loading, error } = useAppSelector((state) => state.teachers);
+  const { items, loading, error, meta } = useAppSelector((state) => state.teachers);
 // Handles is owner.
   const isOwner = (user?.role || '').toLowerCase() === 'owner';
   const defaultCenterId = getResolvedCenterId(user) ?? 0;
@@ -40,29 +40,29 @@ export const useTeachersPage = () => {
   const [formData, setFormData] = useState<Partial<Teacher>>(getEmptyTeacherForm(defaultCenterId));
 
   // Expose state shape compatible with useCRUD for UI pages that read state.items / state.loading / state.error
-  const state = { items, loading, error };
+  const state = { items, loading, error, meta };
 
 // Runs side effects for this component.
   useEffect(() => {
-    dispatch(fetchTeachers());
+    dispatch(fetchTeachers(teacherParams));
     if (isOwner) {
       dispatch(fetchCenters());
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOwner]);
+  }, [isOwner, JSON.stringify(teacherParams)]);
 
 // Runs side effects for this component.
   useEffect(() => {
 // Handles active center changed.
     const handleActiveCenterChanged = () => {
-      dispatch(fetchTeachersForce());
+      dispatch(fetchTeachersForce(teacherParams));
       if (isOwner) {
         dispatch(fetchCenters());
       }
     };
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
-  }, [dispatch, isOwner]);
+  }, [dispatch, isOwner, teacherParams]);
 
 // Handles open modal.
   const handleOpenModal = (teacher?: Teacher) => {
@@ -102,7 +102,7 @@ export const useTeachersPage = () => {
   };
 
   /** Force-refresh from the server (e.g. after external mutation) */
-  const refresh = () => dispatch(fetchTeachersForce());
+  const refresh = () => dispatch(fetchTeachersForce(teacherParams));
 
   return {
     navigate,

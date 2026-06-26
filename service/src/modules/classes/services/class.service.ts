@@ -3,6 +3,9 @@ const sessionRepository = require('../../sessions/repositories/session.repositor
 
 const listClasses = (centerId?: number, teacherId?: number) => classRepository.findAll(centerId, teacherId);
 
+const listClassesPaginated = (filters: Record<string, unknown>, centerId?: number, teacherId?: number) =>
+  classRepository.findPaginated(filters, centerId, teacherId);
+
 const getClass = (id: number, centerId?: number, teacherId?: number) => classRepository.findById(id, centerId, teacherId);
 
 const generateClassCode = () => `CLS-${Date.now().toString(36).toUpperCase()}`;
@@ -52,6 +55,6 @@ const purgeClass = async (id: number, centerId?: number) => {
   return { row };
 };
 
-module.exports = { listClasses, getClass, createClass, updateClass, deleteClass, purgeClass };
+module.exports = { listClasses, listClassesPaginated, getClass, createClass, updateClass, deleteClass, purgeClass };
 
 export {};

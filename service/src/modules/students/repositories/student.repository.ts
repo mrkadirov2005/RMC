@@ -44,6 +44,7 @@ interface StudentListFilters {
   age?: number;
   gender?: string;
   status?: string;
+  teacher_id?: number;
   page?: number;
   limit?: number;
 }
@@ -64,6 +65,9 @@ const addStudentFilters = (
 
   if (teacherId) {
     params.push(teacherId);
+    conditions.push(`s.teacher_id = $${params.length}`);
+  } else if (filters.teacher_id != null) {
+    params.push(filters.teacher_id);
     conditions.push(`s.teacher_id = $${params.length}`);
   }
 

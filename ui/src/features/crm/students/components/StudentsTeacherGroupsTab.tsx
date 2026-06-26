@@ -62,6 +62,7 @@ type TeacherClassRow = {
   classId: number;
   teacherId: number | null;
   students: Student[];
+  studentCount: number;
   isDirect?: boolean;
 };
 
@@ -102,7 +103,7 @@ export const StudentsTeacherGroupsTab = ({
         const classId = toId(cls.class_id || cls.id) || 0;
         const teacherId = toId(cls.teacher_id);
         const groupStudents = students.filter((student) => toId(student.class_id) === classId);
-        return { cls, classId, teacherId, students: groupStudents };
+        return { cls, classId, teacherId, students: groupStudents, studentCount: Number(cls.student_count ?? groupStudents.length) };
       })
       .filter((row) => row.classId > 0);
 
@@ -127,6 +128,7 @@ export const StudentsTeacherGroupsTab = ({
           classId: -teacher.id,
           teacherId: teacher.id,
           students: directStudents,
+          studentCount: directStudents.length,
           isDirect: true,
         };
       })
@@ -298,7 +300,7 @@ export const StudentsTeacherGroupsTab = ({
               <span className="text-center">Students</span>
               <span className="text-right">Teacher transfer</span>
             </div>
-            {selectedTeacherClasses.map(({ cls, classId, teacherId, students: groupStudents, isDirect }, index) => (
+            {selectedTeacherClasses.map(({ cls, classId, teacherId, studentCount, isDirect }, index) => (
               <div key={classId} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_minmax(260px,320px)] lg:items-center">
                 <div className="flex min-w-0 items-center gap-2.5">
                   <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => setSelectedClassId(classId)} aria-label={`Open ${cls.class_name || `Class #${classId}`}`}>
@@ -313,7 +315,7 @@ export const StudentsTeacherGroupsTab = ({
                 </div>
 
                 <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => setSelectedClassId(classId)}>
-                  {groupStudents.length} students
+                  {studentCount} students
                 </button>
 
                 {isDirect ? (
@@ -400,7 +402,7 @@ export const StudentsTeacherGroupsTab = ({
         ) : (
           filteredTeachers.map((teacher, index) => {
             const groups = classRows.filter((row) => row.teacherId === teacher.id);
-            const studentCount = groups.reduce((sum, group) => sum + group.students.length, 0);
+            const studentCount = groups.reduce((sum, group) => sum + group.studentCount, 0);
             return (
               <div key={teacher.id} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_110px_86px] lg:items-center">
                 <div className="flex min-w-0 items-center gap-2.5">

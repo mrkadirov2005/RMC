@@ -27,12 +27,13 @@ const parseStudentListQuery = (query: Record<string, unknown>) => ({
   age: toPositiveInt(query.age),
   gender: cleanString(query.gender),
   status: cleanString(query.status),
+  teacher_id: toPositiveInt(query.teacher_id),
   page: toPositiveInt(query.page) || 1,
   limit: Math.min(100, toPositiveInt(query.limit) || 20),
 });
 
 const hasStudentListParams = (query: Record<string, unknown>) =>
-  ['q', 'search', 'name', 'school_name', 'class_id', 'subject_id', 'level', 'address', 'age', 'gender', 'status', 'page', 'limit']
+  ['q', 'search', 'name', 'school_name', 'class_id', 'subject_id', 'level', 'address', 'age', 'gender', 'status', 'teacher_id', 'page', 'limit']
     .some((key) => query[key] !== undefined && query[key] !== '');
 
 const getAllStudents = async (req: any, res: any) => {

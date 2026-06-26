@@ -18,4 +18,6 @@ export interface Teacher {
   roles?: string[];
   username?: string;
   password?: string;
+  student_count?: number;
+  class_count?: number;
 }

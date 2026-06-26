@@ -19,6 +19,22 @@ export interface Class {
   room_number: string;
   payment_amount: number;
   payment_frequency: string;
+  student_count?: number;
+}
+
+export interface ClassListParams extends Record<string, unknown> {
+  q?: string;
+  search?: string;
+  teacher_id?: number | string;
+  level?: number | string;
+  page?: number;
+  limit?: number;
+}
+
+interface ClassesMeta {
+  total: number;
+  page: number;
+  limit: number;
 }
 
 interface ClassesState {
@@ -26,6 +42,7 @@ interface ClassesState {
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  meta: ClassesMeta;
 }
 
 const initialState: ClassesState = {
@@ -33,21 +50,31 @@ const initialState: ClassesState = {
   loading: false,
   error: null,
   lastFetched: null,
+  meta: { total: 0, page: 1, limit: 20 },
 };
 
 const CACHE_TTL_MS = 60_000;
 
 export const fetchClasses = createAsyncThunk(
   'classes/fetchAll',
-  async (_, { getState, rejectWithValue }) => {
+  async (params: ClassListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { lastFetched } = state.classes;
-    if (lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) return null;
+    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) return null;
     try {
-      const res = await classAPI.getAll();
+      const res = await classAPI.getAll(params);
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data)
+        ? { items: data, meta: { total: data.length, page: 1, limit: data.length || 20 } }
+        : {
+            items: Array.isArray(data?.data) ? data.data : [],
+            meta: {
+              total: Number(data?.total || 0),
+              page: Number(data?.page || params?.page || 1),
+              limit: Number(data?.limit || params?.limit || 20),
+            },
+          };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch classes');
     }
@@ -56,12 +83,21 @@ export const fetchClasses = createAsyncThunk(
 
 export const fetchClassesForce = createAsyncThunk(
   'classes/fetchAllForce',
-  async (_, { rejectWithValue }) => {
+  async (params: ClassListParams | undefined = undefined, { rejectWithValue }) => {
     try {
-      const res = await classAPI.getAll();
+      const res = await classAPI.getAll(params);
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data)
+        ? { items: data, meta: { total: data.length, page: 1, limit: data.length || 20 } }
+        : {
+            items: Array.isArray(data?.data) ? data.data : [],
+            meta: {
+              total: Number(data?.total || 0),
+              page: Number(data?.page || params?.page || 1),
+              limit: Number(data?.limit || params?.limit || 20),
+            },
+          };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch classes');
     }
@@ -126,16 +162,16 @@ const classesSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchClasses.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchClasses.fulfilled, (state, action: PayloadAction<Class[] | null>) => {
+      .addCase(fetchClasses.fulfilled, (state, action: PayloadAction<{ items: Class[]; meta: ClassesMeta } | null>) => {
         state.loading = false;
-        if (action.payload !== null) { state.items = action.payload; state.lastFetched = Date.now(); }
+        if (action.payload !== null) { state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now(); }
       })
       .addCase(fetchClasses.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 
     builder
       .addCase(fetchClassesForce.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchClassesForce.fulfilled, (state, action: PayloadAction<Class[]>) => {
-        state.loading = false; state.items = action.payload; state.lastFetched = Date.now();
+      .addCase(fetchClassesForce.fulfilled, (state, action: PayloadAction<{ items: Class[]; meta: ClassesMeta }>) => {
+        state.loading = false; state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now();
       })
       .addCase(fetchClassesForce.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 

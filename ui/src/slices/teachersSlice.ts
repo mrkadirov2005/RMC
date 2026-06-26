@@ -24,6 +24,22 @@ export interface Teacher {
   roles?: string[];
   username?: string;
   password?: string;
+  student_count?: number;
+  class_count?: number;
+}
+
+export interface TeacherListParams extends Record<string, unknown> {
+  q?: string;
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+interface TeachersMeta {
+  total: number;
+  page: number;
+  limit: number;
 }
 
 interface TeachersState {
@@ -31,6 +47,7 @@ interface TeachersState {
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  meta: TeachersMeta;
 }
 
 const initialState: TeachersState = {
@@ -38,6 +55,7 @@ const initialState: TeachersState = {
   loading: false,
   error: null,
   lastFetched: null,
+  meta: { total: 0, page: 1, limit: 20 },
 };
 
 const CACHE_TTL_MS = 60_000;
@@ -46,17 +64,26 @@ const CACHE_TTL_MS = 60_000;
 
 export const fetchTeachers = createAsyncThunk(
   'teachers/fetchAll',
-  async (_, { getState, rejectWithValue }) => {
+  async (params: TeacherListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { lastFetched } = state.teachers;
-    if (lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) {
+    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) {
       return null; // use cached data
     }
     try {
-      const res = await teacherAPI.getAll();
+      const res = await teacherAPI.getAll(params);
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data)
+        ? { items: data, meta: { total: data.length, page: 1, limit: data.length || 20 } }
+        : {
+            items: Array.isArray(data?.data) ? data.data : [],
+            meta: {
+              total: Number(data?.total || 0),
+              page: Number(data?.page || params?.page || 1),
+              limit: Number(data?.limit || params?.limit || 20),
+            },
+          };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch teachers');
     }
@@ -65,12 +92,21 @@ export const fetchTeachers = createAsyncThunk(
 
 export const fetchTeachersForce = createAsyncThunk(
   'teachers/fetchAllForce',
-  async (_, { rejectWithValue }) => {
+  async (params: TeacherListParams | undefined = undefined, { rejectWithValue }) => {
     try {
-      const res = await teacherAPI.getAll();
+      const res = await teacherAPI.getAll(params);
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return Array.isArray(data)
+        ? { items: data, meta: { total: data.length, page: 1, limit: data.length || 20 } }
+        : {
+            items: Array.isArray(data?.data) ? data.data : [],
+            meta: {
+              total: Number(data?.total || 0),
+              page: Number(data?.page || params?.page || 1),
+              limit: Number(data?.limit || params?.limit || 20),
+            },
+          };
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch teachers');
     }
@@ -163,10 +199,11 @@ const teachersSlice = createSlice({
     // fetchTeachers
     builder
       .addCase(fetchTeachers.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchTeachers.fulfilled, (state, action: PayloadAction<Teacher[] | null>) => {
+      .addCase(fetchTeachers.fulfilled, (state, action: PayloadAction<{ items: Teacher[]; meta: TeachersMeta } | null>) => {
         state.loading = false;
         if (action.payload !== null) {
-          state.items = action.payload;
+          state.items = action.payload.items;
+          state.meta = action.payload.meta;
           state.lastFetched = Date.now();
         }
       })
@@ -178,9 +215,10 @@ const teachersSlice = createSlice({
     // fetchTeachersForce
     builder
       .addCase(fetchTeachersForce.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchTeachersForce.fulfilled, (state, action: PayloadAction<Teacher[]>) => {
+      .addCase(fetchTeachersForce.fulfilled, (state, action: PayloadAction<{ items: Teacher[]; meta: TeachersMeta }>) => {
         state.loading = false;
-        state.items = action.payload;
+        state.items = action.payload.items;
+        state.meta = action.payload.meta;
         state.lastFetched = Date.now();
       })
       .addCase(fetchTeachersForce.rejected, (state, action) => {
@@ -215,3 +253,4 @@ export const selectTeachers = (state: RootState) => state.teachers.items;
 export const selectTeachersLoading = (state: RootState) => state.teachers.loading;
 // Selects teachers error.
 export const selectTeachersError = (state: RootState) => state.teachers.error;
+export const selectTeachersMeta = (state: RootState) => state.teachers.meta;

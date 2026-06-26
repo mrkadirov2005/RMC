@@ -13,6 +13,78 @@ const findAll = (centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
+const findPaginated = async (filters: Record<string, any> = {}, centerId?: number) => {
+  let query = `
+    SELECT
+      t.*,
+      COALESCE(student_counts.student_count, 0)::int AS student_count,
+      COALESCE(class_counts.class_count, 0)::int AS class_count
+    FROM teachers t
+    LEFT JOIN (
+      SELECT teacher_id, COUNT(*) AS student_count
+      FROM students
+      WHERE deleted_at IS NULL
+      GROUP BY teacher_id
+    ) student_counts ON student_counts.teacher_id = t.teacher_id
+    LEFT JOIN (
+      SELECT teacher_id, COUNT(*) AS class_count
+      FROM classes
+      WHERE deleted_at IS NULL
+      GROUP BY teacher_id
+    ) class_counts ON class_counts.teacher_id = t.teacher_id
+  `;
+  let countQuery = 'SELECT COUNT(*)::int AS total FROM teachers t';
+  const params: any[] = [];
+  const conditions = ['t.deleted_at IS NULL'];
+
+  if (centerId) {
+    params.push(centerId);
+    conditions.push(`t.center_id = $${params.length}`);
+  }
+
+  const search = String(filters.q || filters.search || '').trim();
+  if (search) {
+    params.push(`%${search}%`);
+    conditions.push(`(
+      t.first_name ILIKE $${params.length}
+      OR t.last_name ILIKE $${params.length}
+      OR CONCAT_WS(' ', t.first_name, t.last_name) ILIKE $${params.length}
+      OR t.employee_id ILIKE $${params.length}
+      OR t.specialization ILIKE $${params.length}
+      OR t.qualification ILIKE $${params.length}
+      OR t.email ILIKE $${params.length}
+      OR t.phone ILIKE $${params.length}
+      OR t.username ILIKE $${params.length}
+      OR t.status ILIKE $${params.length}
+    )`);
+  }
+
+  const status = String(filters.status || '').trim();
+  if (status) {
+    params.push(status);
+    conditions.push(`t.status = $${params.length}`);
+  }
+
+  const where = ` WHERE ${conditions.join(' AND ')}`;
+  query += where;
+  countQuery += where;
+
+  const countResult = await pool.query(countQuery, params);
+  const total = Number(countResult.rows[0]?.total || 0);
+  const page = Math.max(1, Number(filters.page || 1));
+  const limit = Math.min(100, Math.max(1, Number(filters.limit || 20)));
+  const offset = (page - 1) * limit;
+
+  query += ' ORDER BY t.teacher_id DESC';
+  params.push(limit);
+  query += ` LIMIT $${params.length}`;
+  params.push(offset);
+  query += ` OFFSET $${params.length}`;
+
+  const result = await pool.query(query, params);
+  return { data: result.rows, total, page, limit };
+};
+
 const findById = (id: number, centerId?: number) => {
   let query = 'SELECT * FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL';
   const params: any[] = [id];
@@ -162,6 +234,7 @@ const updatePasswordHash = (id: number, password_hash: string) =>
 
 module.exports = {
   findAll,
+  findPaginated,
   findById,
   findByUsername,
   insert,
