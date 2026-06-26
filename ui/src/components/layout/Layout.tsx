@@ -1,7 +1,8 @@
 // Layout component for the application shell.
 
 import type { ReactNode } from 'react';
-import { memo, useState, useEffect } from 'react';
+import { memo, Suspense, useState, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useAppSelector } from '../../features/crm/hooks';
 import { TranslationEditMode } from './TranslationEditMode';
@@ -12,6 +13,15 @@ const getInitialOpen = () => {
   if (typeof window === 'undefined') return false;
   return localStorage.getItem(SIDEBAR_OPEN_KEY) === 'true';
 };
+
+export const MainContentLoading = () => (
+  <div className="flex min-h-[calc(100vh-3rem)] items-center justify-center rounded-lg border border-slate-200 bg-white/80 dark:border-white/10 dark:bg-white/[0.04]">
+    <div className="flex flex-col items-center gap-3 text-center">
+      <Loader2 className="h-9 w-9 animate-spin text-primary" />
+      <p className="text-sm font-semibold text-muted-foreground">Loading page...</p>
+    </div>
+  </div>
+);
 
 interface LayoutProps {
   children: ReactNode;
@@ -53,7 +63,9 @@ const Layout = memo(({ children }: LayoutProps) => {
         className={`flex-1 overflow-auto bg-background transition-all duration-300 ${isStudent ? 'p-0' : 'p-3 sm:p-5 md:p-6'}`}
         style={{ marginLeft }}
       >
-        {children}
+        <Suspense fallback={<MainContentLoading />}>
+          {children}
+        </Suspense>
       </main>
     </div>
   );

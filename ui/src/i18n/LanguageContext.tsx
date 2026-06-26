@@ -1198,15 +1198,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
 
   useEffect(() => {
     translateStaticDom(language, activeTranslations, activeReverseTranslations);
-    const observer = new MutationObserver(() => translateStaticDom(language, activeTranslations, activeReverseTranslations));
-    observer.observe(document.body, {
-      attributes: true,
-      attributeFilter: ['placeholder', 'aria-label', 'title'],
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
-    return () => observer.disconnect();
   }, [language, activeTranslations, activeReverseTranslations]);
 
   const setLanguage = useCallback((nextLanguage: AppLanguage) => {

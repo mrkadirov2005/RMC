@@ -1,6 +1,6 @@
 // Layout component for the application shell.
 
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useMemo } from 'react';
 import type { ElementType } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -105,10 +105,14 @@ const Sidebar = memo(() => {
   const normalizedRole = String(user?.role || '').toLowerCase();
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
-  const centerOptions = useAppSelector(selectCenterOptions).map((center) => ({
-    id: Number(center.value),
-    label: center.label,
-  }));
+  const rawCenterOptions = useAppSelector(selectCenterOptions);
+  const centerOptions = useMemo(
+    () => rawCenterOptions.map((center) => ({
+      id: Number(center.value),
+      label: center.label,
+    })),
+    [rawCenterOptions]
+  );
 
 // Runs side effects for this component.
   useEffect(() => {

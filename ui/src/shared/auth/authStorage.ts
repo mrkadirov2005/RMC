@@ -58,11 +58,14 @@ export const getStoredActiveCenterId = (): number | null => {
 
 // Sets stored active center id.
 export const setStoredActiveCenterId = (centerId: number | null) => {
+  const previous = getStoredActiveCenterId();
   if (centerId && centerId > 0) {
     localStorage.setItem(ACTIVE_CENTER_KEY, String(centerId));
   } else {
     localStorage.removeItem(ACTIVE_CENTER_KEY);
   }
+  const next = getStoredActiveCenterId();
+  if (previous === next) return;
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new Event('active-center-changed'));
   }
