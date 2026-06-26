@@ -1,6 +1,12 @@
 const assignmentRepository = require('../repositories/assignment.repository');
 
-const getAllAssignments = (centerId?: number, teacherId?: number) => assignmentRepository.getAll(centerId, teacherId);
+const getAllAssignments = (options: {
+  centerId?: number;
+  teacherId?: number;
+  classId?: number;
+  limit?: number;
+  offset?: number;
+} = {}) => assignmentRepository.getAll(options);
 
 const getAssignmentById = (id: number, centerId?: number, teacherId?: number) =>
   assignmentRepository.getById(id, centerId, teacherId);

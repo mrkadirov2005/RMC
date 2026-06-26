@@ -25,10 +25,23 @@ const getAllPayments = async (req: any, res: any) => {
     if (!ensurePaymentAccess(req, res)) return;
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    const requestedLimit = Number(req.query.limit);
+    const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 200)
+      : undefined;
+    const requestedPage = Number(req.query.page || 1);
+    const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
+    const studentId = req.query.student_id ? Number(req.query.student_id) : undefined;
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
-    const rows = await paymentService.listPayments(centerId ?? undefined, teacherId);
+    const rows = await paymentService.listPayments({
+      centerId: centerId ?? undefined,
+      teacherId,
+      studentId,
+      limit,
+      offset: limit ? (page - 1) * limit : undefined,
+    });
     if (req.user?.userType === 'teacher') {
       return res.json(rows.map(toTeacherPaymentView));
     }

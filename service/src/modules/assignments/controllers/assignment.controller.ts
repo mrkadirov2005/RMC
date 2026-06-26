@@ -6,13 +6,24 @@ const getAllAssignments = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    const requestedLimit = Number(req.query.limit || 100);
+    const limit = Number.isFinite(requestedLimit) ? Math.min(Math.max(requestedLimit, 1), 200) : 100;
+    const requestedPage = Number(req.query.page || 1);
+    const page = Number.isFinite(requestedPage) ? Math.max(requestedPage, 1) : 1;
+    const classId = req.query.class_id ? Number(req.query.class_id) : undefined;
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
-    const rows = await assignmentService.getAllAssignments(centerId ?? undefined, teacherId);
+    const rows = await assignmentService.getAllAssignments({
+      centerId: centerId ?? undefined,
+      teacherId,
+      classId,
+      limit,
+      offset: (page - 1) * limit,
+    });
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);

@@ -1,7 +1,13 @@
 const paymentRepository = require('../repositories/payment.repository');
 const discountService = require('../../discounts/services/discount.service');
 
-const listPayments = (centerId?: number, teacherId?: number) => paymentRepository.findAll(centerId, teacherId);
+const listPayments = (options: {
+  centerId?: number;
+  teacherId?: number;
+  limit?: number;
+  offset?: number;
+  studentId?: number;
+} = {}) => paymentRepository.findAll(options);
 
 const getPayment = (id: number, centerId?: number, teacherId?: number) => paymentRepository.findById(id, centerId, teacherId);
 

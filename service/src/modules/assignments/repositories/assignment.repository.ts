@@ -1,6 +1,15 @@
 const pool = require('../../../db/pool');
 
-const getAll = async (centerId?: number, teacherId?: number) => {
+type AssignmentListOptions = {
+  centerId?: number;
+  teacherId?: number;
+  classId?: number;
+  limit?: number;
+  offset?: number;
+};
+
+const getAll = async (options: AssignmentListOptions = {}) => {
+  const { centerId, teacherId, classId, limit, offset } = options;
   let query = 'SELECT a.* FROM assignments a';
   const params: any[] = [];
   const conditions: string[] = [];
@@ -16,11 +25,27 @@ const getAll = async (centerId?: number, teacherId?: number) => {
     conditions.push(`c.teacher_id = $${params.length}`);
   }
 
+  if (classId) {
+    params.push(classId);
+    conditions.push(`a.class_id = $${params.length}`);
+  }
+
   if (conditions.length > 0) {
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
 
   query += ' ORDER BY a.assignment_id DESC';
+
+  if (limit) {
+    params.push(limit);
+    query += ` LIMIT $${params.length}`;
+  }
+
+  if (offset) {
+    params.push(offset);
+    query += ` OFFSET $${params.length}`;
+  }
+
   const result = await pool.query(query, params);
   return result.rows;
 };

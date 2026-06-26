@@ -1,6 +1,15 @@
 const pool = require('../../../db/pool');
 
-const findAll = (centerId?: number, teacherId?: number) => {
+type PaymentListOptions = {
+  centerId?: number;
+  teacherId?: number;
+  limit?: number;
+  offset?: number;
+  studentId?: number;
+};
+
+const findAll = (options: PaymentListOptions = {}) => {
+  const { centerId, teacherId, limit, offset, studentId } = options;
   let query = `
     SELECT
       p.*,
@@ -27,6 +36,10 @@ const findAll = (centerId?: number, teacherId?: number) => {
     params.push(centerId);
     conditions.push(`p.center_id = $${params.length}`);
   }
+  if (studentId) {
+    params.push(studentId);
+    conditions.push(`p.student_id = $${params.length}`);
+  }
   conditions.push('p.deleted_at IS NULL');
 
   if (conditions.length > 0) {
@@ -34,6 +47,14 @@ const findAll = (centerId?: number, teacherId?: number) => {
   }
 
   query += ' ORDER BY p.payment_id DESC';
+  if (limit) {
+    params.push(limit);
+    query += ` LIMIT $${params.length}`;
+  }
+  if (offset) {
+    params.push(offset);
+    query += ` OFFSET $${params.length}`;
+  }
   return pool.query(query, params).then((r: any) => r.rows);
 };
 
