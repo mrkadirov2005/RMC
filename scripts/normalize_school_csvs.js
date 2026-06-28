@@ -228,6 +228,48 @@ const isNoteOrPaymentText = (value) => {
   );
 };
 
+const monthFromHeader = (value) => {
+  const text = compact(value).toLowerCase();
+  const monthMap = [
+    [/^dek|dekabr|dec/, { date: '2025-12-01', label: 'Dekabr' }],
+    [/^yan|yanvar|jan/, { date: '2026-01-01', label: 'Yanvar' }],
+    [/^fev|fevral|feb/, { date: '2026-02-01', label: 'Fevral' }],
+    [/^mart|^mar$/, { date: '2026-03-01', label: 'Mart' }],
+    [/^apr|aprel/, { date: '2026-04-01', label: 'Aprel' }],
+    [/^may$/, { date: '2026-05-01', label: 'May' }],
+    [/^iyun|^jun/, { date: '2026-06-01', label: 'Iyun' }],
+    [/^iyul|^jul/, { date: '2026-07-01', label: 'Iyul' }],
+    [/^avg|avgust|aug/, { date: '2026-08-01', label: 'Avgust' }],
+  ];
+  const match = monthMap.find(([pattern]) => pattern.test(text));
+  return match ? match[1] : null;
+};
+
+const parsePaymentAmount = (value) => {
+  const cleaned = compact(value).replace(/\s/g, '').replace(',', '.');
+  if (!cleaned || /^(b|berilmagan|-|qarz)$/i.test(cleaned)) return null;
+  if (!/^\d+(?:\.\d+)?$/.test(cleaned)) return null;
+  const number = Number(cleaned);
+  if (!Number.isFinite(number) || number <= 0) return null;
+  return number < 10000 ? Math.round(number * 1000) : Math.round(number);
+};
+
+const mostCommonNumber = (values) => {
+  const counts = new Map();
+  for (const value of values.filter((item) => Number.isFinite(item) && item > 0)) {
+    counts.set(value, (counts.get(value) || 0) + 1);
+  }
+  let bestValue = null;
+  let bestCount = 0;
+  for (const [value, count] of counts.entries()) {
+    if (count > bestCount || (count === bestCount && value > (bestValue || 0))) {
+      bestValue = value;
+      bestCount = count;
+    }
+  }
+  return bestValue;
+};
+
 const indexOf = (row, patterns) => {
   for (let index = 0; index < row.length; index += 1) {
     const cell = compact(row[index]).toLowerCase();
@@ -303,6 +345,7 @@ const files = fs.readdirSync(DATA_DIR).filter((file) => file.toLowerCase().endsW
 const existingTeachers = readCsvRows(path.join(EXISTING_OUT_DIR, 'teachers_import.csv'));
 const existingClasses = readCsvRows(path.join(EXISTING_OUT_DIR, 'classes_import.csv'));
 const existingStudents = readCsvRows(path.join(EXISTING_OUT_DIR, 'students_import.csv'));
+const existingPayments = readCsvRows(path.join(EXISTING_OUT_DIR, 'payments_import.csv'));
 const existingTeacherByEmployeeId = new Map(existingTeachers.map((row) => [row.employee_id, row]));
 const existingClassByCode = new Map(existingClasses.map((row) => [row.class_code, row]));
 const teachers = [];
@@ -310,6 +353,7 @@ const teacherByName = new Map();
 const teacherUsernames = new Set();
 const classes = [];
 const students = [];
+const rawPayments = [];
 const studentUsernames = new Set(existingStudents.map((row) => row.username).filter(Boolean));
 const studentIdentityKeys = new Set();
 const createClassCode = createClassCodeFactory();
@@ -389,6 +433,9 @@ for (const file of files) {
     const schoolClassIndex = indexOf(row, [/sinf/]);
     const schoolNameIndex = indexOf(row, [/maktab/]);
     const addressIndex = indexOf(row, [/manzil/]);
+    const monthColumns = row
+      .map((cell, index) => ({ index, month: monthFromHeader(cell) }))
+      .filter(({ month }) => month);
     const headerName = compact(row[nameIndex]);
     const className = isScheduleText(headerName) || isNameColumnHeader(headerName) ? previousTitle : headerName || previousTitle;
     if (!className) continue;
@@ -447,6 +494,20 @@ for (const file of files) {
       student.password = existingStudent.password || DEFAULT_PASSWORD;
       students.push(student);
       classRow.capacity += 1;
+
+      for (const { index: paymentColumn, month } of monthColumns) {
+        const amount = parsePaymentAmount(dataRow[paymentColumn]);
+        if (amount == null) continue;
+        rawPayments.push({
+          enrollment_number: student.enrollment_number,
+          class_code: classRow.class_code,
+          payment_date: month.date,
+          amount,
+          month_label: month.label,
+          source_file: file,
+          source_line: dataIndex + 1,
+        });
+      }
     }
   }
 }
@@ -527,6 +588,127 @@ if (existingStudents.length > 0) {
   }
 }
 
+const classFeeByCode = new Map(
+  classes
+    .map((classRow) => [classRow.class_code, parsePaymentAmount(classRow.payment_amount)])
+    .filter(([, amount]) => amount != null)
+);
+for (const [classCode, paymentsForClass] of rawPayments.reduce((map, payment) => {
+  if (!map.has(payment.class_code)) map.set(payment.class_code, []);
+  map.get(payment.class_code).push(payment.amount);
+  return map;
+}, new Map())) {
+  if (!classFeeByCode.has(classCode)) {
+    const inferredFee = mostCommonNumber(paymentsForClass);
+    if (inferredFee != null) classFeeByCode.set(classCode, inferredFee);
+  }
+}
+
+const finalStudentByEnrollment = new Map(students.map((student) => [student.enrollment_number, student]));
+const rawPaymentsForFinalStudents = rawPayments.filter((payment) => finalStudentByEnrollment.has(payment.enrollment_number));
+const generatedPaymentRows = rawPaymentsForFinalStudents.map((payment, index) => ({
+  ...payment,
+  currency: 'UZS',
+  payment_method: 'Cash',
+  transaction_reference: '',
+  receipt_number: `RCPT-N-${String(index + 1).padStart(5, '0')}`,
+  payment_status: 'Completed',
+  payment_type: 'Tuition',
+  notes: `${payment.month_label} tuition; source: ${payment.source_file} line ${payment.source_line}`,
+}));
+const existingPaymentRows = existingPayments
+  .map((payment) => {
+    const student = finalStudentByEnrollment.get(payment.enrollment_number);
+    const amount = parsePaymentAmount(payment.amount);
+    if (!student || amount == null || !payment.payment_date) return null;
+    return {
+      ...payment,
+      amount,
+      class_code: student.class_code,
+      currency: payment.currency || 'UZS',
+      payment_method: payment.payment_method || 'Cash',
+      payment_status: payment.payment_status || 'Completed',
+      payment_type: payment.payment_type || 'Tuition',
+    };
+  })
+  .filter(Boolean);
+const paymentSourceRows =
+  existingPaymentRows.length > generatedPaymentRows.length ? existingPaymentRows : generatedPaymentRows;
+const paymentsByStudent = new Map();
+for (const payment of paymentSourceRows) {
+  if (!paymentsByStudent.has(payment.enrollment_number)) paymentsByStudent.set(payment.enrollment_number, []);
+  paymentsByStudent.get(payment.enrollment_number).push(payment);
+}
+
+const serialDiscountByEnrollment = new Map();
+for (const [enrollmentNumber, studentPayments] of paymentsByStudent.entries()) {
+  const discountedPayments = studentPayments
+    .map((payment) => ({ ...payment, standardAmount: classFeeByCode.get(payment.class_code) }))
+    .filter((payment) => payment.standardAmount && payment.amount > 0 && payment.amount < payment.standardAmount)
+    .sort((left, right) => left.payment_date.localeCompare(right.payment_date));
+  if (discountedPayments.length < 2) continue;
+
+  const counts = new Map();
+  for (const payment of discountedPayments) counts.set(payment.amount, (counts.get(payment.amount) || 0) + 1);
+  const latestPayment = [...studentPayments].sort((left, right) => left.payment_date.localeCompare(right.payment_date)).at(-1);
+  const repeatedLatestDiscount =
+    latestPayment &&
+    latestPayment.amount < (classFeeByCode.get(latestPayment.class_code) || 0) &&
+    (counts.get(latestPayment.amount) || 0) >= 2;
+
+  if (!repeatedLatestDiscount) continue;
+  serialDiscountByEnrollment.set(enrollmentNumber, {
+    originalAmount: classFeeByCode.get(latestPayment.class_code),
+    finalAmount: latestPayment.amount,
+    discountAmount: classFeeByCode.get(latestPayment.class_code) - latestPayment.amount,
+  });
+}
+
+for (const student of students) {
+  const serialDiscount = serialDiscountByEnrollment.get(student.enrollment_number);
+  if (!serialDiscount) {
+    student.is_discounted = '';
+    student.discount_value_type = '';
+    student.discount_value = '';
+    student.discount_original_price = '';
+    student.discount_reason = '';
+    continue;
+  }
+  student.is_discounted = 'true';
+  student.discount_value_type = 'fixed';
+  student.discount_value = serialDiscount.discountAmount;
+  student.discount_original_price = serialDiscount.originalAmount;
+  student.discount_reason = 'Serial discount inferred from repeated reduced monthly payments';
+}
+
+const payments = paymentSourceRows.map((payment, index) => {
+  const originalAmount = classFeeByCode.get(payment.class_code) || payment.amount;
+  const discountAmount = Math.max(0, originalAmount - payment.amount);
+  const serialDiscount = serialDiscountByEnrollment.get(payment.enrollment_number);
+  const isDiscounted = discountAmount > 0;
+  const discountKind =
+    isDiscounted && serialDiscount && serialDiscount.finalAmount === payment.amount ? 'serial_discount' : isDiscounted ? 'monthly_discount' : '';
+  return {
+    enrollment_number: payment.enrollment_number,
+    payment_date: payment.payment_date,
+    amount: payment.amount,
+    currency: payment.currency || 'UZS',
+    payment_method: payment.payment_method || 'Cash',
+    transaction_reference: payment.transaction_reference || '',
+    receipt_number: payment.receipt_number || `RCPT-N-${String(index + 1).padStart(5, '0')}`,
+    payment_status: payment.payment_status || 'Completed',
+    payment_type: payment.payment_type || 'Tuition',
+    notes: payment.notes || `${payment.month_label || payment.payment_date} tuition`,
+    discount_kind: discountKind,
+    discount_value_type: isDiscounted ? 'fixed' : '',
+    discount_value: isDiscounted ? discountAmount : '',
+    original_amount: isDiscounted ? originalAmount : '',
+    discount_amount: isDiscounted ? discountAmount : '',
+    final_amount: isDiscounted ? payment.amount : '',
+    is_complete: isDiscounted ? 'true' : '',
+  };
+});
+
 writeCsv(path.join(OUT_DIR, 'teachers_import.csv'), teachers, [
   'employee_id',
   'first_name',
@@ -575,9 +757,34 @@ writeCsv(path.join(OUT_DIR, 'students_import.csv'), students, [
   'class_code',
   'school_name',
   'school_class',
+  'is_discounted',
+  'discount_value_type',
+  'discount_value',
+  'discount_original_price',
+  'discount_reason',
+]);
+
+writeCsv(path.join(OUT_DIR, 'payments_import.csv'), payments, [
+  'enrollment_number',
+  'payment_date',
+  'amount',
+  'currency',
+  'payment_method',
+  'transaction_reference',
+  'receipt_number',
+  'payment_status',
+  'payment_type',
+  'notes',
+  'discount_kind',
+  'discount_value_type',
+  'discount_value',
+  'original_amount',
+  'discount_amount',
+  'final_amount',
+  'is_complete',
 ]);
 
 updateClassNamesInExistingCsv('subjects_import.csv', classNameByCode);
 updateClassNamesInExistingCsv('rooms_import.csv', classNameByCode);
 
-console.log(`Created ${teachers.length} teachers, ${classes.length} classes, ${students.length} students in ${OUT_DIR}`);
+console.log(`Created ${teachers.length} teachers, ${classes.length} classes, ${students.length} students, ${payments.length} payments in ${OUT_DIR}`);

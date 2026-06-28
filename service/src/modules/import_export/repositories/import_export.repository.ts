@@ -1,7 +1,30 @@
 const pool = require('../../../db/pool');
 
 const selectAllStudents = (centerId?: number) => {
-  let query = 'SELECT s.*, c.class_name, c.class_code FROM students s LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL';
+  let query = `
+    SELECT
+      s.*,
+      c.class_name,
+      c.class_code,
+      (d.discount_id IS NOT NULL) AS is_discounted,
+      d.discount_type AS discount_value_type,
+      d.value AS discount_value,
+      d.original_price AS discount_original_price,
+      d.reason AS discount_reason
+    FROM students s
+    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
+    LEFT JOIN LATERAL (
+      SELECT discount_id, discount_type, value, original_price, reason
+      FROM discounts
+      WHERE student_id = s.student_id
+        AND active = TRUE
+        AND discount_kind = 'serial_discount'
+        AND (start_date IS NULL OR start_date <= CURRENT_DATE)
+        AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+      ORDER BY created_at DESC
+      LIMIT 1
+    ) d ON TRUE
+  `;
   const params: any[] = [];
   if (centerId) {
     query += ' WHERE s.center_id = $1 AND s.deleted_at IS NULL';
@@ -283,8 +306,8 @@ const upsertClassByCode = (params: any[]) =>
 
 const insertPayment = (params: any[]) =>
   pool.query(
-    `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+    `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes, discount_id, discount_kind, discount_value_type, discount_value, original_amount, discount_amount, final_amount, is_complete)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,COALESCE($19, TRUE))
      ON CONFLICT (receipt_number) WHERE receipt_number IS NOT NULL AND deleted_at IS NULL DO UPDATE SET
        student_id = EXCLUDED.student_id,
        center_id = EXCLUDED.center_id,
@@ -296,7 +319,43 @@ const insertPayment = (params: any[]) =>
        payment_status = EXCLUDED.payment_status,
        payment_type = EXCLUDED.payment_type,
        notes = EXCLUDED.notes,
+       discount_id = EXCLUDED.discount_id,
+       discount_kind = EXCLUDED.discount_kind,
+       discount_value_type = EXCLUDED.discount_value_type,
+       discount_value = EXCLUDED.discount_value,
+       original_amount = EXCLUDED.original_amount,
+       discount_amount = EXCLUDED.discount_amount,
+       final_amount = EXCLUDED.final_amount,
+       is_complete = EXCLUDED.is_complete,
        updated_at = CURRENT_TIMESTAMP`,
+    params
+  );
+
+const upsertSerialDiscount = (params: any[]) =>
+  pool.query(
+    `WITH updated AS (
+       UPDATE discounts
+       SET center_id = $2,
+           discount_type = $3,
+           value = $4,
+           original_price = $5,
+           final_price = $6,
+           reason = $7,
+           active = TRUE,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE student_id = $1
+         AND discount_kind = 'serial_discount'
+         AND active = TRUE
+       RETURNING discount_id
+     ), inserted AS (
+       INSERT INTO discounts (student_id, center_id, discount_type, discount_kind, value, original_price, final_price, reason, start_date, active)
+       SELECT $1,$2,$3,'serial_discount',$4,$5,$6,$7,CURRENT_DATE,TRUE
+       WHERE NOT EXISTS (SELECT 1 FROM updated)
+       RETURNING discount_id
+     )
+     SELECT discount_id FROM updated
+     UNION ALL
+     SELECT discount_id FROM inserted`,
     params
   );
 
@@ -400,8 +459,8 @@ const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
 const upsertPayment = (params: any[], hasPaymentId: boolean) => {
   if (hasPaymentId) {
     return pool.query(
-      `INSERT INTO payments (payment_id, student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
+      `INSERT INTO payments (payment_id, student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes, discount_id, discount_kind, discount_value_type, discount_value, original_amount, discount_amount, final_amount, is_complete)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,COALESCE($20, TRUE))
        ON CONFLICT (payment_id) DO UPDATE SET
          student_id = EXCLUDED.student_id,
          center_id = EXCLUDED.center_id,
@@ -414,6 +473,14 @@ const upsertPayment = (params: any[], hasPaymentId: boolean) => {
          payment_status = EXCLUDED.payment_status,
          payment_type = EXCLUDED.payment_type,
          notes = EXCLUDED.notes,
+         discount_id = EXCLUDED.discount_id,
+         discount_kind = EXCLUDED.discount_kind,
+         discount_value_type = EXCLUDED.discount_value_type,
+         discount_value = EXCLUDED.discount_value,
+         original_amount = EXCLUDED.original_amount,
+         discount_amount = EXCLUDED.discount_amount,
+         final_amount = EXCLUDED.final_amount,
+         is_complete = EXCLUDED.is_complete,
          updated_at = CURRENT_TIMESTAMP`,
       params
     );
@@ -505,6 +572,7 @@ module.exports = {
   insertTeacher,
   upsertClassByCode,
   insertPayment,
+  upsertSerialDiscount,
   insertRoom,
   insertAssignment,
   insertSubject,

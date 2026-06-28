@@ -115,6 +115,11 @@ const STUDENT_COLS = [
   'class_code',
   'school_name',
   'school_class',
+  'is_discounted',
+  'discount_value_type',
+  'discount_value',
+  'discount_original_price',
+  'discount_reason',
 ];
 
 const TEACHER_COLS = [
@@ -166,6 +171,14 @@ const PAYMENT_COLS = [
   'payment_status',
   'payment_type',
   'notes',
+  'discount_id',
+  'discount_kind',
+  'discount_value_type',
+  'discount_value',
+  'original_amount',
+  'discount_amount',
+  'final_amount',
+  'is_complete',
 ];
 
 const ROOM_COLS = [
@@ -245,6 +258,21 @@ const toOptionalNumber = (value: any) => {
   if (cleaned == null) return null;
   const number = Number(cleaned);
   return Number.isFinite(number) && number > 0 ? number : null;
+};
+
+const toOptionalBoolean = (value: any) => {
+  const cleaned = cleanValue(value);
+  if (cleaned == null) return null;
+  return ['1', 'true', 'yes', 'y', 'active'].includes(String(cleaned).trim().toLowerCase());
+};
+
+const calculateDiscountFinalPrice = (originalAmount: number, valueType: string | null, discountValue: number) => {
+  if (!Number.isFinite(originalAmount) || originalAmount <= 0) return null;
+  if (!Number.isFinite(discountValue) || discountValue <= 0) return originalAmount;
+  if (valueType === 'percent') {
+    return Math.max(0, originalAmount - (originalAmount * Math.min(discountValue, 100)) / 100);
+  }
+  return Math.max(0, originalAmount - Math.min(discountValue, originalAmount));
 };
 
 const normalizePaymentMethod = (value: any) => {
@@ -415,9 +443,10 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
       const hasStudentId = upsert && Number.isFinite(studentId) && studentId > 0;
       const classId = await resolveClassId(row, rowCenterId, classIdCache);
       const teacherId = await resolveTeacherId(row, rowCenterId, teacherIdCache);
+      const enrollmentNumber = getRowValue(row, ['enrollment_number']) || identity.enrollmentNumber;
       const params = [
         rowCenterId,
-        getRowValue(row, ['enrollment_number']) || identity.enrollmentNumber,
+        enrollmentNumber,
         getRowValue(row, ['first_name', 'firstname', 'name']) || '',
         getRowValue(row, ['last_name', 'lastname', 'surname']) || '',
         getRowValue(row, ['username']),
@@ -435,6 +464,27 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         getRowValue(row, ['school_class', 'school_grade', 'school_group']),
       ];
       await (upsert ? importExportRepository.upsertStudent(hasStudentId ? [studentId, ...params] : params, hasStudentId) : importExportRepository.insertStudent(params));
+      const isDiscounted = toOptionalBoolean(getRowValue(row, ['is_discounted', 'discounted']));
+      const discountValue = toOptionalNumber(getRowValue(row, ['discount_value']));
+      const originalPrice = toOptionalNumber(getRowValue(row, ['discount_original_price', 'original_price']));
+      if (isDiscounted && discountValue != null && originalPrice != null) {
+        const resolvedStudentId = hasStudentId
+          ? studentId
+          : await importExportRepository.findStudentIdByEnrollmentNumber(enrollmentNumber, rowCenterId);
+        const discountValueType = getRowValue(row, ['discount_value_type', 'discount_type']) || 'fixed';
+        const finalPrice = calculateDiscountFinalPrice(originalPrice, discountValueType, discountValue);
+        if (resolvedStudentId && finalPrice != null) {
+          await importExportRepository.upsertSerialDiscount([
+            resolvedStudentId,
+            rowCenterId,
+            discountValueType,
+            discountValue,
+            originalPrice,
+            finalPrice,
+            getRowValue(row, ['discount_reason']) || 'Imported serial discount',
+          ]);
+        }
+      }
     } else if (entity === 'teachers') {
       const rowCenterId = centerId ?? Number(row.center_id);
       if (centerId && row.center_id && Number(row.center_id) !== Number(centerId)) {
@@ -519,6 +569,14 @@ const importRows = async (entity: string, rows: any[], centerId?: number, upsert
         row.payment_status || 'Completed',
         row.payment_type || null,
         row.notes || null,
+        toOptionalNumber(row.discount_id),
+        getRowValue(row, ['discount_kind']) || null,
+        getRowValue(row, ['discount_value_type', 'discount_type']) || null,
+        toOptionalNumber(row.discount_value),
+        toOptionalNumber(row.original_amount),
+        toOptionalNumber(row.discount_amount),
+        toOptionalNumber(row.final_amount),
+        toOptionalBoolean(row.is_complete),
       ];
       const paymentId = Number(row.payment_id);
       const hasPaymentId = upsert && Number.isFinite(paymentId) && paymentId > 0;
