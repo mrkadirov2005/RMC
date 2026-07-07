@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const crypto = require('crypto');
+const os = require('os');
 const path = require('path');
 const pool = require('../../../db/pool');
 
@@ -87,11 +88,77 @@ const resetTable = async (tableKey: ResetTableKey) => {
   };
 };
 
+const round = (value: number, digits = 2) => {
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+};
+
+const getStats = async () => {
+  const memory = process.memoryUsage();
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const usedMemory = totalMemory - freeMemory;
+  const cpus = os.cpus() || [];
+  const loadAverage = os.loadavg();
+  const oneMinuteLoad = Number(loadAverage[0] || 0);
+  const cpuCount = Math.max(cpus.length, 1);
+  const cpuLoadPercent = Math.min(100, round((oneMinuteLoad / cpuCount) * 100, 1));
+
+  let database = { status: 'unknown', latencyMs: null as number | null };
+  const dbStart = Date.now();
+  try {
+    await pool.query('SELECT 1');
+    database = { status: 'healthy', latencyMs: Date.now() - dbStart };
+  } catch {
+    database = { status: 'unhealthy', latencyMs: null };
+  }
+
+  return {
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    service: {
+      name: 'CRM Backend Server',
+      environment: process.env.NODE_ENV || 'development',
+      pid: process.pid,
+      nodeVersion: process.version,
+      uptimeSeconds: round(process.uptime(), 0),
+    },
+    host: {
+      hostname: os.hostname(),
+      platform: os.platform(),
+      release: os.release(),
+      arch: os.arch(),
+      uptimeSeconds: round(os.uptime(), 0),
+    },
+    cpu: {
+      cores: cpuCount,
+      model: cpus[0]?.model || 'Unknown CPU',
+      loadAverage,
+      loadPercent: cpuLoadPercent,
+    },
+    memory: {
+      totalBytes: totalMemory,
+      freeBytes: freeMemory,
+      usedBytes: usedMemory,
+      usedPercent: round((usedMemory / Math.max(totalMemory, 1)) * 100, 1),
+      process: {
+        rssBytes: memory.rss,
+        heapTotalBytes: memory.heapTotal,
+        heapUsedBytes: memory.heapUsed,
+        externalBytes: memory.external,
+        arrayBuffersBytes: memory.arrayBuffers,
+      },
+    },
+    database,
+  };
+};
+
 module.exports = {
   validateRedeployPassword,
   scheduleRedeploy,
   validateDevResetRequest,
   resetTable,
+  getStats,
   RESET_CONFIRMATION,
 };
 

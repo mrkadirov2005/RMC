@@ -1,7 +1,7 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, BookOpen, Coins, GraduationCap, Info, KeyRound, MoreVertical, Pencil, School, Trash2, UserCheck } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Coins, GraduationCap, Info, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -197,7 +197,9 @@ export const StudentsTableView = ({
     return age > 0 && age < 120 ? String(age) : '-';
   };
   const getGroupName = (student: Student) => student.class_name || 'No group';
-  const getSchoolName = (student: Student) => student.school_name || student.school_class || 'No school';
+  const getSchoolName = (student: Student) => student.school_name || 'No school';
+  const getSchoolClass = (student: Student) => student.school_class || '-';
+  const getPhone = (student: Student) => student.phone || student.parent_phone || '-';
   const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none';
 
   const renderActions = (student: Student) => (
@@ -364,6 +366,8 @@ export const StudentsTableView = ({
                           {!hideTeacherGroup && <span className={`${chipClass} bg-cyan-100 text-cyan-800`}><BookOpen className="h-3 w-3" />{getGroupName(student)}</span>}
                           {!hideTeacherGroup && <span className={`${chipClass} bg-violet-100 text-violet-800`}><UserCheck className="h-3 w-3" />{getTeacherName(student)}</span>}
                           <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
+                          <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
+                          <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                           <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
                         </div>
                         <div className="mt-1.5">
@@ -380,6 +384,8 @@ export const StudentsTableView = ({
                         {!hideTeacherGroup && <span className={`${chipClass} bg-cyan-100 text-cyan-800`}><BookOpen className="h-3 w-3" />{getGroupName(student)}</span>}
                         {!hideTeacherGroup && <span className={`${chipClass} bg-violet-100 text-violet-800`}><UserCheck className="h-3 w-3" />{getTeacherName(student)}</span>}
                         <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
+                        <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
+                        <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                         <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
                       </div>
                       <div className="mt-2">
@@ -437,6 +443,8 @@ export const StudentsTableView = ({
             {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Group</TableHead>}
             {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Teacher</TableHead>}
             <TableHead className="h-8 px-2 text-xs">School</TableHead>
+            <TableHead className="h-8 px-2 text-xs">School class</TableHead>
+            <TableHead className="h-8 px-2 text-xs">Phone</TableHead>
             <TableHead className="h-8 px-2 text-xs">Age</TableHead>
             <TableHead className="h-8 px-2 text-xs">Password</TableHead>
             <TableHead className="h-8 px-2 text-right text-xs"></TableHead>
@@ -445,13 +453,13 @@ export const StudentsTableView = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={hideTeacherGroup ? 6 : 8} className="py-8 text-center">
+              <TableCell colSpan={hideTeacherGroup ? 8 : 10} className="py-8 text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={hideTeacherGroup ? 6 : 8} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={hideTeacherGroup ? 8 : 10} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
@@ -496,6 +504,18 @@ export const StudentsTableView = ({
                   <span className={`${chipClass} bg-amber-100 text-amber-800`}>
                     <School className="h-3 w-3" />
                     <span className="max-w-[140px] truncate">{getSchoolName(student)}</span>
+                  </span>
+                </TableCell>
+                <TableCell className="px-2 py-2">
+                  <span className={`${chipClass} bg-slate-100 text-slate-800`}>
+                    <GraduationCap className="h-3 w-3" />
+                    <span className="max-w-[100px] truncate">{getSchoolClass(student)}</span>
+                  </span>
+                </TableCell>
+                <TableCell className="px-2 py-2">
+                  <span className={`${chipClass} bg-rose-100 text-rose-800`}>
+                    <Phone className="h-3 w-3" />
+                    <span className="max-w-[120px] truncate">{getPhone(student)}</span>
                   </span>
                 </TableCell>
                 <TableCell className="px-2 py-2">

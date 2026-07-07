@@ -15,6 +15,7 @@ export const useStudentsFilters = (students: Student[]) => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterSchool, setFilterSchool] = useState('');
   const [filterClassId, setFilterClassId] = useState('');
+  const [filterTeacherId, setFilterTeacherId] = useState('');
   const [filterSubjectId, setFilterSubjectId] = useState('');
   const [filterLevel, setFilterLevel] = useState('');
   const [filterAddress, setFilterAddress] = useState('');
@@ -25,12 +26,13 @@ export const useStudentsFilters = (students: Student[]) => {
 
   useEffect(() => {
     setPage(1);
-  }, [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, limit, searchTerm]);
+  }, [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, filterTeacherId, limit, searchTerm]);
 
   const studentParams = useMemo(() => ({
     q: searchTerm.trim() || undefined,
     school_name: filterSchool || undefined,
     class_id: filterClassId || undefined,
+    teacher_id: filterTeacherId || undefined,
     subject_id: filterSubjectId || undefined,
     level: filterLevel || undefined,
     address: filterAddress || undefined,
@@ -39,7 +41,7 @@ export const useStudentsFilters = (students: Student[]) => {
     status: filterStatus || undefined,
     page,
     limit: normalizeLimit(limit),
-  }), [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, limit, page, searchTerm]);
+  }), [filterAddress, filterAge, filterClassId, filterGender, filterLevel, filterSchool, filterStatus, filterSubjectId, filterTeacherId, limit, page, searchTerm]);
 
 // Handles clear filters.
   const clearFilters = () => {
@@ -48,13 +50,14 @@ export const useStudentsFilters = (students: Student[]) => {
     setFilterStatus('');
     setFilterSchool('');
     setFilterClassId('');
+    setFilterTeacherId('');
     setFilterSubjectId('');
     setFilterLevel('');
     setFilterAddress('');
     setFilterAge('');
     setPage(1);
   };
-  const hasActiveFilters = Boolean(searchTerm || filterGender || filterStatus || filterSchool || filterClassId || filterSubjectId || filterLevel || filterAddress || filterAge);
+  const hasActiveFilters = Boolean(searchTerm || filterGender || filterStatus || filterSchool || filterClassId || filterTeacherId || filterSubjectId || filterLevel || filterAddress || filterAge);
   return {
     selectedClass,
     setSelectedClass,
@@ -70,6 +73,8 @@ export const useStudentsFilters = (students: Student[]) => {
     setFilterSchool,
     filterClassId,
     setFilterClassId,
+    filterTeacherId,
+    setFilterTeacherId,
     filterSubjectId,
     setFilterSubjectId,
     filterLevel,

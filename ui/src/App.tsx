@@ -17,10 +17,12 @@ const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
 const OwnerReports = lazy(() => import('./features/owner/OwnerReports'));
 const StudentsPage = lazy(() => import('./features/crm/students/StudentsPage'));
+const StudentFormPage = lazy(() => import('./features/crm/students/StudentFormPage'));
 const StudentDetailPage = lazy(() => import('./features/crm/students/StudentDetailPage'));
 const TeachersPage = lazy(() => import('./features/crm/teachers/TeachersPage'));
 const TeacherDetailPage = lazy(() => import('./features/crm/teachers/TeacherDetailPage'));
 const PaymentsPage = lazy(() => import('./features/crm/payments/PaymentsPage'));
+const PaymentFormPage = lazy(() => import('./features/crm/payments/PaymentFormPage'));
 const GradesPage = lazy(() => import('./features/crm/grades/GradesPage'));
 const AttendancePage = lazy(() => import('./features/crm/attendance/AttendancePage'));
 const ClassesPage = lazy(() => import('./features/crm/classes/ClassesPage'));
@@ -47,6 +49,7 @@ const TeacherPortal = lazy(() => import('./features/teacher/TeacherPortal'));
 const StudentPortal = lazy(() => import('./features/student/StudentPortal'));
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
 const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage.tsx'));
+const ServerMonitorPage = lazy(() => import('./features/crm/server/ServerMonitorPage'));
 import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
@@ -297,6 +300,20 @@ function AppContent() {
         />
 
         <Route
+          path="/students/new"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+
+                  <StudentFormPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/student/:studentId"
           element={
             <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
@@ -304,6 +321,20 @@ function AppContent() {
                 <Suspense fallback={<LoadingSpinner />}>
 
                   <StudentDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/students/:studentId/edit"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_STUDENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+
+                  <StudentFormPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>
@@ -406,6 +437,32 @@ function AppContent() {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payments/new"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PaymentFormPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payments/:paymentId/edit"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_PAYMENT}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <PaymentFormPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>
@@ -527,6 +584,19 @@ function AppContent() {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <RequestLogsPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/server"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ServerMonitorPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

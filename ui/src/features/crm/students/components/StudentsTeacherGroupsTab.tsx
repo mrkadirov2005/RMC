@@ -1,9 +1,11 @@
-import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Loader2, Search, Users, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Loader2, Search, Trash2, Users, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { classAPI, studentAPI } from '@/shared/api/api';
+import { showToast } from '@/utils/toast';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import { StudentsTableView } from './StudentsTableView';
 import type { Class, Student } from '../types';
@@ -28,6 +30,7 @@ interface Props {
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   onTransferGroup: (classId: number, teacherId: number) => Promise<void> | void;
+  onDeleteGroups?: (classIds: number[]) => Promise<void> | void;
 }
 
 const toId = (value: unknown) => {
@@ -57,6 +60,14 @@ const getStudentSearchText = (student: Student) =>
     student.phone,
   ].filter(Boolean).join(' ');
 
+const getPayload = (response: any) => response?.data ?? response;
+const getRows = <T,>(response: any): T[] => {
+  const payload = getPayload(response);
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  return [];
+};
+
 type TeacherClassRow = {
   cls: Partial<Class> & { class_name?: string; class_code?: string; level?: number | null };
   classId: number;
@@ -80,11 +91,20 @@ export const StudentsTeacherGroupsTab = ({
   onPasswordUpdate,
   onCoinsUpdated,
   onTransferGroup,
+  onDeleteGroups,
 }: Props) => {
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [targetTeachers, setTargetTeachers] = useState<Record<number, string>>({});
   const [savingClassId, setSavingClassId] = useState<number | null>(null);
+  const [selectedClassIds, setSelectedClassIds] = useState<Set<number>>(new Set());
+  const [bulkTargetTeacherId, setBulkTargetTeacherId] = useState('');
+  const [bulkSaving, setBulkSaving] = useState(false);
+  const [teacherClasses, setTeacherClasses] = useState<Class[]>([]);
+  const [teacherStudents, setTeacherStudents] = useState<Student[]>([]);
+  const [selectedClassStudents, setSelectedClassStudents] = useState<Student[]>([]);
+  const [teacherLoading, setTeacherLoading] = useState(false);
+  const [classLoading, setClassLoading] = useState(false);
   const [searchDraft, setSearchDraft] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -97,7 +117,7 @@ export const StudentsTeacherGroupsTab = ({
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [teacherOptions]);
 
-  const classRows = useMemo<TeacherClassRow[]>(() => {
+  const overviewClassRows = useMemo<TeacherClassRow[]>(() => {
     const realRows = classes
       .map((cls) => {
         const classId = toId(cls.class_id || cls.id) || 0;
@@ -137,14 +157,51 @@ export const StudentsTeacherGroupsTab = ({
     return [...realRows, ...directRows];
   }, [classes, students, teachers]);
 
+  const selectedTeacherClassRows = useMemo<TeacherClassRow[]>(() => {
+    if (!selectedTeacherId) return [];
+
+    const realRows = teacherClasses
+      .map((cls) => {
+        const classId = toId(cls.class_id || cls.id) || 0;
+        const teacherId = toId(cls.teacher_id) || selectedTeacherId;
+        const groupStudents = teacherStudents.filter((student) => toId(student.class_id) === classId);
+        return {
+          cls,
+          classId,
+          teacherId,
+          students: groupStudents,
+          studentCount: Number(cls.student_count ?? groupStudents.length),
+        };
+      })
+      .filter((row) => row.classId > 0);
+
+    const classIds = new Set(realRows.map((row) => row.classId));
+    const directStudents = teacherStudents.filter((student) => {
+      const studentClassId = toId(student.class_id);
+      return !studentClassId || !classIds.has(studentClassId);
+    });
+    const directRow = directStudents.length > 0
+      ? [{
+          cls: { class_name: 'Directly assigned students' },
+          classId: -selectedTeacherId,
+          teacherId: selectedTeacherId,
+          students: directStudents,
+          studentCount: directStudents.length,
+          isDirect: true,
+        }]
+      : [];
+
+    return [...realRows, ...directRow];
+  }, [selectedTeacherId, teacherClasses, teacherStudents]);
+
   const selectedTeacher = selectedTeacherId ? teachers.find((teacher) => teacher.id === selectedTeacherId) : null;
-  const selectedClass = selectedClassId ? classRows.find((row) => row.classId === selectedClassId) : null;
+  const selectedClass = selectedClassId ? selectedTeacherClassRows.find((row) => row.classId === selectedClassId) : null;
   const normalizedSearch = normalizeSearch(searchQuery);
   const filteredTeachers = useMemo(() => {
     if (!normalizedSearch) return teachers;
 
     return teachers.filter((teacher) => {
-      const groups = classRows.filter((row) => row.teacherId === teacher.id);
+      const groups = overviewClassRows.filter((row) => row.teacherId === teacher.id);
       const haystack = [
         teacher.name,
         ...groups.flatMap((group) => [
@@ -157,9 +214,9 @@ export const StudentsTeacherGroupsTab = ({
 
       return normalizeSearch(haystack).includes(normalizedSearch);
     });
-  }, [classRows, normalizedSearch, teachers]);
+  }, [normalizedSearch, overviewClassRows, teachers]);
   const selectedTeacherClasses = selectedTeacherId
-    ? classRows
+    ? selectedTeacherClassRows
       .filter((row) => row.teacherId === selectedTeacherId)
       .filter((row) => {
         if (!normalizedSearch) return true;
@@ -173,6 +230,77 @@ export const StudentsTeacherGroupsTab = ({
       })
       .sort((a, b) => Number(a.isDirect) - Number(b.isDirect) || String(a.cls.class_name || '').localeCompare(String(b.cls.class_name || '')))
     : [];
+  const selectableClassIds = selectedTeacherClasses.filter((row) => !row.isDirect && row.classId > 0).map((row) => row.classId);
+  const selectedVisibleClassCount = selectableClassIds.filter((id) => selectedClassIds.has(id)).length;
+  const allVisibleClassesSelected = selectableClassIds.length > 0 && selectedVisibleClassCount === selectableClassIds.length;
+
+  useEffect(() => {
+    setSelectedClassIds(new Set());
+    setBulkTargetTeacherId('');
+  }, [selectedTeacherId, searchQuery]);
+
+  useEffect(() => {
+    if (!selectedTeacherId) {
+      setTeacherClasses([]);
+      setTeacherStudents([]);
+      return;
+    }
+
+    let alive = true;
+    setTeacherLoading(true);
+    setSelectedClassId(null);
+    setSelectedClassStudents([]);
+    Promise.all([
+      classAPI.getAll({ teacher_id: selectedTeacherId, page: 1, limit: 100 }),
+      studentAPI.getAll({ teacher_id: selectedTeacherId, page: 1, limit: 100 }),
+    ])
+      .then(([classesResponse, studentsResponse]) => {
+        if (!alive) return;
+        setTeacherClasses(getRows<Class>(classesResponse));
+        setTeacherStudents(getRows<Student>(studentsResponse));
+      })
+      .catch((error: any) => {
+        if (!alive) return;
+        setTeacherClasses([]);
+        setTeacherStudents([]);
+        showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to load teacher groups.');
+      })
+      .finally(() => {
+        if (alive) setTeacherLoading(false);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [selectedTeacherId]);
+
+  const openTeacher = (teacherId: number) => {
+    setSelectedTeacherId(teacherId);
+    setSelectedClassId(null);
+    setSelectedClassStudents([]);
+  };
+
+  const openClass = async (classId: number) => {
+    setSelectedClassId(classId);
+    setSelectedClassStudents([]);
+    if (classId < 0) {
+      setClassLoading(false);
+      const row = selectedTeacherClassRows.find((item) => item.classId === classId);
+      setSelectedClassStudents(row?.students || []);
+      return;
+    }
+
+    setClassLoading(true);
+    try {
+      const response = await studentAPI.getByClassWithTransfers(classId);
+      setSelectedClassStudents(getRows<Student>(response));
+    } catch (error: any) {
+      setSelectedClassStudents([]);
+      showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to load class students.');
+    } finally {
+      setClassLoading(false);
+    }
+  };
 
   const applySearch = () => {
     setSearchQuery(searchDraft.trim());
@@ -192,20 +320,73 @@ export const StudentsTeacherGroupsTab = ({
     try {
       await onTransferGroup(classId, teacherId);
       setTargetTeachers((current) => ({ ...current, [classId]: '' }));
-      setSelectedTeacherId(teacherId);
+      openTeacher(teacherId);
       setSelectedClassId(null);
     } finally {
       setSavingClassId(null);
     }
   };
 
+  const toggleClass = (classId: number, checked: boolean) => {
+    setSelectedClassIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(classId);
+      else next.delete(classId);
+      return next;
+    });
+  };
+
+  const toggleAllVisibleClasses = (checked: boolean) => {
+    setSelectedClassIds((current) => {
+      const next = new Set(current);
+      for (const classId of selectableClassIds) {
+        if (checked) next.add(classId);
+        else next.delete(classId);
+      }
+      return next;
+    });
+  };
+
+  const deleteSelectedGroups = async () => {
+    if (!onDeleteGroups || selectedClassIds.size === 0) return;
+    setBulkSaving(true);
+    try {
+      await onDeleteGroups(Array.from(selectedClassIds));
+      setTeacherClasses((current) => current.filter((cls) => !selectedClassIds.has(toId(cls.class_id || cls.id) || 0)));
+      setSelectedClassIds(new Set());
+      setSelectedClassId(null);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
+  const transferSelectedGroups = async () => {
+    const teacherId = Number(bulkTargetTeacherId);
+    const classIds = Array.from(selectedClassIds).filter((id) => id > 0);
+    if (!teacherId || classIds.length === 0) return;
+    setBulkSaving(true);
+    try {
+      for (const classId of classIds) {
+        await onTransferGroup(classId, teacherId);
+      }
+      setSelectedClassIds(new Set());
+      setBulkTargetTeacherId('');
+      openTeacher(teacherId);
+      setSelectedClassId(null);
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
   const goBackToTeachers = () => {
     setSelectedTeacherId(null);
     setSelectedClassId(null);
+    setSelectedClassStudents([]);
   };
 
   const goBackToClasses = () => {
     setSelectedClassId(null);
+    setSelectedClassStudents([]);
   };
 
   if (loading) {
@@ -232,8 +413,8 @@ export const StudentsTeacherGroupsTab = ({
           </div>
         </div>
         <StudentsTableView
-          students={selectedClass.students}
-          loading={false}
+          students={selectedClassStudents}
+          loading={classLoading}
           hasActiveFilters={false}
           onView={onView}
           onEdit={onEdit}
@@ -284,10 +465,49 @@ export const StudentsTeacherGroupsTab = ({
               Clear
             </Button>
           )}
-          <span className="text-xs text-muted-foreground sm:ml-auto">{selectedTeacherClasses.length} groups</span>
         </div>
 
-        {selectedTeacherClasses.length === 0 ? (
+        {selectedClassIds.size > 0 && (
+          <div className="flex flex-col gap-2 rounded-lg border border-sky-100 bg-sky-50/80 p-2 text-sm dark:border-border dark:bg-muted/40 sm:flex-row sm:items-center">
+            <span className="font-medium">{selectedClassIds.size} selected</span>
+            <Select value={bulkTargetTeacherId} onValueChange={setBulkTargetTeacherId} disabled={bulkSaving}>
+              <SelectTrigger className="h-8 bg-white text-xs dark:bg-background sm:ml-auto sm:w-[240px]">
+                <SelectValue placeholder="Transfer selected to..." />
+              </SelectTrigger>
+              <SelectContent>
+                {teachers
+                  .filter((teacher) => teacher.id !== selectedTeacherId)
+                  .map((teacher) => (
+                    <SelectItem key={teacher.id} value={String(teacher.id)}>
+                      {teacher.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+            <Button type="button" size="sm" className="h-8 gap-1.5 bg-sky-600 px-3 text-xs text-white hover:bg-sky-700" onClick={transferSelectedGroups} disabled={bulkSaving || !bulkTargetTeacherId}>
+              {bulkSaving && bulkTargetTeacherId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
+              Transfer
+            </Button>
+            {onDeleteGroups && (
+              <Button type="button" size="sm" className="h-8 gap-1.5 bg-rose-600 px-3 text-xs text-white hover:bg-rose-700" onClick={deleteSelectedGroups} disabled={bulkSaving}>
+                {bulkSaving && !bulkTargetTeacherId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                Delete
+              </Button>
+            )}
+            <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSelectedClassIds(new Set())} disabled={bulkSaving}>
+              Clear
+            </Button>
+          </div>
+        )}
+
+        {teacherLoading ? (
+          <Card>
+            <CardContent className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Loading this teacher...
+            </CardContent>
+          </Card>
+        ) : selectedTeacherClasses.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
               {searchQuery ? 'No groups or students match this search.' : 'No groups assigned to this teacher.'}
@@ -295,26 +515,49 @@ export const StudentsTeacherGroupsTab = ({
           </Card>
         ) : (
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-            <div className="grid grid-cols-[minmax(0,1fr)_100px_minmax(260px,320px)] items-center gap-3 border-b bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-muted-foreground dark:bg-muted/40">
+            <div className="grid grid-cols-[32px_minmax(0,1fr)_100px_minmax(260px,320px)] items-center gap-3 border-b bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-muted-foreground dark:bg-muted/40">
+              <span>
+                <input
+                  type="checkbox"
+                  checked={allVisibleClassesSelected}
+                  ref={(input) => {
+                    if (input) input.indeterminate = selectedVisibleClassCount > 0 && !allVisibleClassesSelected;
+                  }}
+                  onChange={(event) => toggleAllVisibleClasses(event.target.checked)}
+                  aria-label="Select all visible groups"
+                  className="h-3.5 w-3.5"
+                />
+              </span>
               <span>Group</span>
               <span className="text-center">Students</span>
               <span className="text-right">Teacher transfer</span>
             </div>
             {selectedTeacherClasses.map(({ cls, classId, teacherId, studentCount, isDirect }, index) => (
-              <div key={classId} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_minmax(260px,320px)] lg:items-center">
+              <div key={classId} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[32px_minmax(0,1fr)_100px_minmax(260px,320px)] lg:items-center">
+                <div>
+                  {!isDirect && (
+                    <input
+                      type="checkbox"
+                      checked={selectedClassIds.has(classId)}
+                      onChange={(event) => toggleClass(classId, event.target.checked)}
+                      aria-label={`Select ${cls.class_name || `Class #${classId}`}`}
+                      className="h-3.5 w-3.5"
+                    />
+                  )}
+                </div>
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => setSelectedClassId(classId)} aria-label={`Open ${cls.class_name || `Class #${classId}`}`}>
+                  <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => openClass(classId)} aria-label={`Open ${cls.class_name || `Class #${classId}`}`}>
                     <Users className="h-4 w-4" />
                   </button>
                   <div className="min-w-0">
-                    <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => setSelectedClassId(classId)}>
+                    <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openClass(classId)}>
                       {cls.class_name || `Class #${classId}`}
                     </button>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">{isDirect ? 'Students assigned to this teacher outside their groups' : [cls.class_code, cls.level ? `Level ${cls.level}` : null].filter(Boolean).join(' / ') || 'Group'}</p>
                   </div>
                 </div>
 
-                <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => setSelectedClassId(classId)}>
+                <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => openClass(classId)}>
                   {studentCount} students
                 </button>
 
@@ -401,28 +644,28 @@ export const StudentsTeacherGroupsTab = ({
           <div className="px-3 py-8 text-center text-sm text-muted-foreground">No teachers, groups, or students match this search.</div>
         ) : (
           filteredTeachers.map((teacher, index) => {
-            const groups = classRows.filter((row) => row.teacherId === teacher.id);
+            const groups = overviewClassRows.filter((row) => row.teacherId === teacher.id);
             const studentCount = groups.reduce((sum, group) => sum + group.studentCount, 0);
             return (
               <div key={teacher.id} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_110px_86px] lg:items-center">
                 <div className="flex min-w-0 items-center gap-2.5">
-                  <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => setSelectedTeacherId(teacher.id)} aria-label={`Open ${teacher.name}`}>
+                  <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => openTeacher(teacher.id)} aria-label={`Open ${teacher.name}`}>
                     <BookOpen className="h-4 w-4" />
                   </button>
                   <div className="min-w-0">
-                    <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => setSelectedTeacherId(teacher.id)}>
+                    <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openTeacher(teacher.id)}>
                       {teacher.name}
                     </button>
                     <p className="mt-0.5 text-xs text-muted-foreground">Teacher groups and students</p>
                   </div>
                 </div>
-                <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => setSelectedTeacherId(teacher.id)}>
+                <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {groups.length} groups
                 </button>
-                <button type="button" className="w-fit rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 lg:mx-auto" onClick={() => setSelectedTeacherId(teacher.id)}>
+                <button type="button" className="w-fit rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {studentCount} students
                 </button>
-                <Button type="button" size="sm" className={`${getTone(index)} h-7 gap-1 px-2 text-xs text-white`} onClick={() => setSelectedTeacherId(teacher.id)}>
+                <Button type="button" size="sm" className={`${getTone(index)} h-7 gap-1 px-2 text-xs text-white`} onClick={() => openTeacher(teacher.id)}>
                   Open
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>

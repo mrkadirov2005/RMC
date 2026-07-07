@@ -491,6 +491,7 @@ export const translationAPI = {
 };
 
 export const systemAPI = {
+  getStats: () => apiClient.get('/system/stats'),
   redeploy: (password: string) => apiClient.post('/system/redeploy', { password }),
   resetStudents: (confirmation: string) => apiClient.post('/system/dev/reset-students', { confirmation }),
   resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),

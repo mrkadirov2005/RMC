@@ -17,6 +17,7 @@ interface SelectFieldProps {
   onChange: (value: string) => void;
   options: Array<{ id?: number; label: string; value: string | number }>;
   isLoading?: boolean;
+  disabled?: boolean;
   required?: boolean;
   placeholder?: string;
 }
@@ -29,6 +30,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   onChange,
   options,
   isLoading = false,
+  disabled = false,
   required = false,
   placeholder = 'Select an option',
 }) => {
@@ -41,7 +43,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
       <Select
         value={value?.toString() || ''}
         onValueChange={onChange}
-        disabled={isLoading}
+        disabled={isLoading || disabled}
         required={required}
       >
         <SelectTrigger>

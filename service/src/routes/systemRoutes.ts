@@ -1,8 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const systemController = require('../modules/system');
-const { requireAuth, requireOwner } = require('../middleware/auth');
+const { requireAuth, requireOwner, requireRole } = require('../middleware/auth');
 
+router.get('/stats', requireAuth, requireRole('superuser'), systemController.getStats);
 router.post('/redeploy', requireAuth, requireOwner, systemController.redeployServer);
 router.post('/dev/reset-students', requireAuth, requireOwner, systemController.resetStudents);
 router.post('/dev/reset-teachers', requireAuth, requireOwner, systemController.resetTeachers);

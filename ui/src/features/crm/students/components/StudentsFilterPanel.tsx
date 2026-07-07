@@ -11,6 +11,7 @@ interface Props {
   status: string;
   school: string;
   classId: string;
+  teacherId: string;
   subjectId: string;
   level: string;
   address: string;
@@ -19,6 +20,7 @@ interface Props {
   onStatus: (value: string) => void;
   onSchool: (value: string) => void;
   onClassId: (value: string) => void;
+  onTeacherId: (value: string) => void;
   onSubjectId: (value: string) => void;
   onLevel: (value: string) => void;
   onAddress: (value: string) => void;
@@ -27,6 +29,7 @@ interface Props {
   statusOptions: Option[];
   schoolOptions: string[];
   classOptions: Option[];
+  teacherOptions: Option[];
   subjectOptions: Option[];
   levelOptions: Array<string | number>;
   addressOptions: string[];
@@ -41,6 +44,7 @@ export const StudentsFilterPanel = ({
   status,
   school,
   classId,
+  teacherId,
   subjectId,
   level,
   address,
@@ -49,6 +53,7 @@ export const StudentsFilterPanel = ({
   onStatus,
   onSchool,
   onClassId,
+  onTeacherId,
   onSubjectId,
   onLevel,
   onAddress,
@@ -57,6 +62,7 @@ export const StudentsFilterPanel = ({
   statusOptions,
   schoolOptions,
   classOptions,
+  teacherOptions,
   subjectOptions,
   levelOptions,
   addressOptions,
@@ -83,6 +89,16 @@ export const StudentsFilterPanel = ({
               <SelectItem value="all">Hamma sinflar</SelectItem>
               <SelectItem value="-1">Sinf biriktirilmagan</SelectItem>
               {classOptions.map((opt) => <SelectItem key={opt.id || opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs font-semibold">O'qituvchi</Label>
+          <Select value={teacherId || 'all'} onValueChange={(v) => onTeacherId(normalizeValue(v))}>
+            <SelectTrigger><SelectValue placeholder="Hamma o'qituvchilar" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Hamma o'qituvchilar</SelectItem>
+              {teacherOptions.map((opt) => <SelectItem key={opt.id || opt.value} value={String(opt.value)}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>

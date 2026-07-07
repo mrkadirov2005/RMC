@@ -25,7 +25,17 @@ const resetTable = (tableName: 'students' | 'teachers' | 'classes' | 'payments')
   }
 };
 
+const getStats = async (req: any, res: any) => {
+  try {
+    const stats = await systemService.getStats();
+    res.json(stats);
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to load server stats.' });
+  }
+};
+
 module.exports = {
+  getStats,
   redeployServer,
   resetStudents: resetTable('students'),
   resetTeachers: resetTable('teachers'),

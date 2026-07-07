@@ -1,6 +1,6 @@
 // Page component for the payments screen in the crm feature.
 
-import { lazy, Suspense } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
   Plus,
@@ -25,34 +25,22 @@ import { PaymentsFolderTabs } from './components/PaymentsFolderTabs';
 import { PaymentTeacherDetail } from './components/PaymentTeacherDetail';
 import { PaymentListView } from './components/PaymentListView';
 
-const PaymentFormDialog = lazy(() => import('./components/PaymentFormDialog'));
-
 // Renders the payments page screen.
 const PaymentsPage = () => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const hook = usePaymentsPage();
 
   const {
     isTeacher,
-    isOwner,
     state,
     selectedFolder,
-    isModalOpen,
-    editingId,
     teacherDetailView,
     viewMode,
     setViewMode,
     isImporting,
     fileInputRef,
     overallPaymentStats,
-    studentOptions,
-    centerOptions,
-    isLoadingOptions,
-    formData,
-    setFormData,
-    handleOpenModal,
-    handleCloseModal,
-    handleSubmit,
     handleImportPayments,
     handleExportPayments,
     handleBackToFolders,
@@ -100,7 +88,7 @@ const PaymentsPage = () => {
                   <Download className="mr-2 h-4 w-4" />
                   {t('Export CSV')}
                 </Button>
-                <Button onClick={() => handleOpenModal()}>
+                <Button onClick={() => navigate('/payments/new')}>
                   <Plus className="mr-2 h-4 w-4" /> Add Payment
                 </Button>
               </>
@@ -138,21 +126,6 @@ const PaymentsPage = () => {
         <PaymentListView hook={hook} />
       )}
 
-      <Suspense fallback={null}>
-        <PaymentFormDialog
-          open={isModalOpen}
-          editingId={editingId}
-          loading={state.loading}
-          isOwner={isOwner}
-          centerOptions={centerOptions}
-          studentOptions={studentOptions}
-          isLoadingOptions={isLoadingOptions}
-          formData={formData}
-          setFormData={setFormData}
-          onClose={handleCloseModal}
-          onSubmit={handleSubmit}
-        />
-      </Suspense>
     </div>
   );
 };

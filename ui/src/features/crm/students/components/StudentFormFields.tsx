@@ -20,7 +20,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
   const finalPrice = Math.max(0, discountOriginalPrice - discountAmount);
 
   return (
-  <div className="grid grid-cols-2 gap-4">
+  <div className="grid gap-4 md:grid-cols-2">
     <div className="space-y-2"><Label>First Name</Label><Input value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required /></div>
     <div className="space-y-2"><Label>Last Name</Label><Input value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required /></div>
     <div className="space-y-2"><Label>Phone</Label><Input value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required /></div>
@@ -34,7 +34,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
     <div className="space-y-2"><Label>School Class (optional)</Label><Input value={formData.school_class || ''} onChange={(e) => setFormData({ ...formData, school_class: e.target.value })} /></div>
     <div className="space-y-2"><Label>Username</Label><Input value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} /></div>
     <div className="space-y-2"><Label>Password</Label><Input type="password" value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
-    <div className="col-span-2 rounded-lg border border-emerald-200 bg-emerald-50/70 p-3">
+    <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 md:col-span-2">
       <div className="flex items-center justify-between gap-3">
         <div>
           <Label className="text-sm font-bold text-emerald-900">Discounted student</Label>

@@ -1,12 +1,11 @@
 // Page component for the students screen in the crm feature.
 
 import { useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Coins, Download, FileSpreadsheet, GraduationCap, Plus, School, Upload, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, Plus, Upload, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
 import { PageHeader } from '@/components/common/PageHeader';
-import { MetricCard } from '@/components/common/MetricCard';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,7 +14,6 @@ import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
-import { StudentsFormDialog } from './components/StudentsFormDialog';
 import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
 import { StudentsTableView } from './components/StudentsTableView';
 import { StudentsTeacherGroupsTab } from './components/StudentsTeacherGroupsTab';
@@ -39,18 +37,6 @@ const StudentsPage = () => {
   const s = useStudentsPage();
   const title = t('Students');
   const canImportStudents = s.user?.userType === 'superuser';
-// Handles active count.
-  const activeCount = [
-    s.searchTerm,
-    s.filterSchool,
-    s.filterClassId,
-    s.filterSubjectId,
-    s.filterLevel,
-    s.filterAddress,
-    s.filterAge,
-    s.filterGender,
-    s.filterStatus,
-  ].filter(Boolean).length;
   const schoolOptions = useMemo(() => {
     const values = new Set<string>();
     for (const student of s.state.items) {
@@ -81,43 +67,7 @@ const StudentsPage = () => {
   }, [s.centerItems, s.state.items]);
   const total = Number(s.state.meta?.total || 0);
   const totalPages = Math.max(1, Math.ceil(total / s.limit));
-  const start = total === 0 ? 0 : (s.page - 1) * s.limit + 1;
-  const end = Math.min(total, s.page * s.limit);
   const pageStudents = s.displayedStudents;
-  const activeStudents = pageStudents.filter((student) => String(student.status || '').toLowerCase() === 'active').length;
-  const schoolsOnPage = new Set(pageStudents.map((student) => String(student.school_name || '').trim()).filter(Boolean)).size;
-  const classesOnPage = new Set(pageStudents.map((student) => String(student.class_name || student.school_class || '').trim()).filter(Boolean)).size;
-  const coinsOnPage = pageStudents.reduce((sum, student) => sum + (Number(student.coins) || 0), 0);
-  const summaryCards = [
-    {
-      label: t('Students shown'),
-      value: pageStudents.length.toLocaleString(),
-      detail: `${activeStudents.toLocaleString()} ${t('active')}`,
-      icon: Users,
-      tone: 'blue' as const,
-    },
-    {
-      label: t('Schools'),
-      value: schoolsOnPage.toLocaleString(),
-      detail: t('In current view'),
-      icon: School,
-      tone: 'green' as const,
-    },
-    {
-      label: t('Classes'),
-      value: classesOnPage.toLocaleString(),
-      detail: t('Assigned groups'),
-      icon: GraduationCap,
-      tone: 'amber' as const,
-    },
-    {
-      label: t('Coins'),
-      value: coinsOnPage.toLocaleString(),
-      detail: t('Visible students'),
-      icon: Coins,
-      tone: 'neutral' as const,
-    },
-  ];
 
   const handleImportStudents = async (file?: File) => {
     if (!file) return;
@@ -232,6 +182,26 @@ const StudentsPage = () => {
       throw error;
     }
   };
+  const handleBulkDeleteGroups = async (classIds: number[]) => {
+    const ids = classIds.filter((id) => id > 0);
+    if (ids.length === 0) return;
+    if (!window.confirm(`Delete ${ids.length} selected group${ids.length === 1 ? '' : 's'}?`)) return;
+
+    let failed = 0;
+    for (const id of ids) {
+      try {
+        await classAPI.delete(id);
+      } catch {
+        failed += 1;
+      }
+    }
+    await refreshStudents();
+    if (failed > 0) {
+      showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
+    } else {
+      showToast.success(`Deleted ${ids.length} group${ids.length === 1 ? '' : 's'}.`);
+    }
+  };
   const handleExportStudents = () => exportCsvEntity('students', 'Students');
 
   return (
@@ -289,25 +259,13 @@ const StudentsPage = () => {
                 </Button>
               </>
             )}
-            <Button size="sm" onClick={() => s.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+            <Button size="sm" onClick={() => navigate('/students/new')} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
               <Plus className={headerActionIconClass} /> {t('Add Student')}
             </Button>
           </>
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => (
-          <MetricCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            detail={card.detail}
-            icon={card.icon}
-            tone={card.tone}
-          />
-        ))}
-      </div>
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
         <TabsList className="mb-5 bg-slate-100/80 dark:bg-muted">
@@ -316,13 +274,14 @@ const StudentsPage = () => {
           <TabsTrigger value="teachers">Teachers</TabsTrigger>
         </TabsList>
         <TabsContent value="students" className="mt-0">
-          <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} activeCount={activeCount} onClearAll={s.clearFilters} />
+          <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} onClearAll={s.clearFilters} />
           <StudentsFilterPanel
             open={s.showFilters}
             gender={s.filterGender}
             status={s.filterStatus}
             school={s.filterSchool}
             classId={s.filterClassId}
+            teacherId={s.filterTeacherId}
             subjectId={s.filterSubjectId}
             level={s.filterLevel}
             address={s.filterAddress}
@@ -331,6 +290,7 @@ const StudentsPage = () => {
             onStatus={s.setFilterStatus}
             onSchool={s.setFilterSchool}
             onClassId={s.setFilterClassId}
+            onTeacherId={s.setFilterTeacherId}
             onSubjectId={s.setFilterSubjectId}
             onLevel={s.setFilterLevel}
             onAddress={s.setFilterAddress}
@@ -339,6 +299,7 @@ const StudentsPage = () => {
             statusOptions={s.statusOptions}
             schoolOptions={schoolOptions}
             classOptions={s.classOptions}
+            teacherOptions={s.teacherOptions}
             subjectOptions={s.subjectOptions}
             levelOptions={levelOptions}
             addressOptions={addressOptions}
@@ -348,7 +309,7 @@ const StudentsPage = () => {
             loading={s.state.loading}
             hasActiveFilters={s.hasActiveFilters}
             onView={(id) => navigate(`/students/${id}/profile`)}
-            onEdit={s.handleOpenModal}
+            onEdit={(student) => navigate(`/students/${student.student_id || student.id}/edit`)}
             onDelete={s.handleDelete}
             onTransfer={handleTransferStudent}
             onBulkDelete={handleBulkDeleteStudents}
@@ -358,11 +319,7 @@ const StudentsPage = () => {
             teacherOptions={s.teacherOptions}
             viewMode={viewMode}
           />
-          <div className="mt-4 flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:justify-between dark:border-border dark:bg-transparent">
-            <p className="text-sm text-muted-foreground">
-              {t('Showing')} {start}-{end} {t('of')} {total} {t('students')}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-border dark:bg-transparent">
               <Select value={String(s.limit)} onValueChange={(value) => s.setLimit(Number(value))}>
                 <SelectTrigger className="h-9 w-[110px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -376,7 +333,6 @@ const StudentsPage = () => {
               <Button variant="outline" size="sm" onClick={() => s.setPage(Math.min(totalPages, s.page + 1))} disabled={s.page >= totalPages || s.state.loading}>
                 {t('Next')} <ChevronRight className="ml-1 h-4 w-4" />
               </Button>
-            </div>
           </div>
         </TabsContent>
         <TabsContent value="statistics" className="mt-0">
@@ -390,17 +346,17 @@ const StudentsPage = () => {
             loading={s.state.loading || s.loadingClasses || s.isLoadingOptions}
             viewMode={viewMode}
             onView={(id) => navigate(`/students/${id}/profile`)}
-            onEdit={s.handleOpenModal}
+            onEdit={(student) => navigate(`/students/${student.student_id || student.id}/edit`)}
             onDelete={s.handleDelete}
             onTransfer={handleTransferStudent}
             onBulkDelete={handleBulkDeleteStudents}
             onPasswordUpdate={handlePasswordUpdate}
             onCoinsUpdated={s.actions.fetchAll}
             onTransferGroup={handleTransferGroupOwner}
+            onDeleteGroups={handleBulkDeleteGroups}
           />
         </TabsContent>
       </Tabs>
-      <StudentsFormDialog open={s.isModalOpen} editing={Boolean(s.editingId)} formData={s.formData} setFormData={s.setFormData} centerOptions={s.centerOptions} classOptions={s.classOptions} teacherOptions={s.teacherOptions} genderOptions={s.genderOptions} statusOptions={s.statusOptions} onClose={s.handleCloseModal} onSubmit={s.handleSubmit} loading={s.state.loading} showCenterField={s.isOwner} error={s.state.error} />
     </div>
   );
 };

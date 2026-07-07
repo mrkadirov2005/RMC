@@ -9,7 +9,7 @@ import {
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
-  School, BadgeAlert,
+  School, BadgeAlert, Server,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -47,6 +47,7 @@ const iconMap: Record<string, ElementType> = {
   Classes: BookOpen,
   Rooms: DoorOpen,
   Logs: NotebookTabs,
+  Server,
   Attendance: UserCheck,
   Assignments: ListTodo,
   Subjects: BookMarked,
@@ -68,6 +69,7 @@ const iconToneMap: Record<string, string> = {
   Classes: 'from-blue-500 to-violet-600 shadow-blue-500/25',
   Rooms: 'from-orange-500 to-red-500 shadow-orange-500/25',
   Logs: 'from-stone-500 to-zinc-700 shadow-stone-500/20',
+  Server: 'from-emerald-600 to-cyan-700 shadow-emerald-500/25',
   Calendar: 'from-teal-500 to-emerald-600 shadow-teal-500/25',
   MdPayment: 'from-indigo-600 to-blue-700 shadow-indigo-500/25',
   MdBarChart: 'from-lime-500 to-green-600 shadow-lime-500/25',
@@ -175,6 +177,7 @@ const Sidebar = memo(() => {
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
     { label: 'Logs', path: '/logs', iconName: 'Logs', roles: ['superuser'] },
+    { label: 'Server', path: '/server', iconName: 'Server', roles: ['superuser'] },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'teacher', 'student'] },
 
 

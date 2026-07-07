@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import {
   Table,
   TableBody,
@@ -41,6 +42,7 @@ interface PaymentListViewProps {
 
 export const PaymentListView = ({ hook }: PaymentListViewProps) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const {
     dispatch,
     setPaymentsSearchTerm,
@@ -63,7 +65,6 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
     setPaymentsPageSize,
     paymentPageSizeOptions,
     clearFilters,
-    handleOpenModal,
     handleDelete,
     getStudentName,
     getStatusBadgeClasses,
@@ -224,7 +225,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                   {!isTeacher && (
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenModal(payment)}>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/payments/${payment.payment_id || payment.id}/edit`)}>
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(payment.payment_id || payment.id || 0)}>

@@ -49,15 +49,22 @@ export interface Class {
   class_code: string;
   level: number;
   teacher_id?: number;
+  payment_amount?: number;
+  payment_frequency?: string;
 }
 
 export interface Student {
   student_id?: number;
   id?: number;
+  center_id?: number;
   first_name: string;
   last_name: string;
+  phone?: string;
   class_id?: number;
   teacher_id?: number;
+  class_name?: string;
+  school_name?: string | null;
+  school_class?: string | null;
 }
 
 export type FolderType = 'teacher' | 'class' | 'student';
