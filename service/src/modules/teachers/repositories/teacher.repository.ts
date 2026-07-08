@@ -1,15 +1,41 @@
 const pool = require('../../../db/pool');
 
 const findAll = (centerId?: number) => {
-  let query = 'SELECT * FROM teachers';
+  let query = `
+    SELECT
+      t.*,
+      COALESCE(student_counts.student_count, 0)::int AS student_count,
+      COALESCE(class_counts.class_count, 0)::int AS class_count
+    FROM teachers t
+    LEFT JOIN (
+      SELECT teacher_id, COUNT(DISTINCT student_id) AS student_count
+      FROM (
+        SELECT s.student_id, s.teacher_id
+        FROM students s
+        WHERE s.deleted_at IS NULL AND s.teacher_id IS NOT NULL
+        UNION
+        SELECT s.student_id, c.teacher_id
+        FROM students s
+        JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
+        WHERE s.deleted_at IS NULL AND c.teacher_id IS NOT NULL
+      ) teacher_students
+      GROUP BY teacher_id
+    ) student_counts ON student_counts.teacher_id = t.teacher_id
+    LEFT JOIN (
+      SELECT teacher_id, COUNT(*) AS class_count
+      FROM classes
+      WHERE deleted_at IS NULL
+      GROUP BY teacher_id
+    ) class_counts ON class_counts.teacher_id = t.teacher_id
+  `;
   const params: any[] = [];
-  const conditions = ['deleted_at IS NULL'];
+  const conditions = ['t.deleted_at IS NULL'];
   if (centerId) {
     params.push(centerId);
-    conditions.push(`center_id = $${params.length}`);
+    conditions.push(`t.center_id = $${params.length}`);
   }
   query += ' WHERE ' + conditions.join(' AND ');
-  query += ' ORDER BY teacher_id';
+  query += ' ORDER BY t.teacher_id';
   return pool.query(query, params).then((r: any) => r.rows);
 };
 

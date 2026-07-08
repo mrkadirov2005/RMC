@@ -174,7 +174,6 @@ export const StudentsTeacherGroupsTab = ({
   teachers: teacherItems = [],
   teacherOptions,
   loading,
-  viewMode,
   onView,
   onEdit,
   onDelete,
@@ -534,7 +533,7 @@ export const StudentsTeacherGroupsTab = ({
           classOptions={classes}
           hideTeacherGroup
           showMonthlyPaymentStatus
-          viewMode={viewMode}
+          viewMode="list"
         />
       </div>
     );

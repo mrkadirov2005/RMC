@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
 const pool = require('../../../db/pool');
+const v8 = require('v8');
 
 const RESET_CONFIRMATION = 'TRUNCATE_EDUCATION_DATA';
 const RESET_TABLES = {
@@ -95,6 +96,7 @@ const round = (value: number, digits = 2) => {
 
 const getStats = async () => {
   const memory = process.memoryUsage();
+  const heapStats = v8.getHeapStatistics();
   const totalMemory = os.totalmem();
   const freeMemory = os.freemem();
   const usedMemory = totalMemory - freeMemory;
@@ -145,6 +147,7 @@ const getStats = async () => {
         rssBytes: memory.rss,
         heapTotalBytes: memory.heapTotal,
         heapUsedBytes: memory.heapUsed,
+        heapLimitBytes: heapStats.heap_size_limit,
         externalBytes: memory.external,
         arrayBuffersBytes: memory.arrayBuffers,
       },

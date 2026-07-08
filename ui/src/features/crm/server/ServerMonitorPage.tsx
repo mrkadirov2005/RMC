@@ -38,6 +38,7 @@ type ServerStats = {
       rssBytes: number;
       heapTotalBytes: number;
       heapUsedBytes: number;
+      heapLimitBytes?: number;
       externalBytes: number;
       arrayBuffersBytes: number;
     };
@@ -79,6 +80,15 @@ const formatTime = (value?: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '-';
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+};
+
+const getHeapLimitBytes = (stats: ServerStats) =>
+  stats.memory.process.heapLimitBytes || stats.memory.process.heapTotalBytes || 0;
+
+const getHeapPressurePercent = (stats: ServerStats) => {
+  const heapLimitBytes = getHeapLimitBytes(stats);
+  if (!heapLimitBytes) return 0;
+  return (stats.memory.process.heapUsedBytes / heapLimitBytes) * 100;
 };
 
 const percentTone = (value: number) => {
@@ -139,9 +149,7 @@ const ServerMonitorPage = () => {
       const nextStats = ((response as any).data ?? response) as ServerStats;
       setStats(nextStats);
       setHistory((current) => {
-        const heapPercent = nextStats.memory.process.heapTotalBytes > 0
-          ? (nextStats.memory.process.heapUsedBytes / nextStats.memory.process.heapTotalBytes) * 100
-          : 0;
+        const heapPercent = getHeapPressurePercent(nextStats);
         const next = [
           ...current,
           {
@@ -172,8 +180,8 @@ const ServerMonitorPage = () => {
   }, [refreshSeconds]);
 
   const heapPercent = useMemo(() => {
-    if (!stats?.memory.process.heapTotalBytes) return 0;
-    return (stats.memory.process.heapUsedBytes / stats.memory.process.heapTotalBytes) * 100;
+    if (!stats) return 0;
+    return getHeapPressurePercent(stats);
   }, [stats]);
 
   return (
@@ -237,7 +245,7 @@ const ServerMonitorPage = () => {
               <CardContent className="space-y-5">
                 <UsageBar label="CPU load" value={stats.cpu.loadPercent} detail={`${stats.cpu.cores} cores / 1m load ${Number(stats.cpu.loadAverage[0] || 0).toFixed(2)}`} />
                 <UsageBar label="Host memory" value={stats.memory.usedPercent} detail={`${formatBytes(stats.memory.usedBytes)} used of ${formatBytes(stats.memory.totalBytes)}`} />
-                <UsageBar label="Node heap" value={heapPercent} detail={`${formatBytes(stats.memory.process.heapUsedBytes)} used of ${formatBytes(stats.memory.process.heapTotalBytes)}`} />
+                <UsageBar label="Node heap pressure" value={heapPercent} detail={`${formatBytes(stats.memory.process.heapUsedBytes)} used of ${formatBytes(getHeapLimitBytes(stats))} limit`} />
               </CardContent>
             </Card>
 
@@ -253,6 +261,7 @@ const ServerMonitorPage = () => {
                 <div className="flex justify-between gap-3"><span className="text-muted-foreground">Platform</span><span className="font-medium">{stats.host.platform} {stats.host.arch}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-muted-foreground">Release</span><span className="font-medium">{stats.host.release}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-muted-foreground">RSS</span><span className="font-medium">{formatBytes(stats.memory.process.rssBytes)}</span></div>
+                <div className="flex justify-between gap-3"><span className="text-muted-foreground">Heap committed</span><span className="font-medium">{formatBytes(stats.memory.process.heapTotalBytes)}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-muted-foreground">External</span><span className="font-medium">{formatBytes(stats.memory.process.externalBytes)}</span></div>
                 <div className="flex justify-between gap-3"><span className="text-muted-foreground">Last sample</span><span className="font-medium">{formatTime(stats.timestamp)}</span></div>
               </CardContent>

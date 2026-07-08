@@ -358,20 +358,36 @@ export const ClassesMainView = ({
                                       ) : students.length === 0 ? (
                                         <div className="py-3 text-center text-xs text-muted-foreground">{t('No students in this group')}</div>
                                       ) : (
-                                        <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
-                                          {students.map((student, studentIndex) => (
-                                            <div
-                                              key={student.student_id || student.id}
-                                              className="flex min-w-0 items-center gap-2 rounded-md border border-slate-200 bg-white px-2 py-1.5 text-xs shadow-sm dark:border-border dark:bg-background"
-                                            >
-                                              <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white ${studentIndex % 4 === 0 ? 'bg-sky-600' : studentIndex % 4 === 1 ? 'bg-emerald-600' : studentIndex % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'}`}>
-                                                {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
-                                              </span>
-                                              <span className="truncate font-semibold text-slate-950 dark:text-card-foreground">
-                                                {[student.first_name, student.last_name].filter(Boolean).join(' ') || t('Unnamed student')}
-                                              </span>
-                                            </div>
-                                          ))}
+                                        <div className="overflow-hidden rounded-md border border-slate-200 bg-white dark:border-border dark:bg-background">
+                                          <Table className="text-xs">
+                                            <TableHeader className="bg-slate-50/90 dark:bg-muted/30">
+                                              <TableRow>
+                                                <TableHead className="h-8 px-2">{t('Name')}</TableHead>
+                                                <TableHead className="h-8 px-2">{t('School')}</TableHead>
+                                                <TableHead className="h-8 px-2">{t('School class')}</TableHead>
+                                                <TableHead className="h-8 px-2">{t('Phone')}</TableHead>
+                                              </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                              {students.map((student, studentIndex) => (
+                                                <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                                                  <TableCell className="px-2 py-2">
+                                                    <div className="flex min-w-0 items-center gap-2">
+                                                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white ${studentIndex % 4 === 0 ? 'bg-sky-600' : studentIndex % 4 === 1 ? 'bg-emerald-600' : studentIndex % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'}`}>
+                                                        {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                                                      </span>
+                                                      <span className="truncate font-semibold text-slate-950 dark:text-card-foreground">
+                                                        {[student.first_name, student.last_name].filter(Boolean).join(' ') || t('Unnamed student')}
+                                                      </span>
+                                                    </div>
+                                                  </TableCell>
+                                                  <TableCell className="px-2 py-2 text-muted-foreground">{student.school_name || '-'}</TableCell>
+                                                  <TableCell className="px-2 py-2 text-muted-foreground">{student.school_class || '-'}</TableCell>
+                                                  <TableCell className="px-2 py-2 text-muted-foreground">{student.phone || student.parent_phone || '-'}</TableCell>
+                                                </TableRow>
+                                              ))}
+                                            </TableBody>
+                                          </Table>
                                         </div>
                                       )}
                                     </div>
