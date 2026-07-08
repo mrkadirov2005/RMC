@@ -75,6 +75,9 @@ const getRows = <T,>(response: any): T[] => {
   const payload = getPayload(response);
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.rows)) return payload.rows;
+  if (Array.isArray(payload?.students)) return payload.students;
   return [];
 };
 
@@ -383,22 +386,40 @@ export const StudentsTeacherGroupsTab = ({
   };
 
   const openClass = async (classId: number) => {
+    const row = selectedTeacherClassRows.find((item) => item.classId === classId);
     setSelectedClassId(classId);
-    setSelectedClassStudents([]);
+    setSelectedClassStudents(row?.students || []);
     if (classId < 0) {
       setClassLoading(false);
-      const row = selectedTeacherClassRows.find((item) => item.classId === classId);
       setSelectedClassStudents(row?.students || []);
       return;
     }
 
     setClassLoading(true);
     try {
+      const expectedCount = Math.max(100, Number(row?.studentCount || row?.students.length || 0));
+      const fetchClassStudents = async () => {
+        try {
+          const response = await studentAPI.getByClassWithTransfers(classId);
+          const rows = getRows<Student>(response);
+          if (rows.length > 0 || Number(row?.studentCount || 0) === 0) return rows;
+        } catch {
+          // Older deployed backends may not have /students/class/:classId yet.
+        }
+
+        const fallbackResponse = await studentAPI.getAll({
+          class_id: classId,
+          page: 1,
+          limit: Math.min(100, expectedCount),
+        });
+        return getRows<Student>(fallbackResponse);
+      };
+
       const [studentsResponse, paymentsResponse] = await Promise.all([
-        studentAPI.getByClassWithTransfers(classId),
+        fetchClassStudents(),
         paymentAPI.getAll({ page: 1, limit: 200 }).catch(() => ({ data: [] })),
       ]);
-      const classStudents = getRows<Student>(studentsResponse);
+      const classStudents = Array.isArray(studentsResponse) ? studentsResponse : getRows<Student>(studentsResponse);
       const currentPayments = getRows<PaymentRow>(paymentsResponse);
       setSelectedClassStudents(mergeMonthlyPayments(classStudents, currentPayments));
     } catch (error: any) {
