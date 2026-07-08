@@ -191,7 +191,7 @@ const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId
     countQuery += where;
   }
 
-  const countResult = await pool.query(countQuery, params);
+  const countResult = await pool.query(countQuery, [...params]);
   const total = Number(countResult.rows[0]?.total || 0);
 
   const page = Math.max(1, Number(filters.page || 1));
