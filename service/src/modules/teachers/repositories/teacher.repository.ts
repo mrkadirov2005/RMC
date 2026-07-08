@@ -21,9 +21,17 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
       COALESCE(class_counts.class_count, 0)::int AS class_count
     FROM teachers t
     LEFT JOIN (
-      SELECT teacher_id, COUNT(*) AS student_count
-      FROM students
-      WHERE deleted_at IS NULL
+      SELECT teacher_id, COUNT(DISTINCT student_id) AS student_count
+      FROM (
+        SELECT s.student_id, s.teacher_id
+        FROM students s
+        WHERE s.deleted_at IS NULL AND s.teacher_id IS NOT NULL
+        UNION
+        SELECT s.student_id, c.teacher_id
+        FROM students s
+        JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
+        WHERE s.deleted_at IS NULL AND c.teacher_id IS NOT NULL
+      ) teacher_students
       GROUP BY teacher_id
     ) student_counts ON student_counts.teacher_id = t.teacher_id
     LEFT JOIN (

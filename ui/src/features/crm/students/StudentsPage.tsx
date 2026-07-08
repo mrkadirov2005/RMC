@@ -342,6 +342,7 @@ const StudentsPage = () => {
           <StudentsTeacherGroupsTab
             students={pageStudents}
             classes={s.classes}
+            teachers={s.teachers}
             teacherOptions={s.teacherOptions}
             loading={s.state.loading || s.loadingClasses || s.isLoadingOptions}
             viewMode={viewMode}

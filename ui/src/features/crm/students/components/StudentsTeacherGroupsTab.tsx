@@ -16,9 +16,19 @@ interface Option {
   value: string | number;
 }
 
+interface TeacherSummary {
+  teacher_id?: number;
+  id?: number;
+  first_name?: string;
+  last_name?: string;
+  student_count?: number;
+  class_count?: number;
+}
+
 interface Props {
   students: Student[];
   classes: Class[];
+  teachers?: TeacherSummary[];
   teacherOptions: Option[];
   loading: boolean;
   viewMode: ViewMode;
@@ -161,6 +171,7 @@ type TeacherClassRow = {
 export const StudentsTeacherGroupsTab = ({
   students,
   classes,
+  teachers: teacherItems = [],
   teacherOptions,
   loading,
   viewMode,
@@ -190,13 +201,24 @@ export const StudentsTeacherGroupsTab = ({
   const [searchQuery, setSearchQuery] = useState('');
 
   const teachers = useMemo(() => {
-    const map = new Map<number, { id: number; name: string }>();
+    const map = new Map<number, { id: number; name: string; studentCount?: number; classCount?: number }>();
+    for (const teacher of teacherItems) {
+      const id = toId(teacher.teacher_id || teacher.id);
+      if (!id) continue;
+      const name = [teacher.first_name, teacher.last_name].filter(Boolean).join(' ').trim() || `Teacher ${id}`;
+      map.set(id, {
+        id,
+        name,
+        studentCount: teacher.student_count == null ? undefined : Number(teacher.student_count),
+        classCount: teacher.class_count == null ? undefined : Number(teacher.class_count),
+      });
+    }
     for (const teacher of teacherOptions) {
       const id = toId(teacher.value || teacher.id);
-      if (id) map.set(id, { id, name: teacher.label });
+      if (id && !map.has(id)) map.set(id, { id, name: teacher.label });
     }
     return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [teacherOptions]);
+  }, [teacherItems, teacherOptions]);
 
   const overviewClassRows = useMemo<TeacherClassRow[]>(() => {
     const realRows = classes
@@ -732,7 +754,8 @@ export const StudentsTeacherGroupsTab = ({
         ) : (
           filteredTeachers.map((teacher, index) => {
             const groups = overviewClassRows.filter((row) => row.teacherId === teacher.id);
-            const studentCount = groups.reduce((sum, group) => sum + group.studentCount, 0);
+            const studentCount = teacher.studentCount ?? groups.reduce((sum, group) => sum + group.studentCount, 0);
+            const groupCount = teacher.classCount ?? groups.filter((group) => !group.isDirect).length;
             return (
               <div key={teacher.id} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_110px_86px] lg:items-center">
                 <div className="flex min-w-0 items-center gap-2.5">
@@ -747,7 +770,7 @@ export const StudentsTeacherGroupsTab = ({
                   </div>
                 </div>
                 <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
-                  {groups.length} groups
+                  {groupCount} groups
                 </button>
                 <button type="button" className="w-fit rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {studentCount} students

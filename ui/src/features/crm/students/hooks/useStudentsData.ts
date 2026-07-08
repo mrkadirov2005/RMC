@@ -12,6 +12,7 @@ import {
   selectCenterOptions,
   selectClassOptions,
   selectSubjectOptions,
+  selectTeacherItems,
   selectTeacherOptions,
 } from '../../../../store/selectors';
 import type { Class, Student } from '../types';
@@ -30,6 +31,7 @@ export const useStudentsData = (studentParams?: StudentListParams) => {
   const studentsMeta = useAppSelector((state) => state.students.meta);
   const classItems = useAppSelector((state) => state.classes.items) as Class[];
   const classesLoading = useAppSelector((state) => state.classes.loading);
+  const teacherItems = useAppSelector(selectTeacherItems);
   const teacherOptions = useAppSelector(selectTeacherOptions);
   const classOptions = useAppSelector(selectClassOptions);
   const subjectOptions = useAppSelector(selectSubjectOptions);
@@ -79,6 +81,7 @@ export const useStudentsData = (studentParams?: StudentListParams) => {
     state,
     actions,
     classes: classItems,
+    teachers: teacherItems,
     teacherOptions,
     centerOptions,
     classOptions,
