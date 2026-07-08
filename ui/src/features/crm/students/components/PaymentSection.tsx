@@ -65,16 +65,45 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
+const createUuid = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+};
+
+const getToday = () => new Date().toISOString().slice(0, 10);
+
 // Renders the payment section module.
 export const PaymentSection = ({ payments, student, classData, onRefresh }: PaymentSectionProps) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Payment>>({
-    payment_status: 'Pending',
+    payment_status: 'Completed',
     payment_method: 'Cash',
+    payment_type: 'Tuition',
     currency: 'UZS',
+    payment_date: getToday(),
+    amount: classData?.payment_amount || 0,
+    receipt_number: createUuid(),
+    transaction_reference: createUuid(),
   });
   const [loading, setLoading] = useState(false);
+
+  const getNewPaymentDraft = (): Partial<Payment> => ({
+    payment_status: 'Completed',
+    payment_method: 'Cash',
+    payment_type: 'Tuition',
+    currency: 'UZS',
+    payment_date: getToday(),
+    amount: classData?.payment_amount || 0,
+    receipt_number: createUuid(),
+    transaction_reference: createUuid(),
+  });
 
 // Handles open modal.
   const handleOpenModal = (payment?: Payment) => {
@@ -83,12 +112,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
       setFormData(payment);
     } else {
       setEditingId(null);
-      setFormData({
-        payment_status: 'Pending',
-        payment_method: 'Cash',
-        currency: 'UZS',
-        amount: classData?.payment_amount || 0,
-      });
+      setFormData(getNewPaymentDraft());
     }
     setIsModalOpen(true);
   };
@@ -97,12 +121,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditingId(null);
-    setFormData({
-      payment_status: 'Pending',
-      payment_method: 'Cash',
-      currency: 'UZS',
-      amount: classData?.payment_amount || 0,
-    });
+    setFormData(getNewPaymentDraft());
   };
 
 // Handles submit.
@@ -114,6 +133,13 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
         ...formData,
         student_id: student?.student_id || student?.id,
         center_id: student?.center_id,
+        amount: Number(formData.amount || classData?.payment_amount || 0),
+        payment_method: formData.payment_method || 'Cash',
+        payment_type: formData.payment_type || 'Tuition',
+        payment_status: formData.payment_status || 'Completed',
+        currency: formData.currency || 'UZS',
+        receipt_number: formData.receipt_number || createUuid(),
+        transaction_reference: formData.transaction_reference || createUuid(),
       };
 
       if (editingId) {
@@ -213,27 +239,31 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
             <DialogTitle>{editingId ? 'Edit Payment' : 'Add Payment'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="receipt">Receipt Number *</Label>
-              <Input
-                id="receipt"
-                type="text"
-                required
-                value={formData.receipt_number || ''}
-                onChange={(e) => setFormData({ ...formData, receipt_number: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="amount">Amount *</Label>
-              <Input
-                id="amount"
-                type="number"
-                step="0.01"
-                required
-                value={formData.amount || ''}
-                onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-              />
-            </div>
+            {editingId && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="receipt">Receipt Number *</Label>
+                  <Input
+                    id="receipt"
+                    type="text"
+                    required
+                    value={formData.receipt_number || ''}
+                    onChange={(e) => setFormData({ ...formData, receipt_number: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="amount">Amount *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    required
+                    value={formData.amount || ''}
+                    onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
+                  />
+                </div>
+              </>
+            )}
             <div className="space-y-2">
               <Label htmlFor="date">Payment Date *</Label>
               <Input
@@ -244,74 +274,78 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
                 onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="method">Payment Method *</Label>
-              <Select value={formData.payment_method || 'Cash'} onValueChange={(value) => setFormData({ ...formData, payment_method: value })}>
-                <SelectTrigger id="method">
-                  <SelectValue placeholder="Select method" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="Check">Check</SelectItem>
-                  <SelectItem value="Card">Card</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="type">Payment Type *</Label>
-              <Select value={formData.payment_type || ''} onValueChange={(value) => setFormData({ ...formData, payment_type: value })}>
-                <SelectTrigger id="type">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Tuition">Tuition</SelectItem>
-                  <SelectItem value="Fee">Fee</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select value={formData.payment_status || 'Pending'} onValueChange={(value) => setFormData({ ...formData, payment_status: value })}>
-                <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Completed">Completed</SelectItem>
-                  <SelectItem value="Failed">Failed</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="currency">Currency</Label>
-              <Input
-                id="currency"
-                type="text"
-                readOnly
-                value={formData.currency || 'UZS'}
-                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="reference">Transaction Reference</Label>
-              <Input
-                id="reference"
-                type="text"
-                value={formData.transaction_reference || ''}
-                onChange={(e) => setFormData({ ...formData, transaction_reference: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={formData.notes || ''}
-                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                rows={3}
-              />
-            </div>
+            {editingId && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="method">Payment Method *</Label>
+                  <Select value={formData.payment_method || 'Cash'} onValueChange={(value) => setFormData({ ...formData, payment_method: value })}>
+                    <SelectTrigger id="method">
+                      <SelectValue placeholder="Select method" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Cash">Cash</SelectItem>
+                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                      <SelectItem value="Check">Check</SelectItem>
+                      <SelectItem value="Card">Card</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="type">Payment Type *</Label>
+                  <Select value={formData.payment_type || ''} onValueChange={(value) => setFormData({ ...formData, payment_type: value })}>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Tuition">Tuition</SelectItem>
+                      <SelectItem value="Fee">Fee</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status *</Label>
+                  <Select value={formData.payment_status || 'Completed'} onValueChange={(value) => setFormData({ ...formData, payment_status: value })}>
+                    <SelectTrigger id="status">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pending">Pending</SelectItem>
+                      <SelectItem value="Completed">Completed</SelectItem>
+                      <SelectItem value="Failed">Failed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Input
+                    id="currency"
+                    type="text"
+                    readOnly
+                    value={formData.currency || 'UZS'}
+                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="reference">Transaction Reference</Label>
+                  <Input
+                    id="reference"
+                    type="text"
+                    value={formData.transaction_reference || ''}
+                    onChange={(e) => setFormData({ ...formData, transaction_reference: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes || ''}
+                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                    rows={3}
+                  />
+                </div>
+              </>
+            )}
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleCloseModal}>
                 Cancel

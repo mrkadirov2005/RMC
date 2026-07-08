@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { classAPI, studentAPI } from '@/shared/api/api';
+import { classAPI, paymentAPI, studentAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import { StudentsTableView } from './StudentsTableView';
@@ -66,6 +66,87 @@ const getRows = <T,>(response: any): T[] => {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload?.data)) return payload.data;
   return [];
+};
+
+type PaymentRow = {
+  student_id?: number;
+  student_first_name?: string;
+  student_last_name?: string;
+  payment_date?: string;
+  amount?: number | string;
+  payment_status?: string;
+  status?: string;
+  payment_type?: string;
+};
+
+const normalizeName = (firstName?: string, lastName?: string) =>
+  [firstName, lastName]
+    .map((part) => String(part || '').trim().toLowerCase())
+    .filter(Boolean)
+    .join(' ');
+
+const getMonthKey = (value: Date | string) => {
+  if (value instanceof Date) {
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}`;
+  }
+  const raw = String(value || '').trim();
+  const match = raw.match(/^(\d{4})-(\d{2})/);
+  if (match) return `${match[1]}-${match[2]}`;
+  const date = new Date(raw);
+  if (Number.isNaN(date.getTime())) return '';
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+
+const isCompletedPayment = (payment: PaymentRow) => {
+  const status = String(payment.status || payment.payment_status || '').trim().toLowerCase();
+  return status === 'completed' || status === 'paid';
+};
+
+const mergeMonthlyPayments = (students: Student[], payments: PaymentRow[]) => {
+  const currentMonth = getMonthKey(new Date());
+  const byStudentId = new Map<number, PaymentRow[]>();
+  const byStudentName = new Map<string, PaymentRow[]>();
+
+  payments
+    .filter((payment) => isCompletedPayment(payment))
+    .filter((payment) => getMonthKey(payment.payment_date || '') === currentMonth)
+    .filter((payment) => String(payment.payment_type || '') !== 'Transfer Adjustment')
+    .forEach((payment) => {
+      const studentId = toId(payment.student_id);
+      if (studentId) {
+        const rows = byStudentId.get(studentId) || [];
+        rows.push(payment);
+        byStudentId.set(studentId, rows);
+      }
+
+      const nameKey = normalizeName(payment.student_first_name, payment.student_last_name);
+      if (nameKey) {
+        const rows = byStudentName.get(nameKey) || [];
+        rows.push(payment);
+        byStudentName.set(nameKey, rows);
+      }
+    });
+
+  return students.map((student) => {
+    const studentId = toId(student.student_id || student.id);
+    const nameKey = normalizeName(student.first_name, student.last_name);
+    const rows = (studentId ? byStudentId.get(studentId) : undefined) || byStudentName.get(nameKey) || [];
+    if (rows.length === 0) return student;
+
+    const amount = rows.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+    const latest = rows
+      .slice()
+      .sort((a, b) => String(b.payment_date || '').localeCompare(String(a.payment_date || '')))[0];
+
+    return {
+      ...student,
+      paid_this_month: true,
+      payment_amount_this_month: amount,
+      payment_count_this_month: rows.length,
+      last_payment_date_this_month: latest?.payment_date || student.last_payment_date_this_month,
+      payment_status_this_month: latest?.status || latest?.payment_status || student.payment_status_this_month || 'Completed',
+    };
+  });
 };
 
 type TeacherClassRow = {
@@ -292,8 +373,13 @@ export const StudentsTeacherGroupsTab = ({
 
     setClassLoading(true);
     try {
-      const response = await studentAPI.getByClassWithTransfers(classId);
-      setSelectedClassStudents(getRows<Student>(response));
+      const [studentsResponse, paymentsResponse] = await Promise.all([
+        studentAPI.getByClassWithTransfers(classId),
+        paymentAPI.getAll({ page: 1, limit: 200 }).catch(() => ({ data: [] })),
+      ]);
+      const classStudents = getRows<Student>(studentsResponse);
+      const currentPayments = getRows<PaymentRow>(paymentsResponse);
+      setSelectedClassStudents(mergeMonthlyPayments(classStudents, currentPayments));
     } catch (error: any) {
       setSelectedClassStudents([]);
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to load class students.');

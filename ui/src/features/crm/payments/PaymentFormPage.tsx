@@ -34,13 +34,22 @@ const defaultPayment = (centerId: number): Partial<Payment> => ({
 const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
 const getStudentLabel = (student: Student) =>
   `${student.first_name || ''} ${student.last_name || ''}`.trim() || `Student #${getStudentId(student)}`;
-const getTodayStamp = () => new Date().toISOString().slice(0, 10).replace(/-/g, '');
-const buildReceiptNumber = (studentId: number) => `PAY-${getTodayStamp()}-${studentId}`;
+const createUuid = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
+    const random = Math.floor(Math.random() * 16);
+    const value = char === 'x' ? random : (random & 0x3) | 0x8;
+    return value.toString(16);
+  });
+};
 const findStudentClass = (classes: Class[], student: Student | null) => {
   const classId = Number(student?.class_id || 0);
   if (!classId) return null;
   return classes.find((cls) => Number(cls.class_id || cls.id || 0) === classId) || null;
 };
+const getClassPaymentAmount = (studentClass: Class | null) => Number(studentClass?.payment_amount || 0);
 
 const PaymentFormPage = () => {
   const { t } = useLanguage();
@@ -213,12 +222,13 @@ const PaymentFormPage = () => {
   const selectStudent = (student: Student) => {
     const studentId = getStudentId(student);
     const studentClass = findStudentClass(classes, student);
-    const classAmount = Number(studentClass?.payment_amount || 0);
+    const classAmount = getClassPaymentAmount(studentClass);
     setSelectedStudent(student);
     setStudentSearch('');
     setStudentResults([]);
     setFormData((current) => {
-      const nextAmount = Number(current.amount || current.original_amount || 0) > 0 ? current.amount : classAmount || current.amount;
+      const nextAmount = classAmount || Number(current.amount || current.original_amount || 0) || 0;
+      const transactionReference = current.transaction_reference || current.reference_number || createUuid();
       return {
         ...current,
         student_id: studentId,
@@ -227,8 +237,14 @@ const PaymentFormPage = () => {
         student_teacher_id: student.teacher_id,
         amount: nextAmount,
         original_amount: current.discount_kind ? nextAmount : current.original_amount,
-        receipt_number: current.receipt_number || buildReceiptNumber(studentId),
-        reference_number: current.reference_number || (student.class_id ? `CLASS-${student.class_id}` : ''),
+        currency: current.currency || 'UZS',
+        payment_method: current.payment_method || 'Cash',
+        payment_type: current.payment_type || 'Tuition',
+        status: current.status || 'Completed',
+        payment_status: current.payment_status || current.status || 'Completed',
+        receipt_number: current.receipt_number || createUuid(),
+        reference_number: current.reference_number || transactionReference,
+        transaction_reference: transactionReference,
       };
     });
   };
@@ -236,11 +252,21 @@ const PaymentFormPage = () => {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     const hasDiscount = Boolean(formData.discount_kind && Number(formData.discount_amount || 0) > 0);
+    const amount = hasDiscount && formData.final_amount != null ? Number(formData.final_amount) : Number(formData.amount || 0);
+    const transactionReference = formData.transaction_reference || formData.reference_number || createUuid();
     const payload = {
       ...formData,
-      amount: hasDiscount && formData.final_amount != null ? Number(formData.final_amount) : Number(formData.amount || 0),
-      original_amount: hasDiscount ? Number(formData.original_amount || formData.amount || 0) : Number(formData.amount || 0),
+      amount,
+      original_amount: hasDiscount ? Number(formData.original_amount || formData.amount || 0) : amount,
       center_id: formData.center_id ?? defaultCenterId,
+      currency: formData.currency || 'UZS',
+      payment_method: formData.payment_method || 'Cash',
+      payment_type: formData.payment_type || 'Tuition',
+      status: formData.status || formData.payment_status || 'Completed',
+      payment_status: formData.payment_status || formData.status || 'Completed',
+      receipt_number: formData.receipt_number || createUuid(),
+      reference_number: formData.reference_number || transactionReference,
+      transaction_reference: transactionReference,
     };
     try {
       setSaving(true);
@@ -292,11 +318,15 @@ const PaymentFormPage = () => {
           <>
             <section className="rounded-lg border bg-card shadow-sm">
               <div className="border-b px-4 py-3">
-                <h2 className="text-base font-semibold">{t('Student and amount')}</h2>
-                <p className="text-sm text-muted-foreground">{t('Search by student name, then enter the payment amount and date.')}</p>
+                <h2 className="text-base font-semibold">{isEditing ? t('Student and amount') : t('Student and date')}</h2>
+                <p className="text-sm text-muted-foreground">
+                  {isEditing
+                    ? t('Search by student name, then enter the payment amount and date.')
+                    : t('Choose the student and payment date. The receipt data is filled automatically.')}
+                </p>
               </div>
               <div className="grid gap-4 p-4 md:grid-cols-2">
-                {isOwner && (
+                {isOwner && isEditing && (
                   <SelectField
                     label="Center"
                     name="center_id"
@@ -374,39 +404,44 @@ const PaymentFormPage = () => {
                     </div>
                   )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="amount">{formData.discount_kind ? 'Original amount *' : `${t('Amount')} *`}</Label>
-                  <Input
-                    type="number"
-                    id="amount"
-                    required
-                    step="0.01"
-                    min="0"
-                    value={formData.original_amount ?? formData.amount ?? ''}
-                    onChange={(e) => {
-                      const value = Number(e.target.value);
-                      setFormData((current) => ({ ...current, amount: value, original_amount: value }));
-                    }}
-                  />
-                  {selectedClass?.payment_amount != null && (
-                    <p className="text-xs text-muted-foreground">
-                      Filled from {selectedClass.class_name || 'selected group'} monthly fee. You can edit it for this receipt.
-                    </p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payment_date">{t('Payment Date')} *</Label>
-                  <Input
-                    type="date"
-                    id="payment_date"
-                    required
-                    value={formData.payment_date || ''}
-                    onChange={(e) => setFormData((current) => ({ ...current, payment_date: e.target.value }))}
-                  />
-                </div>
+                {isEditing && (
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">{formData.discount_kind ? 'Original amount *' : `${t('Amount')} *`}</Label>
+                    <Input
+                      type="number"
+                      id="amount"
+                      required
+                      step="0.01"
+                      min="0"
+                      value={formData.original_amount ?? formData.amount ?? ''}
+                      onChange={(e) => {
+                        const value = Number(e.target.value);
+                        setFormData((current) => ({ ...current, amount: value, original_amount: value }));
+                      }}
+                    />
+                    {selectedClass?.payment_amount != null && (
+                      <p className="text-xs text-muted-foreground">
+                        Filled from {selectedClass.class_name || 'selected group'} monthly fee. You can edit it for this receipt.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {(isEditing || selectedStudent) && (
+                  <div className="space-y-2">
+                    <Label htmlFor="payment_date">{t('Payment Date')} *</Label>
+                    <Input
+                      type="date"
+                      id="payment_date"
+                      required
+                      value={formData.payment_date || ''}
+                      onChange={(e) => setFormData((current) => ({ ...current, payment_date: e.target.value }))}
+                    />
+                  </div>
+                )}
               </div>
             </section>
 
+            {isEditing && (
             <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
@@ -479,7 +514,9 @@ const PaymentFormPage = () => {
                 </div>
               )}
             </section>
+            )}
 
+            {isEditing && (
             <section className="rounded-lg border bg-card shadow-sm">
               <div className="border-b px-4 py-3">
                 <h2 className="text-base font-semibold">{t('Receipt details')}</h2>
@@ -503,7 +540,9 @@ const PaymentFormPage = () => {
                 </div>
               </div>
             </section>
+            )}
 
+            {isEditing && (
             <section className="grid gap-3 md:grid-cols-3">
               <div className="rounded-lg border bg-card p-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold"><UserRound className="h-4 w-4 text-sky-600" />{t('Student')}</div>
@@ -518,6 +557,7 @@ const PaymentFormPage = () => {
                 <p className="mt-2 text-sm text-muted-foreground">{formData.status || t('Not set')}</p>
               </div>
             </section>
+            )}
 
             <div className="sticky bottom-3 z-10 flex justify-end gap-2 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur">
               <Button type="button" variant="outline" onClick={() => navigate('/payments')} disabled={saving}>

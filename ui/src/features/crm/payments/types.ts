@@ -12,6 +12,7 @@ export interface Payment {
   payment_status?: string;
   receipt_number?: string;
   reference_number?: string;
+  transaction_reference?: string;
   notes?: string;
   discount_id?: number | null;
   discount_kind?: 'serial_discount' | 'monthly_discount' | null;
