@@ -257,9 +257,36 @@ const findDeletedWithClassAndTeacher = async (centerId?: number) => {
 
 const findByClassIncludingTransferred = async (classId: number, centerId?: number, teacherId?: number) => {
   let query = `
-    SELECT s.*, c.class_name
+    SELECT
+      s.*,
+      c.class_name,
+      c.payment_amount AS class_payment_amount,
+      COALESCE(monthly_payments.paid_amount, 0)::numeric AS payment_amount_this_month,
+      COALESCE(monthly_payments.completed_count, 0)::int AS payment_count_this_month,
+      COALESCE(monthly_payments.completed_count, 0)::int > 0 AS paid_this_month,
+      monthly_payments.last_payment_date AS last_payment_date_this_month,
+      monthly_payments.last_payment_status AS payment_status_this_month
     FROM students s
     LEFT JOIN classes c ON s.class_id = c.class_id
+    LEFT JOIN LATERAL (
+      SELECT
+        COALESCE(SUM(
+          CASE
+            WHEN LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid') THEN p.amount
+            ELSE 0
+          END
+        ), 0)::numeric AS paid_amount,
+        COUNT(*) FILTER (WHERE LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid'))::int AS completed_count,
+        MAX(p.payment_date) FILTER (WHERE LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid')) AS last_payment_date,
+        (ARRAY_AGG(p.payment_status ORDER BY p.payment_date DESC, p.payment_id DESC)
+          FILTER (WHERE LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid')))[1] AS last_payment_status
+      FROM payments p
+      WHERE p.student_id = s.student_id
+        AND p.deleted_at IS NULL
+        AND COALESCE(p.payment_type, '') <> 'Transfer Adjustment'
+        AND p.payment_date >= DATE_TRUNC('month', CURRENT_DATE)::date
+        AND p.payment_date < (DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month')::date
+    ) monthly_payments ON TRUE
     WHERE s.class_id = $1
       AND (s.deleted_at IS NULL OR s.status = 'Transferred')
   `;

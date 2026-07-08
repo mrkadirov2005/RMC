@@ -425,6 +425,7 @@ export const StudentsTeacherGroupsTab = ({
           onCoinsUpdated={onCoinsUpdated}
           classOptions={classes}
           hideTeacherGroup
+          showMonthlyPaymentStatus
           viewMode={viewMode}
         />
       </div>

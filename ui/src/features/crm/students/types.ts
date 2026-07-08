@@ -24,6 +24,12 @@ export interface Student {
   center_address?: string | null;
   deleted_at?: string | null;
   coins?: number;
+  class_payment_amount?: number | string | null;
+  paid_this_month?: boolean;
+  payment_amount_this_month?: number | string | null;
+  payment_count_this_month?: number;
+  payment_status_this_month?: string | null;
+  last_payment_date_this_month?: string | null;
   username?: string;
   password?: string;
   is_discounted?: boolean;

@@ -1,7 +1,7 @@
 // View component for the students screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, BookOpen, Coins, GraduationCap, Info, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
+import { ArrowRightLeft, BookOpen, Coins, CreditCard, GraduationCap, Info, KeyRound, MoreVertical, Pencil, Phone, School, Trash2, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -35,6 +35,7 @@ interface Props {
   classOptions?: Class[];
   teacherOptions?: TeacherOption[];
   hideTeacherGroup?: boolean;
+  showMonthlyPaymentStatus?: boolean;
   viewMode?: ViewMode;
 }
 
@@ -110,6 +111,7 @@ export const StudentsTableView = ({
   classOptions = [],
   teacherOptions = [],
   hideTeacherGroup = false,
+  showMonthlyPaymentStatus = false,
   viewMode = 'list',
 }: Props) => {
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
@@ -201,6 +203,37 @@ export const StudentsTableView = ({
   const getSchoolClass = (student: Student) => student.school_class || '-';
   const getPhone = (student: Student) => student.phone || student.parent_phone || '-';
   const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none';
+  const formatMoney = (value: unknown) => {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount) || amount <= 0) return '';
+    return `${amount.toLocaleString()} UZS`;
+  };
+  const formatDate = (value: unknown) => {
+    if (!value) return '';
+    const date = new Date(String(value));
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString();
+  };
+  const getPaymentLabel = (student: Student) => {
+    if (!student.paid_this_month) return 'Unpaid';
+    const amount = formatMoney(student.payment_amount_this_month);
+    return amount ? `Paid ${amount}` : 'Paid';
+  };
+  const getPaymentTitle = (student: Student) => {
+    const date = formatDate(student.last_payment_date_this_month);
+    const status = String(student.payment_status_this_month || '').trim();
+    if (!student.paid_this_month) return 'No completed payment recorded this month';
+    return [status || 'Completed', date].filter(Boolean).join(' / ');
+  };
+  const renderPaymentChip = (student: Student) => (
+    <span
+      className={`${chipClass} ${student.paid_this_month ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}
+      title={getPaymentTitle(student)}
+    >
+      <CreditCard className="h-3 w-3" />
+      <span className="max-w-[150px] truncate">{getPaymentLabel(student)}</span>
+    </span>
+  );
 
   const renderActions = (student: Student) => (
     <DropdownMenu>
@@ -369,6 +402,7 @@ export const StudentsTableView = ({
                           <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
                           <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                           <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
+                          {showMonthlyPaymentStatus && renderPaymentChip(student)}
                         </div>
                         <div className="mt-1.5">
                           <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
@@ -387,6 +421,7 @@ export const StudentsTableView = ({
                         <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
                         <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                         <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
+                        {showMonthlyPaymentStatus && renderPaymentChip(student)}
                       </div>
                       <div className="mt-2">
                         <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
@@ -446,6 +481,7 @@ export const StudentsTableView = ({
             <TableHead className="h-8 px-2 text-xs">School class</TableHead>
             <TableHead className="h-8 px-2 text-xs">Phone</TableHead>
             <TableHead className="h-8 px-2 text-xs">Age</TableHead>
+            {showMonthlyPaymentStatus && <TableHead className="h-8 px-2 text-xs">This month</TableHead>}
             <TableHead className="h-8 px-2 text-xs">Password</TableHead>
             <TableHead className="h-8 px-2 text-right text-xs"></TableHead>
           </TableRow>
@@ -453,13 +489,13 @@ export const StudentsTableView = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={hideTeacherGroup ? 8 : 10} className="py-8 text-center">
+              <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={hideTeacherGroup ? 8 : 10} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
@@ -521,6 +557,11 @@ export const StudentsTableView = ({
                 <TableCell className="px-2 py-2">
                   <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)}</span>
                 </TableCell>
+                {showMonthlyPaymentStatus && (
+                  <TableCell className="px-2 py-2">
+                    {renderPaymentChip(student)}
+                  </TableCell>
+                )}
                 <TableCell className="px-2 py-2">
                   <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                 </TableCell>
