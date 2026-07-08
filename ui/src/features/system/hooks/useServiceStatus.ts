@@ -8,7 +8,7 @@ import {
   setHealthy,
   setOffline,
 } from '../../../slices/serviceStatusSlice';
-import { API_BASE_URL } from '../../../shared/api/api';
+import { buildApiUrl } from '../../../shared/api/api';
 
 const PING_TIMEOUT_MS = 6000;
 const PING_INTERVAL_MS = 30000;
@@ -19,7 +19,7 @@ const pingBackend = async () => {
   const timeoutId = window.setTimeout(() => controller.abort(), PING_TIMEOUT_MS);
 
   try {
-    const response = await fetch(`${API_BASE_URL}/health`, {
+    const response = await fetch(buildApiUrl('/health'), {
       method: 'GET',
       cache: 'no-store',
       signal: controller.signal,

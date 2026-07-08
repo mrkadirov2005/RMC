@@ -12,7 +12,9 @@ import { paymentLogout } from '../../slices/paymentAccessSlice';
 import { getCenterScopeHeaders, isGlobalSuperuser, withCenterScopeParams, withCenterScopePayload } from '../auth/centerScope';
 import { getStoredAuth } from '../auth/authStorage';
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api';
+const normalizeBaseUrl = (url: string) => url.replace(/\/+$/, '');
+export const API_BASE_URL = normalizeBaseUrl(import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api');
+export const buildApiUrl = (path: string) => `${API_BASE_URL}/${path.replace(/^\/+/, '')}`;
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,

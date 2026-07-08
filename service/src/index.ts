@@ -68,7 +68,7 @@ async function main() {
   });
 
   // Health check
-  app.get('/api/health', (req: any, res: any): void => {
+  app.get(['/health', '/api/health', '/api//health'], (req: any, res: any): void => {
     res.json({ status: 'OK', message: 'CRM Backend Server is running' });
   });
 

@@ -2,7 +2,7 @@
 
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-export type PaymentsTabType = 'students' | 'classes' | 'teachers' | 'statistics';
+export type PaymentsTabType = 'students' | 'classes' | 'teachers' | 'statistics' | 'groupPayments';
 export type GradesTabType = 'students' | 'classes' | 'teachers' | 'subjects' | 'statistics';
 export type FolderType = 'teacher' | 'class' | 'student' | 'subject';
 export type TestsTabType = 'all' | 'active' | 'inactive';

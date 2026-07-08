@@ -26,6 +26,7 @@ import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
+import { PaymentGroupsMatrixTab } from './PaymentGroupsMatrixTab';
 
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
@@ -111,7 +112,9 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
             <Input
               type="text"
               placeholder={
-                activeTab === 'classes'
+                activeTab === 'groupPayments'
+                  ? t('Search groups in the matrix...')
+                  : activeTab === 'classes'
                   ? t('Search classes by name, code, level...')
                   : activeTab === 'teachers' || activeTab === 'statistics'
                     ? t('Search teachers by name or employee ID...')
@@ -151,6 +154,14 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
             >
               <BookOpen className="h-4 w-4 mr-2" />
               {t('By Classes')}
+            </Button>
+            <Button
+              variant={activeTab === 'groupPayments' ? 'default' : 'ghost'}
+              onClick={() => dispatch(setPaymentsActiveTab('groupPayments'))}
+              className={cn(activeTab === 'groupPayments' && 'bg-blue-600 text-white hover:bg-blue-700')}
+            >
+              <CreditCard className="h-4 w-4 mr-2" />
+              {t('Group payments')}
             </Button>
             <Button
               variant={activeTab === 'teachers' ? 'default' : 'ghost'}
@@ -312,6 +323,8 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
             />
           </div>
         )}
+
+        {activeTab === 'groupPayments' && <PaymentGroupsMatrixTab />}
 
         {/* By Teachers Tab */}
         {activeTab === 'teachers' && (
