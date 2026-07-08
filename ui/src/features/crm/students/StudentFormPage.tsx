@@ -147,10 +147,10 @@ const StudentFormPage = () => {
           </div>
         ) : (
           <>
-            <section className="rounded-lg border bg-card shadow-sm">
-              <div className="border-b px-4 py-3">
+            <section className="overflow-hidden rounded-lg border border-sky-300 bg-sky-100 shadow-sm">
+              <div className="border-b border-sky-300 bg-sky-600 px-4 py-3 text-white">
                 <h2 className="text-base font-semibold">{t('Student information')}</h2>
-                <p className="text-sm text-muted-foreground">{t('Basic profile, contact, and school details.')}</p>
+                <p className="text-sm text-sky-50">{t('Basic profile, contact, and school details.')}</p>
               </div>
               <div className="p-4">
                 <StudentFormFields
@@ -167,34 +167,34 @@ const StudentFormPage = () => {
             </section>
 
             <section className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-lg border bg-card p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <GraduationCap className="h-4 w-4 text-sky-600" />
+              <div className="rounded-lg border border-sky-300 bg-sky-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold text-sky-950">
+                  <GraduationCap className="h-4 w-4 text-sky-700" />
                   {t('Class')}
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm font-semibold text-sky-900">
                   {selectedClass?.class_name || t('No class selected')}
                 </p>
               </div>
-              <div className="rounded-lg border bg-card p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <BadgePercent className="h-4 w-4 text-emerald-600" />
+              <div className="rounded-lg border border-emerald-300 bg-emerald-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-950">
+                  <BadgePercent className="h-4 w-4 text-emerald-700" />
                   {t('Discount')}
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">
+                <p className="mt-2 text-sm font-semibold text-emerald-900">
                   {formData.is_discounted ? t('Serial discount enabled') : t('No serial discount')}
                 </p>
               </div>
-              <div className="rounded-lg border bg-card p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold">
-                  <CheckCircle2 className="h-4 w-4 text-rose-600" />
+              <div className="rounded-lg border border-rose-300 bg-rose-200 p-4 shadow-sm">
+                <div className="flex items-center gap-2 text-sm font-semibold text-rose-950">
+                  <CheckCircle2 className="h-4 w-4 text-rose-700" />
                   {t('Status')}
                 </div>
-                <p className="mt-2 text-sm text-muted-foreground">{formData.status || t('Not set')}</p>
+                <p className="mt-2 text-sm font-semibold text-rose-900">{formData.status || t('Not set')}</p>
               </div>
             </section>
 
-            <div className="sticky bottom-3 z-10 flex justify-end gap-2 rounded-lg border bg-background/95 p-3 shadow-lg backdrop-blur">
+            <div className="sticky bottom-3 z-10 flex justify-end gap-2 rounded-lg border border-violet-300 bg-violet-200 p-3 shadow-lg">
               <Button type="button" variant="outline" onClick={() => navigate('/students')} disabled={saving}>
                 {t('Cancel')}
               </Button>

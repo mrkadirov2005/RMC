@@ -18,23 +18,35 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
       ? Math.min(discountOriginalPrice, (discountOriginalPrice * Math.min(discountValue, 100)) / 100)
       : Math.min(discountOriginalPrice, discountValue);
   const finalPrice = Math.max(0, discountOriginalPrice - discountAmount);
+  const inputClass = 'border-white bg-white shadow-sm focus-visible:ring-2';
+  const fieldClass = 'space-y-2 rounded-md border p-3 shadow-sm';
+  const fieldStyles = {
+    sky: 'border-sky-300 bg-sky-200',
+    emerald: 'border-emerald-300 bg-emerald-200',
+    rose: 'border-rose-300 bg-rose-200',
+    amber: 'border-amber-300 bg-amber-200',
+    violet: 'border-violet-300 bg-violet-200',
+    cyan: 'border-cyan-300 bg-cyan-200',
+    indigo: 'border-indigo-300 bg-indigo-200',
+    lime: 'border-lime-300 bg-lime-200',
+  };
 
   return (
   <div className="grid gap-4 md:grid-cols-2">
-    <div className="space-y-2"><Label>First Name</Label><Input value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required /></div>
-    <div className="space-y-2"><Label>Last Name</Label><Input value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required /></div>
-    <div className="space-y-2"><Label>Phone</Label><Input value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required /></div>
-    <div className="space-y-2"><Label>Date of Birth</Label><Input type="date" value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} required /></div>
-    <SelectField label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" />
-    <SelectField label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" />
-    {showCenterField && <SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" />}
-    <SelectField label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" />
-    <SelectField label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" />
-    <div className="space-y-2"><Label>School (optional)</Label><Input value={formData.school_name || ''} onChange={(e) => setFormData({ ...formData, school_name: e.target.value })} /></div>
-    <div className="space-y-2"><Label>School Class (optional)</Label><Input value={formData.school_class || ''} onChange={(e) => setFormData({ ...formData, school_class: e.target.value })} /></div>
-    <div className="space-y-2"><Label>Username</Label><Input value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} /></div>
-    <div className="space-y-2"><Label>Password</Label><Input type="password" value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
-    <div className="rounded-lg border border-emerald-200 bg-emerald-50/70 p-3 md:col-span-2">
+    <div className={`${fieldClass} ${fieldStyles.sky}`}><Label className="text-sky-900">First Name</Label><Input className={inputClass} value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required /></div>
+    <div className={`${fieldClass} ${fieldStyles.emerald}`}><Label className="text-emerald-900">Last Name</Label><Input className={inputClass} value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required /></div>
+    <div className={`${fieldClass} ${fieldStyles.rose}`}><Label className="text-rose-900">Phone</Label><Input className={inputClass} value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required /></div>
+    <div className={`${fieldClass} ${fieldStyles.amber}`}><Label className="text-amber-900">Date of Birth</Label><Input className={inputClass} type="date" value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} required /></div>
+    <div className={`${fieldClass} ${fieldStyles.violet}`}><SelectField label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" /></div>
+    <div className={`${fieldClass} ${fieldStyles.lime}`}><SelectField label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" /></div>
+    {showCenterField && <div className={`${fieldClass} ${fieldStyles.cyan}`}><SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" /></div>}
+    <div className={`${fieldClass} ${fieldStyles.indigo}`}><SelectField label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" /></div>
+    <div className={`${fieldClass} ${fieldStyles.sky}`}><SelectField label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" /></div>
+    <div className={`${fieldClass} ${fieldStyles.amber}`}><Label className="text-amber-900">School (optional)</Label><Input className={inputClass} value={formData.school_name || ''} onChange={(e) => setFormData({ ...formData, school_name: e.target.value })} /></div>
+    <div className={`${fieldClass} ${fieldStyles.violet}`}><Label className="text-violet-900">School Class (optional)</Label><Input className={inputClass} value={formData.school_class || ''} onChange={(e) => setFormData({ ...formData, school_class: e.target.value })} /></div>
+    <div className={`${fieldClass} ${fieldStyles.cyan}`}><Label className="text-cyan-900">Username</Label><Input className={inputClass} value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} /></div>
+    <div className={`${fieldClass} ${fieldStyles.rose}`}><Label className="text-rose-900">Password</Label><Input className={inputClass} type="password" value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
+    <div className="rounded-lg border border-emerald-300 bg-emerald-200 p-3 shadow-sm md:col-span-2">
       <div className="flex items-center justify-between gap-3">
         <div>
           <Label className="text-sm font-bold text-emerald-900">Discounted student</Label>
@@ -60,6 +72,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           <div className="space-y-2">
             <Label>Current price</Label>
             <Input
+              className={inputClass}
               type="number"
               min="0"
               step="0.01"
@@ -70,6 +83,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           <div className="space-y-2">
             <Label>Discount value</Label>
             <Input
+              className={inputClass}
               type="number"
               min="0"
               max={formData.discount_value_type === 'percent' ? 100 : undefined}
@@ -80,11 +94,12 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           </div>
           <div className="space-y-2">
             <Label>Final price</Label>
-            <Input readOnly value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} />
+            <Input className={inputClass} readOnly value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} />
           </div>
           <div className="space-y-2 md:col-span-4">
             <Label>Reason</Label>
             <Input
+              className={inputClass}
               value={formData.discount_reason || ''}
               onChange={(e) => setFormData({ ...formData, discount_reason: e.target.value })}
               placeholder="Reason for serial discount"
