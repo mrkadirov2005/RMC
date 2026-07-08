@@ -65,10 +65,10 @@ const addStudentFilters = (
 
   if (teacherId) {
     params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
+    conditions.push(`(s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`);
   } else if (filters.teacher_id != null) {
     params.push(filters.teacher_id);
-    conditions.push(`s.teacher_id = $${params.length}`);
+    conditions.push(`(s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`);
   }
 
   const search = String(filters.q || '').trim();
@@ -152,7 +152,7 @@ const findAllWithClass = async (centerId?: number, teacherId?: number) => {
 
   if (teacherId) {
     params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
+    conditions.push(`(s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`);
   }
 
   if (conditions.length > 0) {
@@ -223,7 +223,7 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
   }
 
   if (teacherId) {
-    query += ` AND s.teacher_id = $${params.length + 1}`;
+    query += ` AND (s.teacher_id = $${params.length + 1} OR c.teacher_id = $${params.length + 1})`;
     params.push(teacherId);
   }
 
@@ -299,7 +299,7 @@ const findByClassIncludingTransferred = async (classId: number, centerId?: numbe
 
   if (teacherId) {
     params.push(teacherId);
-    query += ` AND s.teacher_id = $${params.length}`;
+    query += ` AND (s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`;
   }
 
   query += ` ORDER BY
