@@ -206,7 +206,8 @@ export const studentAPI = {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
-  getByClassWithTransfers: (classId: number) => apiClient.get(`/students/class/${classId}`),
+  getByClassWithTransfers: (classId: number, params?: Record<string, unknown>) =>
+    apiClient.get(`/students/class/${classId}`, { params }),
   getDeleted: (options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students/deleted', {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
@@ -309,7 +310,8 @@ export const paymentAPI = {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
   getById: (id: number) => apiClient.get(`/payments/${id}`),
-  getByStudent: (studentId: number) => apiClient.get(`/payments/student/${studentId}`),
+  getByStudent: (studentId: number, params?: Record<string, unknown>) =>
+    apiClient.get(`/payments/student/${studentId}`, { params }),
   create: (data: any) => apiClient.post('/payments', data),
   update: (id: number, data: any) => apiClient.put(`/payments/${id}`, data),
   delete: (id: number) => apiClient.delete(`/payments/${id}`),

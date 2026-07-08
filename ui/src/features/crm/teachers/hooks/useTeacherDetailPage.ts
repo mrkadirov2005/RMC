@@ -21,6 +21,16 @@ import {
   type TeacherStudent,
 } from '../utils/teacherDetailUtils';
 
+const getRows = <T,>(response: any): T[] => {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.rows)) return payload.rows;
+  if (Array.isArray(payload?.students)) return payload.students;
+  return [];
+};
+
 export const useTeacherDetailPage = () => {
   const { teacherId } = useParams<{ teacherId: string }>();
   const navigate = useNavigate();
@@ -183,8 +193,7 @@ export const useTeacherDetailPage = () => {
     setDetailStudentsLoading(true);
     studentAPI.getAll({ teacher_id: Number(teacherId), page: 1, limit: 100 })
       .then((response) => {
-        const payload = (response as any).data ?? response;
-        const rows = Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : [];
+        const rows = getRows<TeacherStudent>(response);
         if (!cancelled) setDetailStudents(rows);
       })
       .catch((error) => {
@@ -198,6 +207,44 @@ export const useTeacherDetailPage = () => {
       cancelled = true;
     };
   }, [teacherId]);
+
+  const mergeDetailStudents = (rows: TeacherStudent[]) => {
+    setDetailStudents((current) => {
+      const byId = new Map<number, TeacherStudent>();
+      for (const student of current) {
+        const id = Number(student.student_id || student.id);
+        if (id) byId.set(id, student);
+      }
+      for (const student of rows) {
+        const id = Number(student.student_id || student.id);
+        if (id) byId.set(id, { ...byId.get(id), ...student });
+      }
+      return Array.from(byId.values());
+    });
+  };
+
+  const loadStudentsForClass = async (classId: number) => {
+    setDetailStudentsLoading(true);
+    try {
+      let rows: TeacherStudent[] = [];
+      try {
+        rows = getRows<TeacherStudent>(await studentAPI.getByClassWithTransfers(classId, { _fresh: Date.now() }));
+      } catch {
+        rows = [];
+      }
+
+      if (rows.length === 0) {
+        rows = getRows<TeacherStudent>(await studentAPI.getAll({ class_id: classId, page: 1, limit: 100, _fresh: Date.now() }));
+      }
+
+      mergeDetailStudents(rows);
+    } catch (error: unknown) {
+      const err = error as { message?: string };
+      showToast.error(err.message || 'Failed to load class students');
+    } finally {
+      setDetailStudentsLoading(false);
+    }
+  };
 
   const getStudentsByClass = (classId: number | undefined) =>
     classId ? classStudentsByClassId.get(Number(classId)) || [] : [];
@@ -361,6 +408,9 @@ export const useTeacherDetailPage = () => {
       else next.add(classId);
       return next;
     });
+    if (!expandedClassIds.has(classId)) {
+      void loadStudentsForClass(classId);
+    }
   };
 
   return {

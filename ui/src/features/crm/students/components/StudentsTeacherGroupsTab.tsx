@@ -388,7 +388,7 @@ export const StudentsTeacherGroupsTab = ({
   const openClass = async (classId: number) => {
     const row = selectedTeacherClassRows.find((item) => item.classId === classId);
     setSelectedClassId(classId);
-    setSelectedClassStudents(row?.students || []);
+    setSelectedClassStudents([]);
     if (classId < 0) {
       setClassLoading(false);
       setSelectedClassStudents(row?.students || []);
@@ -400,7 +400,7 @@ export const StudentsTeacherGroupsTab = ({
       const expectedCount = Math.max(100, Number(row?.studentCount || row?.students.length || 0));
       const fetchClassStudents = async () => {
         try {
-          const response = await studentAPI.getByClassWithTransfers(classId);
+          const response = await studentAPI.getByClassWithTransfers(classId, { _fresh: Date.now() });
           const rows = getRows<Student>(response);
           if (rows.length > 0 || Number(row?.studentCount || 0) === 0) return rows;
         } catch {
@@ -411,6 +411,7 @@ export const StudentsTeacherGroupsTab = ({
           class_id: classId,
           page: 1,
           limit: Math.min(100, expectedCount),
+          _fresh: Date.now(),
         });
         return getRows<Student>(fallbackResponse);
       };
