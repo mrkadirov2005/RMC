@@ -127,6 +127,10 @@ async function main() {
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {
     console.error(err.stack);
+    res.locals.requestLogFailure = {
+      failureReason: err.message || 'Unhandled server error',
+      failureDetails: process.env.NODE_ENV === 'production' ? null : err.stack || null,
+    };
     res.status(500).json({ error: 'Something went wrong!' });
   });
 

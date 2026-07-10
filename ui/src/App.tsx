@@ -49,7 +49,7 @@ const TeacherPortal = lazy(() => import('./features/teacher/TeacherPortal'));
 const StudentPortal = lazy(() => import('./features/student/StudentPortal'));
 const SettingsPage = lazy(() => import('./features/crm/settings/SettingsPage'));
 const RequestLogsPage = lazy(() => import('./features/crm/logs/RequestLogsPage.tsx'));
-const ServerMonitorPage = lazy(() => import('./features/crm/server/ServerMonitorPage'));
+const EngineeringPage = lazy(() => import('./features/crm/server/EngineeringPage'));
 import { Loader2 } from 'lucide-react';
 import { ServiceStatusGuard } from './features/system/components/ServiceStatusGuard';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/authStorage';
@@ -592,11 +592,16 @@ function AppContent() {
 
         <Route
           path="/server"
+          element={<Navigate to="/engineering" replace />}
+        />
+
+        <Route
+          path="/engineering"
           element={
             <ProtectedRoute allowedUserTypes={['superuser']}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
-                  <ServerMonitorPage />
+                  <EngineeringPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

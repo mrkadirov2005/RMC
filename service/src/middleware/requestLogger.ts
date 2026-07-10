@@ -61,6 +61,41 @@ function safeOriginalUrl(req: any): string {
   return String(req.originalUrl || req.url || '');
 }
 
+function safeJson(value: any, maxLength = 1200): string | null {
+  if (value == null) return null;
+  try {
+    const text = typeof value === 'string' ? value : JSON.stringify(value);
+    return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+  } catch {
+    return null;
+  }
+}
+
+function extractFailureInfo(payload: any) {
+  if (payload == null) return null;
+  if (typeof payload === 'string') {
+    return { failureReason: payload.slice(0, 240), failureDetails: null };
+  }
+
+  const reason =
+    firstHeaderValue(payload.error) ||
+    firstHeaderValue(payload.message) ||
+    firstHeaderValue(payload.reason) ||
+    firstHeaderValue(payload.code) ||
+    null;
+
+  const details =
+    payload.details != null ? payload.details :
+    payload.errors != null ? payload.errors :
+    payload.detail != null ? payload.detail :
+    null;
+
+  return {
+    failureReason: reason ? reason.slice(0, 240) : null,
+    failureDetails: safeJson(details),
+  };
+}
+
 function requestLogger(req: any, res: any, next: any): void {
   const startedAt = Date.now();
   const requestId = getRequestId(req);
@@ -73,6 +108,29 @@ function requestLogger(req: any, res: any, next: any): void {
   }
 
   let logged = false;
+
+  const captureFailurePayload = (payload: any) => {
+    const statusCode = Number(res.statusCode || 0);
+    if (statusCode < 400) return;
+    const info = extractFailureInfo(payload);
+    if (!info) return;
+    res.locals.requestLogFailure = {
+      failureReason: info.failureReason || res.locals.requestLogFailure?.failureReason || null,
+      failureDetails: info.failureDetails || res.locals.requestLogFailure?.failureDetails || null,
+    };
+  };
+
+  const originalJson = res.json.bind(res);
+  res.json = (payload: any) => {
+    captureFailurePayload(payload);
+    return originalJson(payload);
+  };
+
+  const originalSend = res.send.bind(res);
+  res.send = (payload: any) => {
+    captureFailurePayload(payload);
+    return originalSend(payload);
+  };
 
   const writeLog = async (aborted: boolean) => {
     if (logged) return;
@@ -90,6 +148,7 @@ function requestLogger(req: any, res: any, next: any): void {
       const userType = req.user?.userType ?? null;
       const role = req.user?.role ?? null;
       const username = getUsernameBestEffort(req);
+      const failure = res.locals.requestLogFailure || {};
 
       const doc = {
         ts: new Date(),
@@ -108,6 +167,8 @@ function requestLogger(req: any, res: any, next: any): void {
         username,
         userType,
         role,
+        failureReason: success ? null : failure.failureReason || null,
+        failureDetails: success ? null : failure.failureDetails || null,
       };
 
       // Fire-and-forget insert; logging should never block the response lifecycle.
