@@ -1,5 +1,7 @@
 // Source file for the students area in the crm feature.
 
+import type { ReactNode } from 'react';
+import { BadgePercent, Building2, GraduationCap, KeyRound, UserRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -8,6 +10,94 @@ import { SelectField } from './SelectField';
 
 interface Option { id?: number; label: string; value: string | number }
 interface Props { formData: Partial<Student>; setFormData: (value: Partial<Student>) => void; centerOptions: Option[]; classOptions: Option[]; teacherOptions: Option[]; genderOptions: Option[]; statusOptions: Option[]; showCenterField?: boolean }
+
+interface FormSectionProps {
+  title: string;
+  detail: string;
+  icon: ReactNode;
+  tone: string;
+  children: ReactNode;
+}
+
+const sectionTones: Record<string, { shell: string; header: string; icon: string }> = {
+  sky: {
+    shell: 'border-sky-200 bg-sky-50',
+    header: 'bg-sky-600 text-white',
+    icon: 'bg-white text-sky-700',
+  },
+  emerald: {
+    shell: 'border-emerald-200 bg-emerald-50',
+    header: 'bg-emerald-600 text-white',
+    icon: 'bg-white text-emerald-700',
+  },
+  amber: {
+    shell: 'border-amber-200 bg-amber-50',
+    header: 'bg-amber-500 text-white',
+    icon: 'bg-white text-amber-700',
+  },
+  fuchsia: {
+    shell: 'border-fuchsia-200 bg-fuchsia-50',
+    header: 'bg-fuchsia-600 text-white',
+    icon: 'bg-white text-fuchsia-700',
+  },
+  rose: {
+    shell: 'border-rose-200 bg-rose-50',
+    header: 'bg-rose-600 text-white',
+    icon: 'bg-white text-rose-700',
+  },
+};
+
+const inputClass = 'h-10 border-white bg-white text-sm shadow-sm focus-visible:ring-2';
+const fieldClass = 'space-y-1.5';
+
+const FormSection = ({ title, detail, icon, tone, children }: FormSectionProps) => {
+  const colors = sectionTones[tone] || sectionTones.sky;
+  return (
+    <section className={`overflow-hidden rounded-lg border shadow-sm ${colors.shell}`}>
+      <div className={`flex items-center gap-3 px-4 py-3 ${colors.header}`}>
+        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md shadow-sm ${colors.icon}`}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold">{title}</h3>
+          <p className="text-xs text-white/85">{detail}</p>
+        </div>
+      </div>
+      <div className="grid gap-4 p-4 sm:grid-cols-2">{children}</div>
+    </section>
+  );
+};
+
+const TextField = ({
+  label,
+  value,
+  onChange,
+  type = 'text',
+  required = false,
+  placeholder,
+  readOnly = false,
+}: {
+  label: string;
+  value: string | number | undefined;
+  onChange?: (value: string) => void;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  readOnly?: boolean;
+}) => (
+  <div className={fieldClass}>
+    <Label className="text-xs font-bold uppercase text-slate-600">{label}</Label>
+    <Input
+      className={inputClass}
+      type={type}
+      value={value || ''}
+      onChange={(event) => onChange?.(event.target.value)}
+      required={required}
+      placeholder={placeholder}
+      readOnly={readOnly}
+    />
+  </div>
+);
 
 // Renders the student form fields module.
 export const StudentFormFields = ({ formData, setFormData, centerOptions, classOptions, teacherOptions, genderOptions, statusOptions, showCenterField = true }: Props) => {
@@ -18,96 +108,103 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
       ? Math.min(discountOriginalPrice, (discountOriginalPrice * Math.min(discountValue, 100)) / 100)
       : Math.min(discountOriginalPrice, discountValue);
   const finalPrice = Math.max(0, discountOriginalPrice - discountAmount);
-  const inputClass = 'border-white bg-white shadow-sm focus-visible:ring-2';
-  const fieldClass = 'space-y-2 rounded-md border p-3 shadow-sm';
-  const fieldStyles = {
-    sky: 'border-sky-300 bg-sky-200',
-    emerald: 'border-emerald-300 bg-emerald-200',
-    rose: 'border-rose-300 bg-rose-200',
-    amber: 'border-amber-300 bg-amber-200',
-    violet: 'border-violet-300 bg-violet-200',
-    cyan: 'border-cyan-300 bg-cyan-200',
-    indigo: 'border-indigo-300 bg-indigo-200',
-    lime: 'border-lime-300 bg-lime-200',
-  };
 
   return (
-  <div className="grid gap-4 md:grid-cols-2">
-    <div className={`${fieldClass} ${fieldStyles.sky}`}><Label className="text-sky-900">First Name</Label><Input className={inputClass} value={formData.first_name || ''} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} required /></div>
-    <div className={`${fieldClass} ${fieldStyles.emerald}`}><Label className="text-emerald-900">Last Name</Label><Input className={inputClass} value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} required /></div>
-    <div className={`${fieldClass} ${fieldStyles.rose}`}><Label className="text-rose-900">Phone</Label><Input className={inputClass} value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} required /></div>
-    <div className={`${fieldClass} ${fieldStyles.amber}`}><Label className="text-amber-900">Date of Birth</Label><Input className={inputClass} type="date" value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} required /></div>
-    <div className={`${fieldClass} ${fieldStyles.violet}`}><SelectField label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" /></div>
-    <div className={`${fieldClass} ${fieldStyles.lime}`}><SelectField label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" /></div>
-    {showCenterField && <div className={`${fieldClass} ${fieldStyles.cyan}`}><SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" /></div>}
-    <div className={`${fieldClass} ${fieldStyles.indigo}`}><SelectField label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" /></div>
-    <div className={`${fieldClass} ${fieldStyles.sky}`}><SelectField label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" /></div>
-    <div className={`${fieldClass} ${fieldStyles.amber}`}><Label className="text-amber-900">School (optional)</Label><Input className={inputClass} value={formData.school_name || ''} onChange={(e) => setFormData({ ...formData, school_name: e.target.value })} /></div>
-    <div className={`${fieldClass} ${fieldStyles.violet}`}><Label className="text-violet-900">School Class (optional)</Label><Input className={inputClass} value={formData.school_class || ''} onChange={(e) => setFormData({ ...formData, school_class: e.target.value })} /></div>
-    <div className={`${fieldClass} ${fieldStyles.cyan}`}><Label className="text-cyan-900">Username</Label><Input className={inputClass} value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} /></div>
-    <div className={`${fieldClass} ${fieldStyles.rose}`}><Label className="text-rose-900">Password</Label><Input className={inputClass} type="password" value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} /></div>
-    <div className="rounded-lg border border-emerald-300 bg-emerald-200 p-3 shadow-sm md:col-span-2">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <Label className="text-sm font-bold text-emerald-900">Discounted student</Label>
-          <p className="text-xs text-emerald-700">Creates an active serial discount for this student.</p>
+    <div className="space-y-4">
+      <FormSection
+        title="Profile"
+        detail="Core identity and parent contact details."
+        icon={<UserRound className="h-5 w-5" />}
+        tone="sky"
+      >
+        <TextField label="First name" value={formData.first_name} onChange={(value) => setFormData({ ...formData, first_name: value })} required />
+        <TextField label="Last name" value={formData.last_name} onChange={(value) => setFormData({ ...formData, last_name: value })} required />
+        <TextField label="Phone" value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} required />
+        <TextField label="Date of birth" type="date" value={formData.date_of_birth} onChange={(value) => setFormData({ ...formData, date_of_birth: value })} required />
+        <div className={fieldClass}>
+          <SelectField label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" />
         </div>
-        <Switch
-          checked={Boolean(formData.is_discounted)}
-          onCheckedChange={(checked) => setFormData({ ...formData, is_discounted: checked })}
-        />
-      </div>
-      {formData.is_discounted && (
-        <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
-          <SelectField
-            label="Discount type"
-            name="discount_value_type"
-            value={formData.discount_value_type || 'fixed'}
-            onChange={(value) => setFormData({ ...formData, discount_value_type: value as 'percent' | 'fixed' })}
-            options={[
-              { label: 'Fixed', value: 'fixed' },
-              { label: 'Percent', value: 'percent' },
-            ]}
+        <div className={fieldClass}>
+          <SelectField label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" />
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="Placement"
+        detail="Connect the student to center, class, and teacher ownership."
+        icon={<GraduationCap className="h-5 w-5" />}
+        tone="emerald"
+      >
+        {showCenterField && (
+          <div className={fieldClass}>
+            <SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" />
+          </div>
+        )}
+        <div className={fieldClass}>
+          <SelectField label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" />
+        </div>
+        <div className={fieldClass}>
+          <SelectField label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" />
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="School"
+        detail="Optional school information used for filtering and reports."
+        icon={<Building2 className="h-5 w-5" />}
+        tone="amber"
+      >
+        <TextField label="School" value={formData.school_name || ''} onChange={(value) => setFormData({ ...formData, school_name: value })} placeholder="School name" />
+        <TextField label="School class" value={formData.school_class || ''} onChange={(value) => setFormData({ ...formData, school_class: value })} placeholder="Example: 7" />
+      </FormSection>
+
+      <FormSection
+        title="Account"
+        detail="Login credentials are optional because the platform can generate identity data."
+        icon={<KeyRound className="h-5 w-5" />}
+        tone="fuchsia"
+      >
+        <TextField label="Username" value={formData.username} onChange={(value) => setFormData({ ...formData, username: value })} placeholder="Auto-generated if empty" />
+        <TextField label="Password" type="password" value={formData.password} onChange={(value) => setFormData({ ...formData, password: value })} placeholder="Auto-generated if empty" />
+      </FormSection>
+
+      <section className="overflow-hidden rounded-lg border border-rose-200 bg-rose-50 shadow-sm">
+        <div className="flex items-center justify-between gap-3 bg-rose-600 px-4 py-3 text-white">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-rose-700 shadow-sm">
+              <BadgePercent className="h-5 w-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold">Serial discount</h3>
+              <p className="text-xs text-white/85">Enable reduced tuition for this student.</p>
+            </div>
+          </div>
+          <Switch
+            checked={Boolean(formData.is_discounted)}
+            onCheckedChange={(checked) => setFormData({ ...formData, is_discounted: checked })}
           />
-          <div className="space-y-2">
-            <Label>Current price</Label>
-            <Input
-              className={inputClass}
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.discount_original_price || ''}
-              onChange={(e) => setFormData({ ...formData, discount_original_price: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Discount value</Label>
-            <Input
-              className={inputClass}
-              type="number"
-              min="0"
-              max={formData.discount_value_type === 'percent' ? 100 : undefined}
-              step="0.01"
-              value={formData.discount_value || ''}
-              onChange={(e) => setFormData({ ...formData, discount_value: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Final price</Label>
-            <Input className={inputClass} readOnly value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} />
-          </div>
-          <div className="space-y-2 md:col-span-4">
-            <Label>Reason</Label>
-            <Input
-              className={inputClass}
-              value={formData.discount_reason || ''}
-              onChange={(e) => setFormData({ ...formData, discount_reason: e.target.value })}
-              placeholder="Reason for serial discount"
-            />
-          </div>
         </div>
-      )}
+        {formData.is_discounted && (
+          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <SelectField
+              label="Discount type"
+              name="discount_value_type"
+              value={formData.discount_value_type || 'fixed'}
+              onChange={(value) => setFormData({ ...formData, discount_value_type: value as 'percent' | 'fixed' })}
+              options={[
+                { label: 'Fixed', value: 'fixed' },
+                { label: 'Percent', value: 'percent' },
+              ]}
+            />
+            <TextField label="Current price" type="number" value={formData.discount_original_price} onChange={(value) => setFormData({ ...formData, discount_original_price: Number(value) })} />
+            <TextField label="Discount value" type="number" value={formData.discount_value} onChange={(value) => setFormData({ ...formData, discount_value: Number(value) })} />
+            <TextField label="Final price" value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} readOnly />
+            <div className="sm:col-span-2 lg:col-span-4">
+              <TextField label="Reason" value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder="Reason for serial discount" />
+            </div>
+          </div>
+        )}
+      </section>
     </div>
-  </div>
   );
 };

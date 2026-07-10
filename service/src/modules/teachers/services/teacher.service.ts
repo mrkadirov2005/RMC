@@ -2,6 +2,7 @@ const { hashPassword } = require('../../../shared/password');
 const teacherRepository = require('../repositories/teacher.repository');
 
 const DEFAULT_TEACHER_PASSWORD = '012345678';
+const PLATFORM_EMAIL_DOMAIN = 'teachers.platform.local';
 
 const buildUsername = (name: string) => {
   const cleaned = String(name || '')
@@ -17,6 +18,27 @@ const getAvailableUsername = async (base: string) => {
   let suffix = 2;
   while ((await teacherRepository.countByUsername(candidate)) > 0) {
     candidate = `${base}${suffix}`;
+    suffix += 1;
+  }
+  return candidate;
+};
+
+const getAvailableEmployeeId = async (centerId: number | string | undefined) => {
+  const centerPart = Number(centerId || 0) > 0 ? String(centerId).padStart(3, '0') : '000';
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    const randomPart = Math.floor(100000 + Math.random() * 900000);
+    const candidate = `TCH-${centerPart}-${randomPart}`;
+    if ((await teacherRepository.countByEmployeeId(candidate)) === 0) return candidate;
+  }
+  return `TCH-${centerPart}-${Date.now()}`;
+};
+
+const getAvailableEmail = async (username: string) => {
+  const base = username || 'teacher';
+  let candidate = `${base}@${PLATFORM_EMAIL_DOMAIN}`;
+  let suffix = 2;
+  while ((await teacherRepository.countByEmail(candidate)) > 0) {
+    candidate = `${base}${suffix}@${PLATFORM_EMAIL_DOMAIN}`;
     suffix += 1;
   }
   return candidate;
@@ -40,7 +62,7 @@ const createTeacher = async (body: any) => {
   const explicitUsername = String(body?.username || '').trim();
   const d = {
     ...body,
-    status: body?.status || 'Active',
+    status: 'Active',
     roles: body?.roles || [],
     username: explicitUsername || defaultUsername,
     password: body?.password || DEFAULT_TEACHER_PASSWORD,
@@ -50,13 +72,15 @@ const createTeacher = async (body: any) => {
   const username = shouldAutoResolveUsername ? await getAvailableUsername(d.username) : d.username;
   const exists = await teacherRepository.countByUsername(username);
   if (!shouldAutoResolveUsername && exists > 0) return { error: 'username_taken' };
+  const employeeId = await getAvailableEmployeeId(d.center_id);
+  const email = await getAvailableEmail(username);
   const password_hash = hashPassword(d.password);
   const row = await teacherRepository.insert([
     d.center_id,
-    d.employee_id,
+    employeeId,
     d.first_name,
     d.last_name,
-    d.email,
+    email,
     d.phone,
     d.date_of_birth,
     d.gender,

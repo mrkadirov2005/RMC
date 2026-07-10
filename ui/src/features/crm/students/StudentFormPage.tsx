@@ -147,24 +147,16 @@ const StudentFormPage = () => {
           </div>
         ) : (
           <>
-            <section className="overflow-hidden rounded-lg border border-sky-300 bg-sky-100 shadow-sm">
-              <div className="border-b border-sky-300 bg-sky-600 px-4 py-3 text-white">
-                <h2 className="text-base font-semibold">{t('Student information')}</h2>
-                <p className="text-sm text-sky-50">{t('Basic profile, contact, and school details.')}</p>
-              </div>
-              <div className="p-4">
-                <StudentFormFields
-                  formData={formData}
-                  setFormData={setFormData}
-                  centerOptions={options.centerOptions}
-                  classOptions={options.classOptions}
-                  teacherOptions={options.teacherOptions}
-                  genderOptions={genderOptions}
-                  statusOptions={statusOptions}
-                  showCenterField={showCenterField}
-                />
-              </div>
-            </section>
+            <StudentFormFields
+              formData={formData}
+              setFormData={setFormData}
+              centerOptions={options.centerOptions}
+              classOptions={options.classOptions}
+              teacherOptions={options.teacherOptions}
+              genderOptions={genderOptions}
+              statusOptions={statusOptions}
+              showCenterField={showCenterField}
+            />
 
             <section className="grid gap-3 md:grid-cols-3">
               <div className="rounded-lg border border-sky-300 bg-sky-200 p-4 shadow-sm">

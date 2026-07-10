@@ -597,14 +597,18 @@ const TeachersPage = () => {
                   <Label htmlFor="last_name" className="text-xs">Last Name</Label>
                   <Input id="last_name" className="h-8 text-xs" required value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="employee_id" className="text-xs">Employee ID</Label>
-                  <Input id="employee_id" className="h-8 text-xs" required value={formData.employee_id || ''} onChange={(e) => setFormData({ ...formData, employee_id: e.target.value })} />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="email" className="text-xs">Email</Label>
-                  <Input id="email" className="h-8 text-xs" type="email" required value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                </div>
+                {editingId && (
+                  <>
+                    <div className="space-y-1">
+                      <Label htmlFor="employee_id" className="text-xs">Employee ID</Label>
+                      <Input id="employee_id" className="h-8 text-xs" value={formData.employee_id || ''} readOnly />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <Input id="email" className="h-8 text-xs" type="email" value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
+                    </div>
+                  </>
+                )}
                 <div className="space-y-1">
                   <Label htmlFor="phone" className="text-xs">Phone</Label>
                   <Input id="phone" className="h-8 text-xs" required value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
@@ -642,13 +646,15 @@ const TeachersPage = () => {
                     <SelectContent>{genderOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label htmlFor="status" className="text-xs">Status</Label>
-                  <Select value={formData.status || 'Active'} onValueChange={(val) => setFormData({ ...formData, status: val })}>
-                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>{teacherStatusOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
+                {editingId && (
+                  <div className="space-y-1">
+                    <Label htmlFor="status" className="text-xs">Status</Label>
+                    <Select value={formData.status || 'Active'} onValueChange={(val) => setFormData({ ...formData, status: val })}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>{teacherStatusOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
                 {isOwner && (
                   <div className="space-y-1 sm:col-span-2">
                     <Label htmlFor="center" className="text-xs">Center</Label>

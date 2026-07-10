@@ -149,6 +149,12 @@ const insert = (params: any[]) =>
 const countByUsername = (username: string) =>
   pool.query('SELECT teacher_id FROM teachers WHERE username = $1 AND deleted_at IS NULL', [username]).then((r: any) => r.rows.length);
 
+const countByEmployeeId = (employeeId: string) =>
+  pool.query('SELECT teacher_id FROM teachers WHERE employee_id = $1 AND deleted_at IS NULL', [employeeId]).then((r: any) => r.rows.length);
+
+const countByEmail = (email: string) =>
+  pool.query('SELECT teacher_id FROM teachers WHERE email = $1 AND deleted_at IS NULL', [email]).then((r: any) => r.rows.length);
+
 const update = (id: number, fields: any[], centerId?: number) => {
   let query =
     'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), salary_percentage = COALESCE($6, salary_percentage), status = COALESCE($7, status), roles = COALESCE($8, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $9 AND deleted_at IS NULL';
@@ -273,6 +279,8 @@ module.exports = {
   findByUsername,
   insert,
   countByUsername,
+  countByEmployeeId,
+  countByEmail,
   update,
   getDeleteDependencies,
   hasDeleteDependencies,

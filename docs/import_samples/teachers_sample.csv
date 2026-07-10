@@ -1,4 +1,0 @@
-teacher_id,center_id,employee_id,first_name,last_name,email,phone,date_of_birth,gender,qualification,specialization,status,username,password
-,,TCH-001,Aziz,Karimov,aziz.karimov@example.com,+998901234567,1988-03-12,Male,Bachelor,Mathematics,Active,azizkarimov,Teacher123!
-,,TCH-002,Nilufar,Ahmedova,nilufar.ahmedova@example.com,+998902345678,1991-07-24,Female,Master,English,Active,nilufarahmedova,Teacher123!
-,,TCH-003,Sardor,Aliyev,sardor.aliyev@example.com,+998903456789,1985-11-05,Male,PhD,Physics,Active,sardoraliyev,Teacher123!
