@@ -327,9 +327,9 @@ class CreateTeacherDto {
   @Min(1)
   center_id?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  employee_id!: string;
+  employee_id?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -339,8 +339,9 @@ class CreateTeacherDto {
   @IsNotEmpty()
   last_name!: string;
 
+  @IsOptional()
   @IsEmail()
-  email!: string;
+  email?: string;
 
   @IsOptional()
   @IsString()

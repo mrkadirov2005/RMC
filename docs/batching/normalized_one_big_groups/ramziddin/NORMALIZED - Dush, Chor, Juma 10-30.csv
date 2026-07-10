@@ -1,0 +1,5 @@
+enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_employee_id,class_name,class_code,school_name,school_class
+BATCH-00348,Shodiyona,Husenova,,,,,,,Active,shodiyona,012345678,AUTO-FAZLIYEV-RAMZIDDIN,"Dush, Chor, Juma 10:30",AUTO-FAZLIYEV-RAMZIDDIN-DUSH-CHOR-JUMA-10-30,,
+BATCH-00349,Jahongir,Narzullayev,,,,,,,Active,jahongir3,012345678,AUTO-FAZLIYEV-RAMZIDDIN,"Dush, Chor, Juma 10:30",AUTO-FAZLIYEV-RAMZIDDIN-DUSH-CHOR-JUMA-10-30,,
+BATCH-00350,Shohjahon,Ne'matov,,,,,,,Active,shohjahon2,012345678,AUTO-FAZLIYEV-RAMZIDDIN,"Dush, Chor, Juma 10:30",AUTO-FAZLIYEV-RAMZIDDIN-DUSH-CHOR-JUMA-10-30,,
+BATCH-00351,Subhiya,Jamshidova,,,,,,,Active,subhiya,012345678,AUTO-FAZLIYEV-RAMZIDDIN,"Dush, Chor, Juma 10:30",AUTO-FAZLIYEV-RAMZIDDIN-DUSH-CHOR-JUMA-10-30,,
