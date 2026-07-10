@@ -125,6 +125,7 @@ const teacherNameFromPath = (filePath) => {
       .basename(sourceFile || fallback, path.extname(sourceFile || fallback))
       .replace(/^TEMURBEK SCHOOL\s*-\s*/i, '')
       .replace(/\([^)]*\)/g, '')
+      .replace(/\b20\d{2}\b/g, '')
       .replace(/\d+(?:[.,]\d+)?\s*%/g, '')
       .replace(/%/g, '')
       .replace(/\bnew\b/gi, '')
@@ -233,6 +234,7 @@ const normalizeOneFile = (filePath, enrollmentStart, usedUsernames) => {
       status: 'Active',
       username,
       password: '012345678',
+      teacher_name: teacherName,
       teacher_employee_id: teacherEmployeeId,
       class_name: className,
       class_code: classCode,
@@ -262,6 +264,7 @@ const columns = [
   'status',
   'username',
   'password',
+  'teacher_name',
   'teacher_employee_id',
   'class_name',
   'class_code',
@@ -269,12 +272,7 @@ const columns = [
   'school_class',
 ];
 
-const auditColumns = [
-  ...columns,
-  'teacher_name',
-  'source_file',
-  'source_row',
-];
+const auditColumns = [...columns, 'source_file', 'source_row'];
 
 const usedUsernames = new Set();
 let nextEnrollment = 1;
@@ -286,7 +284,7 @@ for (const filePath of walk(BATCHING_DIR).sort()) {
   const normalized = normalizeOneFile(filePath, nextEnrollment, usedUsernames);
   nextEnrollment = normalized.nextEnrollment;
   allRows.push(...normalized.rows);
-  auditRows.push(...normalized.rows.map((row) => ({ ...row, teacher_name: teacherNameFromPath(filePath) })));
+  auditRows.push(...normalized.rows);
 
   const relativeFolder = path.relative(BATCHING_DIR, path.dirname(filePath));
   const perTeacherDir = path.join(OUT_DIR, relativeFolder);

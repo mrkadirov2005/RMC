@@ -20,6 +20,7 @@ interface SelectFieldProps {
   disabled?: boolean;
   required?: boolean;
   placeholder?: string;
+  compact?: boolean;
 }
 
 // Renders the select field module.
@@ -33,10 +34,11 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   disabled = false,
   required = false,
   placeholder = 'Select an option',
+  compact = false,
 }) => {
   return (
-    <div className="space-y-2">
-      <Label htmlFor={name}>
+    <div className={compact ? 'space-y-1' : 'space-y-2'}>
+      <Label htmlFor={name} className={compact ? 'text-xs font-bold uppercase text-slate-600' : undefined}>
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
@@ -46,7 +48,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         disabled={isLoading || disabled}
         required={required}
       >
-        <SelectTrigger>
+        <SelectTrigger className={compact ? 'h-9 border-white bg-white text-sm shadow-sm' : undefined}>
           <SelectValue placeholder={isLoading ? 'Loading...' : placeholder} />
         </SelectTrigger>
         <SelectContent>

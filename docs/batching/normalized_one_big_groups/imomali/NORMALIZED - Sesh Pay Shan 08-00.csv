@@ -1,8 +1,8 @@
-enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_employee_id,class_name,class_code,school_name,school_class
-BATCH-00155,Marjona,Qurbonova,,,,,,,Active,marjona,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
-BATCH-00156,Shabbona,Sa`dullayeva,,,,,,,Active,shabbona,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
-BATCH-00157,Ra`no,Baxriddinova,,,,,,,Active,rano,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
-BATCH-00158,Jayrona,G`yibnazarova,,,,,,,Active,jayrona,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
-BATCH-00159,Umida,A'zamova,,,,,,,Active,umida2,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
-BATCH-00160,Farangiz,Rustamova,,,,,,,Active,farangiz,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
-BATCH-00161,Gulsevar,Ergasheva,,,,,,,Active,gulsevar,012345678,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_name,teacher_employee_id,class_name,class_code,school_name,school_class
+BATCH-00155,Marjona,Qurbonova,,,,,,,Active,marjona,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+BATCH-00156,Shabbona,Sa`dullayeva,,,,,,,Active,shabbona,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+BATCH-00157,Ra`no,Baxriddinova,,,,,,,Active,rano,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+BATCH-00158,Jayrona,G`yibnazarova,,,,,,,Active,jayrona,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+BATCH-00159,Umida,A'zamova,,,,,,,Active,umida2,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+BATCH-00160,Farangiz,Rustamova,,,,,,,Active,farangiz,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,
+BATCH-00161,Gulsevar,Ergasheva,,,,,,,Active,gulsevar,012345678,Mamatqulov Imomali,AUTO-MAMATQULOV-IMOMALI,Sesh Pay Shan 08:00,AUTO-MAMATQULOV-IMOMALI-SESH-PAY-SHAN-08-00,,

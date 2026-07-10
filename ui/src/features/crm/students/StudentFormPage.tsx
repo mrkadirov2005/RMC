@@ -158,39 +158,39 @@ const StudentFormPage = () => {
               showCenterField={showCenterField}
             />
 
-            <section className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-lg border border-sky-300 bg-sky-200 p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-sky-950">
-                  <GraduationCap className="h-4 w-4 text-sky-700" />
+            <section className="grid gap-2.5 md:grid-cols-3">
+              <div className="rounded-lg border border-sky-300 bg-sky-200 p-3 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-sky-950">
+                  <GraduationCap className="h-3.5 w-3.5 text-sky-700" />
                   {t('Class')}
                 </div>
-                <p className="mt-2 text-sm font-semibold text-sky-900">
+                <p className="mt-1 text-sm font-semibold text-sky-900">
                   {selectedClass?.class_name || t('No class selected')}
                 </p>
               </div>
-              <div className="rounded-lg border border-emerald-300 bg-emerald-200 p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-emerald-950">
-                  <BadgePercent className="h-4 w-4 text-emerald-700" />
+              <div className="rounded-lg border border-emerald-300 bg-emerald-200 p-3 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-emerald-950">
+                  <BadgePercent className="h-3.5 w-3.5 text-emerald-700" />
                   {t('Discount')}
                 </div>
-                <p className="mt-2 text-sm font-semibold text-emerald-900">
+                <p className="mt-1 text-sm font-semibold text-emerald-900">
                   {formData.is_discounted ? t('Serial discount enabled') : t('No serial discount')}
                 </p>
               </div>
-              <div className="rounded-lg border border-rose-300 bg-rose-200 p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-rose-950">
-                  <CheckCircle2 className="h-4 w-4 text-rose-700" />
+              <div className="rounded-lg border border-rose-300 bg-rose-200 p-3 shadow-sm">
+                <div className="flex items-center gap-2 text-xs font-bold uppercase text-rose-950">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-rose-700" />
                   {t('Status')}
                 </div>
-                <p className="mt-2 text-sm font-semibold text-rose-900">{formData.status || t('Not set')}</p>
+                <p className="mt-1 text-sm font-semibold text-rose-900">{formData.status || t('Not set')}</p>
               </div>
             </section>
 
-            <div className="sticky bottom-3 z-10 flex justify-end gap-2 rounded-lg border border-violet-300 bg-violet-200 p-3 shadow-lg">
-              <Button type="button" variant="outline" onClick={() => navigate('/students')} disabled={saving}>
+            <div className="sticky bottom-3 z-10 flex justify-end gap-2 rounded-lg border border-violet-300 bg-violet-200 p-2.5 shadow-lg">
+              <Button type="button" variant="outline" size="sm" onClick={() => navigate('/students')} disabled={saving}>
                 {t('Cancel')}
               </Button>
-              <Button type="submit" disabled={saving || loadingStudent} className="gap-2 bg-rose-600 hover:bg-rose-700">
+              <Button type="submit" size="sm" disabled={saving || loadingStudent} className="gap-2 bg-rose-600 hover:bg-rose-700">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {saving ? t('Saving...') : t('Save')}
               </Button>

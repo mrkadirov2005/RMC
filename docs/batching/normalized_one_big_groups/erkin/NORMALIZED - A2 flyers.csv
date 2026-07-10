@@ -1,18 +1,18 @@
-enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_employee_id,class_name,class_code,school_name,school_class
-BATCH-00109,Amina,Gʻafforqulova,,+998952381036,,,,,Active,amina2,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,154,8
-BATCH-00110,Muqaddas,Ikromova,,+998991219650,,,,,Active,muqaddas,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,71,9
-BATCH-00111,Azizbek,Joʻramurodov,,+998945721232,,,,,Active,azizbek2,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,8
-BATCH-00112,Zayniddin,Joʻraqulov,,+998972888990,,,,,Active,zayniddin,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,83,8
-BATCH-00113,Jasurbek,Maqsatov,,+998993802950,,,,,Active,jasurbek,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,7
-BATCH-00114,Dilnura,Rajabboyeva,,+998943485955,,,,,Active,dilnura4,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,36,3
-BATCH-00115,Samirjon,Raxmonberdiyev,,+998990268413,,,,,Active,samirjon,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,7
-BATCH-00116,Farzoda,Qurbonboyeva,,+998990268413,,,,,Active,farzoda,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,7
-BATCH-00117,Nilufar,Sadullayeva,,+998992868776,,,,,Active,nilufar,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,9
-BATCH-00118,Zuxra,Namozova,,+998882880337,,,,,Active,zuxra,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,1,7
-BATCH-00119,Ulug`bek,Olimov,,+998932760732,,,,,Active,ulugbek2,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,36,4
-BATCH-00120,Mubina,Maxmatqulova,,+998979177741,,,,,Active,mubina2,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,2,8
-BATCH-00121,Sardor,Jabborov,,,,,,,Active,sardor,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
-BATCH-00122,Billura,O'tamova,,,,,,,Active,billura,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
-BATCH-00123,Muhsinbek,Tuyoqboyev,,+998997439080,,,,,Active,muhsinbek,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
-BATCH-00124,Dilmurod,Orziyev,,+998942822255,,,,,Active,dilmurod,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
-BATCH-00125,Billura,Uktamova,,,,,,,Active,billura2,012345678,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
+enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_name,teacher_employee_id,class_name,class_code,school_name,school_class
+BATCH-00109,Amina,Gʻafforqulova,,+998952381036,,,,,Active,amina2,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,154,8
+BATCH-00110,Muqaddas,Ikromova,,+998991219650,,,,,Active,muqaddas,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,71,9
+BATCH-00111,Azizbek,Joʻramurodov,,+998945721232,,,,,Active,azizbek2,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,8
+BATCH-00112,Zayniddin,Joʻraqulov,,+998972888990,,,,,Active,zayniddin,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,83,8
+BATCH-00113,Jasurbek,Maqsatov,,+998993802950,,,,,Active,jasurbek,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,7
+BATCH-00114,Dilnura,Rajabboyeva,,+998943485955,,,,,Active,dilnura4,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,36,3
+BATCH-00115,Samirjon,Raxmonberdiyev,,+998990268413,,,,,Active,samirjon,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,7
+BATCH-00116,Farzoda,Qurbonboyeva,,+998990268413,,,,,Active,farzoda,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,7
+BATCH-00117,Nilufar,Sadullayeva,,+998992868776,,,,,Active,nilufar,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,48,9
+BATCH-00118,Zuxra,Namozova,,+998882880337,,,,,Active,zuxra,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,1,7
+BATCH-00119,Ulug`bek,Olimov,,+998932760732,,,,,Active,ulugbek2,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,36,4
+BATCH-00120,Mubina,Maxmatqulova,,+998979177741,,,,,Active,mubina2,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,2,8
+BATCH-00121,Sardor,Jabborov,,,,,,,Active,sardor,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
+BATCH-00122,Billura,O'tamova,,,,,,,Active,billura,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
+BATCH-00123,Muhsinbek,Tuyoqboyev,,+998997439080,,,,,Active,muhsinbek,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
+BATCH-00124,Dilmurod,Orziyev,,+998942822255,,,,,Active,dilmurod,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,
+BATCH-00125,Billura,Uktamova,,,,,,,Active,billura2,012345678,Amonov Erkin,AUTO-AMONOV-ERKIN,A2 flyers,AUTO-AMONOV-ERKIN-A2-FLYERS,,

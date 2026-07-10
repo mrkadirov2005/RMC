@@ -47,23 +47,23 @@ const sectionTones: Record<string, { shell: string; header: string; icon: string
   },
 };
 
-const inputClass = 'h-10 border-white bg-white text-sm shadow-sm focus-visible:ring-2';
-const fieldClass = 'space-y-1.5';
+const inputClass = 'h-9 border-white bg-white px-3 text-sm shadow-sm focus-visible:ring-2';
+const fieldClass = 'space-y-1';
 
 const FormSection = ({ title, detail, icon, tone, children }: FormSectionProps) => {
   const colors = sectionTones[tone] || sectionTones.sky;
   return (
     <section className={`overflow-hidden rounded-lg border shadow-sm ${colors.shell}`}>
-      <div className={`flex items-center gap-3 px-4 py-3 ${colors.header}`}>
-        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md shadow-sm ${colors.icon}`}>
+      <div className={`flex items-center gap-2.5 px-3 py-2.5 ${colors.header}`}>
+        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-md shadow-sm ${colors.icon}`}>
           {icon}
         </div>
         <div className="min-w-0">
-          <h3 className="text-sm font-bold">{title}</h3>
-          <p className="text-xs text-white/85">{detail}</p>
+          <h3 className="text-sm font-bold leading-tight">{title}</h3>
+          <p className="text-[11px] leading-snug text-white/85">{detail}</p>
         </div>
       </div>
-      <div className="grid gap-4 p-4 sm:grid-cols-2">{children}</div>
+      <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
     </section>
   );
 };
@@ -122,10 +122,10 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
         <TextField label="Phone" value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} required />
         <TextField label="Date of birth" type="date" value={formData.date_of_birth} onChange={(value) => setFormData({ ...formData, date_of_birth: value })} required />
         <div className={fieldClass}>
-          <SelectField label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" />
+          <SelectField compact label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" />
         </div>
         <div className={fieldClass}>
-          <SelectField label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" />
+          <SelectField compact label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" />
         </div>
       </FormSection>
 
@@ -137,14 +137,14 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
       >
         {showCenterField && (
           <div className={fieldClass}>
-            <SelectField label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" />
+            <SelectField compact label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" />
           </div>
         )}
         <div className={fieldClass}>
-          <SelectField label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" />
+          <SelectField compact label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" />
         </div>
         <div className={fieldClass}>
-          <SelectField label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" />
+          <SelectField compact label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" />
         </div>
       </FormSection>
 
@@ -169,14 +169,14 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
       </FormSection>
 
       <section className="overflow-hidden rounded-lg border border-rose-200 bg-rose-50 shadow-sm">
-        <div className="flex items-center justify-between gap-3 bg-rose-600 px-4 py-3 text-white">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-rose-700 shadow-sm">
+        <div className="flex items-center justify-between gap-3 bg-rose-600 px-3 py-2.5 text-white">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-rose-700 shadow-sm">
               <BadgePercent className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold">Serial discount</h3>
-              <p className="text-xs text-white/85">Enable reduced tuition for this student.</p>
+              <h3 className="text-sm font-bold leading-tight">Serial discount</h3>
+              <p className="text-[11px] leading-snug text-white/85">Enable reduced tuition for this student.</p>
             </div>
           </div>
           <Switch
@@ -185,8 +185,9 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           />
         </div>
         {formData.is_discounted && (
-          <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
             <SelectField
+              compact
               label="Discount type"
               name="discount_value_type"
               value={formData.discount_value_type || 'fixed'}
