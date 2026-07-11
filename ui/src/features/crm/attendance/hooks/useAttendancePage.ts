@@ -58,7 +58,10 @@ export const useAttendancePage = () => {
   const subjectItems = useAppSelector((state) => state.subjects.items) as SubjectSlice[];
   const subjects = subjectItems as unknown as Subject[];
 
-  const state = { items: attendanceItems, loading: attendanceLoading, error: attendanceError };
+  const state = useMemo(
+    () => ({ items: attendanceItems, loading: attendanceLoading, error: attendanceError }),
+    [attendanceItems, attendanceLoading, attendanceError]
+  );
   const teachers = teacherItems;
   const classes = classItems;
   const students = studentItems;

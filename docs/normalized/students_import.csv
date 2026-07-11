@@ -10,7 +10,7 @@ STU-00008,Ziyoviddin,Juraqulov,,+998932572009,,,,,Active,ziyoviddin,012345678,TC
 STU-00009,Amin,Abdurahmonov,,+998979335300,,,,,Active,amin,012345678,TCH-001,Koreys tili Afternoon,TCH-001-KOREYS-TILI-AFTERNOON,litse,10
 STU-00010,Dilnura,Do'lanova,,,,,,,Active,dilnura2,012345678,TCH-001,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,,
 STU-00011,Lazizbek,Alijonov,,,,,,,Active,lazizbek,012345678,TCH-001,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,,
-STU-00012,Madina,Kamolova,,+998990130740,,,,,Active,madina,012345678,TCH-001,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,54,8
+STU-00012,Madina,Kamolova,,+998990130740,,,,,Active,madina,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,54,8
 STU-00013,Anvar,Akbarov,,+998976145515,,,,,Active,anvar,012345678,TCH-001,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,kallej,2
 STU-00014,Manzura,Asatillayerva,,,,,,,Active,manzura,012345678,TCH-001,Koreys tili TOPIC II,TCH-001-KOREYS-TILI-TOPIC-II,,
 STU-00015,Madina,Abdullayeva,,+998888170009,,,,,Active,madina2,012345678,TCH-001,Koreys tili TOPIC II new,TCH-001-KOREYS-TILI-TOPIC-II-NEW,,
@@ -43,57 +43,57 @@ STU-00041,Adhamjon,Hamroqulov,,+998947197472,,,,,Active,adhamjon,012345678,TCH-0
 STU-00042,Doniyor,To'xtayev,,+998885764747,,,,,Active,doniyor,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,154,8
 STU-00043,Yulduz,Kamolova,,+998873907006,,,,,Active,yulduz,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,71,10
 STU-00044,Madina,Samehjonova,,+998911207125,,,,,Active,madina3,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,143,5
-STU-00045,Yashnarbek,Yarashev,,+998991366025,,,,,Active,yashnarbek,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,11,10
-STU-00046,Bahodir,Nazarov,,+998932397315,,,,,Active,bahodir2,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,7,7
-STU-00047,Akobir,Abdullayev,,+998974058707,,,,,Active,akobir,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,7,9
+STU-00045,Yashnarbek,Yarashev,,+998991366025,,,,,Active,yashnarbek,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,11,10
+STU-00046,Bahodir,Nazarov,,+998932397315,,,,,Active,bahodir2,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,7,7
+STU-00047,Akobir,Abdullayev,,+998974058707,,,,,Active,akobir,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,7,9
 STU-00048,Mehroj,Muhammadaliyev,,+998888974547,,,,,Active,mehroj,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,,
 STU-00049,Mirkomil,Komilov,,+998937333693,,,,,Active,mirkomil,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,97,9
 STU-00050,Nigina,Jo'rayeva,,+998335291611,,,,,Active,nigina,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,71,10
 STU-00051,Shabbona,Yarashova,,+998992553295,,,,,Active,shabbona,012345678,TCH-002,Movers 15:00,TCH-002-MOVERS-15-00,11,10
-STU-00052,Shahrizoda,Akbarova,,+998500101113,,,,,Active,shahrizoda,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,82,9
-STU-00053,Jahongir,Marupov,,+998939932825,,,,,Active,jahongir,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,institut,2
-STU-00054,Jonibek,Bayonov,,+998901031819,,,,,Active,jonibek,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,institut,2
-STU-00055,Hasan,Sa'dullayev,,+998950887332,,,,,Active,hasan,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,154,10
-STU-00056,Bahruz,Islomov,,+998886118146,,,,,Active,bahruz,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,82,8
-STU-00057,Muhammad,Rahimov,,+998979252757,,,,,Active,muhammad,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,156,
-STU-00058,Husan,Nurillayev,,+998979172720,,,,,Active,husan,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,69,8
-STU-00059,Amirxon,Nabixonov,,+998901921712,,,,,Active,amirxon,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,,
-STU-00060,Og'abek,Ashrapov,,+998997127754,,,,,Active,ogabek2,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,7,9
-STU-00061,Kumush,Ahmadova,,+998905020007,,,,,Active,kumush,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,2,8
-STU-00062,Hanifa,Norimova,,+998936821600,,,,,Active,hanifa2,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,54,8
-STU-00063,Durdona,Xusanova,,+998979139484,,,,,Active,durdona,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,11,9
-STU-00064,Mo'tabar,Salimqulova,,+998990454072,,,,,Active,motabar,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30,137,9
-STU-00065,islom,Aslamov,,+998881004454,,,,,Active,islom2,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,54,9
-STU-00066,Farxod,Bobomurodov,,+998939938833,,,,,Active,farxod,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,102,7
-STU-00067,Nurbek,Narzullayev,,,,,,,Active,nurbek,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00068,Doniyor,Komiljonov,,,,,,,Active,doniyor2,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00069,Aziza,Xushqattova,,,,,,,Active,aziza,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00070,Amina,Hamidova,,,,,,,Active,amina,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00071,Sultonali,Ubaydullayev,,,,,,,Active,sultonali,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00072,Madadbek,Orifboyev,,,,,,,Active,madadbek,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00073,Madina,Sharipova,,,,,,,Active,madina4,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00074,Firdavsxon,Murodillayev,,,,,,,Active,firdavsxon,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00075,Shahlo,Obloberdiyeva,,,,,,,Active,shahlo,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00076,G`iyosbek,Mardonqulov,,,,,,,Active,giyosbek,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00077,Yorqinbek,Mardonqulov,,,,,,,Active,yorqinbek,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00078,Ibrohim,Hasanov,,,,,,,Active,ibrohim,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00079,Laylo,Shavkatova,,,,,,,Active,laylo,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00080,Dinara,Mamatqulova,,,,,,,Active,dinara,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00081,Marjona,Mamatqulova,,,,,,,Active,marjona,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00082,Afzal,Rafiqov,,,,,,,Active,afzal,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
-STU-00083,Fariza,Xazratqulova,,,,,,,Active,fariza,012345678,TCH-002,Starter 13:30,TCH-002-STARTER-13-30-2,,
+STU-00052,Shahrizoda,Akbarova,,+998500101113,,,,,Active,shahrizoda,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,82,9
+STU-00053,Jahongir,Marupov,,+998939932825,,,,,Active,jahongir,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,institut,2
+STU-00054,Jonibek,Bayonov,,+998901031819,,,,,Active,jonibek,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,institut,2
+STU-00055,Hasan,Sa'dullayev,,+998950887332,,,,,Active,hasan,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,154,10
+STU-00056,Bahruz,Islomov,,+998886118146,,,,,Active,bahruz,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,82,8
+STU-00057,Muhammad,Rahimov,,+998979252757,,,,,Active,muhammad,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,156,
+STU-00058,Husan,Nurillayev,,+998979172720,,,,,Active,husan,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,69,8
+STU-00059,Amirxon,Nabixonov,,+998901921712,,,,,Active,amirxon,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,,
+STU-00060,Og'abek,Ashrapov,,+998997127754,,,,,Active,ogabek2,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,7,9
+STU-00061,Kumush,Ahmadova,,+998905020007,,,,,Active,kumush,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,2,8
+STU-00062,Hanifa,Norimova,,+998936821600,,,,,Active,hanifa2,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,54,8
+STU-00063,Durdona,Xusanova,,+998979139484,,,,,Active,durdona,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,11,9
+STU-00064,Mo'tabar,Salimqulova,,+998990454072,,,,,Active,motabar,012345678,TCH-002,Starter 13:30 (Group A),TCH-002-STARTER-13-30-A,137,9
+STU-00065,islom,Aslamov,,+998881004454,,,,,Active,islom2,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,54,9
+STU-00066,Farxod,Bobomurodov,,+998939938833,,,,,Active,farxod,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,102,7
+STU-00067,Nurbek,Narzullayev,,,,,,,Active,nurbek,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00068,Doniyor,Komiljonov,,,,,,,Active,doniyor2,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00069,Aziza,Xushqattova,,,,,,,Active,aziza,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00070,Amina,Hamidova,,,,,,,Active,amina,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00071,Sultonali,Ubaydullayev,,,,,,,Active,sultonali,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00072,Madadbek,Orifboyev,,,,,,,Active,madadbek,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00073,Madina,Sharipova,,,,,,,Active,madina4,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00074,Firdavsxon,Murodillayev,,,,,,,Active,firdavsxon,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00075,Shahlo,Obloberdiyeva,,,,,,,Active,shahlo,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00076,G`iyosbek,Mardonqulov,,,,,,,Active,giyosbek,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00077,Yorqinbek,Mardonqulov,,,,,,,Active,yorqinbek,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00078,Ibrohim,Hasanov,,,,,,,Active,ibrohim,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00079,Laylo,Shavkatova,,,,,,,Active,laylo,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00080,Dinara,Mamatqulova,,,,,,,Active,dinara,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00081,Marjona,Mamatqulova,,,,,,,Active,marjona,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00082,Afzal,Rafiqov,,,,,,,Active,afzal,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
+STU-00083,Fariza,Xazratqulova,,,,,,,Active,fariza,012345678,TCH-002,Starter 13:30 (Group B),TCH-002-STARTER-13-30-B,,
 STU-00084,Abdurauf,Manobov,,+998886137770,,,,,Active,abdurauf,012345678,TCH-002,Individual 5 17:30,TCH-002-INDIVIDUAL-5-17-30,Elita,4
-STU-00085,Abubakir,Abdullayev,,+998976149999,,,,,Active,abubakir,012345678,TCH-002,Individual 5 17:30,TCH-002-INDIVIDUAL-5-17-30,Elita maktabi,4
+STU-00085,Abubakir,Abdullayev,,+998976149999,,,,,Active,abubakir,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,Elita maktabi,4
 STU-00086,Bunyodbek,Shuhratov,,+998990694834,,,,,Active,bunyodbek2,012345678,TCH-002,Individual 5 17:30,TCH-002-INDIVIDUAL-5-17-30,Elita maktabi,4
-STU-00087,Ne`matjon,Rofiyev,,+998880012252,,,,,Active,nematjon,012345678,TCH-002,Individual 5 17:30,TCH-002-INDIVIDUAL-5-17-30,Elita maktabi,4
+STU-00087,Ne`matjon,Rofiyev,,+998880012252,,,,,Active,nematjon,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,Elita maktabi,4
 STU-00088,Toxir,Abdujabborov,,,,,,,Active,toxir,012345678,TCH-002,Individual 5 17:30,TCH-002-INDIVIDUAL-5-17-30,,
 STU-00089,Shukur,Anvarov,,,,,,,Active,shukur,012345678,TCH-002,Individual 5 17:30,TCH-002-INDIVIDUAL-5-17-30,,
 STU-00090,Hosiyatoy,Ismatullayeva,,+998905024858,,,,,Active,hosiyatoy,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,121,4
 STU-00091,Samirali,Uzoqov,,+998933460037,,,,,Active,samirali,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,1,7
 STU-00092,Biloljon,Aslamov,,+998885751000,,,,,Active,biloljon,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,1,5
-STU-00093,Muso,Rajabboyev,,,,,,,Active,muso,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,,
+STU-00093,Muso,Rajabboyev,,,,,,,Active,muso,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
 STU-00094,Najmiddin,Najmiyev,,+998979192823,,,,,Active,najmiddin,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,2,5
-STU-00095,Abdulaziz,Rajabboyev,,,,,,,Active,abdulaziz,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,,
+STU-00095,Abdulaziz,Rajabboyev,,,,,,,Active,abdulaziz,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
 STU-00096,Fozil,Abdullayev,,+998888640099,,,,,Active,fozil,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,137,4
 STU-00097,Muhammadjon,Yusupov,,+998952484821,,,,,Active,muhammadjon,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,7,3
 STU-00098,Amirbek,Mehrojov,,+998902814700,,,,,Active,amirbek,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,2,3
@@ -104,12 +104,10 @@ STU-00102,Fazliddin,Salohiddinov,,+998979208767,,,,,Active,fazliddin,012345678,T
 STU-00103,Abbos,Aminov,,+998915206655,,,,,Active,abbos,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,1,7
 STU-00104,Muhammadislom,Nurillayev,,+998974056662,,,,,Active,muhammadislom,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,89,3
 STU-00105,Shohida,No'monova,,+998991084169,,,,,Active,shohida,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,54,5
-STU-00106,Gulruh,O'ktamova,,+998907433545,,,,,Active,gulruh,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,136,2
-STU-00107,Maftuna,O'ktamova,,+998979157475,,,,,Active,maftuna,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,136,4
+STU-00107,Maftuna,O'ktamova,,+998979157475,,,,,Active,maftuna,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,4
 STU-00108,Nuriyabonu,Fozilova,,+998883995364,,,,,Active,nuriyabonu,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,55,5
 STU-00109,Zarina,Abdujalilova,,+998939624884,,,,,Active,zarina,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,36,6
 STU-00110,Sharofiddin,Murodullayev,,+998979293477,,,,,Active,sharofiddin,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,1,5
-STU-00111,Yasmina,Erdanova,,+998933535125,,,,,Active,yasmina,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,137,3
 STU-00112,Mubina,Baxtiyorova,,,,,,,Active,mubina,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
 STU-00113,Samira,Amrullayeva,,,,,,,Active,samira,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
 STU-00114,Muslima,Holmurodova,,,,,,,Active,muslima,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
@@ -122,7 +120,7 @@ STU-00120,Abdusaid,Abdurasulov,,,,,,,Active,abdusaid,012345678,TCH-003,Kids Fara
 STU-00121,Xislatbek,Urinov,,,,,,,Active,xislatbek,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
 STU-00122,Amina,Gʻafforqulova,,+998952381036,,,,,Active,amina2,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,154,8
 STU-00123,Muqaddas,Ikromova,,+998991219650,,,,,Active,muqaddas,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,71,9
-STU-00124,Farrux,Isomov,,+998941816655,,,,,Active,farrux,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,,
+STU-00124,Farrux,Isomov,,+998941816655,,,,,Active,farrux,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,,
 STU-00125,Azizbek,Joʻramurodov,,+998945721232,,,,,Active,azizbek2,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,48,8
 STU-00126,Zayniddin,Joʻraqulov,,+998972888990,,,,,Active,zayniddin,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,83,8
 STU-00127,Jasurbek,Maqsatov,,+998993802950,,,,,Active,jasurbek,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,48,7
@@ -131,22 +129,19 @@ STU-00129,Samirjon,Raxmonberdiyev,,+998990268413,,,,,Active,samirjon,012345678,T
 STU-00130,Farzoda,Qurbonboyeva,,+998990268413,,,,,Active,farzoda,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,48,7
 STU-00131,Nilufar,Sadullayeva,,+998992868776,,,,,Active,nilufar,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,48,9
 STU-00132,Zuxra,Namozova,,+998882880337,,,,,Active,zuxra,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,1,7
-STU-00133,Abdulquddus,Azamov,,+998949457212,,,,,Active,abdulquddus,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,6,4
+STU-00133,Abdulquddus,Azamov,,+998949457212,,,,,Active,abdulquddus,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,6,4
 STU-00134,Ulug`bek,Olimov,,+998932760732,,,,,Active,ulugbek2,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,36,4
 STU-00135,Mubina,Maxmatqulova,,+998979177741,,,,,Active,mubina3,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,2,8
-STU-00136,Sa'dullo,Nematov,,+998915229933,,,,,Active,sadullo,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,1,6
-STU-00137,Muhammadamin,Mahmudov,,+998945339000,,,,,Active,muhammadamin,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,142,5
 STU-00138,Sardor,Jabborov,,,,,,,Active,sardor,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,,
-STU-00139,Ramazon,Meliyev,,,,,,,Active,ramazon,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,,
 STU-00140,Billura,O'tamova,,,,,,,Active,billura,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,,
 STU-00141,Rahmonali,Abdujalilov,,+998912997784,,,,,Active,rahmonali,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,97,7
 STU-00142,Abubakir,Raxmonov,,+998977715376,,,,,Active,abubakir2,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,1,3
 STU-00143,Abdulloh,Asatullayev,,+998979278918,,,,,Active,abdulloh,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,85,4
 STU-00144,Firdavs,Botirov,,+998973961425,,,,,Active,firdavs,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,34,7
 STU-00145,Shuhrat,Nozimov,,+998942674442,,,,,Active,shuhrat,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,55,6
-STU-00146,Dilmurod,Orziyev,,+998942822255,,,,,Active,dilmurod,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,70,6
+STU-00146,Dilmurod,Orziyev,,+998942822255,,,,,Active,dilmurod,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,70,6
 STU-00147,Abubakr,Sultonov,,+998979191777,,,,,Active,abubakr,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,86,6
-STU-00148,Muhsinbek,Tuyoqboyev,,+998997439080,,,,,Active,muhsinbek,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,137,7
+STU-00148,Muhsinbek,Tuyoqboyev,,+998997439080,,,,,Active,muhsinbek,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,137,7
 STU-00149,Muhammadsodiq,Kamolov,,+998975320002,,,,,Active,muhammadsodiq,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,136,5
 STU-00150,Dilshodbek,Olimboyev,,+998975320002,,,,,Active,dilshodbek,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,136,5
 STU-00151,Muhammadozod,Murodillayev,,+998939957875,,,,,Active,muhammadozod,012345678,TCH-004,A2 Plus new,TCH-004-A2-PLUS-NEW,136,4
@@ -158,34 +153,8 @@ STU-00156,Azimjon,Anvarov,,,,,,,Active,azimjon,012345678,TCH-004,Individual,TCH-
 STU-00157,Olimjon,Sharifboyev,,,,,,,Active,olimjon,012345678,TCH-004,Individual,TCH-004-INDIVIDUAL,,
 STU-00158,Dilshod,Eliyev,,,,,,,Active,dilshod2,012345678,TCH-004,Individual,TCH-004-INDIVIDUAL,,
 STU-00159,Surayyo,Ismoilova,,,,,,,Active,surayyo,012345678,TCH-004,Individual,TCH-004-INDIVIDUAL,,
-STU-00160,Malika,Norimova,,+998991431284,,,,,Active,malika,012345678,TCH-004,starter,TCH-004-STARTER,71,9
-STU-00161,Dilnura,Rajabboyeva,,+998943485955,,,,,Active,dilnura4,012345678,TCH-004,starter,TCH-004-STARTER,36,3
-STU-00162,Qurbonnazar,Xojiyev,,,,,,,Active,qurbonnazar,012345678,TCH-004,starter,TCH-004-STARTER,,
-STU-00163,Jafarbek,Mamatov,,+998979272237,,,,,Active,jafarbek,012345678,TCH-004,starter,TCH-004-STARTER,137,10
-STU-00164,Gʻolib,Azizqulov,,+998992020237,,,,,Active,golib,012345678,TCH-004,starter,TCH-004-STARTER,48,9
-STU-00165,Sardor,Ismoilov,,+998333690508,,,,,Active,sardor2,012345678,TCH-004,starter,TCH-004-STARTER,48,10
-STU-00166,Janona,Rustamova,,+998979433955,,,,,Active,janona,012345678,TCH-004,starter,TCH-004-STARTER,48,9
-STU-00167,Jasurbek,Maqsatov,,+998993802950,,,,,Active,jasurbek2,012345678,TCH-004,starter,TCH-004-STARTER,48,7
-STU-00168,Samirjon,Raxmonberdiyev,,+998990268413,,,,,Active,samirjon2,012345678,TCH-004,starter,TCH-004-STARTER,48,7
-STU-00169,Azizbek,Joʻramurodov,,+998945721232,,,,,Active,azizbek3,012345678,TCH-004,starter,TCH-004-STARTER,48,8
-STU-00170,Shoxrux,Valiyev,,+998992868776,,,,,Active,shoxrux,012345678,TCH-004,starter,TCH-004-STARTER,48,9
-STU-00171,Shohjahon,Do'stmurodov,,,,,,,Active,shohjahon2,012345678,TCH-004,starter,TCH-004-STARTER,,
-STU-00172,Jahongir,Jonibekov,,,,,,,Active,jahongir2,012345678,TCH-004,starter,TCH-004-STARTER,,
-STU-00173,Amina,Gʻafforqulova,,+998952381036,,,,,Active,amina3,012345678,TCH-004,starter,TCH-004-STARTER,154,8
-STU-00174,Muqaddas,Ikromova,,+998991219650,,,,,Active,muqaddas2,012345678,TCH-004,starter,TCH-004-STARTER,71,9
-STU-00175,Farrux,Isomov,,+998941816655,,,,,Active,farrux2,012345678,TCH-004,starter,TCH-004-STARTER,,
-STU-00176,Sevinch,Axtamova,,+998936313443,,,,,Active,sevinch,012345678,TCH-004,starter,TCH-004-STARTER,Kurs,2
-STU-00177,Jahongir,Oʻlmasov,,+998991202920,,,,,Active,jahongir3,012345678,TCH-004,starter,TCH-004-STARTER-2,1,7
-STU-00178,Aminjon,Sharopov,,+998882880337,,,,,Active,aminjon2,012345678,TCH-004,starter,TCH-004-STARTER-2,1,7
-STU-00179,Maqsud,Xurramov,,+998996770548,,,,,Active,maqsud,012345678,TCH-004,starter,TCH-004-STARTER-2,48,7
-STU-00180,Alisher,Najmiyev,,+998973941113,,,,,Active,alisher,012345678,TCH-004,starter,TCH-004-STARTER-2,89,6
-STU-00181,Joʻrabek,Fazliddinov,,+998889132322,,,,,Active,jorabek,012345678,TCH-004,starter,TCH-004-STARTER-2,89,7
-STU-00182,Asilbek,Abdullayev,,+998981800727,,,,,Active,asilbek2,012345678,TCH-004,starter,TCH-004-STARTER-2,121,6
-STU-00183,Sardor,Islomov,,,,,,,Active,sardor3,012345678,TCH-004,starter,TCH-004-STARTER-2,,
-STU-00184,Toxir,Abdusamiyev,,+998938126414,,,,,Active,toxir2,012345678,TCH-004,starter,TCH-004-STARTER-2,,
-STU-00185,Zayniddin,Joʻraqulova,,+998972888990,,,,,Active,zayniddin2,012345678,TCH-004,starter,TCH-004-STARTER-2,83,8
-STU-00186,Begzod,Shukurov,,,,,,,Active,begzod,012345678,TCH-004,starter,TCH-004-STARTER-2,,
-STU-00187,Abdurahim,Burxonov,,+998917008807,,,,,Active,abdurahim,012345678,TCH-004,starter,TCH-004-STARTER-2,136,9
+STU-00166,Janona,Rustamova,,+998979433955,,,,,Active,janona,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,48,9
+STU-00187,Abdurahim,Burxonov,,+998917008807,,,,,Active,abdurahim,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,136,9
 STU-00188,Mohirjon,Tolibov,,,,,,,Active,mohirjon,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,88,9
 STU-00189,Farzona,Abdumajidova,,,,,,,Active,farzona,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,48,9
 STU-00190,Abduqaxor,Akramov,,,,,,,Active,abduqaxor,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,1,8
@@ -195,30 +164,30 @@ STU-00193,Gulnoza,Qaxxorova,,,,,,,Active,gulnoza,012345678,TCH-005,A2 plus,TCH-0
 STU-00194,Sunbula,Saidqulova,,,,,,,Active,sunbula,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,88,9
 STU-00195,Azizbek,Oblayev,,,,,,,Active,azizbek4,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,88,10
 STU-00196,Nusrat,Mansurov,,,,,,,Active,nusrat,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,97,8
-STU-00197,Muslima,Salimova,,,,,,,Active,muslima2,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,121,9
+STU-00197,Muslima,Salimova,,,,,,,Active,muslima2,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,121,9
 STU-00198,Ozodbek,Xursandov,,,,,,,Active,ozodbek2,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,88,9
 STU-00199,Azizbek,Abdurahmatov,,,,,,,Active,azizbek5,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,pirizident m,9
-STU-00200,Shohakbar,G'ulomov,,,,,,,Active,shohakbar,012345678,TCH-005,A2 plus,TCH-005-A2-PLUS,128,10
+STU-00200,Shohakbar,G'ulomov,,,,,,,Active,shohakbar,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,128,10
 STU-00201,Asilbek,Shodiyev,,+998999417639,,,,,Active,asilbek3,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,136,10
 STU-00202,Abduvohid,Abdullayev,,+998335470001,,,,,Active,abduvohid,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,136,6
 STU-00203,Maqsud,Xurramov,,+998996770548,,,,,Active,maqsud2,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,48,8
 STU-00204,Mexrangiz,Kamolova,,+998909657562,,,,,Active,mexrangiz,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,54,7
 STU-00205,Jahongir,Jonibekov,,+998950861142,,,,,Active,jahongir4,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,48,7
-STU-00206,Mansurbek,Toshtemirov,,+998990761210,,,,,Active,mansurbek,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,48,7
+STU-00206,Mansurbek,Toshtemirov,,+998990761210,,,,,Active,mansurbek,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,48,7
 STU-00207,Sunbula,Ikromova,,+998979102608,,,,,Active,sunbula2,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,75,9
-STU-00208,Munisa,Davronova,,+998883990447,,,,,Active,munisa,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,71,10
-STU-00209,Saidkomil,Abdujabborov,,+998995499245,,,,,Active,saidkomil,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,48,6
+STU-00208,Munisa,Davronova,,+998883990447,,,,,Active,munisa,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,71,10
+STU-00209,Saidkomil,Abdujabborov,,+998995499245,,,,,Active,saidkomil,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,48,6
 STU-00210,Malika,Nurillayeva,,+998931288633,,,,,Active,malika2,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,136,7
 STU-00211,Akbar,Ergashev,,+998992271132,,,,,Active,akbar,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,kasb xunar,2
 STU-00212,Muhammadali,Zarafrov,,+998915410232,,,,,Active,muhammadali,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,kasb xunar,2
 STU-00213,Oybek,Azizov,,+998882232511,,,,,Active,oybek,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,6,9
 STU-00214,Sevinch,Elmurodova,,+70126641,,,,,Active,sevinch2,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,10,10
-STU-00215,Charos,Xursandova,,+998955303057,,,,,Active,charos,012345678,TCH-005,A1 plus new,TCH-005-A1-PLUS-NEW,128,10
+STU-00215,Charos,Xursandova,,+998955303057,,,,,Active,charos,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,128,10
 STU-00216,Intizor,Abdurasulova,,+998957024712,,,,,Active,intizor2,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,71,7
 STU-00217,Laylo,Aliyeva,,+998333986161,,,,,Active,laylo2,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,6,6
 STU-00218,Yulduz,Arslonova,,+998991933124,,,,,Active,yulduz2,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,67,8
 STU-00219,Gulnoza,Asatullayeva,,+998907009442,,,,,Active,gulnoza2,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,6,6
-STU-00220,Azizbek,Ergashev,,+998979359095,,,,,Active,azizbek6,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,137,10
+STU-00220,Azizbek,Ergashev,,+998979359095,,,,,Active,azizbek6,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,137,10
 STU-00221,Abdusamad,Abdurasulov,,+998997709190,,,,,Active,abdusamad,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,142,6
 STU-00222,Osiyo,Meliyeva,,+998333108820,,,,,Active,osiyo,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,71,7
 STU-00223,Samirbek,Negmatov,,+998901003436,,,,,Active,samirbek,012345678,TCH-006,A2 FLYERS afternoon 14:00,TCH-006-A2-FLYERS-AFTERNOON-14-00,122,9
@@ -238,21 +207,21 @@ STU-00236,Shohjahon,Qaxramonov,,+998972881187,,,,,Active,shohjahon3,012345678,TC
 STU-00237,Jabbor,Asrorov,,+998956698929,,,,,Active,jabbor,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,99,9
 STU-00238,Aziz,Baxtiyorov,,+998979233564,,,,,Active,aziz,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,2,9
 STU-00239,Hojiakbar,Ulashev,,+998883950455,,,,,Active,hojiakbar2,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,66,10
-STU-00240,Abduqaxxor,Salimov,,+998889330038,,,,,Active,abduqaxxor,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,55,10
+STU-00240,Abduqaxxor,Salimov,,+998889330038,,,,,Active,abduqaxxor,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,55,10
 STU-00241,Behruz,Sobirov,,+998902813024,,,,,Active,behruz3,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,54,9
-STU-00242,Robiya,Xudoyberdiyeva,,+998930012733,,,,,Active,robiya,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,36,9
-STU-00243,Shodiyona,Ravshanova,,+998889981956,,,,,Active,shodiyona,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,3,8
+STU-00242,Robiya,Xudoyberdiyeva,,+998930012733,,,,,Active,robiya,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,36,9
+STU-00243,Shodiyona,Ravshanova,,+998889981956,,,,,Active,shodiyona,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,3,8
 STU-00244,Elnora,Tursunqulova,,+998996643239,,,,,Active,elnora,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,71,11
 STU-00245,Nuriddin,Bahriddinov,,+998975460005,,,,,Active,nuriddin,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,136,10
 STU-00246,Lazizbek,Do'stmurodov,,+998976142288,,,,,Active,lazizbek2,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,ixtisos,8
-STU-00247,Muhammadsaid,Nasrullayev,,+998884008012,,,,,Active,muhammadsaid,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,2,8
+STU-00247,Muhammadsaid,Nasrullayev,,+998884008012,,,,,Active,muhammadsaid,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,2,8
 STU-00248,Ozodbek,Hamidov,,,,,,,Active,ozodbek3,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,,
 STU-00249,Qodirali,Abdurashidov,,+998979189296,,,,,Active,qodirali,012345678,TCH-006,B1 Plus 15:30,TCH-006-B1-PLUS-15-30,7,9
 STU-00250,Komila,Ravshanova,,+998902511441,,,,,Active,komila,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,54,10
 STU-00251,Abdurazzoq,Abdullayev,,+998501034475,,,,,Active,abdurazzoq,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,69,10
 STU-00252,Durdona,Murodillayeva,,+998975781150,,,,,Active,durdona2,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,2,10
 STU-00253,Jasmina,Zafrullayeva,,+998902856505,,,,,Active,jasmina2,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,154,10
-STU-00254,Jafarbek,Mamatov,,+998979272237,,,,,Active,jafarbek2,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,137,10
+STU-00254,Jafarbek,Mamatov,,+998979272237,,,,,Active,jafarbek2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,137,10
 STU-00255,Rushan,Ravshanov,,+998979324045,,,,,Active,rushan,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,54,10
 STU-00256,Azizbek,O'ktamov,,+998910321211,,,,,Active,azizbek7,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,KALLEJ,2
 STU-00257,Jasmina,Murodullayeva,,,,,,,Active,jasmina3,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,97,11
@@ -262,7 +231,7 @@ STU-00260,Ruxshona,Maxmurova,,+998902820964,,,,,Active,ruxshona,012345678,TCH-00
 STU-00261,Iqlima,Xolmahmadova,,+998932565305,,,,,Active,iqlima,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,143,11
 STU-00262,Ulug'bek,Zohidov,,+998979070355,,,,,Active,ulugbek3,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,7,8
 STU-00263,Sehruz,Jumaboyev,,+998934213385,,,,,Active,sehruz,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,48,8
-STU-00264,Jasmina,Bobojonova,,+998901997590,,,,,Active,jasmina4,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,54,8
+STU-00264,Jasmina,Bobojonova,,+998901997590,,,,,Active,jasmina4,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,54,8
 STU-00265,Og'abek,Abdurahmonov,,,,,,,Active,ogabek3,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,66,7
 STU-00266,Yusufjon,Abdug'afforov,,+998904557719,,,,,Active,yusufjon,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,2,9
 STU-00267,Beg'ubor,Aliqulova,,+998931875247,,,,,Active,begubor,012345678,TCH-006,Intensive,TCH-006-INTENSIVE,35,10
@@ -314,7 +283,7 @@ STU-00312,Saidakbar,Toxirov,,,,,,,Active,saidakbar,012345678,TCH-006,Starter 1,T
 STU-00313,Yulduz,Arslonova,,,,,,,Active,yulduz3,012345678,TCH-006,Starter 1,TCH-006-STARTER-1,,
 STU-00314,Muhammadyusuf,Ulashev,,,,,,,Active,muhammadyusuf,012345678,TCH-006,Starter 1,TCH-006-STARTER-1,,
 STU-00315,Nigina,G'iyosova,,,,,,,Active,nigina2,012345678,TCH-006,Starter 1,TCH-006-STARTER-1,,
-STU-00316,Zarina,Amonova,,,,,,,Active,zarina2,012345678,TCH-006,Starter 2,TCH-006-STARTER-2,,
+STU-00316,Zarina,Amonova,,,,,,,Active,zarina2,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
 STU-00317,Amirxon,Rabbimov,,,,,,,Active,amirxon2,012345678,TCH-006,Starter 2,TCH-006-STARTER-2,,
 STU-00318,Samirbek,Negmatov,,,,,,,Active,samirbek2,012345678,TCH-006,Starter 2,TCH-006-STARTER-2,,
 STU-00319,Biloliddin,Abduvahobov,,,,,,,Active,biloliddin,012345678,TCH-006,Starter 2,TCH-006-STARTER-2,,
@@ -335,9 +304,9 @@ STU-00333,Azizbek,Ergashev,,,,,,,Active,azizbek10,012345678,TCH-006,Starter 2,TC
 STU-00334,Javlonbek,Adashov,,,,,,,Active,javlonbek,012345678,TCH-006,Starter 2,TCH-006-STARTER-2,,
 STU-00335,Maqsudbek,Yusupov,,,,,,,Active,maqsudbek,012345678,TCH-006,Starter 2,TCH-006-STARTER-2,,
 STU-00336,Sunnat,Tojiyev,,,,,,,Active,sunnat,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
-STU-00337,Behruz,Davronov,,,,,,,Active,behruz5,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
-STU-00338,Mexrangiz,Sardorova,,,,,,,Active,mexrangiz3,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
-STU-00339,Zulfiya,Sardorova,,,,,,,Active,zulfiya,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
+STU-00337,Behruz,Davronov,,,,,,,Active,behruz5,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-00338,Mexrangiz,Sardorova,,,,,,,Active,mexrangiz3,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-00339,Zulfiya,Sardorova,,,,,,,Active,zulfiya,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,,
 STU-00340,Shoxrux,Sharofboyev,,,,,,,Active,shoxrux2,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
 STU-00341,Ahmadamin,Ravshanov,,,,,,,Active,ahmadamin,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
 STU-00342,Javohir,Maxmamurodov,,,,,,,Active,javohir2,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
@@ -348,8 +317,8 @@ STU-00346,Umid,Shokirov,,,,,,,Active,umid,012345678,TCH-006,Grammar special,TCH-
 STU-00347,Laziz,Ergashev,,,,,,,Active,laziz,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
 STU-00348,Dilnura,G'aybullayeva,,,,,,,Active,dilnura6,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
 STU-00349,Alisher,Uzoqov,,,,,,,Active,alisher4,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
-STU-00350,Jasurbek,Raxmonov,,,,,,,Active,jasurbek3,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
-STU-00351,Murodjon,Toxirov,,,,,,,Active,murodjon,012345678,TCH-006,Grammar special,TCH-006-GRAMMAR-SPECIAL,,
+STU-00350,Jasurbek,Raxmonov,,,,,,,Active,jasurbek3,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,,
+STU-00351,Murodjon,Toxirov,,,,,,,Active,murodjon,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,,
 STU-00352,Jafar,Baxronov,,+998934670134,,,,,Active,jafar,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,136,8
 STU-00353,Alisher,Yusupov,,+998889182858,,,,,Active,alisher5,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,99,10
 STU-00354,Jabbor,Asrorov,,+998956698929,,,,,Active,jabbor2,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,99,9
@@ -358,7 +327,7 @@ STU-00356,Hamid,Bozorov,,+998993579467,,,,,Active,hamid,012345678,TCH-006,B1 plu
 STU-00357,Behruz,Sobirov,,+998902813024,,,,,Active,behruz6,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,54,9
 STU-00358,Abduqaxxor,Salimov,,+998889330038,,,,,Active,abduqaxxor2,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,55,10
 STU-00359,Muhammadxon,Abduhamidov,,,,,,,Active,muhammadxon,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,,
-STU-00360,Madina,Mamatqulova,,,,,,,Active,madina6,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,,
+STU-00360,Madina,Mamatqulova,,,,,,,Active,madina6,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
 STU-00361,Ezoza,Ochilova,,,,,,,Active,ezoza,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,,
 STU-00362,Umidjon,Shodiyorov,,,,,,,Active,umidjon,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,,
 STU-00363,Ozodbek,Xamidov,,,,,,,Active,ozodbek6,012345678,TCH-006,B1 plus,TCH-006-B1-PLUS,,
@@ -378,46 +347,44 @@ STU-00376,Ahmadjon,Sodiqov,,+998910359674,,,,,Active,ahmadjon2,012345678,TCH-007
 STU-00377,Bilolbek,Umarov,,+998876526002,,,,,Active,bilolbek,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,3,2
 STU-00378,Islom,Abdujabborov,,+998888931144,,,,,Active,islom4,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,54,2
 STU-00379,Umar,Abdullayev,,,,,,,Active,umar,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
-STU-00380,Hojiakbar,Xudoyberdiyev,,,,,,,Active,hojiakbar3,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
+STU-00380,Hojiakbar,Xudoyberdiyev,,,,,,,Active,hojiakbar3,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
 STU-00381,Muhammadali,Usmonov,,,,,,,Active,muhammadali3,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
 STU-00382,Athamjon,Sadrullayev,,,,,,,Active,athamjon,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
-STU-00383,Muhammadisoh,Musurmonov,,,,,,,Active,muhammadisoh,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
 STU-00384,Shodiyona,Husenova,,,,,,,Active,shodiyona2,012345678,TCH-008,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,,
 STU-00385,Jahongir,Narzullayev,,,,,,,Active,jahongir6,012345678,TCH-008,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,,
 STU-00386,Fayoz,Abrorov,,,,,,,Active,fayoz,012345678,TCH-008,Individual Speaking by Fazliyev,TCH-008-INDIVIDUAL-SPEAKING-BY-FAZLIYEV,kallej,2
 STU-00387,Ilyos,Yardonov,,,,,,,Active,ilyos,012345678,TCH-008,Individual Speaking by Fazliyev,TCH-008-INDIVIDUAL-SPEAKING-BY-FAZLIYEV,,
 STU-00388,Sa'dillo,Ne'matov,,,,,,,Active,sadillo,012345678,TCH-008,Individual Speaking by Fazliyev,TCH-008-INDIVIDUAL-SPEAKING-BY-FAZLIYEV,,
-STU-00389,Shodiyona,Ravshanova,,+998938504477,,,,,Active,shodiyona3,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,54,4
-STU-00390,Hasan,Jo'rayev,,+998505796953,,,,,Active,hasan2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,38,5
-STU-00391,Husan,Jo'rayev,,+998505796953,,,,,Active,husan2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,38,5
-STU-00392,Laziz,Tolibov,,+998973912771,,,,,Active,laziz2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,82,2
-STU-00393,Aziza,Qahhorova,,+998933573549,,,,,Active,aziza5,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,2,6
-STU-00394,Boboburod,Kamolov,,+998334155265,,,,,Active,boboburod,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,2,2
-STU-00395,Azamat,Samehjonov,,+998910336110,,,,,Active,azamat,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,86,4
-STU-00396,Ikrom,Imomqulov,,+998774941988,,,,,Active,ikrom3,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,137,4
-STU-00397,Hanifa,Salohiddinov,,+998979208767,,,,,Active,hanifa3,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,2,6
-STU-00398,Mubina,Burxonova,,+998920527566,,,,,Active,mubina5,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,2,5
-STU-00399,Abdulloh,Burxonov,,+998972864445,,,,,Active,abdulloh2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,54,5
-STU-00400,Asatillo,Isrofilov,,+998904664214,,,,,Active,asatillo,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,2,4
-STU-00401,Shodiyona,Yunusova,,,,,,,Active,shodiyona4,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,,
-STU-00402,Ibrohim,Abdullayev,,,,,,,Active,ibrohim2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,,
-STU-00403,Yasmina,Eldonova,,,,,,,Active,yasmina2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA,,
-STU-00404,Umar,Olimov,,,,,,,Active,umar2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00405,Ali,Olimov,,,,,,,Active,ali,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00406,Afruza,Amrullayeva,,,,,,,Active,afruza,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00407,Gulshoda,Qurbonova,,,,,,,Active,gulshoda,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00408,Diyorbek,Baxtiyarov,,,,,,,Active,diyorbek,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00409,Xislatbek,izzatillayev,,,,,,,Active,xislatbek2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00410,Diyorbek,Shuxratov,,,,,,,Active,diyorbek2,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00411,Ulug'bek,Izzatillayev,,,,,,,Active,ulugbek5,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00412,Muhammadali,Raxmatov,,,,,,,Active,muhammadali4,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00413,Xonzoda,Ibodullayeva,,,,,,,Active,xonzoda,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00414,Amrillo,Ilhomov,,,,,,,Active,amrillo,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00415,Madina,Ahmadova,,,,,,,Active,madina7,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00416,Baxriddin,Rustamov,,,,,,,Active,baxriddin,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00417,Aliakbar,Rustamov,,,,,,,Active,aliakbar,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00418,Muhammadjon,Jamoliddinov,,,,,,,Active,muhammadjon4,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
-STU-00419,Mehribon,Jamoliddinova,,,,,,,Active,mehribon,012345678,TCH-009,Kids Zubayda,TCH-009-KIDS-ZUBAYDA-2,,
+STU-00389,Shodiyona,Ravshanova,,+998938504477,,,,,Active,shodiyona3,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,54,4
+STU-00390,Hasan,Jo'rayev,,+998505796953,,,,,Active,hasan2,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,38,5
+STU-00391,Husan,Jo'rayev,,+998505796953,,,,,Active,husan2,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,38,5
+STU-00392,Laziz,Tolibov,,+998973912771,,,,,Active,laziz2,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,82,2
+STU-00393,Aziza,Qahhorova,,+998933573549,,,,,Active,aziza5,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,2,6
+STU-00394,Boboburod,Kamolov,,+998334155265,,,,,Active,boboburod,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,2,2
+STU-00395,Azamat,Samehjonov,,+998910336110,,,,,Active,azamat,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,86,4
+STU-00396,Ikrom,Imomqulov,,+998774941988,,,,,Active,ikrom3,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,137,4
+STU-00397,Hanifa,Salohiddinov,,+998979208767,,,,,Active,hanifa3,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,2,6
+STU-00398,Mubina,Burxonova,,+998920527566,,,,,Active,mubina5,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,2,5
+STU-00399,Abdulloh,Burxonov,,+998972864445,,,,,Active,abdulloh2,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,54,5
+STU-00400,Asatillo,Isrofilov,,+998904664214,,,,,Active,asatillo,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,2,4
+STU-00402,Ibrohim,Abdullayev,,,,,,,Active,ibrohim2,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,,
+STU-00403,Yasmina,Eldonova,,,,,,,Active,yasmina2,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,,
+STU-00404,Umar,Olimov,,,,,,,Active,umar2,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,,
+STU-00405,Ali,Olimov,,,,,,,Active,ali,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00406,Afruza,Amrullayeva,,,,,,,Active,afruza,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00407,Gulshoda,Qurbonova,,,,,,,Active,gulshoda,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00408,Diyorbek,Baxtiyarov,,,,,,,Active,diyorbek,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00409,Xislatbek,izzatillayev,,,,,,,Active,xislatbek2,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00410,Diyorbek,Shuxratov,,,,,,,Active,diyorbek2,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00411,Ulug'bek,Izzatillayev,,,,,,,Active,ulugbek5,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00412,Muhammadali,Raxmatov,,,,,,,Active,muhammadali4,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00413,Xonzoda,Ibodullayeva,,,,,,,Active,xonzoda,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00414,Amrillo,Ilhomov,,,,,,,Active,amrillo,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00415,Madina,Ahmadova,,,,,,,Active,madina7,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00416,Baxriddin,Rustamov,,,,,,,Active,baxriddin,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00417,Aliakbar,Rustamov,,,,,,,Active,aliakbar,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00418,Muhammadjon,Jamoliddinov,,,,,,,Active,muhammadjon4,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-00419,Mehribon,Jamoliddinova,,,,,,,Active,mehribon,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
 STU-00420,Sarvinoz,Mamatqulova,,+998958364043,,,,,Active,sarvinoz,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,144,10
 STU-00421,Shavqiya,Aslamova,,+998917022322,,,,,Active,shavqiya,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,bitirgan,
 STU-00422,Parizoda,Izzatillayeva,,+998997003948,,,,,Active,parizoda,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,54,4
@@ -441,22 +408,6 @@ STU-00439,Oytul,Hotamova,,+998902122142,,,,,Active,oytul,012345678,TCH-010,Arab 
 STU-00440,Abdulloh,Ibragimov,,+998339982733,,,,,Active,abdulloh3,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,154,5
 STU-00441,Abdurasul,Hasanov,,+998904716191,,,,,Active,abdurasul,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,144,7
 STU-00442,Amirjon,Bahromov,,+998906062206,,,,,Active,amirjon,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,1,5
-STU-00443,"Pay, Shan 09:","Sesh,",,,,,,,Active,payshan09,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,maktab,sinf
-STU-00444,Shaxzoda,Norqulova,,+998972850012,,,,,Active,shaxzoda,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,bitirgan,
-STU-00445,Bashorat,Norqulova,,+998972850012,,,,,Active,bashorat,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,89,4
-STU-00446,Robiya,Obloberdiyeva,,+998913137981,,,,,Active,robiya2,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,89,9
-STU-00447,Ma`rufjon,Norqulov,,+998952461986,,,,,Active,marufjon,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,142,3
-STU-00448,Saida,Xo`jamberdiyeva,,+998904478737,,,,,Active,saida,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,144,8
-STU-00449,Sayyora,Xo`jamberdiyeva,,+998904478737,,,,,Active,sayyora,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,bitirgan,
-STU-00450,Muhammadali,Hasanov,,+998915209991,,,,,Active,muhammadali5,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,2,2
-STU-00451,Durdona,Shodmonqulova,,+998889227071,,,,,Active,durdona3,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,bitirgan,
-STU-00452,Osiyo,Bobonazarova,,+998951914677,,,,,Active,osiyo3,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,bitirgan,
-STU-00453,Yoqubjon,G'ofurov,,+998509502533,,,,,Active,yoqubjon,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,7,2
-STU-00454,Rashod,Mamatqulov,,+998889440161,,,,,Active,rashod,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,2,5
-STU-00455,Marjona,Xaqberdiyeva,,+998333612303,,,,,Active,marjona3,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,bitirgan,
-STU-00456,Dilnura,Jalilova,,+998888955600,,,,,Active,dilnura7,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
-STU-00457,Aziza,Ne'matova,,,,,,,Active,aziza6,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
-STU-00458,Mehrojbek,Murodullayev,,,,,,,Active,mehrojbek,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,89,5
 STU-00459,Muminjon,A'zamov,,,,,,,Active,muminjon2,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00460,Samira,Ahmadjonova,,,,,,,Active,samira3,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00461,Shoira,Asrorova,,,,,,,Active,shoira2,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
@@ -469,7 +420,6 @@ STU-00467,Hursanoy,Samehova,,,,,,,Active,hursanoy,012345678,TCH-010,Arab tili 3.
 STU-00468,Abdullo,Bahtiyorov,,,,,,,Active,abdullo,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00469,Farida,Oblaberdiyeva,,,,,,,Active,farida,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00470,Munisa,Karimova,,,,,,,Active,munisa4,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
-STU-00471,Mubina,Karimova,,,,,,,Active,mubina6,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00472,Asliddin,Karimov,,,,,,,Active,asliddin,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00473,Elnura,Rasulberdiyeva,,,,,,,Active,elnura,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
 STU-00474,Abubakir,Karimov,,,,,,,Active,abubakir5,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
@@ -543,7 +493,6 @@ STU-00541,Nilufar,G'oyibova,,,,,,,Active,nilufar4,012345678,TCH-010,Arab tili 2,
 STU-00542,Bibisora,Salimova,,,,,,,Active,bibisora3,012345678,TCH-010,Arab tili 2,TCH-010-ARAB-TILI-2,,
 STU-00543,Shavqiya,Aslamova,,,,,,,Active,shavqiya2,012345678,TCH-010,Arab tili 2,TCH-010-ARAB-TILI-2,,
 STU-00544,Muhammadamin,Odinayev,,,,,,,Active,muhammadamin2,012345678,TCH-010,Arab tili 2,TCH-010-ARAB-TILI-2,,
-STU-00545,Sattor,Kattaboyev,,,,,,,Active,sattor2,012345678,TCH-010,Arab tili 2,TCH-010-ARAB-TILI-2,,
 STU-00546,Parizoda,Izzatullayeva,,,,,,,Active,parizoda2,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
 STU-00547,Xislatbek,Izzatullayeva,,,,,,,Active,xislatbek3,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
 STU-00548,Muqaddas,Zokirova,,,,,,,Active,muqaddas4,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
@@ -583,24 +532,24 @@ STU-00581,Nigohbonu,To'ychiyeva,,+998889337319,,,,,Active,nigohbonu2,012345678,T
 STU-00582,Aziz,Rabbimov,,+998889223229,,,,,Active,aziz4,012345678,TCH-011,A1 Movers morning 08:00,TCH-011-A1-MOVERS-MORNING-08-00,7,5
 STU-00583,Parizoda,Izzatillayeva,,+998996636651,,,,,Active,parizoda3,012345678,TCH-011,A1 Movers morning 08:00,TCH-011-A1-MOVERS-MORNING-08-00,54,3
 STU-00584,Nurislom,Sharofo,,,,,,,Active,nurislom,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,,
-STU-00585,Firdavs,Hakimov,,+998906554257,,,,,Active,firdavs3,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,54,3
-STU-00586,Muhammadali,Qobilov,,+998976149596,,,,,Active,muhammadali7,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,2,2
-STU-00587,Hadisa,Mansurova,,+998973981338,,,,,Active,hadisa,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,7,3
-STU-00588,Dilora,Shahobova,,+998508138095,,,,,Active,dilora,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,7,3
+STU-00585,Firdavs,Hakimov,,+998906554257,,,,,Active,firdavs3,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,3
+STU-00586,Muhammadali,Qobilov,,+998976149596,,,,,Active,muhammadali7,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,2,2
+STU-00587,Hadisa,Mansurova,,+998973981338,,,,,Active,hadisa,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,7,3
+STU-00588,Dilora,Shahobova,,+998508138095,,,,,Active,dilora,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,7,3
 STU-00589,Mexrangiz,Sardorova,,+998889206550,,,,,Active,mexrangiz5,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,55,3
 STU-00590,Lola,Latipova,,+998944274626,,,,,Active,lola,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,36,7
-STU-00591,Binafsha,Hamroqulova,,+998945993769,,,,,Active,binafsha,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,36,6
-STU-00592,Mubina,Hamroqulova,,+998901993769,,,,,Active,mubina10,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,36,4
-STU-00593,Hosila,Rahimberdiyeva,,+998944084646,,,,,Active,hosila,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,36,6
-STU-00594,Zohidbek,Nurillayev,,,,,,,Active,zohidbek,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,,
-STU-00595,Dilnura,Rahmatullayeva,,,,,,,Active,dilnura8,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,,
-STU-00596,Nurmuhammad,rahmatullayev,,+998934746991,,,,,Active,nurmuhammad,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,156,4
-STU-00597,Amir,Hasanov,,+998931285918,,,,,Active,amir,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,136,2
-STU-00598,Sarvinoz,A'zamova,,+998979311188,,,,,Active,sarvinoz2,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,3,4
-STU-00599,Nazokat,Zayniyeva,,+998889171545,,,,,Active,nazokat,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,54,4
-STU-00600,Amina,Ruslanova,,+998883980015,,,,,Active,amina6,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,136,4
-STU-00601,Islom,Latipov,,+998883901892,,,,,Active,islom5,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,54,3
-STU-00602,Zebiniso,Axtamova,,,,,,,Active,zebiniso,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,,
+STU-00591,Binafsha,Hamroqulova,,+998945993769,,,,,Active,binafsha,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,6
+STU-00592,Mubina,Hamroqulova,,+998901993769,,,,,Active,mubina10,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,4
+STU-00593,Hosila,Rahimberdiyeva,,+998944084646,,,,,Active,hosila,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,6
+STU-00594,Zohidbek,Nurillayev,,,,,,,Active,zohidbek,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-00595,Dilnura,Rahmatullayeva,,,,,,,Active,dilnura8,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-00596,Nurmuhammad,rahmatullayev,,+998934746991,,,,,Active,nurmuhammad,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,156,4
+STU-00597,Amir,Hasanov,,+998931285918,,,,,Active,amir,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,2
+STU-00598,Sarvinoz,A'zamova,,+998979311188,,,,,Active,sarvinoz2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,3,4
+STU-00599,Nazokat,Zayniyeva,,+998889171545,,,,,Active,nazokat,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,4
+STU-00600,Amina,Ruslanova,,+998883980015,,,,,Active,amina6,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,4
+STU-00601,Islom,Latipov,,+998883901892,,,,,Active,islom5,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,3
+STU-00602,Zebiniso,Axtamova,,,,,,,Active,zebiniso,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
 STU-00603,Parvina,Pardayeva,,,,,,,Active,parvina3,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,,
 STU-00604,Shoxruz,Tursunqulov,,,,,,,Active,shoxruz,012345678,TCH-012,KIDS English,TCH-012-KIDS-ENGLISH,,
 STU-00605,Ahliddin,Qahramonov,,+998945485101,,,,,Active,ahliddin,012345678,TCH-012,KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,7,3
@@ -618,10 +567,10 @@ STU-00616,Gulruh,Mamatova,,+998889580114,,,,,Active,gulruh2,012345678,TCH-012,KI
 STU-00617,Akobr,Sayfullayev,,,,,,,Active,akobr,012345678,TCH-012,KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,,
 STU-00618,Alijon,Shukurov,,,,,,,Active,alijon,012345678,TCH-012,KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,,
 STU-00619,Shoxjaxon,Xolmurodov,,,,,,,Active,shoxjaxon,012345678,TCH-012,KIDS English new morning,TCH-012-KIDS-ENGLISH-NEW-MORNING,,
-STU-00620,Muhammadyusuf,Tolibov,,+998990746833,,,,,Active,muhammadyusuf2,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,55,4
-STU-00621,Shoxrux,Nasrullayev,,+998930048618,,,,,Active,shoxrux3,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,82,6
-STU-00622,Sunnat,G`ulomov,,+998979188515,,,,,Active,sunnat3,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,82,6
-STU-00623,Firdavs,Qurbonov,,+998883614700,,,,,Active,firdavs4,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,86,5
+STU-00620,Muhammadyusuf,Tolibov,,+998990746833,,,,,Active,muhammadyusuf2,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,55,4
+STU-00621,Shoxrux,Nasrullayev,,+998930048618,,,,,Active,shoxrux3,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,82,6
+STU-00622,Sunnat,G`ulomov,,+998979188515,,,,,Active,sunnat3,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,82,6
+STU-00623,Firdavs,Qurbonov,,+998883614700,,,,,Active,firdavs4,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,86,5
 STU-00624,Odiljon,Rahimov,,+998885777091,,,,,Active,odiljon,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,82,6
 STU-00625,Aziz,Rabbimov,,+998979223229,,,,,Active,aziz5,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,7,5
 STU-00626,Zaynab,Amriyeva,,+998881824900,,,,,Active,zaynab2,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,54,4
@@ -629,7 +578,7 @@ STU-00627,Hojiakbar,Rustamov,,+998999106282,,,,,Active,hojiakbar4,012345678,TCH-
 STU-00628,Asilbek,Namozov,,+998999106282,,,,,Active,asilbek4,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,156,4
 STU-00629,Asilbek,Rabbimov,,+998979223229,,,,,Active,asilbek5,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,7,7
 STU-00630,Abubakir,Abdukarimov,,+998997728810,,,,,Active,abubakir7,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,1,5
-STU-00631,Senzora,Jamshidova,,+998990862044,,,,,Active,senzora,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,54,6
+STU-00631,Senzora,Jamshidova,,+998990862044,,,,,Active,senzora,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,54,6
 STU-00632,Hojiakbar,Xushvaqtov,,+998979115633,,,,,Active,hojiakbar5,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,54,7
 STU-00633,Fozil,Abdullayev,,+998888640099,,,,,Active,fozil2,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,137,4
 STU-00634,Shuhrat,Rustamov,,+998931666316,,,,,Active,shuhrat2,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,82,7
@@ -645,33 +594,18 @@ STU-00643,Shabnam,Bahtiyorova,,,,,,,Active,shabnam,012345678,TCH-013,Matematika 
 STU-00644,Ijobat,Toraqulova,,,,,,,Active,ijobat,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,,
 STU-00645,Jahongir,Sirojiddinov,,,,,,,Active,jahongir7,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,,
 STU-00646,Muhammadrizo,No'monov,,,,,,,Active,muhammadrizo,012345678,TCH-013,Matematika 1 8:00,TCH-013-MATEMATIKA-1-8-00,,
-STU-00647,Sevinch,Ergashova,,+998995557432,,,,,Active,sevinch3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,11,8
-STU-00648,Guljahon,Mahkamova,,+998889355525,,,,,Active,guljahon2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,55,8
-STU-00649,Farida,Qurbonova,,+998889470270,,,,,Active,farida3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
-STU-00650,Abubakir,Rahmonov,,+998917073236,,,,,Active,abubakir8,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,1,4
-STU-00651,Islom,Olimov,,+998902844448,,,,,Active,islom6,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,2,1
-STU-00652,Asal,Shokirova,,+998943939193,,,,,Active,asal2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,36,4
-STU-00653,Gulnora,Hamdamova,,+998913178613,,,,,Active,gulnora3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,11,11
-STU-00654,Abdurauf,Mannobov,,+998886137770,,,,,Active,abdurauf2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,elita,3
-STU-00655,Shoxjahon,Xolmahmadov,,+998933223748,,,,,Active,shoxjahon,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,48,11
-STU-00656,Nafisa,Hasanova,,+998954279515,,,,,Active,nafisa2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,kollej,1
-STU-00657,Xislatbek,Ziyoyev,,+998930682118,,,,,Active,xislatbek5,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,70,9
-STU-00658,Gulzoda,G'afforova,,+998904777267,,,,,Active,gulzoda,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,54,11
-STU-00659,Jafarbek,Mamatov,,+998979272237,,,,,Active,jafarbek3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,137,10
-STU-00660,Behruz,Davronov,,+998882234445,,,,,Active,behruz7,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,137,6
-STU-00661,Oybek,Tanaqulov,,+998501030075,,,,,Active,oybek2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,7,7
-STU-00662,Muhammadjon,Faxriyev,,+998979212181,,,,,Active,muhammadjon6,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,2,7
-STU-00663,Abdujabbor,Karimberdiyev,,+998502009470,,,,,Active,abdujabbor2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,4,1
-STU-00664,Kumush,Bahodirova,,,,,,,Active,kumush2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
-STU-00665,Marjona,Xusanova,,,,,,,Active,marjona5,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
-STU-00666,Abdulloh,Isoqulov,,,,,,,Active,abdulloh4,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
-STU-00667,Oybek,Murodillayev,,+998904550447,,,,,Active,oybek3,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,136,11
+STU-00649,Farida,Qurbonova,,+998889470270,,,,,Active,farida3,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-00658,Gulzoda,G'afforova,,+998904777267,,,,,Active,gulzoda,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,54,11
+STU-00660,Behruz,Davronov,,+998882234445,,,,,Active,behruz7,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,137,6
+STU-00662,Muhammadjon,Faxriyev,,+998979212181,,,,,Active,muhammadjon6,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,2,7
+STU-00663,Abdujabbor,Karimberdiyev,,+998502009470,,,,,Active,abdujabbor2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,4,1
+STU-00667,Oybek,Murodillayev,,+998904550447,,,,,Active,oybek3,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,136,11
 STU-00668,Behruz,Uktamov,,+998330187669,,,,,Active,behruz8,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,23,9
 STU-00669,Malika,Axtamova,,+998949131712,,,,,Active,malika4,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,86,5
 STU-00670,Bilolbek,Umarov,,+998991836870,,,,,Active,bilolbek2,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,3,2
 STU-00671,Asqar,Ahmadov,,+998981111240,,,,,Active,asqar,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,3,9
-STU-00672,Ismoil,Abdukarimov,,+998994135007,,,,,Active,ismoil,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,bitirgan,bitirgan
-STU-00673,Sabina,Abdurahmonova,,+998992130561,,,,,Active,sabina2,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,121,3
+STU-00672,Ismoil,Abdukarimov,,+998994135007,,,,,Active,ismoil,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,bitirgan,bitirgan
+STU-00673,Sabina,Abdurahmonova,,+998992130561,,,,,Active,sabina2,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,121,3
 STU-00674,Dilnura,Rajabboyeva,,+998943485955,,,,,Active,dilnura10,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,36,3
 STU-00675,Asadbek,Aminov,,+998901012299,,,,,Active,asadbek3,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,123,4
 STU-00676,Begzod,Toxirov,,+998941878685,,,,,Active,begzod2,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,123,4
@@ -683,42 +617,28 @@ STU-00681,Sarvar,Murodqulov,,,,,,,Active,sarvar3,012345678,TCH-013,Matematika 3 
 STU-00682,Shamsiya,Xursandmurodova,,,,,,,Active,shamsiya,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,,
 STU-00683,Dovudbek,Berdiyev,,,,,,,Active,dovudbek,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,,
 STU-00684,Aziza,G'afforova,,,,,,,Active,aziza7,012345678,TCH-013,Matematika 3 16:00,TCH-013-MATEMATIKA-3-16-00,,
-STU-00685,Abubakir,Abdullayev,,+998976149999,,,,,Active,abubakir9,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,elita,4
 STU-00686,Bunyod,Shuhratov,,+998900303060,,,,,Active,bunyod2,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,elita,4
-STU-00687,Ne'matjon,Rofiyev,,+998979267906,,,,,Active,nematjon2,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,elita,4
 STU-00688,Yusuf,Bahodirov,,,,,,,Active,yusuf,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00689,Madina,Raupova,,,,,,,Active,madina10,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00690,Muhammadyusuf,Tolibov,,,,,,,Active,muhammadyusuf3,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00691,Sunnat,Usmonov,,,,,,,Active,sunnat4,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00692,Habibullo,Safaraliyev,,,,,,,Active,habibullo,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00693,Shoxrux,Nasrullayev,,,,,,,Active,shoxrux4,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
-STU-00694,Lobar,Burxonova,,,,,,,Active,lobar,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
-STU-00695,Begzod,Amriyev,,,,,,,Active,begzod3,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
+STU-00694,Lobar,Burxonova,,,,,,,Active,lobar,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,,
+STU-00695,Begzod,Amriyev,,,,,,,Active,begzod3,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
 STU-00696,Doniyor,Safaraliyev,,,,,,,Active,doniyor3,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00697,Amira,Nurillayeva,,,,,,,Active,amira,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00698,Ijobat,To'raqulova,,,,,,,Active,ijobat2,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00699,Shabnam,Bahtiyorova,,,,,,,Active,shabnam2,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
-STU-00700,Oybek,Tanaqulov,,,,,,,Active,oybek4,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
+STU-00700,Oybek,Tanaqulov,,,,,,,Active,oybek4,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
 STU-00701,Javohir,Najmiyev,,,,,,,Active,javohir3,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
 STU-00702,Sardor,Abdurashidov,,,,,,,Active,sardor4,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
-STU-00703,Umar,Isomov,,,,,,,Active,umar3,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
+STU-00703,Umar,Isomov,,,,,,,Active,umar3,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,,
 STU-00704,Otabek,Abdukamolov,,,,,,,Active,otabek,012345678,TCH-013,Matematika 1,TCH-013-MATEMATIKA-1,,
-STU-00705,Ibrohim,Olimjonov,,,,,,,Active,ibrohim4,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00706,Islom,Xoliqov,,,,,,,Active,islom7,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00707,Alisher,Abloyorov,,,,,,,Active,alisher6,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00708,Alibek,Ro'zimurodov,,,,,,,Active,alibek3,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00709,Muhsinjon,Raupov,,,,,,,Active,muhsinjon2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00710,Shahboz,Rahimboyev,,,,,,,Active,shahboz,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00711,Malika,Bahodirova,,,,,,,Active,malika5,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00712,Islomjon,Olimov,,,,,,,Active,islomjon,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00713,Hojiakbar,Xaqnazarov,,,,,,,Active,hojiakbar7,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00714,Aziza,Qurbonova,,,,,,,Active,aziza8,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00715,Akobir,G'iyosov,,,,,,,Active,akobir2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-00712,Islomjon,Olimov,,,,,,,Active,islomjon,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
 STU-00716,Sevinch,Ergashova,,,,,,,Active,sevinch4,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
 STU-00717,Guljahon,Mahkamova,,,,,,,Active,guljahon3,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00718,Abram,Abdurahimov,,,,,,,Active,abram,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00719,Behruz,Ochilov,,,,,,,Active,behruz9,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
-STU-00720,Humoyun,Rajabov,,,,,,,Active,humoyun2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-00718,Abram,Abdurahimov,,,,,,,Active,abram,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
 STU-00721,Mahliyo,Sobirova,,,,,,,Active,mahliyo,012345678,TCH-013,Matematika 3,TCH-013-MATEMATIKA-3,,
 STU-00722,Abdurauf,Mannopov,,,,,,,Active,abdurauf3,012345678,TCH-013,Matematika 3,TCH-013-MATEMATIKA-3,,
 STU-00723,Aliakbar,Tohirov,,,,,,,Active,aliakbar2,012345678,TCH-013,Matematika 3,TCH-013-MATEMATIKA-3,,
@@ -729,27 +649,20 @@ STU-00727,Malika,Axtamova,,,,,,,Active,malika6,012345678,TCH-013,Matematika 3,TC
 STU-00728,Sherbek,Jumaqulov,,,,,,,Active,sherbek,012345678,TCH-013,Matematika 3,TCH-013-MATEMATIKA-3,,
 STU-00729,Suhrob,Bahriddinov,,,,,,,Active,suhrob,012345678,TCH-013,Matematika 3,TCH-013-MATEMATIKA-3,,
 STU-00730,Mahliyo,Faxriddinova,,,,,,,Active,mahliyo2,012345678,TCH-013,Matematika 3,TCH-013-MATEMATIKA-3,,
-STU-00731,Mohira,Yarasheva,,+998940880273,,,,,Active,mohira,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,38,11
-STU-00732,Jasmina,Bobojonova,,+998901997590,,,,,Active,jasmina6,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,54,8
-STU-00733,Saidshox,Qurbonov,,+998991481336,,,,,Active,saidshox,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,136,11
-STU-00734,Sadriddin,Kattabekov,,+998979071292,,,,,Active,sadriddin,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,11,6
-STU-00735,Diyora,Toshpo'latova,,+998339125515,,,,,Active,diyora,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,97,10
-STU-00736,Ulfadjon,Hamroqulov,,+998900302423,,,,,Active,ulfadjon,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,4,12
-STU-00737,Ezoza,Asrorova,,,,,,,Active,ezoza4,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM,,
-STU-00738,Ruxsora,Qahramonova,,,,,,,Active,ruxsora,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00739,Moxiniso,Bahronova,,,,,,,Active,moxiniso,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00740,Charos,A'zamova,,,,,,,Active,charos3,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00741,Nozima,Ravshanova,,,,,,,Active,nozima,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00742,Amirhamza,Bobonazarov,,,,,,,Active,amirhamza,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00743,Hadyatillo,Habibullayev,,,,,,,Active,hadyatillo,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00744,Muhammadjon,Lutfiyev,,,,,,,Active,muhammadjon7,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00745,Murodjon,Baxtiyorov,,,,,,,Active,murodjon2,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00746,Dilbar,Xotamova,,,,,,,Active,dilbar3,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00747,Dilnoza,Asatillayeva,,,,,,,Active,dilnoza3,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00748,Dildora,Asatillayeva,,,,,,,Active,dildora2,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00749,Gulchexra,Amriddinova,,,,,,,Active,gulchexra,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00750,Bexruz,Tursunqulov,,,,,,,Active,bexruz,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
-STU-00751,Imrona,Anvarova,,,,,,,Active,imrona,012345678,TCH-014,Rus tili Afternoon Shoxsanam,TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-2,,
+STU-00731,Mohira,Yarasheva,,+998940880273,,,,,Active,mohira,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,38,11
+STU-00733,Saidshox,Qurbonov,,+998991481336,,,,,Active,saidshox,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,136,11
+STU-00734,Sadriddin,Kattabekov,,+998979071292,,,,,Active,sadriddin,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,11,6
+STU-00735,Diyora,Toshpo'latova,,+998339125515,,,,,Active,diyora,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,97,10
+STU-00736,Ulfadjon,Hamroqulov,,+998900302423,,,,,Active,ulfadjon,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,4,12
+STU-00737,Ezoza,Asrorova,,,,,,,Active,ezoza4,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TT,,
+STU-00739,Moxiniso,Bahronova,,,,,,,Active,moxiniso,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00740,Charos,A'zamova,,,,,,,Active,charos3,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00741,Nozima,Ravshanova,,,,,,,Active,nozima,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00742,Amirhamza,Bobonazarov,,,,,,,Active,amirhamza,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00743,Hadyatillo,Habibullayev,,,,,,,Active,hadyatillo,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00744,Muhammadjon,Lutfiyev,,,,,,,Active,muhammadjon7,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00745,Murodjon,Baxtiyorov,,,,,,,Active,murodjon2,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-00751,Imrona,Anvarova,,,,,,,Active,imrona,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
 STU-00752,Ruxsora,Qahramonova,,+998972881187,,,,,Active,ruxsora2,012345678,TCH-014,Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,1,5
 STU-00753,Mohiniso,Bahronova,,+998995998778,,,,,Active,mohiniso,012345678,TCH-014,Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,54,6
 STU-00754,Charos,A'zamova,,+998979311188,,,,,Active,charos4,012345678,TCH-014,Rus tili morning Dinora,TCH-014-RUS-TILI-MORNING-DINORA,,
@@ -777,8 +690,6 @@ STU-00775,Isroil,Ismatov,,+998889255727,,,,,Active,isroil,012345678,TCH-015,A2 F
 STU-00776,Madina,Halimova,,+998934523236,,,,,Active,madina11,012345678,TCH-015,A2 FLYERS morning 08:00,TCH-015-A2-FLYERS-MORNING-08-00,7,3 / 10- yosh
 STU-00777,Abdurashid,Davronov,,+998917090763,,,,,Active,abdurashid3,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,123,6 / 13 yosh
 STU-00778,Suhrob,Bahriddinov,,+998973966838,,,,,Active,suhrob2,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,38,7
-STU-00779,Behruz,Davronov,,+998882234445,,,,,Active,behruz10,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,137,6
-STU-00780,Mohigul,O'rinova,,+998885888867,,,,,Active,mohigul,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,,
 STU-00781,Shabnam,Fayzullayea,,+998935535459,,,,,Active,shabnam3,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,38,7
 STU-00782,Shukrona,Musurmonova,,+998943362220,,,,,Active,shukrona5,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,143,5 / 11 yosh
 STU-00783,Lazizbek,Samariddinov,,+998938804636,,,,,Active,lazizbek3,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,125,7 / 13 yosh
@@ -858,27 +769,25 @@ STU-00856,Muhammadjon,Lutfiyev,,,,,,,Active,muhammadjon8,012345678,TCH-015,A1 mo
 STU-00857,Umar,Isomov,,,,,,,Active,umar6,012345678,TCH-015,A1 movers morning,TCH-015-A1-MOVERS-MORNING,,
 STU-00858,Umarxon,Hayrullayev,,,,,,,Active,umarxon,012345678,TCH-015,A1 movers morning,TCH-015-A1-MOVERS-MORNING,,
 STU-00859,Asilbek,Rofiyev,,,,,,,Active,asilbek6,012345678,TCH-015,A1 movers morning,TCH-015-A1-MOVERS-MORNING,,
-STU-00860,Madina,Muxtorova,,+998948702050,,,,,Active,madina12,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,7,9
-STU-00861,Shodiyona,Musulmonova,,+998932270612,,,,,Active,shodiyona7,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,104,9
-STU-00862,Shahriza,Hazratqulova,,+998954443781,,,,,Active,shahriza,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,75,8
-STU-00863,Og`abek,Yazdonov,,+998974058984,,,,,Active,ogabek5,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,71,9
-STU-00864,Dinora,Raimberdiyeva,,+998993157287,,,,,Active,dinora,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,10
-STU-00865,Muhammad,Mamasiddiqov,,+998972231210,,,,,Active,muhammad3,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,128,10
-STU-00866,Osiyo,Nizomova,,+998999616384,,,,,Active,osiyo4,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,34,8
-STU-00867,Kumush,Raimberdiyev,,+998953433321,,,,,Active,kumush3,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,36,9
-STU-00868,Zaynura,Rahmonqulova,,+998940810523,,,,,Active,zaynura,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,36,9
-STU-00869,Farishta,Akbarova,,+998938191890,,,,,Active,farishta,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,36,9
-STU-00870,Shaydo,Farmonova,,+998770256904,,,,,Active,shaydo2,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,8
-STU-00871,Asliddin,Tuliyev,,+998770887687,,,,,Active,asliddin2,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,9
-STU-00872,Laziz,Mahmadaliyev,,+998992063362,,,,,Active,laziz4,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,6
-STU-00873,Bexruz,Burxonov,,+998500103765,,,,,Active,bexruz2,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,70,8
-STU-00874,Shohjahon,Saidmurodov,,+93780494,,,,,Active,shohjahon4,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
-STU-00875,Kamola,Axbutayeva,,,,,,,Active,kamola,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
-STU-00876,Shoxrux,Xamroqulov,,+998915533142,,,,,Active,shoxrux6,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,30,9 / 16 yosh
-STU-00877,Mashhura,Xolmaxmadova,,+998932565305,,,,,Active,mashhura,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,143,9 / 15 yosh
-STU-00878,Sevinch,Murodullayeva,,+998979290207,,,,,Active,sevinch5,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,89,9 / 16 yosh
-STU-00879,Osiyobegim,Berdiyeva,,,,,,,Active,osiyobegim,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
-STU-00880,Sharqiyabegim,Hakimbekova,,,,,,,Active,sharqiyabegim,012345678,TCH-015,A2 flyers Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
+STU-00860,Madina,Muxtorova,,+998948702050,,,,,Active,madina12,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,7,9
+STU-00861,Shodiyona,Musulmonova,,+998932270612,,,,,Active,shodiyona7,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,104,9
+STU-00862,Shahriza,Hazratqulova,,+998954443781,,,,,Active,shahriza,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,75,8
+STU-00863,Og`abek,Yazdonov,,+998974058984,,,,,Active,ogabek5,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,71,9
+STU-00865,Muhammad,Mamasiddiqov,,+998972231210,,,,,Active,muhammad3,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,128,10
+STU-00866,Osiyo,Nizomova,,+998999616384,,,,,Active,osiyo4,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,34,8
+STU-00867,Kumush,Raimberdiyev,,+998953433321,,,,,Active,kumush3,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,36,9
+STU-00868,Zaynura,Rahmonqulova,,+998940810523,,,,,Active,zaynura,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,36,9
+STU-00869,Farishta,Akbarova,,+998938191890,,,,,Active,farishta,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,36,9
+STU-00870,Shaydo,Farmonova,,+998770256904,,,,,Active,shaydo2,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,8
+STU-00871,Asliddin,Tuliyev,,+998770887687,,,,,Active,asliddin2,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,9
+STU-00872,Laziz,Mahmadaliyev,,+998992063362,,,,,Active,laziz4,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,48,6
+STU-00873,Bexruz,Burxonov,,+998500103765,,,,,Active,bexruz2,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,70,8
+STU-00874,Shohjahon,Saidmurodov,,+93780494,,,,,Active,shohjahon4,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
+STU-00876,Shoxrux,Xamroqulov,,+998915533142,,,,,Active,shoxrux6,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,30,9 / 16 yosh
+STU-00877,Mashhura,Xolmaxmadova,,+998932565305,,,,,Active,mashhura,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,143,9 / 15 yosh
+STU-00878,Sevinch,Murodullayeva,,+998979290207,,,,,Active,sevinch5,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,89,9 / 16 yosh
+STU-00879,Osiyobegim,Berdiyeva,,,,,,,Active,osiyobegim,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
+STU-00880,Sharqiyabegim,Hakimbekova,,,,,,,Active,sharqiyabegim,012345678,TCH-015,B1 INTRO Afternoon (Javhar Ustoz),TCH-015-A2-FLYERS-AFTERNOON-JAVHAR-USTOZ,,
 STU-00881,Shuhrat,Mahmaniyozov,,+998945915111,,,,,Active,shuhrat3,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,125,10
 STU-00882,Bibioysha,Sattorova,,+998883994447,,,,,Active,bibioysha,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,7,9
 STU-00883,Mubina,Fazliddinova,,+998873991400,,,,,Active,mubina11,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,7,9
@@ -896,10 +805,7 @@ STU-00894,Feruz,Yusupov,,+998933596252,,,,,Active,feruz,012345678,TCH-016,B2 Mul
 STU-00895,Aziz,G'aybullayev,,+998993123037,,,,,Active,aziz7,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,48,9
 STU-00896,Mubina,Shukrullayeva,,+998700449722,,,,,Active,mubina12,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,54,10
 STU-00897,Asal,Utkirova,,+998882219962,,,,,Active,asal3,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,82,9
-STU-00898,Muhammadsaid,,,,,,,,Active,muhammadsaid2,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
 STU-00899,Baxtiyorov,Azizbek,,,,,,,Active,baxtiyorov,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
-STU-00900,Abduqaxxor,Salimov,,,,,,,Active,abduqaxxor3,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
-STU-00901,Robiya,Xudoyberdiyeva,,,,,,,Active,robiya7,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
 STU-00902,Soliha,Ne'matullayeva,,,,,,,Active,soliha3,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
 STU-00903,Navro'z,Nuriddinov,,+74777712,,,,,Active,navroz,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,142,9
 STU-00904,Muhammadjon,Faxriyev,,+998979212181,,,,,Active,muhammadjon9,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,2,8
@@ -918,37 +824,22 @@ STU-00916,Shaxzoda,Xojimurodova,,+998970421812,,,,,Active,shaxzoda3,012345678,TC
 STU-00917,Gulruxsor,Musurmonova,,+998916280853,,,,,Active,gulruxsor,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,85,6
 STU-00918,Aminjon,Fotixjonov,,+998901026567,,,,,Active,aminjon6,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,122,7
 STU-00919,Suxrob,Karimberdiyev,,+998507196720,,,,,Active,suxrob,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,70,9
-STU-00920,Muhammadsodiq,Zokirov,,+998918000044,,,,,Active,muhammadsodiq4,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,89,5
-STU-00921,Muhammadiso,Aminov,,+998904557970,,,,,Active,muhammadiso,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,142,6
-STU-00922,Alisher,Rabbimov,,+998990917194,,,,,Active,alisher8,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,48,6
 STU-00923,Xudoyberdi,Absusalomov,,+998773691389,,,,,Active,xudoyberdi2,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,82,8
 STU-00924,Abdulloh,Shodiyev,,+998979146565,,,,,Active,abdulloh5,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,6,9
-STU-00925,Abdulaziz,Ne'matullayev,,+998901017179,,,,,Active,abdulaziz3,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,Elita,7
-STU-00926,Abdukarim,Norimov,,+998904449272,,,,,Active,abdukarim,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,2,6
 STU-00927,Kumushbonu,Xamroyeva,,+998912502648,,,,,Active,kumushbonu,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,85,9
 STU-00928,Dilnura,Shodiyorova,,+998979257782,,,,,Active,dilnura11,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,136,6
 STU-00929,Shahzoda,Fahriddinova,,+998879323334,,,,,Active,shahzoda,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,6,11
 STU-00930,Ruxshona,Rabbimova,,+998940420062,,,,,Active,ruxshona7,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,70,6
 STU-00931,Jahongir,Hazratqulov,,+998880353565,,,,,Active,jahongir9,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,128,9
 STU-00932,Muhammadali,Suyarqulov,,+998880353565,,,,,Active,muhammadali10,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,128,6
-STU-00933,Dilnura,Abrorova,,,,,,,Active,dilnura12,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
 STU-00934,Samandar,Narzullayev,,+998933430556,,,,,Active,samandar,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,70,7
 STU-00935,Shuxrat,Rustamov,,+998931666316,,,,,Active,shuxrat,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,82,8
-STU-00936,Xislatbek,Mansurov,,+998881114900,,,,,Active,xislatbek6,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,7,10
-STU-00937,Asadbek,Abdiyev,,+998990471055,,,,,Active,asadbek6,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,121,6
-STU-00938,Amirbek,Abdiyev,,+998990471055,,,,,Active,amirbek2,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,121,4
-STU-00939,Amirun,Uzoqov,,+998941890707,,,,,Active,amirun,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,54,6
 STU-00940,Shabbona,Ergasheva,,+998935087389,,,,,Active,shabbona2,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,64,9
 STU-00941,Navbahor,Namozova,,+998933598786,,,,,Active,navbahor2,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,82,7
 STU-00942,Muhammadsodiq,Shuxratov,,+998973977578,,,,,Active,muhammadsodiq5,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,122,6
 STU-00943,Bexruz,Qodirov,,+998990706123,,,,,Active,bexruz3,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,6,7
-STU-00944,Azizbek,Ergashev,,+998935087389,,,,,Active,azizbek11,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,14,5
 STU-00945,Hikmatullo,Olimov,,+998770482572,,,,,Active,hikmatullo,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,55,7
 STU-00946,Parvina,Bahriyeva,,+998337450703,,,,,Active,parvina4,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,89,9
-STU-00947,Xurshida,Erkinova,,,,,,,Active,xurshida,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
-STU-00948,Shahrizoda,Abdumannopova,,+998973128848,,,,,Active,shahrizoda3,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,55,9
-STU-00949,Shoxjaxon,Hasanov,,+998951961976,,,,,Active,shoxjaxon2,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,55,11
-STU-01535,Nigina,Latipova,,+998943391291,,,,,Active,nigina6,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,82,7
 STU-00950,Yorqinjon,G'afforov,,,,,,,Active,yorqinjon,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,7-MK,7
 STU-00951,Nurmuhammad,Bobojonov,,,,,,,Active,nurmuhammad2,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,54,8
 STU-00952,Nodir,Sadriddinov,,,,,,,Active,nodir,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,30,8
@@ -962,13 +853,10 @@ STU-00959,Abdurahmon,Davronov,,,,,,,Active,abdurahmon6,012345678,TCH-016,B1 Intr
 STU-00960,Murodjon,Najmiyev,,,,,,,Active,murodjon5,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,89,7
 STU-00961,Sunnatillo,Tolibov,,+998508788117,,,,,Active,sunnatillo,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,5,8
 STU-00962,Islom,Kamolov,,+998906556231,,,,,Active,islom9,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,1-MK,8
-STU-00963,Muhammadyusuf,Tolibov,,,,,,,Active,muhammadyusuf5,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,55,6
 STU-00964,Farziddin,Foziljonov,,,,,,,Active,farziddin,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,97,8
 STU-00965,Hojiakbar,Normurodov,,,,,,,Active,hojiakbar9,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,102-MK,8
 STU-00966,Ulug'bek,Salimboye,,+998905040415,,,,,Active,ulugbek6,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,55,6
 STU-00967,Asilbek,Yoqubov,,,,,,,Active,asilbek7,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,36,11
-STU-00968,Sunnat,G'ulomov,,,,,,,Active,sunnat5,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,82,8
-STU-00969,Shoxrux,Nasrullayev,,,,,,,Active,shoxrux7,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,82,8
 STU-00970,Muhammadqodir,Shavkatov,,,,,,,Active,muhammadqodir,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,3-MK,7
 STU-00971,Savlatbek,Qahhorov,,,,,,,Active,savlatbek,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,82,8
 STU-00972,Mehmed,Elmurodov,,,,,,,Active,mehmed,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,36-MK,8
@@ -979,7 +867,7 @@ STU-00976,Xusnora,Eldarova,,,,,,,Active,xusnora,012345678,TCH-016,B1 Intro (Temu
 STU-00977,Usmon,Olimov,,,,,,,Active,usmon3,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,3,7
 STU-00978,Muhammadali,Olimov,,,,,,,Active,muhammadali11,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,70,11
 STU-00979,Ozoda,Tugalova,,,,,,,Active,ozoda2,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,inyaz,5
-STU-00980,Dilbar,Sayfiyeva,,,,,,,Active,dilbar4,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,Inyaz,5
+STU-00980,Dilbar,Sayfiyeva,,,,,,,Active,dilbar4,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,Inyaz,5
 STU-00981,Munisa,Axrorova,,,,,,,Active,munisa6,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,54,8
 STU-00982,Ismoil,Akbarov,,,,,,,Active,ismoil2,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,Elita,9
 STU-00983,Yusuf,Tuychiyev,,,,,,,Active,yusuf2,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,Elita,8
@@ -1005,7 +893,6 @@ STU-01002,Muhammadali,Asadov,,+998979362353,,,,,Active,muhammadali12,012345678,T
 STU-01003,Murod,Haqqulov,,+998902854332,,,,,Active,murod,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,154,9
 STU-01004,Abduraxmon,Bahriddinov,,+998972276725,,,,,Active,abduraxmon,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,142,9
 STU-01005,Ozodbek,Olimboyev,,+998935084123,,,,,Active,ozodbek10,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,142,8
-STU-01006,Oybek,Murodillayev,,+998904550447,,,,,Active,oybek5,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,136,10
 STU-01007,Nodir,Ne'matov,,+998976123777,,,,,Active,nodir2,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,97,8
 STU-01008,Zubayr,Furqatov,,+998995260054,,,,,Active,zubayr,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,97,8
 STU-01009,Shahnoza,Fazliddinova,,+998979270511,,,,,Active,shahnoza,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,55,9
@@ -1015,14 +902,12 @@ STU-01012,Aminjon,Tursunov,,+998947190781,,,,,Active,aminjon7,012345678,TCH-016,
 STU-01013,Ziyoviddin,Olimov,,+998508897671,,,,,Active,ziyoviddin2,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,69,8
 STU-01014,Abdushukur,Tursunov,,+998977717163,,,,,Active,abdushukur2,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,69,8
 STU-01015,Abduqahhor,Akramov,,,,,,,Active,abduqahhor,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
-STU-01016,Munisa,Davronova,,,,,,,Active,munisa7,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01017,Ilyos,Matlabov,,,,,,,Active,ilyos2,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01018,Sardor,Rabbimov,,+8,,,,,Active,sardor5,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01019,Aminjon,Eshonqulov,,+8,,,,,Active,aminjon8,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01020,Halimov,Muhammadali,,+10,,,,,Active,halimov,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01021,Parvina,O'rinova,,+9,,,,,Active,parvina5,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01022,Habibulloh,O'rinov,,+6,,,,,Active,habibulloh2,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
-STU-01023,Muslima,Salimova,,,,,,,Active,muslima7,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
 STU-01024,Bahora,Olimboyeva,,+998995084123,,,,,Active,bahora,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,136,8
 STU-01025,Ismir,Subxonov,,+998933391984,,,,,Active,ismir,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,82,8
 STU-01026,G'aybullayev,Sherbek,,+998888943543,,,,,Active,gaybullayev,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,82,8
@@ -1040,16 +925,13 @@ STU-01037,Muhammad,Olimjonov,,,,,,,Active,muhammad4,012345678,TCH-016,IELTS 7.0 
 STU-01038,Kamoliddin,Maxmudov,,+998997771553,,,,,Active,kamoliddin2,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,121,8
 STU-01039,Ahmadbek,Oqilov,,+998915452630,,,,,Active,ahmadbek,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,54,8
 STU-01040,Gulzoda,G'afforova,,+998901954667,,,,,Active,gulzoda2,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
-STU-01041,Begzod,Amriyev,,+998978980625,,,,,Active,begzod5,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,55,9
 STU-01042,Iftixor,Sadriddinov,,+998976133727,,,,,Active,iftixor,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,35,8
 STU-01043,Yasmina,Ashurmurodova,,+998904718201,,,,,Active,yasmina3,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,2,11
 STU-01044,Xislat,Ziyoyev,,+998930682118,,,,,Active,xislat,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,70,10
 STU-01045,Abdujabbor,Karimberdiyev,,+998502009470,,,,,Active,abdujabbor3,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,70,9
 STU-01046,Jahongir,Asadullayev,,+998907009442,,,,,Active,jahongir10,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,6,10
 STU-01047,Habibullo,Murodillayev,,+998904612575,,,,,Active,habibullo2,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,54,7
-STU-01048,Madina,Kamolova,,+998771963770,,,,,Active,madina13,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,54,9
 STU-01049,Nurislom,Normurodov,,+998915467999,,,,,Active,nurislom3,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,102,7
-STU-01050,Madina,Mamatqulova,,+998973961008,,,,,Active,madina14,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,samdu,2
 STU-01051,Malika,Usmonova,,+998889961217,,,,,Active,malika8,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,samdu,1
 STU-01052,Muhammad,Amonov,,+998942814248,,,,,Active,muhammad5,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,54,12
 STU-01053,Zarifa,Axtamova,,+998935929243,,,,,Active,zarifa,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,36,9
@@ -1060,26 +942,8 @@ STU-01057,Muxlisa,Tuyoqboyeva,,,,,,,Active,muxlisa3,012345678,TCH-016,IELTS 7.0 
 STU-01058,Kamron,Abdullayev,,,,,,,Active,kamron2,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
 STU-01059,Marjona,Jabborova,,,,,,,Active,marjona9,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
 STU-01060,Fotima,Ziyodullayeva,,+998947024636,,,,,Active,fotima4,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,81,11
-STU-01061,Firdavs,Hakimov,,+998906554257,,,,,Active,firdavs5,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,3
-STU-01062,Muhammadali,Qobilov,,+998976149596,,,,,Active,muhammadali14,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,2,2
-STU-01063,Hadisa,Mansurova,,+998973981338,,,,,Active,hadisa3,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,7,3
-STU-01064,Dilora,Shahobova,,+998508138095,,,,,Active,dilora2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,7,3
-STU-01065,Mexrangiz,Sardorova,,+998889206550,,,,,Active,mexrangiz7,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,55,3
-STU-01066,Binafsha,Hamroqulova,,+998945993769,,,,,Active,binafsha2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,6
-STU-01067,Mubina,Hamroqulova,,+998901993769,,,,,Active,mubina15,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,4
-STU-01068,Hosila,Rahimberdiyeva,,+998944084646,,,,,Active,hosila2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,6
-STU-01069,Zohidbek,Nurillayev,,,,,,,Active,zohidbek2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
-STU-01070,Dilnura,Rahmatullayeva,,,,,,,Active,dilnura14,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
-STU-01071,Nurmuhammad,rahmatullayev,,+998934746991,,,,,Active,nurmuhammad3,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,156,4
-STU-01072,Amir,Hasanov,,+998931285918,,,,,Active,amir2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,2
-STU-01073,Sarvinoz,A'zamova,,+998979311188,,,,,Active,sarvinoz4,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,3,4
-STU-01074,Nazokat,Zayniyeva,,+998889171545,,,,,Active,nazokat2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,4
-STU-01075,Islom,Latipov,,+998883901892,,,,,Active,islom10,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,3
-STU-01076,Amina,Ruslanova,,+998883980015,,,,,Active,amina9,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,4
-STU-01077,Zebiniso,Axtamova,,+998935929243,,,,,Active,zebiniso2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,4
 STU-01078,Nurislom,Sharopov,,+998939979399,,,,,Active,nurislom4,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,36,4
 STU-01079,Gulrux,O'ktamova,,+998979157471,,,,,Active,gulrux,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,3
-STU-01080,Maftuna,O'ktamova,,,,,,,Active,maftuna2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,136,5
 STU-01081,Ismoil,Normurodov,,+998915467999,,,,,Active,ismoil3,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,102,7
 STU-01082,Fazliddin,Mirzayev,,+998932586558,,,,,Active,fazliddin2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,7,4
 STU-01083,Sardor,Ibragimov,,+998932394888,,,,,Active,sardor6,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,102,8
@@ -1089,12 +953,10 @@ STU-01086,Abdullo,Nuriddinov,,+998902823761,,,,,Active,abdullo2,012345678,TCH-01
 STU-01087,Shoxjaxon,Akbarov,,+998904561646,,,,,Active,shoxjaxon3,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,1,6
 STU-01088,Zahro,Saidqulova,,+998507192026,,,,,Active,zahro,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,36,7
 STU-01089,Mexrinigor,Rustamova,,+998940275848,,,,,Active,mexrinigor,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,36,6
-STU-01090,Senzora,Jamshidova,,+998990862044,,,,,Active,senzora2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,54,7
 STU-01091,Diyora,Burxonova,,+998934048818,,,,,Active,diyora2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,82,7
 STU-01092,Artur,Xusniddinov,,+998944755586,,,,,Active,artur,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,82,7
 STU-01093,Begoyim,Botirova,,+998937741425,,,,,Active,begoyim3,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,34,7
 STU-01094,Karimbek,Xalimov,,+998982732506,,,,,Active,karimbek,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,55,5
-STU-01095,Firdavs,Qurbonov,,+998883614700,,,,,Active,firdavs6,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,82,6
 STU-01096,Mohichehra,Erkinova,,+998939980867,,,,,Active,mohichehra,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,1- kurs,11
 STU-01097,Zuxra,Ahmadova,,+998910070001,,,,,Active,zuxra2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,55,5
 STU-01098,Fotima,Ahmadova,,+998910070001,,,,,Active,fotima5,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,55,5
@@ -1102,12 +964,10 @@ STU-01099,Sarvarbek,Faxriddinov,,+998915323292,,,,,Active,sarvarbek,012345678,TC
 STU-01100,Baxronova,Shaydo,,+998947666655,,,,,Active,baxronova,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,36,6
 STU-01101,Sardor,Salohiddinov,,+998936710084,,,,,Active,sardor7,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,36,6
 STU-01102,Farzona,G'aybullayeva,,+998770660723,,,,,Active,farzona4,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,samdu,4
-STU-01103,Shohakbar,G'ulomov,,+128,,,,,Active,shohakbar2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,10,
 STU-01104,Nafisbek,Shuxratov,,+998973977578,,,,,Active,nafisbek,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,inyaz,3
 STU-01105,Ja'farxon,Salohiddinov,,,,,,,Active,jafarxon,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,,6
 STU-01106,Mo'mina,Asatillayeva,,+998976008918,,,,,Active,momina,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,PIMA,9
 STU-01107,Feruza,Sattorova,,+998880931343,,,,,Active,feruza2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,55,9
-STU-01108,Mo'mina,Asatillayeva,,+998976008918,,,,,Active,momina2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,PIMA,9
 STU-01109,Sherzodbek,Rahmatov,,+998990747849,,,,,Active,sherzodbek2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,54,7
 STU-01110,Sitora,Gʻulomova,,+998771000028,,,,,Active,sitora,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,55,6
 STU-01111,Muhammadali,Baxronov,,+998979223383,,,,,Active,muhammadali15,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,54,7
@@ -1117,15 +977,11 @@ STU-01114,Muhammadsiddiq,Sharofiddinov,,+998988000731,,,,,Active,muhammadsiddiq,
 STU-01115,Muhammadyusuf,Shuxratov,,+998778002919,,,,,Active,muhammadyusuf6,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,54,5
 STU-01116,Abduraxmon,Raqibov,,+998993353339,,,,,Active,abduraxmon2,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,123,5
 STU-01117,Shoxruz,G'ulomov,,+998979188517,,,,,Active,shoxruz2,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,82,6
-STU-01118,Jasurbek,Raxmonov,,+998935272277,,,,,Active,jasurbek4,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,7,5
-STU-01119,Zulfiya,Sardorova,,+998885766550,,,,,Active,zulfiya2,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,55,6
 STU-01120,Maryam,Ismatova,,+998974082373,,,,,Active,maryam,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,1,6
 STU-01121,Farzona,Qobilova,,+998889360804,,,,,Active,farzona5,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,7,4
 STU-01122,Muslima,Doniyorova,,+998880300245,,,,,Active,muslima9,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,55,6
 STU-01123,Dilnavo,Jabborova,,+998971063222,,,,,Active,dilnavo,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,7,5
 STU-01124,Muhammadyusuf,Qahhorov,,+998945309800,,,,,Active,muhammadyusuf7,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,7,7
-STU-01125,Murodjon,Toxirov,,+998904567662,,,,,Active,murodjon6,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,8,7
-STU-01126,Lobar,Burxonova,,+998934048818,,,,,Active,lobar2,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,82,4
 STU-01127,G'ayratjon,Tolibov,,+998979235652,,,,,Active,gayratjon,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,5,
 STU-01128,Farrux,Faxriddinov,,+998937282085,,,,,Active,farrux3,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,34,7
 STU-01129,Ziyoda,Haqqulova,,+998981007525,,,,,Active,ziyoda,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,54,6
@@ -1138,17 +994,14 @@ STU-01135,Afruza,Akbarova,,+998904561646,,,,,Active,afruza2,012345678,TCH-016,A2
 STU-01136,Bexruz,Qobilov,,+998946061351,,,,,Active,bexruz4,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,154,7
 STU-01137,Laziz,Muhtorov,,+998882237733,,,,,Active,laziz5,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,7,7
 STU-01138,Oyshabibi,Jabborova,,+998882237733,,,,,Active,oyshabibi,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,7,7
-STU-01139,Saidkomil,Abdujabborov,,+998995499245,,,,,Active,saidkomil2,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,48,6
-STU-01140,Charos,Xursandova,,+998955303057,,,,,Active,charos5,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,128,10
 STU-01141,Sirojiddin,Maxmayusupov,,+998933368484,,,,,Active,sirojiddin,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,PIMA,7
 STU-01142,Madina,Ma'rupova,,+998979231883,,,,,Active,madina16,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,54,10
-STU-01143,Umar,Isomov,,+998941816655,,,,,Active,umar7,012345678,TCH-016,A2 Plus Morning,TCH-016-A2-PLUS-MORNING,136,10
 STU-01144,Mehriddin,Bahriddinov,,+998333973116,,,,,Active,mehriddin2,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,136,9
 STU-01145,Botirbek,Sultonov,,+998979191777,,,,,Active,botirbek,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,86,8
-STU-01146,Maryam,Hakimova,,+998917086614,,,,,Active,maryam2,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,54,9
+STU-01146,Maryam,Hakimova,,+998917086614,,,,,Active,maryam2,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,54,9
 STU-01147,Jaloliddin,Tilakov,,+998917005070,,,,,Active,jaloliddin,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,8,11
 STU-01148,Shukrona,Azimova,,+998900300221,,,,,Active,shukrona6,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,136,9
-STU-01149,Kumush,Baxodirova,,,,,,,Active,kumush4,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,,
+STU-01149,Kumush,Baxodirova,,,,,,,Active,kumush4,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
 STU-01150,Mavluda,Adasheva,,+998979073556,,,,,Active,mavluda,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,3,9
 STU-01151,Muhammadali,Nuraliyev,,+998991224772,,,,,Active,muhammadali16,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,7,11
 STU-01152,Farangiz,Ahadova,,+998904560015,,,,,Active,farangiz5,012345678,TCH-016,IELTS Introduction,TCH-016-IELTS-INTRODUCTION,121,12
@@ -1184,7 +1037,7 @@ STU-01181,Mehrinso,Olimjonova,,,,,,,Active,mehrinso,012345678,TCH-017,Odiljon us
 STU-01182,Mushtariy,Ahmadova,,,,,,,Active,mushtariy4,012345678,TCH-017,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,,
 STU-01183,Shirin,A'zamova,,,,,,,Active,shirin2,012345678,TCH-017,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,,
 STU-01184,Ibrohim,Abduroziqov,,,,,,,Active,ibrohim5,012345678,TCH-017,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,,
-STU-01185,Bahora,Amriyeva,,,,,,,Active,bahora2,012345678,TCH-017,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,,
+STU-01185,Bahora,Amriyeva,,,,,,,Active,bahora2,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
 STU-01186,Sayhuna,jumaqulova,,,,,,,Active,sayhuna,012345678,TCH-017,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,,
 STU-01187,Mohichehra,Erkinova,,,,,,,Active,mohichehra2,012345678,TCH-017,Odiljon ustoz 16:00,TCH-017-ODILJON-USTOZ-16-00,,
 STU-01188,Behruz,Mamatov,,,,,,,Active,behruz13,012345678,TCH-017,Odiljon ustoz 14:00,TCH-017-ODILJON-USTOZ-14-00,,
@@ -1209,8 +1062,8 @@ STU-01206,Nusratillo,Solehov,,,,,,,Active,nusratillo,012345678,TCH-018,B2 intro,
 STU-01207,Asadbek,Oqilov,,,,,,,Active,asadbek7,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
 STU-01208,Javohir,Abduvohidov,,,,,,,Active,javohir5,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
 STU-01209,Abdulloh,Qiyomov,,,,,,,Active,abdulloh6,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
-STU-01210,Tabassum,Haqnazarova,,,,,,,Active,tabassum,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
-STU-01211,Shodiyona,Rustamova,,,,,,,Active,shodiyona9,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
+STU-01210,Tabassum,Haqnazarova,,,,,,,Active,tabassum,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
+STU-01211,Shodiyona,Rustamova,,,,,,,Active,shodiyona9,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
 STU-01212,Mannopov,Kamron,,,,,,,Active,mannopov,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
 STU-01213,Abdulvosid,Olimov,,,,,,,Active,abdulvosid,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
 STU-01214,Akbar,Samadov,,,,,,,Active,akbar2,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
@@ -1218,7 +1071,6 @@ STU-01215,Farangiz,Samehjonova,,,,,,,Active,farangiz7,012345678,TCH-018,B2 intro
 STU-01216,Behruz,Ismatov,,,,,,,Active,behruz14,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01217,Ilhom,Amriyev,,,,,,,Active,ilhom,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01218,Shahina,Hasanova,,,,,,,Active,shahina3,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
-STU-01219,Janona,Rustamova,,,,,,,Active,janona3,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01220,Behruz,Do'stmurodov,,,,,,,Active,behruz15,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01221,Muhlisbek,Mamatqulov,,,,,,,Active,muhlisbek,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01222,Fayoz,Fazliddinov,,,,,,,Active,fayoz2,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
@@ -1234,47 +1086,44 @@ STU-01231,Ravshan,Boboyorov,,,,,,,Active,ravshan,012345678,TCH-018,B1 intro (Xur
 STU-01232,Ezoza,Jamoliddinova,,,,,,,Active,ezoza5,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01233,Athamjon,Ahmadov,,,,,,,Active,athamjon2,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
 STU-01234,Zulfiya,Zokirova,,,,,,,Active,zulfiya5,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
-STU-01235,Ismatjon,Murodov,,,,,,,Active,ismatjon,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,,
-STU-01236,Mehriddin,Zokirov,,,,,,,Active,mehriddin3,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,,
-STU-01237,Muhammadsodiq,Qiyomov,,,,,,,Active,muhammadsodiq7,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00,,
-STU-01238,Muhammadamin,Bahrullayev,,+998904786363,,,,,Active,muhammadamin5,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,89,7
-STU-01239,Samir,Aslamov,,+998901954202,,,,,Active,samir2,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,136,6
-STU-01240,Ilhom,Marupov,,+998883935002,,,,,Active,ilhom2,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,97,9
-STU-01241,Shahina,Temirova,,+998979321722,,,,,Active,shahina4,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,64,10
-STU-01242,Mashhura,Latipova,,+998879321636,,,,,Active,mashhura3,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,73,10
-STU-01243,Firdavs,Mahmaniyozov,,+998995979046,,,,,Active,firdavs7,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,125,7
-STU-01244,Mehribon,Norqulova,,+998508079039,,,,,Active,mehribon2,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,36,9
-STU-01245,Charos,Farhodova,,+998935097432,,,,,Active,charos7,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,36,9
-STU-01246,Iqboljon,Xudoyqulov,,+998338906565,,,,,Active,iqboljon,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,97,8
-STU-01247,Elnura,Rasulberdiyeva,,+998901597751,,,,,Active,elnura5,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,48,9
-STU-01248,Elbekjon,Rasulberdiyev,,+998901597751,,,,,Active,elbekjon,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,48,5
-STU-01249,G'anijon,Vosiyev,,,,,,,Active,ganijon,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,121,8
-STU-01250,Hojiahmad,Sobirov,,+998979224805,,,,,Active,hojiahmad,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,akademik,10
-STU-01251,Laziza,Ahmadova,,+998904466475,,,,,Active,laziza3,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,7,7
-STU-01252,Maftuna,Hazratqulova,,+998505110799,,,,,Active,maftuna3,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,7,7
-STU-01253,Muzaffar,Abduraupov,,+998979169889,,,,,Active,muzaffar,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,82,8
-STU-01254,Bexruz,Zamonov,,+998888825040,,,,,Active,bexruz5,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,6,9
-STU-01255,Nozli,Murodillayeva,,+998970301337,,,,,Active,nozli,012345678,TCH-018,A2 Flyers,TCH-018-A2-FLYERS,82,9
-STU-01256,Ismatjon,Murodov,,,,,,,Active,ismatjon2,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01257,Mehriddin,Zokirov,,,,,,,Active,mehriddin4,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01258,Muhammadsodiq,Qiyomov,,,,,,,Active,muhammadsodiq8,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01259,Umar,Ashurboyev,,,,,,,Active,umar8,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01260,Inomjon,Rahimboyev,,,,,,,Active,inomjon,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01261,Sarvar,Ahmadov,,,,,,,Active,sarvar6,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01262,Sarvar,Erkinov,,,,,,,Active,sarvar7,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01263,Lazizbek,Homidov,,,,,,,Active,lazizbek5,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01264,Abzalbek,Mahmudov,,,,,,,Active,abzalbek2,012345678,TCH-018,Starter Best 08:00,TCH-018-STARTER-BEST-08-00-2,,
-STU-01265,Akobir,Abdullayev,,,,,,,Active,akobir3,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
+STU-01235,Ismatjon,Murodov,,,,,,,Active,ismatjon,012345678,TCH-018,Starter Best 08:00 (Group A),TCH-018-STARTER-BEST-08-00-A,,
+STU-01236,Mehriddin,Zokirov,,,,,,,Active,mehriddin3,012345678,TCH-018,Starter Best 08:00 (Group A),TCH-018-STARTER-BEST-08-00-A,,
+STU-01237,Muhammadsodiq,Qiyomov,,,,,,,Active,muhammadsodiq7,012345678,TCH-018,Starter Best 08:00 (Group A),TCH-018-STARTER-BEST-08-00-A,,
+STU-01238,Muhammadamin,Bahrullayev,,+998904786363,,,,,Active,muhammadamin5,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,89,7
+STU-01239,Samir,Aslamov,,+998901954202,,,,,Active,samir2,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,136,6
+STU-01240,Ilhom,Marupov,,+998883935002,,,,,Active,ilhom2,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,97,9
+STU-01241,Shahina,Temirova,,+998979321722,,,,,Active,shahina4,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,64,10
+STU-01242,Mashhura,Latipova,,+998879321636,,,,,Active,mashhura3,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,73,10
+STU-01243,Firdavs,Mahmaniyozov,,+998995979046,,,,,Active,firdavs7,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,125,7
+STU-01244,Mehribon,Norqulova,,+998508079039,,,,,Active,mehribon2,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,36,9
+STU-01245,Charos,Farhodova,,+998935097432,,,,,Active,charos7,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,36,9
+STU-01246,Iqboljon,Xudoyqulov,,+998338906565,,,,,Active,iqboljon,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,97,8
+STU-01247,Elnura,Rasulberdiyeva,,+998901597751,,,,,Active,elnura5,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,48,9
+STU-01248,Elbekjon,Rasulberdiyev,,+998901597751,,,,,Active,elbekjon,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,48,5
+STU-01249,G'anijon,Vosiyev,,,,,,,Active,ganijon,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,121,8
+STU-01250,Hojiahmad,Sobirov,,+998979224805,,,,,Active,hojiahmad,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,akademik,10
+STU-01251,Laziza,Ahmadova,,+998904466475,,,,,Active,laziza3,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,7,7
+STU-01252,Maftuna,Hazratqulova,,+998505110799,,,,,Active,maftuna3,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,7,7
+STU-01253,Muzaffar,Abduraupov,,+998979169889,,,,,Active,muzaffar,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,82,8
+STU-01254,Bexruz,Zamonov,,+998888825040,,,,,Active,bexruz5,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,6,9
+STU-01255,Nozli,Murodillayeva,,+998970301337,,,,,Active,nozli,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,82,9
+STU-01256,Ismatjon,Murodov,,,,,,,Active,ismatjon2,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01257,Mehriddin,Zokirov,,,,,,,Active,mehriddin4,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01258,Muhammadsodiq,Qiyomov,,,,,,,Active,muhammadsodiq8,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01259,Umar,Ashurboyev,,,,,,,Active,umar8,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01260,Inomjon,Rahimboyev,,,,,,,Active,inomjon,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01261,Sarvar,Ahmadov,,,,,,,Active,sarvar6,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01262,Sarvar,Erkinov,,,,,,,Active,sarvar7,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01263,Lazizbek,Homidov,,,,,,,Active,lazizbek5,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
+STU-01264,Abzalbek,Mahmudov,,,,,,,Active,abzalbek2,012345678,TCH-018,Starter Best 08:00 (Group B),TCH-018-STARTER-BEST-08-00-B,,
 STU-01266,Saidakbar,Ashurmurodov,,,,,,,Active,saidakbar3,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01267,Odil,Bekmurodov,,,,,,,Active,odil,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01268,Muhammadamin,Mansurov,,,,,,,Active,muhammadamin6,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
-STU-01269,Yashnarbek,Yarashev,,,,,,,Active,yashnarbek2,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01270,Shabbona,Yarasheva,,,,,,,Active,shabbona3,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01271,Samariddin,Zokirov,,,,,,,Active,samariddin,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01272,Muxsinjon,Raufov,,,,,,,Active,muxsinjon,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01273,Abubakir,Fozilov,,,,,,,Active,abubakir12,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01274,Dilmurod,Samadov,,,,,,,Active,dilmurod2,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
-STU-01275,Bahodir,Nazarov,,,,,,,Active,bahodir3,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
 STU-01276,Abdulvosit,Sharipov,,,,,,,Active,abdulvosit2,012345678,TCH-018,Starter teens,TCH-018-STARTER-TEENS,,
 STU-01277,Munirshox,Namozov,,,,,,,Active,munirshox,012345678,TCH-018,Starter teens,TCH-018-STARTER-TEENS,,
 STU-01278,Elyanura,Ziyodullayeva,,,,,,,Active,elyanura,012345678,TCH-018,Starter teens,TCH-018-STARTER-TEENS,,
@@ -1313,54 +1162,54 @@ STU-01310,Abubakr,Ziyodullayev,,,,,,,Active,abubakr6,012345678,TCH-018,Grammatik
 STU-01311,Murodbek,Raximov,,,,,,,Active,murodbek2,012345678,TCH-018,Grammatika,TCH-018-GRAMMATIKA,,
 STU-01312,Murod,Sattorov,,,,,,,Active,murod2,012345678,TCH-018,Grammatika,TCH-018-GRAMMATIKA,,
 STU-01313,Nigina,Bahodirova,,,,,,,Active,nigina4,012345678,TCH-018,Grammatika,TCH-018-GRAMMATIKA,,
-STU-01314,Sabina,Ne'matova,,,,,,,Active,sabina3,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01315,Xayrullo,Axadov,,,,,,,Active,xayrullo3,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01316,Abdulaziz,Abduraupov,,,,,,,Active,abdulaziz5,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01317,Muslimbek,G'aniyev,,,,,,,Active,muslimbek3,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01318,Nusratillo,Solehov,,,,,,,Active,nusratillo2,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01319,Abdurahim,Qayumov,,,,,,,Active,abdurahim2,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01320,Kamron,Shuhratov,,,,,,,Active,kamron3,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01321,Asadbek,Oqilov,,,,,,,Active,asadbek8,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01322,Javohir,Abduvohidov,,,,,,,Active,javohir6,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01323,Abdulloh,Qiyomov,,,,,,,Active,abdulloh7,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01324,Daler,Mahmudov,,,,,,,Active,daler4,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01325,Bexruz,Fayziyev,,,,,,,Active,bexruz6,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01326,Tabassum,Haqnazarova,,,,,,,Active,tabassum2,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01327,Robiya,Yazdonboyeva,,,,,,,Active,robiya8,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01328,Ikrom,O'lmasov,,,,,,,Active,ikrom4,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01329,Javohir,O'lmasov,,,,,,,Active,javohir7,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01330,Zohidbek,Tursunov,,,,,,,Active,zohidbek3,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01331,Shodiyona,Rustamova,,,,,,,Active,shodiyona10,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01332,Ahmad,Akbarov,,,,,,,Active,ahmad2,012345678,TCH-018,B1 Plus,TCH-018-B1-PLUS,,
-STU-01333,Nuriddin,Ibodullayev,,,,,,,Active,nuriddin3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01334,Alisher,Nematov,,,,,,,Active,alisher9,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01335,Muhammadamin,Nematov,,,,,,,Active,muhammadamin7,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01336,Ulug'bek,Sharopov,,,,,,,Active,ulugbek7,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01337,Sardor,Fayzullayev,,,,,,,Active,sardor8,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01338,Doniyor,Sharopov,,,,,,,Active,doniyor6,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01339,Mehribon,Ro'ziyeva,,,,,,,Active,mehribon4,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01340,Arofat,Faxriddinova,,,,,,,Active,arofat,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01341,Ahmad,Raxmonqulov,,,,,,,Active,ahmad3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01342,Sherbek,Jumaqulov,,,,,,,Active,sherbek3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01343,Sarvar,Ahmadov,,,,,,,Active,sarvar8,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01344,Sarvarbek,Ro'ziyev,,,,,,,Active,sarvarbek2,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01345,Sarvar,Erkinov,,,,,,,Active,sarvar9,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01346,Suhrob,Bahriddinov,,,,,,,Active,suhrob3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01347,Shabnam,Fayzullayeva,,,,,,,Active,shabnam4,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01348,Vorisbek,Homidov,,,,,,,Active,vorisbek,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01349,Lazizbek,Homidov,,,,,,,Active,lazizbek6,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01350,Matniyoz,Homidov,,,,,,,Active,matniyoz,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01351,Hasan,Ergashev,,,,,,,Active,hasan4,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01352,Ziyoviddin,Homidov,,,,,,,Active,ziyoviddin3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01353,Muhammad,Mahmudov,,,,,,,Active,muhammad7,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01354,Shahina,Arsinboyeva,,,,,,,Active,shahina5,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01355,Abubakir,Uchqunov,,,,,,,Active,abubakir13,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01356,Abzalbek,Mahmudov,,,,,,,Active,abzalbek3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01357,Baratov,Elyor,,,,,,,Active,baratov,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01358,Asilbek,Alimardonov,,,,,,,Active,asilbek11,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW,,
-STU-01359,Amir,,,,,,,,Active,amir3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW-2,,
-STU-01360,Mehroj,,,,,,,,Active,mehroj3,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW-2,,
-STU-01361,Sardor,Normurodov,,,,,,,Active,sardor9,012345678,TCH-018,Starters New,TCH-018-STARTERS-NEW-2,,
+STU-01314,Sabina,Ne'matova,,,,,,,Active,sabina3,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01315,Xayrullo,Axadov,,,,,,,Active,xayrullo3,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01316,Abdulaziz,Abduraupov,,,,,,,Active,abdulaziz5,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01317,Muslimbek,G'aniyev,,,,,,,Active,muslimbek3,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01318,Nusratillo,Solehov,,,,,,,Active,nusratillo2,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01319,Abdurahim,Qayumov,,,,,,,Active,abdurahim2,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01320,Kamron,Shuhratov,,,,,,,Active,kamron3,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01321,Asadbek,Oqilov,,,,,,,Active,asadbek8,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01322,Javohir,Abduvohidov,,,,,,,Active,javohir6,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01323,Abdulloh,Qiyomov,,,,,,,Active,abdulloh7,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01324,Daler,Mahmudov,,,,,,,Active,daler4,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01325,Bexruz,Fayziyev,,,,,,,Active,bexruz6,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01326,Tabassum,Haqnazarova,,,,,,,Active,tabassum2,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01327,Robiya,Yazdonboyeva,,,,,,,Active,robiya8,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01328,Ikrom,O'lmasov,,,,,,,Active,ikrom4,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01329,Javohir,O'lmasov,,,,,,,Active,javohir7,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01330,Zohidbek,Tursunov,,,,,,,Active,zohidbek3,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01331,Shodiyona,Rustamova,,,,,,,Active,shodiyona10,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01332,Ahmad,Akbarov,,,,,,,Active,ahmad2,012345678,TCH-018,B1 Plus (Xurshid),TCH-018-B1-PLUS-XURSHID,,
+STU-01333,Nuriddin,Ibodullayev,,,,,,,Active,nuriddin3,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01334,Alisher,Nematov,,,,,,,Active,alisher9,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01335,Muhammadamin,Nematov,,,,,,,Active,muhammadamin7,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01336,Ulug'bek,Sharopov,,,,,,,Active,ulugbek7,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01337,Sardor,Fayzullayev,,,,,,,Active,sardor8,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01338,Doniyor,Sharopov,,,,,,,Active,doniyor6,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01339,Mehribon,Ro'ziyeva,,,,,,,Active,mehribon4,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01340,Arofat,Faxriddinova,,,,,,,Active,arofat,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01341,Ahmad,Raxmonqulov,,,,,,,Active,ahmad3,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01342,Sherbek,Jumaqulov,,,,,,,Active,sherbek3,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01343,Sarvar,Ahmadov,,,,,,,Active,sarvar8,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01344,Sarvarbek,Ro'ziyev,,,,,,,Active,sarvarbek2,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01345,Sarvar,Erkinov,,,,,,,Active,sarvar9,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01346,Suhrob,Bahriddinov,,,,,,,Active,suhrob3,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01347,Shabnam,Fayzullayeva,,,,,,,Active,shabnam4,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01348,Vorisbek,Homidov,,,,,,,Active,vorisbek,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01349,Lazizbek,Homidov,,,,,,,Active,lazizbek6,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01350,Matniyoz,Homidov,,,,,,,Active,matniyoz,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01351,Hasan,Ergashev,,,,,,,Active,hasan4,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01352,Ziyoviddin,Homidov,,,,,,,Active,ziyoviddin3,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01353,Muhammad,Mahmudov,,,,,,,Active,muhammad7,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01354,Shahina,Arsinboyeva,,,,,,,Active,shahina5,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01355,Abubakir,Uchqunov,,,,,,,Active,abubakir13,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01356,Abzalbek,Mahmudov,,,,,,,Active,abzalbek3,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01357,Baratov,Elyor,,,,,,,Active,baratov,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01358,Asilbek,Alimardonov,,,,,,,Active,asilbek11,012345678,TCH-018,Starters New (Tue/Thu),TCH-018-STARTERS-NEW-TT,,
+STU-01359,Amir,,,,,,,,Active,amir3,012345678,TCH-018,Starters New (Mon/Wed/Fri),TCH-018-STARTERS-NEW-MWF,,
+STU-01360,Mehroj,,,,,,,,Active,mehroj3,012345678,TCH-018,Starters New (Mon/Wed/Fri),TCH-018-STARTERS-NEW-MWF,,
+STU-01361,Sardor,Normurodov,,,,,,,Active,sardor9,012345678,TCH-018,Starters New (Mon/Wed/Fri),TCH-018-STARTERS-NEW-MWF,,
 STU-01362,Ruxshona,Jahongirova,,+998930026042,,,,,Active,ruxshona9,012345678,TCH-019,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,2kurs,student
 STU-01363,Ezoza,Raximova,,+998979284842,,,,,Active,ezoza6,012345678,TCH-019,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,86,7
 STU-01364,Intizor,Rajabova,,+998957771586,,,,,Active,intizor4,012345678,TCH-019,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,53,7
@@ -1382,7 +1231,6 @@ STU-01379,Marjona,Zubaydullayeva,,+998944350217,,,,,Active,marjona10,012345678,T
 STU-01380,Muhammadsodiq,Zohirov,,+998889387010,,,,,Active,muhammadsodiq9,012345678,TCH-019,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,136,6
 STU-01381,Muxibullo,Abdug'afforov,,,,,,,Active,muxibullo,012345678,TCH-019,Flyers (Islomjon ustoz),TCH-019-FLYERS-ISLOMJON-USTOZ,,
 STU-01382,Alisher,Sharofboyev,,+998901021293,,,,,Active,alisher10,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,2,8
-STU-01383,Og'abek,Jumayev,,+998502212867,,,,,Active,ogabek6,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,137,11
 STU-01384,Jahongir,Ismatov,,+998993403612,,,,,Active,jahongir11,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,56,8
 STU-01385,Abdumubin,Matlabov,,+998907426788,,,,,Active,abdumubin,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,136,5
 STU-01386,Asadbek,Mahmudov,,+998975758505,,,,,Active,asadbek9,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,156,8
@@ -1396,15 +1244,8 @@ STU-01393,Elshodbek,Shaxriyorov,,,,,,,Active,elshodbek,012345678,TCH-019,A2 Plus
 STU-01394,Salohiddin,Shokirov,,,,,,,Active,salohiddin3,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,,
 STU-01395,Muhammadyusuf,Hamdamov,,,,,,,Active,muhammadyusuf8,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,,
 STU-01396,Fayro'z,Tojimurodov,,,,,,,Active,fayroz,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,,
-STU-01397,Shahnoza,Bo'ronova,,,,,,,Active,shahnoza2,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,879617404,75
-STU-01398,Osiyobegim,Berdiyeva,,,,,,,Active,osiyobegim2,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,873310602,0
-STU-01399,Shavqiyabegim,Hakimmbekova,,,,,,,Active,shavqiyabegim,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,73310602,38
-STU-01400,Nazarbek,Turonov,,+998995422396,,,,,Active,nazarbek,012345678,TCH-019,A2 Plus (Islomjon ustoz),TCH-019-A2-PLUS-ISLOMJON-USTOZ,71,7
 STU-01401,Abdulloh,Mamamurodov,,+998991664604,,,,,Active,abdulloh9,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,7,7
 STU-01402,Sanjar,Rajabov,,+998995551831,,,,,Active,sanjar2,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,53,9
-STU-01403,Subhiddin,Sharofddinov,,+998330540021,,,,,Active,subhiddin,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,2,7
-STU-01404,Amin,Xursandov,,+998904581770,,,,,Active,amin3,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,0,0
-STU-01405,Mexroj,Azimov,,+998904579044,,,,,Active,mexroj,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,0,0
 STU-01406,Saidhon,Shukrullayev,,+998992592628,,,,,Active,saidhon,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,136,6
 STU-01407,Shoxjahon,Qurbonov,,+998889172426,,,,,Active,shoxjahon2,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,6,7
 STU-01408,Quddus,Hamdamov,,+998889110689,,,,,Active,quddus,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,11,9
@@ -1419,7 +1260,6 @@ STU-01416,Azamjon,Qo'chqorov,,,,,,,Active,azamjon2,012345678,TCH-019,Fun For mov
 STU-01417,Abduhamid,O'ktamov,,,,,,,Active,abduhamid,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,,
 STU-01418,Boburjon,Ilhomov,,,,,,,Active,boburjon,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,,
 STU-01419,Durbek,Fayzullayev,,,,,,,Active,durbek,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,,
-STU-01420,Shahzoda,Mirzayeva,,,,,,,Active,shahzoda3,012345678,TCH-019,Fun For movers (Islomjon ustoz),TCH-019-FUN-FOR-MOVERS-ISLOMJON-USTOZ,,
 STU-01421,Azizbek,Izzatullayev,,+998979240332,,,,,Active,azizbek14,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,54,5
 STU-01422,Zinnurbek,Faxriddinov,,+998975781252,,,,,Active,zinnurbek,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,89,5
 STU-01423,Muhammadzohid,Ismatullayev,,+998991507744,,,,,Active,muhammadzohid,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,6,3
@@ -1438,16 +1278,11 @@ STU-01435,Asilbek,Hamroqulov,,+998976123235,,,,,Active,asilbek12,012345678,TCH-0
 STU-01436,Taxmina,O'roqova,,+998915311499,,,,,Active,taxmina,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,5,55
 STU-01437,Mubina,Bahrillayeva,,+998990251335,,,,,Active,mubina16,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,6,55
 STU-01438,Zahro,Xalilova,,+998889332240,,,,,Active,zahro2,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,7,82
-STU-01439,Fruzbek,Shavkatov,,+998979621920,,,,,Active,fruzbek,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,4,121
 STU-01440,Ayubbek,Botirov,,,,,,,Active,ayubbek,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,,
 STU-01441,Asilbek,Namozov,,+998904495992,,,,,Active,asilbek13,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,156,4
-STU-01442,Marjona,JAbborova,,+998884401314,,,,,Active,marjona11,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,,
 STU-01443,Alisher,Raupov,,+998904489755,,,,,Active,alisher11,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,yoq,Bitirgan
 STU-01444,Humoyun,Raupov,,+998902289755,,,,,Active,humoyun4,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,yoq,Bitirgan
 STU-01445,Abubakir,Raximov,,+998915249399,,,,,Active,abubakir14,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,86,7
-STU-01446,Begali,Eshpo'latov,,+998990893123,,,,,Active,begali,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,Yoq,Bitirgan
-STU-01447,Azizbek,Burxonov,,+998917080122,,,,,Active,azizbek15,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,Yoq,Bitirgan
-STU-01448,Saidmuhammad,Otkirov,,+998884401314,,,,,Active,saidmuhammad,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,kasb xunar,2
 STU-01449,Yusuf,RAhimov,,,,,,,Active,yusuf4,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,,
 STU-01450,Yasmina,Yardonova,,+998933535125,,,,,Active,yasmina4,012345678,TCH-020,Matematika 3 16:00 (1),TCH-020-MATEMATIKA-3-16-00,137,3
 STU-01451,Javohir,Bo'riyev,,,,,,,Active,javohir8,012345678,TCH-020,Matematika 3 16:00 (1),TCH-020-MATEMATIKA-3-16-00,,
@@ -1489,15 +1324,15 @@ STU-01486,Imron,Raxmatullayev,,,,,,,Active,imron,012345678,TCH-020,Matematika 3 
 STU-01487,Behruz,Yusupov,,,,,,,Active,behruz16,012345678,TCH-020,Matematika 3 16:00 (2),TCH-020-MATEMATIKA-3-16-00-2,,
 STU-01488,Yorqin,Shukrullayev,,+998500761603,,,,,Active,yorqin,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,97,2
 STU-01489,Shukrona,Rashidova,,+998939977270,,,,,Active,shukrona7,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,54,2
-STU-01490,Muhammadsodiq,Mahmudov,,+998979366633,,,,,Active,muhammadsodiq11,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,55,1
-STU-01491,Samir,Farmonov,,+998915263514,,,,,Active,samir3,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,48,5
+STU-01490,Muhammadsodiq,Mahmudov,,+998979366633,,,,,Active,muhammadsodiq11,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,55,1
+STU-01491,Samir,Farmonov,,+998915263514,,,,,Active,samir3,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,48,5
 STU-01492,Shahrambek,Farmonov,,+998990280115,,,,,Active,shahrambek,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,48,5
-STU-01493,Miraziz,SHukrullayev,,+998902769722,,,,,Active,miraziz,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,54,1
-STU-01494,Muhammadali,Nematillayev,,+998978954340,,,,,Active,muhammadali22,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,86,2
+STU-01493,Miraziz,SHukrullayev,,+998902769722,,,,,Active,miraziz,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,54,1
+STU-01494,Muhammadali,Nematillayev,,+998978954340,,,,,Active,muhammadali22,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,86,2
 STU-01495,Mehrinso,Nematillayeva,,+998978954340,,,,,Active,mehrinso2,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,86,3
 STU-01496,Azizbek,Faxriddinov,,+998975751252,,,,,Active,azizbek16,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,89,3
 STU-01497,Hojiahmad,Hasanov,,+998997737262,,,,,Active,hojiahmad2,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,121,3
-STU-01498,Aziz,Sodiqov,,+998910385206,,,,,Active,aziz9,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,54,1
+STU-01498,Aziz,Sodiqov,,+998910385206,,,,,Active,aziz9,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,54,1
 STU-01499,Abdukarim,Aslamov,,+998889148085,,,,,Active,abdukarim2,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,89,3
 STU-01500,Nazarjon,Samehov,,,,,,,Active,nazarjon,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,,
 STU-01501,Muhammadali,Rahimov,,,,,,,Active,muhammadali23,012345678,TCH-021,Kids Shamsiya,TCH-021-KIDS-SHAMSIYA,,
@@ -1510,12 +1345,11 @@ STU-01507,Islom,Baxtiyorov,,+998910337079,,,,,Active,islom13,012345678,TCH-021,K
 STU-01508,Umar,Fazliddinov,,+998904561225,,,,,Active,umar9,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,144,6
 STU-01509,Abubakir,Soliyev,,+998962651715,,,,,Active,abubakir17,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,7,6
 STU-01510,Suhrob,Ravshanov,,+998979291151,,,,,Active,suhrob4,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,7,4
-STU-01511,Sabina,Abdurahmonova,,+998992130561,,,,,Active,sabina4,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,121,3
 STU-01512,Elmurod,Orziyev,,,,,,,Active,elmurod,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,,
 STU-01513,Umar,Sadriddinov,,+998979286907,,,,,Active,umar10,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,89,3
 STU-01514,Muhammadali,Oybekov,,,,,,,Active,muhammadali24,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,,
 STU-01515,Mustafo,Jamshidov,,+998944784444,,,,,Active,mustafo2,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,54,2
-STU-01516,Nuriddin,Husenov,,+998882903922,,,,,Active,nuriddin4,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,86,3
+STU-01516,Nuriddin,Husenov,,+998882903922,,,,,Active,nuriddin4,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,86,3
 STU-01517,umar,Shavkatov,,+998979228303,,,,,Active,umar11,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,136,5
 STU-01518,Feruz,A'zamjonov,,,,,,,Active,feruz3,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,,
 STU-01519,Alisher,Ablayorov,,+998970304643,,,,,Active,alisher13,012345678,TCH-020,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,55,2
@@ -1534,3 +1368,185 @@ STU-01531,Ulug'bek,Shavkatov,,,,,,,Active,ulugbek8,012345678,TCH-020,Matematika 
 STU-01532,Ayubbek,Botirov,,+998590776212,,,,,Active,ayubbek3,012345678,TCH-020,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,55,3
 STU-01533,Ahmadjon,Shodiqulov,,,,,,,Active,ahmadjon5,012345678,TCH-020,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,,
 STU-01534,Hadyatillo,Habibullayev,,,,,,,Active,hadyatillo2,012345678,TCH-020,Matematika 3 16:00 (3),TCH-020-MATEMATIKA-3-16-00-3,,
+STU-01589,Shohjahon,Ne'matov,,,,,,,Active,shohjahon7,012345678,TCH-008,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,,
+STU-01590,Subhiya,Jamshidova,,,,,,,Active,subhiya,012345678,TCH-008,Pirizident maktab Ramziddin ustoz,TCH-008-PIRIZIDENT-MAKTAB-RAMZIDDIN-USTOZ,,
+STU-01591,Muhammadamin,Rahmatov,,,,,,,Active,muhammadamin9,012345678,TCH-009,Kids Zubayda 10:00,TCH-009-KIDS-ZUBAYDA-10-00,,
+STU-01592,Muhammad,Soliyev,,,,,,,Active,muhammad8,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-01593,Xushnud,Aslamov,,,,,,,Active,xushnud,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
+STU-01594,Muhammadsodiq,Qurbonov,,,,,,,Active,muhammadsodiq12,012345678,TCH-018,B1 intro (Xurshid),TCH-018-B1-INTRO,,
+STU-01595,Ramazon,Najmiyev,,,,,,,Active,ramazon2,012345678,TCH-018,A2 Flyers (Xurshid),TCH-018-A2-FLYERS-XURSHID,,
+STU-01596,Shukrona,G'ulomova,,,,,,,Active,shukrona8,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,,
+STU-01597,Og'abek,Olimov,,,,,,,Active,ogabek7,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
+STU-01598,Muhammad,Melisov,,,,,,,Active,muhammad9,012345678,TCH-016,B2 Multilevel September,TCH-016-B2-MULTILEVEL-SEPTEMBER,,
+STU-01599,Robiya,Salimova,,,,,,,Active,robiya9,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
+STU-01600,Nigina,Olimova,,,,,,,Active,nigina7,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
+STU-01601,Muxlisa,Axmatova,,,,,,,Active,muxlisa4,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
+STU-01602,Bobirbek,Aslamov,,,,,,,Active,bobirbek,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
+STU-01603,Imomali,Raxmonberdiyev,,,,,,,Active,imomali2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01604,Yosinbek,Mahmudov,,,,,,,Active,yosinbek,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,,
+STU-01605,Islom,Sharopov,,,,,,,Active,islom14,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,,
+STU-01606,Davlatshoh,,,,,,,,Active,davlatshoh,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,,
+STU-01607,Temurbek,Himmatrqulov,,,,,,,Active,temurbek,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,,
+STU-01608,Aziza,Shukrullayeva,,,,,,,Active,aziza11,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
+STU-01609,Dilnura,Abrorova,,,,,,,Active,dilnura16,012345678,TCH-016,Special Grammar B1 Plus,TCH-016-SPECIAL-GRAMMAR-B1-PLUS,,
+STU-01610,Feruza,Shukrulloyeva,,,,,,,Active,feruza3,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
+STU-01611,Najmiddin,Kamoliddinov,,,,,,,Active,najmiddin2,012345678,TCH-016,IELTS 7.0 Premier,TCH-016-IELTS-7-0-PREMIER,,
+STU-01612,Hushnudbek,O'zbekov,,,,,,,Active,hushnudbek2,012345678,TCH-016,B1 plus Morning,TCH-016-B1-PLUS-MORNING,,
+STU-01613,Muslima,Sheraliyeva,,,,,,,Active,muslima10,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01614,Mexrangiz,Nabiyeva,,,,,,,Active,mexrangiz8,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01615,Xislat,Ulashev,,,,,,,Active,xislat2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01616,Ayub,Burxonov,,,,,,,Active,ayub,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01617,Ja'farxon,Olimov,,,,,,,Active,jafarxon3,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01618,Shaxram,Farmonov,,,,,,,Active,shaxram,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01619,Mohinso,Nematillayeva,,,,,,,Active,mohinso,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01620,Diyorbek,Matlabov,,,,,,,Active,diyorbek4,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01621,Muhammad,Shamsiyev,,,,,,,Active,muhammad10,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01622,Abdumalik,Shamsiyev,,,,,,,Active,abdumalik2,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01623,Muhammadumar,Azamov,,,,,,,Active,muhammadumar,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,,
+STU-01624,Jo'rabek,Sharopov,,,,,,,Active,jorabek2,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,,
+STU-01625,Nurafshon,Sharopova,,,,,,,Active,nurafshon,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,,
+STU-01626,Dilnura,Gaybullayeva,,,,,,,Active,dilnura17,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,,
+STU-01627,Olimjon,Shuxratov,,,,,,,Active,olimjon2,012345678,TCH-015,A2 Plus morning 9:30,TCH-015-A2-PLUS-MORNING-9-30,,
+STU-01628,Billura,Uktamova,,,,,,,Active,billura2,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01629,Amin,Xursandov,,+998904581770,,,,,Active,amin4,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,0,0
+STU-01630,Mexroj,Azimov,,+998904579044,,,,,Active,mexroj2,012345678,TCH-019,Individual (Islomjon ustoz),TCH-019-INDIVIDUAL-ISLOMJON-USTOZ,0,0
+STU-01631,Feruzbek,Shavkatov,,+998979621920,,,,,Active,feruzbek,012345678,TCH-019,Starter (Islomjon ustoz),TCH-019-STARTER-ISLOMJON-USTOZ,4,121
+STU-01632,Muhammadiso,Aminov,,,,,,,Active,muhammadiso2,012345678,TCH-019,starter (Afternoon),TCH-019-STARTER-AFTERNOON-ISLOMJON-USTOZ,,
+STU-01633,Amirun,Uzoqov,,,,,,,Active,amirun2,012345678,TCH-019,starter (Afternoon),TCH-019-STARTER-AFTERNOON-ISLOMJON-USTOZ,,
+STU-01634,Amirbek,Abdiyev,,,,,,,Active,amirbek3,012345678,TCH-019,starter (Afternoon),TCH-019-STARTER-AFTERNOON-ISLOMJON-USTOZ,,
+STU-01635,Muhammadyusuf,Sharifov,,,,,,,Active,muhammadyusuf10,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01636,Hamrobek,Karimov,,,,,,,Active,hamrobek,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01637,Anora,Abdug'aniyeva,,,,,,,Active,anora,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01638,Sabina,Abdug'aniyeva,,,,,,,Active,sabina5,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01639,Mubina,Ibodullayeva,,,,,,,Active,mubina18,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01640,Bahriddin,Rustamov,,,,,,,Active,bahriddin2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01641,Hasan,Bahronov,,,,,,,Active,hasan5,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01642,Malikabonu,Diyorova,,,,,,,Active,malikabonu2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01643,Begzodjon,Mahmudjonov,,,,,,,Active,begzodjon,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01644,Nilufar,Abdug'aniyeva,,,,,,,Active,nilufar6,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01645,Aziz,Xoliddinov,,,,,,,Active,aziz10,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01646,Hikmatillo,Tolipov,,,,,,,Active,hikmatillo3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01647,Hamidillo,To'ramurodov,,,,,,,Active,hamidillo,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01648,Gulsumoy,Raimjonova,,,,,,,Active,gulsumoy,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01649,Ismoil,Umarjonov,,,,,,,Active,ismoil4,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01650,Joziba,Abdug'ofurova,,,,,,,Active,joziba3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01651,Imron,Rahmatullayev,,,,,,,Active,imron2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01652,Amir,Asomov,,,,,,,Active,amir4,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01653,Muhammadyusuf,Samiyev,,,,,,,Active,muhammadyusuf11,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01654,Abdulvosid,Bahronov,,,,,,,Active,abdulvosid2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01655,Islomjon,Salimov,,,,,,,Active,islomjon2,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01656,Muhammadamin,Olimov,,,,,,,Active,muhammadamin8,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01657,omatbek,Uktamov,,,,,,,Active,omatbek,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01658,Sheroz,Mahmarajabov,,,,,,,Active,sheroz,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01659,Muhammadamin,Abdusamodov,,,,,,,Active,muhammadamin10,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01660,Jafarxon,Salohiddinov,,,,,,,Active,jafarxon4,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01661,Lazizbek,Obloberdiyev,,,,,,,Active,lazizbek7,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01662,MUhammadsodiq,Soliyev,,,,,,,Active,muhammadsodiq13,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01663,Davlatbek,Mo'minqulov,,,,,,,Active,davlatbek,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01664,Gulnora,Imomqulova,,,,,,,Active,gulnora4,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01665,Sunnat,Begmurodov,,,,,,,Active,sunnat6,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01666,Farangiz,Qobilova,,,,,,,Active,farangiz8,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01667,Abubakir,Rahmonov,,,,,,,Active,abubakir19,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01668,Islom,Olimov,,,,,,,Active,islom15,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01669,Gulnora,Hamdamova,,,,,,,Active,gulnora5,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01670,Abdurauf,Mannobov,,,,,,,Active,abdurauf4,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01671,Shoxjahon,Xolmahmadov,,,,,,,Active,shoxjahon3,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01672,Nafisa,Hasanova,,,,,,,Active,nafisa4,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01673,Xislatbek,Ziyoyev,,,,,,,Active,xislatbek8,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01674,Kumush,Bahodirova,,,,,,,Active,kumush5,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01675,Marjona,Xusanova,,,,,,,Active,marjona12,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01676,Abdulloh,Isoqulov,,,,,,,Active,abdulloh10,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01677,Muxlisa,Xudoyberdiyeva,,,,,,,Active,muxlisa5,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01678,Akbarali,Abdujalilov,,,,,,,Active,akbarali,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01679,Shahnoza,Azizova,,,,,,,Active,shahnoza3,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01680,Humoyun,Qodirov,,,,,,,Active,humoyun7,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01681,Mehribon,Berdinazarova,,,,,,,Active,mehribon5,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01682,Alibek,Sattorov,,,,,,,Active,alibek4,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01683,Mushtariy,Sattorova,,,,,,,Active,mushtariy5,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01684,Ruhshona,Tugalboyeva,,,,,,,Active,ruhshona,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01685,Elnurbek,Oynazarov,,,,,,,Active,elnurbek,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01686,hojiakbar,Haqberdiy,,,,,,,Active,hojiakbar10,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01687,Dilso'z,Abdurashidova,,,,,,,Active,dilsoz,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01688,Farzodbek,Imomov,,,,,,,Active,farzodbek,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01689,Husan,Xursandmurodov,,,,,,,Active,husan4,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01690,Mexribon,Aliyeva,,,,,,,Active,mexribon2,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01691,Mexribon,Ashrapova,,,,,,,Active,mexribon3,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01692,Muxxaro,Egamberdiyeva,,,,,,,Active,muxxaro,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01693,Jayrona,Mardonova,,,,,,,Active,jayrona,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01694,Dinara,Mardonova,,,,,,,Active,dinara2,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01695,Amina,Mardonova,,,,,,,Active,amina10,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01696,Zavqiddin,Erkinov,,,,,,,Active,zavqiddin,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01697,Hasan,Xursandmurodov,,,,,,,Active,hasan6,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01698,Abdufattoh,Nematov,,,,,,,Active,abdufattoh,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01699,Jahongir,Muhammadiyev,,,,,,,Active,jahongir12,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01700,Muhammadali,Mahmadnosirov,,,,,,,Active,muhammadali26,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01701,Ozodbek,Roziqberdiyev,,,,,,,Active,ozodbek12,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01702,Mamura,Zoyodullayeva,,,,,,,Active,mamura2,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01703,Muslima,Nurillayeva,,,,,,,Active,muslima11,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01704,Humoyun,Umurov,,,,,,,Active,humoyun8,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01705,Sabina,Namozova,,,,,,,Active,sabina6,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01706,Ruxshona,Ruziqova,,,,,,,Active,ruxshona10,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01707,Zinatoy,Oynazarova,,,,,,,Active,zinatoy,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01708,Sitora,Raimberdiyeva,,,,,,,Active,sitora2,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01709,Dilorom,Ahadova,,,,,,,Active,dilorom,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01710,Muxlisa,Shokirova,,,,,,,Active,muxlisa6,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01711,Soliha,Saidova,,,,,,,Active,soliha6,012345678,TCH-010,Arab tili 1,TCH-010-ARAB-TILI-1,,
+STU-01712,Muhammadali,Isomov,,,,,,,Active,muhammadali27,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO,,
+STU-01713,Islombek,Raxmonov,,,,,,,Active,islombek3,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
+STU-01714,Mohinur,Asliddinova,,,,,,,Active,mohinur3,012345678,TCH-007,Kids Laylo,TCH-007-KIDS-LAYLO-2,,
+STU-01715,Asadbek,Ashrapov,,,,,,,Active,asadbek10,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ,,
+STU-01716,Zaynab,Yusupova,,,,,,,Active,zaynab3,012345678,TCH-003,Kids Farangiz,TCH-003-KIDS-FARANGIZ-2,,
+STU-01717,Ruhsora,Qahramonova,,,,,,,Active,ruhsora,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01718,Gulchehra,Amriddinova,,,,,,,Active,gulchehra2,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01719,Behruz,Tursunqulov,,,,,,,Active,behruz17,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01720,Abubakir,Komilov,,,,,,,Active,abubakir20,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01721,Madina,Murtazayeva,,,,,,,Active,madina18,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01722,Mexrangiz,Murtazayeva,,,,,,,Active,mexrangiz9,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01723,shukrullo,Isroilov,,,,,,,Active,shukrullo3,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01724,Akbar,Muhammadiyev,,,,,,,Active,akbar4,012345678,TCH-014,Rus tili Afternoon Shoxsanam (Tue/Thu/Sat),TCH-014-RUS-TILI-AFTERNOON-SHOXSANAM-TTS,,
+STU-01725,Muhammadzufar,Baratov,,,,,,,Active,muhammadzufar,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01726,Zuxriddin,Ahmadov,,,,,,,Active,zuxriddin,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01727,Muhammadiso,Musurmonov,,,,,,,Active,muhammadiso3,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01728,Nafisa,Abdullayeva,,,,,,,Active,nafisa5,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01729,Shukrona,Salimova,,,,,,,Active,shukrona9,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01730,Jaloliddin,Soatov,,,,,,,Active,jaloliddin2,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01731,Jafar,Salimov,,,,,,,Active,jafar2,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01732,Elbek,Ilhomov,,,,,,,Active,elbek3,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01733,Elnur,Azamov,,,,,,,Active,elnur4,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01734,Hojiakbar,Safaraliyev,,,,,,,Active,hojiakbar11,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01735,Muslima,Ulasheva,,,,,,,Active,muslima12,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01736,Umar,Ulashev,,,,,,,Active,umar12,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01737,Muqaddas,Ulashev,,,,,,,Active,muqaddas5,012345678,TCH-021,Kids English morning,TCH-021-KIDS-ENGLISH-MORNING,,
+STU-01738,Tabassum,Haqnazarova,,,,,,,Active,tabassum3,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
+STU-01739,Shodiyona,Rustamova,,,,,,,Active,shodiyona4,012345678,TCH-018,B2 intro,TCH-018-B2-INTRO,,
+STU-01740,Abubakir,Soliyev,,,,,,,Active,abubakir8,012345678,TCH-018,fun for movers,TCH-018-FUN-FOR-MOVERS,7,6
+STU-01741,Imomali,Raxmonberdiyev,,,,,,,Active,imomali3,012345678,TCH-016,Starter New,TCH-016-STARTER-NEW,,
+STU-01742,Dilbar,Sayfiyeva,,,,,,,Active,dilbar3,012345678,TCH-016,B1 Intro (Temurbek),TCH-016-B1-INTRO,Inyaz,5
+STU-01743,Muslima,Sheraliyeva,,,,,,,Active,muslima7,012345678,TCH-016,A1 Movers KIDS,TCH-016-A1-MOVERS-KIDS,,
+STU-01744,Billura,Uktamova,,,,,,,Active,billura3,012345678,TCH-004,A2 flyers,TCH-004-A2-FLYERS,,
+STU-01745,Muhammadyusuf,Sharifov,,,,,,,Active,muhammadyusuf5,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01746,Hamrobek,Karimov,,,,,,,Active,hamrobek2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01747,Anora,Abdug'aniyeva,,,,,,,Active,anora2,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01748,Sabina,Abdug'aniyeva,,,,,,,Active,sabina4,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01749,Mubina,Ibodullayeva,,,,,,,Active,mubina6,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01750,Bahriddin,Rustamov,,,,,,,Active,bahriddin3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01751,Aliakbar,Rustamov,,,,,,,Active,aliakbar3,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01752,Muhammadamin,Rahmatov,,,,,,,Active,muhammadamin,012345678,TCH-013,Matematika 10,TCH-013-MATEMATIKA-10,,
+STU-01753,Hadyatillo,Habibullayev,,,,,,,Active,hadyatillo3,012345678,TCH-013,Matematika Individual 17:30,TCH-013-MATEMATIKA-INDIVIDUAL-17-30,,
+STU-01754,Asal,Shokirova,,,,,,,Active,asal2,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,36,4
+STU-01755,Muhammadamin,Rahmatov,,,,,,,Active,muhammadamin11,012345678,TCH-013,Matematika 2,TCH-013-MATEMATIKA-2,,
+STU-01756,Muqaddas,Zokirova,,,,,,,Active,muqaddas2,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01757,Nafisa,Ahadova,,,,,,,Active,nafisa2,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01758,Xislatbek,izzatillayev,,,,,,,Active,xislatbek5,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01759,Biloljon,Aslamov,,,,,,,Active,biloljon2,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,1,5
+STU-01760,Mushtaribonu,Amriddinova,,,,,,,Active,mushtaribonu2,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01761,Soliha,Sobirova,,,,,,,Active,soliha7,012345678,TCH-010,Arab tili 1.0 New,TCH-010-ARAB-TILI-1-0-NEW,,
+STU-01762,Sattor,Kattaboyev,,,,,,,Active,sattor2,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01763,Muhabbat,Amrullayeva,,,,,,,Active,muhabbat2,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01764,Ruxshona,Olimova,,,,,,,Active,ruxshona11,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01765,Sardorali,Odilov,,,,,,,Active,sardorali2,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01766,Malika,Xursanova,,,,,,,Active,malika,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01767,Marjona,Xursanova,,,,,,,Active,marjona3,012345678,TCH-010,Arab tili 3.0 New,TCH-010-ARAB-TILI-3-0-NEW,,
+STU-01768,Muhammadali,Oybekov,,,,,,,Active,muhammadali5,012345678,TCH-010,Arab tili 5.0 New,TCH-010-ARAB-TILI-5-0-NEW,,
+STU-01769,Umar,Olimov,,,,,,,Active,umar7,012345678,TCH-009,Kids Zubayda 08:00,TCH-009-KIDS-ZUBAYDA-08-00,,
+STU-01770,Nuriddin,Husenov,,+998882903922,,,,,Active,nuriddin5,012345678,TCH-021,Kids English (Shamsiyabegim),TCH-021-KIDS-ENGLISH-SHAMSIYABEGIM,86,3

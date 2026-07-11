@@ -169,6 +169,20 @@ const normalizePhone = (value) => {
 const isScheduleText = (value) =>
   /\b(dush|sesh|chor|pay|paysh|juma|shanba|yak|du|se|ch|ju)\b/i.test(value) || /\d{1,2}[:.]\d{2}/.test(value);
 
+const isStandaloneScheduleText = (value) => {
+  const text = compact(value).toLowerCase();
+  if (!text || !isScheduleText(text)) return false;
+
+  const remainder = text
+    .replace(/\d{1,2}[:.]\d{2}(?:\s*-\s*\d{1,2}[:.]\d{2})?/g, ' ')
+    .replace(/\b(dush|sesh|chor|pay|paysh|juma|shanba|yak|du|se|ch|ju|xona)\b/g, ' ')
+    .replace(/[(),/-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return remainder.length === 0;
+};
+
 const addMinutesToTime = (time, minutes) => {
   const [hoursRaw, minutesRaw] = String(time || '').split(':');
   const hours = Number(hoursRaw);
@@ -390,7 +404,8 @@ for (const file of files) {
     const schoolNameIndex = indexOf(row, [/maktab/]);
     const addressIndex = indexOf(row, [/manzil/]);
     const headerName = compact(row[nameIndex]);
-    const className = isScheduleText(headerName) || isNameColumnHeader(headerName) ? previousTitle : headerName || previousTitle;
+    const className =
+      isNameColumnHeader(headerName) || isStandaloneScheduleText(headerName) ? previousTitle : headerName || previousTitle;
     if (!className) continue;
     if (isExcludedClassName(className)) continue;
 

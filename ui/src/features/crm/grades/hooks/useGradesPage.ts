@@ -46,7 +46,10 @@ export const useGradesPage = () => {
   const gradeItems = useAppSelector((state) => state.grades.items) as Grade[];
   const gradesLoading = useAppSelector((state) => state.grades.loading);
   const gradesError = useAppSelector((state) => state.grades.error);
-  const stateObj = { items: gradeItems, loading: gradesLoading, error: gradesError };
+  const stateObj = useMemo(
+    () => ({ items: gradeItems, loading: gradesLoading, error: gradesError }),
+    [gradeItems, gradesLoading, gradesError]
+  );
 
   const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
   const classes = useAppSelector((state) => state.classes.items) as Class[];

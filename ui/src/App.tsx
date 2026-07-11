@@ -53,6 +53,7 @@ import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/
 import { PERMISSION_CODES } from './types';
 import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
 import { useLanguage } from './i18n/LanguageContext';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 const scheduleIdleWork = (callback: () => void) => {
   if (typeof window === 'undefined') return;
@@ -791,10 +792,12 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <HashRouter>
-        <TopStatusLine />
-        <AppContent />
-      </HashRouter>
+      <ErrorBoundary>
+        <HashRouter>
+          <TopStatusLine />
+          <AppContent />
+        </HashRouter>
+      </ErrorBoundary>
     </Provider>
   );
 }

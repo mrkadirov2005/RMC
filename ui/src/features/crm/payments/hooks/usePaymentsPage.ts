@@ -44,14 +44,20 @@ export const usePaymentsPage = () => {
   const paymentItems = useAppSelector((state) => state.payments.items) as Payment[];
   const paymentsLoading = useAppSelector((state) => state.payments.loading);
   const paymentsError = useAppSelector((state) => state.payments.error);
-  const state = { items: paymentItems, loading: paymentsLoading, error: paymentsError };
+  const state = useMemo(
+    () => ({ items: paymentItems, loading: paymentsLoading, error: paymentsError }),
+    [paymentItems, paymentsLoading, paymentsError]
+  );
 
   const teachers = useAppSelector((state) => state.teachers.items) as Teacher[];
   const classes = useAppSelector((state) => state.classes.items) as Class[];
   const students = useAppSelector((state) => state.students.items) as Student[];
   const studentOptions = useAppSelector(selectStudentOptions);
   const allCenterOptions = useAppSelector(selectCenterOptions);
-  const centerOptions = isOwner ? allCenterOptions : [];
+  const centerOptions = useMemo(
+    () => (isOwner ? allCenterOptions : []),
+    [isOwner, allCenterOptions]
+  );
   const isLoadingOptions = useAppSelector(
     (state) =>
       state.students.loading || state.teachers.loading || state.classes.loading || (isOwner && state.centers.loading)
@@ -457,11 +463,14 @@ export const usePaymentsPage = () => {
     [displayedPayments, paymentsPage, paymentsPageSize]
   );
 
-  const totalAmount = displayedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-  const displayedPaidAmount = displayedPayments
-    .filter(isPaidPayment)
-    .reduce((sum, p) => sum + getPaymentAmount(p), 0);
-  const displayedPendingAmount = Math.max(totalAmount - displayedPaidAmount, 0);
+  const { totalAmount, displayedPaidAmount, displayedPendingAmount } = useMemo(() => {
+    const total = displayedPayments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+    const paid = displayedPayments
+      .filter(isPaidPayment)
+      .reduce((sum, p) => sum + getPaymentAmount(p), 0);
+    return { totalAmount: total, displayedPaidAmount: paid, displayedPendingAmount: Math.max(total - paid, 0) };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [displayedPayments]);
 
   const folderGridClass =
     viewMode === 'list'
