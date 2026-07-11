@@ -1,4 +1,4 @@
-import { BookOpen, ChevronDown, User } from 'lucide-react';
+import { BookOpen, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
@@ -9,7 +9,6 @@ interface TeacherClassesStudentsTabProps {
     students: any[];
     isTeacherOwned: boolean;
   }>;
-  directAssignedStudents: any[];
   expandedClassIds: Set<number>;
   detailStudentsLoading: boolean;
   onToggleClassExpanded: (classId: number) => void;
@@ -17,12 +16,11 @@ interface TeacherClassesStudentsTabProps {
 
 export default function TeacherClassesStudentsTab({
   studentClassGroups,
-  directAssignedStudents,
   expandedClassIds,
   detailStudentsLoading,
   onToggleClassExpanded,
 }: TeacherClassesStudentsTabProps) {
-  if (studentClassGroups.length === 0 && directAssignedStudents.length === 0) {
+  if (studentClassGroups.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <BookOpen className="h-16 w-16 mx-auto opacity-30 mb-4" />
@@ -48,7 +46,7 @@ export default function TeacherClassesStudentsTab({
               <div className="flex-grow">
                 <h3 className="text-sm font-semibold">{classItem.class_name}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {isTeacherOwned ? 'Teacher group' : 'Student group'} / Level: {classItem.level || 'N/A'}
+                  {isTeacherOwned ? 'Teacher group' : 'Group'} / Level: {classItem.level || 'N/A'}
                 </p>
               </div>
               <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
@@ -70,24 +68,6 @@ export default function TeacherClassesStudentsTab({
           </div>
         );
       })}
-      {directAssignedStudents.length > 0 && (
-        <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-          <div className="flex w-full items-center gap-2 bg-white p-2.5 text-left dark:bg-muted/40">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-sm">
-              <User className="h-4 w-4" />
-            </div>
-            <div className="flex-grow">
-              <p className="text-xs text-muted-foreground">Students connected to this teacher without a group</p>
-            </div>
-            <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
-              {directAssignedStudents.length} Students
-            </Badge>
-          </div>
-          <div className="border-t border-slate-200 bg-white p-2.5 dark:border-border dark:bg-card">
-            <StudentList students={directAssignedStudents} />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

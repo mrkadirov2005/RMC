@@ -89,14 +89,14 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
       OR t.email ILIKE $${params.length}
       OR t.phone ILIKE $${params.length}
       OR t.username ILIKE $${params.length}
-      OR t.status ILIKE $${params.length}
+      OR t.status::text ILIKE $${params.length}
     )`);
   }
 
   const status = String(filters.status || '').trim();
   if (status) {
     params.push(status);
-    conditions.push(`t.status = $${params.length}`);
+    conditions.push(`t.status = $${params.length}::teacher_status`);
   }
 
   const where = ` WHERE ${conditions.join(' AND ')}`;

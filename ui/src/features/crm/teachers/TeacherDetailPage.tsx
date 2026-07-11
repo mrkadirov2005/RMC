@@ -78,7 +78,6 @@ const TeacherDetailPage = () => {
     setSelectedPaymentMonth,
     detailStudentsLoading,
     teacherStudents,
-    directAssignedStudents,
     studentClassGroups,
     handleRefreshAll,
     handleOpenGradeModal,
@@ -234,7 +233,6 @@ const TeacherDetailPage = () => {
               <TabsContent value="classes">
                 <TeacherClassesStudentsTab
                   studentClassGroups={studentClassGroups}
-                  directAssignedStudents={directAssignedStudents}
                   expandedClassIds={expandedClassIds}
                   detailStudentsLoading={detailStudentsLoading}
                   onToggleClassExpanded={toggleClassExpanded}
@@ -256,7 +254,6 @@ const TeacherDetailPage = () => {
               <TabsContent value="payments">
                 <TeacherPaymentsTab
                   studentClassGroups={studentClassGroups}
-                  directAssignedStudents={directAssignedStudents}
                   payments={payments}
                   selectedPaymentMonth={selectedPaymentMonth}
                   setSelectedPaymentMonth={setSelectedPaymentMonth}

@@ -120,13 +120,6 @@ export const useTeacherDetailPage = () => {
       ),
     [studentsSource, teacherClassIds, teacherIdNum]
   );
-  const directAssignedStudents = useMemo(
-    () =>
-      teacherStudents
-        .filter((student) => Number(student.teacher_id) === teacherIdNum && !student.class_id)
-      .sort(compareStudentsByName),
-    [teacherIdNum, teacherStudents]
-  );
   const classStudentsByClassId = useMemo(() => {
     const map = new Map<number, TeacherStudent[]>();
     for (const student of teacherStudents) {
@@ -146,11 +139,6 @@ export const useTeacherDetailPage = () => {
       const id = Number(classItem.class_id || classItem.id);
       if (id) ids.add(id);
     }
-    for (const student of teacherStudents) {
-      const id = Number(student.class_id);
-      if (id) ids.add(id);
-    }
-
     return Array.from(ids)
       .map((classId) => {
         const fallbackClass = classes.find((classItem) => Number(classItem.class_id || classItem.id) === classId);
@@ -159,14 +147,11 @@ export const useTeacherDetailPage = () => {
           classId,
           classItem,
           students: classStudentsByClassId.get(classId) || [],
-          isTeacherOwned: teacherClassIds.has(classId),
-        };
-      })
-      .sort((a, b) =>
-        Number(b.isTeacherOwned) - Number(a.isTeacherOwned) ||
-        String(a.classItem.class_name || '').localeCompare(String(b.classItem.class_name || ''))
-      );
-  }, [classById, classStudentsByClassId, classes, teacherClassIds, teacherStudents]);
+        isTeacherOwned: true,
+      };
+    })
+      .sort((a, b) => String(a.classItem.class_name || '').localeCompare(String(b.classItem.class_name || '')));
+  }, [classById, classStudentsByClassId, classes]);
 
   const handleRefreshAll = () => {
     const teacherStudentParams = { teacher_id: Number(teacherId), page: 1, limit: 100 };
@@ -450,7 +435,6 @@ export const useTeacherDetailPage = () => {
     setSelectedPaymentMonth,
     detailStudentsLoading,
     teacherStudents,
-    directAssignedStudents,
     studentClassGroups,
     handleRefreshAll,
     handleOpenGradeModal,

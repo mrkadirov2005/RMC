@@ -18,7 +18,6 @@ interface TeacherPaymentsTabProps {
     students: any[];
     isTeacherOwned: boolean;
   }>;
-  directAssignedStudents: any[];
   payments: any[];
   selectedPaymentMonth: string;
   setSelectedPaymentMonth: (value: string) => void;
@@ -26,7 +25,6 @@ interface TeacherPaymentsTabProps {
 
 export default function TeacherPaymentsTab({
   studentClassGroups,
-  directAssignedStudents,
   payments,
   selectedPaymentMonth,
   setSelectedPaymentMonth,
@@ -53,7 +51,7 @@ export default function TeacherPaymentsTab({
         </div>
       </div>
 
-      {studentClassGroups.length === 0 && directAssignedStudents.length === 0 ? (
+      {studentClassGroups.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Wallet className="h-16 w-16 mx-auto opacity-30 mb-4" />
           <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
@@ -83,6 +81,7 @@ export default function TeacherPaymentsTab({
 const PaymentGroup = ({
   Icon,
   iconTone,
+  title,
   subtitle,
   students,
   payments,
@@ -105,6 +104,7 @@ const PaymentGroup = ({
             <Icon className="h-4 w-4" />
           </div>
           <span>
+            {title}
             {subtitle && <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">{subtitle}</span>}
           </span>
         </div>
