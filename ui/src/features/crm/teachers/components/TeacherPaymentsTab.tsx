@@ -1,4 +1,4 @@
-import { Calendar, BookOpen, User, Wallet } from 'lucide-react';
+import { Calendar, BookOpen, Wallet } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -73,17 +73,7 @@ export default function TeacherPaymentsTab({
               Icon={BookOpen}
             />
           ))}
-          {directAssignedStudents.length > 0 && (
-            <PaymentGroup
-              classItem={null}
-              iconTone="bg-emerald-600"
-              title="Directly assigned students"
-              students={directAssignedStudents}
-              payments={payments}
-              selectedPaymentMonth={selectedPaymentMonth}
-              Icon={User}
-            />
-          )}
+         
         </div>
       )}
     </div>
@@ -93,7 +83,6 @@ export default function TeacherPaymentsTab({
 const PaymentGroup = ({
   Icon,
   iconTone,
-  title,
   subtitle,
   students,
   payments,
@@ -116,7 +105,6 @@ const PaymentGroup = ({
             <Icon className="h-4 w-4" />
           </div>
           <span>
-            {title}
             {subtitle && <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">{subtitle}</span>}
           </span>
         </div>

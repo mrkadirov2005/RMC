@@ -77,7 +77,6 @@ export default function TeacherClassesStudentsTab({
               <User className="h-4 w-4" />
             </div>
             <div className="flex-grow">
-              <h3 className="text-sm font-semibold">Directly assigned students</h3>
               <p className="text-xs text-muted-foreground">Students connected to this teacher without a group</p>
             </div>
             <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
