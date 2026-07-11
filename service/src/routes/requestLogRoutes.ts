@@ -147,6 +147,8 @@ router.get('/', async (req: any, res: any) => {
           username: 1,
           userType: 1,
           role: 1,
+          failureReason: 1,
+          failureDetails: 1,
         },
       })
       .sort({ ts: -1 })

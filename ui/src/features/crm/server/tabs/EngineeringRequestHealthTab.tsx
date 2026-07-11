@@ -25,6 +25,8 @@ type RequestLogItem = {
   username: string | null;
   userType: string | null;
   role: string | null;
+  failureReason?: string | null;
+  failureDetails?: string | null;
 };
 
 const requestKinds: RequestKind[] = ['owner', 'superuser', 'teacher', 'student'];
@@ -37,6 +39,13 @@ const formatTs = (value: string) => {
 };
 
 const pathLabel = (row: RequestLogItem) => row.originalUrl || row.path || '-';
+
+const failureLabel = (row: RequestLogItem) => {
+  if (row.failureReason) return row.failureReason;
+  if (row.aborted) return 'Client connection closed before the response finished.';
+  if (!row.success || Number(row.statusCode || 0) >= 400) return 'No failure reason captured for this older log.';
+  return '-';
+};
 
 const loadLogs = async (mode: RequestHealthMode) => {
   const responses = await Promise.all(
@@ -168,6 +177,7 @@ const EngineeringRequestHealthTab = ({ mode }: { mode: RequestHealthMode }) => {
                   <TableHead>Path</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Duration</TableHead>
+                  <TableHead>Reason</TableHead>
                   <TableHead>User</TableHead>
                   <TableHead>Scope</TableHead>
                 </TableRow>
@@ -175,14 +185,14 @@ const EngineeringRequestHealthTab = ({ mode }: { mode: RequestHealthMode }) => {
               <TableBody>
                 {loading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                       <Loader2 className="mx-auto mb-2 h-5 w-5 animate-spin" />
                       Loading request health...
                     </TableCell>
                   </TableRow>
                 ) : items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={9} className="py-10 text-center text-muted-foreground">
                       No matching requests found.
                     </TableCell>
                   </TableRow>
@@ -199,6 +209,12 @@ const EngineeringRequestHealthTab = ({ mode }: { mode: RequestHealthMode }) => {
                           <Clock className="h-3.5 w-3.5 text-muted-foreground" />
                           {Number(row.durationMs || 0).toLocaleString()} ms
                         </span>
+                      </TableCell>
+                      <TableCell className="max-w-[320px]">
+                        <div className="truncate font-medium">{failureLabel(row)}</div>
+                        {row.failureDetails && (
+                          <div className="mt-1 truncate text-xs text-muted-foreground">{row.failureDetails}</div>
+                        )}
                       </TableCell>
                       <TableCell className="max-w-[180px] truncate">{row.username || '-'}</TableCell>
                       <TableCell className="capitalize">{row.scope}</TableCell>

@@ -50,6 +50,7 @@ async function main() {
   const systemRoutes = require('./routes/systemRoutes');
   const archiveRoutes = require('./routes/archiveRoutes');
   const telegramRegistrationRoutes = require('./routes/telegramRegistrationRoutes');
+  const telegramStudentRoutes = require('./routes/telegramStudentRoutes');
 
   const app = express();
   const PORT = process.env.PORT || 4000;
@@ -123,6 +124,7 @@ async function main() {
   app.use('/api/system', systemRoutes);
   app.use('/api/archive', requireAuth, requireRole('superuser'), archiveRoutes);
   app.use('/api/telegram-registrations', requireAuth, requireRole('superuser'), telegramRegistrationRoutes);
+  app.use('/api/telegram/student', telegramStudentRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {
