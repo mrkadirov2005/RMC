@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Loader2,
   Trash2,
+  X,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { studentAPI, gradeAPI, attendanceAPI, testAPI } from '../../../shared/api/api';
 import { useNavigate } from 'react-router-dom';
@@ -112,6 +120,9 @@ export default function TeacherStudentDirectory({
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [paymentFilter, setPaymentFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [classFilter, setClassFilter] = useState('all');
   const [selectedStudent, setSelectedStudent] = useState<TeacherStudentItem | null>(null);
   const [detailsDialog, setDetailsDialog] = useState(false);
   const [detailsTab, setDetailsTab] = useState('overview');
@@ -137,16 +148,42 @@ export default function TeacherStudentDirectory({
     [defaultClassName, students]
   );
 
+  const classOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        normalizedStudents
+          .map((student) => String(student.class_name || '').trim())
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [normalizedStudents]);
+
   const filteredStudents = useMemo(() => {
-    if (!searchTerm) return normalizedStudents;
     const query = searchTerm.toLowerCase();
-    return normalizedStudents.filter(
-      (student) =>
+    return normalizedStudents.filter((student) => {
+      const matchesSearch =
+        !query ||
         student.first_name.toLowerCase().includes(query) ||
         student.last_name.toLowerCase().includes(query) ||
-        student.email?.toLowerCase().includes(query)
-    );
-  }, [normalizedStudents, searchTerm]);
+        student.email?.toLowerCase().includes(query);
+
+      const matchesPayment =
+        paymentFilter === 'all' ||
+        (paymentFilter === 'paid' && Boolean(student.paid_this_month)) ||
+        (paymentFilter === 'unpaid' && !student.paid_this_month);
+
+      const normalizedStatus = String(student.status || '').toLowerCase();
+      const matchesStatus = statusFilter === 'all' || normalizedStatus === statusFilter;
+
+      const matchesClass =
+        classFilter === 'all' || String(student.class_name || '').trim() === classFilter;
+
+      return matchesSearch && matchesPayment && matchesStatus && matchesClass;
+    });
+  }, [normalizedStudents, searchTerm, paymentFilter, statusFilter, classFilter]);
+
+  const hasActiveFilters =
+    paymentFilter !== 'all' || statusFilter !== 'all' || classFilter !== 'all';
 
   const selectedStudentId = Number(selectedStudent?.student_id || selectedStudent?.id || 0) || null;
 
@@ -306,6 +343,64 @@ export default function TeacherStudentDirectory({
             className="pl-9"
           />
         </div>
+      </div>
+
+      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-white/10 dark:bg-muted/20">
+        <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+          <SelectTrigger className="h-9 w-[170px] bg-white dark:bg-background">
+            <SelectValue placeholder={t('Payment Status')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('All payments')}</SelectItem>
+            <SelectItem value="paid">{t('Paid')}</SelectItem>
+            <SelectItem value="unpaid">{t('Unpaid')}</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="h-9 w-[150px] bg-white dark:bg-background">
+            <SelectValue placeholder={t('Status')} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t('All statuses')}</SelectItem>
+            <SelectItem value="active">{t('Active')}</SelectItem>
+            <SelectItem value="inactive">{t('Inactive')}</SelectItem>
+            <SelectItem value="graduated">{t('Graduated')}</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {classOptions.length > 1 ? (
+          <Select value={classFilter} onValueChange={setClassFilter}>
+            <SelectTrigger className="h-9 w-[190px] bg-white dark:bg-background">
+              <SelectValue placeholder={t('Class')} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('All classes')}</SelectItem>
+              {classOptions.map((className) => (
+                <SelectItem key={className} value={className}>
+                  {className}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
+
+        {hasActiveFilters ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-9"
+            onClick={() => {
+              setPaymentFilter('all');
+              setStatusFilter('all');
+              setClassFilter('all');
+            }}
+          >
+            <X className="mr-2 h-4 w-4" />
+            {t('Clear filters')}
+          </Button>
+        ) : null}
       </div>
 
       {filteredStudents.length === 0 ? (
