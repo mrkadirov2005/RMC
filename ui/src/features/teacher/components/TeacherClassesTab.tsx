@@ -346,7 +346,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
 
         <div
           className="grid gap-4"
-          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))' }}
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))' }}
         >
           {filteredClasses.map((classItem) => {
             const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
@@ -358,8 +358,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                 className="group rounded-xl border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:border-border dark:bg-card"
               >
                 <div className="flex h-full flex-col gap-4 p-4">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
                       <div className="rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-500/10 p-2.5 text-indigo-600 transition-colors group-hover:from-indigo-500/20 group-hover:to-sky-500/15">
                         <GraduationCap className="h-5 w-5" />
                       </div>
@@ -372,7 +372,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                         </p>
                       </div>
                     </div>
-                    <Badge variant={getStatusVariant(classItem.status) as any}>
+                    <Badge className="shrink-0" variant={getStatusVariant(classItem.status) as any}>
                       {t(classItem.status || 'Active')}
                     </Badge>
                   </div>
