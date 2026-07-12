@@ -12,6 +12,7 @@ import SessionModal from '../../crm/classes/SessionModal';
 import { showToast } from '../../../utils/toast';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import TeacherClassDetailPanel from './TeacherClassDetailPanel';
+import type { TeacherStudentItem } from './TeacherStudentDirectory';
 
 interface ClassInfo {
   class_id: number;
@@ -33,18 +34,6 @@ interface ClassInfo {
   schedule?: string;
 }
 
-interface StudentItem {
-  student_id?: number;
-  id?: number;
-  class_id?: number;
-  first_name?: string;
-  last_name?: string;
-  enrollment_number?: string;
-  status?: string;
-  phone?: string;
-  deleted_at?: string | null;
-}
-
 interface TeacherClassesTabProps {
   teacherId?: number;
   onRefresh?: () => void;
@@ -61,7 +50,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [classData, setClassData] = useState<ClassInfo | null>(null);
-  const [students, setStudents] = useState<StudentItem[]>([]);
+  const [students, setStudents] = useState<TeacherStudentItem[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [sessionModalOpen, setSessionModalOpen] = useState(false);
   const [sessionModalId, setSessionModalId] = useState<number | null>(null);
@@ -126,7 +115,16 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           .forEach((room: string) => roomNumbers.add(room));
 
         setClassData({ ...nextClass, room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number });
-        setStudents(Array.isArray(studentsResponse?.data) ? studentsResponse.data : []);
+        const nextStudents = Array.isArray(studentsResponse?.data) ? studentsResponse.data : [];
+        setStudents(
+          nextStudents.map((student: any) => ({
+            ...student,
+            first_name: String(student?.first_name || ''),
+            last_name: String(student?.last_name || ''),
+            enrollment_number: String(student?.enrollment_number || ''),
+            status: String(student?.status || 'Active'),
+          }))
+        );
         setSessions(Array.isArray(sessionsResponse?.data) ? sessionsResponse.data : []);
       } catch (error) {
         if (!cancelled) {
