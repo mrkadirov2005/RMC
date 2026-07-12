@@ -346,7 +346,10 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
 
         <div
           className="grid gap-4"
-          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 420px), 1fr))' }}
+          style={{
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 420px))',
+            justifyContent: 'start',
+          }}
         >
           {filteredClasses.map((classItem) => {
             const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
