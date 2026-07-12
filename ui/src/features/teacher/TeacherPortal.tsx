@@ -33,11 +33,11 @@ import {
 } from '@/components/ui/tooltip';
 import { useAppSelector } from '../crm/hooks';
 import { useNavigate } from 'react-router-dom';
-import TeacherTestsTab from './components/TeacherTestsTab';
 import TeacherClassesTab from './components/TeacherClassesTab';
 import TeacherAttendanceTab from './components/TeacherAttendanceTab';
 import TeacherGradesTab from './components/TeacherGradesTab';
 import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
+import TeacherPortalTopBar from './components/TeacherPortalTopBar';
 import { useAppDispatch } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
@@ -48,6 +48,8 @@ import { fetchAttendance } from '../../slices/attendanceSlice';
 import { fetchAssignments } from '../../slices/assignmentsSlice';
 import { selectTeacherPortalUi } from '../../store/selectors';
 import { useLanguage } from '../../i18n/LanguageContext';
+import TestsPage from '../crm/tests/TestsPage';
+import CalendarPage from '../crm/calendar/CalendarPage';
 
 interface TeacherStats {
   totalStudents: number;
@@ -177,8 +179,9 @@ const TeacherPortal = () => {
   ];
 
   const tabs = [
-    { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
+    { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
+    { value: 'calendar', label: t('Calendar'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'grades', label: t('Grades'), icon: <Star className="h-4 w-4" /> },
     { value: 'assignments', label: t('Assignments'), icon: <ClipboardList className="h-4 w-4" /> },
@@ -186,6 +189,8 @@ const TeacherPortal = () => {
 
   return (
     <div className="relative space-y-6">
+      <TeacherPortalTopBar teacherName={user?.first_name} />
+
       <PageHeader
         className="animate-slide-up"
         variant="hero"
@@ -285,11 +290,18 @@ const TeacherPortal = () => {
           </div>
 
           <div className="p-4">
-            <TabsContent value="tests">
-              <TeacherTestsTab teacherId={user?.id} onRefresh={loadStats} />
-            </TabsContent>
             <TabsContent value="classes">
               <TeacherClassesTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="tests">
+              <div className="-m-4">
+                <TestsPage />
+              </div>
+            </TabsContent>
+            <TabsContent value="calendar">
+              <div className="-m-4">
+                <CalendarPage />
+              </div>
             </TabsContent>
             <TabsContent value="attendance">
               <TeacherAttendanceTab teacherId={user?.id} onRefresh={loadStats} />

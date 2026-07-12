@@ -178,11 +178,11 @@ const Sidebar = memo(() => {
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
     { label: 'Logs', path: '/logs', iconName: 'Logs', roles: ['superuser'] },
     { label: 'Engineering', path: '/engineering', iconName: 'Server', roles: ['superuser'] },
-    { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'teacher', 'student'] },
+    { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'] },
 
 
     // Settings removed from sidebar — accessible via gear icon in header
-    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser', 'teacher'], permission: 'MANAGE_TESTS' },
+    { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'], permission: 'CRUD_GRADE' },
     { label: 'Attendance', path: '/attendance', iconName: 'Attendance', roles: ['superuser'], permission: 'CRUD_ATTENDANCE' },
