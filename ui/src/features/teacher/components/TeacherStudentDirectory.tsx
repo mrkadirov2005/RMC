@@ -6,6 +6,7 @@ import {
   Phone,
   MoreVertical,
   Coins,
+  CreditCard,
   Star,
   CalendarDays,
   FileQuestion,
@@ -71,6 +72,11 @@ export interface TeacherStudentItem {
   updated_at?: string;
   coins?: number;
   deleted_at?: string | null;
+  paid_this_month?: boolean;
+  payment_amount_this_month?: number | string | null;
+  payment_count_this_month?: number;
+  payment_status_this_month?: string | null;
+  last_payment_date_this_month?: string | null;
 }
 
 interface StudentDetails {
@@ -138,7 +144,6 @@ export default function TeacherStudentDirectory({
       (student) =>
         student.first_name.toLowerCase().includes(query) ||
         student.last_name.toLowerCase().includes(query) ||
-        student.enrollment_number.toLowerCase().includes(query) ||
         student.email?.toLowerCase().includes(query)
     );
   }, [normalizedStudents, searchTerm]);
@@ -240,6 +245,44 @@ export default function TeacherStudentDirectory({
     return Math.round(total / studentDetails.grades.length);
   };
 
+  const formatMoney = (value: unknown) => {
+    const amount = Number(value || 0);
+    if (!Number.isFinite(amount) || amount <= 0) return '';
+    return `${amount.toLocaleString()} UZS`;
+  };
+
+  const formatDate = (value: unknown) => {
+    if (!value) return '';
+    const date = new Date(String(value));
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString();
+  };
+
+  const getPaymentLabel = (student: TeacherStudentItem) => {
+    if (!student.paid_this_month) return t('Unpaid');
+    const amount = formatMoney(student.payment_amount_this_month);
+    return amount ? `${t('Paid')} ${amount}` : t('Paid');
+  };
+
+  const getPaymentTitle = (student: TeacherStudentItem) => {
+    const date = formatDate(student.last_payment_date_this_month);
+    const status = String(student.payment_status_this_month || '').trim();
+    if (!student.paid_this_month) return t('No completed payment recorded this month');
+    return [status || t('Completed'), date].filter(Boolean).join(' / ');
+  };
+
+  const renderPaymentChip = (student: TeacherStudentItem) => (
+    <span
+      className={`inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none ${
+        student.paid_this_month ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+      }`}
+      title={getPaymentTitle(student)}
+    >
+      <CreditCard className="h-3 w-3" />
+      <span className="max-w-[150px] truncate">{getPaymentLabel(student)}</span>
+    </span>
+  );
+
   if (loading) {
     return (
       <div className="flex justify-center py-8">
@@ -257,7 +300,7 @@ export default function TeacherStudentDirectory({
         <div className="relative min-w-[350px]">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={t('Search students by name, email, or enrollment...')}
+            placeholder={t('Search students by name or email...')}
             value={searchTerm}
             onChange={(event) => setSearchTerm(event.target.value)}
             className="pl-9"
@@ -275,8 +318,8 @@ export default function TeacherStudentDirectory({
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead>{t('Student')}</TableHead>
-                <TableHead>{t('Enrollment #')}</TableHead>
                 <TableHead>{t('Class')}</TableHead>
+                <TableHead>{t('Payment Status')}</TableHead>
                 <TableHead>{t('Contact')}</TableHead>
                 <TableHead>{t('Status')}</TableHead>
                 <TableHead className="text-right">{t('Actions')}</TableHead>
@@ -306,11 +349,9 @@ export default function TeacherStudentDirectory({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-mono text-sm">{student.enrollment_number}</span>
-                    </TableCell>
-                    <TableCell>
                       <Badge variant="outline">{student.class_name || t('Unassigned')}</Badge>
                     </TableCell>
+                    <TableCell>{renderPaymentChip(student)}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
                         {student.email && (

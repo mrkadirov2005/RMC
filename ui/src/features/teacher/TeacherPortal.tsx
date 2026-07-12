@@ -12,7 +12,6 @@ import {
   Bell,
   Clock,
   Loader2,
-  Wallet,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +38,6 @@ import TeacherClassesTab from './components/TeacherClassesTab';
 import TeacherAttendanceTab from './components/TeacherAttendanceTab';
 import TeacherGradesTab from './components/TeacherGradesTab';
 import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
-import TeacherPaymentsTab from './components/TeacherPaymentsTab';
 import { useAppDispatch } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
@@ -184,7 +182,6 @@ const TeacherPortal = () => {
     { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'grades', label: t('Grades'), icon: <Star className="h-4 w-4" /> },
     { value: 'assignments', label: t('Assignments'), icon: <ClipboardList className="h-4 w-4" /> },
-    { value: 'payments', label: t('Payments'), icon: <Wallet className="h-4 w-4" /> },
   ];
 
   return (
@@ -302,9 +299,6 @@ const TeacherPortal = () => {
             </TabsContent>
             <TabsContent value="assignments">
               <TeacherAssignmentsTab teacherId={user?.id} onRefresh={loadStats} />
-            </TabsContent>
-            <TabsContent value="payments">
-              <TeacherPaymentsTab teacherId={user?.id} />
             </TabsContent>
           </div>
         </Tabs>
