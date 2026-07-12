@@ -1,21 +1,48 @@
 // Tab component for the teacher feature.
 
-import { useState, useEffect } from 'react';
-import { GraduationCap, Users, Clock, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { BookOpen, Clock, GraduationCap, Loader2, Search, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { classAPI } from '../../../shared/api/api';
+import { Input } from '@/components/ui/input';
+import { classAPI, roomAPI, roomSlotAPI, studentAPI } from '../../../shared/api/api';
+import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { useAppSelector } from '../../crm/hooks';
+import SessionModal from '../../crm/classes/SessionModal';
+import { showToast } from '../../../utils/toast';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import TeacherClassDetailPanel from './TeacherClassDetailPanel';
 
 interface ClassInfo {
   class_id: number;
   class_name: string;
+  class_code?: string;
   description?: string;
   teacher_id?: number;
+  teacher_name?: string;
+  center_id?: number;
+  level?: number;
+  capacity?: number;
+  room_number?: string;
+  payment_amount?: number;
+  payment_frequency?: string;
+  section?: string;
+  room_assignments?: any[];
   status: string;
   student_count?: number;
   schedule?: string;
+}
+
+interface StudentItem {
+  student_id?: number;
+  id?: number;
+  class_id?: number;
+  first_name?: string;
+  last_name?: string;
+  enrollment_number?: string;
+  status?: string;
+  phone?: string;
+  deleted_at?: string | null;
 }
 
 interface TeacherClassesTabProps {
@@ -30,14 +57,96 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const effectiveTeacherId = teacherId ?? user?.id;
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
+  const [classData, setClassData] = useState<ClassInfo | null>(null);
+  const [students, setStudents] = useState<StudentItem[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionModalOpen, setSessionModalOpen] = useState(false);
+  const [sessionModalId, setSessionModalId] = useState<number | null>(null);
+  const [sessionModalDate, setSessionModalDate] = useState('');
+  const [sessionModalCenterId, setSessionModalCenterId] = useState<number | undefined>(undefined);
+  const [startingLesson, setStartingLesson] = useState(false);
+  const todayKey = new Date().toISOString().split('T')[0];
 
 // Runs side effects for this component.
   useEffect(() => {
-    loadClasses();
+    void loadClasses();
   }, [effectiveTeacherId]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadClassDetails = async () => {
+      if (!selectedClassId) {
+        setClassData(null);
+        setStudents([]);
+        setSessions([]);
+        return;
+      }
+
+      try {
+        setDetailLoading(true);
+        const centerId = getResolvedCenterId(user) || undefined;
+        const [classResponse, studentsResponse, sessionsResponse, roomsResponse, bookingResponse] = await Promise.all([
+          classAPI.getById(selectedClassId),
+          studentAPI.getByClassWithTransfers(selectedClassId).catch(() => ({ data: [] })),
+          classAPI.getSessions(selectedClassId).catch(() => ({ data: [] })),
+          roomAPI.getAll(centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
+          roomSlotAPI.getBookingsByClass(selectedClassId, centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
+        ]);
+
+        if (cancelled) return;
+
+        const nextClass = classResponse?.data ?? classResponse;
+        const roomNumbers = new Set<string>();
+        String(nextClass?.room_number || '')
+          .split(',')
+          .map((room: string) => room.trim())
+          .filter(Boolean)
+          .forEach((room) => roomNumbers.add(room));
+        const roomAssignments = Array.isArray(nextClass?.room_assignments) ? nextClass.room_assignments : [];
+        roomAssignments
+          .map((room: any) => String(room.room_number || '').trim())
+          .filter(Boolean)
+          .forEach((room: string) => roomNumbers.add(room));
+        const roomsPayload = roomsResponse?.data || [];
+        const rooms = Array.isArray(roomsPayload) ? roomsPayload : Array.isArray(roomsPayload.data) ? roomsPayload.data : [];
+        rooms
+          .filter((room: any) => Number(room.class_id) === selectedClassId)
+          .map((room: any) => String(room.room_number || '').trim())
+          .filter(Boolean)
+          .forEach((room: string) => roomNumbers.add(room));
+        const bookingPayload = bookingResponse?.data || [];
+        const bookings = Array.isArray(bookingPayload) ? bookingPayload : Array.isArray(bookingPayload.data) ? bookingPayload.data : [];
+        bookings
+          .map((booking: any) => String(booking.room_number || '').trim())
+          .filter(Boolean)
+          .forEach((room: string) => roomNumbers.add(room));
+
+        setClassData({ ...nextClass, room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number });
+        setStudents(Array.isArray(studentsResponse?.data) ? studentsResponse.data : []);
+        setSessions(Array.isArray(sessionsResponse?.data) ? sessionsResponse.data : []);
+      } catch (error) {
+        if (!cancelled) {
+          console.error('Error loading class details:', error);
+          showToast.error('Failed to load class details.');
+        }
+      } finally {
+        if (!cancelled) setDetailLoading(false);
+      }
+    };
+
+    void loadClassDetails();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClassId, user]);
+
 // Loads classes.
-  const loadClasses = async () => {
+  const loadClasses = useCallback(async () => {
     try {
       setLoading(true);
       const response = await classAPI.getAll(
@@ -46,10 +155,24 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
       const payload = response.data || [];
       const scopedClasses = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
       setClasses(scopedClasses);
+      setSelectedClassId((current) => current ?? (Number(scopedClasses[0]?.class_id || 0) || null));
     } catch (error) {
       console.error('Error loading classes:', error);
     } finally {
       setLoading(false);
+    }
+  }, [effectiveTeacherId]);
+
+  const parseSchedulePreview = (section?: string) => {
+    if (!section) return '';
+    try {
+      const parsed = JSON.parse(section);
+      const days = Array.isArray(parsed?.days) ? parsed.days.join(', ') : '';
+      const time = String(parsed?.time || '');
+      const endTime = String(parsed?.endTime || '');
+      return [days, [time, endTime].filter(Boolean).join(' - ')].filter(Boolean).join(' / ');
+    } catch {
+      return section;
     }
   };
 
@@ -64,6 +187,89 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
         return 'info';
       default:
         return 'secondary';
+    }
+  };
+
+  const filteredClasses = useMemo(() => {
+    if (!searchTerm) return classes;
+    const query = searchTerm.toLowerCase();
+    return classes.filter((classItem) => {
+      const scheduleText = parseSchedulePreview(classItem.section);
+      return (
+        String(classItem.class_name || '').toLowerCase().includes(query) ||
+        String(classItem.class_code || '').toLowerCase().includes(query) ||
+        String(classItem.room_number || '').toLowerCase().includes(query) ||
+        scheduleText.toLowerCase().includes(query)
+      );
+    });
+  }, [classes, searchTerm]);
+
+  const openSessionWorkflow = (session: any) => {
+    if (!classData) return;
+    const nextSessionId = Number(session.session_id || session.id);
+    if (!nextSessionId) return;
+    setSessionModalId(nextSessionId);
+    setSessionModalDate(session.session_date ? new Date(session.session_date).toISOString().split('T')[0] : todayKey);
+    setSessionModalCenterId(Number(session.center_id || classData.center_id || 0) || getResolvedCenterId(user) || undefined);
+    setSessionModalOpen(true);
+  };
+
+  const handleStartLesson = async () => {
+    if (!classData || !selectedClassId) return;
+
+    const existingTodaySession = sessions.find((session) => {
+      if (!session.session_date) return false;
+      return new Date(session.session_date).toISOString().split('T')[0] === todayKey;
+    });
+
+    if (existingTodaySession) {
+      openSessionWorkflow(existingTodaySession);
+      return;
+    }
+
+    setStartingLesson(true);
+    try {
+      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(user) || undefined;
+      if (!targetCenterId) {
+        showToast.error('Please select an active center before starting a lesson.');
+        return;
+      }
+
+      let startTime = new Date().toTimeString().slice(0, 5);
+      let durationMinutes = 90;
+
+      if (classData.section) {
+        try {
+          const parsed = JSON.parse(classData.section);
+          startTime = String(parsed?.time || startTime);
+          const endTime = String(parsed?.endTime || '');
+          if (startTime && endTime) {
+            const [startHoursRaw, startMinutesRaw] = startTime.split(':');
+            const [endHoursRaw, endMinutesRaw] = endTime.split(':');
+            const duration = Number(endHoursRaw) * 60 + Number(endMinutesRaw) - (Number(startHoursRaw) * 60 + Number(startMinutesRaw));
+            if (duration > 0) durationMinutes = duration;
+          }
+        } catch {
+          // Ignore schedule parsing fallback and use defaults.
+        }
+      }
+
+      const response = await classAPI.createSession(selectedClassId, {
+        center_id: targetCenterId,
+        session_date: todayKey,
+        start_time: startTime,
+        duration_minutes: durationMinutes,
+        teacher_id: user?.userType === 'teacher' && user?.id ? Number(user.id) : Number(classData.teacher_id || 0) || undefined,
+      });
+
+      const nextSession = response?.data ?? response;
+      setSessions((current) => [...current, nextSession]);
+      openSessionWorkflow(nextSession);
+    } catch (error) {
+      console.error('Failed to start lesson:', error);
+      showToast.error('Failed to start lesson.');
+    } finally {
+      setStartingLesson(false);
     }
   };
 
@@ -89,50 +295,112 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
     );
   }
 
+  if (classData && selectedClassId) {
+    return (
+      <>
+        <TeacherClassDetailPanel
+          classData={classData}
+          loading={detailLoading}
+          onBack={() => setSelectedClassId(null)}
+          onOpenSession={openSessionWorkflow}
+          onStartLesson={handleStartLesson}
+          sessions={sessions}
+          startingLesson={startingLesson}
+          students={students}
+        />
+        <SessionModal
+          open={sessionModalOpen}
+          classData={classData}
+          sessionId={sessionModalId}
+          selectedDate={sessionModalDate}
+          onClose={() => {
+            setSessionModalOpen(false);
+            setSessionModalId(null);
+            setSessionModalDate('');
+            setSessionModalCenterId(undefined);
+          }}
+          sessionCenterId={sessionModalCenterId}
+        />
+      </>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-      {classes.map((classItem) => (
-        <Card
-          key={classItem.class_id}
-          className="h-full transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-        >
-          <CardContent className="p-5">
-            <div className="flex justify-between items-start mb-3">
-              <div className="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-500">
-                <GraduationCap className="h-5 w-5" />
-              </div>
-              <Badge variant={getStatusVariant(classItem.status) as any}>
-                {t(classItem.status || 'Active')}
-              </Badge>
-            </div>
+    <Card className="border-slate-200/80 shadow-sm">
+      <CardContent className="space-y-4 p-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">{t('My Classes')}</h3>
+            <p className="text-sm text-muted-foreground">
+              {t('Open one of your classes to see students and start a lesson.')}
+            </p>
+          </div>
+          <div className="relative w-full max-w-md">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder={t('Search classes by name, code, schedule, room...')}
+              className="pl-9"
+            />
+          </div>
+        </div>
 
-            <h3 className="text-lg font-semibold mb-1">
-              {classItem.class_name}
-            </h3>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredClasses.map((classItem) => {
+            const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
+            return (
+              <button
+                key={classItem.class_id}
+                type="button"
+                onClick={() => setSelectedClassId(Number(classItem.class_id))}
+                className="rounded-lg border border-slate-200 bg-white text-left transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:border-border dark:bg-card"
+              >
+                <div className="flex h-full flex-col gap-4 p-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="rounded-lg bg-indigo-500/10 p-2.5 text-indigo-600">
+                        <GraduationCap className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h4 className="line-clamp-2 text-base font-semibold">{classItem.class_name}</h4>
+                        <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                          {classItem.class_code || t('No code')}
+                        </p>
+                      </div>
+                    </div>
+                    <Badge variant={getStatusVariant(classItem.status) as any}>
+                      {t(classItem.status || 'Active')}
+                    </Badge>
+                  </div>
 
-            {classItem.description && (
-              <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                {classItem.description}
-              </p>
-            )}
+                  <div className="grid gap-2 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      <span>{classItem.student_count || 0} {t('Students')}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      <span className="line-clamp-2">{scheduleText}</span>
+                    </div>
+                  </div>
 
-            <div className="flex items-center gap-2 mt-3 text-muted-foreground">
-              <Users className="h-4 w-4" />
-              <span className="text-sm">
-                {classItem.student_count || 0} {t('Students')}
-              </span>
-            </div>
-
-            {classItem.schedule && (
-              <div className="flex items-center gap-2 mt-1.5 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span className="text-sm">{classItem.schedule}</span>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+                  <div className="mt-auto flex items-center justify-between pt-1">
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {classItem.room_number || t('No room')}
+                    </span>
+                    <span className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm">
+                      <BookOpen className="mr-2 h-4 w-4" />
+                      {t('Open class')}
+                    </span>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
