@@ -11,7 +11,6 @@ import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from 
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
-import SessionModal from './SessionModal';
 import { useAppSelector } from '../hooks';
 
 type ClassItem = {
@@ -89,10 +88,6 @@ const ClassDetailPage = () => {
   const [subjects, setSubjects] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
-  const [sessionModalOpen, setSessionModalOpen] = useState(false);
-  const [sessionModalId, setSessionModalId] = useState<number | null>(null);
-  const [sessionModalDate, setSessionModalDate] = useState('');
-  const [sessionModalCenterId, setSessionModalCenterId] = useState<number | undefined>(undefined);
   const [startingLesson, setStartingLesson] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -181,10 +176,7 @@ const ClassDetailPage = () => {
   const openSessionWorkflow = (session: any) => {
     const nextSessionId = Number(session.session_id || session.id);
     if (!nextSessionId) return;
-    setSessionModalId(nextSessionId);
-    setSessionModalDate(session.session_date ? new Date(session.session_date).toISOString().split('T')[0] : todayKey);
-    setSessionModalCenterId(Number(session.center_id || classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined);
-    setSessionModalOpen(true);
+    navigate(`/classes/${classId}/sessions/${nextSessionId}/workflow`);
   };
 
   const handleStartLesson = async () => {
@@ -487,20 +479,6 @@ const ClassDetailPage = () => {
           </TabsContent>
         </div>
       </Tabs>
-
-      <SessionModal
-        open={sessionModalOpen}
-        classData={classData}
-        sessionId={sessionModalId}
-        selectedDate={sessionModalDate}
-        onClose={() => {
-          setSessionModalOpen(false);
-          setSessionModalId(null);
-          setSessionModalDate('');
-          setSessionModalCenterId(undefined);
-        }}
-        sessionCenterId={sessionModalCenterId}
-      />
     </div>
   );
 };

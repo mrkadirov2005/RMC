@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { ArrowLeft, BadgePercent, CheckCircle2, GraduationCap, Loader2, Save, UserPlus } from 'lucide-react';
+import { ArrowLeft, BadgePercent, CheckCircle2, GraduationCap, Loader2, Save } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -57,9 +57,6 @@ const StudentFormPage = () => {
 
   const showCenterField = options.isOwner;
   const title = isEditing ? t('Edit Student') : t('Add Student');
-  const description = isEditing
-    ? t('Update profile, class assignment, account access, and serial discount details.')
-    : t('Create a student profile with class assignment, login access, and optional serial discount.');
 
   const selectedClass = useMemo(
     () => options.classes.find((item) => Number(item.class_id || item.id) === Number(formData.class_id)),
@@ -121,8 +118,6 @@ const StudentFormPage = () => {
     <div className="space-y-4">
       <PageHeader
         title={title}
-        description={description}
-        icon={isEditing ? GraduationCap : UserPlus}
         actions={
           <Button type="button" variant="outline" size="sm" onClick={() => navigate('/students')} className="h-9 gap-2">
             <ArrowLeft className="h-4 w-4" />
