@@ -24,9 +24,7 @@ interface TeacherClassDetailPanelProps {
   classData: ClassItem;
   loading?: boolean;
   onBack: () => void;
-  onOpenSession: (session: any) => void;
   onStartLesson: () => void;
-  sessions: any[];
   startingLesson?: boolean;
   students: TeacherStudentItem[];
 }
@@ -37,9 +35,7 @@ export default function TeacherClassDetailPanel({
   classData,
   loading = false,
   onBack,
-  onOpenSession,
   onStartLesson,
-  sessions,
   startingLesson = false,
   students,
 }: TeacherClassDetailPanelProps) {
@@ -66,9 +62,6 @@ export default function TeacherClassDetailPanel({
   const visibleStudents = students.filter((student) => !student.deleted_at);
   const activeStudents = visibleStudents.filter((student) => String(student.status || '').toLowerCase() === 'active').length;
   const transferredStudents = visibleStudents.filter((student) => String(student.status || '').toLowerCase() === 'transferred').length;
-  const latestSession = sessions
-    .slice()
-    .sort((a, b) => new Date(b.session_date || 0).getTime() - new Date(a.session_date || 0).getTime())[0];
   const capacity = Number(classData?.capacity || 0);
 
   const statTiles = [
@@ -132,11 +125,6 @@ export default function TeacherClassDetailPanel({
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {latestSession ? (
-              <Button type="button" variant="outline" size="sm" onClick={() => onOpenSession(latestSession)}>
-                {t('Open Session')}
-              </Button>
-            ) : null}
             <Button
               onClick={onStartLesson}
               disabled={startingLesson}

@@ -34,7 +34,6 @@ import {
 } from '@/components/ui/tooltip';
 import { useAppSelector } from '../crm/hooks';
 import { useNavigate } from 'react-router-dom';
-import TeacherStudentsTab from './components/TeacherStudentsTab';
 import TeacherTestsTab from './components/TeacherTestsTab';
 import TeacherClassesTab from './components/TeacherClassesTab';
 import TeacherAttendanceTab from './components/TeacherAttendanceTab';
@@ -99,6 +98,12 @@ const TeacherPortal = () => {
   useEffect(() => {
     loadStats();
   }, [loadStats]);
+
+  useEffect(() => {
+    if (tabValue === 'students') {
+      dispatch(setTeacherPortalTabValue('classes'));
+    }
+  }, [dispatch, tabValue]);
 
   const stats = useMemo<TeacherStats>(() => {
     const tests = testsData || [];
@@ -165,7 +170,7 @@ const TeacherPortal = () => {
   };
 
   const statsCards = [
-    { title: t('My Students'), value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: t('Assigned to you'), tab: 'students' },
+    { title: t('My Students'), value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: t('Assigned to you'), tab: 'classes' },
     { title: t('My Classes'), value: stats.totalClasses, icon: GraduationCap, tone: 'green' as const, detail: `${stats.upcomingClasses} ${t('active')}`, tab: 'classes' },
     { title: t('Active Tests'), value: stats.pendingTests, icon: FileQuestion, tone: 'amber' as const, detail: t('Open test work'), tab: 'tests' },
     { title: t('Pending Grading'), value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? t('Needs attention') : t('Nothing pending'), tab: 'grades' },
@@ -174,7 +179,6 @@ const TeacherPortal = () => {
   ];
 
   const tabs = [
-    { value: 'students', label: t('My Students'), icon: <Users className="h-4 w-4" /> },
     { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
     { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
@@ -284,9 +288,6 @@ const TeacherPortal = () => {
           </div>
 
           <div className="p-4">
-            <TabsContent value="students">
-              <TeacherStudentsTab teacherId={user?.id} onRefresh={loadStats} />
-            </TabsContent>
             <TabsContent value="tests">
               <TeacherTestsTab teacherId={user?.id} onRefresh={loadStats} />
             </TabsContent>

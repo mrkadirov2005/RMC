@@ -302,9 +302,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           classData={classData}
           loading={detailLoading}
           onBack={() => setSelectedClassId(null)}
-          onOpenSession={openSessionWorkflow}
           onStartLesson={handleStartLesson}
-          sessions={sessions}
           startingLesson={startingLesson}
           students={students}
         />
