@@ -344,7 +344,10 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div
+          className="grid gap-4"
+          style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 380px))' }}
+        >
           {filteredClasses.map((classItem) => {
             const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
             return (
@@ -352,17 +355,19 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                 key={classItem.class_id}
                 type="button"
                 onClick={() => setSelectedClassId(Number(classItem.class_id))}
-                className="rounded-lg border border-slate-200 bg-white text-left transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:border-border dark:bg-card"
+                className="group rounded-xl border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:border-border dark:bg-card"
               >
                 <div className="flex h-full flex-col gap-4 p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-3">
-                      <div className="rounded-lg bg-indigo-500/10 p-2.5 text-indigo-600">
+                      <div className="rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-500/10 p-2.5 text-indigo-600 transition-colors group-hover:from-indigo-500/20 group-hover:to-sky-500/15">
                         <GraduationCap className="h-5 w-5" />
                       </div>
-                      <div>
-                        <h4 className="line-clamp-2 text-base font-semibold">{classItem.class_name}</h4>
-                        <p className="mt-1 text-xs uppercase tracking-[0.2em] text-muted-foreground">
+                      <div className="min-w-0">
+                        <h4 className="line-clamp-2 text-base font-semibold text-slate-950 dark:text-foreground">
+                          {classItem.class_name}
+                        </h4>
+                        <p className="mt-1 truncate text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
                           {classItem.class_code || t('No code')}
                         </p>
                       </div>
@@ -372,8 +377,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                     </Badge>
                   </div>
 
-                  <div className="grid gap-2 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-2">
+                  <div className="grid gap-2 rounded-lg bg-slate-50/80 p-3 text-sm text-muted-foreground dark:bg-muted/30">
+                    <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-muted-foreground">
                       <Users className="h-4 w-4" />
                       <span>{classItem.student_count || 0} {t('Students')}</span>
                     </div>
@@ -383,11 +388,11 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                     </div>
                   </div>
 
-                  <div className="mt-auto flex items-center justify-between pt-1">
-                    <span className="text-xs font-medium text-muted-foreground">
+                  <div className="mt-auto flex items-center justify-between gap-3 pt-1">
+                    <span className="truncate text-xs font-medium text-muted-foreground">
                       {classItem.room_number || t('No room')}
                     </span>
-                    <span className="inline-flex items-center rounded-md border border-input bg-background px-3 py-2 text-sm font-medium shadow-sm">
+                    <span className="inline-flex shrink-0 items-center rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 shadow-sm transition-colors group-hover:border-indigo-200 group-hover:bg-indigo-100 dark:border-white/10 dark:bg-muted dark:text-foreground">
                       <BookOpen className="mr-2 h-4 w-4" />
                       {t('Open class')}
                     </span>
