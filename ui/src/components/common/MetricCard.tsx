@@ -64,7 +64,7 @@ export const MetricCard = ({
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       className={cn(
-        'relative overflow-hidden rounded-xl border p-4 text-left text-white shadow-md transition-all duration-200',
+        'relative h-full min-h-[124px] overflow-hidden rounded-xl border p-4 text-left text-white shadow-md transition-all duration-200',
         toneSurfaceClasses[tone],
         onClick && 'hover:-translate-y-0.5 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer',
         className
@@ -72,10 +72,18 @@ export const MetricCard = ({
     >
       <div className={cn('absolute inset-x-0 top-0 h-1', toneAccentClasses[tone])} aria-hidden="true" />
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className={cn('text-xs font-semibold uppercase', toneTextClasses[tone])}>{label}</p>
+        <div className="min-w-0 flex-1">
+          <p className={cn('min-h-[2rem] line-clamp-2 text-xs font-semibold uppercase leading-4', toneTextClasses[tone])}>
+            {label}
+          </p>
           <div className="mt-1 text-2xl font-bold tracking-normal text-white">{value}</div>
-          {detail && <div className={cn('mt-1 text-xs', toneTextClasses[tone])}>{detail}</div>}
+          {detail ? (
+            <div className={cn('mt-1 min-h-[2rem] line-clamp-2 text-xs leading-4', toneTextClasses[tone])}>
+              {detail}
+            </div>
+          ) : (
+            <div className="mt-1 min-h-[2rem]" />
+          )}
         </div>
         {Icon && (
           <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-md ring-1', toneClasses[tone])}>
