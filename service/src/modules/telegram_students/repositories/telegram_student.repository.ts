@@ -128,6 +128,37 @@ const classRank = async (centerId: number, classId: number) => {
   return result.rows;
 };
 
+const classRankSummary = async (centerId: number, classId: number, studentId: number) => {
+  const result = await pool.query(
+    `WITH points AS (
+       SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
+       FROM grades
+       WHERE center_id = $1 AND class_id = $2
+       GROUP BY student_id
+     ),
+     ranked AS (
+       SELECT
+         s.student_id,
+         s.coins,
+         COALESCE(p.points, 0) AS points,
+         RANK() OVER (
+           ORDER BY COALESCE(s.coins, 0) DESC,
+                    COALESCE(p.points, 0) DESC,
+                    s.student_id ASC
+         )::int AS rank,
+         COUNT(*) OVER ()::int AS total_students
+       FROM students s
+       LEFT JOIN points p ON p.student_id = s.student_id
+       WHERE s.center_id = $1
+         AND s.class_id = $2
+         AND s.deleted_at IS NULL
+     )
+     SELECT * FROM ranked WHERE student_id = $3`,
+    [centerId, classId, studentId]
+  );
+  return result.rows[0] || null;
+};
+
 const centerRank = async (centerId: number, limit = 100) => {
   const result = await pool.query(
     `WITH points AS (
@@ -160,6 +191,39 @@ const centerRank = async (centerId: number, limit = 100) => {
     [centerId, limit]
   );
   return result.rows;
+};
+
+const centerRankSummary = async (centerId: number, studentId: number) => {
+  const result = await pool.query(
+    `WITH points AS (
+       SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
+       FROM grades
+       WHERE center_id = $1
+       GROUP BY student_id
+     ),
+     ranked AS (
+       SELECT
+         s.student_id,
+         s.class_id,
+         c.class_name,
+         s.coins,
+         COALESCE(p.points, 0) AS points,
+         RANK() OVER (
+           ORDER BY COALESCE(s.coins, 0) DESC,
+                    COALESCE(p.points, 0) DESC,
+                    s.student_id ASC
+         )::int AS rank,
+         COUNT(*) OVER ()::int AS total_students
+       FROM students s
+       LEFT JOIN classes c ON c.class_id = s.class_id
+       LEFT JOIN points p ON p.student_id = s.student_id
+       WHERE s.center_id = $1
+         AND s.deleted_at IS NULL
+     )
+     SELECT * FROM ranked WHERE student_id = $2`,
+    [centerId, studentId]
+  );
+  return result.rows[0] || null;
 };
 
 const results = async (studentId: number, page: number, limit: number) => {
@@ -199,6 +263,52 @@ const results = async (studentId: number, page: number, limit: number) => {
   return { data: rows.rows, total: Number(count.rows[0]?.total || 0), page, limit };
 };
 
-module.exports = { resolveStudent, findLastLesson, classRank, centerRank, results };
+const payments = async (studentId: number, centerId: number, page: number, limit: number) => {
+  const offset = (page - 1) * limit;
+  const params = [studentId, centerId, limit, offset];
+  const [rows, count] = await Promise.all([
+    pool.query(
+      `SELECT
+         payment_id,
+         payment_date,
+         amount,
+         currency,
+         payment_method,
+         payment_status,
+         payment_type,
+         receipt_number,
+         final_amount,
+         discount_amount,
+         is_complete
+       FROM payments
+       WHERE student_id = $1
+         AND center_id = $2
+         AND deleted_at IS NULL
+       ORDER BY payment_date DESC, payment_id DESC
+       LIMIT $3 OFFSET $4`,
+      params
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int AS total
+       FROM payments
+       WHERE student_id = $1
+         AND center_id = $2
+         AND deleted_at IS NULL`,
+      [studentId, centerId]
+    ),
+  ]);
+  return { data: rows.rows, total: Number(count.rows[0]?.total || 0), page, limit };
+};
+
+module.exports = {
+  resolveStudent,
+  findLastLesson,
+  classRank,
+  classRankSummary,
+  centerRank,
+  centerRankSummary,
+  results,
+  payments,
+};
 
 export {};

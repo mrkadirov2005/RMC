@@ -3,6 +3,16 @@ const repository = require('../repositories/telegram_student.repository');
 const fullName = (row: any, prefix = '') =>
   [row?.[`${prefix}first_name`], row?.[`${prefix}last_name`]].filter(Boolean).join(' ').trim();
 
+const money = (value: unknown, currency = 'UZS') =>
+  `${Number(value || 0).toLocaleString('en-US')} ${currency || 'UZS'}`;
+
+const fmtDate = (value: unknown) => {
+  if (!value) return '-';
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return '-';
+  return date.toISOString().slice(0, 10);
+};
+
 const toStudentProfile = (row: any) => ({
   student_id: row.student_id,
   name: fullName(row),
@@ -38,9 +48,11 @@ const menu = async (telegramUserId: string) => {
     student: toStudentProfile(student),
     menus: [
       { key: 'last_lesson', label: "Oxirgi dars" },
+      { key: 'payments', label: "To'lovlar" },
       { key: 'rankings', label: "O'rin", children: ['class', 'center'] },
       { key: 'results', label: 'Natijalar' },
     ],
+    message: `Xush kelibsiz, ${fullName(student)}. Kerakli bo'limni tanlang.`,
   };
 };
 
@@ -78,24 +90,27 @@ const lastLesson = async (telegramUserId: string) => {
 const rankings = async (telegramUserId: string, scope: string) => {
   const student = await requireStudent(telegramUserId);
   const normalizedScope = scope === 'center' ? 'center' : 'class';
-  const rows = normalizedScope === 'center'
-    ? await repository.centerRank(student.center_id)
+  const summary = normalizedScope === 'center'
+    ? await repository.centerRankSummary(student.center_id, student.student_id)
     : student.class_id
-      ? await repository.classRank(student.center_id, student.class_id)
-      : [];
+      ? await repository.classRankSummary(student.center_id, student.class_id, student.student_id)
+      : null;
+  const title = normalizedScope === 'center' ? "Markaz bo'yicha o'rin" : "Guruh bo'yicha o'rin";
   return {
     student: toStudentProfile(student),
     scope: normalizedScope,
-    ranking: rows.map((row: any) => ({
-      rank: row.rank,
-      student_id: row.student_id,
-      name: fullName(row),
-      status: row.status,
-      class_name: row.class_name,
-      coins: Number(row.coins || 0),
-      points: Number(row.points || 0),
-      is_me: Number(row.student_id) === Number(student.student_id),
-    })),
+    ranking: summary
+      ? {
+          rank: Number(summary.rank || 0),
+          total_students: Number(summary.total_students || 0),
+          coins: Number(summary.coins || 0),
+          points: Number(summary.points || 0),
+          class_name: summary.class_name || student.class_name || null,
+        }
+      : null,
+    message: summary
+      ? `${title}: ${summary.rank}-o'rin / ${summary.total_students} ta o'quvchi. Coins: ${summary.coins || 0}, points: ${summary.points || 0}.`
+      : `${title}: hozircha reyting ma'lumoti topilmadi.`,
   };
 };
 
@@ -111,6 +126,41 @@ const results = async (telegramUserId: string, page: number, limit: number) => {
   };
 };
 
-module.exports = { menu, lastLesson, rankings, results };
+const payments = async (telegramUserId: string, page: number, limit: number) => {
+  const student = await requireStudent(telegramUserId);
+  const safePage = Math.max(1, Number(page || 1));
+  const safeLimit = Math.min(20, Math.max(1, Number(limit || 10)));
+  const data = await repository.payments(student.student_id, student.center_id, safePage, safeLimit);
+  const rows = data.data.map((row: any) => ({
+    payment_id: row.payment_id,
+    date: row.payment_date,
+    amount: Number(row.amount || 0),
+    final_amount: row.final_amount == null ? null : Number(row.final_amount || 0),
+    discount_amount: row.discount_amount == null ? null : Number(row.discount_amount || 0),
+    currency: row.currency || 'UZS',
+    method: row.payment_method,
+    status: row.payment_status,
+    type: row.payment_type,
+    receipt_number: row.receipt_number,
+    is_complete: Boolean(row.is_complete),
+  }));
+  const lines = rows.length
+    ? rows.map((row: any, index: number) =>
+        `${index + 1}. ${fmtDate(row.date)} · ${money(row.final_amount ?? row.amount, row.currency)} · ${row.status || '-'}`
+      )
+    : ["Hozircha to'lov yozuvlari topilmadi."];
+
+  return {
+    student: toStudentProfile(student),
+    data: rows,
+    total: data.total,
+    page: data.page,
+    limit: data.limit,
+    total_pages: Math.max(1, Math.ceil(data.total / data.limit)),
+    message: [`To'lovlar tarixi`, `${fullName(student)}`, '', ...lines].join('\n'),
+  };
+};
+
+module.exports = { menu, lastLesson, rankings, results, payments };
 
 export {};

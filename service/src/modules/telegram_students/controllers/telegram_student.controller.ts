@@ -48,6 +48,14 @@ const getResults = async (req: any, res: any) => {
   }
 };
 
-module.exports = { getMenu, getLastLesson, getRankings, getResults };
+const getPayments = async (req: any, res: any) => {
+  try {
+    res.json(await service.payments(telegramUserIdFrom(req), Number(req.query.page || 1), Number(req.query.limit || 10)));
+  } catch (error: any) {
+    sendError(res, error);
+  }
+};
+
+module.exports = { getMenu, getLastLesson, getRankings, getResults, getPayments };
 
 export {};

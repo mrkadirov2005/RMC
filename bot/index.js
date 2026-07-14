@@ -29,7 +29,8 @@ const MAIN_KEYBOARD = {
 const AUTH_KEYBOARD = {
   keyboard: [
     [{ text: 'Darslar' }, { text: 'Oxirgi dars' }],
-    [{ text: "O'rin" }, { text: 'Natijalar' }],
+    [{ text: "O'rin" }, { text: "To'lovlar" }],
+    [{ text: 'Natijalar' }],
     [{ text: 'Chiqish' }],
   ],
   resize_keyboard: true,
@@ -93,6 +94,10 @@ function formatDate(value) {
 function moneyOrNumber(value) {
   const num = Number(value || 0);
   return Number.isInteger(num) ? String(num) : num.toFixed(2);
+}
+
+function moneyText(value, currency = 'UZS') {
+  return `${Number(value || 0).toLocaleString('en-US')} ${currency || 'UZS'}`;
 }
 
 async function telegram(method, payload) {
@@ -334,67 +339,67 @@ async function getClassPerformance(studentId, classId) {
   };
 }
 
-async function getClassRank(centerId, classId) {
+async function getClassRankSummary(centerId, classId, studentId) {
   const result = await pool.query(
     `WITH points AS (
        SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
        FROM grades
        WHERE center_id = $1 AND class_id = $2
        GROUP BY student_id
+     ),
+     ranked AS (
+       SELECT
+         s.student_id,
+         s.coins,
+         COALESCE(p.points, 0) AS points,
+         RANK() OVER (
+           ORDER BY COALESCE(s.coins, 0) DESC,
+                    COALESCE(p.points, 0) DESC,
+                    s.student_id ASC
+         )::int AS rank,
+         COUNT(*) OVER ()::int AS total_students
+       FROM students s
+       LEFT JOIN points p ON p.student_id = s.student_id
+       WHERE s.center_id = $1
+         AND s.class_id = $2
+         AND s.deleted_at IS NULL
      )
-     SELECT
-       s.student_id,
-       s.first_name,
-       s.last_name,
-       s.coins,
-       COALESCE(p.points, 0) AS points,
-       RANK() OVER (
-         ORDER BY COALESCE(s.coins, 0) DESC,
-                  COALESCE(p.points, 0) DESC,
-                  s.student_id ASC
-       )::int AS rank
-     FROM students s
-     LEFT JOIN points p ON p.student_id = s.student_id
-     WHERE s.center_id = $1
-       AND s.class_id = $2
-       AND s.deleted_at IS NULL
-     ORDER BY rank, s.last_name, s.first_name
-     LIMIT 30`,
-    [centerId, classId]
+     SELECT * FROM ranked WHERE student_id = $3`,
+    [centerId, classId, studentId]
   );
-  return result.rows;
+  return result.rows[0] || null;
 }
 
-async function getCenterRank(centerId) {
+async function getCenterRankSummary(centerId, studentId) {
   const result = await pool.query(
     `WITH points AS (
        SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
        FROM grades
        WHERE center_id = $1
        GROUP BY student_id
+     ),
+     ranked AS (
+       SELECT
+         s.student_id,
+         c.class_name,
+         s.coins,
+         COALESCE(p.points, 0) AS points,
+         RANK() OVER (
+           ORDER BY COALESCE(s.coins, 0) DESC,
+                    COALESCE(p.points, 0) DESC,
+                    s.student_id ASC
+         )::int AS rank,
+         COUNT(*) OVER ()::int AS total_students
+       FROM students s
+       LEFT JOIN classes c ON c.class_id = s.class_id
+       LEFT JOIN points p ON p.student_id = s.student_id
+       WHERE s.center_id = $1
+         AND s.deleted_at IS NULL
      )
-     SELECT
-       s.student_id,
-       s.first_name,
-       s.last_name,
-       c.class_name,
-       s.coins,
-       COALESCE(p.points, 0) AS points,
-       RANK() OVER (
-         ORDER BY COALESCE(s.coins, 0) DESC,
-                  COALESCE(p.points, 0) DESC,
-                  s.student_id ASC
-       )::int AS rank
-     FROM students s
-     LEFT JOIN classes c ON c.class_id = s.class_id
-     LEFT JOIN points p ON p.student_id = s.student_id
-     WHERE s.center_id = $1
-       AND s.deleted_at IS NULL
-     ORDER BY rank, s.last_name, s.first_name
-     LIMIT 30`,
-    [centerId]
+     SELECT * FROM ranked WHERE student_id = $2`,
+    [centerId, studentId]
   );
-  return result.rows;
+  return result.rows[0] || null;
 }
 
 async function getStudentResults(studentId, page) {
@@ -430,6 +435,50 @@ async function getStudentResults(studentId, page) {
     page: safePage,
     total,
     totalPages: Math.max(1, Math.ceil(total / RESULTS_PAGE_SIZE)),
+  };
+}
+
+async function getStudentPayments(studentId, centerId, page = 1) {
+  const safePage = Math.max(1, Number(page || 1));
+  const limit = RESULTS_PAGE_SIZE;
+  const offset = (safePage - 1) * limit;
+  const [rows, count] = await Promise.all([
+    pool.query(
+      `SELECT
+         payment_id,
+         payment_date,
+         amount,
+         currency,
+         payment_method,
+         payment_status,
+         payment_type,
+         receipt_number,
+         final_amount,
+         discount_amount,
+         is_complete
+       FROM payments
+       WHERE student_id = $1
+         AND center_id = $2
+         AND deleted_at IS NULL
+       ORDER BY payment_date DESC, payment_id DESC
+       LIMIT $3 OFFSET $4`,
+      [studentId, centerId, limit, offset]
+    ),
+    pool.query(
+      `SELECT COUNT(*)::int AS total
+       FROM payments
+       WHERE student_id = $1
+         AND center_id = $2
+         AND deleted_at IS NULL`,
+      [studentId, centerId]
+    ),
+  ]);
+  const total = Number(count.rows[0]?.total || 0);
+  return {
+    rows: rows.rows,
+    page: safePage,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
   };
 }
 
@@ -510,6 +559,13 @@ function resultsKeyboard(page, totalPages) {
   return buttons.length ? { inline_keyboard: [buttons] } : undefined;
 }
 
+function paymentsKeyboard(page, totalPages) {
+  const buttons = [];
+  if (page > 1) buttons.push({ text: 'Oldingi', callback_data: `payments:${page - 1}` });
+  if (page < totalPages) buttons.push({ text: 'Keyingi', callback_data: `payments:${page + 1}` });
+  return buttons.length ? { inline_keyboard: [buttons] } : undefined;
+}
+
 function performanceText(row, stats) {
   const studentName = stats.student
     ? `${stats.student.first_name} ${stats.student.last_name}`
@@ -540,43 +596,47 @@ function performanceText(row, stats) {
 function lastSessionText(details) {
   const { lesson, grade, attendance, coins } = details;
   const lines = [
-    `<b>Oxirgi dars: ${lesson.class_name}</b>`,
+    `<b>Oxirgi dars</b>`,
+    `<b>${lesson.class_name}</b>`,
     `Sana: ${formatDate(lesson.session_date)}`,
     `Vaqt: ${lesson.start_time || '-'} - ${lesson.end_time || '-'}`,
     '',
-    `<b>Davomat:</b> ${attendance?.status || '-'}`,
+    `<b>Davomat</b>: ${attendance?.status || '-'}`,
   ];
 
   if (grade) {
     lines.push(
       '',
-      '<b>Ballar:</b>',
-      `Attendance: ${grade.attendance_score ?? 0}`,
-      `Homework: ${grade.homework_score ?? 0}`,
-      `Activity: ${grade.activity_score ?? 0}`,
-      `Total: ${moneyOrNumber(grade.marks_obtained)}/${moneyOrNumber(grade.total_marks)} (${moneyOrNumber(grade.percentage)}%)`
+      '<b>Ballar</b>',
+      `Davomat: ${grade.attendance_score ?? 0}`,
+      `Uy vazifa: ${grade.homework_score ?? 0}`,
+      `Faollik: ${grade.activity_score ?? 0}`,
+      `Jami: ${moneyOrNumber(grade.marks_obtained)}/${moneyOrNumber(grade.total_marks)} (${moneyOrNumber(grade.percentage)}%)`
     );
   } else {
-    lines.push('', '<b>Ballar:</b> -');
+    lines.push('', '<b>Ballar</b>: -');
   }
 
-  lines.push('', `<b>Coins:</b> ${coins ? `${coins.delta} (${coins.reason || 'lesson'})` : '-'}`);
+  lines.push('', `<b>Coins</b>: ${coins ? `${coins.delta} (${coins.reason || 'lesson'})` : '-'}`);
   return lines.join('\n');
 }
 
-function rankText(title, rows, currentStudentId) {
-  if (!rows.length) return `${title}\n\nHozircha reyting ma'lumoti yo'q.`;
-  const list = rows.map((row) => {
-    const name = `${row.first_name || ''} ${row.last_name || ''}`.trim();
-    const marker = Number(row.student_id) === Number(currentStudentId) ? ' (siz)' : '';
-    const className = row.class_name ? ` · ${row.class_name}` : '';
-    return `${row.rank}. ${name}${marker}${className}\n   Coins: ${row.coins || 0} · Points: ${moneyOrNumber(row.points)}`;
-  });
-  return [`<b>${title}</b>`, '', ...list].join('\n');
+function rankSummaryText(title, row) {
+  if (!row) return [`<b>${title}</b>`, '', "Hozircha reyting ma'lumoti yo'q."].join('\n');
+  const suffix = row.class_name ? `\nGuruh: ${row.class_name}` : '';
+  return [
+    `<b>${title}</b>`,
+    '',
+    `Siz: <b>${row.rank}-o'rin</b>`,
+    `Jami: ${row.total_students} ta o'quvchi`,
+    `Coins: ${row.coins || 0}`,
+    `Points: ${moneyOrNumber(row.points)}`,
+    suffix.trim(),
+  ].filter(Boolean).join('\n');
 }
 
 function resultsText(results) {
-  if (!results.rows.length) return "Natijalar hali yo'q.";
+  if (!results.rows.length) return ["<b>Natijalar</b>", '', "Hozircha natija yo'q."].join('\n');
   const rows = results.rows.map((row, index) => {
     const number = (results.page - 1) * RESULTS_PAGE_SIZE + index + 1;
     const subject = row.subject || row.class_name || 'Dars';
@@ -584,10 +644,28 @@ function resultsText(results) {
       `${number}. <b>${subject}</b>`,
       `Sana: ${formatDate(row.session_date)} ${row.start_time || ''}`.trim(),
       `Ball: ${moneyOrNumber(row.marks_obtained)}/${moneyOrNumber(row.total_marks)} (${moneyOrNumber(row.percentage)}%)`,
-      `A/H/Act: ${row.attendance_score ?? 0}/${row.homework_score ?? 0}/${row.activity_score ?? 0} · Coins: ${row.total_daily_coin ?? 0}`,
+      `Davomat/Uy vazifa/Faollik: ${row.attendance_score ?? 0}/${row.homework_score ?? 0}/${row.activity_score ?? 0}`,
+      `Coins: ${row.total_daily_coin ?? 0}`,
     ].join('\n');
   });
-  return [`<b>Natijalar</b> · ${results.page}/${results.totalPages}`, '', ...rows].join('\n\n');
+  return [`<b>Natijalar</b>`, `Sahifa: ${results.page}/${results.totalPages}`, '', ...rows].join('\n\n');
+}
+
+function paymentsText(payments) {
+  if (!payments.rows.length) return ["<b>To'lovlar</b>", '', "Hozircha to'lov yozuvlari topilmadi."].join('\n');
+  const rows = payments.rows.map((row, index) => {
+    const number = (payments.page - 1) * RESULTS_PAGE_SIZE + index + 1;
+    const paid = row.final_amount == null ? row.amount : row.final_amount;
+    const discount = Number(row.discount_amount || 0);
+    return [
+      `${number}. <b>${formatDate(row.payment_date)}</b>`,
+      `Miqdor: ${moneyText(paid, row.currency)}`,
+      discount > 0 ? `Chegirma: ${moneyText(discount, row.currency)}` : '',
+      `Holat: ${row.payment_status || '-'}`,
+      row.receipt_number ? `Kvitansiya: ${row.receipt_number}` : '',
+    ].filter(Boolean).join('\n');
+  });
+  return [`<b>To'lovlar</b>`, `Sahifa: ${payments.page}/${payments.totalPages}`, '', ...rows].join('\n\n');
 }
 
 async function startRegistration(chatId) {
@@ -662,7 +740,7 @@ async function handleRegisterStep(message, state) {
 
 async function startLogin(chatId) {
   userState.set(chatId, { flow: 'login', step: 'username', data: {} });
-  await sendMessage(chatId, 'Username kiriting:');
+  await sendMessage(chatId, ["<b>Kirish</b>", '', 'Username kiriting:'].join('\n'));
 }
 
 async function handleLoginStep(message, state) {
@@ -674,19 +752,23 @@ async function handleLoginStep(message, state) {
     state.data.username = text;
     state.step = 'password';
     userState.set(chatId, state);
-    await sendMessage(chatId, 'Parol kiriting:');
+    await sendMessage(chatId, ["<b>Kirish</b>", '', 'Parol kiriting:'].join('\n'));
     return;
   }
 
   const student = await authenticate(state.data.username, text);
   userState.delete(chatId);
   if (!student) {
-    await sendMessage(chatId, "Username yoki parol noto'g'ri.", { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, ["<b>Kirish amalga oshmadi</b>", '', "Username yoki parol noto'g'ri."].join('\n'), {
+      reply_markup: MAIN_KEYBOARD,
+    });
     return;
   }
 
   sessions.set(chatId, { ...student, selectedClassId: student.class_id, selectedStudentId: student.student_id });
-  await sendMessage(chatId, `Xush kelibsiz, ${student.first_name} ${student.last_name}!`, { reply_markup: AUTH_KEYBOARD });
+  await sendMessage(chatId, [`<b>Xush kelibsiz</b>`, `${student.first_name} ${student.last_name}`, '', "Kerakli bo'limni tanlang."].join('\n'), {
+    reply_markup: AUTH_KEYBOARD,
+  });
 }
 
 async function showClasses(chatId) {
@@ -702,7 +784,7 @@ async function showClasses(chatId) {
     return;
   }
 
-  await sendMessage(chatId, 'Guruhni tanlang:', { reply_markup: classKeyboard(classes) });
+  await sendMessage(chatId, ["<b>Darslar</b>", '', 'Guruhni tanlang:'].join('\n'), { reply_markup: classKeyboard(classes) });
 }
 
 async function showLastSession(chatId) {
@@ -740,7 +822,7 @@ async function showRankMenu(chatId) {
     await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
-  await sendMessage(chatId, "Reyting turini tanlang:", { reply_markup: rankMenuKeyboard() });
+  await sendMessage(chatId, ["<b>O'rin</b>", '', "Reyting turini tanlang:"].join('\n'), { reply_markup: rankMenuKeyboard() });
 }
 
 async function showRank(chatId, scope) {
@@ -751,8 +833,8 @@ async function showRank(chatId, scope) {
   }
 
   if (scope === 'center') {
-    const rows = await getCenterRank(session.center_id);
-    await sendMessage(chatId, rankText("Markaz bo'yicha reyting", rows, session.student_id), { reply_markup: AUTH_KEYBOARD });
+    const row = await getCenterRankSummary(session.center_id, session.selectedStudentId || session.student_id);
+    await sendMessage(chatId, rankSummaryText("Markaz bo'yicha reyting", row), { reply_markup: AUTH_KEYBOARD });
     return;
   }
 
@@ -761,8 +843,8 @@ async function showRank(chatId, scope) {
     await sendMessage(chatId, "Avval Darslar bo'limidan guruhni tanlang.", { reply_markup: AUTH_KEYBOARD });
     return;
   }
-  const rows = await getClassRank(session.center_id, classId);
-  await sendMessage(chatId, rankText("Guruh bo'yicha reyting", rows, session.selectedStudentId || session.student_id), {
+  const row = await getClassRankSummary(session.center_id, classId, session.selectedStudentId || session.student_id);
+  await sendMessage(chatId, rankSummaryText("Guruh bo'yicha reyting", row), {
     reply_markup: AUTH_KEYBOARD,
   });
 }
@@ -779,6 +861,18 @@ async function showResults(chatId, page = 1) {
   await sendMessage(chatId, resultsText(results), { reply_markup: keyboard || AUTH_KEYBOARD });
 }
 
+async function showPayments(chatId, page = 1) {
+  const session = sessions.get(chatId);
+  if (!session) {
+    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    return;
+  }
+
+  const payments = await getStudentPayments(session.selectedStudentId || session.student_id, session.center_id, page);
+  const keyboard = paymentsKeyboard(payments.page, payments.totalPages);
+  await sendMessage(chatId, paymentsText(payments), { reply_markup: keyboard || AUTH_KEYBOARD });
+}
+
 async function handleMessage(message) {
   const chatId = message.chat.id;
   const text = cleanText(message.text);
@@ -786,7 +880,9 @@ async function handleMessage(message) {
 
   if (text === '/start') {
     userState.delete(chatId);
-    await sendMessage(chatId, 'Assalomu alaykum. Kerakli bo‘limni tanlang:', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, ['<b>Assalomu alaykum</b>', '', 'Kerakli bo‘limni tanlang:'].join('\n'), {
+      reply_markup: MAIN_KEYBOARD,
+    });
     return;
   }
 
@@ -825,6 +921,11 @@ async function handleMessage(message) {
     return;
   }
 
+  if (text === "To'lovlar" || text === "To‘lovlar") {
+    await showPayments(chatId);
+    return;
+  }
+
   if (text === 'Natijalar') {
     await showResults(chatId);
     return;
@@ -858,6 +959,10 @@ async function handleCallback(callbackQuery) {
   }
   if (kind === 'results') {
     await showResults(chatId, Number(studentIdRaw || 1));
+    return;
+  }
+  if (kind === 'payments') {
+    await showPayments(chatId, Number(studentIdRaw || 1));
     return;
   }
   if (kind !== 'class') return;
