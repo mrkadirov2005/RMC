@@ -321,9 +321,15 @@ export const paymentAPI = {
 };
 
 export const discountAPI = {
-  getAll: (params?: Record<string, unknown>) => apiClient.get('/discounts', { params }),
+  getAll: (params?: Record<string, unknown>, options?: { skipCenterScope?: boolean }) =>
+    apiClient.get('/discounts', {
+      params,
+      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+    }),
   getById: (id: number) => apiClient.get(`/discounts/${id}`),
   getActiveSerialByStudent: (studentId: number) => apiClient.get(`/discounts/student/${studentId}/active`),
+  getActiveByStudent: (studentId: number, params?: Record<string, unknown>) =>
+    apiClient.get(`/discounts/student/${studentId}/active-any`, { params }),
   create: (data: any) => apiClient.post('/discounts', data),
   update: (id: number, data: any) => apiClient.put(`/discounts/${id}`, data),
   delete: (id: number) => apiClient.delete(`/discounts/${id}`),

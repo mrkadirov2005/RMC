@@ -72,6 +72,7 @@ export const useOwnerManager = () => {
     teachers: [] as any[],
     classes: [] as any[],
     payments: [] as any[],
+    discounts: [] as any[],
     deletedStudents: [] as any[],
   });
   const [overviewCollections, setOverviewCollections] = useState<OwnerOverviewCollections>({
@@ -82,6 +83,7 @@ export const useOwnerManager = () => {
     teachers: [],
     classes: [],
     payments: [],
+    discounts: [],
     deletedStudents: [],
   });
   const [overviewSummary, setOverviewSummary] = useState({
@@ -175,7 +177,7 @@ export const useOwnerManager = () => {
         const payments = Array.isArray(paymentsRes) ? paymentsRes : paymentsRes.data || [];
         const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
 
-        setStatisticsCollections({ students, teachers, classes, payments, deletedStudents });
+        setStatisticsCollections({ students, teachers, classes, payments, discounts: [], deletedStudents });
         dispatch(setOwnerManagerData(activeTab === 'finance' ? teachers : students));
         return;
       }
@@ -193,7 +195,7 @@ export const useOwnerManager = () => {
         const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
         const payments = Array.isArray(paymentsRes) ? paymentsRes : paymentsRes.data || [];
         const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
-        setStatisticsCollections({ students, teachers, classes, payments, deletedStudents });
+        setStatisticsCollections({ students, teachers, classes, payments, discounts: [], deletedStudents });
         dispatch(setOwnerManagerData(teachers));
         return;
       }
@@ -224,6 +226,7 @@ export const useOwnerManager = () => {
         teachers: [],
         classes: [],
         payments: [],
+        discounts: [],
         deletedStudents: [],
       });
     } finally {
@@ -265,6 +268,7 @@ export const useOwnerManager = () => {
         teachers: [],
         classes: [],
         payments: [],
+        discounts: [],
         deletedStudents: toRows(deletedStudentsRes),
       });
     } finally {

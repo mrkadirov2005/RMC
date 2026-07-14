@@ -210,9 +210,29 @@ const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId
 
 const findByIdWithClass = async (id: number, centerId?: number, teacherId?: number) => {
   let query = `
-    SELECT s.*, c.class_name
+    SELECT
+      s.*,
+      c.class_name,
+      (d.discount_id IS NOT NULL) AS is_discounted,
+      d.discount_kind,
+      d.discount_type AS discount_value_type,
+      d.value AS discount_value,
+      d.original_price AS discount_original_price,
+      d.reason AS discount_reason
     FROM students s
     LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
+    LEFT JOIN LATERAL (
+      SELECT discount_id, discount_kind, discount_type, value, original_price, reason
+      FROM discounts
+      WHERE student_id = s.student_id
+        AND active = TRUE
+        AND (start_date IS NULL OR start_date <= CURRENT_DATE)
+        AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+      ORDER BY
+        CASE discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END,
+        created_at DESC
+      LIMIT 1
+    ) d ON TRUE
     WHERE s.student_id = $1 AND s.deleted_at IS NULL
   `;
   const params: any[] = [id];

@@ -33,6 +33,7 @@ export interface Student {
   username?: string;
   password?: string;
   is_discounted?: boolean;
+  discount_kind?: 'serial_discount' | 'monthly_discount';
   discount_value_type?: 'percent' | 'fixed';
   discount_value?: number;
   discount_original_price?: number;

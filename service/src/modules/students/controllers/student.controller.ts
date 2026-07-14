@@ -1,40 +1,8 @@
 const { generateToken } = require('../../../middleware/auth');
 const studentService = require('../services/student.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
-
-const toPositiveInt = (value: unknown) => {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) && numeric > 0 ? numeric : undefined;
-};
-
-const toInt = (value: unknown) => {
-  const numeric = Number(value);
-  return Number.isFinite(numeric) ? numeric : undefined;
-};
-
-const cleanString = (value: unknown) => {
-  const text = String(value ?? '').trim();
-  return text || undefined;
-};
-
-const parseStudentListQuery = (query: Record<string, unknown>) => ({
-  q: cleanString(query.q || query.search || query.name),
-  school_name: cleanString(query.school_name),
-  class_id: toInt(query.class_id),
-  subject_id: toPositiveInt(query.subject_id),
-  level: toInt(query.level),
-  address: cleanString(query.address),
-  age: toPositiveInt(query.age),
-  gender: cleanString(query.gender),
-  status: cleanString(query.status),
-  teacher_id: toPositiveInt(query.teacher_id),
-  page: toPositiveInt(query.page) || 1,
-  limit: Math.min(100, toPositiveInt(query.limit) || 20),
-});
-
-const hasStudentListParams = (query: Record<string, unknown>) =>
-  ['q', 'search', 'name', 'school_name', 'class_id', 'subject_id', 'level', 'address', 'age', 'gender', 'status', 'teacher_id', 'page', 'limit']
-    .some((key) => query[key] !== undefined && query[key] !== '');
+const { hasStudentListParams, parseStudentListQuery } = require('./studentListQuery');
+const studentCoinsController = require('./studentCoins.controller');
 
 const getAllStudents = async (req: any, res: any) => {
   try {
@@ -321,138 +289,6 @@ const changeStudentPassword = async (req: any, res: any) => {
   }
 };
 
-const getStudentCoins = async (req: any, res: any) => {
-  try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    const studentId = Number(req.params.id);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
-    if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
-    }
-    const summary = await studentService.getCoinSummary(studentId, centerId ?? undefined, teacherId);
-    if (!summary) return res.status(404).json({ error: 'Student not found' });
-    res.json(summary);
-  } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch coins', details: error.message || String(error) });
-  }
-};
-
-const addStudentCoins = async (req: any, res: any) => {
-  try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    const studentId = Number(req.params.id);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
-    if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
-    }
-
-    const rawAmount = Number(req.body?.amount);
-
-    const direction = String(req.body?.direction || '').toLowerCase();
-    const delta = direction === 'subtract' ? -Math.abs(rawAmount) : rawAmount;
-    const reason = req.body?.reason ? String(req.body.reason) : null;
-
-    const scopedStudent = await studentService.getStudent(studentId, centerId ?? undefined, teacherId);
-    if (!scopedStudent) return res.status(404).json({ error: 'Student not found' });
-
-    const out = await studentService.addCoins(studentId, delta, reason, req.user?.id ?? null, req.user?.userType ?? null);
-    if (out.error === 'insufficient') {
-      return res.status(400).json({ error: 'Insufficient coins for this operation.' });
-    }
-    if (out.error === 'not_found') {
-      return res.status(404).json({ error: 'Student not found' });
-    }
-    res.json(out);
-  } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update coins', details: error.message || String(error) });
-  }
-};
-
-const updateStudentCoinTransaction = async (req: any, res: any) => {
-  try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    const studentId = Number(req.params.id);
-    const transactionId = Number(req.params.transactionId);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
-    if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
-    }
-
-    const rawAmount = Number(req.body?.amount);
-    const direction = String(req.body?.direction || '').toLowerCase();
-    const delta = direction === 'subtract' ? -Math.abs(rawAmount) : rawAmount;
-    const reason = req.body?.reason ? String(req.body.reason) : null;
-
-    const scopedStudent = await studentService.getStudent(studentId, centerId ?? undefined, teacherId);
-    if (!scopedStudent) return res.status(404).json({ error: 'Student not found' });
-
-    const out = await studentService.updateCoinTransaction(studentId, transactionId, delta, reason);
-    if (out.error === 'insufficient') {
-      return res.status(400).json({ error: 'Insufficient coins for this operation.' });
-    }
-    if (out.error === 'not_found' || out.error === 'tx_not_found') {
-      return res.status(404).json({ error: 'Transaction not found' });
-    }
-    res.json(out);
-  } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update coins', details: error.message || String(error) });
-  }
-};
-
-const deleteStudentCoinTransaction = async (req: any, res: any) => {
-  try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    const studentId = Number(req.params.id);
-    const transactionId = Number(req.params.transactionId);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
-    if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
-    }
-
-    const scopedStudent = await studentService.getStudent(studentId, centerId ?? undefined, teacherId);
-    if (!scopedStudent) return res.status(404).json({ error: 'Student not found' });
-
-    const out = await studentService.deleteCoinTransaction(studentId, transactionId);
-    if (out.error === 'insufficient') {
-      return res.status(400).json({ error: 'Insufficient coins for this operation.' });
-    }
-    if (out.error === 'not_found' || out.error === 'tx_not_found') {
-      return res.status(404).json({ error: 'Transaction not found' });
-    }
-    res.json(out);
-  } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete coins', details: error.message || String(error) });
-  }
-};
-
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -466,10 +302,10 @@ module.exports = {
   studentLogin,
   setStudentPassword,
   changeStudentPassword,
-  getStudentCoins,
-  addStudentCoins,
-  updateStudentCoinTransaction,
-  deleteStudentCoinTransaction,
+  getStudentCoins: studentCoinsController.getStudentCoins,
+  addStudentCoins: studentCoinsController.addStudentCoins,
+  updateStudentCoinTransaction: studentCoinsController.updateStudentCoinTransaction,
+  deleteStudentCoinTransaction: studentCoinsController.deleteStudentCoinTransaction,
 };
 
 export {};

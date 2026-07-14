@@ -7,6 +7,7 @@ const router = express.Router();
 const discountController = require('../modules/discounts');
 
 router.get('/', discountController.getAllDiscounts);
+router.get('/student/:studentId/active-any', discountController.getActiveDiscountByStudent);
 router.get('/student/:studentId/active', discountController.getActiveSerialDiscountByStudent);
 router.get('/:id', discountController.getDiscountById);
 router.post('/', validateBody(CreateDiscountDto), discountController.createDiscount);

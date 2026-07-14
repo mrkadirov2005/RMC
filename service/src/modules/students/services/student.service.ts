@@ -17,6 +17,49 @@ const listDeletedStudents = (centerId?: number) =>
 const listClassStudentsWithTransfers = (classId: number, centerId?: number, teacherId?: number) =>
   studentRepository.findByClassIncludingTransferred(classId, centerId, teacherId);
 
+const syncStudentDiscount = async (student: any, body: any, centerId?: number) => {
+  const studentId = Number(student?.student_id || student?.id || body.student_id || 0);
+  const scopedCenterId = Number(student?.center_id || body.center_id || centerId || 0);
+  if (!studentId || !scopedCenterId || body.is_discounted === undefined) return;
+
+  const discountKind = body.discount_kind || 'serial_discount';
+  const activeDiscount = await discountService.getActiveByStudent(studentId, scopedCenterId, discountKind);
+  if (!body.is_discounted) {
+    for (const kind of ['serial_discount', 'monthly_discount']) {
+      const row = await discountService.getActiveByStudent(studentId, scopedCenterId, kind);
+      if (row?.discount_id) await discountService.update(row.discount_id, { active: false }, scopedCenterId);
+    }
+    return;
+  }
+
+  if (body.discount_value == null) return;
+  const originalPrice = Number(body.discount_original_price || body.original_price || activeDiscount?.original_price || 0);
+  const valueType = body.discount_value_type || activeDiscount?.discount_type || 'fixed';
+  const value = Number(body.discount_value || 0);
+  const calculated = discountService.calculateDiscount(originalPrice, valueType, value);
+  const payload = {
+    student_id: studentId,
+    center_id: scopedCenterId,
+    discount_type: valueType,
+    discount_kind: discountKind,
+    value,
+    original_price: originalPrice,
+    final_price: calculated.finalAmount,
+    reason: body.discount_reason || activeDiscount?.reason || null,
+    active: true,
+  };
+
+  if (activeDiscount?.discount_id) {
+    await discountService.update(activeDiscount.discount_id, payload, scopedCenterId);
+  } else {
+    await discountService.create(payload, scopedCenterId);
+  }
+
+  const otherKind = discountKind === 'serial_discount' ? 'monthly_discount' : 'serial_discount';
+  const staleDiscount = await discountService.getActiveByStudent(studentId, scopedCenterId, otherKind);
+  if (staleDiscount?.discount_id) await discountService.update(staleDiscount.discount_id, { active: false }, scopedCenterId);
+};
+
 const createStudent = async (body: any) => {
   const password_hash = body.password ? hashPassword(body.password) : null;
   const student = await studentRepository.insert({
@@ -39,30 +82,15 @@ const createStudent = async (body: any) => {
     school_class: body.school_class,
     is_frozen: body.is_frozen,
   });
-  if (body.is_discounted && body.discount_value != null) {
-    const originalPrice = Number(body.discount_original_price || body.original_price || 0);
-    const calculated = discountService.calculateDiscount(
-      originalPrice,
-      body.discount_value_type || 'fixed',
-      Number(body.discount_value || 0)
-    );
-    await discountService.create({
-      student_id: student.student_id || student.id,
-      center_id: student.center_id || body.center_id,
-      discount_type: body.discount_value_type || 'fixed',
-      discount_kind: 'serial_discount',
-      value: Number(body.discount_value || 0),
-      original_price: originalPrice,
-      final_price: calculated.finalAmount,
-      reason: body.discount_reason || null,
-      active: true,
-    });
-  }
+  await syncStudentDiscount(student, body);
   return student;
 };
 
-const updateStudent = (id: number, body: any, centerId?: number, teacherId?: number) =>
-  studentRepository.update(id, body, centerId, teacherId);
+const updateStudent = async (id: number, body: any, centerId?: number, teacherId?: number) => {
+  const student = await studentRepository.update(id, body, centerId, teacherId);
+  if (student) await syncStudentDiscount(student, body, centerId);
+  return student;
+};
 
 const deleteStudent = (id: number, centerId?: number, teacherId?: number) =>
   studentRepository.remove(id, centerId, teacherId);

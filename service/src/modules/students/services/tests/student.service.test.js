@@ -11,7 +11,9 @@ jest.mock('../../repositories/student.repository', () => ({
 
 jest.mock('../../../discounts/services/discount.service', () => ({
   calculateDiscount: jest.fn(() => ({ finalAmount: 750 })),
+  getActiveByStudent: jest.fn(),
   create: jest.fn(),
+  update: jest.fn(),
 }));
 
 jest.mock('../../repositories/studentCoins.repository', () => ({
@@ -38,6 +40,7 @@ describe('students service', () => {
 
   it('hashes password and creates a serial discount when requested', async () => {
     studentRepository.insert.mockResolvedValue({ student_id: 44, center_id: 3 });
+    discountService.getActiveByStudent.mockResolvedValue(null);
 
     const student = await studentService.createStudent({
       center_id: 3,
@@ -56,12 +59,16 @@ describe('students service', () => {
       password_hash: hashPassword('secret'),
     }));
     expect(discountService.calculateDiscount).toHaveBeenCalledWith(1000, 'fixed', 250);
-    expect(discountService.create).toHaveBeenCalledWith(expect.objectContaining({
-      student_id: 44,
-      center_id: 3,
-      final_price: 750,
-      discount_kind: 'serial_discount',
-    }));
+    expect(discountService.getActiveByStudent).toHaveBeenCalledWith(44, 3, 'serial_discount');
+    expect(discountService.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        student_id: 44,
+        center_id: 3,
+        final_price: 750,
+        discount_kind: 'serial_discount',
+      }),
+      3,
+    );
     expect(student).toEqual({ student_id: 44, center_id: 3 });
   });
 

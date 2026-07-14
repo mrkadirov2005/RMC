@@ -1,58 +1,64 @@
 const { logAudit } = require('../../../utils/audit');
 const discountService = require('../services/discount.service');
-const { getScopedCenterId } = require('../../../shared/tenant');
+const { getCenterScope, sendError, sendScopeError } = require('../../../shared/controller');
 
 const getAllDiscounts = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     res.json(await discountService.list(req.query, centerId ?? undefined));
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch discounts', details: error.message || String(error) });
+    sendError(res, error, 'Failed to fetch discounts');
   }
 };
 
 const getDiscountById = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     const row = await discountService.getById(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Discount not found' });
     res.json(row);
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch discount', details: error.message || String(error) });
+    sendError(res, error, 'Failed to fetch discount');
   }
 };
 
 const getActiveSerialDiscountByStudent = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     const row = await discountService.getActiveSerialByStudent(Number(req.params.studentId), centerId ?? undefined);
     res.json(row || null);
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch active discount', details: error.message || String(error) });
+    sendError(res, error, 'Failed to fetch active discount');
+  }
+};
+
+const getActiveDiscountByStudent = async (req: any, res: any) => {
+  try {
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
+    const row = await discountService.getActiveByStudent(
+      Number(req.params.studentId),
+      centerId ?? undefined,
+      req.query.discount_kind ? String(req.query.discount_kind) : undefined
+    );
+    res.json(row || null);
+  } catch (error: any) {
+    sendError(res, error, 'Failed to fetch active discount');
   }
 };
 
 const createDiscount = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
+    const scope = getCenterScope(req, { requireConcreteCenter: true });
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     const out = await discountService.create(req.body, centerId ?? undefined);
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
@@ -75,38 +81,33 @@ const createDiscount = async (req: any, res: any) => {
     });
     res.status(201).json({ message: 'Discount created', discount: row });
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create discount', details: error.message || String(error) });
+    sendError(res, error, 'Failed to create discount');
   }
 };
 
 const updateDiscount = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     const row = await discountService.update(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Discount not found' });
     res.json({ message: 'Discount updated', discount: row });
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update discount', details: error.message || String(error) });
+    sendError(res, error, 'Failed to update discount');
   }
 };
 
 const deleteDiscount = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     const row = await discountService.remove(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Discount not found' });
     res.json({ message: 'Discount deleted', discount: row });
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete discount', details: error.message || String(error) });
+    sendError(res, error, 'Failed to delete discount');
   }
 };
 
@@ -114,6 +115,7 @@ module.exports = {
   getAllDiscounts,
   getDiscountById,
   getActiveSerialDiscountByStudent,
+  getActiveDiscountByStudent,
   createDiscount,
   updateDiscount,
   deleteDiscount,

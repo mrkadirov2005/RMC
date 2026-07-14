@@ -36,6 +36,33 @@ const findActiveSerialByStudent = (studentId: number, centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
+const findActiveByStudent = (studentId: number, centerId?: number, discountKind?: string) => {
+  let query = `
+    SELECT *
+    FROM discounts
+    WHERE student_id = $1
+      AND active = TRUE
+      AND (start_date IS NULL OR start_date <= CURRENT_DATE)
+      AND (end_date IS NULL OR end_date >= CURRENT_DATE)
+  `;
+  const params: any[] = [studentId];
+  if (centerId) {
+    params.push(centerId);
+    query += ` AND center_id = $${params.length}`;
+  }
+  if (discountKind) {
+    params.push(discountKind);
+    query += ` AND discount_kind = $${params.length}`;
+  }
+  query += `
+    ORDER BY
+      CASE discount_kind WHEN 'serial_discount' THEN 1 ELSE 2 END,
+      created_at DESC
+    LIMIT 1
+  `;
+  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+};
+
 const insert = (params: any[]) =>
   pool
     .query(
@@ -89,6 +116,6 @@ const remove = (id: number, centerId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-module.exports = { findAllFiltered, findById, findActiveSerialByStudent, insert, update, remove };
+module.exports = { findAllFiltered, findById, findActiveSerialByStudent, findActiveByStudent, insert, update, remove };
 
 export {};

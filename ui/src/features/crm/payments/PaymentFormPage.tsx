@@ -261,7 +261,7 @@ const PaymentFormPage = () => {
     let cancelled = false;
     setLoadingDiscount(true);
     discountAPI
-      .getActiveSerialByStudent(Number(formData.student_id))
+      .getActiveByStudent(Number(formData.student_id))
       .then((res) => {
         if (cancelled) return;
         const discount = (res as any).data ?? null;
@@ -270,14 +270,36 @@ const PaymentFormPage = () => {
           setFormData((current) => ({
             ...current,
             discount_id: discount.discount_id,
-            discount_kind: 'serial_discount',
+            discount_kind: discount.discount_kind || 'serial_discount',
             discount_value_type: discount.discount_type || 'fixed',
             discount_value: Number(discount.value || 0),
+            original_amount: Number(current.original_amount || current.amount || discount.original_price || 0),
+          }));
+        } else {
+          setFormData((current) => ({
+            ...current,
+            discount_id: null,
+            discount_kind: null,
+            discount_value_type: null,
+            discount_value: 0,
+            discount_amount: 0,
+            final_amount: undefined,
           }));
         }
       })
       .catch(() => {
-        if (!cancelled) setSerialDiscount(null);
+        if (!cancelled) {
+          setSerialDiscount(null);
+          setFormData((current) => ({
+            ...current,
+            discount_id: null,
+            discount_kind: null,
+            discount_value_type: null,
+            discount_value: 0,
+            discount_amount: 0,
+            final_amount: undefined,
+          }));
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingDiscount(false);
@@ -328,7 +350,13 @@ const PaymentFormPage = () => {
         student_class_id: student.class_id,
         student_teacher_id: student.teacher_id,
         amount: nextAmount,
-        original_amount: current.discount_kind ? nextAmount : current.original_amount,
+        original_amount: nextAmount,
+        discount_id: null,
+        discount_kind: null,
+        discount_value_type: null,
+        discount_value: 0,
+        discount_amount: 0,
+        final_amount: undefined,
         currency: current.currency || 'UZS',
         payment_method: current.payment_method || 'Cash',
         payment_type: current.payment_type || 'Tuition',
@@ -606,7 +634,7 @@ const PaymentFormPage = () => {
               </div>
             </section>
 
-            {isEditing && (
+            {(isEditing || selectedStudent) && (
             <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>

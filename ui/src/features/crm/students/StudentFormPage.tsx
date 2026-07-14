@@ -32,6 +32,7 @@ const normalizeStudentFormData = (student: Student): Partial<Student> => ({
   ...student,
   password: '',
   is_discounted: Boolean(student.is_discounted),
+  discount_kind: student.discount_kind || 'serial_discount',
   discount_value_type: student.discount_value_type || 'fixed',
 });
 
@@ -49,6 +50,7 @@ const StudentFormPage = () => {
     status: 'Active',
     username: '',
     password: '',
+    discount_kind: 'serial_discount',
     discount_value_type: 'fixed',
   });
   const [loadingStudent, setLoadingStudent] = useState(isEditing);
@@ -169,7 +171,11 @@ const StudentFormPage = () => {
                   {t('Discount')}
                 </div>
                 <p className="mt-1 text-sm font-semibold text-emerald-900">
-                  {formData.is_discounted ? t('Serial discount enabled') : t('No serial discount')}
+                  {formData.is_discounted
+                    ? formData.discount_kind === 'monthly_discount'
+                      ? t('One-time discount enabled')
+                      : t('Serial discount enabled')
+                    : t('No discount')}
                 </p>
               </div>
               <div className="rounded-lg border border-rose-300 bg-rose-200 p-3 shadow-sm">

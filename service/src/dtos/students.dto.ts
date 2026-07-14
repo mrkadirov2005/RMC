@@ -170,6 +170,35 @@ class CreateStudentDto {
   @Type(() => Boolean)
   @IsBoolean()
   is_frozen?: boolean;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  is_discounted?: boolean;
+
+  @IsOptional()
+  @IsIn(['serial_discount', 'monthly_discount'])
+  discount_kind?: string;
+
+  @IsOptional()
+  @IsIn(['percent', 'fixed'])
+  discount_value_type?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_value?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_original_price?: number;
+
+  @IsOptional()
+  @IsString()
+  discount_reason?: string;
 }
 
 class UpdateStudentDto {
@@ -221,6 +250,35 @@ class UpdateStudentDto {
   @IsOptional()
   @IsString()
   school_class?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  is_discounted?: boolean;
+
+  @IsOptional()
+  @IsIn(['serial_discount', 'monthly_discount'])
+  discount_kind?: string;
+
+  @IsOptional()
+  @IsIn(['percent', 'fixed'])
+  discount_value_type?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_value?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discount_original_price?: number;
+
+  @IsOptional()
+  @IsString()
+  discount_reason?: string;
 }
 
 class TransferStudentDto {

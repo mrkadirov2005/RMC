@@ -40,6 +40,9 @@ const calculateDiscount = (originalAmount: number, valueType: string, value: num
 const getActiveSerialByStudent = (studentId: number, centerId?: number) =>
   discountRepository.findActiveSerialByStudent(studentId, centerId);
 
+const getActiveByStudent = (studentId: number, centerId?: number, discountKind?: string) =>
+  discountRepository.findActiveByStudent(studentId, centerId, discountKind);
+
 const create = async (body: any, centerId?: number) => {
   const {
     student_id,
@@ -116,6 +119,6 @@ const update = (id: number, body: any, centerId?: number) => {
 
 const remove = (id: number, centerId?: number) => discountRepository.remove(id, centerId);
 
-module.exports = { list, getById, getActiveSerialByStudent, calculateDiscount, create, update, remove };
+module.exports = { list, getById, getActiveSerialByStudent, getActiveByStudent, calculateDiscount, create, update, remove };
 
 export {};

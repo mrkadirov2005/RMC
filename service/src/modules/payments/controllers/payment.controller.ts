@@ -1,6 +1,6 @@
 const paymentService = require('../services/payment.service');
-const { getScopedCenterId } = require('../../../shared/tenant');
 const { studentBelongsToTeacher } = require('../../../shared/tenantDb');
+const { getCenterScope, sendError, sendScopeError } = require('../../../shared/controller');
 
 const ensurePaymentAccess = (req: any, res: any) => {
   if (req.user?.userType === 'student') {
@@ -23,8 +23,9 @@ const toTeacherPaymentView = (row: any) => {
 const getAllPayments = async (req: any, res: any) => {
   try {
     if (!ensurePaymentAccess(req, res)) return;
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId, teacherId } = scope;
     const requestedLimit = Number(req.query.limit);
     const limit = Number.isFinite(requestedLimit) && requestedLimit > 0
       ? Math.min(requestedLimit, 200)
@@ -32,9 +33,6 @@ const getAllPayments = async (req: any, res: any) => {
     const requestedPage = Number(req.query.page || 1);
     const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
     const studentId = req.query.student_id ? Number(req.query.student_id) : undefined;
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
     const rows = await paymentService.listPayments({
       centerId: centerId ?? undefined,
       teacherId,
@@ -47,19 +45,16 @@ const getAllPayments = async (req: any, res: any) => {
     }
     res.json(rows);
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch payments', details: error.message || String(error) });
+    sendError(res, error, 'Failed to fetch payments');
   }
 };
 
 const getPaymentById = async (req: any, res: any) => {
   try {
     if (!ensurePaymentAccess(req, res)) return;
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId, teacherId } = scope;
     const row = await paymentService.getPayment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Payment not found' });
     if (req.user?.userType === 'student' && row.student_id !== req.user?.id) {
@@ -70,8 +65,7 @@ const getPaymentById = async (req: any, res: any) => {
     }
     res.json(row);
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch payment', details: error.message || String(error) });
+    sendError(res, error, 'Failed to fetch payment');
   }
 };
 
@@ -80,21 +74,12 @@ const createPayment = async (req: any, res: any) => {
     if (req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Teachers cannot create payments.' });
     }
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
-    if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
-    }
-    if (req.user?.userType === 'teacher') {
-      const ok = await studentBelongsToTeacher(req.body.student_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
-    }
+    const scope = getCenterScope(req, { requireConcreteCenter: true });
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
     res.status(201).json(await paymentService.createPayment(req.body, centerId ?? undefined));
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create payment', details: error.message || String(error) });
+    sendError(res, error, 'Failed to create payment');
   }
 };
 
@@ -103,28 +88,23 @@ const updatePayment = async (req: any, res: any) => {
     if (req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Teachers cannot update payments.' });
     }
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId, teacherId } = scope;
     const row = await paymentService.updatePayment(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Payment not found' });
     res.json(row);
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update payment', details: error.message || String(error) });
+    sendError(res, error, 'Failed to update payment');
   }
 };
 
 const getPaymentsByStudent = async (req: any, res: any) => {
   try {
     if (!ensurePaymentAccess(req, res)) return;
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId, teacherId } = scope;
     const studentId = Number(req.params.studentId);
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
       return res.status(403).json({ error: 'Access denied.' });
@@ -139,8 +119,7 @@ const getPaymentsByStudent = async (req: any, res: any) => {
     }
     res.json(rows);
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch payments', details: error.message || String(error) });
+    sendError(res, error, 'Failed to fetch payments');
   }
 };
 
@@ -149,17 +128,14 @@ const deletePayment = async (req: any, res: any) => {
     if (req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Teachers cannot delete payments.' });
     }
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId, teacherId } = scope;
     const row = await paymentService.deletePayment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Payment not found' });
     res.json({ message: 'Payment deleted successfully', payment: row });
   } catch (error: any) {
-    console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete payment', details: error.message || String(error) });
+    sendError(res, error, 'Failed to delete payment');
   }
 };
 
@@ -168,11 +144,9 @@ const purgePayment = async (req: any, res: any) => {
     if (req.user?.userType === 'teacher') {
       return res.status(403).json({ error: 'Teachers cannot permanently delete payments.' });
     }
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
-    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const { centerId, teacherId } = scope;
     const row = await paymentService.purgePayment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Soft-deleted payment not found' });
     res.json({ message: 'Payment permanently deleted', payment: row });
@@ -185,7 +159,7 @@ const purgePayment = async (req: any, res: any) => {
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to permanently delete payment', details: error.message || String(error) });
+    sendError(res, error, 'Failed to permanently delete payment');
   }
 };
 

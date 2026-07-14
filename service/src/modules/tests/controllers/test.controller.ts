@@ -1,13 +1,12 @@
 const { logAudit } = require('../../../utils/audit');
 const testService = require('../services/test.service');
-const { getScopedCenterId } = require('../../../shared/tenant');
+const { requireTestCenterScope } = require('./testScope');
 const { studentBelongsToTeacher, testInCenter } = require('../../../shared/tenantDb');
 
 const getAllTests = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const rows = await testService.listTests(req.query, centerId ?? undefined, req.user);
     res.json(rows);
   } catch (error: any) {
@@ -18,9 +17,8 @@ const getAllTests = async (req: any, res: any) => {
 
 const getTestById = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const data = await testService.getTestById(Number(req.params.id), centerId ?? undefined, req.user);
     if (!data) return res.status(404).json({ error: 'Test not found' });
     res.json(data);
@@ -32,9 +30,8 @@ const getTestById = async (req: any, res: any) => {
 
 const createTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const out = await testService.createTest({
       ...req.body,
       center_id: centerId ?? req.body.center_id,
@@ -60,9 +57,8 @@ const createTest = async (req: any, res: any) => {
 
 const updateTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.id), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -78,9 +74,8 @@ const updateTest = async (req: any, res: any) => {
 
 const deleteTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.id), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -96,9 +91,8 @@ const deleteTest = async (req: any, res: any) => {
 
 const addQuestion = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -114,9 +108,8 @@ const addQuestion = async (req: any, res: any) => {
 
 const updateQuestion = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const row = await testService.updateQuestion(Number(req.params.questionId), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Question not found' });
     res.json({ message: 'Question updated', question: row });
@@ -128,9 +121,8 @@ const updateQuestion = async (req: any, res: any) => {
 
 const deleteQuestion = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const row = await testService.deleteQuestion(Number(req.params.questionId), centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Question not found' });
     res.json({ message: 'Question deleted', question: row });
@@ -142,9 +134,8 @@ const deleteQuestion = async (req: any, res: any) => {
 
 const addPassage = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -160,9 +151,8 @@ const addPassage = async (req: any, res: any) => {
 
 const updatePassage = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const row = await testService.updatePassage(Number(req.params.passageId), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Passage not found' });
     res.json({ message: 'Passage updated', passage: row });
@@ -174,9 +164,8 @@ const updatePassage = async (req: any, res: any) => {
 
 const deletePassage = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const row = await testService.deletePassage(Number(req.params.passageId), centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Passage not found' });
     res.json({ message: 'Passage deleted', passage: row });
@@ -188,9 +177,8 @@ const deletePassage = async (req: any, res: any) => {
 
 const startTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -215,9 +203,8 @@ const startTest = async (req: any, res: any) => {
 
 const submitTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const row = await testService.submitTest(Number(req.params.submissionId), req.body, centerId ?? req.body.center_id);
     if (row?.error === 'invalid_center') {
       return res.status(400).json({ error: 'Submission contains records from another center.' });
@@ -232,9 +219,8 @@ const submitTest = async (req: any, res: any) => {
 
 const gradeSubmission = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const row = await testService.gradeSubmission(Number(req.params.submissionId), req.body, centerId ?? req.body.center_id);
     if (row?.error === 'invalid_center') {
       return res.status(400).json({ error: 'Submission contains records from another center.' });
@@ -249,9 +235,8 @@ const gradeSubmission = async (req: any, res: any) => {
 
 const getSubmissionsByTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -266,9 +251,8 @@ const getSubmissionsByTest = async (req: any, res: any) => {
 
 const getSubmissionDetails = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const data = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
     if (!data) return res.status(404).json({ error: 'Submission not found' });
     if (req.user?.userType === 'student' && Number(data.student_id) !== Number(req.user?.id)) {
@@ -295,9 +279,8 @@ const getSubmissionsByStudent = async (req: any, res: any) => {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
       if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
     }
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const rows = await testService.getSubmissionsByStudent(studentId, centerId ?? req.body.center_id);
     res.json(rows);
   } catch (error: any) {
@@ -308,9 +291,8 @@ const getSubmissionsByStudent = async (req: any, res: any) => {
 
 const getTestResults = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -325,9 +307,8 @@ const getTestResults = async (req: any, res: any) => {
 
 const getStudentResults = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const studentId = Number(req.params.studentId);
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
       return res.status(403).json({ error: 'Access denied.' });
@@ -346,9 +327,8 @@ const getStudentResults = async (req: any, res: any) => {
 
 const assignTest = async (req: any, res: any) => {
   try {
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
       if (!ok) return res.status(404).json({ error: 'Test not found' });
@@ -373,9 +353,8 @@ const getAssignedTests = async (req: any, res: any) => {
     if (req.user?.userType === 'teacher' && (type !== 'teacher' || Number(id) !== req.user?.id)) {
       return res.status(403).json({ error: 'Access denied.' });
     }
-    const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
     const rows = await testService.getAssignedTests(type, Number(id), centerId ?? req.body.center_id);
     res.json(rows);
   } catch (error: any) {

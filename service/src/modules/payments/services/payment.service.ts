@@ -75,7 +75,7 @@ const createPayment = async (body: any, centerId?: number) => {
   const paidAmount = Number(amount || 0);
   const complete = is_complete ?? paidAmount >= resolvedFinalAmount;
 
-  return paymentRepository.insert([
+  const createdPayment = await paymentRepository.insert([
     student_id,
     scopedCenterId,
     paymentDate,
@@ -96,6 +96,12 @@ const createPayment = async (body: any, centerId?: number) => {
     resolvedFinalAmount,
     complete,
   ]);
+
+  if (appliedDiscount?.discount_kind === 'monthly_discount' && appliedDiscount?.discount_id) {
+    await discountService.update(appliedDiscount.discount_id, { active: false }, Number(scopedCenterId));
+  }
+
+  return createdPayment;
 };
 
 const updatePayment = (id: number, body: any, centerId?: number, teacherId?: number) => {

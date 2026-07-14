@@ -175,8 +175,8 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
               <BadgePercent className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold leading-tight">Serial discount</h3>
-              <p className="text-[11px] leading-snug text-white/85">Enable reduced tuition for this student.</p>
+              <h3 className="text-sm font-bold leading-tight">Discount</h3>
+              <p className="text-[11px] leading-snug text-white/85">Choose serial or one-time tuition discount.</p>
             </div>
           </div>
           <Switch
@@ -185,7 +185,18 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           />
         </div>
         {formData.is_discounted && (
-          <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-5">
+            <SelectField
+              compact
+              label="Discount kind"
+              name="discount_kind"
+              value={formData.discount_kind || 'serial_discount'}
+              onChange={(value) => setFormData({ ...formData, discount_kind: value as 'serial_discount' | 'monthly_discount' })}
+              options={[
+                { label: 'Serial', value: 'serial_discount' },
+                { label: 'One-time', value: 'monthly_discount' },
+              ]}
+            />
             <SelectField
               compact
               label="Discount type"
@@ -200,8 +211,8 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             <TextField label="Current price" type="number" value={formData.discount_original_price} onChange={(value) => setFormData({ ...formData, discount_original_price: Number(value) })} />
             <TextField label="Discount value" type="number" value={formData.discount_value} onChange={(value) => setFormData({ ...formData, discount_value: Number(value) })} />
             <TextField label="Final price" value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} readOnly />
-            <div className="sm:col-span-2 lg:col-span-4">
-              <TextField label="Reason" value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder="Reason for serial discount" />
+            <div className="sm:col-span-2 lg:col-span-5">
+              <TextField label="Reason" value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder="Reason for discount" />
             </div>
           </div>
         )}
