@@ -39,6 +39,8 @@ describe('students repository', () => {
     await studentRepository.findPaginatedWithClass({ teacher_id: 7, page: 1, limit: 20 });
 
     expect(pool.query.mock.calls[0][0]).toContain('(s.teacher_id = $1 OR c.teacher_id = $1)');
+    expect(pool.query.mock.calls[1][0]).toContain('c.teacher_id AS class_teacher_id');
+    expect(pool.query.mock.calls[1][0]).toContain('COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id');
     expect(pool.query.mock.calls[0][1]).toEqual([7]);
     expect(pool.query.mock.calls[1][1]).toEqual([7, 20, 0]);
   });

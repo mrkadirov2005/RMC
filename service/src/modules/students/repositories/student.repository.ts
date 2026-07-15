@@ -138,7 +138,11 @@ const addStudentFilters = (
 
 const findAllWithClass = async (centerId?: number, teacherId?: number) => {
   let query = `
-    SELECT s.*, c.class_name
+    SELECT
+      s.*,
+      c.class_name,
+      c.teacher_id AS class_teacher_id,
+      COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id
     FROM students s
     LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
   `;
@@ -173,7 +177,13 @@ const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId
     LEFT JOIN subjects sub ON sub.class_id = c.class_id
   `;
   let query = `
-    SELECT DISTINCT s.*, c.class_name, c.level AS class_level, ec.address AS center_address
+    SELECT DISTINCT
+      s.*,
+      c.class_name,
+      c.level AS class_level,
+      c.teacher_id AS class_teacher_id,
+      COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id,
+      ec.address AS center_address
     ${fromClause}
   `;
   let countQuery = `
@@ -280,6 +290,8 @@ const findByClassIncludingTransferred = async (classId: number, centerId?: numbe
     SELECT
       s.*,
       c.class_name,
+      c.teacher_id AS class_teacher_id,
+      COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id,
       c.payment_amount AS class_payment_amount,
       COALESCE(monthly_payments.paid_amount, 0)::numeric AS payment_amount_this_month,
       COALESCE(monthly_payments.completed_count, 0)::int AS payment_count_this_month,

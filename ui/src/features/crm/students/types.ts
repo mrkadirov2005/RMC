@@ -15,6 +15,8 @@ export interface Student {
   gender: string;
   status: string;
   teacher_id?: number;
+  class_teacher_id?: number;
+  effective_teacher_id?: number;
   class_id?: number;
   school_name?: string | null;
   school_class?: string | null;
