@@ -21,6 +21,8 @@ export interface Student {
   gender: string;
   status: string;
   teacher_id?: number;
+  class_teacher_id?: number;
+  effective_teacher_id?: number;
   class_id?: number;
   coins?: number;
   username?: string;
@@ -55,6 +57,7 @@ interface StudentsState {
   error: string | null;
   lastFetched: number | null;
   meta: StudentsMeta;
+  currentRequestKey: string | null;
 }
 
 const initialState: StudentsState = {
@@ -63,12 +66,21 @@ const initialState: StudentsState = {
   error: null,
   lastFetched: null,
   meta: { total: 0, page: 1, limit: 20 },
+  currentRequestKey: null,
 };
 
 const CACHE_TTL_MS = 60_000;
 
 const hasFullStudentList = (state: StudentsState) =>
   state.items.length > 0 && state.meta.total <= state.items.length;
+
+const studentParamsKey = (params?: StudentListParams) => {
+  if (!params) return 'all';
+  const cleaned = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== null && value !== '')
+    .sort(([a], [b]) => a.localeCompare(b));
+  return JSON.stringify(cleaned);
+};
 
 // ── Thunks ──────────────────────────────────────────────────────────────────
 
@@ -184,8 +196,13 @@ const studentsSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchStudents.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchStudents.fulfilled, (state, action: PayloadAction<{ items: Student[]; meta: StudentsMeta } | null>) => {
+      .addCase(fetchStudents.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+        state.currentRequestKey = studentParamsKey(action.meta.arg);
+      })
+      .addCase(fetchStudents.fulfilled, (state, action) => {
+        if (state.currentRequestKey !== studentParamsKey(action.meta.arg)) return;
         state.loading = false;
         if (action.payload !== null) {
           state.items = action.payload.items;
@@ -193,14 +210,27 @@ const studentsSlice = createSlice({
           state.lastFetched = Date.now();
         }
       })
-      .addCase(fetchStudents.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+      .addCase(fetchStudents.rejected, (state, action) => {
+        if (state.currentRequestKey !== studentParamsKey(action.meta.arg)) return;
+        state.loading = false;
+        state.error = action.payload as string;
+      });
 
     builder
-      .addCase(fetchStudentsForce.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchStudentsForce.fulfilled, (state, action: PayloadAction<{ items: Student[]; meta: StudentsMeta }>) => {
+      .addCase(fetchStudentsForce.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+        state.currentRequestKey = studentParamsKey(action.meta.arg);
+      })
+      .addCase(fetchStudentsForce.fulfilled, (state, action) => {
+        if (state.currentRequestKey !== studentParamsKey(action.meta.arg)) return;
         state.loading = false; state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now();
       })
-      .addCase(fetchStudentsForce.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
+      .addCase(fetchStudentsForce.rejected, (state, action) => {
+        if (state.currentRequestKey !== studentParamsKey(action.meta.arg)) return;
+        state.loading = false;
+        state.error = action.payload as string;
+      });
 
     builder
       .addCase(createStudent.pending, (state) => { state.loading = true; state.error = null; })
