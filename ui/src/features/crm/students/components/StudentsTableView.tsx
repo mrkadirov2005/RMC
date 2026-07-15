@@ -122,6 +122,12 @@ export const StudentsTableView = ({
   const [transferring, setTransferring] = useState(false);
 
   const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
+  const getClassTeacherId = (student: Student) => {
+    const classId = Number(student.class_id || 0);
+    if (!classId) return 0;
+    const studentClass = classOptions.find((cls) => Number(cls.class_id || cls.id || 0) === classId);
+    return Number(studentClass?.teacher_id || 0);
+  };
   const visibleIds = students.map(getStudentId).filter((id) => id > 0);
   const selectedVisibleCount = visibleIds.filter((id) => selectedIds.has(id)).length;
   const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
@@ -184,7 +190,7 @@ export const StudentsTableView = ({
 
   const actionIconClass = 'h-3 w-3';
   const getTeacherName = (student: Student) => {
-    const teacherId = Number(student.effective_teacher_id || student.teacher_id || student.class_teacher_id || 0);
+    const teacherId = Number(student.effective_teacher_id || student.teacher_id || student.class_teacher_id || getClassTeacherId(student) || 0);
     if (!teacherId) return 'No teacher';
     return teacherOptions.find((teacher) => Number(teacher.value || teacher.id || 0) === teacherId)?.label || 'No teacher';
   };
