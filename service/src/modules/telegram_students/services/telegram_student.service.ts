@@ -47,12 +47,12 @@ const menu = async (telegramUserId: string) => {
   return {
     student: toStudentProfile(student),
     menus: [
-      { key: 'last_lesson', label: "Oxirgi dars" },
-      { key: 'payments', label: "To'lovlar" },
-      { key: 'rankings', label: "O'rin", children: ['class', 'center'] },
-      { key: 'results', label: 'Natijalar' },
+      { key: 'last_lesson', label: "🕘 Oxirgi dars" },
+      { key: 'payments', label: "💳 To'lovlar" },
+      { key: 'rankings', label: "🏆 O'rin", children: ['class', 'center'] },
+      { key: 'results', label: '📊 Natijalar' },
     ],
-    message: `Xush kelibsiz, ${fullName(student)}. Kerakli bo'limni tanlang.`,
+    message: `👋 Xush kelibsiz, ${fullName(student)}.\nKerakli bo'limni tanlang.`,
   };
 };
 
@@ -95,7 +95,7 @@ const rankings = async (telegramUserId: string, scope: string) => {
     : student.class_id
       ? await repository.classRankSummary(student.center_id, student.class_id, student.student_id)
       : null;
-  const title = normalizedScope === 'center' ? "Markaz bo'yicha o'rin" : "Guruh bo'yicha o'rin";
+  const title = normalizedScope === 'center' ? "🏫 Markaz bo'yicha o'rin" : "👥 Guruh bo'yicha o'rin";
   return {
     student: toStudentProfile(student),
     scope: normalizedScope,
@@ -109,8 +109,8 @@ const rankings = async (telegramUserId: string, scope: string) => {
         }
       : null,
     message: summary
-      ? `${title}: ${summary.rank}-o'rin / ${summary.total_students} ta o'quvchi. Coins: ${summary.coins || 0}, points: ${summary.points || 0}.`
-      : `${title}: hozircha reyting ma'lumoti topilmadi.`,
+      ? `${title}\n📍 ${summary.rank}-o'rin / ${summary.total_students} ta o'quvchi\n🪙 Coins: ${summary.coins || 0}\n⭐ Points: ${summary.points || 0}`
+      : `${title}\nHozircha reyting ma'lumoti topilmadi.`,
   };
 };
 
@@ -146,9 +146,9 @@ const payments = async (telegramUserId: string, page: number, limit: number) => 
   }));
   const lines = rows.length
     ? rows.map((row: any, index: number) =>
-        `${index + 1}. ${fmtDate(row.date)} · ${money(row.final_amount ?? row.amount, row.currency)} · ${row.status || '-'}`
+        `${index + 1}. 📅 ${fmtDate(row.date)} · 💰 ${money(row.final_amount ?? row.amount, row.currency)} · ${row.status || '-'}`
       )
-    : ["Hozircha to'lov yozuvlari topilmadi."];
+    : ["📭 Hozircha to'lov yozuvlari topilmadi."];
 
   return {
     student: toStudentProfile(student),
@@ -157,7 +157,7 @@ const payments = async (telegramUserId: string, page: number, limit: number) => 
     page: data.page,
     limit: data.limit,
     total_pages: Math.max(1, Math.ceil(data.total / data.limit)),
-    message: [`To'lovlar tarixi`, `${fullName(student)}`, '', ...lines].join('\n'),
+    message: [`💳 To'lovlar tarixi`, `👤 ${fullName(student)}`, '', ...lines].join('\n'),
   };
 };
 

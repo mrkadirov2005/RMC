@@ -22,16 +22,16 @@ const userState = new Map();
 const sessions = new Map();
 
 const MAIN_KEYBOARD = {
-  keyboard: [[{ text: 'Kirish' }, { text: "Ro'yhatdan o'tish" }]],
+  keyboard: [[{ text: '🔐 Kirish' }, { text: "📝 Ro'yhatdan o'tish" }]],
   resize_keyboard: true,
 };
 
 const AUTH_KEYBOARD = {
   keyboard: [
-    [{ text: 'Darslar' }, { text: 'Oxirgi dars' }],
-    [{ text: "O'rin" }, { text: "To'lovlar" }],
-    [{ text: 'Natijalar' }],
-    [{ text: 'Chiqish' }],
+    [{ text: '📚 Darslar' }, { text: '🕘 Oxirgi dars' }],
+    [{ text: "🏆 O'rin" }, { text: "💳 To'lovlar" }],
+    [{ text: '📊 Natijalar' }],
+    [{ text: '🚪 Chiqish' }],
   ],
   resize_keyboard: true,
 };
@@ -536,7 +536,7 @@ function classKeyboard(classes) {
   return {
     inline_keyboard: classes.map((row) => [
       {
-        text: `${row.class_name}${row.status === 'Transferred' ? ' (transferred)' : ''}`,
+        text: `📘 ${row.class_name}${row.status === 'Transferred' ? ' · transferred' : ''}`,
         callback_data: `class:${row.student_id}:${row.class_id}`,
       },
     ]),
@@ -546,23 +546,23 @@ function classKeyboard(classes) {
 function rankMenuKeyboard() {
   return {
     inline_keyboard: [
-      [{ text: "Guruh bo'yicha", callback_data: 'rank:class' }],
-      [{ text: "Markaz bo'yicha", callback_data: 'rank:center' }],
+      [{ text: "👥 Guruh bo'yicha", callback_data: 'rank:class' }],
+      [{ text: "🏫 Markaz bo'yicha", callback_data: 'rank:center' }],
     ],
   };
 }
 
 function resultsKeyboard(page, totalPages) {
   const buttons = [];
-  if (page > 1) buttons.push({ text: 'Oldingi', callback_data: `results:${page - 1}` });
-  if (page < totalPages) buttons.push({ text: 'Keyingi', callback_data: `results:${page + 1}` });
+  if (page > 1) buttons.push({ text: '⬅️ Oldingi', callback_data: `results:${page - 1}` });
+  if (page < totalPages) buttons.push({ text: 'Keyingi ➡️', callback_data: `results:${page + 1}` });
   return buttons.length ? { inline_keyboard: [buttons] } : undefined;
 }
 
 function paymentsKeyboard(page, totalPages) {
   const buttons = [];
-  if (page > 1) buttons.push({ text: 'Oldingi', callback_data: `payments:${page - 1}` });
-  if (page < totalPages) buttons.push({ text: 'Keyingi', callback_data: `payments:${page + 1}` });
+  if (page > 1) buttons.push({ text: '⬅️ Oldingi', callback_data: `payments:${page - 1}` });
+  if (page < totalPages) buttons.push({ text: 'Keyingi ➡️', callback_data: `payments:${page + 1}` });
   return buttons.length ? { inline_keyboard: [buttons] } : undefined;
 }
 
@@ -580,15 +580,15 @@ function performanceText(row, stats) {
     : 'No grades yet.';
 
   return [
-    `<b>${row.class_name}</b>`,
-    `${studentName}`,
+    `📚 <b>${row.class_name}</b>`,
+    `👤 ${studentName}`,
     '',
-    `O'rtacha natija: ${stats.avg ? `${stats.avg.toFixed(1)}%` : '-'}`,
-    `Davomat: ${stats.attendance.present || 0} present, ${stats.attendance.late || 0} late, ${stats.attendance.absent || 0} absent`,
-    `Jami coins: ${stats.student?.coins ?? 0}`,
-    `Dars coins tarixi: ${stats.classCoins}`,
+    `📈 O'rtacha natija: ${stats.avg ? `${stats.avg.toFixed(1)}%` : '-'}`,
+    `✅ Davomat: ${stats.attendance.present || 0} present, ${stats.attendance.late || 0} late, ${stats.attendance.absent || 0} absent`,
+    `🪙 Jami coins: ${stats.student?.coins ?? 0}`,
+    `🎯 Dars coins tarixi: ${stats.classCoins}`,
     '',
-    '<b>Oxirgi baholar:</b>',
+    '📊 <b>Oxirgi baholar</b>',
     recent,
   ].join('\n');
 }
@@ -596,81 +596,81 @@ function performanceText(row, stats) {
 function lastSessionText(details) {
   const { lesson, grade, attendance, coins } = details;
   const lines = [
-    `<b>Oxirgi dars</b>`,
-    `<b>${lesson.class_name}</b>`,
-    `Sana: ${formatDate(lesson.session_date)}`,
-    `Vaqt: ${lesson.start_time || '-'} - ${lesson.end_time || '-'}`,
+    `🕘 <b>Oxirgi dars</b>`,
+    `📚 <b>${lesson.class_name}</b>`,
+    `📅 Sana: ${formatDate(lesson.session_date)}`,
+    `⏰ Vaqt: ${lesson.start_time || '-'} - ${lesson.end_time || '-'}`,
     '',
-    `<b>Davomat</b>: ${attendance?.status || '-'}`,
+    `✅ <b>Davomat</b>: ${attendance?.status || '-'}`,
   ];
 
   if (grade) {
     lines.push(
       '',
-      '<b>Ballar</b>',
-      `Davomat: ${grade.attendance_score ?? 0}`,
-      `Uy vazifa: ${grade.homework_score ?? 0}`,
-      `Faollik: ${grade.activity_score ?? 0}`,
-      `Jami: ${moneyOrNumber(grade.marks_obtained)}/${moneyOrNumber(grade.total_marks)} (${moneyOrNumber(grade.percentage)}%)`
+      '📊 <b>Ballar</b>',
+      `✅ Davomat: ${grade.attendance_score ?? 0}`,
+      `📝 Uy vazifa: ${grade.homework_score ?? 0}`,
+      `⚡ Faollik: ${grade.activity_score ?? 0}`,
+      `🎯 Jami: ${moneyOrNumber(grade.marks_obtained)}/${moneyOrNumber(grade.total_marks)} (${moneyOrNumber(grade.percentage)}%)`
     );
   } else {
-    lines.push('', '<b>Ballar</b>: -');
+    lines.push('', '📊 <b>Ballar</b>: -');
   }
 
-  lines.push('', `<b>Coins</b>: ${coins ? `${coins.delta} (${coins.reason || 'lesson'})` : '-'}`);
+  lines.push('', `🪙 <b>Coins</b>: ${coins ? `${coins.delta} (${coins.reason || 'lesson'})` : '-'}`);
   return lines.join('\n');
 }
 
 function rankSummaryText(title, row) {
-  if (!row) return [`<b>${title}</b>`, '', "Hozircha reyting ma'lumoti yo'q."].join('\n');
-  const suffix = row.class_name ? `\nGuruh: ${row.class_name}` : '';
+  if (!row) return [`🏆 <b>${title}</b>`, '', "Hozircha reyting ma'lumoti yo'q."].join('\n');
+  const suffix = row.class_name ? `\n📚 Guruh: ${row.class_name}` : '';
   return [
-    `<b>${title}</b>`,
+    `🏆 <b>${title}</b>`,
     '',
-    `Siz: <b>${row.rank}-o'rin</b>`,
-    `Jami: ${row.total_students} ta o'quvchi`,
-    `Coins: ${row.coins || 0}`,
-    `Points: ${moneyOrNumber(row.points)}`,
+    `📍 Siz: <b>${row.rank}-o'rin</b>`,
+    `👥 Jami: ${row.total_students} ta o'quvchi`,
+    `🪙 Coins: ${row.coins || 0}`,
+    `⭐ Points: ${moneyOrNumber(row.points)}`,
     suffix.trim(),
   ].filter(Boolean).join('\n');
 }
 
 function resultsText(results) {
-  if (!results.rows.length) return ["<b>Natijalar</b>", '', "Hozircha natija yo'q."].join('\n');
+  if (!results.rows.length) return ["📊 <b>Natijalar</b>", '', "Hozircha natija yo'q."].join('\n');
   const rows = results.rows.map((row, index) => {
     const number = (results.page - 1) * RESULTS_PAGE_SIZE + index + 1;
     const subject = row.subject || row.class_name || 'Dars';
     return [
-      `${number}. <b>${subject}</b>`,
-      `Sana: ${formatDate(row.session_date)} ${row.start_time || ''}`.trim(),
-      `Ball: ${moneyOrNumber(row.marks_obtained)}/${moneyOrNumber(row.total_marks)} (${moneyOrNumber(row.percentage)}%)`,
-      `Davomat/Uy vazifa/Faollik: ${row.attendance_score ?? 0}/${row.homework_score ?? 0}/${row.activity_score ?? 0}`,
-      `Coins: ${row.total_daily_coin ?? 0}`,
+      `${number}. 📘 <b>${subject}</b>`,
+      `📅 Sana: ${formatDate(row.session_date)} ${row.start_time || ''}`.trim(),
+      `🎯 Ball: ${moneyOrNumber(row.marks_obtained)}/${moneyOrNumber(row.total_marks)} (${moneyOrNumber(row.percentage)}%)`,
+      `✅📝⚡ Davomat/Uy vazifa/Faollik: ${row.attendance_score ?? 0}/${row.homework_score ?? 0}/${row.activity_score ?? 0}`,
+      `🪙 Coins: ${row.total_daily_coin ?? 0}`,
     ].join('\n');
   });
-  return [`<b>Natijalar</b>`, `Sahifa: ${results.page}/${results.totalPages}`, '', ...rows].join('\n\n');
+  return [`📊 <b>Natijalar</b>`, `📄 Sahifa: ${results.page}/${results.totalPages}`, '', ...rows].join('\n\n');
 }
 
 function paymentsText(payments) {
-  if (!payments.rows.length) return ["<b>To'lovlar</b>", '', "Hozircha to'lov yozuvlari topilmadi."].join('\n');
+  if (!payments.rows.length) return ["💳 <b>To'lovlar</b>", '', "Hozircha to'lov yozuvlari topilmadi."].join('\n');
   const rows = payments.rows.map((row, index) => {
     const number = (payments.page - 1) * RESULTS_PAGE_SIZE + index + 1;
     const paid = row.final_amount == null ? row.amount : row.final_amount;
     const discount = Number(row.discount_amount || 0);
     return [
-      `${number}. <b>${formatDate(row.payment_date)}</b>`,
-      `Miqdor: ${moneyText(paid, row.currency)}`,
-      discount > 0 ? `Chegirma: ${moneyText(discount, row.currency)}` : '',
-      `Holat: ${row.payment_status || '-'}`,
-      row.receipt_number ? `Kvitansiya: ${row.receipt_number}` : '',
+      `${number}. 📅 <b>${formatDate(row.payment_date)}</b>`,
+      `💰 Miqdor: ${moneyText(paid, row.currency)}`,
+      discount > 0 ? `🏷️ Chegirma: ${moneyText(discount, row.currency)}` : '',
+      `✅ Holat: ${row.payment_status || '-'}`,
+      row.receipt_number ? `🧾 Kvitansiya: ${row.receipt_number}` : '',
     ].filter(Boolean).join('\n');
   });
-  return [`<b>To'lovlar</b>`, `Sahifa: ${payments.page}/${payments.totalPages}`, '', ...rows].join('\n\n');
+  return [`💳 <b>To'lovlar</b>`, `📄 Sahifa: ${payments.page}/${payments.totalPages}`, '', ...rows].join('\n\n');
 }
 
 async function startRegistration(chatId) {
   userState.set(chatId, { flow: 'register', step: 0, data: {} });
-  await sendMessage(chatId, REGISTER_STEPS[0].prompt);
+  await sendMessage(chatId, ['📝 <b>Ro‘yxatdan o‘tish</b>', '', REGISTER_STEPS[0].prompt].join('\n'));
 }
 
 async function handleRegisterStep(message, state) {
@@ -679,7 +679,7 @@ async function handleRegisterStep(message, state) {
   const step = REGISTER_STEPS[state.step];
   if (!step) {
     userState.delete(chatId);
-    await sendMessage(chatId, 'Ro‘yxatdan o‘tish holati eskirgan. Qaytadan boshlang.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '⚠️ Ro‘yxatdan o‘tish holati eskirgan. Qaytadan boshlang.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
   if (!text) {
@@ -690,7 +690,7 @@ async function handleRegisterStep(message, state) {
   if (step.key === 'phone') {
     const normalized = normalizePhone(text);
     if (await isPhoneTaken(normalized)) {
-      await sendMessage(chatId, 'Bu telefon raqam allaqachon ro‘yxatdan o‘tgan. Boshqa telefon raqam kiriting:');
+      await sendMessage(chatId, '⚠️ Bu telefon raqam allaqachon ro‘yxatdan o‘tgan. Boshqa telefon raqam kiriting:');
       return;
     }
     state.data[step.key] = normalized;
@@ -698,14 +698,14 @@ async function handleRegisterStep(message, state) {
   } else if (step.key === 'date_of_birth') {
     const parsedDate = parseDateInput(text);
     if (!parsedDate) {
-      await sendMessage(chatId, "Sana noto‘g‘ri. Iltimos YYYY-MM-DD formatida kiriting. Masalan: 2008-05-21");
+      await sendMessage(chatId, "⚠️ Sana noto‘g‘ri. Iltimos YYYY-MM-DD formatida kiriting. Masalan: 2008-05-21");
       return;
     }
     state.data[step.key] = parsedDate;
     state.step += 1;
   } else if (step.key === 'username') {
     if (await isUsernameTaken(text)) {
-      await sendMessage(chatId, 'Bu username band. Boshqa username kiriting:');
+      await sendMessage(chatId, '⚠️ Bu username band. Boshqa username kiriting:');
       return;
     }
     state.data[step.key] = text;
@@ -726,13 +726,19 @@ async function handleRegisterStep(message, state) {
     userState.delete(chatId);
     await sendMessage(
       chatId,
-      `Ro'yhatdan o'tish so'rovi saqlandi.\nID: ${saved.registration_id}\nGuruh: ${process.env.BOT_REGISTRATION_CLASS_LABEL || 'Unassigned'}\nStatus: Pending`,
+      [
+        '✅ <b>Ro‘yxatdan o‘tish so‘rovi saqlandi</b>',
+        '',
+        `🆔 ID: ${saved.registration_id}`,
+        `📚 Guruh: ${process.env.BOT_REGISTRATION_CLASS_LABEL || 'Unassigned'}`,
+        '⏳ Status: Pending',
+      ].join('\n'),
       { reply_markup: MAIN_KEYBOARD }
     );
   } catch (error) {
     console.error('Registration save failed:', error);
     userState.delete(chatId);
-    await sendMessage(chatId, 'Ro‘yxatdan o‘tishni saqlashda xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.', {
+    await sendMessage(chatId, '❌ Ro‘yxatdan o‘tishni saqlashda xatolik yuz berdi. Iltimos, qaytadan urinib ko‘ring.', {
       reply_markup: MAIN_KEYBOARD,
     });
   }
@@ -740,7 +746,7 @@ async function handleRegisterStep(message, state) {
 
 async function startLogin(chatId) {
   userState.set(chatId, { flow: 'login', step: 'username', data: {} });
-  await sendMessage(chatId, ["<b>Kirish</b>", '', 'Username kiriting:'].join('\n'));
+  await sendMessage(chatId, ["🔐 <b>Kirish</b>", '', 'Username kiriting:'].join('\n'));
 }
 
 async function handleLoginStep(message, state) {
@@ -752,21 +758,21 @@ async function handleLoginStep(message, state) {
     state.data.username = text;
     state.step = 'password';
     userState.set(chatId, state);
-    await sendMessage(chatId, ["<b>Kirish</b>", '', 'Parol kiriting:'].join('\n'));
+    await sendMessage(chatId, ["🔐 <b>Kirish</b>", '', 'Parol kiriting:'].join('\n'));
     return;
   }
 
   const student = await authenticate(state.data.username, text);
   userState.delete(chatId);
   if (!student) {
-    await sendMessage(chatId, ["<b>Kirish amalga oshmadi</b>", '', "Username yoki parol noto'g'ri."].join('\n'), {
+    await sendMessage(chatId, ["❌ <b>Kirish amalga oshmadi</b>", '', "Username yoki parol noto'g'ri."].join('\n'), {
       reply_markup: MAIN_KEYBOARD,
     });
     return;
   }
 
   sessions.set(chatId, { ...student, selectedClassId: student.class_id, selectedStudentId: student.student_id });
-  await sendMessage(chatId, [`<b>Xush kelibsiz</b>`, `${student.first_name} ${student.last_name}`, '', "Kerakli bo'limni tanlang."].join('\n'), {
+  await sendMessage(chatId, [`👋 <b>Xush kelibsiz</b>`, `👤 ${student.first_name} ${student.last_name}`, '', "Kerakli bo'limni tanlang."].join('\n'), {
     reply_markup: AUTH_KEYBOARD,
   });
 }
@@ -774,23 +780,23 @@ async function handleLoginStep(message, state) {
 async function showClasses(chatId) {
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
   const classes = await getStudentClasses(session);
   if (classes.length === 0) {
-    await sendMessage(chatId, 'Sizga biriktirilgan guruh topilmadi.', { reply_markup: AUTH_KEYBOARD });
+    await sendMessage(chatId, '📭 Sizga biriktirilgan guruh topilmadi.', { reply_markup: AUTH_KEYBOARD });
     return;
   }
 
-  await sendMessage(chatId, ["<b>Darslar</b>", '', 'Guruhni tanlang:'].join('\n'), { reply_markup: classKeyboard(classes) });
+  await sendMessage(chatId, ["📚 <b>Darslar</b>", '', 'Guruhni tanlang:'].join('\n'), { reply_markup: classKeyboard(classes) });
 }
 
 async function showLastSession(chatId) {
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
@@ -801,7 +807,7 @@ async function showLastSession(chatId) {
     const classes = await getStudentClasses(session);
     const latest = classes[0];
     if (!latest) {
-      await sendMessage(chatId, 'Guruh topilmadi.', { reply_markup: AUTH_KEYBOARD });
+      await sendMessage(chatId, '📭 Guruh topilmadi.', { reply_markup: AUTH_KEYBOARD });
       return;
     }
     classId = latest.class_id;
@@ -810,7 +816,7 @@ async function showLastSession(chatId) {
 
   const details = await getLastSessionDetails(studentId, classId);
   if (!details) {
-    await sendMessage(chatId, "Bu guruh uchun oxirgi dars topilmadi.", { reply_markup: AUTH_KEYBOARD });
+    await sendMessage(chatId, "📭 Bu guruh uchun oxirgi dars topilmadi.", { reply_markup: AUTH_KEYBOARD });
     return;
   }
   await sendMessage(chatId, lastSessionText(details), { reply_markup: AUTH_KEYBOARD });
@@ -819,16 +825,16 @@ async function showLastSession(chatId) {
 async function showRankMenu(chatId) {
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
-  await sendMessage(chatId, ["<b>O'rin</b>", '', "Reyting turini tanlang:"].join('\n'), { reply_markup: rankMenuKeyboard() });
+  await sendMessage(chatId, ["🏆 <b>O'rin</b>", '', "Reyting turini tanlang:"].join('\n'), { reply_markup: rankMenuKeyboard() });
 }
 
 async function showRank(chatId, scope) {
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
@@ -840,7 +846,7 @@ async function showRank(chatId, scope) {
 
   const classId = session.selectedClassId || session.class_id;
   if (!classId) {
-    await sendMessage(chatId, "Avval Darslar bo'limidan guruhni tanlang.", { reply_markup: AUTH_KEYBOARD });
+    await sendMessage(chatId, "📚 Avval Darslar bo'limidan guruhni tanlang.", { reply_markup: AUTH_KEYBOARD });
     return;
   }
   const row = await getClassRankSummary(session.center_id, classId, session.selectedStudentId || session.student_id);
@@ -852,7 +858,7 @@ async function showRank(chatId, scope) {
 async function showResults(chatId, page = 1) {
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
@@ -864,7 +870,7 @@ async function showResults(chatId, page = 1) {
 async function showPayments(chatId, page = 1) {
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
@@ -880,7 +886,7 @@ async function handleMessage(message) {
 
   if (text === '/start') {
     userState.delete(chatId);
-    await sendMessage(chatId, ['<b>Assalomu alaykum</b>', '', 'Kerakli bo‘limni tanlang:'].join('\n'), {
+    await sendMessage(chatId, ['👋 <b>Assalomu alaykum</b>', '', 'Kerakli bo‘limni tanlang:'].join('\n'), {
       reply_markup: MAIN_KEYBOARD,
     });
     return;
@@ -896,49 +902,56 @@ async function handleMessage(message) {
     return;
   }
 
-  if (text === "Ro'yhatdan o'tish" || text === "Ro’yhatdan o‘tish" || text === "Ro'yxatdan o'tish") {
+  if (
+    text === "Ro'yhatdan o'tish" ||
+    text === "📝 Ro'yhatdan o'tish" ||
+    text === "Ro’yhatdan o‘tish" ||
+    text === "📝 Ro’yhatdan o‘tish" ||
+    text === "Ro'yxatdan o'tish" ||
+    text === "📝 Ro'yxatdan o'tish"
+  ) {
     await startRegistration(chatId);
     return;
   }
 
-  if (text === 'Kirish') {
+  if (text === 'Kirish' || text === '🔐 Kirish') {
     await startLogin(chatId);
     return;
   }
 
-  if (text === 'Darslar') {
+  if (text === 'Darslar' || text === '📚 Darslar') {
     await showClasses(chatId);
     return;
   }
 
-  if (text === 'Oxirgi dars') {
+  if (text === 'Oxirgi dars' || text === '🕘 Oxirgi dars') {
     await showLastSession(chatId);
     return;
   }
 
-  if (text === "O'rin" || text === "O‘rin") {
+  if (text === "O'rin" || text === "🏆 O'rin" || text === "O‘rin" || text === "🏆 O‘rin") {
     await showRankMenu(chatId);
     return;
   }
 
-  if (text === "To'lovlar" || text === "To‘lovlar") {
+  if (text === "To'lovlar" || text === "💳 To'lovlar" || text === "To‘lovlar" || text === "💳 To‘lovlar") {
     await showPayments(chatId);
     return;
   }
 
-  if (text === 'Natijalar') {
+  if (text === 'Natijalar' || text === '📊 Natijalar') {
     await showResults(chatId);
     return;
   }
 
-  if (text === 'Chiqish') {
+  if (text === 'Chiqish' || text === '🚪 Chiqish') {
     sessions.delete(chatId);
     userState.delete(chatId);
-    await sendMessage(chatId, 'Tizimdan chiqdingiz.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🚪 Tizimdan chiqdingiz.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
-  await sendMessage(chatId, 'Iltimos, menyudan tanlang.', {
+  await sendMessage(chatId, '👇 Iltimos, menyudan tanlang.', {
     reply_markup: sessions.has(chatId) ? AUTH_KEYBOARD : MAIN_KEYBOARD,
   });
 }
@@ -948,7 +961,7 @@ async function handleCallback(callbackQuery) {
   const chatId = callbackQuery.message.chat.id;
   const session = sessions.get(chatId);
   if (!session) {
-    await sendMessage(chatId, 'Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
     return;
   }
 
@@ -972,7 +985,7 @@ async function handleCallback(callbackQuery) {
   const classes = await getStudentClasses(session);
   const selected = classes.find((row) => Number(row.student_id) === studentId && Number(row.class_id) === classId);
   if (!selected) {
-    await sendMessage(chatId, 'Bu guruhga ruxsat topilmadi.', { reply_markup: AUTH_KEYBOARD });
+    await sendMessage(chatId, '⚠️ Bu guruhga ruxsat topilmadi.', { reply_markup: AUTH_KEYBOARD });
     return;
   }
 
@@ -1002,7 +1015,7 @@ async function poll() {
         } catch (error) {
           const chatId = update.message?.chat?.id || update.callback_query?.message?.chat?.id;
           console.error('Update handling failed:', error);
-          if (chatId) await sendMessage(chatId, 'Xatolik yuz berdi. Keyinroq qayta urinib ko‘ring.');
+          if (chatId) await sendMessage(chatId, '❌ Xatolik yuz berdi. Keyinroq qayta urinib ko‘ring.');
         }
       }
     } catch (error) {
