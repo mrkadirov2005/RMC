@@ -292,6 +292,7 @@ CREATE TABLE grades (
     attendance_score INT DEFAULT 0,
     homework_score INT DEFAULT 0,
     activity_score INT DEFAULT 0,
+    points_score INT DEFAULT 0,
     base_coin INT DEFAULT 0,
     total_daily_coin INT DEFAULT 0,
     coin_comment TEXT,

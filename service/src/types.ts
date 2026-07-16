@@ -103,6 +103,7 @@ export interface Student {
   attendance_score?: number;
   homework_score?: number;
   activity_score?: number;
+  points_score?: number;
   parent_phone?: string;
   gender?: StudentGender;
   status?: StudentStatus;

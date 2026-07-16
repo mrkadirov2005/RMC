@@ -24,6 +24,7 @@ const createGrade = async (body: any, centerId?: number) => {
     attendance_score,
     homework_score,
     activity_score,
+    points_score,
   } = body;
   if (centerId) {
     const [studentOk, classOk] = await Promise.all([
@@ -37,7 +38,8 @@ const createGrade = async (body: any, centerId?: number) => {
   const derivedTotal =
     (attendance_score ?? 0) +
     (homework_score ?? 0) +
-    (activity_score ?? 0);
+    (activity_score ?? 0) +
+    (points_score ?? 0);
   const finalMarks = Number.isFinite(marks_obtained) ? marks_obtained : derivedTotal;
   const finalPercentage = Number.isFinite(percentage)
     ? percentage
@@ -63,6 +65,7 @@ const createGrade = async (body: any, centerId?: number) => {
     attendance_score ?? 0,
     homework_score ?? 0,
     activity_score ?? 0,
+    points_score ?? 0,
   ]);
 
   console.log('✅ [Grade] Grade inserted:', { gradeId: row?.grade_id, student_id: row?.student_id, marks_obtained: row?.marks_obtained, total_marks: row?.total_marks, percentage: row?.percentage });
@@ -105,10 +108,10 @@ const createGrade = async (body: any, centerId?: number) => {
 };
 
 const updateGrade = (id: number, body: any, centerId?: number, teacherId?: number) => {
-  const { marks_obtained, percentage, grade_letter, attendance_score, homework_score, activity_score } = body;
+  const { marks_obtained, percentage, grade_letter, attendance_score, homework_score, activity_score, points_score } = body;
   return gradeRepository.update(
     id,
-    [marks_obtained, percentage, grade_letter, attendance_score, homework_score, activity_score],
+    [marks_obtained, percentage, grade_letter, attendance_score, homework_score, activity_score, points_score],
     centerId,
     teacherId
   );
@@ -141,6 +144,7 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
     attendance_score,
     homework_score,
     activity_score,
+    points_score,
     academic_year,
     term,
     total_marks,
@@ -163,12 +167,13 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
     attendance_score ?? null,
     homework_score ?? null,
     activity_score ?? null,
+    points_score ?? null,
   ]);
 
   console.log('✅ [SessionScore] Session scores upserted:', { gradeId: row?.grade_id, student_id: row?.student_id, marks_obtained: row?.marks_obtained, total_marks: row?.total_marks, percentage: row?.percentage });
 
   // Add/update academic coins from the combined session score.
-  if (row && !row.error) {
+  if (row && !row.error && body.award_coins !== false) {
     console.log('💰 [Coins-Session] Attempting to add coins...', { hasMarksObtained: row.marks_obtained !== null, hasTotalMarks: row.total_marks !== null });
     if (row.marks_obtained !== null && row.total_marks !== null) {
       try {

@@ -64,16 +64,17 @@ const insert = (params: any[]) =>
          center_id,
          attendance_score,
          homework_score,
-         activity_score
+         activity_score,
+         points_score
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
       params
     )
     .then((r: any) => r.rows[0]);
 
 const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
   let query =
-    'UPDATE grades SET marks_obtained = COALESCE($1, marks_obtained), percentage = COALESCE($2, percentage), grade_letter = COALESCE($3, grade_letter), attendance_score = COALESCE($4, attendance_score), homework_score = COALESCE($5, homework_score), activity_score = COALESCE($6, activity_score), updated_at = CURRENT_TIMESTAMP WHERE grade_id = $7';
+    'UPDATE grades SET marks_obtained = COALESCE($1, marks_obtained), percentage = COALESCE($2, percentage), grade_letter = COALESCE($3, grade_letter), attendance_score = COALESCE($4, attendance_score), homework_score = COALESCE($5, homework_score), activity_score = COALESCE($6, activity_score), points_score = COALESCE($7, points_score), updated_at = CURRENT_TIMESTAMP WHERE grade_id = $8';
   const values: any[] = [...params, id];
   if (centerId || teacherId) {
     query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
@@ -107,14 +108,15 @@ const upsertSessionScores = (params: any[]) =>
          attendance_score,
          homework_score,
          activity_score,
+         points_score,
          marks_obtained,
          percentage
        )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12,
-         (COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0)),
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+         (COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0) + COALESCE($13, 0)),
          CASE
            WHEN $6 > 0 THEN
-             ROUND((COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0)) * 100.0 / $6, 2)
+             ROUND((COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0) + COALESCE($13, 0)) * 100.0 / $6, 2)
            ELSE NULL
          END
        )
@@ -123,6 +125,7 @@ const upsertSessionScores = (params: any[]) =>
          attendance_score = COALESCE(EXCLUDED.attendance_score, grades.attendance_score),
          homework_score = COALESCE(EXCLUDED.homework_score, grades.homework_score),
          activity_score = COALESCE(EXCLUDED.activity_score, grades.activity_score),
+         points_score = COALESCE(EXCLUDED.points_score, grades.points_score),
          total_marks = COALESCE(EXCLUDED.total_marks, grades.total_marks, 100),
          subject = COALESCE(EXCLUDED.subject, grades.subject),
          teacher_id = COALESCE(EXCLUDED.teacher_id, grades.teacher_id),
@@ -133,7 +136,8 @@ const upsertSessionScores = (params: any[]) =>
          marks_obtained = (
            COALESCE(EXCLUDED.attendance_score, grades.attendance_score, 0) +
            COALESCE(EXCLUDED.homework_score, grades.homework_score, 0) +
-           COALESCE(EXCLUDED.activity_score, grades.activity_score, 0)
+           COALESCE(EXCLUDED.activity_score, grades.activity_score, 0) +
+           COALESCE(EXCLUDED.points_score, grades.points_score, 0)
          ),
          percentage = CASE
            WHEN COALESCE(EXCLUDED.total_marks, grades.total_marks, 100) > 0 THEN
@@ -141,7 +145,8 @@ const upsertSessionScores = (params: any[]) =>
                (
                  COALESCE(EXCLUDED.attendance_score, grades.attendance_score, 0) +
                  COALESCE(EXCLUDED.homework_score, grades.homework_score, 0) +
-                 COALESCE(EXCLUDED.activity_score, grades.activity_score, 0)
+                 COALESCE(EXCLUDED.activity_score, grades.activity_score, 0) +
+                 COALESCE(EXCLUDED.points_score, grades.points_score, 0)
                ) * 100.0 / COALESCE(EXCLUDED.total_marks, grades.total_marks, 100),
                2
              )
