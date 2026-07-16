@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { attendanceAPI, classAPI, gradeAPI, studentAPI } from '@/shared/api/api'
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { useAppSelector } from '../hooks';
-import { ScoreTable, StepTile, type ScoreOption } from './components/SessionWorkflowScoring';
+import { ManualPointsTable, ScoreTable, StepTile, type ScoreOption } from './components/SessionWorkflowScoring';
 
 const toPointMap = (options: ScoreOption[]) => Object.fromEntries(options.map((option) => [option.label, option.score]));
 
@@ -39,7 +39,17 @@ const ATTENDANCE_POINTS: Record<string, number> = toPointMap(ATTENDANCE_OPTIONS)
 const HOMEWORK_POINTS: Record<string, number> = toPointMap(HOMEWORK_OPTIONS);
 const ACTIVITY_POINTS: Record<string, number> = toPointMap(ACTIVITY_OPTIONS);
 
-type WorkflowTab = 'attendance' | 'homework' | 'activity';
+type WorkflowTab = 'attendance' | 'homework' | 'activity' | 'points';
+type WorkflowAction = WorkflowTab | 'coins';
+
+const DEFAULT_WORKFLOW_ACTIONS: WorkflowAction[] = ['attendance', 'homework', 'activity', 'coins'];
+const WORKFLOW_TABS: WorkflowTab[] = ['attendance', 'homework', 'activity', 'points'];
+const ACTION_LABELS: Record<WorkflowTab, string> = {
+  attendance: 'Attendance',
+  homework: 'Homework',
+  activity: 'Activity',
+  points: 'Points',
+};
 
 const unwrapRows = <T,>(response: any): T[] => {
   const data = response?.data ?? response;
@@ -76,6 +86,7 @@ const fetchAllClassStudents = async (classId: number) => {
 export default function SessionWorkflowPage() {
   const { classId, sessionId } = useParams<{ classId: string; sessionId: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const authUser = useAppSelector((state) => state.auth.user);
   const [classData, setClassData] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
@@ -84,6 +95,7 @@ export default function SessionWorkflowPage() {
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
+  const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
   const [activeTab, setActiveTab] = useState<WorkflowTab>('attendance');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -91,6 +103,18 @@ export default function SessionWorkflowPage() {
 
   const numericClassId = Number(classId);
   const numericSessionId = Number(sessionId);
+  const selectedActions = useMemo(() => {
+    const raw = searchParams.get('actions');
+    const values = raw ? raw.split(',') : DEFAULT_WORKFLOW_ACTIONS;
+    const allowed = new Set<WorkflowAction>(['attendance', 'homework', 'activity', 'coins', 'points']);
+    const next = values.filter((value): value is WorkflowAction => allowed.has(value as WorkflowAction));
+    return next.length > 0 ? next : DEFAULT_WORKFLOW_ACTIONS;
+  }, [searchParams]);
+  const selectedTabs = useMemo(
+    () => WORKFLOW_TABS.filter((tab) => selectedActions.includes(tab)),
+    [selectedActions],
+  );
+  const shouldAwardCoins = selectedActions.includes('coins');
   const centerId = Number(session?.center_id || classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
   const selectedDate = session?.session_date ? new Date(session.session_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 
@@ -119,6 +143,7 @@ export default function SessionWorkflowPage() {
         const nextAttendance = new Map<number, string>();
         const nextHomework = new Map<number, string>();
         const nextActivity = new Map<number, string>();
+        const nextPoints = new Map<number, string>();
         const statusMap: Record<string, string> = { Present: 'On time', 'Absent R': 'Excused', 'Absent NR': 'Absent' };
 
         nextStudents.forEach((student) => {
@@ -127,6 +152,7 @@ export default function SessionWorkflowPage() {
           nextAttendance.set(id, '');
           nextHomework.set(id, '');
           nextActivity.set(id, '');
+          nextPoints.set(id, '');
         });
         nextAttendanceRecords.forEach((record) => {
           const id = Number(record.student_id);
@@ -138,6 +164,7 @@ export default function SessionWorkflowPage() {
           const activity = Object.keys(ACTIVITY_POINTS).find((key) => ACTIVITY_POINTS[key] === Number(grade.activity_score));
           if (id && homework) nextHomework.set(id, homework);
           if (id && activity) nextActivity.set(id, activity);
+          if (id && grade.points_score !== null && grade.points_score !== undefined) nextPoints.set(id, String(Number(grade.points_score || 0)));
         });
 
         setClassData(nextClass);
@@ -147,6 +174,7 @@ export default function SessionWorkflowPage() {
         setAttendance(nextAttendance);
         setHomeworkScores(nextHomework);
         setActivityScores(nextActivity);
+        setPointsScores(nextPoints);
       } catch (err: any) {
         if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load lesson workflow.');
       } finally {
@@ -159,27 +187,86 @@ export default function SessionWorkflowPage() {
     };
   }, [numericClassId, numericSessionId]);
 
+  useEffect(() => {
+    if (selectedTabs.length === 0) return;
+    if (!selectedTabs.includes(activeTab)) {
+      setActiveTab(selectedTabs[0]);
+    }
+  }, [activeTab, selectedTabs]);
+
   const counts = useMemo(() => {
     const total = students.length;
     const attendanceMarked = Array.from(attendance.values()).filter(Boolean).length;
     const homeworkMarked = Array.from(homeworkScores.values()).filter(Boolean).length;
     const activityMarked = Array.from(activityScores.values()).filter(Boolean).length;
+    const pointsMarked = Array.from(pointsScores.values()).filter((value) => value !== '').length;
     return {
       total,
       attendanceMarked,
       homeworkMarked,
       activityMarked,
+      pointsMarked,
       allAttendanceMarked: total > 0 && attendanceMarked === total,
       allHomeworkMarked: total > 0 && homeworkMarked === total,
       allActivityMarked: total > 0 && activityMarked === total,
+      allPointsMarked: total > 0 && pointsMarked === total,
     };
-  }, [activityScores, attendance, homeworkScores, students.length]);
+  }, [activityScores, attendance, homeworkScores, pointsScores, students.length]);
 
   const getTotalScore = (studentId: number) => {
-    const attendanceStatus = attendance.get(studentId) || '';
-    const homeworkStatus = homeworkScores.get(studentId) || '';
-    const activityStatus = activityScores.get(studentId) || '';
-    return (ATTENDANCE_POINTS[attendanceStatus] || 0) + (HOMEWORK_POINTS[homeworkStatus] || 0) + (ACTIVITY_POINTS[activityStatus] || 0);
+    const attendanceStatus = selectedActions.includes('attendance') ? attendance.get(studentId) || '' : '';
+    const homeworkStatus = selectedActions.includes('homework') ? homeworkScores.get(studentId) || '' : '';
+    const activityStatus = selectedActions.includes('activity') ? activityScores.get(studentId) || '' : '';
+    const pointsScore = selectedActions.includes('points') ? Number(pointsScores.get(studentId) || 0) : 0;
+    return (ATTENDANCE_POINTS[attendanceStatus] || 0) + (HOMEWORK_POINTS[homeworkStatus] || 0) + (ACTIVITY_POINTS[activityStatus] || 0) + (Number.isFinite(pointsScore) ? pointsScore : 0);
+  };
+
+  const getNextTab = (tab: WorkflowTab) => {
+    const index = selectedTabs.indexOf(tab);
+    return index >= 0 ? selectedTabs[index + 1] : undefined;
+  };
+
+  const getPreviousTab = (tab: WorkflowTab) => {
+    const index = selectedTabs.indexOf(tab);
+    return index > 0 ? selectedTabs[index - 1] : undefined;
+  };
+
+  const isTabComplete = (tab: WorkflowTab) => {
+    if (tab === 'attendance') return counts.allAttendanceMarked;
+    if (tab === 'homework') return counts.allHomeworkMarked;
+    if (tab === 'activity') return counts.allActivityMarked;
+    return counts.allPointsMarked;
+  };
+
+  const completeTab = (tab: WorkflowTab) => {
+    if (!isTabComplete(tab)) {
+      showToast.error(`Complete ${ACTION_LABELS[tab].toLowerCase()} for every student first.`);
+      return;
+    }
+    const nextTab = getNextTab(tab);
+    if (nextTab) setActiveTab(nextTab);
+    else saveSession();
+  };
+
+  const setPointScore = (studentId: number, value: string) => {
+    const numericValue = Number(value);
+    const nextValue = value === '' || !Number.isFinite(numericValue) ? '' : String(Math.max(0, Math.min(100, Math.round(numericValue))));
+    setPointsScores((current) => {
+      const next = new Map(current);
+      next.set(studentId, nextValue);
+      return next;
+    });
+  };
+
+  const fillPointScores = (value: string) => {
+    setPointsScores((current) => {
+      const next = new Map(current);
+      students.forEach((student) => {
+        const studentId = getStudentId(student);
+        if (studentId) next.set(studentId, value);
+      });
+      return next;
+    });
   };
 
   const toggleMapValue = (setter: React.Dispatch<React.SetStateAction<Map<number, string>>>, studentId: number, value: string) => {
@@ -207,8 +294,13 @@ export default function SessionWorkflowPage() {
 
   const saveSession = async () => {
     if (!numericSessionId || !numericClassId) return;
-    if (!counts.allAttendanceMarked || !counts.allHomeworkMarked || !counts.allActivityMarked) {
-      showToast.error('Complete attendance, homework, and activity for every student.');
+    if (selectedTabs.length === 0) {
+      showToast.error('Choose at least one scoring action before saving this lesson.');
+      return;
+    }
+    const incompleteTab = selectedTabs.find((tab) => !isTabComplete(tab));
+    if (incompleteTab) {
+      showToast.error(`Complete ${ACTION_LABELS[incompleteTab].toLowerCase()} for every student.`);
       return;
     }
     if (!centerId) {
@@ -223,42 +315,49 @@ export default function SessionWorkflowPage() {
       for (const student of students) {
         const studentId = getStudentId(student);
         const status = attendance.get(studentId);
-        if (!studentId || !status) continue;
+        const attendanceStatus = status || '';
+        if (!studentId) continue;
+        if (selectedActions.includes('attendance') && !status) continue;
 
-        const attendancePayload = {
-          center_id: centerId,
-          student_id: studentId,
-          class_id: numericClassId,
-          session_id: numericSessionId,
-          attendance_date: selectedDate,
-          status: statusMap[status] || status,
-          remarks: 'Daily Session Grading',
-          teacher_id: teacherId || 1,
-        };
+        if (selectedActions.includes('attendance')) {
+          const attendancePayload = {
+            center_id: centerId,
+            student_id: studentId,
+            class_id: numericClassId,
+            session_id: numericSessionId,
+            attendance_date: selectedDate,
+            status: statusMap[attendanceStatus] || attendanceStatus,
+            remarks: 'Daily Session Grading',
+            teacher_id: teacherId || 1,
+          };
 
-        const existingAttendance = attendanceRecords.find((record) => Number(record.student_id) === Number(studentId));
-        if (existingAttendance?.attendance_id || existingAttendance?.id) {
-          await attendanceAPI.update(Number(existingAttendance.attendance_id || existingAttendance.id), attendancePayload);
-        } else {
-          await attendanceAPI.create(attendancePayload);
+          const existingAttendance = attendanceRecords.find((record) => Number(record.student_id) === Number(studentId));
+          if (existingAttendance?.attendance_id || existingAttendance?.id) {
+            await attendanceAPI.update(Number(existingAttendance.attendance_id || existingAttendance.id), attendancePayload);
+          } else {
+            await attendanceAPI.create(attendancePayload);
+          }
         }
 
         const homeworkStatus = homeworkScores.get(studentId);
         const activityStatus = activityScores.get(studentId);
+        const pointsScore = Number(pointsScores.get(studentId) || 0);
         await gradeAPI.upsertSessionScores({
           student_id: studentId,
           teacher_id: teacherId || 1,
           class_id: numericClassId,
           session_id: numericSessionId,
-          attendance_score: ATTENDANCE_POINTS[status] || 0,
-          homework_score: homeworkStatus ? (HOMEWORK_POINTS[homeworkStatus] ?? 0) : 0,
-          activity_score: activityStatus ? (ACTIVITY_POINTS[activityStatus] ?? 0) : 0,
+          attendance_score: selectedActions.includes('attendance') ? (ATTENDANCE_POINTS[attendanceStatus] || 0) : null,
+          homework_score: selectedActions.includes('homework') && homeworkStatus ? (HOMEWORK_POINTS[homeworkStatus] ?? 0) : null,
+          activity_score: selectedActions.includes('activity') && activityStatus ? (ACTIVITY_POINTS[activityStatus] ?? 0) : null,
+          points_score: selectedActions.includes('points') && Number.isFinite(pointsScore) ? pointsScore : null,
           subject: classData?.class_name || 'Class Session',
           total_marks: 100,
           center_id: centerId,
+          award_coins: shouldAwardCoins,
         });
       }
-      showToast.success('Session data saved successfully.');
+      showToast.success(shouldAwardCoins ? 'Session data and coins saved successfully.' : 'Session data saved successfully.');
       navigate(`/classes/${numericClassId}`);
     } catch (err) {
       console.error('Failed to save session data:', err);
@@ -300,12 +399,12 @@ export default function SessionWorkflowPage() {
           </Button>
           <h1 className="truncate text-xl font-bold text-slate-950 dark:text-foreground">{classData?.class_name || 'Lesson workflow'}</h1>
           <p className="text-sm text-muted-foreground">
-            {selectedDate} / {session?.start_time || '-'} / {students.length} students
+            {selectedDate} / {session?.start_time || '-'} / {students.length} students / {shouldAwardCoins ? 'coins on' : 'coins off'}
           </p>
         </div>
         <Button className="h-9 bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveSession} disabled={submitting || students.length === 0}>
           {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          Save Scores & Coins
+          {shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}
         </Button>
       </div>
 
@@ -313,52 +412,77 @@ export default function SessionWorkflowPage() {
         <CardContent className="p-3">
           <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WorkflowTab)}>
             <div className="mb-3 grid gap-2 md:grid-cols-3">
-              <StepTile active={activeTab === 'attendance'} title="1. Attendance" value={`${counts.attendanceMarked}/${counts.total} marked`} tone="emerald" />
-              <StepTile active={activeTab === 'homework'} title="2. Homework" value={`${counts.homeworkMarked}/${counts.total} checked`} tone="sky" />
-              <StepTile active={activeTab === 'activity'} title="3. Activity & Coins" value={`${counts.activityMarked}/${counts.total} scored`} tone="violet" />
+              {selectedTabs.map((tab, index) => (
+                <StepTile
+                  key={tab}
+                  active={activeTab === tab}
+                  title={`${index + 1}. ${ACTION_LABELS[tab]}`}
+                  value={
+                    tab === 'attendance'
+                      ? `${counts.attendanceMarked}/${counts.total} marked`
+                      : tab === 'homework'
+                      ? `${counts.homeworkMarked}/${counts.total} checked`
+                      : tab === 'activity'
+                      ? `${counts.activityMarked}/${counts.total} scored`
+                      : `${counts.pointsMarked}/${counts.total} entered`
+                  }
+                  tone={tab === 'attendance' ? 'emerald' : tab === 'homework' ? 'sky' : 'violet'}
+                />
+              ))}
             </div>
 
-            <TabsList className="grid h-auto w-full grid-cols-3">
-              <TabsTrigger value="attendance" className="py-2">Attendance</TabsTrigger>
-              <TabsTrigger value="homework" disabled={!counts.allAttendanceMarked} className="py-2">Homework</TabsTrigger>
-              <TabsTrigger value="activity" disabled={!counts.allAttendanceMarked || !counts.allHomeworkMarked} className="py-2">Activity</TabsTrigger>
+            <TabsList className="grid h-auto w-full" style={{ gridTemplateColumns: `repeat(${Math.max(selectedTabs.length, 1)}, minmax(0, 1fr))` }}>
+              {selectedTabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab} className="py-2">{ACTION_LABELS[tab]}</TabsTrigger>
+              ))}
             </TabsList>
 
-            <TabsContent value="attendance" className="pt-4">
+            {selectedActions.includes('attendance') && <TabsContent value="attendance" className="pt-4">
               <ScoreTable
                 students={students}
                 options={ATTENDANCE_OPTIONS}
                 values={attendance}
                 onToggle={(studentId, value) => toggleMapValue(setAttendance, studentId, value)}
                 onFillAll={(value) => fillMapValue(setAttendance, value)}
-                action={<Button onClick={() => counts.allAttendanceMarked ? setActiveTab('homework') : showToast.error('Mark attendance for every student first.')}><CheckCircle2 className="mr-2 h-4 w-4" />Complete Attendance</Button>}
+                action={<><Button variant="outline" onClick={() => navigate(`/classes/${numericClassId}`)}>Cancel</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? 'Complete Attendance' : 'Save Scores'}</Button></>}
               />
-            </TabsContent>
+            </TabsContent>}
 
-            <TabsContent value="homework" className="pt-4">
+            {selectedActions.includes('homework') && <TabsContent value="homework" className="pt-4">
               <ScoreTable
                 students={students}
                 options={HOMEWORK_OPTIONS}
                 values={homeworkScores}
-                isEnabled={(studentId) => Boolean(attendance.get(studentId))}
+                isEnabled={(studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
-                onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => Boolean(attendance.get(studentId)))}
-                action={<><Button variant="outline" onClick={() => setActiveTab('attendance')}>Back</Button><Button onClick={() => counts.allHomeworkMarked ? setActiveTab('activity') : showToast.error('Add homework score for every student first.')}><ClipboardCheck className="mr-2 h-4 w-4" />Complete Homework</Button></>}
+                onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId)))}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? 'Complete Homework' : 'Save Scores'}</Button></>}
               />
-            </TabsContent>
+            </TabsContent>}
 
-            <TabsContent value="activity" className="pt-4">
+            {selectedActions.includes('activity') && <TabsContent value="activity" className="pt-4">
               <ScoreTable
                 students={students}
                 options={ACTIVITY_OPTIONS}
                 values={activityScores}
-                isEnabled={(studentId) => Boolean(attendance.get(studentId)) && Boolean(homeworkScores.get(studentId))}
+                isEnabled={(studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
                 onToggle={(studentId, value) => toggleMapValue(setActivityScores, studentId, value)}
-                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => Boolean(attendance.get(studentId)) && Boolean(homeworkScores.get(studentId)))}
+                onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))))}
                 getTotalScore={getTotalScore}
-                action={<><Button variant="outline" onClick={() => setActiveTab('homework')}>Back</Button><Button onClick={saveSession} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save Scores & Coins</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? 'Complete Activity' : shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
               />
-            </TabsContent>
+            </TabsContent>}
+
+            {selectedActions.includes('points') && <TabsContent value="points" className="pt-4">
+              <ManualPointsTable
+                students={students}
+                values={pointsScores}
+                onChange={setPointScore}
+                onFillAll={fillPointScores}
+                getTotalScore={getTotalScore}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
+              />
+            </TabsContent>}
           </Tabs>
         </CardContent>
       </Card>

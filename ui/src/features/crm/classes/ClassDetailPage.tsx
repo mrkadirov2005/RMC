@@ -1,10 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarDays, Clock, DollarSign, FileQuestion, Loader2, MapPin, PlayCircle,  Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, CheckCircle2, Clock, Coins, DollarSign, FileQuestion, Loader2, MapPin, PencilLine, PlayCircle, Star, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
@@ -60,6 +63,18 @@ type AssignedTestItem = {
   notes?: string;
 };
 
+type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
+
+const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
+
+const lessonActionOptions: Array<{ id: LessonAction; label: string; detail: string; icon: typeof CalendarCheck }> = [
+  { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
+  { id: 'homework', label: 'Homework', detail: 'Score homework completion.', icon: CheckCircle2 },
+  { id: 'activity', label: 'Activity', detail: 'Score class activity.', icon: Star },
+  { id: 'coins', label: 'Coins', detail: 'Apply coins from the final score.', icon: Coins },
+  { id: 'points', label: 'Points', detail: 'Enter manual points for each student.', icon: PencilLine },
+];
+
 const parseSchedule = (section?: string): ClassSchedule => {
   if (!section) return { days: [] as string[], time: '', endTime: '' };
   try {
@@ -89,6 +104,8 @@ const ClassDetailPage = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
   const [startingLesson, setStartingLesson] = useState(false);
+  const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
+  const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -173,14 +190,26 @@ const ClassDetailPage = () => {
     { label: 'Tuition', value: formatMoney(classData?.payment_amount), detail: classData?.payment_frequency || 'Monthly', icon: DollarSign, color: 'bg-fuchsia-600' },
   ];
 
-  const openSessionWorkflow = (session: any) => {
+  const openSessionWorkflow = (session: any, actions: LessonAction[] = defaultLessonActions) => {
     const nextSessionId = Number(session.session_id || session.id);
     if (!nextSessionId) return;
-    navigate(`/classes/${classId}/sessions/${nextSessionId}/workflow`);
+    navigate(`/classes/${classId}/sessions/${nextSessionId}/workflow?actions=${actions.join(',')}`);
+  };
+
+  const toggleLessonAction = (action: LessonAction, checked: boolean) => {
+    setSelectedLessonActions((current) => {
+      if (checked) return Array.from(new Set([...current, action]));
+      return current.filter((item) => item !== action);
+    });
   };
 
   const handleStartLesson = async () => {
     if (!classData || !classId) return;
+    const scoringActions = selectedLessonActions.filter((action) => action !== 'coins');
+    if (scoringActions.length === 0) {
+      showToast.error('Pick attendance, homework, activity, or points before starting.');
+      return;
+    }
     const targetClassId = Number(classData.class_id || classData.id || classId);
     const existingTodaySession = sessions.find((session) => {
       if (!session.session_date) return false;
@@ -188,7 +217,8 @@ const ClassDetailPage = () => {
     });
 
     if (existingTodaySession) {
-      openSessionWorkflow(existingTodaySession);
+      setLessonPickerOpen(false);
+      openSessionWorkflow(existingTodaySession, selectedLessonActions);
       return;
     }
 
@@ -208,7 +238,8 @@ const ClassDetailPage = () => {
       });
       const nextSession = response?.data ?? response;
       setSessions((current) => [...current, nextSession]);
-      openSessionWorkflow(nextSession);
+      setLessonPickerOpen(false);
+      openSessionWorkflow(nextSession, selectedLessonActions);
     } catch (err) {
       console.error('Failed to start lesson:', err);
       showToast.error('Failed to start lesson.');
@@ -266,7 +297,7 @@ const ClassDetailPage = () => {
             </div>
           </div>
           <Button
-            onClick={handleStartLesson}
+            onClick={() => setLessonPickerOpen(true)}
             disabled={startingLesson}
             className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
           >
@@ -275,6 +306,49 @@ const ClassDetailPage = () => {
           </Button>
         </div>
       </div>
+
+      <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingLesson && setLessonPickerOpen(open)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Pick lesson actions</DialogTitle>
+            <DialogDescription>Select what you want to do in this lesson session.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            {lessonActionOptions.map((option) => {
+              const Icon = option.icon;
+              const checked = selectedLessonActions.includes(option.id);
+              return (
+                <Label
+                  key={option.id}
+                  htmlFor={`lesson-action-${option.id}`}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition hover:bg-slate-50 dark:hover:bg-muted/40"
+                >
+                  <Checkbox
+                    id={`lesson-action-${option.id}`}
+                    checked={checked}
+                    onCheckedChange={(value) => toggleLessonAction(option.id, value === true)}
+                    className="mt-1"
+                  />
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-white">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">{option.label}</span>
+                    <span className="block text-xs text-muted-foreground">{option.detail}</span>
+                  </span>
+                </Label>
+              );
+            })}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>Cancel</Button>
+            <Button onClick={handleStartLesson} disabled={startingLesson} className="bg-rose-600 text-white hover:bg-rose-700">
+              {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+              Start
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {statTiles.map((tile) => {

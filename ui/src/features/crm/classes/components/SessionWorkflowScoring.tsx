@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 
@@ -188,6 +189,79 @@ export const ScoreTable = ({
                   {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
                 </TableCell>
               )}
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
+    <div className="flex justify-end gap-2 border-t p-3">{action}</div>
+  </div>
+);
+
+export const ManualPointsTable = ({
+  students,
+  values,
+  onChange,
+  onFillAll,
+  getTotalScore,
+  action,
+}: {
+  students: any[];
+  values: Map<number, string>;
+  onChange: (studentId: number, value: string) => void;
+  onFillAll: (value: string) => void;
+  getTotalScore: (studentId: number) => number;
+  action: ReactNode;
+}) => (
+  <div className="overflow-x-auto rounded-lg border">
+    <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
+      <span className="text-xs font-semibold text-muted-foreground">Fill all points</span>
+      {[0, 5, 10, 20, 50, 100].map((value) => (
+        <button
+          key={value}
+          type="button"
+          className="h-8 rounded-full border border-slate-200 bg-white px-3 text-[11px] font-bold text-slate-700 shadow-sm transition hover:border-slate-400"
+          onClick={() => onFillAll(String(value))}
+        >
+          {value}
+        </button>
+      ))}
+    </div>
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-primary">
+          <TableHead className="h-10 w-[220px] min-w-[220px] px-3 text-xs font-semibold text-primary-foreground">Student</TableHead>
+          <TableHead className="h-10 w-[160px] min-w-[160px] px-3 text-center text-xs font-semibold text-primary-foreground">Manual Points</TableHead>
+          <TableHead className="h-10 px-3 text-center text-xs font-semibold text-primary-foreground">Combined Score</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {students.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
+          </TableRow>
+        ) : students.map((student) => {
+          const studentId = getStudentId(student);
+          return (
+            <TableRow key={studentId} className="h-12">
+              <TableCell className="w-[220px] max-w-[220px] px-3 py-1.5 text-sm font-medium">
+                <span className="block truncate">{[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}</span>
+              </TableCell>
+              <TableCell className="px-3 py-1.5">
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={values.get(studentId) ?? ''}
+                  onChange={(event) => onChange(studentId, event.target.value)}
+                  className="mx-auto h-8 max-w-[120px] text-center text-sm font-semibold"
+                  placeholder="0"
+                />
+              </TableCell>
+              <TableCell className="px-3 py-1.5 text-center text-base font-bold">
+                {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
+              </TableCell>
             </TableRow>
           );
         })}
