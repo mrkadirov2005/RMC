@@ -345,6 +345,7 @@ export const gradeAPI = {
   update: (id: number, data: any) => apiClient.put(`/grades/${id}`, data),
   delete: (id: number) => apiClient.delete(`/grades/${id}`),
   upsertSessionScores: (data: any) => apiClient.post('/grades/session-scores', data),
+  saveSessionWorkflow: (data: any) => apiClient.post('/grades/session-workflow', data),
 };
 
 export const attendanceAPI = {

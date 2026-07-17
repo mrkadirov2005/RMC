@@ -193,6 +193,33 @@ const upsertSessionScores = async (req: any, res: any) => {
   }
 };
 
+const saveSessionWorkflow = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (req.user?.userType === 'teacher') {
+      const records = Array.isArray(req.body?.records) ? req.body.records : [];
+      for (const record of records) {
+        const ok = await studentBelongsToTeacher(Number(record.student_id), req.user?.id);
+        if (!ok) return res.status(403).json({ error: 'One or more students do not belong to this teacher.' });
+      }
+    }
+    const out = await gradeService.saveSessionWorkflow(req.body, centerId ?? req.body.center_id);
+    if (out && out.error === 'invalid_payload') {
+      return res.status(400).json({ error: 'Invalid session workflow payload.' });
+    }
+    if (out && out.error === 'invalid_center') {
+      return res.status(400).json({ error: 'Class does not belong to this center.' });
+    }
+    res.json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to save session workflow', details: error.message || String(error) });
+  }
+};
+
 module.exports = {
   getAllGrades,
   getGradeById,
@@ -203,6 +230,7 @@ module.exports = {
   deleteGrade,
   createBulkGrades,
   upsertSessionScores,
+  saveSessionWorkflow,
 };
 
 export {};

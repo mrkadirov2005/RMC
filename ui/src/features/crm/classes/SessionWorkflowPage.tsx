@@ -92,7 +92,6 @@ export default function SessionWorkflowPage() {
   const [session, setSession] = useState<any>(null);
   const [students, setStudents] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
-  const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
   const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
@@ -170,7 +169,6 @@ export default function SessionWorkflowPage() {
         setClassData(nextClass);
         setSession(nextSession || { session_id: numericSessionId, class_id: numericClassId, center_id: nextClass?.center_id });
         setStudents(nextStudents.filter((student) => !student.deleted_at));
-        setAttendanceRecords(nextAttendanceRecords);
         setAttendance(nextAttendance);
         setHomeworkScores(nextHomework);
         setActivityScores(nextActivity);
@@ -312,51 +310,36 @@ export default function SessionWorkflowPage() {
     try {
       const teacherId = authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id || session?.teacher_id || 0);
       const statusMap: Record<string, string> = { 'On time': 'Present', Late: 'Late', Excused: 'Absent R', Absent: 'Absent' };
-      for (const student of students) {
+      const records = students.map((student) => {
         const studentId = getStudentId(student);
         const status = attendance.get(studentId);
         const attendanceStatus = status || '';
-        if (!studentId) continue;
-        if (selectedActions.includes('attendance') && !status) continue;
-
-        if (selectedActions.includes('attendance')) {
-          const attendancePayload = {
-            center_id: centerId,
-            student_id: studentId,
-            class_id: numericClassId,
-            session_id: numericSessionId,
-            attendance_date: selectedDate,
-            status: statusMap[attendanceStatus] || attendanceStatus,
-            remarks: 'Daily Session Grading',
-            teacher_id: teacherId || 1,
-          };
-
-          const existingAttendance = attendanceRecords.find((record) => Number(record.student_id) === Number(studentId));
-          if (existingAttendance?.attendance_id || existingAttendance?.id) {
-            await attendanceAPI.update(Number(existingAttendance.attendance_id || existingAttendance.id), attendancePayload);
-          } else {
-            await attendanceAPI.create(attendancePayload);
-          }
-        }
-
         const homeworkStatus = homeworkScores.get(studentId);
         const activityStatus = activityScores.get(studentId);
         const pointsScore = Number(pointsScores.get(studentId) || 0);
-        await gradeAPI.upsertSessionScores({
+
+        return {
           student_id: studentId,
-          teacher_id: teacherId || 1,
-          class_id: numericClassId,
-          session_id: numericSessionId,
+          attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
+          attendance_remarks: selectedActions.includes('attendance') ? 'Daily Session Grading' : null,
           attendance_score: selectedActions.includes('attendance') ? (ATTENDANCE_POINTS[attendanceStatus] || 0) : null,
           homework_score: selectedActions.includes('homework') && homeworkStatus ? (HOMEWORK_POINTS[homeworkStatus] ?? 0) : null,
           activity_score: selectedActions.includes('activity') && activityStatus ? (ACTIVITY_POINTS[activityStatus] ?? 0) : null,
           points_score: selectedActions.includes('points') && Number.isFinite(pointsScore) ? pointsScore : null,
-          subject: classData?.class_name || 'Class Session',
-          total_marks: 100,
-          center_id: centerId,
-          award_coins: shouldAwardCoins,
-        });
-      }
+        };
+      }).filter((record) => Number(record.student_id) > 0);
+
+      await gradeAPI.saveSessionWorkflow({
+        center_id: centerId,
+        class_id: numericClassId,
+        session_id: numericSessionId,
+        teacher_id: teacherId || 1,
+        attendance_date: selectedDate,
+        subject: classData?.class_name || 'Class Session',
+        total_marks: 100,
+        award_coins: shouldAwardCoins,
+        records,
+      });
       showToast.success(shouldAwardCoins ? 'Session data and coins saved successfully.' : 'Session data saved successfully.');
       navigate(`/classes/${numericClassId}`);
     } catch (err) {

@@ -167,5 +167,6 @@ router_grade.get('/student/:studentId', requireAuth, validateParams(StudentIdPar
 router_grade.delete('/:id', requireAuth, validateParams(IdParamDto), gradeController.deleteGrade);
 router_grade.get('/session/:sessionId', requireAuth, validateParams(SessionIdParamDto), gradeController.getGradesBySession);
 router_grade.post('/session-scores', requireAuth, gradeController.upsertSessionScores);
+router_grade.post('/session-workflow', requireAuth, gradeController.saveSessionWorkflow);
 
 module.exports = router_grade;
