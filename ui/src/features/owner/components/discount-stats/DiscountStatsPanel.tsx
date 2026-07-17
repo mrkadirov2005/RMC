@@ -14,7 +14,7 @@ const colors = {
   monthly: '#10b981',
   complete: '#059669',
   partial: '#f59e0b',
-  unpaid: '#e11d48',
+  unpaid: '#f59e0b',
 };
 
 export const DiscountStatsPanel = ({ collections }: Props) => {
@@ -107,7 +107,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
                   {[item.student_first_name || student?.first_name, item.student_last_name || student?.last_name].filter(Boolean).join(' ') || `Student #${item.student_id}`}
                 </span>
                 <span className="rounded bg-blue-100 px-2 py-1 text-xs font-black text-blue-700">{item.discount_kind === 'monthly_discount' ? 'one-time' : item.discount_kind || 'discount'}</span>
-                <span className="rounded bg-rose-100 px-2 py-1 text-xs font-black text-rose-700">-{formatMoney(discountAmount)}</span>
+                <span className="rounded bg-amber-100 px-2 py-1 text-xs font-black text-amber-700">-{formatMoney(discountAmount)}</span>
                 <span className="rounded bg-emerald-100 px-2 py-1 text-xs font-black text-emerald-700">final {formatMoney(Number(item.final_price || item.final_amount || item.amount || 0))}</span>
                 <span className={`rounded px-2 py-1 text-xs font-black ${item.active === false ? 'bg-slate-200 text-slate-700' : 'bg-emerald-100 text-emerald-700'}`}>{item.active === false ? 'inactive' : 'active'}</span>
               </div>

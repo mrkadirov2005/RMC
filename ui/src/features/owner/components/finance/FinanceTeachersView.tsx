@@ -177,7 +177,7 @@ const TeacherGroupsHeader = ({
               <span className="block truncate">{group.name}</span>
               <span className="mt-1 flex h-1 overflow-hidden rounded-full bg-slate-100">
                 <span className="block h-full bg-emerald-500" style={{ width: `${paidPercent}%` }} />
-                <span className="block h-full bg-rose-500" style={{ width: `${Math.max(100 - paidPercent, 0)}%` }} />
+                <span className="block h-full bg-amber-500" style={{ width: `${Math.max(100 - paidPercent, 0)}%` }} />
               </span>
             </button>
           );
@@ -204,7 +204,7 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
             <span className="w-52 shrink-0 truncate font-black text-slate-950">
               {selectedGroup.name}
               {selectedGroup.unpaidCount > 0 && (
-                <span className="ml-2 rounded bg-rose-100 px-2 py-0.5 text-[10px] font-black text-rose-700">
+                <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
                   {selectedGroup.unpaidCount} qarzdor
                 </span>
               )}
@@ -231,7 +231,7 @@ const StudentPaymentRow = ({ student, groupName, index }: { student: StudentPaym
     <span className="w-44 shrink-0 truncate text-slate-500">{groupName}</span>
     <span className="w-28 shrink-0 font-black text-slate-700">{student.paid ? formatMoney(student.paidAmount) : '-'}</span>
     <span className="w-24 shrink-0">
-      <span className={cn('inline-flex items-center rounded px-2 py-1 text-[10px] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700')}>
+      <span className={cn('inline-flex items-center rounded px-2 py-1 text-[10px] font-black', student.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700')}>
         {student.paid ? (
           <>
             <CheckCircle2 className="mr-1 h-3 w-3" />

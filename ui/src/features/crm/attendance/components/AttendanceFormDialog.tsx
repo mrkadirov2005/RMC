@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { formLabelClassName } from '@/components/ui/form-control';
 import { SelectField } from '../../students/components/SelectField';
 import type { Attendance } from '../types';
 
@@ -89,7 +90,7 @@ const AttendanceFormDialog = ({
               placeholder="Select a class"
             />
             <div className="space-y-2">
-              <Label htmlFor="attendance_date">Attendance Date *</Label>
+              <Label htmlFor="attendance_date" className={formLabelClassName}>Attendance Date *</Label>
               <Input
                 type="date"
                 id="attendance_date"
@@ -101,7 +102,7 @@ const AttendanceFormDialog = ({
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
+              <Label htmlFor="status" className={formLabelClassName}>Status *</Label>
               <Select
                 required
                 value={formData.status || 'Present'}
@@ -121,7 +122,7 @@ const AttendanceFormDialog = ({
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="remarks">Remarks</Label>
+            <Label htmlFor="remarks" className={formLabelClassName}>Remarks</Label>
             <Textarea
               id="remarks"
               value={formData.remarks || ''}
