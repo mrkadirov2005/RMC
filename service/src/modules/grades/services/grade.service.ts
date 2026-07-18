@@ -3,6 +3,7 @@ const pool = require('../../../db/pool');
 const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
 const studentService = require('../../students/services/student.service');
 const { calculateCoins } = require('../../../utils/coinCalculator');
+const settingsService = require('../../settings/services/settings.service');
 
 const listGrades = (centerId?: number, teacherId?: number, studentId?: number) =>
   gradeRepository.findAll(centerId, teacherId, studentId);
@@ -316,11 +317,22 @@ const upsertSessionScoreInTransaction = (client: any, payload: any) =>
     )
     .then((r: any) => r.rows[0]);
 
-const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId: number | null) => {
+const calculateCoinsFromMapping = (marksObtained: number, totalMarks: number, mapping: any[]) => {
+  if (!totalMarks || totalMarks <= 0) return 0;
+  const score = Math.min(100, Math.max(0, (marksObtained / totalMarks) * 100));
+  const rows = [...mapping].sort((a, b) => Number(b.score) - Number(a.score));
+  for (const row of rows) {
+    if (score >= Number(row.score)) return Number(row.coins || 0);
+  }
+  return Number(rows[rows.length - 1]?.coins || 0);
+};
+
+const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId: number | null, scoringSettings: any, stellarBonusCoins = 0) => {
   const marksNum = Number(grade.marks_obtained);
   const totalNum = Number(grade.total_marks);
-  const coinsToAdd = calculateCoins(marksNum, totalNum);
-  const reason = `Academic performance: ${marksNum}/${totalNum} in ${grade.subject}`;
+  const baseCoins = calculateCoinsFromMapping(marksNum, totalNum, scoringSettings.coinScoreMapping);
+  const coinsToAdd = baseCoins + stellarBonusCoins;
+  const reason = `Academic performance: ${marksNum}/${totalNum} in ${grade.subject}${stellarBonusCoins > 0 ? ` | Stellar student bonus: +${stellarBonusCoins}` : ''}`;
 
   const studentRes = await client.query(
     'SELECT student_id, center_id, coins FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE',
@@ -369,7 +381,7 @@ const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId
          coin_comment = $3,
          updated_at = CURRENT_TIMESTAMP
      WHERE grade_id = $4`,
-    [coinsToAdd, coinsToAdd, reason, grade.grade_id]
+    [baseCoins, coinsToAdd, reason, grade.grade_id]
   );
 
   return { balance: nextCoins, transaction: tx.rows[0] };
@@ -428,12 +440,16 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
   if (!class_id || !session_id || !Array.isArray(records) || records.length === 0) {
     return { error: 'invalid_payload' as const };
   }
+  if (award_coins !== false && records.filter((record: any) => record.is_stellar_student).length > 1) {
+    return { error: 'multiple_stellar_students' as const };
+  }
 
   const resolvedCenterId = centerId ?? body.center_id;
   if (resolvedCenterId) {
     const classOk = await classInCenter(class_id, resolvedCenterId);
     if (!classOk) return { error: 'invalid_center' as const };
   }
+  const scoringSettings = await settingsService.getLessonScoring(resolvedCenterId);
 
   const client = await pool.connect();
   try {
@@ -485,7 +501,8 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
       gradeRows.push(gradeRow);
 
       if (award_coins !== false) {
-        const coinRow = await upsertLessonCoinsInTransaction(client, gradeRow, teacher_id ?? null);
+        const stellarBonusCoins = record.is_stellar_student ? Number(scoringSettings.stellarBonusCoins || 0) : 0;
+        const coinRow = await upsertLessonCoinsInTransaction(client, gradeRow, teacher_id ?? null, scoringSettings, stellarBonusCoins);
         if (coinRow?.error) throw new Error(`Failed to save coins for student ${studentId}: ${coinRow.error}`);
         coinRows.push(coinRow);
       } else {

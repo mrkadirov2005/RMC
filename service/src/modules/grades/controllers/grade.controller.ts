@@ -210,6 +210,9 @@ const saveSessionWorkflow = async (req: any, res: any) => {
     if (out && out.error === 'invalid_payload') {
       return res.status(400).json({ error: 'Invalid session workflow payload.' });
     }
+    if (out && out.error === 'multiple_stellar_students') {
+      return res.status(400).json({ error: 'Only one stellar student can be selected per lesson.' });
+    }
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Class does not belong to this center.' });
     }

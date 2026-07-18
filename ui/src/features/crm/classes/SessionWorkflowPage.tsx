@@ -5,39 +5,14 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { attendanceAPI, classAPI, gradeAPI, studentAPI } from '@/shared/api/api';
+import { attendanceAPI, classAPI, gradeAPI, settingsAPI, studentAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { useAppSelector } from '../hooks';
 import { ManualPointsTable, ScoreTable, StepTile, type ScoreOption } from './components/SessionWorkflowScoring';
+import { defaultLessonScoringSettings, normalizeLessonScoringSettings, type LessonScoringSettings } from './lessonScoringSettings';
 
 const toPointMap = (options: ScoreOption[]) => Object.fromEntries(options.map((option) => [option.label, option.score]));
-
-const ATTENDANCE_OPTIONS: ScoreOption[] = [
-  { label: 'On time', score: 50, symbol: '✓', fill: 100, tone: 'emerald' },
-  { label: 'Late', score: 40, symbol: '◕', fill: 80, tone: 'amber' },
-  { label: 'Excused', score: 30, symbol: '◐', fill: 60, tone: 'sky' },
-  { label: 'Absent', score: 0, symbol: '○', fill: 0, tone: 'rose' },
-];
-
-const HOMEWORK_OPTIONS: ScoreOption[] = [
-  { label: 'Excellent', score: 20, symbol: '😍', fill: 100, tone: 'emerald' },
-  { label: 'Good', score: 15, symbol: '🙂', fill: 75, tone: 'sky' },
-  { label: 'Half', score: 10, symbol: '😐', fill: 50, tone: 'amber' },
-  { label: 'Weak', score: 5, symbol: '😕', fill: 25, tone: 'orange' },
-  { label: 'None', score: 0, symbol: '😞', fill: 0, tone: 'rose' },
-];
-
-const ACTIVITY_OPTIONS: ScoreOption[] = [
-  { label: 'Very active', score: 30, symbol: '★', fill: 100, tone: 'violet' },
-  { label: 'Average', score: 20, symbol: '●', fill: 66, tone: 'sky' },
-  { label: 'Weak', score: 10, symbol: '◔', fill: 33, tone: 'amber' },
-  { label: 'No activity', score: 0, symbol: '○', fill: 0, tone: 'rose' },
-];
-
-const ATTENDANCE_POINTS: Record<string, number> = toPointMap(ATTENDANCE_OPTIONS);
-const HOMEWORK_POINTS: Record<string, number> = toPointMap(HOMEWORK_OPTIONS);
-const ACTIVITY_POINTS: Record<string, number> = toPointMap(ACTIVITY_OPTIONS);
 
 type WorkflowTab = 'attendance' | 'homework' | 'activity' | 'points';
 type WorkflowAction = WorkflowTab | 'coins';
@@ -95,6 +70,8 @@ export default function SessionWorkflowPage() {
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
   const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
+  const [stellarStudentId, setStellarStudentId] = useState<number | null>(null);
+  const [scoringSettings, setScoringSettings] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
   const [activeTab, setActiveTab] = useState<WorkflowTab>('attendance');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -114,6 +91,9 @@ export default function SessionWorkflowPage() {
     [selectedActions],
   );
   const shouldAwardCoins = selectedActions.includes('coins');
+  const attendancePoints = useMemo(() => toPointMap(scoringSettings.attendance), [scoringSettings.attendance]);
+  const homeworkPoints = useMemo(() => toPointMap(scoringSettings.homework), [scoringSettings.homework]);
+  const activityPoints = useMemo(() => toPointMap(scoringSettings.activity), [scoringSettings.activity]);
   const centerId = Number(session?.center_id || classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
   const selectedDate = session?.session_date ? new Date(session.session_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 
@@ -124,12 +104,13 @@ export default function SessionWorkflowPage() {
       setLoading(true);
       setError('');
       try {
-        const [classResponse, sessionsResponse, studentsResponse, attendanceResponse, gradesResponse] = await Promise.all([
+        const [classResponse, sessionsResponse, studentsResponse, attendanceResponse, gradesResponse, scoringResponse] = await Promise.all([
           classAPI.getById(numericClassId),
           classAPI.getSessions(numericClassId).catch(() => ({ data: [] })),
           fetchAllClassStudents(numericClassId),
           attendanceAPI.getBySession(numericSessionId).catch(() => ({ data: [] })),
           gradeAPI.getBySession(numericSessionId).catch(() => ({ data: [] })),
+          settingsAPI.getLessonScoring().catch(() => ({ data: defaultLessonScoringSettings })),
         ]);
         if (cancelled) return;
 
@@ -138,11 +119,15 @@ export default function SessionWorkflowPage() {
         const nextStudents = Array.isArray(studentsResponse) ? studentsResponse : [];
         const nextAttendanceRecords = unwrapRows<any>(attendanceResponse);
         const nextGrades = unwrapRows<any>(gradesResponse);
+        const nextScoringSettings = normalizeLessonScoringSettings(getPayload(scoringResponse));
+        const nextHomeworkPoints = toPointMap(nextScoringSettings.homework);
+        const nextActivityPoints = toPointMap(nextScoringSettings.activity);
 
         const nextAttendance = new Map<number, string>();
         const nextHomework = new Map<number, string>();
         const nextActivity = new Map<number, string>();
         const nextPoints = new Map<number, string>();
+        let nextStellarStudentId: number | null = null;
         const statusMap: Record<string, string> = { Present: 'On time', 'Absent R': 'Excused', 'Absent NR': 'Absent' };
 
         nextStudents.forEach((student) => {
@@ -159,20 +144,23 @@ export default function SessionWorkflowPage() {
         });
         nextGrades.forEach((grade) => {
           const id = Number(grade.student_id);
-          const homework = Object.keys(HOMEWORK_POINTS).find((key) => HOMEWORK_POINTS[key] === Number(grade.homework_score));
-          const activity = Object.keys(ACTIVITY_POINTS).find((key) => ACTIVITY_POINTS[key] === Number(grade.activity_score));
+          const homework = Object.keys(nextHomeworkPoints).find((key) => nextHomeworkPoints[key] === Number(grade.homework_score));
+          const activity = Object.keys(nextActivityPoints).find((key) => nextActivityPoints[key] === Number(grade.activity_score));
           if (id && homework) nextHomework.set(id, homework);
           if (id && activity) nextActivity.set(id, activity);
           if (id && grade.points_score !== null && grade.points_score !== undefined) nextPoints.set(id, String(Number(grade.points_score || 0)));
+          if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarStudentId = id;
         });
 
         setClassData(nextClass);
+        setScoringSettings(nextScoringSettings);
         setSession(nextSession || { session_id: numericSessionId, class_id: numericClassId, center_id: nextClass?.center_id });
         setStudents(nextStudents.filter((student) => !student.deleted_at));
         setAttendance(nextAttendance);
         setHomeworkScores(nextHomework);
         setActivityScores(nextActivity);
         setPointsScores(nextPoints);
+        setStellarStudentId(nextStellarStudentId);
       } catch (err: any) {
         if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load lesson workflow.');
       } finally {
@@ -216,7 +204,7 @@ export default function SessionWorkflowPage() {
     const homeworkStatus = selectedActions.includes('homework') ? homeworkScores.get(studentId) || '' : '';
     const activityStatus = selectedActions.includes('activity') ? activityScores.get(studentId) || '' : '';
     const pointsScore = selectedActions.includes('points') ? Number(pointsScores.get(studentId) || 0) : 0;
-    return (ATTENDANCE_POINTS[attendanceStatus] || 0) + (HOMEWORK_POINTS[homeworkStatus] || 0) + (ACTIVITY_POINTS[activityStatus] || 0) + (Number.isFinite(pointsScore) ? pointsScore : 0);
+    return (attendancePoints[attendanceStatus] || 0) + (homeworkPoints[homeworkStatus] || 0) + (activityPoints[activityStatus] || 0) + (Number.isFinite(pointsScore) ? pointsScore : 0);
   };
 
   const getNextTab = (tab: WorkflowTab) => {
@@ -320,11 +308,13 @@ export default function SessionWorkflowPage() {
 
         return {
           student_id: studentId,
+          is_stellar_student: shouldAwardCoins && stellarStudentId === studentId,
+          stellar_bonus_coins: shouldAwardCoins && stellarStudentId === studentId ? scoringSettings.stellarBonusCoins : 0,
           attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
           attendance_remarks: selectedActions.includes('attendance') ? 'Daily Session Grading' : null,
-          attendance_score: selectedActions.includes('attendance') ? (ATTENDANCE_POINTS[attendanceStatus] || 0) : null,
-          homework_score: selectedActions.includes('homework') && homeworkStatus ? (HOMEWORK_POINTS[homeworkStatus] ?? 0) : null,
-          activity_score: selectedActions.includes('activity') && activityStatus ? (ACTIVITY_POINTS[activityStatus] ?? 0) : null,
+          attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
+          homework_score: selectedActions.includes('homework') && homeworkStatus ? (homeworkPoints[homeworkStatus] ?? 0) : null,
+          activity_score: selectedActions.includes('activity') && activityStatus ? (activityPoints[activityStatus] ?? 0) : null,
           points_score: selectedActions.includes('points') && Number.isFinite(pointsScore) ? pointsScore : null,
         };
       }).filter((record) => Number(record.student_id) > 0);
@@ -423,7 +413,7 @@ export default function SessionWorkflowPage() {
             {selectedActions.includes('attendance') && <TabsContent value="attendance" className="pt-4">
               <ScoreTable
                 students={students}
-                options={ATTENDANCE_OPTIONS}
+                options={scoringSettings.attendance}
                 values={attendance}
                 onToggle={(studentId, value) => toggleMapValue(setAttendance, studentId, value)}
                 onFillAll={(value) => fillMapValue(setAttendance, value)}
@@ -434,7 +424,7 @@ export default function SessionWorkflowPage() {
             {selectedActions.includes('homework') && <TabsContent value="homework" className="pt-4">
               <ScoreTable
                 students={students}
-                options={HOMEWORK_OPTIONS}
+                options={scoringSettings.homework}
                 values={homeworkScores}
                 isEnabled={(studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
@@ -446,12 +436,15 @@ export default function SessionWorkflowPage() {
             {selectedActions.includes('activity') && <TabsContent value="activity" className="pt-4">
               <ScoreTable
                 students={students}
-                options={ACTIVITY_OPTIONS}
+                options={scoringSettings.activity}
                 values={activityScores}
                 isEnabled={(studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
                 onToggle={(studentId, value) => toggleMapValue(setActivityScores, studentId, value)}
                 onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))))}
                 getTotalScore={getTotalScore}
+                stellarStudentId={shouldAwardCoins ? stellarStudentId : null}
+                onToggleStellar={shouldAwardCoins ? (studentId) => setStellarStudentId((current) => current === studentId ? null : studentId) : undefined}
+                stellarBonusCoins={scoringSettings.stellarBonusCoins}
                 action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? 'Complete Activity' : shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
               />
             </TabsContent>}

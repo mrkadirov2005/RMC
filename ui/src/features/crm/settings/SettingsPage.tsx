@@ -1,16 +1,22 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, Clock, Globe, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { CalendarDays, Clock, Coins, Globe, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { settingsAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { cn } from '@/lib/utils';
+import {
+  defaultLessonScoringSettings,
+  normalizeLessonScoringSettings,
+  type LessonScoringSettings,
+} from '../classes/lessonScoringSettings';
 import {
   CALENDAR_DAY_END_HOUR_KEY,
   CALENDAR_DAY_START_HOUR_KEY,
@@ -53,6 +59,8 @@ const hourOptions = Array.from({ length: 24 }, (_, hour) => ({
   label: `${String(hour).padStart(2, '0')}:00`,
 }));
 
+type ScoreSection = 'attendance' | 'homework' | 'activity';
+
 // Renders the settings page screen.
 const SettingsPage = () => {
   const { language, setLanguage, t } = useLanguage();
@@ -61,6 +69,7 @@ const SettingsPage = () => {
   const [calendarDefaultView, setCalendarDefaultView] = useState<'month' | 'week'>('month');
   const [calendarStartHour, setCalendarStartHour] = useState(8);
   const [calendarEndHour, setCalendarEndHour] = useState(18);
+  const [lessonScoring, setLessonScoring] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
 
   useEffect(() => {
     setDefaultDuration(readStoredNumber(DEFAULT_DURATION_KEY, 90));
@@ -69,9 +78,28 @@ const SettingsPage = () => {
     setCalendarDefaultView(readStoredView());
     setCalendarStartHour(readStoredHour(CALENDAR_DAY_START_HOUR_KEY, 8));
     setCalendarEndHour(readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 18));
+    settingsAPI.getLessonScoring()
+      .then((response) => setLessonScoring(normalizeLessonScoringSettings(response.data)))
+      .catch(() => setLessonScoring(defaultLessonScoringSettings));
   }, []);
 
-  const handleSave = () => {
+  const updateScoreOption = (section: ScoreSection, index: number, key: 'label' | 'score' | 'symbol' | 'fill', value: string) => {
+    setLessonScoring((current) => ({
+      ...current,
+      [section]: current[section].map((option, optionIndex) => optionIndex === index
+        ? { ...option, [key]: key === 'label' || key === 'symbol' ? value : Number(value) }
+        : option),
+    }));
+  };
+
+  const updateCoinMapping = (index: number, key: 'score' | 'coins', value: string) => {
+    setLessonScoring((current) => ({
+      ...current,
+      coinScoreMapping: current.coinScoreMapping.map((row, rowIndex) => rowIndex === index ? { ...row, [key]: Number(value) } : row),
+    }));
+  };
+
+  const handleSave = async () => {
     if (!Number.isFinite(defaultDuration) || defaultDuration <= 0) {
       showToast.error('Lesson length must be a positive number.');
       return;
@@ -90,7 +118,12 @@ const SettingsPage = () => {
     localStorage.setItem(CALENDAR_DEFAULT_VIEW_KEY, calendarDefaultView);
     localStorage.setItem(CALENDAR_DAY_START_HOUR_KEY, String(calendarStartHour));
     localStorage.setItem(CALENDAR_DAY_END_HOUR_KEY, String(calendarEndHour));
-    showToast.success('Settings saved.');
+    try {
+      await settingsAPI.saveLessonScoring(lessonScoring);
+      showToast.success('Settings saved.');
+    } catch {
+      showToast.error('Failed to save lesson scoring settings.');
+    }
   };
 
   const handleClearOverride = () => {
@@ -115,11 +148,13 @@ const SettingsPage = () => {
     localStorage.removeItem(CALENDAR_DEFAULT_VIEW_KEY);
     localStorage.removeItem(CALENDAR_DAY_START_HOUR_KEY);
     localStorage.removeItem(CALENDAR_DAY_END_HOUR_KEY);
+    settingsAPI.saveLessonScoring(defaultLessonScoringSettings).catch(() => null);
     setDefaultDuration(90);
     setOverrideDuration('');
     setCalendarDefaultView('month');
     setCalendarStartHour(8);
     setCalendarEndHour(18);
+    setLessonScoring(defaultLessonScoringSettings);
     showToast.success('Settings reset to defaults.');
   };
 
@@ -289,6 +324,65 @@ const SettingsPage = () => {
           </div>
         </SectionPanel>
       </div>
+
+      <SectionPanel
+        title={
+          <span className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-sm">
+              <Coins className="h-4 w-4" />
+            </span>
+            Lesson Scoring
+          </span>
+        }
+      >
+        <div className="space-y-6">
+          {(['attendance', 'homework', 'activity'] as ScoreSection[]).map((section) => (
+            <div key={section} className="space-y-2">
+              <div className="text-sm font-semibold capitalize">{section}</div>
+              <div className="overflow-x-auto rounded-lg border">
+                <div className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-muted-foreground">
+                  <span>Label</span>
+                  <span>Score</span>
+                  <span>Symbol</span>
+                  <span>Fill %</span>
+                </div>
+                {lessonScoring[section].map((option, index) => (
+                  <div key={`${section}-${index}`} className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b px-3 py-2 last:border-b-0">
+                    <Input value={option.label} onChange={(event) => updateScoreOption(section, index, 'label', event.target.value)} className="h-8" />
+                    <Input type="number" value={option.score} onChange={(event) => updateScoreOption(section, index, 'score', event.target.value)} className="h-8" />
+                    <Input value={option.symbol} onChange={(event) => updateScoreOption(section, index, 'symbol', event.target.value)} className="h-8" />
+                    <Input type="number" min={0} max={100} value={option.fill} onChange={(event) => updateScoreOption(section, index, 'fill', event.target.value)} className="h-8" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+
+          <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
+            <div className="space-y-2">
+              <Label htmlFor="stellarBonusCoins">Stellar bonus coins</Label>
+              <Input
+                id="stellarBonusCoins"
+                type="number"
+                value={lessonScoring.stellarBonusCoins}
+                onChange={(event) => setLessonScoring((current) => ({ ...current, stellarBonusCoins: Number(event.target.value) }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="text-sm font-semibold">Coin mapping</div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {lessonScoring.coinScoreMapping.map((row, index) => (
+                  <div key={`coin-${index}`} className="grid grid-cols-2 gap-2 rounded-lg border p-2">
+                    <Input type="number" value={row.score} onChange={(event) => updateCoinMapping(index, 'score', event.target.value)} className="h-8" />
+                    <Input type="number" value={row.coins} onChange={(event) => updateCoinMapping(index, 'coins', event.target.value)} className="h-8" />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">Each pair is score percent and coins awarded at or above that score.</p>
+            </div>
+          </div>
+        </div>
+      </SectionPanel>
     </div>
   );
 };

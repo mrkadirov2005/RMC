@@ -48,6 +48,7 @@ async function main() {
   const requestLogRoutes = require('./routes/requestLogRoutes');
   const translationRoutes = require('./routes/translationRoutes');
   const systemRoutes = require('./routes/systemRoutes');
+  const settingsRoutes = require('./routes/settingsRoutes');
   const archiveRoutes = require('./routes/archiveRoutes');
   const telegramRegistrationRoutes = require('./routes/telegramRegistrationRoutes');
   const telegramStudentRoutes = require('./routes/telegramStudentRoutes');
@@ -103,6 +104,7 @@ async function main() {
   app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
   app.use('/api/owners', requireAuth, requireOwner, ownerRoutes);
   app.use('/api/tests', requireAuth, testRoutes);
+  app.use('/api/settings', requireAuth, settingsRoutes);
 
   // Phase 1 / extended APIs (superuser unless noted)
   app.use('/api/invoices', requireAuth, requireRole('superuser'), invoiceRoutes);

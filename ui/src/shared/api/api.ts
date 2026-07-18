@@ -510,6 +510,11 @@ export const systemAPI = {
   resetPayments: (confirmation: string) => apiClient.post('/system/dev/reset-payments', { confirmation }),
 };
 
+export const settingsAPI = {
+  getLessonScoring: () => apiClient.get('/settings/lesson-scoring'),
+  saveLessonScoring: (data: any) => apiClient.put('/settings/lesson-scoring', data),
+};
+
 export const portalAPI = {
   getDashboard: () => apiClient.get('/portal/dashboard'),
   getAttendance: () => apiClient.get('/portal/attendance'),

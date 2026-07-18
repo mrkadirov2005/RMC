@@ -313,6 +313,21 @@ CREATE UNIQUE INDEX uniq_grade_session
 CREATE INDEX idx_grades_student_id ON grades(student_id);
 CREATE INDEX idx_grades_academic_year ON grades(academic_year);
 
+CREATE TABLE app_settings (
+    setting_id SERIAL PRIMARY KEY,
+    center_id INT,
+    setting_key VARCHAR(100) NOT NULL,
+    setting_value JSONB NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (center_id) REFERENCES edu_centers(center_id),
+    UNIQUE (center_id, setting_key)
+);
+
+CREATE UNIQUE INDEX uniq_app_settings_global_key
+    ON app_settings (setting_key)
+    WHERE center_id IS NULL;
+
 CREATE TABLE debts (
     debt_id SERIAL PRIMARY KEY,
     student_id INT NOT NULL,

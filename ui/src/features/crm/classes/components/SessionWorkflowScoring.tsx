@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Star } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -104,6 +105,9 @@ export const ScoreTable = ({
   onToggle,
   onFillAll,
   getTotalScore,
+  stellarStudentId,
+  onToggleStellar,
+  stellarBonusCoins = 30,
   action,
 }: {
   students: any[];
@@ -113,6 +117,9 @@ export const ScoreTable = ({
   onToggle: (studentId: number, value: string) => void;
   onFillAll: (value: string) => void;
   getTotalScore?: (studentId: number) => number;
+  stellarStudentId?: number | null;
+  onToggleStellar?: (studentId: number) => void;
+  stellarBonusCoins?: number;
   action: ReactNode;
 }) => (
   <div className="overflow-x-auto rounded-lg border">
@@ -147,17 +154,19 @@ export const ScoreTable = ({
             </TableHead>
           ))}
           {getTotalScore && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">Combined Score</TableHead>}
+          {onToggleStellar && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">Stellar</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
         {students.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={options.length + (getTotalScore ? 2 : 1)} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
+            <TableCell colSpan={options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
           </TableRow>
         ) : students.map((student) => {
           const studentId = getStudentId(student);
           const selected = values.get(studentId) || '';
           const enabled = isEnabled ? isEnabled(studentId) : true;
+          const isStellar = stellarStudentId === studentId;
           return (
             <TableRow key={studentId} className={cn('h-12', !enabled && 'opacity-40 grayscale')}>
               <TableCell className="w-[180px] max-w-[180px] px-3 py-1.5 text-sm font-medium">
@@ -187,6 +196,24 @@ export const ScoreTable = ({
               {getTotalScore && (
                 <TableCell className="px-3 py-1.5 text-center text-base font-bold">
                   {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
+                </TableCell>
+              )}
+              {onToggleStellar && (
+                <TableCell className="px-3 py-1.5 text-center">
+                  <button
+                    type="button"
+                    disabled={!enabled}
+                    className={cn(
+                      'inline-flex h-8 items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-bold shadow-sm transition disabled:pointer-events-none',
+                      isStellar
+                        ? 'border-amber-500 bg-amber-500 text-white shadow-amber-100'
+                        : 'border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-400',
+                    )}
+                    onClick={() => onToggleStellar(studentId)}
+                  >
+                    <Star className={cn('h-3.5 w-3.5', isStellar && 'fill-white')} />
+                    +{stellarBonusCoins}
+                  </button>
                 </TableCell>
               )}
             </TableRow>
