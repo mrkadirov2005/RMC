@@ -32,6 +32,7 @@ import {
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import { paginateItems } from '@/components/common/pagination';
 import type { Payment, Teacher, Class, Student, FolderType, TeacherDetailView } from '../types';
+import { createPaymentDraft, normalizePaymentFormData } from '../utils/paymentForm';
 
 const folderPageSizeOptions = [12, 24, 48];
 const paymentPageSizeOptions = [10, 25, 50, 100];
@@ -72,12 +73,9 @@ export const usePaymentsPage = () => {
   } = paymentsUi;
   const hasActiveFilters = useAppSelector(selectPaymentsHasActiveFilters);
 
-  const [formData, setFormData] = useState<Partial<Payment>>({
-    currency: 'UZS',
-    payment_method: 'Cash',
-    payment_type: 'Tuition',
-    status: 'Completed',
-  });
+  const [formData, setFormData] = useState<Partial<Payment>>(
+    createPaymentDraft(getResolvedCenterId(user) ?? 0)
+  );
   const [teacherDetailView, setTeacherDetailView] = useState<TeacherDetailView>('groups');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isImporting, setIsImporting] = useState(false);
@@ -129,16 +127,10 @@ export const usePaymentsPage = () => {
     const defaultCenterId = getResolvedCenterId(user) ?? 0;
     if (payment) {
       dispatch(setPaymentsEditingId(payment.payment_id || payment.id || null));
-      setFormData({ ...payment, center_id: payment.center_id ?? defaultCenterId });
+      setFormData(normalizePaymentFormData(payment, defaultCenterId));
     } else {
       dispatch(setPaymentsEditingId(null));
-      setFormData({
-        center_id: defaultCenterId,
-        currency: 'UZS',
-        payment_method: 'Cash',
-        payment_type: 'Tuition',
-        status: 'Completed',
-      });
+      setFormData(createPaymentDraft(defaultCenterId));
     }
     dispatch(setPaymentsModalOpen(true));
   };
@@ -146,13 +138,7 @@ export const usePaymentsPage = () => {
   const handleCloseModal = () => {
     dispatch(setPaymentsModalOpen(false));
     dispatch(setPaymentsEditingId(null));
-    setFormData({
-      center_id: getResolvedCenterId(user) ?? 0,
-      currency: 'UZS',
-      payment_method: 'Cash',
-      payment_type: 'Tuition',
-      status: 'Completed',
-    });
+    setFormData(createPaymentDraft(getResolvedCenterId(user) ?? 0));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

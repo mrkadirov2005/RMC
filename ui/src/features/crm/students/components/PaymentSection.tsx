@@ -4,16 +4,13 @@ import { useState } from 'react';
 import { Pencil, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { paymentAPI } from '../../../../shared/api/api';
 import { showToast } from '../../../../utils/toast';
 import { formatMoney } from '../../../../utils/helpers';
+import { PaymentFormDialog } from '../../payments/components/PaymentFormDialog';
+import { createPaymentDraft, normalizePaymentFormData } from '../../payments/utils/paymentForm';
 
 interface Payment {
   payment_id?: number;
@@ -24,6 +21,7 @@ interface Payment {
   payment_date: string;
   payment_method: string;
   payment_type: string;
+  status?: string;
   payment_status: string;
   receipt_number: string;
   currency?: string;
@@ -35,6 +33,8 @@ interface Student {
   student_id?: number;
   id?: number;
   center_id?: number;
+  first_name?: string;
+  last_name?: string;
 }
 
 interface Class {
@@ -65,51 +65,26 @@ const getStatusBadgeVariant = (status: string) => {
   }
 };
 
-const createUuid = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (char) => {
-    const random = Math.floor(Math.random() * 16);
-    const value = char === 'x' ? random : (random & 0x3) | 0x8;
-    return value.toString(16);
-  });
-};
-
-const getToday = () => new Date().toISOString().slice(0, 10);
-
 // Renders the payment section module.
 export const PaymentSection = ({ payments, student, classData, onRefresh }: PaymentSectionProps) => {
+  const defaultCenterId = student?.center_id || 0;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [formData, setFormData] = useState<Partial<Payment>>({
-    payment_status: 'Completed',
-    payment_method: 'Cash',
-    payment_type: 'Tuition',
-    currency: 'UZS',
-    payment_date: getToday(),
-    amount: classData?.payment_amount || 0,
-    receipt_number: createUuid(),
-    transaction_reference: createUuid(),
-  });
+  const [formData, setFormData] = useState<Partial<Payment>>(
+    createPaymentDraft(defaultCenterId, { amount: classData?.payment_amount || 0 })
+  );
   const [loading, setLoading] = useState(false);
 
   const getNewPaymentDraft = (): Partial<Payment> => ({
-    payment_status: 'Completed',
-    payment_method: 'Cash',
-    payment_type: 'Tuition',
-    currency: 'UZS',
-    payment_date: getToday(),
+    ...createPaymentDraft(defaultCenterId),
     amount: classData?.payment_amount || 0,
-    receipt_number: createUuid(),
-    transaction_reference: createUuid(),
   });
 
 // Handles open modal.
   const handleOpenModal = (payment?: Payment) => {
     if (payment) {
       setEditingId(payment.payment_id || payment.id || null);
-      setFormData(payment);
+      setFormData(normalizePaymentFormData(payment, defaultCenterId));
     } else {
       setEditingId(null);
       setFormData(getNewPaymentDraft());
@@ -136,10 +111,11 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
         amount: Number(formData.amount || classData?.payment_amount || 0),
         payment_method: formData.payment_method || 'Cash',
         payment_type: formData.payment_type || 'Tuition',
-        payment_status: formData.payment_status || 'Completed',
+        payment_status: formData.payment_status || formData.status || 'Completed',
+        status: formData.payment_status || formData.status || 'Completed',
         currency: formData.currency || 'UZS',
-        receipt_number: formData.receipt_number || createUuid(),
-        transaction_reference: formData.transaction_reference || createUuid(),
+        receipt_number: formData.receipt_number,
+        transaction_reference: formData.transaction_reference,
       };
 
       if (editingId) {
@@ -233,130 +209,33 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
         </div>
       </CardContent>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Payment' : 'Add Payment'}</DialogTitle>
-          </DialogHeader>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {editingId && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="receipt">Receipt Number *</Label>
-                  <Input
-                    id="receipt"
-                    type="text"
-                    required
-                    value={formData.receipt_number || ''}
-                    onChange={(e) => setFormData({ ...formData, receipt_number: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="amount">Amount *</Label>
-                  <Input
-                    id="amount"
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.amount || ''}
-                    onChange={(e) => setFormData({ ...formData, amount: Number(e.target.value) })}
-                  />
-                </div>
-              </>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="date">Payment Date *</Label>
-              <Input
-                id="date"
-                type="date"
-                required
-                value={formData.payment_date || ''}
-                onChange={(e) => setFormData({ ...formData, payment_date: e.target.value })}
-              />
-            </div>
-            {editingId && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="method">Payment Method *</Label>
-                  <Select value={formData.payment_method || 'Cash'} onValueChange={(value) => setFormData({ ...formData, payment_method: value })}>
-                    <SelectTrigger id="method">
-                      <SelectValue placeholder="Select method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Cash">Cash</SelectItem>
-                      <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="Check">Check</SelectItem>
-                      <SelectItem value="Card">Card</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="type">Payment Type *</Label>
-                  <Select value={formData.payment_type || ''} onValueChange={(value) => setFormData({ ...formData, payment_type: value })}>
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Tuition">Tuition</SelectItem>
-                      <SelectItem value="Fee">Fee</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="status">Status *</Label>
-                  <Select value={formData.payment_status || 'Completed'} onValueChange={(value) => setFormData({ ...formData, payment_status: value })}>
-                    <SelectTrigger id="status">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Completed">Completed</SelectItem>
-                      <SelectItem value="Failed">Failed</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currency">Currency</Label>
-                  <Input
-                    id="currency"
-                    type="text"
-                    readOnly
-                    value={formData.currency || 'UZS'}
-                    onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="reference">Transaction Reference</Label>
-                  <Input
-                    id="reference"
-                    type="text"
-                    value={formData.transaction_reference || ''}
-                    onChange={(e) => setFormData({ ...formData, transaction_reference: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="notes">Notes</Label>
-                  <Textarea
-                    id="notes"
-                    value={formData.notes || ''}
-                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </>
-            )}
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleCloseModal}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <PaymentFormDialog
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) handleCloseModal();
+        }}
+        title={editingId ? 'Edit Payment' : 'Add Payment'}
+        description="Manage this student payment from the same popup structure used across the CRM."
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        isSubmitting={loading}
+        submitLabel={editingId ? 'Update payment' : 'Save payment'}
+        selectedStudent={{
+          name:
+            `${student?.first_name || ''} ${student?.last_name || ''}`.trim() || 'Selected student',
+          subtitle: `Student ID ${student?.student_id || student?.id || '-'}`,
+          className: classData?.class_name || 'No class assigned',
+          amount: classData?.payment_amount,
+        }}
+        amountHint={
+          classData?.payment_amount
+            ? `Suggested from ${classData.class_name || 'current class'} fee: ${formatMoney(
+                Number(classData.payment_amount || 0)
+              )}`
+            : undefined
+        }
+      />
     </Card>
   );
 };
