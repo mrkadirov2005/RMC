@@ -1,4 +1,5 @@
-import { CreditCard, FileText, ReceiptText, UserRound, Wallet } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CreditCard, FileText, ReceiptText, Search, UserRound, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -78,6 +79,30 @@ export const PaymentFormDialog = ({
   submitDisabled = false,
 }: PaymentFormDialogProps) => {
   const normalizedAmount = Number(formData.amount || 0);
+  const [studentSearch, setStudentSearch] = useState('');
+  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
+  const selectedStudentOption = useMemo(
+    () => studentOptions.find((option) => String(option.value) === String(formData.student_id || '')),
+    [formData.student_id, studentOptions]
+  );
+  const filteredStudentOptions = useMemo(() => {
+    const query = studentSearch.trim().toLowerCase();
+    const source = studentOptions.filter((option) => String(option.value) !== '');
+    if (!query) return source.slice(0, 8);
+    return source
+      .filter((option) => option.label.toLowerCase().includes(query))
+      .slice(0, 12);
+  }, [studentOptions, studentSearch]);
+
+  useEffect(() => {
+    if (selectedStudentOption && !studentPickerOpen) {
+      setStudentSearch(selectedStudentOption.label);
+      return;
+    }
+    if (!selectedStudentOption && !studentPickerOpen) {
+      setStudentSearch('');
+    }
+  }, [selectedStudentOption, studentPickerOpen]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -147,16 +172,77 @@ export const PaymentFormDialog = ({
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {showStudentSelect ? (
-                <SelectField
-                  label="Student"
-                  name="student_id"
-                  value={formData.student_id || ''}
-                  onChange={(value) => setPaymentField(setFormData, { student_id: Number(value) })}
-                  options={studentOptions}
-                  isLoading={isLoadingOptions}
-                  required
-                  placeholder="Select student"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="student_search" className={formLabelClassName}>
+                    Student <span className="ml-1 text-destructive">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      id="student_search"
+                      value={studentSearch}
+                      onFocus={() => setStudentPickerOpen(true)}
+                      onChange={(event) => {
+                        setStudentSearch(event.target.value);
+                        setStudentPickerOpen(true);
+                        if (formData.student_id) {
+                          setPaymentField(setFormData, { student_id: undefined });
+                        }
+                      }}
+                      onBlur={() => {
+                        window.setTimeout(() => {
+                          setStudentPickerOpen(false);
+                          if (selectedStudentOption) {
+                            setStudentSearch(selectedStudentOption.label);
+                          }
+                        }, 120);
+                      }}
+                      placeholder={isLoadingOptions ? 'Loading students...' : 'Search student by name or batch...'}
+                      className="pl-9"
+                      autoComplete="off"
+                      required
+                    />
+                    {studentPickerOpen && (
+                      <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
+                        {isLoadingOptions ? (
+                          <div className="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
+                            Loading students...
+                          </div>
+                        ) : filteredStudentOptions.length === 0 ? (
+                          <div className="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
+                            No students found
+                          </div>
+                        ) : (
+                          <div className="max-h-64 overflow-y-auto p-1.5">
+                            {filteredStudentOptions.map((option) => {
+                              const isSelected =
+                                String(option.value) === String(formData.student_id || '');
+                              return (
+                                <button
+                                  key={option.id || option.value}
+                                  type="button"
+                                  onMouseDown={(event) => {
+                                    event.preventDefault();
+                                    setPaymentField(setFormData, { student_id: Number(option.value) });
+                                    setStudentSearch(option.label);
+                                    setStudentPickerOpen(false);
+                                  }}
+                                  className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
+                                    isSelected
+                                      ? 'bg-cyan-50 text-slate-900 dark:bg-cyan-950/30 dark:text-slate-50'
+                                      : 'hover:bg-slate-100 dark:hover:bg-slate-900'
+                                  }`}
+                                >
+                                  <span className="truncate font-medium">{option.label}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-2">
                   <Label className={formLabelClassName}>Student</Label>
