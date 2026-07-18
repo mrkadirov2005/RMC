@@ -15,18 +15,7 @@ import { useStudentsData } from './hooks/useStudentsData';
 import { useAppSelector } from '../hooks';
 import type { Student } from './types';
 import { StudentFormFields } from './components/StudentFormFields';
-
-const genderOptions = [
-  { id: 1, label: 'Male', value: 'Male' },
-  { id: 2, label: 'Female', value: 'Female' },
-  { id: 3, label: 'Other', value: 'Other' },
-];
-
-const statusOptions = [
-  { id: 1, label: 'Active', value: 'Active' },
-  { id: 2, label: 'Inactive', value: 'Inactive' },
-  { id: 3, label: 'Suspended', value: 'Suspended' },
-];
+import { studentGenderOptions, studentStatusOptions } from './utils/studentFormOptions';
 
 const normalizeStudentFormData = (student: Student): Partial<Student> => ({
   ...student,
@@ -150,8 +139,8 @@ const StudentFormPage = () => {
               centerOptions={options.centerOptions}
               classOptions={options.classOptions}
               teacherOptions={options.teacherOptions}
-              genderOptions={genderOptions}
-              statusOptions={statusOptions}
+              genderOptions={studentGenderOptions}
+              statusOptions={studentStatusOptions}
               showCenterField={showCenterField}
             />
 

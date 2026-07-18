@@ -41,11 +41,11 @@ interface PaymentFormDialogProps {
 }
 
 const shellClass =
-  'rounded-2xl border border-slate-200/90 bg-white/98 shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950/96';
+  'rounded-2xl border border-slate-200/90 bg-white shadow-[0_24px_80px_-48px_rgba(15,23,42,0.45)] dark:border-slate-800 dark:bg-slate-950/96';
 const sectionClass =
-  'rounded-2xl border border-slate-200/80 bg-slate-50/75 p-4 dark:border-slate-800 dark:bg-slate-900/60';
+  'rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/70';
 const statClass =
-  'rounded-xl border border-white/60 bg-white/90 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-950/70';
+  'rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70';
 
 const setPaymentField = (
   setter: React.Dispatch<React.SetStateAction<Partial<Payment>>>,
@@ -81,14 +81,14 @@ export const PaymentFormDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn(shellClass, 'max-h-[92vh] max-w-5xl overflow-y-auto p-0 gap-0')}>
-        <DialogHeader className="border-b border-slate-200/80 px-6 py-5 dark:border-slate-800">
+      <DialogContent className={cn(shellClass, 'max-h-[90vh] max-w-4xl overflow-y-auto p-0 gap-0')}>
+        <DialogHeader className="border-b border-slate-200/80 px-6 py-4 dark:border-slate-800">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
-              <Wallet className="h-5 w-5" />
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/20">
+              <Wallet className="h-4.5 w-4.5" />
             </div>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
+              <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
                 {title}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
@@ -98,7 +98,7 @@ export const PaymentFormDialog = ({
           </div>
         </DialogHeader>
 
-        <form onSubmit={onSubmit} className="space-y-5 px-6 py-5">
+        <form onSubmit={onSubmit} className="space-y-4 px-6 py-5">
           <div className="grid gap-3 md:grid-cols-3">
             <div className={statClass}>
               <p className={formLabelClassName}>Student</p>
@@ -134,8 +134,8 @@ export const PaymentFormDialog = ({
           </div>
 
           <section className={sectionClass}>
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-100 text-cyan-700 dark:bg-cyan-950/40 dark:text-cyan-300">
                 <UserRound className="h-4 w-4" />
               </div>
               <div>
@@ -183,8 +183,8 @@ export const PaymentFormDialog = ({
           </section>
 
           <section className={sectionClass}>
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
                 <CreditCard className="h-4 w-4" />
               </div>
               <div>
@@ -194,7 +194,7 @@ export const PaymentFormDialog = ({
                 </p>
               </div>
             </div>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="payment_date" className={formLabelClassName}>Payment date</Label>
                 <Input
@@ -259,8 +259,8 @@ export const PaymentFormDialog = ({
           </section>
 
           <section className={sectionClass}>
-            <div className="mb-4 flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
+            <div className="mb-3 flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                 <ReceiptText className="h-4 w-4" />
               </div>
               <div>

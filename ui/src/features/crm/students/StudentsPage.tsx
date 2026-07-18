@@ -14,12 +14,15 @@ import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
+import { StudentFormDialog } from './components/StudentFormDialog';
 import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
 import { StudentsTableView } from './components/StudentsTableView';
 import { StudentsTeacherGroupsTab } from './components/StudentsTeacherGroupsTab';
 import { useStudentsPage } from './hooks/useStudentsPage';
+import { useStudentsModal } from './hooks/useStudentsModal';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
+import { studentGenderOptions, studentStatusOptions } from './utils/studentFormOptions';
 
 const headerActionClass = 'h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white shadow-sm';
 const headerActionIconClass = 'h-3.5 w-3.5';
@@ -94,6 +97,7 @@ const StudentsPage = () => {
     s.actions.fetchAll();
     s.actions.fetchClasses();
   };
+  const studentModal = useStudentsModal(null, refreshStudents);
 
   const handlePushStudentsToSheets = async () => {
     try {
@@ -259,7 +263,7 @@ const StudentsPage = () => {
                 </Button>
               </>
             )}
-            <Button size="sm" onClick={() => navigate('/students/new')} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+            <Button size="sm" onClick={() => studentModal.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
               <Plus className={headerActionIconClass} /> {t('Add Student')}
             </Button>
           </>
@@ -358,6 +362,24 @@ const StudentsPage = () => {
           />
         </TabsContent>
       </Tabs>
+
+      <StudentFormDialog
+        open={studentModal.isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) studentModal.handleCloseModal();
+        }}
+        formData={studentModal.formData}
+        setFormData={studentModal.setFormData}
+        onSubmit={studentModal.handleSubmit}
+        saving={studentModal.saving}
+        showCenterField={s.isOwner}
+        centerOptions={s.centerOptions}
+        classOptions={s.classOptions}
+        teacherOptions={s.teacherOptions}
+        genderOptions={studentGenderOptions}
+        statusOptions={studentStatusOptions}
+        classes={s.classes}
+      />
     </div>
   );
 };
