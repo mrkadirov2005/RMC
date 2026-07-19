@@ -228,6 +228,8 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
           className: classData?.class_name || 'No class assigned',
           amount: classData?.payment_amount,
         }}
+        paymentHistory={payments}
+        historyExpectedAmount={Number(classData?.payment_amount || 0)}
         amountHint={
           classData?.payment_amount
             ? `Suggested from ${classData.class_name || 'current class'} fee: ${formatMoney(

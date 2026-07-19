@@ -1,6 +1,6 @@
 // Page component for the payments screen in the crm feature.
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   ArrowLeft,
   Plus,
@@ -62,6 +62,13 @@ const PaymentsPage = () => {
   );
   const selectedClass = classes.find(
     (classItem) => Number(classItem.class_id || classItem.id || 0) === Number(selectedStudent?.class_id || 0)
+  );
+  const selectedStudentHistory = useMemo(
+    () =>
+      state.items.filter(
+        (payment) => Number(payment.student_id || 0) === Number(formData.student_id || 0)
+      ),
+    [formData.student_id, state.items]
   );
 
   useEffect(() => {
@@ -193,6 +200,8 @@ const PaymentsPage = () => {
                 }
               : null
           }
+          paymentHistory={selectedStudentHistory}
+          historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
           amountHint={
             selectedClass?.payment_amount
               ? `Suggested from ${selectedClass.class_name || 'selected class'} fee: ${formatMoney(

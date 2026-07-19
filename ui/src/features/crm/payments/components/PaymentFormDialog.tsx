@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CreditCard, FileText, ReceiptText, Search, UserRound, Wallet } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CreditCard, FileText, ReceiptText, Search, UserRound, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,14 @@ import { formLabelClassName } from '@/components/ui/form-control';
 import { cn } from '@/lib/utils';
 import type { Payment } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
+import {
+  getMonthKey,
+  getMonthLabel,
+  getMonthPaymentState,
+  getMonthPaymentStatus,
+  getMonthStart,
+  getSixMonthWindow,
+} from '../utils/paymentHistory';
 
 type Option = { id?: number; label: string; value: string | number };
 
@@ -36,6 +44,8 @@ interface PaymentFormDialogProps {
   showStudentSelect?: boolean;
   showCenterSelect?: boolean;
   selectedStudent?: StudentSummary | null;
+  paymentHistory?: Partial<Payment>[];
+  historyExpectedAmount?: number;
   amountHint?: string;
   disableCenterSelect?: boolean;
   submitDisabled?: boolean;
@@ -74,6 +84,8 @@ export const PaymentFormDialog = ({
   showStudentSelect = false,
   showCenterSelect = false,
   selectedStudent,
+  paymentHistory = [],
+  historyExpectedAmount = 0,
   amountHint,
   disableCenterSelect = false,
   submitDisabled = false,
@@ -81,6 +93,7 @@ export const PaymentFormDialog = ({
   const normalizedAmount = Number(formData.amount || 0);
   const [studentSearch, setStudentSearch] = useState('');
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
+  const [historyWindowEnd, setHistoryWindowEnd] = useState(() => getMonthStart());
   const selectedStudentOption = useMemo(
     () => studentOptions.find((option) => String(option.value) === String(formData.student_id || '')),
     [formData.student_id, studentOptions]
@@ -103,6 +116,27 @@ export const PaymentFormDialog = ({
       setStudentSearch('');
     }
   }, [selectedStudentOption, studentPickerOpen]);
+
+  useEffect(() => {
+    if (open) {
+      setHistoryWindowEnd(getMonthStart());
+    }
+  }, [open]);
+
+  const historyMonths = useMemo(() => getSixMonthWindow(historyWindowEnd), [historyWindowEnd]);
+  const historyPaymentsByMonth = useMemo(() => {
+    const monthKeys = new Set(historyMonths.map(getMonthKey));
+    const map = new Map<string, Partial<Payment>[]>();
+    paymentHistory
+      .filter((payment) => monthKeys.has(getMonthKey(payment.payment_date)))
+      .forEach((payment) => {
+        const key = getMonthKey(payment.payment_date);
+        map.set(key, [...(map.get(key) || []), payment]);
+      });
+    return map;
+  }, [historyMonths, paymentHistory]);
+  const canMoveHistoryForward = getMonthKey(historyWindowEnd) < getMonthKey(getMonthStart());
+  const shouldShowHistory = Boolean(selectedStudent && Number(formData.student_id || 0));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -267,6 +301,74 @@ export const PaymentFormDialog = ({
               ) : null}
             </div>
           </section>
+
+          {shouldShowHistory ? (
+            <section className={sectionClass}>
+              <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Payment history</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {getMonthLabel(historyMonths[0])} - {getMonthLabel(historyMonths[historyMonths.length - 1])}
+                  </p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setHistoryWindowEnd((current) => new Date(current.getFullYear(), current.getMonth() - 6, 1))}
+                    aria-label="Previous six months"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => setHistoryWindowEnd((current) => new Date(current.getFullYear(), current.getMonth() + 6, 1))}
+                    disabled={!canMoveHistoryForward}
+                    aria-label="Next six months"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-slate-200/80 dark:border-slate-800">
+                <div className="grid grid-cols-6 border-b border-slate-200/80 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900/50">
+                  {historyMonths.map((month) => (
+                    <div
+                      key={getMonthKey(month)}
+                      className="px-2 py-2 text-center text-xs font-semibold text-slate-600 dark:text-slate-300"
+                    >
+                      {getMonthLabel(month)}
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-6 bg-white dark:bg-slate-950/70">
+                  {historyMonths.map((month) => {
+                    const rows = historyPaymentsByMonth.get(getMonthKey(month)) || [];
+                    const monthState = getMonthPaymentState(rows, Number(historyExpectedAmount || 0));
+                    const monthStatus = getMonthPaymentStatus(monthState);
+                    return (
+                      <div
+                        key={getMonthKey(month)}
+                        className="flex items-center justify-center px-2 py-3"
+                      >
+                        <span
+                          className={`inline-flex min-w-[92px] justify-center rounded-full px-3 py-1.5 text-[11px] font-bold shadow-sm ${monthStatus.className}`}
+                        >
+                          {monthStatus.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           <section className={sectionClass}>
             <div className="mb-3 flex items-center gap-2">
