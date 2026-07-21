@@ -1,14 +1,31 @@
 // Tab component for the teacher feature.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { BookOpen, Clock, GraduationCap, Loader2, Search, Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import {
+  BookOpen,
+  CalendarCheck,
+  CheckCircle2,
+  Clock,
+  Coins,
+  GraduationCap,
+  Loader2,
+  PencilLine,
+  PlayCircle,
+  Search,
+  Star,
+  Users,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { classAPI, roomAPI, roomSlotAPI, studentAPI } from '../../../shared/api/api';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { useAppSelector } from '../../crm/hooks';
-import SessionModal from '../../crm/classes/SessionModal';
 import { showToast } from '../../../utils/toast';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import TeacherClassDetailPanel from './TeacherClassDetailPanel';
@@ -39,10 +56,28 @@ interface TeacherClassesTabProps {
   onRefresh?: () => void;
 }
 
+type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
+
+const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
+
+const lessonActionOptions: Array<{
+  id: LessonAction;
+  label: string;
+  detail: string;
+  icon: typeof CalendarCheck;
+}> = [
+  { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
+  { id: 'homework', label: 'Homework', detail: 'Score homework completion.', icon: CheckCircle2 },
+  { id: 'activity', label: 'Activity', detail: 'Score class activity.', icon: Star },
+  { id: 'coins', label: 'Coins', detail: 'Apply coins from the final score.', icon: Coins },
+  { id: 'points', label: 'Points', detail: 'Enter manual points for each student.', icon: PencilLine },
+];
+
 // Renders the teacher classes tab tab.
 const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesTabProps) => {
   const { user } = useAppSelector((state) => state.auth);
   const { t } = useLanguage();
+  const navigate = useNavigate();
   const effectiveTeacherId = teacherId ?? user?.id;
   const [classes, setClasses] = useState<ClassInfo[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +87,9 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const [classData, setClassData] = useState<ClassInfo | null>(null);
   const [students, setStudents] = useState<TeacherStudentItem[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
-  const [sessionModalOpen, setSessionModalOpen] = useState(false);
-  const [sessionModalId, setSessionModalId] = useState<number | null>(null);
-  const [sessionModalDate, setSessionModalDate] = useState('');
-  const [sessionModalCenterId, setSessionModalCenterId] = useState<number | undefined>(undefined);
   const [startingLesson, setStartingLesson] = useState(false);
+  const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
+  const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
   const todayKey = new Date().toISOString().split('T')[0];
 
 // Runs side effects for this component.
@@ -202,18 +235,29 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
     });
   }, [classes, searchTerm]);
 
-  const openSessionWorkflow = (session: any) => {
+  const openSessionWorkflow = (session: any, actions: LessonAction[] = defaultLessonActions) => {
     if (!classData) return;
     const nextSessionId = Number(session.session_id || session.id);
     if (!nextSessionId) return;
-    setSessionModalId(nextSessionId);
-    setSessionModalDate(session.session_date ? new Date(session.session_date).toISOString().split('T')[0] : todayKey);
-    setSessionModalCenterId(Number(session.center_id || classData.center_id || 0) || getResolvedCenterId(user) || undefined);
-    setSessionModalOpen(true);
+    navigate(
+      `/classes/${selectedClassId}/sessions/${nextSessionId}/workflow?actions=${actions.join(',')}&from=teacher`
+    );
+  };
+
+  const toggleLessonAction = (action: LessonAction, checked: boolean) => {
+    setSelectedLessonActions((current) => {
+      if (checked) return Array.from(new Set([...current, action]));
+      return current.filter((item) => item !== action);
+    });
   };
 
   const handleStartLesson = async () => {
     if (!classData || !selectedClassId) return;
+    const scoringActions = selectedLessonActions.filter((action) => action !== 'coins');
+    if (scoringActions.length === 0) {
+      showToast.error('Pick attendance, homework, activity, or points before starting.');
+      return;
+    }
 
     const existingTodaySession = sessions.find((session) => {
       if (!session.session_date) return false;
@@ -221,7 +265,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
     });
 
     if (existingTodaySession) {
-      openSessionWorkflow(existingTodaySession);
+      setLessonPickerOpen(false);
+      openSessionWorkflow(existingTodaySession, selectedLessonActions);
       return;
     }
 
@@ -262,7 +307,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
 
       const nextSession = response?.data ?? response;
       setSessions((current) => [...current, nextSession]);
-      openSessionWorkflow(nextSession);
+      setLessonPickerOpen(false);
+      openSessionWorkflow(nextSession, selectedLessonActions);
     } catch (error) {
       console.error('Failed to start lesson:', error);
       showToast.error('Failed to start lesson.');
@@ -300,23 +346,54 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           classData={classData}
           loading={detailLoading}
           onBack={() => setSelectedClassId(null)}
-          onStartLesson={handleStartLesson}
+          onStartLesson={() => setLessonPickerOpen(true)}
           startingLesson={startingLesson}
           students={students}
         />
-        <SessionModal
-          open={sessionModalOpen}
-          classData={classData}
-          sessionId={sessionModalId}
-          selectedDate={sessionModalDate}
-          onClose={() => {
-            setSessionModalOpen(false);
-            setSessionModalId(null);
-            setSessionModalDate('');
-            setSessionModalCenterId(undefined);
-          }}
-          sessionCenterId={sessionModalCenterId}
-        />
+        <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingLesson && setLessonPickerOpen(open)}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Pick lesson actions</DialogTitle>
+              <DialogDescription>Select what you want to do in this lesson session.</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-2">
+              {lessonActionOptions.map((option) => {
+                const Icon = option.icon;
+                const checked = selectedLessonActions.includes(option.id);
+                return (
+                  <Label
+                    key={option.id}
+                    htmlFor={`teacher-lesson-action-${option.id}`}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition hover:bg-slate-50 dark:hover:bg-muted/40"
+                  >
+                    <Checkbox
+                      id={`teacher-lesson-action-${option.id}`}
+                      checked={checked}
+                      onCheckedChange={(value) => toggleLessonAction(option.id, value === true)}
+                      className="mt-1"
+                    />
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-white">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{option.label}</span>
+                      <span className="block text-xs text-muted-foreground">{option.detail}</span>
+                    </span>
+                  </Label>
+                );
+              })}
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>
+                Cancel
+              </Button>
+              <Button onClick={handleStartLesson} disabled={startingLesson} className="bg-rose-600 text-white hover:bg-rose-700">
+                {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+                Start
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </>
     );
   }

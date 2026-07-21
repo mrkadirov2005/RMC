@@ -567,7 +567,7 @@ function AppContent() {
         <Route
           path="/classes/:classId/sessions/:sessionId/workflow"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_CLASS}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <SessionWorkflowPage />
