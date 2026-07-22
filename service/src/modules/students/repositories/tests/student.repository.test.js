@@ -21,7 +21,7 @@ describe('students repository', () => {
       4
     );
 
-    expect(pool.query.mock.calls[0][0]).toContain('(s.teacher_id = $2 OR c.teacher_id = $2)');
+    expect(pool.query.mock.calls[0][0]).toContain('COALESCE(c.teacher_id, s.teacher_id) = $2');
     expect(pool.query).toHaveBeenNthCalledWith(1, expect.stringContaining('COUNT(DISTINCT s.student_id)'), [4, 11, '%Ali%']);
     expect(pool.query).toHaveBeenNthCalledWith(
       2,
@@ -31,16 +31,16 @@ describe('students repository', () => {
     expect(result).toEqual({ data: [{ student_id: 10 }, { student_id: 9 }], total: 2, page: 2, limit: 25 });
   });
 
-  it('matches teacher filters against direct student and class teacher ownership', async () => {
+  it('matches teacher filters by effective class teacher first, then direct student ownership', async () => {
     pool.query
       .mockResolvedValueOnce({ rows: [{ total: '1' }] })
       .mockResolvedValueOnce({ rows: [{ student_id: 12, class_id: 3 }] });
 
     await studentRepository.findPaginatedWithClass({ teacher_id: 7, page: 1, limit: 20 });
 
-    expect(pool.query.mock.calls[0][0]).toContain('(s.teacher_id = $1 OR c.teacher_id = $1)');
+    expect(pool.query.mock.calls[0][0]).toContain('COALESCE(c.teacher_id, s.teacher_id) = $1');
     expect(pool.query.mock.calls[1][0]).toContain('c.teacher_id AS class_teacher_id');
-    expect(pool.query.mock.calls[1][0]).toContain('COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id');
+    expect(pool.query.mock.calls[1][0]).toContain('COALESCE(c.teacher_id, s.teacher_id) AS effective_teacher_id');
     expect(pool.query.mock.calls[0][1]).toEqual([7]);
     expect(pool.query.mock.calls[1][1]).toEqual([7, 20, 0]);
   });

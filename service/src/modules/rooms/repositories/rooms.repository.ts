@@ -1,91 +1,114 @@
 const pool = require('../../../db/pool');
-const { db, sql } = pool;
+const { db } = pool;
+const { and, asc, eq, ne, sql } = require('drizzle-orm');
+const { classes, rooms } = require('../../../db/schema');
+
+const roomColumns = {
+  roomId: rooms.roomId,
+  centerId: rooms.centerId,
+  roomNumber: rooms.roomNumber,
+  classId: rooms.classId,
+  day: rooms.day,
+  time: rooms.time,
+  endTime: rooms.endTime,
+  createdAt: rooms.createdAt,
+  updatedAt: rooms.updatedAt,
+};
 
 const findAll = (centerId: number) => {
   return db
-    .execute(sql`
-      SELECT r.*, c.class_name, c.teacher_id, c.start_date, c.end_date
-      FROM rooms r
-      LEFT JOIN classes c ON r.class_id = c.class_id AND c.deleted_at IS NULL
-      WHERE r.center_id = ${centerId}
-      ORDER BY r.room_number, r.day, r.time
-    `)
-    .then((r: any) => r.rows);
+    .select({
+      ...roomColumns,
+      className: classes.className,
+      teacherId: classes.teacherId,
+      startDate: classes.startDate,
+      endDate: classes.endDate,
+    })
+    .from(rooms)
+    .leftJoin(classes, and(eq(rooms.classId, classes.classId), sql`${classes.deletedAt} IS NULL`))
+    .where(eq(rooms.centerId, centerId))
+    .orderBy(asc(rooms.roomNumber), asc(rooms.day), asc(rooms.time));
 };
 
 const findById = (id: number, centerId: number) => {
   return db
-    .execute(sql`SELECT * FROM rooms WHERE room_id = ${id} AND center_id = ${centerId}`)
-    .then((r: any) => r.rows[0] || null);
+    .select()
+    .from(rooms)
+    .where(and(eq(rooms.roomId, id), eq(rooms.centerId, centerId)))
+    .then((rows: any[]) => rows[0] || null);
 };
 
 const insert = (params: any[]) =>
   db
-    .execute(sql`
-      INSERT INTO rooms (center_id, room_number, class_id, day, time, end_time)
-      VALUES (${params[0]}, ${params[1]}, ${params[2]}, ${params[3]}, ${params[4]}, ${params[5]})
-      RETURNING *
-    `)
-    .then((r: any) => r.rows[0]);
+    .insert(rooms)
+    .values({
+      centerId: params[0],
+      roomNumber: params[1],
+      classId: params[2],
+      day: params[3],
+      time: params[4],
+      endTime: params[5],
+    })
+    .returning()
+    .then((rows: any[]) => rows[0]);
 
 const update = (id: number, params: any[], centerId: number) => {
   return db
-    .execute(sql`
-      UPDATE rooms
-      SET room_number = ${params[0]},
-          class_id = ${params[1]},
-          day = ${params[2]},
-          time = ${params[3]},
-          end_time = ${params[4]},
-          updated_at = CURRENT_TIMESTAMP
-      WHERE room_id = ${id} AND center_id = ${centerId}
-      RETURNING *
-    `)
-    .then((r: any) => r.rows[0] || null);
+    .update(rooms)
+    .set({
+      roomNumber: params[0],
+      classId: params[1],
+      day: params[2],
+      time: params[3],
+      endTime: params[4],
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(and(eq(rooms.roomId, id), eq(rooms.centerId, centerId)))
+    .returning()
+    .then((rows: any[]) => rows[0] || null);
 };
 
 const remove = (id: number, centerId: number) => {
   return db
-    .execute(sql`DELETE FROM rooms WHERE room_id = ${id} AND center_id = ${centerId} RETURNING *`)
-    .then((r: any) => r.rows[0] || null);
+    .delete(rooms)
+    .where(and(eq(rooms.roomId, id), eq(rooms.centerId, centerId)))
+    .returning()
+    .then((rows: any[]) => rows[0] || null);
 };
 
 const findByClassId = (classId: number, centerId: number) => {
   return db
-    .execute(sql`
-      SELECT r.*
-      FROM rooms r
-      JOIN classes c ON c.class_id = r.class_id AND c.deleted_at IS NULL
-      WHERE r.class_id = ${classId} AND r.center_id = ${centerId}
-      ORDER BY r.day, r.time
-    `)
-    .then((r: any) => r.rows);
+    .select(roomColumns)
+    .from(rooms)
+    .innerJoin(classes, and(eq(classes.classId, rooms.classId), sql`${classes.deletedAt} IS NULL`))
+    .where(and(eq(rooms.classId, classId), eq(rooms.centerId, centerId)))
+    .orderBy(asc(rooms.day), asc(rooms.time));
 };
 
 const findConflict = (centerId: number, roomNumber: string, day: string, startTime: string, endTime: string, excludeRoomId?: number) => {
+  const filters = [
+    eq(rooms.centerId, centerId),
+    sql`lower(trim(${rooms.roomNumber})) = lower(${roomNumber.trim()})`,
+    eq(rooms.day, day),
+    sql`${rooms.time} < ${endTime}::time`,
+    sql`COALESCE(${rooms.endTime}, ${rooms.time} + INTERVAL '1 hour') > ${startTime}::time`,
+  ];
   if (excludeRoomId) {
-    return db.execute(sql`
-      SELECT room_id, room_number, class_id, day, time, end_time
-      FROM rooms
-      WHERE center_id = ${centerId}
-        AND lower(trim(room_number)) = lower(${roomNumber.trim()})
-        AND day = ${day}
-        AND time < ${endTime}::time
-        AND COALESCE(end_time, time + INTERVAL '1 hour') > ${startTime}::time
-        AND room_id <> ${excludeRoomId}
-      LIMIT 1
-    `).then((r: any) => r.rows[0] || null);
+    filters.push(ne(rooms.roomId, excludeRoomId));
   }
-  return db.execute(sql`
-    SELECT room_id, room_number, class_id, day, time, end_time
-    FROM rooms
-    WHERE center_id = ${centerId}
-      AND lower(trim(room_number)) = lower(${roomNumber.trim()})
-      AND day = ${day}
-      AND time < ${endTime}::time
-      AND COALESCE(end_time, time + INTERVAL '1 hour') > ${startTime}::time
-    LIMIT 1
-  `).then((r: any) => r.rows[0] || null);
+  return db
+    .select({
+      roomId: rooms.roomId,
+      roomNumber: rooms.roomNumber,
+      classId: rooms.classId,
+      day: rooms.day,
+      time: rooms.time,
+      endTime: rooms.endTime,
+    })
+    .from(rooms)
+    .where(and(...filters))
+    .limit(1)
+    .then((rows: any[]) => rows[0] || null);
 };
 
 module.exports = { findAll, findById, insert, update, remove, findByClassId, findConflict };

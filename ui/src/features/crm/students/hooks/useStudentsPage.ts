@@ -24,12 +24,14 @@ const buildClassTeacherMap = (classes: Class[]) => {
 };
 
 const getStudentTeacherId = (student: Student, classTeacherMap: Map<number, number>) => {
-  const rowTeacherId =
-    toPositiveId(student.effective_teacher_id) || toPositiveId(student.teacher_id) || toPositiveId(student.class_teacher_id);
+  const classId = toPositiveId(student.class_id);
+  const classTeacherId = toPositiveId(student.class_teacher_id) || (classId ? classTeacherMap.get(classId) || null : null);
+  if (classTeacherId) return classTeacherId;
+
+  const rowTeacherId = toPositiveId(student.effective_teacher_id) || toPositiveId(student.teacher_id);
   if (rowTeacherId) return rowTeacherId;
 
-  const classId = toPositiveId(student.class_id);
-  return classId ? classTeacherMap.get(classId) || null : null;
+  return null;
 };
 
 // Provides students page.

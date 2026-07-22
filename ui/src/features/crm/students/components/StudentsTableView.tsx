@@ -190,7 +190,7 @@ export const StudentsTableView = ({
 
   const actionIconClass = 'h-3 w-3';
   const getTeacherName = (student: Student) => {
-    const teacherId = Number(student.effective_teacher_id || student.teacher_id || student.class_teacher_id || getClassTeacherId(student) || 0);
+    const teacherId = Number(student.class_teacher_id || getClassTeacherId(student) || student.effective_teacher_id || student.teacher_id || 0);
     if (!teacherId) return 'No teacher';
     return teacherOptions.find((teacher) => Number(teacher.value || teacher.id || 0) === teacherId)?.label || 'No teacher';
   };

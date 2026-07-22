@@ -1,36 +1,40 @@
 const pool = require('../../../db/pool');
-const { db, sql } = pool;
+const { db } = pool;
+const { and, eq, isNull, or, sql } = require('drizzle-orm');
+const { appSettings } = require('../../../db/schema');
 
 const getSetting = (key: string, centerId?: number) => {
   if (centerId) {
-    return db.execute(sql`
-      SELECT setting_value
-      FROM app_settings
-      WHERE setting_key = ${key}
-        AND (center_id = ${centerId} OR center_id IS NULL)
-      ORDER BY center_id NULLS LAST
-      LIMIT 1
-    `).then((result: any) => result.rows[0]?.setting_value || null);
+    return db
+      .select({ settingValue: appSettings.settingValue })
+      .from(appSettings)
+      .where(and(eq(appSettings.settingKey, key), or(eq(appSettings.centerId, centerId), isNull(appSettings.centerId))))
+      .orderBy(sql`${appSettings.centerId} NULLS LAST`)
+      .limit(1)
+      .then((rows: any[]) => rows[0]?.settingValue || null);
   }
 
-  return db.execute(sql`
-    SELECT setting_value
-    FROM app_settings
-    WHERE setting_key = ${key}
-      AND center_id IS NULL
-  `).then((result: any) => result.rows[0]?.setting_value || null);
+  return db
+    .select({ settingValue: appSettings.settingValue })
+    .from(appSettings)
+    .where(and(eq(appSettings.settingKey, key), isNull(appSettings.centerId)))
+    .then((rows: any[]) => rows[0]?.settingValue || null);
 };
 
 const saveSetting = (key: string, value: any, centerId?: number) =>
   db
-    .execute(sql`
-      INSERT INTO app_settings (center_id, setting_key, setting_value)
-       VALUES (${centerId ?? null}, ${key}, ${JSON.stringify(value)}::jsonb)
-       ON CONFLICT (center_id, setting_key)
-       DO UPDATE SET setting_value = EXCLUDED.setting_value, updated_at = CURRENT_TIMESTAMP
-       RETURNING setting_value
-    `)
-    .then((result: any) => result.rows[0]?.setting_value || null);
+    .insert(appSettings)
+    .values({ centerId: centerId ?? null, settingKey: key, settingValue: value })
+    .onConflictDoUpdate({
+      target: centerId ? [appSettings.centerId, appSettings.settingKey] : appSettings.settingKey,
+      targetWhere: centerId ? undefined : isNull(appSettings.centerId),
+      set: {
+        settingValue: value,
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      },
+    })
+    .returning({ settingValue: appSettings.settingValue })
+    .then((rows: any[]) => rows[0]?.settingValue || null);
 
 module.exports = { getSetting, saveSetting };
 

@@ -65,10 +65,10 @@ const addStudentFilters = (
 
   if (teacherId) {
     params.push(teacherId);
-    conditions.push(`(s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`);
+    conditions.push(`COALESCE(c.teacher_id, s.teacher_id) = $${params.length}`);
   } else if (filters.teacher_id != null) {
     params.push(filters.teacher_id);
-    conditions.push(`(s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`);
+    conditions.push(`COALESCE(c.teacher_id, s.teacher_id) = $${params.length}`);
   }
 
   const search = String(filters.q || '').trim();
@@ -142,7 +142,7 @@ const findAllWithClass = async (centerId?: number, teacherId?: number) => {
       s.*,
       c.class_name,
       c.teacher_id AS class_teacher_id,
-      COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id
+      COALESCE(c.teacher_id, s.teacher_id) AS effective_teacher_id
     FROM students s
     LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
   `;
@@ -156,7 +156,7 @@ const findAllWithClass = async (centerId?: number, teacherId?: number) => {
 
   if (teacherId) {
     params.push(teacherId);
-    conditions.push(`(s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`);
+    conditions.push(`COALESCE(c.teacher_id, s.teacher_id) = $${params.length}`);
   }
 
   if (conditions.length > 0) {
@@ -182,7 +182,7 @@ const findPaginatedWithClass = async (filters: StudentListFilters = {}, centerId
       c.class_name,
       c.level AS class_level,
       c.teacher_id AS class_teacher_id,
-      COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id,
+      COALESCE(c.teacher_id, s.teacher_id) AS effective_teacher_id,
       ec.address AS center_address
     ${fromClause}
   `;
@@ -253,7 +253,7 @@ const findByIdWithClass = async (id: number, centerId?: number, teacherId?: numb
   }
 
   if (teacherId) {
-    query += ` AND (s.teacher_id = $${params.length + 1} OR c.teacher_id = $${params.length + 1})`;
+    query += ` AND COALESCE(c.teacher_id, s.teacher_id) = $${params.length + 1}`;
     params.push(teacherId);
   }
 
@@ -291,7 +291,7 @@ const findByClassIncludingTransferred = async (classId: number, centerId?: numbe
       s.*,
       c.class_name,
       c.teacher_id AS class_teacher_id,
-      COALESCE(s.teacher_id, c.teacher_id) AS effective_teacher_id,
+      COALESCE(c.teacher_id, s.teacher_id) AS effective_teacher_id,
       c.payment_amount AS class_payment_amount,
       COALESCE(monthly_payments.paid_amount, 0)::numeric AS payment_amount_this_month,
       COALESCE(monthly_payments.completed_count, 0)::int AS payment_count_this_month,
@@ -331,7 +331,7 @@ const findByClassIncludingTransferred = async (classId: number, centerId?: numbe
 
   if (teacherId) {
     params.push(teacherId);
-    query += ` AND (s.teacher_id = $${params.length} OR c.teacher_id = $${params.length})`;
+    query += ` AND COALESCE(c.teacher_id, s.teacher_id) = $${params.length}`;
   }
 
   query += ` ORDER BY

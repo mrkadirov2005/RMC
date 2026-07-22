@@ -1,60 +1,38 @@
 const pool = require('../../../db/pool');
-const { db, sql } = pool;
+const { db } = pool;
+const { and, desc, eq } = require('drizzle-orm');
+const { notifications } = require('../../../db/schema');
 
 const findByUser = (userType: string, userId: number, centerId?: number) => {
-  if (centerId) {
-    return db.execute(sql`
-      SELECT * FROM notifications
-      WHERE user_type = ${userType} AND user_id = ${userId} AND center_id = ${centerId}
-      ORDER BY created_at DESC
-    `).then((r: any) => r.rows);
-  }
-  return db.execute(sql`
-    SELECT * FROM notifications
-    WHERE user_type = ${userType} AND user_id = ${userId}
-    ORDER BY created_at DESC
-  `).then((r: any) => r.rows);
+  const filters = [eq(notifications.userType, userType), eq(notifications.userId, userId)];
+  if (centerId) filters.push(eq(notifications.centerId, centerId));
+  return db.select().from(notifications).where(and(...filters)).orderBy(desc(notifications.createdAt));
 };
 
 const insert = (params: any[]) =>
   db
-    .execute(sql`
-      INSERT INTO notifications (center_id, user_type, user_id, title, message, type)
-      VALUES (${params[0]}, ${params[1]}, ${params[2]}, ${params[3]}, ${params[4]}, ${params[5]})
-      RETURNING *
-    `)
-    .then((r: any) => r.rows[0]);
+    .insert(notifications)
+    .values({
+      centerId: params[0],
+      userType: params[1],
+      userId: params[2],
+      title: params[3],
+      message: params[4],
+      type: params[5],
+    })
+    .returning()
+    .then((rows: any[]) => rows[0]);
 
 const markRead = (id: number, userType: string, userId: number, centerId?: number) => {
-  if (centerId) {
-    return db.execute(sql`
-      UPDATE notifications
-      SET is_read = TRUE
-      WHERE notification_id = ${id} AND user_type = ${userType} AND user_id = ${userId} AND center_id = ${centerId}
-      RETURNING *
-    `).then((r: any) => r.rows[0] || null);
-  }
-  return db.execute(sql`
-    UPDATE notifications
-    SET is_read = TRUE
-    WHERE notification_id = ${id} AND user_type = ${userType} AND user_id = ${userId}
-    RETURNING *
-  `).then((r: any) => r.rows[0] || null);
+  const filters = [eq(notifications.notificationId, id), eq(notifications.userType, userType), eq(notifications.userId, userId)];
+  if (centerId) filters.push(eq(notifications.centerId, centerId));
+  return db.update(notifications).set({ isRead: true }).where(and(...filters)).returning().then((rows: any[]) => rows[0] || null);
 };
 
 const remove = (id: number, userType: string, userId: number, centerId?: number) => {
-  if (centerId) {
-    return db.execute(sql`
-      DELETE FROM notifications
-      WHERE notification_id = ${id} AND user_type = ${userType} AND user_id = ${userId} AND center_id = ${centerId}
-      RETURNING *
-    `).then((r: any) => r.rows[0] || null);
-  }
-  return db.execute(sql`
-    DELETE FROM notifications
-    WHERE notification_id = ${id} AND user_type = ${userType} AND user_id = ${userId}
-    RETURNING *
-  `).then((r: any) => r.rows[0] || null);
+  const filters = [eq(notifications.notificationId, id), eq(notifications.userType, userType), eq(notifications.userId, userId)];
+  if (centerId) filters.push(eq(notifications.centerId, centerId));
+  return db.delete(notifications).where(and(...filters)).returning().then((rows: any[]) => rows[0] || null);
 };
 
 module.exports = { findByUser, insert, markRead, remove };
