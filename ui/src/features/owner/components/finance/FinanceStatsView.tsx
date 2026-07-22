@@ -90,7 +90,7 @@ export const FinanceStatsView = ({
       {[
         ['Kutilgan tolov', formatMoney(expectedMonthlyTotal), 'border-slate-200 bg-white text-slate-900'],
         ['Kelgan tolov', formatMoney(totalCollected), 'border-blue-200 bg-blue-50 text-blue-800'],
-        ['Taxminiy qarz', formatMoney(unpaidEstimate), 'border-rose-200 bg-rose-50 text-rose-800'],
+        ['Taxminiy qarz', formatMoney(unpaidEstimate), 'border-amber-200 bg-amber-50 text-amber-800'],
         ['Tolov ulushi', `${paymentStats.paidPercent}%`, 'border-emerald-200 bg-emerald-50 text-emerald-800'],
       ].map(([label, value, tone]) => (
         <div key={label} className={cn('rounded-md border p-3 shadow-sm', tone as string)}>
@@ -105,7 +105,7 @@ export const FinanceStatsView = ({
         </div>
         <div className="mt-2 flex h-3 overflow-hidden rounded-full bg-slate-100">
           <div className="animate-chart-bar-fill bg-emerald-500" style={{ width: `${paymentStats.paidPercent}%` }} />
-          <div className="animate-chart-bar-fill bg-rose-400" style={{ width: `${paymentStats.unpaidPercent}%`, animationDelay: '180ms' }} />
+          <div className="animate-chart-bar-fill bg-amber-400" style={{ width: `${paymentStats.unpaidPercent}%`, animationDelay: '180ms' }} />
         </div>
       </div>
     </div>
@@ -225,14 +225,14 @@ const FinanceChart = ({
             strokeWidth={34}
             data={[
               { label: "To'lagan", value: statsPaidStudents, color: '#10b981' },
-              { label: 'Qarzdor', value: statsUnpaidStudents, color: '#f43f5e' },
+              { label: 'Qarzdor', value: statsUnpaidStudents, color: '#f59e0b' },
             ]}
           />
         </div>
         <div className="grid content-center gap-2">
           {[
             ["To'lagan talabalar", statsPaidStudents, 'bg-emerald-100 text-emerald-700'],
-            ['Qarzdor talabalar', statsUnpaidStudents, 'bg-rose-100 text-rose-700'],
+            ['Qarzdor talabalar', statsUnpaidStudents, 'bg-amber-100 text-amber-700'],
             ['Kelgan tolov', formatMoney(statsCollected), 'bg-blue-100 text-blue-700'],
             ['Kutilgan tolov', formatMoney(statsExpected), 'bg-slate-100 text-slate-700'],
           ].map(([label, value, tone]) => (
@@ -256,7 +256,7 @@ const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => (
         <span className="truncate font-black text-slate-700">{group.name}</span>
         <div className="flex h-5 overflow-hidden rounded bg-slate-100">
           <div className="animate-chart-bar-fill bg-emerald-500" style={{ width: `${group.paidPercent}%` }} />
-          <div className="animate-chart-bar-fill bg-rose-400" style={{ width: `${Math.max(100 - group.paidPercent, 0)}%`, animationDelay: '160ms' }} />
+          <div className="animate-chart-bar-fill bg-amber-400" style={{ width: `${Math.max(100 - group.paidPercent, 0)}%`, animationDelay: '160ms' }} />
         </div>
         <span className="text-right font-black text-slate-600">{group.paidPercent}%</span>
       </div>
@@ -310,7 +310,7 @@ const FinanceRankings = ({
 }) => (
   <div className="space-y-2">
     <FinanceRanking title="Eng yaxshi to'layotgan guruhlar" tone="emerald" groups={mostPaidGroups.slice(0, 5)} value={(group) => `${group.paidPercent}%`} />
-    <FinanceRanking title="Eng kop qarzdor guruhlar" tone="rose" groups={mostUnpaidGroups.slice(0, 5)} value={(group) => `${group.unpaidCount} qarzdor`} />
+    <FinanceRanking title="Eng kop qarzdor guruhlar" tone="amber" groups={mostUnpaidGroups.slice(0, 5)} value={(group) => `${group.unpaidCount} qarzdor`} />
     <div className="rounded-md border border-slate-200 bg-white p-3">
       <p className="text-xs font-black uppercase text-slate-500">Oylar boyicha umumiy tolov</p>
       <div className="mt-2 space-y-1.5">
@@ -335,17 +335,17 @@ const FinanceRanking = ({
   value,
 }: {
   title: string;
-  tone: 'emerald' | 'rose';
+  tone: 'emerald' | 'amber';
   groups: TeacherGroup[];
   value: (group: TeacherGroup) => string;
 }) => (
-  <div className={cn('rounded-md border p-3', tone === 'emerald' ? 'border-emerald-200 bg-emerald-50' : 'border-rose-200 bg-rose-50')}>
-    <p className={cn('text-xs font-black uppercase', tone === 'emerald' ? 'text-emerald-700' : 'text-rose-700')}>{title}</p>
+  <div className={cn('rounded-md border p-3', tone === 'emerald' ? 'border-emerald-200 bg-emerald-50' : 'border-amber-200 bg-amber-50')}>
+    <p className={cn('text-xs font-black uppercase', tone === 'emerald' ? 'text-emerald-700' : 'text-amber-700')}>{title}</p>
     <div className="mt-2 space-y-1.5">
       {groups.map((group) => (
         <div key={group.id} className="flex items-center justify-between gap-2 rounded bg-white/80 px-2 py-1.5 text-xs">
           <span className="truncate font-black text-slate-800">{group.name}</span>
-          <span className={cn('shrink-0 font-black', tone === 'emerald' ? 'text-emerald-700' : 'text-rose-700')}>{value(group)}</span>
+          <span className={cn('shrink-0 font-black', tone === 'emerald' ? 'text-emerald-700' : 'text-amber-700')}>{value(group)}</span>
         </div>
       ))}
     </div>

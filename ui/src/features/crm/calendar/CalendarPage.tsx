@@ -131,10 +131,19 @@ const CalendarPage = () => {
         }
       } else {
         const teacherId = Number(user?.id);
+        const teacherClassIds = new Set(
+          classes.map((cls) => Number(cls.class_id || cls.id)).filter((id) => Number.isFinite(id) && id > 0)
+        );
         const roomSchedule = rooms
           .filter(r => {
             if (!r.day || !r.time) return false;
-            if (user?.userType === 'teacher') return Number(r.teacher_id) === teacherId;
+            if (user?.userType === 'teacher') {
+              const classId = Number(r.class_id);
+              if (teacherClassIds.size > 0 && classId > 0) {
+                return teacherClassIds.has(classId);
+              }
+              return Number(r.teacher_id) === teacherId;
+            }
             return true;
           })
           .map(r => ({
@@ -144,6 +153,7 @@ const CalendarPage = () => {
             room_number: r.room_number,
             class_id: r.class_id,
             class_name: r.class_name,
+            teacher_id: r.teacher_id,
             start_date: r.start_date,
             end_date: r.end_date,
           }));
@@ -151,7 +161,7 @@ const CalendarPage = () => {
       }
     };
     loadSchedule();
-  }, [user, rooms]);
+  }, [user, rooms, classes]);
 
   const visibleSchedule = useMemo(() => {
     if (selectedRoom === 'all') return schedule;

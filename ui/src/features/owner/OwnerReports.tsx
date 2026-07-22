@@ -123,7 +123,7 @@ const OwnerReports = () => {
       { label: 'Students', value: summaryCounts.students.toLocaleString(), tone: 'from-amber-500 to-orange-600' },
       { label: 'Teachers', value: summaryCounts.teachers.toLocaleString(), tone: 'from-emerald-600 to-teal-600' },
       { label: 'Groups', value: summaryCounts.classes.toLocaleString(), tone: 'from-blue-600 to-cyan-600' },
-      { label: 'Payments', value: summaryCounts.payments.toLocaleString(), tone: 'from-rose-600 to-pink-600' },
+      { label: 'Payments', value: summaryCounts.payments.toLocaleString(), tone: 'from-yellow-500 to-amber-600' },
     ],
     [summaryCounts]
   );

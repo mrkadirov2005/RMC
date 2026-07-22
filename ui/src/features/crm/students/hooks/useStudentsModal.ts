@@ -17,6 +17,7 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Student>>({ center_id: defaultCenterId, gender: 'Male', status: 'Active' });
+  const [saving, setSaving] = useState(false);
 // Handles open modal.
   const handleOpenModal = (student?: Student) => { student ? setFormData({ ...student, password: '' }) : setFormData({ center_id: defaultCenterId, gender: 'Male', status: 'Active', username: '', password: '', class_id: selectedClass ? (selectedClass.class_id || selectedClass.id) : undefined }); setEditingId(student?.student_id || student?.id || null); setIsModalOpen(true); };
 // Handles close modal.
@@ -25,6 +26,7 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
   const handleSubmit = async (e: FormEvent) => { 
     e.preventDefault(); 
     try {
+      setSaving(true);
       if (editingId) {
         await studentAPI.update(editingId, formData);
         showToast.success('Student updated successfully!');
@@ -39,6 +41,8 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
       handleCloseModal();
     } catch {
       showToast.error('Error saving student');
+    } finally {
+      setSaving(false);
     }
   };
 // Handles delete.
@@ -53,5 +57,5 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
       }
     } 
   };
-  return { isModalOpen, editingId, formData, setFormData, handleOpenModal, handleCloseModal, handleSubmit, handleDelete };
+  return { isModalOpen, editingId, formData, setFormData, saving, handleOpenModal, handleCloseModal, handleSubmit, handleDelete };
 };

@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { memo, Suspense, useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAppSelector } from '../../features/crm/hooks';
 import { TranslationEditMode } from './TranslationEditMode';
@@ -31,9 +32,12 @@ interface LayoutProps {
 const Layout = memo(({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(getInitialOpen);
   const [isMobile, setIsMobile] = useState(false);
+  const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
   const isOwner = user?.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner';
   const isStudent = user?.userType === 'student';
+  const isTeacherPortal = user?.userType === 'teacher' && location.pathname === '/teacher-portal';
+  const hideSidebar = isStudent || isTeacherPortal;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -53,11 +57,11 @@ const Layout = memo(({ children }: LayoutProps) => {
     return () => window.removeEventListener('sidebar-toggled', handler);
   }, []);
 
-  const marginLeft = isStudent || isMobile ? 0 : sidebarOpen ? 280 : 72;
+  const marginLeft = hideSidebar || isMobile ? 0 : sidebarOpen ? 280 : 72;
 
   return (
     <div className="flex min-h-screen bg-background">
-      {!isStudent && <Sidebar />}
+      {!hideSidebar && <Sidebar />}
       <TranslationEditMode isOwner={isOwner} />
       <main
         className={`flex-1 overflow-auto bg-background transition-all duration-300 ${isStudent ? 'p-0' : 'p-3 sm:p-5 md:p-6'}`}

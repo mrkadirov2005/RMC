@@ -86,6 +86,7 @@ export default function SessionWorkflowPage() {
     const next = values.filter((value): value is WorkflowAction => allowed.has(value as WorkflowAction));
     return next.length > 0 ? next : DEFAULT_WORKFLOW_ACTIONS;
   }, [searchParams]);
+  const backPath = searchParams.get('from') === 'teacher' ? '/teacher-portal' : `/classes/${numericClassId}`;
   const selectedTabs = useMemo(
     () => WORKFLOW_TABS.filter((tab) => selectedActions.includes(tab)),
     [selectedActions],
@@ -331,7 +332,7 @@ export default function SessionWorkflowPage() {
         records,
       });
       showToast.success(shouldAwardCoins ? 'Session data and coins saved successfully.' : 'Session data saved successfully.');
-      navigate(`/classes/${numericClassId}`);
+      navigate(backPath);
     } catch (err) {
       console.error('Failed to save session data:', err);
       showToast.error('Failed to save session data.');
@@ -351,7 +352,7 @@ export default function SessionWorkflowPage() {
   if (error) {
     return (
       <div className="space-y-4 p-4">
-        <Button variant="outline" onClick={() => navigate(`/classes/${numericClassId || ''}`)}>
+        <Button variant="outline" onClick={() => navigate(backPath)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to class
         </Button>
@@ -366,9 +367,9 @@ export default function SessionWorkflowPage() {
     <div className="min-h-full space-y-4 bg-slate-50 p-4 dark:bg-background">
       <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-border dark:bg-card lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
-          <Button variant="outline" size="sm" className="mb-3 h-8 text-xs" onClick={() => navigate(`/classes/${numericClassId}`)}>
+          <Button variant="outline" size="sm" className="mb-3 h-8 text-xs" onClick={() => navigate(backPath)}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            Back to class
+            {searchParams.get('from') === 'teacher' ? 'Back to teacher portal' : 'Back to class'}
           </Button>
           <h1 className="truncate text-xl font-bold text-slate-950 dark:text-foreground">{classData?.class_name || 'Lesson workflow'}</h1>
           <p className="text-sm text-muted-foreground">
@@ -417,7 +418,7 @@ export default function SessionWorkflowPage() {
                 values={attendance}
                 onToggle={(studentId, value) => toggleMapValue(setAttendance, studentId, value)}
                 onFillAll={(value) => fillMapValue(setAttendance, value)}
-                action={<><Button variant="outline" onClick={() => navigate(`/classes/${numericClassId}`)}>Cancel</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? 'Complete Attendance' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => navigate(backPath)}>Cancel</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? 'Complete Attendance' : 'Save Scores'}</Button></>}
               />
             </TabsContent>}
 
@@ -429,7 +430,7 @@ export default function SessionWorkflowPage() {
                 isEnabled={(studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
                 onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId)))}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? 'Complete Homework' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? 'Complete Homework' : 'Save Scores'}</Button></>}
               />
             </TabsContent>}
 
@@ -445,7 +446,7 @@ export default function SessionWorkflowPage() {
                 stellarStudentId={shouldAwardCoins ? stellarStudentId : null}
                 onToggleStellar={shouldAwardCoins ? (studentId) => setStellarStudentId((current) => current === studentId ? null : studentId) : undefined}
                 stellarBonusCoins={scoringSettings.stellarBonusCoins}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? 'Complete Activity' : shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? 'Complete Activity' : shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
               />
             </TabsContent>}
 
@@ -456,7 +457,7 @@ export default function SessionWorkflowPage() {
                 onChange={setPointScore}
                 onFillAll={fillPointScores}
                 getTotalScore={getTotalScore}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(`/classes/${numericClassId}`)}>Back</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
               />
             </TabsContent>}
           </Tabs>

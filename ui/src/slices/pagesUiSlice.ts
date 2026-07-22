@@ -133,7 +133,7 @@ const initialState: PagesUiState = {
     submitting: false,
   },
   teacherPortal: {
-    tabValue: 'students',
+    tabValue: 'classes',
   },
   ownerManager: {
     activeTab: 'superusers',

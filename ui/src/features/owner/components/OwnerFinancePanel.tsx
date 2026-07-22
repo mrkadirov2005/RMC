@@ -251,7 +251,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             ['Jami tolov', formatMoney(totalCollected), 'bg-blue-600'],
             ['Maosh 20%', formatMoney(totalSalary), 'bg-emerald-600'],
             ["To'lagan", paymentStats.paidStudents, 'bg-cyan-600'],
-            ['Qarzdor', paymentStats.unpaidStudents, 'bg-rose-600'],
+            ['Qarzdor', paymentStats.unpaidStudents, 'bg-amber-500'],
             ['Ulash', `${paymentStats.paidPercent}%`, 'bg-violet-600'],
           ].map(([label, value, tone]) => (
             <div key={label} className={cn('rounded px-2 py-1.5 text-white', tone as string)}>

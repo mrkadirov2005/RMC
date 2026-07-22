@@ -18,6 +18,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchStudents } from '../../../slices/studentsSlice';
@@ -76,6 +77,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
   const [attendanceRecords, setAttendanceRecords] = useState<any[]>([]);
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<number>>(new Set());
 
   const classId = classData?.class_id || classData?.id;
   const authUser = useAppSelector((state) => state.auth.user);
@@ -85,6 +87,10 @@ const SessionModal: React.FC<SessionModalProps> = ({
     getResolvedCenterId(authUser) ||
     undefined;
   const students = useAppSelector((state) => selectStudentsByClass(state, Number(classId))) as any[];
+  const studentIds = useMemo(
+    () => students.map((student) => Number(student.student_id || student.id)).filter(Boolean),
+    [students]
+  );
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -140,23 +146,73 @@ const SessionModal: React.FC<SessionModalProps> = ({
 // Runs side effects for this component.
   useEffect(() => {
     if (!open) return;
-    const ids = students.map((student) => Number(student.student_id || student.id)).filter(Boolean);
     setAttendance((prev) => {
       const next = new Map<number, string>();
-      ids.forEach((id) => next.set(id, prev.get(id) || ''));
+      studentIds.forEach((id) => next.set(id, prev.get(id) || 'On time'));
       return next;
     });
     setHomeworkScores((prev) => {
       const next = new Map<number, string>();
-      ids.forEach((id) => next.set(id, prev.get(id) || ''));
+      studentIds.forEach((id) => next.set(id, prev.get(id) || 'Full'));
       return next;
     });
     setActivityScores((prev) => {
       const next = new Map<number, string>();
-      ids.forEach((id) => next.set(id, prev.get(id) || ''));
+      studentIds.forEach((id) => next.set(id, prev.get(id) || ''));
       return next;
     });
-  }, [open, students]);
+    setSelectedStudentIds(new Set(studentIds));
+  }, [open, studentIds]);
+
+  const toggleStudentSelection = (studentId: number, checked: boolean) => {
+    setSelectedStudentIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(studentId);
+      else next.delete(studentId);
+      return next;
+    });
+  };
+
+  const setAllSelections = (checked: boolean) => {
+    setSelectedStudentIds(checked ? new Set(studentIds) : new Set());
+  };
+
+  const applyBulkState = (
+    targetMap: Map<number, string>,
+    setter: React.Dispatch<React.SetStateAction<Map<number, string>>>,
+    nextValue: string,
+    enabledIds?: number[]
+  ) => {
+    const applicableIds = selectedStudentIds.size > 0
+      ? Array.from(selectedStudentIds)
+      : enabledIds ?? studentIds;
+    const allowed = enabledIds ? new Set(enabledIds) : null;
+    setter(() => {
+      const next = new Map(targetMap);
+      applicableIds.forEach((id) => {
+        if (!allowed || allowed.has(id)) next.set(id, nextValue);
+      });
+      return next;
+    });
+  };
+
+  const clearBulkState = (
+    targetMap: Map<number, string>,
+    setter: React.Dispatch<React.SetStateAction<Map<number, string>>>,
+    enabledIds?: number[]
+  ) => {
+    const applicableIds = selectedStudentIds.size > 0
+      ? Array.from(selectedStudentIds)
+      : enabledIds ?? studentIds;
+    const allowed = enabledIds ? new Set(enabledIds) : null;
+    setter(() => {
+      const next = new Map(targetMap);
+      applicableIds.forEach((id) => {
+        if (!allowed || allowed.has(id)) next.set(id, '');
+      });
+      return next;
+    });
+  };
 
 // Handles attendance toggle.
   const handleAttendanceToggle = (studentId: number, status: string) => {
@@ -186,6 +242,11 @@ const SessionModal: React.FC<SessionModalProps> = ({
   const allAttendanceMarked = totalStudents > 0 && markedAttendanceCount === totalStudents;
   const allHomeworkMarked = totalStudents > 0 && markedHomeworkCount === totalStudents;
   const allActivityMarked = totalStudents > 0 && markedActivityCount === totalStudents;
+  const selectedCount = selectedStudentIds.size;
+  const allSelected = totalStudents > 0 && selectedCount === totalStudents;
+  const someSelected = selectedCount > 0 && selectedCount < totalStudents;
+  const homeworkEnabledIds = studentIds.filter((id) => !!attendance.get(id));
+  const activityEnabledIds = studentIds.filter((id) => !!attendance.get(id) && !!homeworkScores.get(id));
 
   const getTotalScore = (studentId: number) => {
     const status = attendance.get(studentId) || '';
@@ -208,6 +269,47 @@ const SessionModal: React.FC<SessionModalProps> = ({
       return;
     }
     setActiveTab('activity');
+  };
+
+  const bulkBar = (
+    options: string[],
+    pointsMap: Record<string, number>,
+    onApply: (value: string) => void,
+    onClear: () => void,
+    disabledIds?: number[]
+  ) => {
+    const targetCount = selectedCount > 0 ? selectedCount : (disabledIds?.length ?? totalStudents);
+    return (
+      <div className="flex flex-col gap-3 border-b bg-slate-50/80 p-4 dark:bg-muted/20">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700 dark:text-foreground">
+            <Checkbox
+              checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+              onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
+            />
+            {selectedCount > 0 ? `${selectedCount} selected` : 'Select students'}
+          </label>
+          <Button type="button" size="sm" variant="outline" onClick={onClear}>
+            Clear selected
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {options.map((option) => (
+            <Button
+              key={option}
+              type="button"
+              size="sm"
+              variant="outline"
+              className="text-[11px]"
+              disabled={targetCount === 0}
+              onClick={() => onApply(option)}
+            >
+              {option} ({pointsMap[option]})
+            </Button>
+          ))}
+        </div>
+      </div>
+    );
   };
 
 // Handles save.
@@ -321,9 +423,21 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
           <TabsContent value="attendance" className="pt-4">
             <div className="border rounded-lg">
+              {bulkBar(
+                Object.keys(ATTENDANCE_POINTS),
+                ATTENDANCE_POINTS,
+                (value) => applyBulkState(attendance, setAttendance, value),
+                () => clearBulkState(attendance, setAttendance)
+              )}
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
+                    <TableHead className="w-12 text-center text-primary-foreground font-semibold">
+                      <Checkbox
+                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                        onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
+                      />
+                    </TableHead>
                     <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
                     <TableHead className="text-primary-foreground font-semibold text-center">Attendance score / 50</TableHead>
                   </TableRow>
@@ -334,6 +448,12 @@ const SessionModal: React.FC<SessionModalProps> = ({
                     const status = attendance.get(sid) || '';
                     return (
                       <TableRow key={sid}>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={selectedStudentIds.has(sid)}
+                            onCheckedChange={(checked) => toggleStudentSelection(sid, Boolean(checked))}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap justify-center gap-2">
@@ -369,9 +489,22 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
           <TabsContent value="hometask" className="pt-4">
             <div className="border rounded-lg">
+              {bulkBar(
+                Object.keys(HOMETASK_POINTS),
+                HOMETASK_POINTS,
+                (value) => applyBulkState(homeworkScores, setHomeworkScores, value, homeworkEnabledIds),
+                () => clearBulkState(homeworkScores, setHomeworkScores, homeworkEnabledIds),
+                homeworkEnabledIds
+              )}
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
+                    <TableHead className="w-12 text-center text-primary-foreground font-semibold">
+                      <Checkbox
+                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                        onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
+                      />
+                    </TableHead>
                     <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
                     <TableHead className="text-primary-foreground font-semibold text-center">Homework score / 20</TableHead>
                   </TableRow>
@@ -383,6 +516,13 @@ const SessionModal: React.FC<SessionModalProps> = ({
                     const enabled = !!attendance.get(sid);
                     return (
                       <TableRow key={sid} className={cn(!enabled && "opacity-40 grayscale")}>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={selectedStudentIds.has(sid)}
+                            disabled={!enabled}
+                            onCheckedChange={(checked) => toggleStudentSelection(sid, Boolean(checked))}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap justify-center gap-2">
@@ -417,9 +557,22 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
           <TabsContent value="activity" className="pt-4">
             <div className="border rounded-lg">
+              {bulkBar(
+                Object.keys(ACTIVITY_POINTS),
+                ACTIVITY_POINTS,
+                (value) => applyBulkState(activityScores, setActivityScores, value, activityEnabledIds),
+                () => clearBulkState(activityScores, setActivityScores, activityEnabledIds),
+                activityEnabledIds
+              )}
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
+                    <TableHead className="w-12 text-center text-primary-foreground font-semibold">
+                      <Checkbox
+                        checked={allSelected ? true : someSelected ? 'indeterminate' : false}
+                        onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
+                      />
+                    </TableHead>
                     <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
                     <TableHead className="text-primary-foreground font-semibold text-center">Class activity / 30</TableHead>
                     <TableHead className="text-primary-foreground font-semibold text-center">Combined Score</TableHead>
@@ -438,6 +591,13 @@ const SessionModal: React.FC<SessionModalProps> = ({
 
                     return (
                       <TableRow key={sid} className={cn(!enabled && "opacity-40 grayscale")}>
+                        <TableCell className="text-center">
+                          <Checkbox
+                            checked={selectedStudentIds.has(sid)}
+                            disabled={!enabled}
+                            onCheckedChange={(checked) => toggleStudentSelection(sid, Boolean(checked))}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{student.first_name} {student.last_name}</TableCell>
                         <TableCell>
                           <div className="flex flex-wrap justify-center gap-2">

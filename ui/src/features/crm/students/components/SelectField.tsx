@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { compactFormControlClassName, formLabelClassName } from '@/components/ui/form-control';
 
 interface SelectFieldProps {
   label: string;
@@ -38,7 +39,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
 }) => {
   return (
     <div className={compact ? 'space-y-1' : 'space-y-2'}>
-      <Label htmlFor={name} className={compact ? 'text-xs font-bold uppercase text-slate-600' : undefined}>
+      <Label htmlFor={name} className={compact ? formLabelClassName : undefined}>
         {label}
         {required && <span className="text-destructive ml-1">*</span>}
       </Label>
@@ -48,7 +49,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         disabled={isLoading || disabled}
         required={required}
       >
-        <SelectTrigger className={compact ? 'h-9 border-white bg-white text-sm shadow-sm' : undefined}>
+        <SelectTrigger className={compact ? compactFormControlClassName : undefined}>
           <SelectValue placeholder={isLoading ? 'Loading...' : placeholder} />
         </SelectTrigger>
         <SelectContent>
