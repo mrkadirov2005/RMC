@@ -2,7 +2,12 @@ const pool = require('../db/pool');
 
 const studentBelongsToTeacher = async (studentId: number, teacherId: number) => {
   const result = await pool.query(
-    'SELECT student_id FROM students WHERE student_id = $1 AND teacher_id = $2 AND deleted_at IS NULL',
+    `SELECT s.student_id
+     FROM students s
+     LEFT JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
+     WHERE s.student_id = $1
+       AND COALESCE(c.teacher_id, s.teacher_id) = $2
+       AND s.deleted_at IS NULL`,
     [studentId, teacherId]
   );
   return result.rows.length > 0;
