@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsIn, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { IsBoolean, IsIn, IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 class CreateDiscountDto {
   @Type(() => Number)
@@ -8,13 +8,14 @@ class CreateDiscountDto {
   student_id!: number;
 
   @Type(() => Number)
+  @IsOptional()
   @IsInt()
   @Min(1)
-  center_id!: number;
+  center_id?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  discount_type!: string;
+  discount_type?: string;
 
   @IsOptional()
   @IsIn(['serial_discount', 'monthly_discount'])
@@ -43,6 +44,22 @@ class CreateDiscountDto {
   @IsOptional()
   @IsString()
   payment_period?: string;
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
+
+  @IsOptional()
+  @IsString()
+  start_date?: string;
+
+  @IsOptional()
+  @IsString()
+  end_date?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
 }
 
 module.exports = {

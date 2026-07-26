@@ -72,8 +72,8 @@ const findById = (id: number, centerId?: number, teacherId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-const insert = (params: any[]) =>
-  pool
+const insert = (params: any[], queryable: any = pool) =>
+  queryable
     .query(
       `INSERT INTO payments (
         student_id,
@@ -100,6 +100,21 @@ const insert = (params: any[]) =>
       params
     )
     .then((r: any) => r.rows[0]);
+
+const withTransaction = async (callback: (client: any) => Promise<any>) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
 
 const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
   let query =
@@ -162,6 +177,6 @@ const purge = (id: number, centerId?: number, teacherId?: number) => {
   return pool.query(query, params).then((r: any) => r.rows[0] || null);
 };
 
-module.exports = { findAll, findById, insert, update, findByStudent, remove, purge };
+module.exports = { findAll, findById, insert, withTransaction, update, findByStudent, remove, purge };
 
 export {};

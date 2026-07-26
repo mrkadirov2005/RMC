@@ -113,7 +113,7 @@ const PaymentFormPage = () => {
   const [loadingPayment, setLoadingPayment] = useState(isEditing);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [serialDiscount, setSerialDiscount] = useState<any>(null);
+  const [activeDiscount, setActiveDiscount] = useState<any>(null);
   const [loadingDiscount, setLoadingDiscount] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState<Partial<Payment>[]>([]);
   const [paymentHistoryLoading, setPaymentHistoryLoading] = useState(false);
@@ -255,17 +255,21 @@ const PaymentFormPage = () => {
 
   useEffect(() => {
     if (isEditing || !formData.student_id) {
-      if (!formData.student_id) setSerialDiscount(null);
+      if (!formData.student_id) setActiveDiscount(null);
       return;
     }
     let cancelled = false;
     setLoadingDiscount(true);
-    discountAPI
-      .getActiveByStudent(Number(formData.student_id))
-      .then((res) => {
+    Promise.all([
+      discountAPI.getActiveByStudent(Number(formData.student_id), { discount_kind: 'monthly_discount' }),
+      discountAPI.getActiveByStudent(Number(formData.student_id), { discount_kind: 'serial_discount' }),
+    ])
+      .then(([monthlyRes, serialRes]) => {
         if (cancelled) return;
-        const discount = (res as any).data ?? null;
-        setSerialDiscount(discount);
+        const monthlyDiscount = (monthlyRes as any).data ?? null;
+        const serialDiscount = (serialRes as any).data ?? null;
+        const discount = monthlyDiscount || serialDiscount;
+        setActiveDiscount(discount);
         if (discount) {
           setFormData((current) => ({
             ...current,
@@ -289,7 +293,7 @@ const PaymentFormPage = () => {
       })
       .catch(() => {
         if (!cancelled) {
-          setSerialDiscount(null);
+          setActiveDiscount(null);
           setFormData((current) => ({
             ...current,
             discount_id: null,
@@ -320,7 +324,7 @@ const PaymentFormPage = () => {
   }, [discountAmount, finalAmount, formData.discount_kind]);
 
   const clearDiscount = () => {
-    setSerialDiscount(null);
+    setActiveDiscount(null);
     setFormData((current) => ({
       ...current,
       discount_id: null,
@@ -641,9 +645,9 @@ const PaymentFormPage = () => {
                   <Label className="text-sm font-bold text-sky-900">Discount</Label>
                   <p className="text-xs text-sky-700">
                     {loadingDiscount
-                      ? 'Checking active serial discount...'
-                      : serialDiscount
-                        ? 'Active serial discount is applied automatically.'
+                      ? 'Checking active discounts...'
+                      : activeDiscount
+                        ? `${activeDiscount.discount_kind === 'monthly_discount' ? 'One-month' : 'Serial'} discount is applied automatically.`
                         : 'Use a monthly discount only for this payment.'}
                   </p>
                 </div>
@@ -692,7 +696,7 @@ const PaymentFormPage = () => {
                       max={formData.discount_value_type === 'percent' ? 100 : undefined}
                       step="0.01"
                       value={formData.discount_value || ''}
-                      disabled={formData.discount_kind === 'serial_discount'}
+                      disabled={Boolean(formData.discount_id)}
                       onChange={(e) => setFormData((current) => ({ ...current, discount_value: Number(e.target.value) }))}
                     />
                   </div>

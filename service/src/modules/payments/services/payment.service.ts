@@ -50,7 +50,26 @@ const createPayment = async (body: any, centerId?: number) => {
       final_amount: calculated.finalAmount,
     };
   } else {
-    const serialDiscount = await discountService.getActiveSerialByStudent(Number(student_id), Number(scopedCenterId));
+    const monthlyDiscount = await discountService.getActiveByStudent(Number(student_id), Number(scopedCenterId), 'monthly_discount');
+    const serialDiscount = monthlyDiscount
+      ? null
+      : await discountService.getActiveSerialByStudent(Number(student_id), Number(scopedCenterId));
+    if (monthlyDiscount) {
+      const calculated = discountService.calculateDiscount(
+        originalAmount,
+        monthlyDiscount.discount_type,
+        Number(monthlyDiscount.value)
+      );
+      appliedDiscount = {
+        discount_id: monthlyDiscount.discount_id,
+        discount_kind: 'monthly_discount',
+        discount_value_type: monthlyDiscount.discount_type,
+        discount_value: Number(monthlyDiscount.value),
+        original_amount: calculated.originalAmount,
+        discount_amount: calculated.discountAmount,
+        final_amount: calculated.finalAmount,
+      };
+    }
     if (serialDiscount) {
       const calculated = discountService.calculateDiscount(
         originalAmount,
@@ -70,12 +89,12 @@ const createPayment = async (body: any, centerId?: number) => {
   }
 
   const resolvedOriginalAmount = Number(appliedDiscount?.original_amount ?? originalAmount);
-  const resolvedDiscountAmount = Number(discount_amount ?? appliedDiscount?.discount_amount ?? 0);
-  const resolvedFinalAmount = Number(final_amount ?? appliedDiscount?.final_amount ?? Math.max(0, resolvedOriginalAmount - resolvedDiscountAmount));
+  const resolvedDiscountAmount = Number(appliedDiscount?.discount_amount ?? 0);
+  const resolvedFinalAmount = Number(appliedDiscount?.final_amount ?? Math.max(0, resolvedOriginalAmount - resolvedDiscountAmount));
   const paidAmount = Number(amount || 0);
   const complete = is_complete ?? paidAmount >= resolvedFinalAmount;
 
-  const createdPayment = await paymentRepository.insert([
+  const paymentPayload = [
     student_id,
     scopedCenterId,
     paymentDate,
@@ -95,13 +114,17 @@ const createPayment = async (body: any, centerId?: number) => {
     resolvedDiscountAmount,
     resolvedFinalAmount,
     complete,
-  ]);
+  ];
 
   if (appliedDiscount?.discount_kind === 'monthly_discount' && appliedDiscount?.discount_id) {
-    await discountService.update(appliedDiscount.discount_id, { active: false }, Number(scopedCenterId));
+    return paymentRepository.withTransaction(async (client: any) => {
+      const createdPayment = await paymentRepository.insert(paymentPayload, client);
+      await discountService.update(appliedDiscount.discount_id, { active: false }, Number(scopedCenterId), client);
+      return createdPayment;
+    });
   }
 
-  return createdPayment;
+  return paymentRepository.insert(paymentPayload);
 };
 
 const updatePayment = (id: number, body: any, centerId?: number, teacherId?: number) => {

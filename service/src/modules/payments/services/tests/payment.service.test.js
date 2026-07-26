@@ -2,6 +2,7 @@ jest.mock('../../repositories/payment.repository', () => ({
   findAll: jest.fn(),
   findById: jest.fn(),
   insert: jest.fn(),
+  withTransaction: jest.fn(),
   update: jest.fn(),
   findByStudent: jest.fn(),
   remove: jest.fn(),
@@ -11,6 +12,8 @@ jest.mock('../../repositories/payment.repository', () => ({
 jest.mock('../../../discounts/services/discount.service', () => ({
   calculateDiscount: jest.fn(),
   getActiveSerialByStudent: jest.fn(),
+  getActiveByStudent: jest.fn(),
+  update: jest.fn(),
 }));
 
 const paymentService = require('../payment.service');
@@ -19,7 +22,11 @@ const discountService = require('../../../discounts/services/discount.service');
 
 describe('payments service', () => {
   beforeEach(() => {
+    jest.clearAllMocks();
     paymentRepository.insert.mockResolvedValue({ payment_id: 1 });
+    paymentRepository.withTransaction.mockImplementation(async (callback) => callback({ query: jest.fn() }));
+    discountService.getActiveByStudent.mockResolvedValue(null);
+    discountService.getActiveSerialByStudent.mockResolvedValue(null);
   });
 
   it('applies explicit monthly discount before inserting payment', async () => {
@@ -86,6 +93,37 @@ describe('payments service', () => {
       10000,
       90000,
       false,
+    ]);
+  });
+
+  it('uses and deactivates an active monthly discount in one transaction', async () => {
+    discountService.getActiveByStudent.mockResolvedValue({
+      discount_id: 12,
+      discount_type: 'fixed',
+      value: 25000,
+    });
+    discountService.calculateDiscount.mockReturnValue({
+      originalAmount: 100000,
+      discountAmount: 25000,
+      finalAmount: 75000,
+    });
+
+    await paymentService.createPayment({ student_id: 5, amount: 75000, original_amount: 100000 }, 8);
+
+    expect(discountService.getActiveByStudent).toHaveBeenCalledWith(5, 8, 'monthly_discount');
+    expect(discountService.getActiveSerialByStudent).not.toHaveBeenCalled();
+    expect(paymentRepository.withTransaction).toHaveBeenCalledTimes(1);
+    expect(discountService.update).toHaveBeenCalledWith(12, { active: false }, 8, expect.any(Object));
+    const payload = paymentRepository.insert.mock.calls[0][0];
+    expect(payload.slice(11)).toEqual([
+      12,
+      'monthly_discount',
+      'fixed',
+      25000,
+      100000,
+      25000,
+      75000,
+      true,
     ]);
   });
 

@@ -1,7 +1,7 @@
 const discountRepository = require('../repositories/discount.repository');
 const { studentInCenter } = require('../../../shared/tenantDb');
 
-const list = (query: { student_id?: string; center_id?: string; active?: string }, centerId?: number) => {
+const list = (query: { student_id?: string; center_id?: string; active?: string; discount_kind?: string }, centerId?: number) => {
   const params: any[] = [];
   const conditions: string[] = [];
   const scopedCenterId = centerId ?? (query.center_id ? Number(query.center_id) : undefined);
@@ -16,6 +16,10 @@ const list = (query: { student_id?: string; center_id?: string; active?: string 
   if (query.active !== undefined) {
     params.push(query.active === 'true');
     conditions.push(`active = $${params.length}`);
+  }
+  if (query.discount_kind) {
+    params.push(query.discount_kind);
+    conditions.push(`discount_kind = $${params.length}`);
   }
   return discountRepository.findAllFiltered(conditions, params);
 };
@@ -85,7 +89,7 @@ const create = async (body: any, centerId?: number) => {
     .then((row: any) => ({ row }));
 };
 
-const update = (id: number, body: any, centerId?: number) => {
+const update = (id: number, body: any, centerId?: number, queryable?: any) => {
   const {
     discount_type,
     discount_kind,
@@ -113,7 +117,8 @@ const update = (id: number, body: any, centerId?: number) => {
       end_date,
       active,
     ],
-    centerId
+    centerId,
+    queryable
   );
 };
 

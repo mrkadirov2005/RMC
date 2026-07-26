@@ -85,8 +85,8 @@ const insert = (params: any[]) =>
     )
     .then((r: any) => r.rows[0]);
 
-const update = (id: number, params: any[], centerId?: number) =>
-  pool
+const update = (id: number, params: any[], centerId?: number, queryable: any = pool) =>
+  queryable
     .query(
       `UPDATE discounts SET
         discount_type = COALESCE($1, discount_type),
