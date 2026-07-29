@@ -9,15 +9,15 @@ const roomNumbersSql = sql`(
   FROM (
     SELECT r.room_number
     FROM rooms r
-    WHERE r.class_id = ${classes.classId}
-      AND r.center_id = ${classes.centerId}
+    WHERE r.class_id = classes.class_id
+      AND r.center_id = classes.center_id
     UNION
     SELECT r.room_number
     FROM room_bookings rb
     JOIN room_slots rs ON rs.slot_id = rb.slot_id
     JOIN rooms r ON r.room_id = rs.room_id
-    WHERE rb.class_id = ${classes.classId}
-      AND rb.center_id = ${classes.centerId}
+    WHERE rb.class_id = classes.class_id
+      AND rb.center_id = classes.center_id
   ) assigned_rooms
 )`;
 
@@ -42,8 +42,8 @@ const roomAssignmentsSql = sql`(
       r.end_time,
       NULL::TEXT AS slot_date
     FROM rooms r
-    WHERE r.class_id = ${classes.classId}
-      AND r.center_id = ${classes.centerId}
+    WHERE r.class_id = classes.class_id
+      AND r.center_id = classes.center_id
     UNION
     SELECT
       r.room_id,
@@ -55,8 +55,8 @@ const roomAssignmentsSql = sql`(
     FROM room_bookings rb
     JOIN room_slots rs ON rs.slot_id = rb.slot_id
     JOIN rooms r ON r.room_id = rs.room_id
-    WHERE rb.class_id = ${classes.classId}
-      AND rb.center_id = ${classes.centerId}
+    WHERE rb.class_id = classes.class_id
+      AND rb.center_id = classes.center_id
   ) assigned_rooms
 )`;
 
