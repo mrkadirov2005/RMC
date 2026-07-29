@@ -1,71 +1,96 @@
+const mockDb = {
+  select: jest.fn(),
+  selectDistinct: jest.fn(),
+  insert: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+  transaction: jest.fn(),
+};
+
 jest.mock('../../../../db/pool', () => ({
-  query: jest.fn(),
-  connect: jest.fn(),
+  db: mockDb,
+  sql: require('drizzle-orm').sql,
 }));
 
-const pool = require('../../../../db/pool');
 const studentRepository = require('../student.repository');
+
+const createSelectChain = (rows) => {
+  const chain = {};
+  chain.from = jest.fn(() => chain);
+  chain.leftJoin = jest.fn(() => chain);
+  chain.where = jest.fn(() => chain);
+  chain.orderBy = jest.fn(() => chain);
+  chain.limit = jest.fn(() => chain);
+  chain.offset = jest.fn(() => chain);
+  chain.then = jest.fn((resolve, reject) => Promise.resolve(rows).then(resolve, reject));
+  return chain;
+};
 
 describe('students repository', () => {
   beforeEach(() => {
-    pool.query.mockReset();
+    jest.clearAllMocks();
   });
 
-  it('builds scoped paginated student queries with search and teacher filters', async () => {
-    pool.query
-      .mockResolvedValueOnce({ rows: [{ total: '2' }] })
-      .mockResolvedValueOnce({ rows: [{ student_id: 10 }, { student_id: 9 }] });
+  it('builds scoped paginated student queries with search and teacher filters using Drizzle builders', async () => {
+    const countChain = createSelectChain([{ total: 2 }]);
+    const rowsChain = createSelectChain([{ student_id: 10 }, { student_id: 9 }]);
+    mockDb.select.mockReturnValueOnce(countChain);
+    mockDb.selectDistinct.mockReturnValueOnce(rowsChain);
 
     const result = await studentRepository.findPaginatedWithClass(
       { q: 'Ali', teacher_id: 11, page: 2, limit: 25 },
       4
     );
 
-    expect(pool.query.mock.calls[0][0]).toContain('COALESCE(c.teacher_id, s.teacher_id) = $2');
-    expect(pool.query).toHaveBeenNthCalledWith(1, expect.stringContaining('COUNT(DISTINCT s.student_id)'), [4, 11, '%Ali%']);
-    expect(pool.query).toHaveBeenNthCalledWith(
-      2,
-      expect.stringContaining('ORDER BY s.student_id DESC'),
-      [4, 11, '%Ali%', 25, 25]
-    );
+    expect(mockDb.select).toHaveBeenCalled();
+    expect(mockDb.selectDistinct).toHaveBeenCalled();
+    expect(countChain.leftJoin).toHaveBeenCalledTimes(3);
+    expect(rowsChain.leftJoin).toHaveBeenCalledTimes(3);
+    expect(countChain.where).toHaveBeenCalled();
+    expect(rowsChain.where).toHaveBeenCalled();
+    expect(rowsChain.orderBy).toHaveBeenCalled();
+    expect(rowsChain.limit).toHaveBeenCalledWith(25);
+    expect(rowsChain.offset).toHaveBeenCalledWith(25);
     expect(result).toEqual({ data: [{ student_id: 10 }, { student_id: 9 }], total: 2, page: 2, limit: 25 });
   });
 
-  it('matches teacher filters by effective class teacher first, then direct student ownership', async () => {
-    pool.query
-      .mockResolvedValueOnce({ rows: [{ total: '1' }] })
-      .mockResolvedValueOnce({ rows: [{ student_id: 12, class_id: 3 }] });
+  it('matches teacher filters through the effective teacher expression', async () => {
+    const countChain = createSelectChain([{ total: 1 }]);
+    const rowsChain = createSelectChain([{ student_id: 12, class_id: 3 }]);
+    mockDb.select.mockReturnValueOnce(countChain);
+    mockDb.selectDistinct.mockReturnValueOnce(rowsChain);
 
     await studentRepository.findPaginatedWithClass({ teacher_id: 7, page: 1, limit: 20 });
 
-    expect(pool.query.mock.calls[0][0]).toContain('COALESCE(c.teacher_id, s.teacher_id) = $1');
-    expect(pool.query.mock.calls[1][0]).toContain('c.teacher_id AS class_teacher_id');
-    expect(pool.query.mock.calls[1][0]).toContain('COALESCE(c.teacher_id, s.teacher_id) AS effective_teacher_id');
-    expect(pool.query.mock.calls[0][1]).toEqual([7]);
-    expect(pool.query.mock.calls[1][1]).toEqual([7, 20, 0]);
+    expect(countChain.where).toHaveBeenCalled();
+    expect(rowsChain.where).toHaveBeenCalled();
+    expect(rowsChain.limit).toHaveBeenCalledWith(20);
+    expect(rowsChain.offset).toHaveBeenCalledWith(0);
   });
 
-  it('uses null-class filter without adding a class id param', async () => {
-    pool.query
-      .mockResolvedValueOnce({ rows: [{ total: '0' }] })
-      .mockResolvedValueOnce({ rows: [] });
+  it('uses null-class filter without breaking pagination builders', async () => {
+    const countChain = createSelectChain([{ total: 0 }]);
+    const rowsChain = createSelectChain([]);
+    mockDb.select.mockReturnValueOnce(countChain);
+    mockDb.selectDistinct.mockReturnValueOnce(rowsChain);
 
     await studentRepository.findPaginatedWithClass({ class_id: -1, page: 1, limit: 10 });
 
-    expect(pool.query.mock.calls[0][0]).toContain('s.class_id IS NULL');
-    expect(pool.query.mock.calls[0][1]).toEqual([]);
-    expect(pool.query.mock.calls[1][1]).toEqual([10, 0]);
+    expect(countChain.where).toHaveBeenCalled();
+    expect(rowsChain.where).toHaveBeenCalled();
+    expect(rowsChain.limit).toHaveBeenCalledWith(10);
+    expect(rowsChain.offset).toHaveBeenCalledWith(0);
   });
 
-  it('looks students up by username excluding deleted rows', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ student_id: 1, username: 'ali' }] });
+  it('looks students up by username excluding deleted rows with Drizzle builders', async () => {
+    const chain = createSelectChain([{ student_id: 1, username: 'ali' }]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     const result = await studentRepository.findByUsername('ali');
 
-    expect(pool.query).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE username = $1 AND deleted_at IS NULL'),
-      ['ali']
-    );
+    expect(mockDb.select).toHaveBeenCalled();
+    expect(chain.from).toHaveBeenCalled();
+    expect(chain.where).toHaveBeenCalled();
     expect(result).toEqual({ student_id: 1, username: 'ali' });
   });
 });

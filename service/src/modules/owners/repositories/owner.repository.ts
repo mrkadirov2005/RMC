@@ -1,80 +1,120 @@
+const { desc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { owners } = require('../../../db/schema');
 
-const findAllSafe = () =>
-  pool
-    .query(
-      `SELECT owner_id, username, email, first_name, last_name, status, last_login, created_at, updated_at
-       FROM owners
-       ORDER BY owner_id DESC`
-    )
-    .then((r: any) => r.rows);
+const db = pool.db;
 
-const findById = (id: number) =>
-  pool
-    .query(
-      `SELECT owner_id, username, email, first_name, last_name, status, last_login, created_at, updated_at
-       FROM owners
-       WHERE owner_id = $1`,
-      [id]
-    )
-    .then((r: any) => r.rows[0] || null);
+const safeSelection = {
+  owner_id: owners.ownerId,
+  username: owners.username,
+  email: owners.email,
+  first_name: owners.firstName,
+  last_name: owners.lastName,
+  status: owners.status,
+  last_login: owners.lastLogin,
+  created_at: owners.createdAt,
+  updated_at: owners.updatedAt,
+};
 
-const countByUsername = (username: string) =>
-  pool.query('SELECT owner_id FROM owners WHERE username = $1', [username]).then((r: any) => r.rows.length);
+const findAllSafe = () => db.select(safeSelection).from(owners).orderBy(desc(owners.ownerId));
 
-const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO owners (username, email, password_hash, first_name, last_name, status)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING owner_id, username, email, first_name, last_name, status, created_at`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
+const findById = async (id: number) => {
+  const rows = await db.select(safeSelection).from(owners).where(eq(owners.ownerId, id)).limit(1);
+  return rows[0] || null;
+};
 
-const update = (id: number, params: any[]) =>
-  pool
-    .query(
-      `UPDATE owners
-       SET email = COALESCE($1, email),
-           first_name = COALESCE($2, first_name),
-           last_name = COALESCE($3, last_name),
-           status = COALESCE($4, status),
-           password_hash = COALESCE($5, password_hash),
-           updated_at = CURRENT_TIMESTAMP
-       WHERE owner_id = $6
-       RETURNING owner_id, username, email, first_name, last_name, status, updated_at`,
-      [...params, id]
-    )
-    .then((r: any) => r.rows[0] || null);
+const countByUsername = async (username: string) => {
+  const rows = await db.select({ owner_id: owners.ownerId }).from(owners).where(eq(owners.username, username));
+  return rows.length;
+};
 
-const remove = (id: number) =>
-  pool.query('DELETE FROM owners WHERE owner_id = $1 RETURNING owner_id, username, email', [id]).then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(owners)
+    .values({
+      username: params[0],
+      email: params[1],
+      passwordHash: params[2],
+      firstName: params[3],
+      lastName: params[4],
+      status: params[5],
+    })
+    .returning({
+      owner_id: owners.ownerId,
+      username: owners.username,
+      email: owners.email,
+      first_name: owners.firstName,
+      last_name: owners.lastName,
+      status: owners.status,
+      created_at: owners.createdAt,
+    });
+  return rows[0];
+};
 
-const findByUsernameForLogin = (username: string) =>
-  pool
-    .query(
-      `SELECT owner_id, username, email, first_name, last_name, password_hash, status, is_locked
-       FROM owners
-       WHERE username = $1`,
-      [username]
-    )
-    .then((r: any) => r.rows[0] || null);
+const update = async (id: number, params: any[]) => {
+  const rows = await db
+    .update(owners)
+    .set({
+      email: sql`COALESCE(${params[0] ?? null}, ${owners.email})`,
+      firstName: sql`COALESCE(${params[1] ?? null}, ${owners.firstName})`,
+      lastName: sql`COALESCE(${params[2] ?? null}, ${owners.lastName})`,
+      status: sql`COALESCE(${params[3] ?? null}, ${owners.status})`,
+      passwordHash: sql`COALESCE(${params[4] ?? null}, ${owners.passwordHash})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(owners.ownerId, id))
+    .returning({
+      owner_id: owners.ownerId,
+      username: owners.username,
+      email: owners.email,
+      first_name: owners.firstName,
+      last_name: owners.lastName,
+      status: owners.status,
+      updated_at: owners.updatedAt,
+    });
+  return rows[0] || null;
+};
+
+const remove = async (id: number) => {
+  const rows = await db.delete(owners).where(eq(owners.ownerId, id)).returning({
+    owner_id: owners.ownerId,
+    username: owners.username,
+    email: owners.email,
+  });
+  return rows[0] || null;
+};
+
+const findByUsernameForLogin = async (username: string) => {
+  const rows = await db
+    .select({
+      owner_id: owners.ownerId,
+      username: owners.username,
+      email: owners.email,
+      first_name: owners.firstName,
+      last_name: owners.lastName,
+      password_hash: owners.passwordHash,
+      status: owners.status,
+      is_locked: owners.isLocked,
+    })
+    .from(owners)
+    .where(eq(owners.username, username))
+    .limit(1);
+  return rows[0] || null;
+};
 
 const incrementLoginAttempts = (id: number) =>
-  pool.query('UPDATE owners SET login_attempts = login_attempts + 1 WHERE owner_id = $1', [id]);
+  db.update(owners).set({ loginAttempts: sql`${owners.loginAttempts} + 1` }).where(eq(owners.ownerId, id));
 
 const resetLoginSuccess = (id: number) =>
-  pool.query('UPDATE owners SET login_attempts = 0, last_login = CURRENT_TIMESTAMP WHERE owner_id = $1', [id]);
+  db.update(owners).set({ loginAttempts: 0, lastLogin: sql`CURRENT_TIMESTAMP` }).where(eq(owners.ownerId, id));
 
-const findPasswordHash = (id: number) =>
-  pool.query('SELECT password_hash FROM owners WHERE owner_id = $1', [id]).then((r: any) => r.rows[0]?.password_hash);
+const findPasswordHash = async (id: number) => {
+  const rows = await db.select({ password_hash: owners.passwordHash }).from(owners).where(eq(owners.ownerId, id)).limit(1);
+  return rows[0]?.password_hash;
+};
 
 const updatePasswordHash = (id: number, password_hash: string) =>
-  pool.query('UPDATE owners SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE owner_id = $2', [
-    password_hash,
-    id,
-  ]);
+  db.update(owners).set({ passwordHash: password_hash, updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(owners.ownerId, id));
 
 module.exports = {
   findAllSafe,

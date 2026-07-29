@@ -40,10 +40,23 @@ const getAttendanceReport = async (req: any, res: any) => {
   }
 };
 
+const getRetentionReport = async (req: any, res: any) => {
+  try {
+    const scope = getCenterScope(req, { requireConcreteCenter: true });
+    if (sendScopeError(res, scope)) return;
+    const { centerId } = scope;
+    const data = await reportService.retentionReport(req.query, centerId ?? undefined);
+    res.json(data);
+  } catch (error: any) {
+    sendError(res, error, 'Failed to fetch retention report');
+  }
+};
+
 module.exports = {
   getOverviewReport,
   getPaymentsReport,
   getAttendanceReport,
+  getRetentionReport,
 };
 
 export {};

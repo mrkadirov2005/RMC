@@ -2,26 +2,13 @@ const discountRepository = require('../repositories/discount.repository');
 const { studentInCenter } = require('../../../shared/tenantDb');
 
 const list = (query: { student_id?: string; center_id?: string; active?: string; discount_kind?: string }, centerId?: number) => {
-  const params: any[] = [];
-  const conditions: string[] = [];
   const scopedCenterId = centerId ?? (query.center_id ? Number(query.center_id) : undefined);
-  if (query.student_id) {
-    params.push(query.student_id);
-    conditions.push(`student_id = $${params.length}`);
-  }
-  if (scopedCenterId) {
-    params.push(scopedCenterId);
-    conditions.push(`center_id = $${params.length}`);
-  }
-  if (query.active !== undefined) {
-    params.push(query.active === 'true');
-    conditions.push(`active = $${params.length}`);
-  }
-  if (query.discount_kind) {
-    params.push(query.discount_kind);
-    conditions.push(`discount_kind = $${params.length}`);
-  }
-  return discountRepository.findAllFiltered(conditions, params);
+  return discountRepository.findAllFiltered({
+    studentId: query.student_id ? Number(query.student_id) : undefined,
+    centerId: scopedCenterId,
+    active: query.active === undefined ? undefined : query.active === 'true',
+    discountKind: query.discount_kind,
+  });
 };
 
 const getById = (id: number, centerId?: number) => discountRepository.findById(id, centerId);

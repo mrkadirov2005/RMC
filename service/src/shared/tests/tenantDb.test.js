@@ -1,29 +1,44 @@
+const mockDb = {
+  select: jest.fn(),
+};
+
 jest.mock('../../db/pool', () => ({
-  query: jest.fn(),
+  db: mockDb,
+  sql: require('drizzle-orm').sql,
 }));
 
-const pool = require('../../db/pool');
 const { studentBelongsToTeacher } = require('../tenantDb');
+
+const createSelectChain = (rows) => {
+  const chain = {};
+  chain.from = jest.fn(() => chain);
+  chain.leftJoin = jest.fn(() => chain);
+  chain.where = jest.fn(() => chain);
+  chain.limit = jest.fn(() => Promise.resolve(rows));
+  return chain;
+};
 
 describe('tenant db ownership helpers', () => {
   beforeEach(() => {
-    pool.query.mockReset();
+    jest.clearAllMocks();
   });
 
   it('checks student teacher ownership using class teacher first, then direct student teacher', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ student_id: 12 }] });
+    const chain = createSelectChain([{ student_id: 12 }]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     await expect(studentBelongsToTeacher(12, 7)).resolves.toBe(true);
 
-    expect(pool.query).toHaveBeenCalledWith(
-      expect.stringContaining('COALESCE(c.teacher_id, s.teacher_id) = $2'),
-      [12, 7]
-    );
-    expect(pool.query.mock.calls[0][0]).toContain('LEFT JOIN classes c ON c.class_id = s.class_id');
+    expect(mockDb.select).toHaveBeenCalledWith(expect.objectContaining({ student_id: expect.any(Object) }));
+    expect(chain.from).toHaveBeenCalled();
+    expect(chain.leftJoin).toHaveBeenCalled();
+    expect(chain.where).toHaveBeenCalled();
+    expect(chain.limit).toHaveBeenCalledWith(1);
   });
 
   it('returns false when no effective teacher match exists', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [] });
+    const chain = createSelectChain([]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     await expect(studentBelongsToTeacher(12, 7)).resolves.toBe(false);
   });

@@ -1,208 +1,147 @@
+const { and, desc, eq, isNotNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { classes, payments, sessions, students, teachers } = require('../../../db/schema');
 
-const addCenterScope = (conditions: string[], params: any[], alias: string, centerId?: number) => {
-  if (!centerId) return;
-  params.push(centerId);
-  conditions.push(`${alias}.center_id = $${params.length}`);
-};
+const db = pool.db;
 
-const findArchivedStudents = async (centerId?: number) => {
-  const params: any[] = [];
-  const conditions = ['s.deleted_at IS NOT NULL'];
-  addCenterScope(conditions, params, 's', centerId);
-  const result = await pool.query(
-    `
-      SELECT
-        s.student_id,
-        s.center_id,
-        s.enrollment_number,
-        s.first_name,
-        s.last_name,
-        s.email,
-        s.phone,
-        s.status,
-        s.teacher_id,
-        s.class_id,
-        s.deleted_at,
-        c.class_name,
-        c.class_code,
-        t.first_name AS teacher_first_name,
-        t.last_name AS teacher_last_name
-      FROM students s
-      LEFT JOIN classes c ON c.class_id = s.class_id
-      LEFT JOIN teachers t ON t.teacher_id = s.teacher_id
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY s.deleted_at DESC, s.student_id DESC
-    `,
-    params
-  );
-  return result.rows;
-};
+const center = (table: any, centerId?: number) => (centerId ? [eq(table.centerId, centerId)] : []);
 
-const findArchivedTeachers = async (centerId?: number) => {
-  const params: any[] = [];
-  const conditions = ['t.deleted_at IS NOT NULL'];
-  addCenterScope(conditions, params, 't', centerId);
-  const result = await pool.query(
-    `
-      SELECT
-        t.teacher_id,
-        t.center_id,
-        t.employee_id,
-        t.first_name,
-        t.last_name,
-        t.email,
-        t.phone,
-        t.status,
-        t.deleted_at
-      FROM teachers t
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY t.deleted_at DESC, t.teacher_id DESC
-    `,
-    params
-  );
-  return result.rows;
-};
+const findArchivedStudents = (centerId?: number) =>
+  db
+    .select({
+      student_id: students.studentId,
+      center_id: students.centerId,
+      enrollment_number: students.enrollmentNumber,
+      first_name: students.firstName,
+      last_name: students.lastName,
+      email: students.email,
+      phone: students.phone,
+      status: students.status,
+      teacher_id: students.teacherId,
+      class_id: students.classId,
+      deleted_at: students.deletedAt,
+      class_name: classes.className,
+      class_code: classes.classCode,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+    })
+    .from(students)
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .leftJoin(teachers, eq(teachers.teacherId, students.teacherId))
+    .where(and(isNotNull(students.deletedAt), ...center(students, centerId)))
+    .orderBy(desc(students.deletedAt), desc(students.studentId));
 
-const findArchivedClasses = async (centerId?: number) => {
-  const params: any[] = [];
-  const conditions = ['c.deleted_at IS NOT NULL'];
-  addCenterScope(conditions, params, 'c', centerId);
-  const result = await pool.query(
-    `
-      SELECT
-        c.class_id,
-        c.center_id,
-        c.class_name,
-        c.class_code,
-        c.level,
-        c.capacity,
-        c.teacher_id,
-        c.room_number,
-        c.payment_amount,
-        c.payment_frequency,
-        c.deleted_at,
-        t.first_name AS teacher_first_name,
-        t.last_name AS teacher_last_name
-      FROM classes c
-      LEFT JOIN teachers t ON t.teacher_id = c.teacher_id
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY c.deleted_at DESC, c.class_id DESC
-    `,
-    params
-  );
-  return result.rows;
-};
+const findArchivedTeachers = (centerId?: number) =>
+  db
+    .select({
+      teacher_id: teachers.teacherId,
+      center_id: teachers.centerId,
+      employee_id: teachers.employeeId,
+      first_name: teachers.firstName,
+      last_name: teachers.lastName,
+      email: teachers.email,
+      phone: teachers.phone,
+      status: teachers.status,
+      deleted_at: teachers.deletedAt,
+    })
+    .from(teachers)
+    .where(and(isNotNull(teachers.deletedAt), ...center(teachers, centerId)))
+    .orderBy(desc(teachers.deletedAt), desc(teachers.teacherId));
 
-const findArchivedPayments = async (centerId?: number) => {
-  const params: any[] = [];
-  const conditions = ['p.deleted_at IS NOT NULL'];
-  addCenterScope(conditions, params, 'p', centerId);
-  const result = await pool.query(
-    `
-      SELECT
-        p.payment_id,
-        p.student_id,
-        p.center_id,
-        p.payment_date,
-        p.amount,
-        p.currency,
-        p.payment_method,
-        p.receipt_number,
-        p.payment_status,
-        p.payment_type,
-        p.deleted_at,
-        s.first_name AS student_first_name,
-        s.last_name AS student_last_name,
-        s.enrollment_number
-      FROM payments p
-      LEFT JOIN students s ON s.student_id = p.student_id
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY p.deleted_at DESC, p.payment_id DESC
-    `,
-    params
-  );
-  return result.rows;
-};
+const findArchivedClasses = (centerId?: number) =>
+  db
+    .select({
+      class_id: classes.classId,
+      center_id: classes.centerId,
+      class_name: classes.className,
+      class_code: classes.classCode,
+      level: classes.level,
+      capacity: classes.capacity,
+      teacher_id: classes.teacherId,
+      room_number: classes.roomNumber,
+      payment_amount: classes.paymentAmount,
+      payment_frequency: classes.paymentFrequency,
+      deleted_at: classes.deletedAt,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+    })
+    .from(classes)
+    .leftJoin(teachers, eq(teachers.teacherId, classes.teacherId))
+    .where(and(isNotNull(classes.deletedAt), ...center(classes, centerId)))
+    .orderBy(desc(classes.deletedAt), desc(classes.classId));
 
-const findArchivedSessions = async (centerId?: number) => {
-  const params: any[] = [];
-  const conditions = ['se.deleted_at IS NOT NULL'];
-  addCenterScope(conditions, params, 'se', centerId);
-  const result = await pool.query(
-    `
-      SELECT
-        se.session_id,
-        se.center_id,
-        se.class_id,
-        se.teacher_id,
-        se.session_date,
-        se.start_time,
-        se.duration_minutes,
-        se.end_time,
-        se.deleted_at,
-        c.class_name,
-        c.class_code,
-        t.first_name AS teacher_first_name,
-        t.last_name AS teacher_last_name
-      FROM sessions se
-      LEFT JOIN classes c ON c.class_id = se.class_id
-      LEFT JOIN teachers t ON t.teacher_id = se.teacher_id
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY se.deleted_at DESC, se.session_id DESC
-    `,
-    params
-  );
-  return result.rows;
+const findArchivedPayments = (centerId?: number) =>
+  db
+    .select({
+      payment_id: payments.paymentId,
+      student_id: payments.studentId,
+      center_id: payments.centerId,
+      payment_date: payments.paymentDate,
+      amount: payments.amount,
+      currency: payments.currency,
+      payment_method: payments.paymentMethod,
+      receipt_number: payments.receiptNumber,
+      payment_status: payments.paymentStatus,
+      payment_type: payments.paymentType,
+      deleted_at: payments.deletedAt,
+      student_first_name: students.firstName,
+      student_last_name: students.lastName,
+      enrollment_number: students.enrollmentNumber,
+    })
+    .from(payments)
+    .leftJoin(students, eq(students.studentId, payments.studentId))
+    .where(and(isNotNull(payments.deletedAt), ...center(payments, centerId)))
+    .orderBy(desc(payments.deletedAt), desc(payments.paymentId));
+
+const findArchivedSessions = (centerId?: number) =>
+  db
+    .select({
+      session_id: sessions.sessionId,
+      center_id: sessions.centerId,
+      class_id: sessions.classId,
+      teacher_id: sessions.teacherId,
+      session_date: sessions.sessionDate,
+      start_time: sessions.startTime,
+      duration_minutes: sessions.durationMinutes,
+      end_time: sessions.endTime,
+      deleted_at: sessions.deletedAt,
+      class_name: classes.className,
+      class_code: classes.classCode,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+    })
+    .from(sessions)
+    .leftJoin(classes, eq(classes.classId, sessions.classId))
+    .leftJoin(teachers, eq(teachers.teacherId, sessions.teacherId))
+    .where(and(isNotNull(sessions.deletedAt), ...center(sessions, centerId)))
+    .orderBy(desc(sessions.deletedAt), desc(sessions.sessionId));
+
+const entityMap: Record<string, { table: any; pk: any; status?: string }> = {
+  students: { table: students, pk: students.studentId, status: 'Active' },
+  teachers: { table: teachers, pk: teachers.teacherId, status: 'Active' },
+  classes: { table: classes, pk: classes.classId },
+  payments: { table: payments, pk: payments.paymentId },
+  sessions: { table: sessions, pk: sessions.sessionId },
 };
 
 const restoreArchived = async (entity: string, id: number, centerId?: number) => {
-  const restoreQueries: Record<string, { table: string; idColumn: string; status?: string }> = {
-    students: { table: 'students', idColumn: 'student_id', status: 'Active' },
-    teachers: { table: 'teachers', idColumn: 'teacher_id', status: 'Active' },
-    classes: { table: 'classes', idColumn: 'class_id' },
-    payments: { table: 'payments', idColumn: 'payment_id' },
-    sessions: { table: 'sessions', idColumn: 'session_id' },
-  };
-  const config = restoreQueries[entity];
+  const config = entityMap[entity];
   if (!config) return { error: 'invalid_entity' as const };
-
-  const params: any[] = [id];
-  let query = `UPDATE ${config.table} SET deleted_at = NULL, updated_at = CURRENT_TIMESTAMP`;
-  if (config.status) {
-    params.push(config.status);
-    query += `, status = $${params.length}`;
-  }
-  query += ` WHERE ${config.idColumn} = $1 AND deleted_at IS NOT NULL`;
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' RETURNING *';
-  const result = await pool.query(query, params);
-  return { row: result.rows[0] || null };
+  const conditions = [eq(config.pk, id), isNotNull(config.table.deletedAt)];
+  if (centerId) conditions.push(eq(config.table.centerId, centerId));
+  const setData: any = { deletedAt: null, updatedAt: sql`CURRENT_TIMESTAMP` };
+  if (config.status) setData.status = config.status;
+  const rows = await db.update(config.table).set(setData).where(and(...conditions)).returning();
+  return { row: rows[0] || null };
 };
 
 const purgeArchived = async (entity: string, id: number, centerId?: number) => {
-  const purgeQueries: Record<string, { table: string; idColumn: string }> = {
-    students: { table: 'students', idColumn: 'student_id' },
-    teachers: { table: 'teachers', idColumn: 'teacher_id' },
-    classes: { table: 'classes', idColumn: 'class_id' },
-    payments: { table: 'payments', idColumn: 'payment_id' },
-    sessions: { table: 'sessions', idColumn: 'session_id' },
-  };
-  const config = purgeQueries[entity];
+  const config = entityMap[entity];
   if (!config) return { error: 'invalid_entity' as const };
-
-  const params: any[] = [id];
-  let query = `DELETE FROM ${config.table} WHERE ${config.idColumn} = $1 AND deleted_at IS NOT NULL`;
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' RETURNING *';
-  const result = await pool.query(query, params);
-  return { row: result.rows[0] || null };
+  const conditions = [eq(config.pk, id), isNotNull(config.table.deletedAt)];
+  if (centerId) conditions.push(eq(config.table.centerId, centerId));
+  const rows = await db.delete(config.table).where(and(...conditions)).returning();
+  return { row: rows[0] || null };
 };
 
 module.exports = {

@@ -1,125 +1,8 @@
+const { and, desc, eq, ilike, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { assignments, classes, discounts, payments, rooms, students, subjects, teachers } = require('../../../db/schema');
 
-const selectAllStudents = (centerId?: number) => {
-  let query = `
-    SELECT
-      s.*,
-      c.class_name,
-      c.class_code,
-      (d.discount_id IS NOT NULL) AS is_discounted,
-      d.discount_type AS discount_value_type,
-      d.value AS discount_value,
-      d.original_price AS discount_original_price,
-      d.reason AS discount_reason
-    FROM students s
-    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
-    LEFT JOIN LATERAL (
-      SELECT discount_id, discount_type, value, original_price, reason
-      FROM discounts
-      WHERE student_id = s.student_id
-        AND active = TRUE
-        AND discount_kind = 'serial_discount'
-        AND (start_date IS NULL OR start_date <= CURRENT_DATE)
-        AND (end_date IS NULL OR end_date >= CURRENT_DATE)
-      ORDER BY created_at DESC
-      LIMIT 1
-    ) d ON TRUE
-  `;
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE s.center_id = $1 AND s.deleted_at IS NULL';
-    params.push(centerId);
-  } else {
-    query += ' WHERE s.deleted_at IS NULL';
-  }
-  query += ' ORDER BY s.student_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
-
-const selectAllTeachers = (centerId?: number) => {
-  let query = 'SELECT * FROM teachers';
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE center_id = $1 AND deleted_at IS NULL';
-    params.push(centerId);
-  } else {
-    query += ' WHERE deleted_at IS NULL';
-  }
-  query += ' ORDER BY teacher_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
-
-const selectAllClasses = (centerId?: number) => {
-  let query = 'SELECT * FROM classes';
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE center_id = $1 AND deleted_at IS NULL';
-    params.push(centerId);
-  } else {
-    query += ' WHERE deleted_at IS NULL';
-  }
-  query += ' ORDER BY class_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
-
-const selectAllPayments = (centerId?: number) => {
-  let query = 'SELECT * FROM payments';
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE center_id = $1 AND deleted_at IS NULL';
-    params.push(centerId);
-  } else {
-    query += ' WHERE deleted_at IS NULL';
-  }
-  query += ' ORDER BY payment_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
-
-const selectAllRooms = (centerId?: number) => {
-  let query = `
-    SELECT r.*, c.class_name, c.class_code
-    FROM rooms r
-    LEFT JOIN classes c ON r.class_id = c.class_id AND c.deleted_at IS NULL
-  `;
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE r.center_id = $1';
-    params.push(centerId);
-  }
-  query += ' ORDER BY r.room_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
-
-const selectAllAssignments = (centerId?: number) => {
-  let query = `
-    SELECT a.*, c.class_name, c.class_code
-    FROM assignments a
-    LEFT JOIN classes c ON a.class_id = c.class_id AND c.deleted_at IS NULL
-  `;
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE a.center_id = $1';
-    params.push(centerId);
-  }
-  query += ' ORDER BY a.assignment_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
-
-const selectAllSubjects = (centerId?: number) => {
-  let query = `
-    SELECT s.*, c.class_name, c.class_code, t.employee_id AS teacher_employee_id
-    FROM subjects s
-    LEFT JOIN classes c ON s.class_id = c.class_id AND c.deleted_at IS NULL
-    LEFT JOIN teachers t ON s.teacher_id = t.teacher_id AND t.deleted_at IS NULL
-  `;
-  const params: any[] = [];
-  if (centerId) {
-    query += ' WHERE s.center_id = $1';
-    params.push(centerId);
-  }
-  query += ' ORDER BY s.subject_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
-};
+const db = pool.db;
 
 const normalizeClassText = (value?: string | null) => String(value || '').trim().replace(/\s+/g, ' ');
 
@@ -131,80 +14,275 @@ const normalizeClassCode = (value?: string | null) => {
   return code || 'CLASS';
 };
 
-const findTeacherIdByEmployeeId = (employeeId?: string | null, centerId?: number) => {
-  const normalizedEmployeeId = normalizeClassText(employeeId);
-  if (!normalizedEmployeeId) return Promise.resolve(null);
-
-  let query = 'SELECT teacher_id FROM teachers WHERE LOWER(TRIM(employee_id)) = LOWER($1) AND deleted_at IS NULL';
-  const params: any[] = [normalizedEmployeeId];
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' ORDER BY teacher_id LIMIT 1';
-
-  return pool.query(query, params).then((r: any) => r.rows[0]?.teacher_id || null);
+const studentSelection = {
+  student_id: students.studentId,
+  center_id: students.centerId,
+  enrollment_number: students.enrollmentNumber,
+  first_name: students.firstName,
+  last_name: students.lastName,
+  username: students.username,
+  password_hash: students.passwordHash,
+  email: students.email,
+  phone: students.phone,
+  date_of_birth: students.dateOfBirth,
+  parent_name: students.parentName,
+  parent_phone: students.parentPhone,
+  gender: students.gender,
+  status: students.status,
+  teacher_id: students.teacherId,
+  class_id: students.classId,
+  school_name: students.schoolName,
+  school_class: students.schoolClass,
+  is_frozen: students.isFrozen,
+  coins: students.coins,
+  deleted_at: students.deletedAt,
+  created_at: students.createdAt,
+  updated_at: students.updatedAt,
 };
 
-const findClassIdByNameOrCode = (className?: string | null, classCode?: string | null, centerId?: number) => {
-  const params: any[] = [];
-  const conditions: string[] = [];
+const teacherSelection = {
+  teacher_id: teachers.teacherId,
+  center_id: teachers.centerId,
+  employee_id: teachers.employeeId,
+  first_name: teachers.firstName,
+  last_name: teachers.lastName,
+  email: teachers.email,
+  phone: teachers.phone,
+  date_of_birth: teachers.dateOfBirth,
+  gender: teachers.gender,
+  qualification: teachers.qualification,
+  specialization: teachers.specialization,
+  salary_percentage: teachers.salaryPercentage,
+  status: teachers.status,
+  username: teachers.username,
+  password_hash: teachers.passwordHash,
+  created_at: teachers.createdAt,
+  updated_at: teachers.updatedAt,
+};
+
+const classSelection = {
+  class_id: classes.classId,
+  center_id: classes.centerId,
+  class_name: classes.className,
+  class_code: classes.classCode,
+  level: classes.level,
+  section: classes.section,
+  capacity: classes.capacity,
+  teacher_id: classes.teacherId,
+  room_number: classes.roomNumber,
+  start_date: classes.startDate,
+  end_date: classes.endDate,
+  payment_amount: classes.paymentAmount,
+  payment_frequency: classes.paymentFrequency,
+  created_at: classes.createdAt,
+  updated_at: classes.updatedAt,
+};
+
+const paymentSelection = {
+  payment_id: payments.paymentId,
+  student_id: payments.studentId,
+  center_id: payments.centerId,
+  payment_date: payments.paymentDate,
+  amount: payments.amount,
+  currency: payments.currency,
+  payment_method: payments.paymentMethod,
+  transaction_reference: payments.transactionReference,
+  receipt_number: payments.receiptNumber,
+  payment_status: payments.paymentStatus,
+  payment_type: payments.paymentType,
+  notes: payments.notes,
+  discount_id: payments.discountId,
+  discount_kind: payments.discountKind,
+  discount_value_type: payments.discountValueType,
+  discount_value: payments.discountValue,
+  original_amount: payments.originalAmount,
+  discount_amount: payments.discountAmount,
+  final_amount: payments.finalAmount,
+  is_complete: payments.isComplete,
+  created_at: payments.createdAt,
+  updated_at: payments.updatedAt,
+};
+
+const roomSelection = {
+  room_id: rooms.roomId,
+  center_id: rooms.centerId,
+  room_number: rooms.roomNumber,
+  class_id: rooms.classId,
+  day: rooms.day,
+  time: rooms.time,
+  end_time: rooms.endTime,
+  created_at: rooms.createdAt,
+  updated_at: rooms.updatedAt,
+};
+
+const assignmentSelection = {
+  assignment_id: assignments.assignmentId,
+  center_id: assignments.centerId,
+  class_id: assignments.classId,
+  student_id: assignments.studentId,
+  teacher_id: assignments.teacherId,
+  assignment_title: assignments.assignmentTitle,
+  description: assignments.description,
+  due_date: assignments.dueDate,
+  submission_date: assignments.submissionDate,
+  status: assignments.status,
+  grade: assignments.grade,
+  created_at: assignments.createdAt,
+  updated_at: assignments.updatedAt,
+};
+
+const subjectSelection = {
+  subject_id: subjects.subjectId,
+  center_id: subjects.centerId,
+  class_id: subjects.classId,
+  subject_name: subjects.subjectName,
+  subject_code: subjects.subjectCode,
+  teacher_id: subjects.teacherId,
+  total_marks: subjects.totalMarks,
+  passing_marks: subjects.passingMarks,
+};
+
+const selectAllStudents = (centerId?: number) => {
+  const conditions = [isNull(students.deletedAt)];
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  return db
+    .select({
+      ...studentSelection,
+      class_name: classes.className,
+      class_code: classes.classCode,
+      is_discounted: sql`EXISTS (
+        SELECT 1 FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId}
+          AND d.active = TRUE
+          AND d.discount_kind = 'serial_discount'
+          AND (d.start_date IS NULL OR d.start_date <= CURRENT_DATE)
+          AND (d.end_date IS NULL OR d.end_date >= CURRENT_DATE)
+      )`,
+      discount_value_type: sql`(
+        SELECT d.discount_type FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId} AND d.active = TRUE AND d.discount_kind = 'serial_discount'
+        ORDER BY d.created_at DESC LIMIT 1
+      )`,
+      discount_value: sql`(
+        SELECT d.value FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId} AND d.active = TRUE AND d.discount_kind = 'serial_discount'
+        ORDER BY d.created_at DESC LIMIT 1
+      )`,
+      discount_original_price: sql`(
+        SELECT d.original_price FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId} AND d.active = TRUE AND d.discount_kind = 'serial_discount'
+        ORDER BY d.created_at DESC LIMIT 1
+      )`,
+      discount_reason: sql`(
+        SELECT d.reason FROM ${discounts} d
+        WHERE d.student_id = ${students.studentId} AND d.active = TRUE AND d.discount_kind = 'serial_discount'
+        ORDER BY d.created_at DESC LIMIT 1
+      )`,
+    })
+    .from(students)
+    .leftJoin(classes, and(eq(students.classId, classes.classId), isNull(classes.deletedAt)))
+    .where(and(...conditions))
+    .orderBy(desc(students.studentId));
+};
+
+const selectAllTeachers = (centerId?: number) => {
+  const conditions = [isNull(teachers.deletedAt)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  return db.select(teacherSelection).from(teachers).where(and(...conditions)).orderBy(desc(teachers.teacherId));
+};
+
+const selectAllClasses = (centerId?: number) => {
+  const conditions = [isNull(classes.deletedAt)];
+  if (centerId) conditions.push(eq(classes.centerId, centerId));
+  return db.select(classSelection).from(classes).where(and(...conditions)).orderBy(desc(classes.classId));
+};
+
+const selectAllPayments = (centerId?: number) => {
+  const conditions = [isNull(payments.deletedAt)];
+  if (centerId) conditions.push(eq(payments.centerId, centerId));
+  return db.select(paymentSelection).from(payments).where(and(...conditions)).orderBy(desc(payments.paymentId));
+};
+
+const selectAllRooms = (centerId?: number) => {
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(rooms.centerId, centerId));
+  const query = db
+    .select({ ...roomSelection, class_name: classes.className, class_code: classes.classCode })
+    .from(rooms)
+    .leftJoin(classes, and(eq(rooms.classId, classes.classId), isNull(classes.deletedAt)));
+  return (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(rooms.roomId));
+};
+
+const selectAllAssignments = (centerId?: number) => {
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(assignments.centerId, centerId));
+  const query = db
+    .select({ ...assignmentSelection, class_name: classes.className, class_code: classes.classCode })
+    .from(assignments)
+    .leftJoin(classes, and(eq(assignments.classId, classes.classId), isNull(classes.deletedAt)));
+  return (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(assignments.assignmentId));
+};
+
+const selectAllSubjects = (centerId?: number) => {
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(subjects.centerId, centerId));
+  const query = db
+    .select({
+      ...subjectSelection,
+      class_name: classes.className,
+      class_code: classes.classCode,
+      teacher_employee_id: teachers.employeeId,
+    })
+    .from(subjects)
+    .leftJoin(classes, and(eq(subjects.classId, classes.classId), isNull(classes.deletedAt)))
+    .leftJoin(teachers, and(eq(subjects.teacherId, teachers.teacherId), isNull(teachers.deletedAt)));
+  return (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(subjects.subjectId));
+};
+
+const findTeacherIdByEmployeeId = async (employeeId?: string | null, centerId?: number) => {
+  const normalizedEmployeeId = normalizeClassText(employeeId);
+  if (!normalizedEmployeeId) return null;
+  const conditions = [ilike(sql`TRIM(${teachers.employeeId})`, normalizedEmployeeId), isNull(teachers.deletedAt)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  const rows = await db.select({ teacher_id: teachers.teacherId }).from(teachers).where(and(...conditions)).orderBy(teachers.teacherId).limit(1);
+  return rows[0]?.teacher_id || null;
+};
+
+const findClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number) => {
   const normalizedClassName = normalizeClassText(className);
   const normalizedClassCode = normalizeClassText(classCode);
-
-  if (normalizedClassName) {
-    params.push(normalizedClassName);
-    conditions.push(`LOWER(TRIM(class_name)) = LOWER($${params.length})`);
-  }
-  if (normalizedClassCode) {
-    params.push(normalizedClassCode);
-    conditions.push(`LOWER(TRIM(class_code)) = LOWER($${params.length})`);
-  }
-  if (!conditions.length) return Promise.resolve(null);
-
-  let query = `SELECT class_id FROM classes WHERE (${conditions.join(' OR ')}) AND deleted_at IS NULL`;
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' ORDER BY class_id LIMIT 1';
-
-  return pool.query(query, params).then((r: any) => r.rows[0]?.class_id || null);
+  const matchConditions: any[] = [];
+  if (normalizedClassName) matchConditions.push(ilike(sql`TRIM(${classes.className})`, normalizedClassName));
+  if (normalizedClassCode) matchConditions.push(ilike(sql`TRIM(${classes.classCode})`, normalizedClassCode));
+  if (!matchConditions.length) return null;
+  const conditions = [or(...matchConditions), isNull(classes.deletedAt)];
+  if (centerId) conditions.push(eq(classes.centerId, centerId));
+  const rows = await db.select({ class_id: classes.classId }).from(classes).where(and(...conditions)).orderBy(classes.classId).limit(1);
+  return rows[0]?.class_id || null;
 };
 
-const findStudentIdByEnrollmentNumber = (enrollmentNumber?: string | null, centerId?: number) => {
+const findStudentIdByEnrollmentNumber = async (enrollmentNumber?: string | null, centerId?: number) => {
   const normalizedEnrollmentNumber = normalizeClassText(enrollmentNumber);
-  if (!normalizedEnrollmentNumber) return Promise.resolve(null);
-
-  let query = 'SELECT student_id FROM students WHERE LOWER(TRIM(enrollment_number)) = LOWER($1) AND deleted_at IS NULL';
-  const params: any[] = [normalizedEnrollmentNumber];
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' ORDER BY student_id LIMIT 1';
-
-  return pool.query(query, params).then((r: any) => r.rows[0]?.student_id || null);
+  if (!normalizedEnrollmentNumber) return null;
+  const conditions = [ilike(sql`TRIM(${students.enrollmentNumber})`, normalizedEnrollmentNumber), isNull(students.deletedAt)];
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  const rows = await db.select({ student_id: students.studentId }).from(students).where(and(...conditions)).orderBy(students.studentId).limit(1);
+  return rows[0]?.student_id || null;
 };
 
-const findStudentIdByNameAndClass = (firstName?: string | null, lastName?: string | null, classId?: number | null, centerId?: number) => {
+const findStudentIdByNameAndClass = async (firstName?: string | null, lastName?: string | null, classId?: number | null, centerId?: number) => {
   const normalizedFirstName = normalizeClassText(firstName);
   const normalizedLastName = normalizeClassText(lastName);
-  if (!normalizedFirstName || !normalizedLastName) return Promise.resolve(null);
-
-  const params: any[] = [normalizedFirstName, normalizedLastName];
-  let query = `SELECT student_id FROM students WHERE LOWER(TRIM(first_name)) = LOWER($1) AND LOWER(TRIM(last_name)) = LOWER($2) AND deleted_at IS NULL`;
-  if (classId) {
-    params.push(classId);
-    query += ` AND class_id = $${params.length}`;
-  }
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' ORDER BY student_id LIMIT 1';
-
-  return pool.query(query, params).then((r: any) => r.rows[0]?.student_id || null);
+  if (!normalizedFirstName || !normalizedLastName) return null;
+  const conditions = [
+    ilike(sql`TRIM(${students.firstName})`, normalizedFirstName),
+    ilike(sql`TRIM(${students.lastName})`, normalizedLastName),
+    isNull(students.deletedAt),
+  ];
+  if (classId) conditions.push(eq(students.classId, classId));
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  const rows = await db.select({ student_id: students.studentId }).from(students).where(and(...conditions)).orderBy(students.studentId).limit(1);
+  return rows[0]?.student_id || null;
 };
 
 const findOrCreateClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number) => {
@@ -216,344 +294,261 @@ const findOrCreateClassIdByNameOrCode = async (className?: string | null, classC
 
   const baseCode = normalizeClassCode(classCode || normalizedClassName);
   const candidates = [baseCode, `${baseCode}-${centerId}`];
-  for (let index = 2; index <= 99; index += 1) {
-    candidates.push(`${baseCode}-${centerId}-${index}`);
-  }
+  for (let index = 2; index <= 99; index += 1) candidates.push(`${baseCode}-${centerId}-${index}`);
 
   for (const candidate of candidates) {
-    try {
-      const result = await pool.query(
-        `INSERT INTO classes (center_id, class_name, class_code, payment_frequency)
-         VALUES ($1, $2, $3, 'Monthly')
-         RETURNING class_id`,
-        [centerId, normalizedClassName, candidate]
-      );
-      return result.rows[0]?.class_id || null;
-    } catch (error: any) {
-      if (error?.code !== '23505') throw error;
-    }
+    const existing = await findClassIdByNameOrCode(null, candidate, centerId);
+    if (existing) continue;
+    const rows = await db
+      .insert(classes)
+      .values({ centerId, className: normalizedClassName, classCode: candidate, paymentFrequency: 'Monthly' })
+      .returning({ class_id: classes.classId });
+    return rows[0]?.class_id || null;
   }
 
   return findClassIdByNameOrCode(normalizedClassName, null, centerId);
 };
 
-const insertStudent = (params: any[]) =>
-  pool.query(
-    `INSERT INTO students (center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
-     ON CONFLICT (enrollment_number) WHERE deleted_at IS NULL DO UPDATE SET
-       center_id = EXCLUDED.center_id,
-       first_name = EXCLUDED.first_name,
-       last_name = EXCLUDED.last_name,
-       username = EXCLUDED.username,
-       password_hash = EXCLUDED.password_hash,
-       email = EXCLUDED.email,
-       phone = EXCLUDED.phone,
-       date_of_birth = EXCLUDED.date_of_birth,
-       parent_name = EXCLUDED.parent_name,
-       parent_phone = EXCLUDED.parent_phone,
-       gender = EXCLUDED.gender,
-       status = EXCLUDED.status,
-       teacher_id = EXCLUDED.teacher_id,
-       class_id = EXCLUDED.class_id,
-       school_name = EXCLUDED.school_name,
-       school_class = EXCLUDED.school_class,
-       updated_at = CURRENT_TIMESTAMP`,
-    params
-  );
+const studentValues = (params: any[], offset = 0) => ({
+  centerId: params[offset + 0],
+  enrollmentNumber: params[offset + 1],
+  firstName: params[offset + 2],
+  lastName: params[offset + 3],
+  username: params[offset + 4],
+  passwordHash: params[offset + 5],
+  email: params[offset + 6],
+  phone: params[offset + 7],
+  dateOfBirth: params[offset + 8],
+  parentName: params[offset + 9],
+  parentPhone: params[offset + 10],
+  gender: params[offset + 11],
+  status: params[offset + 12],
+  teacherId: params[offset + 13],
+  classId: params[offset + 14],
+  schoolName: params[offset + 15],
+  schoolClass: params[offset + 16],
+});
 
-const insertTeacher = (params: any[]) =>
-  pool.query(
-    `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, salary_percentage, status, username, password_hash)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-     ON CONFLICT (employee_id) WHERE deleted_at IS NULL DO UPDATE SET
-       center_id = EXCLUDED.center_id,
-       first_name = EXCLUDED.first_name,
-       last_name = EXCLUDED.last_name,
-       email = EXCLUDED.email,
-       phone = EXCLUDED.phone,
-       date_of_birth = EXCLUDED.date_of_birth,
-       gender = EXCLUDED.gender,
-       qualification = EXCLUDED.qualification,
-       specialization = EXCLUDED.specialization,
-       salary_percentage = EXCLUDED.salary_percentage,
-       status = EXCLUDED.status,
-       username = EXCLUDED.username,
-       password_hash = EXCLUDED.password_hash,
-       updated_at = CURRENT_TIMESTAMP`,
-    params
-  );
+const teacherValues = (params: any[], offset = 0) => ({
+  centerId: params[offset + 0],
+  employeeId: params[offset + 1],
+  firstName: params[offset + 2],
+  lastName: params[offset + 3],
+  email: params[offset + 4],
+  phone: params[offset + 5],
+  dateOfBirth: params[offset + 6],
+  gender: params[offset + 7],
+  qualification: params[offset + 8],
+  specialization: params[offset + 9],
+  salaryPercentage: params[offset + 10],
+  status: params[offset + 11],
+  username: params[offset + 12],
+  passwordHash: params[offset + 13],
+});
 
-const upsertClassByCode = (params: any[]) =>
-  pool.query(
-    `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)
-     ON CONFLICT (class_code) WHERE deleted_at IS NULL DO UPDATE SET
-       center_id = EXCLUDED.center_id,
-       class_name = EXCLUDED.class_name,
-       level = EXCLUDED.level,
-       section = EXCLUDED.section,
-       capacity = EXCLUDED.capacity,
-       teacher_id = EXCLUDED.teacher_id,
-       room_number = EXCLUDED.room_number,
-       start_date = EXCLUDED.start_date,
-       end_date = EXCLUDED.end_date,
-       payment_amount = EXCLUDED.payment_amount,
-       payment_frequency = EXCLUDED.payment_frequency,
-       updated_at = CURRENT_TIMESTAMP`,
-    params
-  );
+const classValues = (params: any[], offset = 0) => ({
+  centerId: params[offset + 0],
+  className: params[offset + 1],
+  classCode: params[offset + 2],
+  level: params[offset + 3],
+  section: params[offset + 4],
+  capacity: params[offset + 5],
+  teacherId: params[offset + 6],
+  roomNumber: params[offset + 7],
+  startDate: params[offset + 8],
+  endDate: params[offset + 9],
+  paymentAmount: params[offset + 10],
+  paymentFrequency: params[offset + 11],
+});
 
-const insertPayment = (params: any[]) =>
-  pool.query(
-    `INSERT INTO payments (student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes, discount_id, discount_kind, discount_value_type, discount_value, original_amount, discount_amount, final_amount, is_complete)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,COALESCE($19, TRUE))
-     ON CONFLICT (receipt_number) WHERE receipt_number IS NOT NULL AND deleted_at IS NULL DO UPDATE SET
-       student_id = EXCLUDED.student_id,
-       center_id = EXCLUDED.center_id,
-       payment_date = EXCLUDED.payment_date,
-       amount = EXCLUDED.amount,
-       currency = EXCLUDED.currency,
-       payment_method = EXCLUDED.payment_method,
-       transaction_reference = EXCLUDED.transaction_reference,
-       payment_status = EXCLUDED.payment_status,
-       payment_type = EXCLUDED.payment_type,
-       notes = EXCLUDED.notes,
-       discount_id = EXCLUDED.discount_id,
-       discount_kind = EXCLUDED.discount_kind,
-       discount_value_type = EXCLUDED.discount_value_type,
-       discount_value = EXCLUDED.discount_value,
-       original_amount = EXCLUDED.original_amount,
-       discount_amount = EXCLUDED.discount_amount,
-       final_amount = EXCLUDED.final_amount,
-       is_complete = EXCLUDED.is_complete,
-       updated_at = CURRENT_TIMESTAMP`,
-    params
-  );
+const paymentValues = (params: any[], offset = 0) => ({
+  studentId: params[offset + 0],
+  centerId: params[offset + 1],
+  paymentDate: params[offset + 2],
+  amount: params[offset + 3],
+  currency: params[offset + 4],
+  paymentMethod: params[offset + 5],
+  transactionReference: params[offset + 6],
+  receiptNumber: params[offset + 7],
+  paymentStatus: params[offset + 8],
+  paymentType: params[offset + 9],
+  notes: params[offset + 10],
+  discountId: params[offset + 11],
+  discountKind: params[offset + 12],
+  discountValueType: params[offset + 13],
+  discountValue: params[offset + 14],
+  originalAmount: params[offset + 15],
+  discountAmount: params[offset + 16],
+  finalAmount: params[offset + 17],
+  isComplete: params[offset + 18] ?? true,
+});
 
-const upsertSerialDiscount = (params: any[]) =>
-  pool.query(
-    `WITH updated AS (
-       UPDATE discounts
-       SET center_id = $2,
-           discount_type = $3,
-           value = $4,
-           original_price = $5,
-           final_price = $6,
-           reason = $7,
-           active = TRUE,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE student_id = $1
-         AND discount_kind = 'serial_discount'
-         AND active = TRUE
-       RETURNING discount_id
-     ), inserted AS (
-       INSERT INTO discounts (student_id, center_id, discount_type, discount_kind, value, original_price, final_price, reason, start_date, active)
-       SELECT $1,$2,$3,'serial_discount',$4,$5,$6,$7,CURRENT_DATE,TRUE
-       WHERE NOT EXISTS (SELECT 1 FROM updated)
-       RETURNING discount_id
-     )
-     SELECT discount_id FROM updated
-     UNION ALL
-     SELECT discount_id FROM inserted`,
-    params
-  );
+const upsertById = async (table: any, idColumn: any, idKey: string, id: number | null, values: any) => {
+  if (id) {
+    const existing = await db.select({ id: idColumn }).from(table).where(eq(idColumn, id)).limit(1);
+    if (existing[0]) {
+      await db.update(table).set({ ...values, updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(idColumn, id));
+      return;
+    }
+    await db.insert(table).values({ [idKey]: id, ...values });
+    return;
+  }
+  await db.insert(table).values(values);
+};
+
+const insertStudent = async (params: any[]) => {
+  const existingId = await findStudentIdByEnrollmentNumber(params[1], params[0]);
+  if (existingId) return db.update(students).set({ ...studentValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(students.studentId, existingId));
+  return db.insert(students).values(studentValues(params));
+};
+
+const insertTeacher = async (params: any[]) => {
+  const existingId = await findTeacherIdByEmployeeId(params[1], params[0]);
+  if (existingId) return db.update(teachers).set({ ...teacherValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(teachers.teacherId, existingId));
+  return db.insert(teachers).values(teacherValues(params));
+};
+
+const upsertClassByCode = async (params: any[]) => {
+  const existingId = await findClassIdByNameOrCode(null, params[2], params[0]);
+  if (existingId) return db.update(classes).set({ ...classValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(classes.classId, existingId));
+  return db.insert(classes).values(classValues(params));
+};
+
+const insertPayment = async (params: any[]) => {
+  if (params[7]) {
+    const existing = await db
+      .select({ payment_id: payments.paymentId })
+      .from(payments)
+      .where(and(eq(payments.receiptNumber, params[7]), isNull(payments.deletedAt)))
+      .limit(1);
+    if (existing[0]) return db.update(payments).set({ ...paymentValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(payments.paymentId, existing[0].payment_id));
+  }
+  return db.insert(payments).values(paymentValues(params));
+};
+
+const upsertSerialDiscount = async (params: any[]) => {
+  const [studentId, centerId, discountType, value, originalPrice, finalPrice, reason] = params;
+  const existing = await db
+    .select({ discount_id: discounts.discountId })
+    .from(discounts)
+    .where(and(eq(discounts.studentId, studentId), eq(discounts.discountKind, 'serial_discount'), eq(discounts.active, true)))
+    .limit(1);
+  if (existing[0]) {
+    return db
+      .update(discounts)
+      .set({ centerId, discountType, value, originalPrice, finalPrice, reason, active: true, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(discounts.discountId, existing[0].discount_id));
+  }
+  return db.insert(discounts).values({
+    studentId,
+    centerId,
+    discountType,
+    discountKind: 'serial_discount',
+    value,
+    originalPrice,
+    finalPrice,
+    reason,
+    startDate: sql`CURRENT_DATE`,
+    active: true,
+  });
+};
 
 const insertRoom = (params: any[]) =>
-  pool.query(
-    `INSERT INTO rooms (center_id, room_number, class_id, day, time, end_time)
-     VALUES ($1,$2,$3,$4,$5,$6)`,
-    params
-  );
+  db.insert(rooms).values({ centerId: params[0], roomNumber: params[1], classId: params[2], day: params[3], time: params[4], endTime: params[5] });
 
 const insertAssignment = (params: any[]) =>
-  pool.query(
-    `INSERT INTO assignments (center_id, class_id, student_id, teacher_id, assignment_title, description, due_date, submission_date, status, grade)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
-    params
-  );
+  db.insert(assignments).values({
+    centerId: params[0],
+    classId: params[1],
+    studentId: params[2],
+    teacherId: params[3],
+    assignmentTitle: params[4],
+    description: params[5],
+    dueDate: params[6],
+    submissionDate: params[7],
+    status: params[8],
+    grade: params[9],
+  });
 
-const insertSubject = (params: any[]) =>
-  pool.query(
-    `WITH updated AS (
-       UPDATE subjects
-       SET subject_name = $3,
-           subject_code = $4,
-           teacher_id = $5,
-           total_marks = $6,
-           passing_marks = $7
-       WHERE center_id = $1
-         AND class_id = $2
-         AND COALESCE($4, '') <> ''
-         AND LOWER(TRIM(COALESCE(subject_code, ''))) = LOWER(TRIM($4))
-       RETURNING subject_id
-     ), inserted AS (
-       INSERT INTO subjects (center_id, class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks)
-       SELECT $1,$2,$3,$4,$5,$6,$7
-       WHERE NOT EXISTS (SELECT 1 FROM updated)
-       RETURNING subject_id
-     )
-     SELECT subject_id FROM updated
-     UNION ALL
-     SELECT subject_id FROM inserted`,
-    params
-  );
+const insertSubject = async (params: any[]) => {
+  const existing = params[3]
+    ? await db
+        .select({ subject_id: subjects.subjectId })
+        .from(subjects)
+        .where(and(eq(subjects.centerId, params[0]), eq(subjects.classId, params[1]), ilike(sql`TRIM(COALESCE(${subjects.subjectCode}, ''))`, normalizeClassText(params[3]))))
+        .limit(1)
+    : [];
+  const values = {
+    centerId: params[0],
+    classId: params[1],
+    subjectName: params[2],
+    subjectCode: params[3],
+    teacherId: params[4],
+    totalMarks: params[5],
+    passingMarks: params[6],
+  };
+  if (existing[0]) return db.update(subjects).set(values).where(eq(subjects.subjectId, existing[0].subject_id));
+  return db.insert(subjects).values(values);
+};
 
 const upsertStudent = (params: any[], hasStudentId: boolean) => {
-  if (hasStudentId) {
-    return pool.query(
-      `INSERT INTO students (student_id, center_id, enrollment_number, first_name, last_name, username, password_hash, email, phone, date_of_birth, parent_name, parent_phone, gender, status, teacher_id, class_id, school_name, school_class)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
-       ON CONFLICT (student_id) DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         enrollment_number = EXCLUDED.enrollment_number,
-         first_name = EXCLUDED.first_name,
-         last_name = EXCLUDED.last_name,
-         username = EXCLUDED.username,
-         password_hash = EXCLUDED.password_hash,
-         email = EXCLUDED.email,
-         phone = EXCLUDED.phone,
-         date_of_birth = EXCLUDED.date_of_birth,
-         parent_name = EXCLUDED.parent_name,
-         parent_phone = EXCLUDED.parent_phone,
-         gender = EXCLUDED.gender,
-         status = EXCLUDED.status,
-         teacher_id = EXCLUDED.teacher_id,
-         class_id = EXCLUDED.class_id,
-         school_name = EXCLUDED.school_name,
-         school_class = EXCLUDED.school_class,
-         updated_at = CURRENT_TIMESTAMP`,
-      params
-    );
-  }
-  return insertStudent(params);
+  if (!hasStudentId) return insertStudent(params);
+  return upsertById(students, students.studentId, 'studentId', params[0], studentValues(params, 1));
 };
 
 const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
-  if (hasTeacherId) {
-    return pool.query(
-      `INSERT INTO teachers (teacher_id, center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, salary_percentage, status, username, password_hash)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
-       ON CONFLICT (teacher_id) DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         employee_id = EXCLUDED.employee_id,
-         first_name = EXCLUDED.first_name,
-         last_name = EXCLUDED.last_name,
-         email = EXCLUDED.email,
-         phone = EXCLUDED.phone,
-         date_of_birth = EXCLUDED.date_of_birth,
-         gender = EXCLUDED.gender,
-         qualification = EXCLUDED.qualification,
-         specialization = EXCLUDED.specialization,
-         salary_percentage = EXCLUDED.salary_percentage,
-         status = EXCLUDED.status,
-         username = EXCLUDED.username,
-         password_hash = EXCLUDED.password_hash,
-         updated_at = CURRENT_TIMESTAMP`,
-      params
-    );
-  }
-  return insertTeacher(params);
+  if (!hasTeacherId) return insertTeacher(params);
+  return upsertById(teachers, teachers.teacherId, 'teacherId', params[0], teacherValues(params, 1));
 };
 
 const upsertPayment = (params: any[], hasPaymentId: boolean) => {
-  if (hasPaymentId) {
-    return pool.query(
-      `INSERT INTO payments (payment_id, student_id, center_id, payment_date, amount, currency, payment_method, transaction_reference, receipt_number, payment_status, payment_type, notes, discount_id, discount_kind, discount_value_type, discount_value, original_amount, discount_amount, final_amount, is_complete)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,COALESCE($20, TRUE))
-       ON CONFLICT (payment_id) DO UPDATE SET
-         student_id = EXCLUDED.student_id,
-         center_id = EXCLUDED.center_id,
-         payment_date = EXCLUDED.payment_date,
-         amount = EXCLUDED.amount,
-         currency = EXCLUDED.currency,
-         payment_method = EXCLUDED.payment_method,
-         transaction_reference = EXCLUDED.transaction_reference,
-         receipt_number = EXCLUDED.receipt_number,
-         payment_status = EXCLUDED.payment_status,
-         payment_type = EXCLUDED.payment_type,
-         notes = EXCLUDED.notes,
-         discount_id = EXCLUDED.discount_id,
-         discount_kind = EXCLUDED.discount_kind,
-         discount_value_type = EXCLUDED.discount_value_type,
-         discount_value = EXCLUDED.discount_value,
-         original_amount = EXCLUDED.original_amount,
-         discount_amount = EXCLUDED.discount_amount,
-         final_amount = EXCLUDED.final_amount,
-         is_complete = EXCLUDED.is_complete,
-         updated_at = CURRENT_TIMESTAMP`,
-      params
-    );
-  }
-  return insertPayment(params);
+  if (!hasPaymentId) return insertPayment(params);
+  return upsertById(payments, payments.paymentId, 'paymentId', params[0], paymentValues(params, 1));
 };
 
-const upsertRoom = (params: any[], hasRoomId: boolean) => {
-  if (hasRoomId) {
-    return pool.query(
-      `INSERT INTO rooms (room_id, center_id, room_number, class_id, day, time, end_time)
-       VALUES ($1,$2,$3,$4,$5,$6,$7)
-       ON CONFLICT (room_id) DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         room_number = EXCLUDED.room_number,
-         class_id = EXCLUDED.class_id,
-         day = EXCLUDED.day,
-         time = EXCLUDED.time,
-         end_time = EXCLUDED.end_time,
-         updated_at = CURRENT_TIMESTAMP`,
-      params
-    );
-  }
-  return insertRoom(params);
+const upsertRoom = async (params: any[], hasRoomId: boolean) => {
+  if (!hasRoomId) return insertRoom(params);
+  return upsertById(rooms, rooms.roomId, 'roomId', params[0], {
+    centerId: params[1],
+    roomNumber: params[2],
+    classId: params[3],
+    day: params[4],
+    time: params[5],
+    endTime: params[6],
+  });
 };
 
 const upsertAssignment = (params: any[], hasAssignmentId: boolean) => {
-  if (hasAssignmentId) {
-    return pool.query(
-      `INSERT INTO assignments (assignment_id, center_id, class_id, student_id, teacher_id, assignment_title, description, due_date, submission_date, status, grade)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
-       ON CONFLICT (assignment_id) DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         class_id = EXCLUDED.class_id,
-         student_id = EXCLUDED.student_id,
-         teacher_id = EXCLUDED.teacher_id,
-         assignment_title = EXCLUDED.assignment_title,
-         description = EXCLUDED.description,
-         due_date = EXCLUDED.due_date,
-         submission_date = EXCLUDED.submission_date,
-         status = EXCLUDED.status,
-         grade = EXCLUDED.grade,
-         updated_at = CURRENT_TIMESTAMP`,
-      params
-    );
-  }
-  return insertAssignment(params);
+  if (!hasAssignmentId) return insertAssignment(params);
+  return upsertById(assignments, assignments.assignmentId, 'assignmentId', params[0], {
+    centerId: params[1],
+    classId: params[2],
+    studentId: params[3],
+    teacherId: params[4],
+    assignmentTitle: params[5],
+    description: params[6],
+    dueDate: params[7],
+    submissionDate: params[8],
+    status: params[9],
+    grade: params[10],
+  });
 };
 
 const upsertSubject = (params: any[], hasSubjectId: boolean) => {
-  if (hasSubjectId) {
-    return pool.query(
-      `INSERT INTO subjects (subject_id, center_id, class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-       ON CONFLICT (subject_id) DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         class_id = EXCLUDED.class_id,
-         subject_name = EXCLUDED.subject_name,
-         subject_code = EXCLUDED.subject_code,
-         teacher_id = EXCLUDED.teacher_id,
-         total_marks = EXCLUDED.total_marks,
-         passing_marks = EXCLUDED.passing_marks`,
-      params
-    );
-  }
-  return insertSubject(params);
+  if (!hasSubjectId) return insertSubject(params);
+  return upsertById(subjects, subjects.subjectId, 'subjectId', params[0], {
+    centerId: params[1],
+    classId: params[2],
+    subjectName: params[3],
+    subjectCode: params[4],
+    teacherId: params[5],
+    totalMarks: params[6],
+    passingMarks: params[7],
+  });
 };
 
 const syncSerialSequence = (table: string, idColumn: string) =>
-  pool.query(`SELECT setval(pg_get_serial_sequence($1, $2), COALESCE((SELECT MAX(${idColumn}) FROM ${table}), 1), true)`, [
-    table,
-    idColumn,
-  ]);
+  db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('${table}', '${idColumn}'), COALESCE((SELECT MAX(${idColumn}) FROM ${table}), 1), true)`));
 
 module.exports = {
   selectAllStudents,

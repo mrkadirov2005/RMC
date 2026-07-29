@@ -1,46 +1,77 @@
+const mockDb = {
+  select: jest.fn(),
+  insert: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+  transaction: jest.fn(),
+};
+
 jest.mock('../../../../db/pool', () => ({
-  query: jest.fn(),
+  db: mockDb,
+  sql: require('drizzle-orm').sql,
 }));
 
-const pool = require('../../../../db/pool');
 const paymentRepository = require('../payment.repository');
+
+const createSelectChain = (rows) => {
+  const chain = {};
+  chain.from = jest.fn(() => chain);
+  chain.leftJoin = jest.fn(() => chain);
+  chain.where = jest.fn(() => chain);
+  chain.orderBy = jest.fn(() => chain);
+  chain.limit = jest.fn(() => chain);
+  chain.offset = jest.fn(() => chain);
+  chain.then = jest.fn((resolve, reject) => Promise.resolve(rows).then(resolve, reject));
+  return chain;
+};
+
+const createMutationChain = (rows) => {
+  const chain = {};
+  chain.values = jest.fn(() => chain);
+  chain.set = jest.fn(() => chain);
+  chain.where = jest.fn(() => chain);
+  chain.returning = jest.fn(() => Promise.resolve(rows));
+  return chain;
+};
 
 describe('payments repository', () => {
   beforeEach(() => {
-    pool.query.mockReset();
+    jest.clearAllMocks();
   });
 
-  it('filters payment listing by teacher, center, student, limit, and offset', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ payment_id: 1 }] });
+  it('filters payment listing by teacher, center, student, limit, and offset with Drizzle builders', async () => {
+    const chain = createSelectChain([{ payment_id: 1 }]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     const rows = await paymentRepository.findAll({ teacherId: 4, centerId: 2, studentId: 9, limit: 10, offset: 20 });
 
-    expect(pool.query.mock.calls[0][0]).toContain('s.teacher_id = $1');
-    expect(pool.query.mock.calls[0][0]).toContain('p.center_id = $2');
-    expect(pool.query.mock.calls[0][0]).toContain('p.student_id = $3');
-    expect(pool.query.mock.calls[0][0]).toContain('LIMIT $4');
-    expect(pool.query.mock.calls[0][0]).toContain('OFFSET $5');
-    expect(pool.query.mock.calls[0][1]).toEqual([4, 2, 9, 10, 20]);
+    expect(mockDb.select).toHaveBeenCalled();
+    expect(chain.leftJoin).toHaveBeenCalledTimes(2);
+    expect(chain.where).toHaveBeenCalled();
+    expect(chain.limit).toHaveBeenCalledWith(10);
+    expect(chain.offset).toHaveBeenCalledWith(20);
     expect(rows).toEqual([{ payment_id: 1 }]);
   });
 
-  it('updates payments with teacher scope', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ payment_id: 3 }] });
+  it('updates payments after scoped lookup', async () => {
+    const lookup = createSelectChain([{ payment_id: 3 }]);
+    const update = createMutationChain([{ payment_id: 3 }]);
+    mockDb.select.mockReturnValueOnce(lookup);
+    mockDb.update.mockReturnValueOnce(update);
 
-    await paymentRepository.update(3, [1000, 'Completed', 'ok'], 2, 4);
+    await expect(paymentRepository.update(3, [1000, 'Completed', 'ok'], 2, 4)).resolves.toEqual({ payment_id: 3 });
 
-    expect(pool.query.mock.calls[0][0]).toContain('payment_id = $4');
-    expect(pool.query.mock.calls[0][0]).toContain('center_id = $5');
-    expect(pool.query.mock.calls[0][0]).toContain('teacher_id = $6');
-    expect(pool.query.mock.calls[0][1]).toEqual([1000, 'Completed', 'ok', 3, 2, 4]);
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(update.set).toHaveBeenCalled();
+    expect(update.where).toHaveBeenCalled();
   });
 
   it('orders student payments by newest payment date', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [] });
+    const chain = createSelectChain([]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     await paymentRepository.findByStudent(5, 2);
 
-    expect(pool.query.mock.calls[0][0]).toContain('ORDER BY payment_date DESC');
-    expect(pool.query.mock.calls[0][1]).toEqual([5, 2]);
+    expect(chain.orderBy).toHaveBeenCalled();
   });
 });

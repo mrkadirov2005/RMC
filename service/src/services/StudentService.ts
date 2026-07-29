@@ -1,5 +1,9 @@
 import { Pool } from 'pg';
+import { and, eq, ilike, or, sql } from 'drizzle-orm';
 import { BaseService } from './BaseService';
+
+const { assignments, attendance, grades, payments, students } = require('../db/schema');
+const poolModule = require('../db/pool');
 
 export interface Student {
   id?: number;
@@ -23,8 +27,11 @@ export interface Student {
 export interface CreateStudentData extends Omit<Student, 'id'> {}
 
 export class StudentService extends BaseService {
+  private readonly drizzle: any;
+
   constructor(pool: Pool) {
     super(pool);
+    this.drizzle = (pool as any).db || poolModule.db;
   }
 
   async createStudent(studentData: CreateStudentData): Promise<Student> {
@@ -64,21 +71,38 @@ export class StudentService extends BaseService {
   }
 
   async searchStudents(searchTerm: string, centerId?: number): Promise<Student[]> {
-    let query = `
-      SELECT * FROM students 
-      WHERE (first_name ILIKE $1 OR last_name ILIKE $1 OR enrollment_number ILIKE $1)
-    `;
-    const values: any[] = [`%${searchTerm}%`];
+    const search = `%${searchTerm}%`;
+    const conditions: any[] = [
+      or(
+        ilike(students.firstName, search),
+        ilike(students.lastName, search),
+        ilike(students.enrollmentNumber, search)
+      ),
+    ];
+    if (centerId) conditions.push(eq(students.centerId, centerId));
 
-    if (centerId) {
-      query += ' AND center_id = $2';
-      values.push(centerId);
-    }
-
-    query += ' ORDER BY first_name, last_name';
-
-    const result = await this.pool.query(query, values);
-    return result.rows;
+    return this.drizzle
+      .select({
+        student_id: students.studentId,
+        center_id: students.centerId,
+        enrollment_number: students.enrollmentNumber,
+        first_name: students.firstName,
+        last_name: students.lastName,
+        email: students.email,
+        phone: students.phone,
+        date_of_birth: students.dateOfBirth,
+        parent_name: students.parentName,
+        parent_phone: students.parentPhone,
+        gender: students.gender,
+        status: students.status,
+        teacher_id: students.teacherId,
+        class_id: students.classId,
+        school_name: students.schoolName,
+        school_class: students.schoolClass,
+      })
+      .from(students)
+      .where(and(...conditions))
+      .orderBy(students.firstName, students.lastName);
   }
 
   async updateStudentStatus(id: number, status: string): Promise<Student | null> {
@@ -95,28 +119,26 @@ export class StudentService extends BaseService {
 
   // Get student statistics
   async getStudentStatistics(studentId: number): Promise<any> {
-    const query = `
-      SELECT 
-        s.id,
-        s.first_name,
-        s.last_name,
-        COUNT(DISTINCT a.id) as attendance_count,
-        COUNT(DISTINCT CASE WHEN a.status IN ('Present', 'Late') THEN a.id END) as present_count,
-        COUNT(DISTINCT g.id) as grade_count,
-        AVG(g.percentage) as average_grade,
-        COUNT(DISTINCT p.id) as payment_count,
-        COALESCE(SUM(p.amount), 0) as total_paid,
-        COUNT(DISTINCT ass.id) as assignment_count
-      FROM students s
-      LEFT JOIN attendance a ON s.id = a.student_id
-      LEFT JOIN grades g ON s.id = g.student_id
-      LEFT JOIN payments p ON s.id = p.student_id
-      LEFT JOIN assignments ass ON s.class_id = ass.class_id
-      WHERE s.id = $1
-      GROUP BY s.id, s.first_name, s.last_name
-    `;
-
-    const result = await this.pool.query(query, [studentId]);
-    return result.rows[0] || null;
+    const rows = await this.drizzle
+      .select({
+        student_id: students.studentId,
+        first_name: students.firstName,
+        last_name: students.lastName,
+        attendance_count: sql`COUNT(DISTINCT ${attendance.attendanceId})::int`,
+        present_count: sql`COUNT(DISTINCT CASE WHEN ${attendance.status} IN ('Present', 'Late') THEN ${attendance.attendanceId} END)::int`,
+        grade_count: sql`COUNT(DISTINCT ${grades.gradeId})::int`,
+        average_grade: sql`AVG(${grades.percentage})`,
+        payment_count: sql`COUNT(DISTINCT ${payments.paymentId})::int`,
+        total_paid: sql`COALESCE(SUM(${payments.amount}), 0)`,
+        assignment_count: sql`COUNT(DISTINCT ${assignments.assignmentId})::int`,
+      })
+      .from(students)
+      .leftJoin(attendance, eq(students.studentId, attendance.studentId))
+      .leftJoin(grades, eq(students.studentId, grades.studentId))
+      .leftJoin(payments, eq(students.studentId, payments.studentId))
+      .leftJoin(assignments, eq(students.classId, assignments.classId))
+      .where(eq(students.studentId, studentId))
+      .groupBy(students.studentId, students.firstName, students.lastName);
+    return rows[0] || null;
   }
 }

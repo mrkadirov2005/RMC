@@ -1,195 +1,279 @@
+const { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const {
+  assignments,
+  attendance,
+  classes,
+  grades,
+  sessions,
+  students,
+  subjects,
+  teachers,
+} = require('../../../db/schema');
 
-const findAll = (centerId?: number) => {
-  let query = `
-    SELECT
-      t.*,
-      COALESCE(student_counts.student_count, 0)::int AS student_count,
-      COALESCE(class_counts.class_count, 0)::int AS class_count
-    FROM teachers t
-    LEFT JOIN (
-      SELECT teacher_id, COUNT(DISTINCT student_id) AS student_count
-      FROM (
-        SELECT s.student_id, s.teacher_id
-        FROM students s
-        WHERE s.deleted_at IS NULL AND s.teacher_id IS NOT NULL
-        UNION
-        SELECT s.student_id, c.teacher_id
-        FROM students s
-        JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
-        WHERE s.deleted_at IS NULL AND c.teacher_id IS NOT NULL
-      ) teacher_students
-      GROUP BY teacher_id
-    ) student_counts ON student_counts.teacher_id = t.teacher_id
-    LEFT JOIN (
-      SELECT teacher_id, COUNT(*) AS class_count
-      FROM classes
-      WHERE deleted_at IS NULL
-      GROUP BY teacher_id
-    ) class_counts ON class_counts.teacher_id = t.teacher_id
-  `;
-  const params: any[] = [];
-  const conditions = ['t.deleted_at IS NULL'];
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`t.center_id = $${params.length}`);
+const db = pool.db;
+
+const parseJson = (value: any) => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
   }
-  query += ' WHERE ' + conditions.join(' AND ');
-  query += ' ORDER BY t.teacher_id';
-  return pool.query(query, params).then((r: any) => r.rows);
 };
 
-const findPaginated = async (filters: Record<string, any> = {}, centerId?: number) => {
-  let query = `
-    SELECT
-      t.*,
-      COALESCE(student_counts.student_count, 0)::int AS student_count,
-      COALESCE(class_counts.class_count, 0)::int AS class_count
-    FROM teachers t
-    LEFT JOIN (
-      SELECT teacher_id, COUNT(DISTINCT student_id) AS student_count
-      FROM (
-        SELECT s.student_id, s.teacher_id
-        FROM students s
-        WHERE s.deleted_at IS NULL AND s.teacher_id IS NOT NULL
-        UNION
-        SELECT s.student_id, c.teacher_id
-        FROM students s
-        JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
-        WHERE s.deleted_at IS NULL AND c.teacher_id IS NOT NULL
-      ) teacher_students
-      GROUP BY teacher_id
-    ) student_counts ON student_counts.teacher_id = t.teacher_id
-    LEFT JOIN (
-      SELECT teacher_id, COUNT(*) AS class_count
-      FROM classes
-      WHERE deleted_at IS NULL
-      GROUP BY teacher_id
-    ) class_counts ON class_counts.teacher_id = t.teacher_id
-  `;
-  let countQuery = 'SELECT COUNT(*)::int AS total FROM teachers t';
-  const params: any[] = [];
-  const conditions = ['t.deleted_at IS NULL'];
+const teacherSelection = {
+  teacher_id: teachers.teacherId,
+  center_id: teachers.centerId,
+  employee_id: teachers.employeeId,
+  first_name: teachers.firstName,
+  last_name: teachers.lastName,
+  email: teachers.email,
+  phone: teachers.phone,
+  date_of_birth: teachers.dateOfBirth,
+  gender: teachers.gender,
+  qualification: teachers.qualification,
+  specialization: teachers.specialization,
+  salary_percentage: teachers.salaryPercentage,
+  status: teachers.status,
+  roles: teachers.roles,
+  username: teachers.username,
+  password_hash: teachers.passwordHash,
+  deleted_at: teachers.deletedAt,
+  created_at: teachers.createdAt,
+  updated_at: teachers.updatedAt,
+};
 
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`t.center_id = $${params.length}`);
-  }
+const teacherListSelection = {
+  ...teacherSelection,
+  student_count: sql`
+    COALESCE((
+      SELECT COUNT(DISTINCT teacher_students.student_id)::int
+      FROM (
+        SELECT ${students.studentId} AS student_id
+        FROM ${students}
+        WHERE ${students.deletedAt} IS NULL
+          AND ${students.teacherId} = ${teachers.teacherId}
+        UNION
+        SELECT ${students.studentId} AS student_id
+        FROM ${students}
+        JOIN ${classes} ON ${classes.classId} = ${students.classId}
+          AND ${classes.deletedAt} IS NULL
+        WHERE ${students.deletedAt} IS NULL
+          AND ${classes.teacherId} = ${teachers.teacherId}
+      ) teacher_students
+    ), 0)::int
+  `,
+  class_count: sql`
+    COALESCE((
+      SELECT COUNT(*)::int
+      FROM ${classes}
+      WHERE ${classes.deletedAt} IS NULL
+        AND ${classes.teacherId} = ${teachers.teacherId}
+    ), 0)::int
+  `,
+};
+
+const scopedTeacherConditions = (id?: number, centerId?: number, includeDeleted = false) => {
+  const conditions: any[] = [];
+  if (id !== undefined) conditions.push(eq(teachers.teacherId, id));
+  if (!includeDeleted) conditions.push(isNull(teachers.deletedAt));
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  return conditions;
+};
+
+const buildListConditions = (filters: Record<string, any> = {}, centerId?: number) => {
+  const conditions: any[] = [isNull(teachers.deletedAt)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
 
   const search = String(filters.q || filters.search || '').trim();
   if (search) {
-    params.push(`%${search}%`);
-    conditions.push(`(
-      t.first_name ILIKE $${params.length}
-      OR t.last_name ILIKE $${params.length}
-      OR CONCAT_WS(' ', t.first_name, t.last_name) ILIKE $${params.length}
-      OR t.employee_id ILIKE $${params.length}
-      OR t.specialization ILIKE $${params.length}
-      OR t.qualification ILIKE $${params.length}
-      OR t.email ILIKE $${params.length}
-      OR t.phone ILIKE $${params.length}
-      OR t.username ILIKE $${params.length}
-      OR t.status::text ILIKE $${params.length}
-    )`);
+    const pattern = `%${search}%`;
+    conditions.push(
+      or(
+        ilike(teachers.firstName, pattern),
+        ilike(teachers.lastName, pattern),
+        ilike(sql`CONCAT_WS(' ', ${teachers.firstName}, ${teachers.lastName})`, pattern),
+        ilike(teachers.employeeId, pattern),
+        ilike(teachers.specialization, pattern),
+        ilike(teachers.qualification, pattern),
+        ilike(teachers.email, pattern),
+        ilike(teachers.phone, pattern),
+        ilike(teachers.username, pattern),
+        ilike(teachers.status, pattern)
+      )
+    );
   }
 
   const status = String(filters.status || '').trim();
-  if (status) {
-    params.push(status);
-    conditions.push(`t.status = $${params.length}::teacher_status`);
-  }
+  if (status) conditions.push(eq(teachers.status, status));
+  return conditions;
+};
 
-  const where = ` WHERE ${conditions.join(' AND ')}`;
-  query += where;
-  countQuery += where;
+const findAll = (centerId?: number) =>
+  db
+    .select(teacherListSelection)
+    .from(teachers)
+    .where(and(...buildListConditions({}, centerId)))
+    .orderBy(asc(teachers.teacherId));
 
-  const countResult = await pool.query(countQuery, params);
-  const total = Number(countResult.rows[0]?.total || 0);
+const findPaginated = async (filters: Record<string, any> = {}, centerId?: number) => {
+  const conditions = buildListConditions(filters, centerId);
+  const [countRows, rows] = await Promise.all([
+    db.select({ total: sql`COUNT(*)::int` }).from(teachers).where(and(...conditions)),
+    db
+      .select(teacherListSelection)
+      .from(teachers)
+      .where(and(...conditions))
+      .orderBy(desc(teachers.teacherId))
+      .limit(Math.min(100, Math.max(1, Number(filters.limit || 20))))
+      .offset((Math.max(1, Number(filters.page || 1)) - 1) * Math.min(100, Math.max(1, Number(filters.limit || 20)))),
+  ]);
   const page = Math.max(1, Number(filters.page || 1));
   const limit = Math.min(100, Math.max(1, Number(filters.limit || 20)));
-  const offset = (page - 1) * limit;
-
-  query += ' ORDER BY t.teacher_id DESC';
-  params.push(limit);
-  query += ` LIMIT $${params.length}`;
-  params.push(offset);
-  query += ` OFFSET $${params.length}`;
-
-  const result = await pool.query(query, params);
-  return { data: result.rows, total, page, limit };
+  return { data: rows, total: Number((countRows[0] as any)?.total || 0), page, limit };
 };
 
-const findById = (id: number, centerId?: number) => {
-  let query = 'SELECT * FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
-};
+const findById = (id: number, centerId?: number) =>
+  db
+    .select(teacherSelection)
+    .from(teachers)
+    .where(and(...scopedTeacherConditions(id, centerId)))
+    .then((rows: any[]) => rows[0] || null);
 
 const findByUsername = (username: string) =>
-  pool
-    .query(
-      'SELECT teacher_id, first_name, last_name, email, password_hash, status, center_id FROM teachers WHERE username = $1 AND deleted_at IS NULL',
-      [username]
-    )
-    .then((r: any) => r.rows[0] || null);
+  db
+    .select({
+      teacher_id: teachers.teacherId,
+      first_name: teachers.firstName,
+      last_name: teachers.lastName,
+      email: teachers.email,
+      password_hash: teachers.passwordHash,
+      status: teachers.status,
+      center_id: teachers.centerId,
+    })
+    .from(teachers)
+    .where(and(eq(teachers.username, username), isNull(teachers.deletedAt)))
+    .then((rows: any[]) => rows[0] || null);
 
 const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO teachers (center_id, employee_id, first_name, last_name, email, phone, date_of_birth, gender, qualification, specialization, salary_percentage, status, roles, username, password_hash)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
+  db
+    .insert(teachers)
+    .values({
+      centerId: params[0],
+      employeeId: params[1],
+      firstName: params[2],
+      lastName: params[3],
+      email: params[4],
+      phone: params[5],
+      dateOfBirth: params[6],
+      gender: params[7],
+      qualification: params[8],
+      specialization: params[9],
+      salaryPercentage: params[10],
+      status: params[11],
+      roles: parseJson(params[12]),
+      username: params[13],
+      passwordHash: params[14],
+    })
+    .returning(teacherSelection)
+    .then((rows: any[]) => rows[0]);
 
 const countByUsername = (username: string) =>
-  pool.query('SELECT teacher_id FROM teachers WHERE username = $1 AND deleted_at IS NULL', [username]).then((r: any) => r.rows.length);
+  db
+    .select({ count: sql`COUNT(*)::int` })
+    .from(teachers)
+    .where(and(eq(teachers.username, username), isNull(teachers.deletedAt)))
+    .then((rows: any[]) => Number(rows[0]?.count || 0));
 
 const countByEmployeeId = (employeeId: string) =>
-  pool.query('SELECT teacher_id FROM teachers WHERE employee_id = $1 AND deleted_at IS NULL', [employeeId]).then((r: any) => r.rows.length);
+  db
+    .select({ count: sql`COUNT(*)::int` })
+    .from(teachers)
+    .where(and(eq(teachers.employeeId, employeeId), isNull(teachers.deletedAt)))
+    .then((rows: any[]) => Number(rows[0]?.count || 0));
 
 const countByEmail = (email: string) =>
-  pool.query('SELECT teacher_id FROM teachers WHERE email = $1 AND deleted_at IS NULL', [email]).then((r: any) => r.rows.length);
+  db
+    .select({ count: sql`COUNT(*)::int` })
+    .from(teachers)
+    .where(and(eq(teachers.email, email), isNull(teachers.deletedAt)))
+    .then((rows: any[]) => Number(rows[0]?.count || 0));
 
 const update = (id: number, fields: any[], centerId?: number) => {
-  let query =
-    'UPDATE teachers SET first_name = COALESCE($1, first_name), last_name = COALESCE($2, last_name), username = COALESCE($3, username), email = COALESCE($4, email), phone = COALESCE($5, phone), salary_percentage = COALESCE($6, salary_percentage), status = COALESCE($7, status), roles = COALESCE($8, roles), updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $9 AND deleted_at IS NULL';
-  const params: any[] = [...fields, id];
-  if (centerId) {
-    query += ' AND center_id = $10';
-    params.push(centerId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+  const setData: any = { updatedAt: sql`CURRENT_TIMESTAMP` };
+  if (fields[0] != null) setData.firstName = fields[0];
+  if (fields[1] != null) setData.lastName = fields[1];
+  if (fields[2] != null) setData.username = fields[2];
+  if (fields[3] != null) setData.email = fields[3];
+  if (fields[4] != null) setData.phone = fields[4];
+  if (fields[5] != null) setData.salaryPercentage = fields[5];
+  if (fields[6] != null) setData.status = fields[6];
+  if (fields[7] != null) setData.roles = parseJson(fields[7]);
+  return db
+    .update(teachers)
+    .set(setData)
+    .where(and(...scopedTeacherConditions(id, centerId)))
+    .returning(teacherSelection)
+    .then((rows: any[]) => rows[0] || null);
 };
 
 const getDeleteDependencies = async (id: number, centerId?: number) => {
-  const params: any[] = [id];
-  const scoped = centerId ? ' AND center_id = $2' : '';
-  if (centerId) params.push(centerId);
+  const scoped = (table: any) => {
+    const conditions = [eq(table.teacherId, id)];
+    if (centerId) conditions.push(eq(table.centerId, centerId));
+    return conditions;
+  };
 
-  const [classes, students, subjects, assignments, sessions, attendance, grades] = await Promise.all([
-    pool.query(`SELECT class_id, class_name, class_code FROM classes WHERE teacher_id = $1${scoped} AND deleted_at IS NULL ORDER BY class_id`, params),
-    pool.query(`SELECT student_id, first_name, last_name FROM students WHERE teacher_id = $1${scoped} AND deleted_at IS NULL ORDER BY student_id`, params),
-    pool.query(`SELECT subject_id, subject_name, subject_code FROM subjects WHERE teacher_id = $1${scoped} ORDER BY subject_id`, params),
-    pool.query(`SELECT assignment_id, assignment_title FROM assignments WHERE teacher_id = $1 ORDER BY assignment_id`, [id]),
-    pool.query(`SELECT session_id, class_id, session_date FROM sessions WHERE teacher_id = $1${scoped} AND deleted_at IS NULL ORDER BY session_id`, params),
-    pool.query(`SELECT COUNT(*)::int AS count FROM attendance WHERE teacher_id = $1${scoped}`, params),
-    pool.query(`SELECT COUNT(*)::int AS count FROM grades WHERE teacher_id = $1${scoped}`, params),
+  const [
+    classRows,
+    studentRows,
+    subjectRows,
+    assignmentRows,
+    sessionRows,
+    attendanceRows,
+    gradeRows,
+  ] = await Promise.all([
+    db
+      .select({ class_id: classes.classId, class_name: classes.className, class_code: classes.classCode })
+      .from(classes)
+      .where(and(...scoped(classes), isNull(classes.deletedAt)))
+      .orderBy(asc(classes.classId)),
+    db
+      .select({ student_id: students.studentId, first_name: students.firstName, last_name: students.lastName })
+      .from(students)
+      .where(and(...scoped(students), isNull(students.deletedAt)))
+      .orderBy(asc(students.studentId)),
+    db
+      .select({ subject_id: subjects.subjectId, subject_name: subjects.subjectName, subject_code: subjects.subjectCode })
+      .from(subjects)
+      .where(and(...scoped(subjects)))
+      .orderBy(asc(subjects.subjectId)),
+    db
+      .select({ assignment_id: assignments.assignmentId, assignment_title: assignments.assignmentTitle })
+      .from(assignments)
+      .where(eq(assignments.teacherId, id))
+      .orderBy(asc(assignments.assignmentId)),
+    db
+      .select({ session_id: sessions.sessionId, class_id: sessions.classId, session_date: sessions.sessionDate })
+      .from(sessions)
+      .where(and(...scoped(sessions), isNull(sessions.deletedAt)))
+      .orderBy(asc(sessions.sessionId)),
+    db
+      .select({ count: sql`COUNT(*)::int` })
+      .from(attendance)
+      .where(and(...scoped(attendance))),
+    db.select({ count: sql`COUNT(*)::int` }).from(grades).where(and(...scoped(grades))),
   ]);
 
   return {
-    classes: classes.rows,
-    students: students.rows,
-    subjects: subjects.rows,
-    assignments: assignments.rows,
-    sessions: sessions.rows,
-    attendance_count: Number(attendance.rows[0]?.count || 0),
-    grades_count: Number(grades.rows[0]?.count || 0),
+    classes: classRows,
+    students: studentRows,
+    subjects: subjectRows,
+    assignments: assignmentRows,
+    sessions: sessionRows,
+    attendance_count: Number((attendanceRows[0] as any)?.count || 0),
+    grades_count: Number((gradeRows[0] as any)?.count || 0),
   };
 };
 
@@ -203,74 +287,60 @@ const hasDeleteDependencies = (dependencies: any) =>
   dependencies.grades_count > 0;
 
 const unassignDeleteDependencies = async (id: number, centerId?: number) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const params: any[] = [id];
-    const scoped = centerId ? ' AND center_id = $2' : '';
-    if (centerId) params.push(centerId);
+  const scoped = (table: any, deleted = false) => {
+    const conditions = [eq(table.teacherId, id)];
+    if (centerId) conditions.push(eq(table.centerId, centerId));
+    if (deleted && table.deletedAt) conditions.push(isNull(table.deletedAt));
+    return and(...conditions);
+  };
 
-    await client.query(`UPDATE students SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped} AND deleted_at IS NULL`, params);
-    await client.query(`UPDATE classes SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped} AND deleted_at IS NULL`, params);
-    await client.query(`UPDATE subjects SET teacher_id = NULL WHERE teacher_id = $1${scoped}`, params);
-    await client.query('UPDATE assignments SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1', [id]);
-    await client.query(`UPDATE sessions SET teacher_id = NULL, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $1${scoped} AND deleted_at IS NULL`, params);
-
-    await client.query('COMMIT');
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  await db.transaction(async (tx: any) => {
+    await tx.update(students).set({ teacherId: null, updatedAt: sql`CURRENT_TIMESTAMP` }).where(scoped(students, true));
+    await tx.update(classes).set({ teacherId: null, updatedAt: sql`CURRENT_TIMESTAMP` }).where(scoped(classes, true));
+    await tx.update(subjects).set({ teacherId: null }).where(scoped(subjects));
+    await tx.update(assignments).set({ teacherId: null, updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(assignments.teacherId, id));
+    await tx.update(sessions).set({ teacherId: null, updatedAt: sql`CURRENT_TIMESTAMP` }).where(scoped(sessions, true));
+  });
 };
 
-const remove = (id: number, centerId?: number) => {
-  let query = `UPDATE teachers
-    SET deleted_at = CURRENT_TIMESTAMP,
-        status = 'Retired',
-        updated_at = CURRENT_TIMESTAMP
-    WHERE teacher_id = $1 AND deleted_at IS NULL`;
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
-};
+const remove = (id: number, centerId?: number) =>
+  db
+    .update(teachers)
+    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Retired', updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...scopedTeacherConditions(id, centerId)))
+    .returning(teacherSelection)
+    .then((rows: any[]) => rows[0] || null);
 
 const purge = (id: number, centerId?: number) => {
-  let query = 'DELETE FROM teachers WHERE teacher_id = $1 AND deleted_at IS NOT NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+  const conditions = [eq(teachers.teacherId, id), isNotNull(teachers.deletedAt)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  return db
+    .delete(teachers)
+    .where(and(...conditions))
+    .returning(teacherSelection)
+    .then((rows: any[]) => rows[0] || null);
 };
 
 const findPasswordHash = (id: number) =>
-  pool.query('SELECT password_hash FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL', [id]).then((r: any) => r.rows[0]?.password_hash);
+  db
+    .select({ password_hash: teachers.passwordHash })
+    .from(teachers)
+    .where(and(eq(teachers.teacherId, id), isNull(teachers.deletedAt)))
+    .then((rows: any[]) => rows[0]?.password_hash);
 
-const setCredentials = (id: number, username: string, password_hash: string, centerId?: number) => {
-  let query =
-    'UPDATE teachers SET username = $1, password_hash = $2, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $3 AND deleted_at IS NULL';
-  const params: any[] = [username, password_hash, id];
-  if (centerId) {
-    query += ' AND center_id = $4';
-    params.push(centerId);
-  }
-  query += ' RETURNING teacher_id, username, email';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
-};
+const setCredentials = (id: number, username: string, password_hash: string, centerId?: number) =>
+  db
+    .update(teachers)
+    .set({ username, passwordHash: password_hash, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...scopedTeacherConditions(id, centerId)))
+    .returning({ teacher_id: teachers.teacherId, username: teachers.username, email: teachers.email })
+    .then((rows: any[]) => rows[0] || null);
 
 const updatePasswordHash = (id: number, password_hash: string) =>
-  pool.query('UPDATE teachers SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE teacher_id = $2 AND deleted_at IS NULL', [
-    password_hash,
-    id,
-  ]);
+  db
+    .update(teachers)
+    .set({ passwordHash: password_hash, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(eq(teachers.teacherId, id), isNull(teachers.deletedAt)));
 
 module.exports = {
   findAll,

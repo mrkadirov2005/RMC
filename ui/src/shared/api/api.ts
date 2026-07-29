@@ -254,6 +254,11 @@ export const archiveAPI = {
     apiClient.delete(`/archive/${entity}/${id}/purge`),
 };
 
+export const reportAPI = {
+  retention: (params?: { month?: string; months?: number; limit?: number }) =>
+    apiClient.get('/reports/retention', { params }),
+};
+
 export const telegramRegistrationAPI = {
   getAll: (params?: { status?: string }) => apiClient.get('/telegram-registrations', { params }),
   convert: (id: number, data?: { class_id?: number; teacher_id?: number }) => apiClient.post(`/telegram-registrations/${id}/convert`, data),

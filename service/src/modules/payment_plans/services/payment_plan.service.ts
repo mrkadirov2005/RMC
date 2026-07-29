@@ -2,22 +2,12 @@ const paymentPlanRepository = require('../repositories/payment_plan.repository')
 const { studentInCenter } = require('../../../shared/tenantDb');
 
 const list = (query: { student_id?: string; center_id?: string; status?: string }, centerId?: number) => {
-  const params: any[] = [];
-  const conditions: string[] = [];
   const scopedCenterId = centerId ?? (query.center_id ? Number(query.center_id) : undefined);
-  if (query.student_id) {
-    params.push(query.student_id);
-    conditions.push(`student_id = $${params.length}`);
-  }
-  if (scopedCenterId) {
-    params.push(scopedCenterId);
-    conditions.push(`center_id = $${params.length}`);
-  }
-  if (query.status) {
-    params.push(query.status);
-    conditions.push(`status = $${params.length}`);
-  }
-  return paymentPlanRepository.findAllFiltered(conditions, params);
+  return paymentPlanRepository.findAllFiltered({
+    studentId: query.student_id ? Number(query.student_id) : undefined,
+    centerId: scopedCenterId,
+    status: query.status,
+  });
 };
 
 const getWithInstallments = async (id: number, centerId?: number) => {

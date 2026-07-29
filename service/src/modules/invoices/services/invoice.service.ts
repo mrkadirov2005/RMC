@@ -21,22 +21,12 @@ const calculateTotals = (items: any[], discount_total = 0, tax_total = 0) => {
 };
 
 const listInvoices = async (query: { student_id?: string; center_id?: string; status?: string }, centerId?: number) => {
-  const params: any[] = [];
-  const conditions: string[] = [];
   const scopedCenterId = centerId ?? (query.center_id ? Number(query.center_id) : undefined);
-  if (query.student_id) {
-    params.push(query.student_id);
-    conditions.push(`student_id = $${params.length}`);
-  }
-  if (scopedCenterId) {
-    params.push(scopedCenterId);
-    conditions.push(`center_id = $${params.length}`);
-  }
-  if (query.status) {
-    params.push(query.status);
-    conditions.push(`status = $${params.length}`);
-  }
-  return invoiceRepository.findAllFiltered(conditions, params);
+  return invoiceRepository.findAllFiltered({
+    studentId: query.student_id ? Number(query.student_id) : undefined,
+    centerId: scopedCenterId,
+    status: query.status,
+  });
 };
 
 const getInvoiceWithItems = async (id: number, centerId?: number) => {

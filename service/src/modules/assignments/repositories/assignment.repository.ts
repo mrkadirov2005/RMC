@@ -1,4 +1,6 @@
+const { and, desc, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { assignments, classes } = require('../../../db/schema');
 
 type AssignmentListOptions = {
   centerId?: number;
@@ -8,193 +10,96 @@ type AssignmentListOptions = {
   offset?: number;
 };
 
-const getAll = async (options: AssignmentListOptions = {}) => {
-  const { centerId, teacherId, classId, limit, offset } = options;
-  let query = 'SELECT a.* FROM assignments a';
-  const params: any[] = [];
-  const conditions: string[] = [];
+const db = pool.db;
 
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`a.center_id = $${params.length}`);
-  }
+const selection = {
+  assignment_id: assignments.assignmentId,
+  center_id: assignments.centerId,
+  class_id: assignments.classId,
+  subject_id: assignments.subjectId,
+  student_id: assignments.studentId,
+  teacher_id: assignments.teacherId,
+  assignment_title: assignments.assignmentTitle,
+  title: assignments.title,
+  description: assignments.description,
+  due_date: assignments.dueDate,
+  submission_date: assignments.submissionDate,
+  status: assignments.status,
+  grade: assignments.grade,
+  deleted_at: assignments.deletedAt,
+  created_at: assignments.createdAt,
+  updated_at: assignments.updatedAt,
+};
 
-  if (teacherId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(teacherId);
-    conditions.push(`c.teacher_id = $${params.length}`);
-  }
+const scopedConditions = (options: AssignmentListOptions = {}) => {
+  const conditions: any[] = [];
+  if (options.centerId) conditions.push(eq(assignments.centerId, options.centerId));
+  if (options.teacherId) conditions.push(eq(classes.teacherId, options.teacherId), isNull(classes.deletedAt));
+  if (options.classId) conditions.push(eq(assignments.classId, options.classId));
+  return conditions;
+};
 
-  if (classId) {
-    params.push(classId);
-    conditions.push(`a.class_id = $${params.length}`);
-  }
+const scopedQuery = (conditions: any[], teacherId?: number) => {
+  let query = db.select(selection).from(assignments);
+  if (teacherId) query = query.innerJoin(classes, eq(classes.classId, assignments.classId));
+  if (conditions.length) query = query.where(and(...conditions));
+  return query;
+};
 
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
-  }
-
-  query += ' ORDER BY a.assignment_id DESC';
-
-  if (limit) {
-    params.push(limit);
-    query += ` LIMIT $${params.length}`;
-  }
-
-  if (offset) {
-    params.push(offset);
-    query += ` OFFSET $${params.length}`;
-  }
-
-  const result = await pool.query(query, params);
-  return result.rows;
+const getAll = (options: AssignmentListOptions = {}) => {
+  let query = scopedQuery(scopedConditions(options), options.teacherId).orderBy(desc(assignments.assignmentId));
+  if (options.limit) query = query.limit(options.limit);
+  if (options.offset) query = query.offset(options.offset);
+  return query;
 };
 
 const getById = async (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT a.* FROM assignments a';
-  const params: any[] = [id];
-  const conditions: string[] = ['a.assignment_id = $1'];
-
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`a.center_id = $${params.length}`);
-  }
-
-  if (teacherId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(teacherId);
-    conditions.push(`c.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')}`;
-  const result = await pool.query(query, params);
-  return result.rows[0] || null;
+  const rows = await scopedQuery([eq(assignments.assignmentId, id), ...scopedConditions({ centerId, teacherId })], teacherId).limit(1);
+  return rows[0] || null;
 };
 
 const create = async (payload: any) => {
-  const { class_id, assignment_title, description, due_date, submission_date, status, grade, center_id, student_id, teacher_id } = payload;
-  const baseParams = [
-    class_id ?? null,
-    assignment_title,
-    description,
-    due_date,
-    submission_date,
-    status || 'Pending',
-    grade,
-  ];
-
-  const tryInsert = async (columns: string[], params: any[]) => {
-    const placeholders = params.map((_, index) => `$${index + 1}`).join(', ');
-    const result = await pool.query(
-      `INSERT INTO assignments (${columns.join(', ')}) VALUES (${placeholders}) RETURNING *`,
-      params
-    );
-    return result.rows[0];
-  };
-
-  try {
-    return await tryInsert(
-      [
-        'class_id',
-        'assignment_title',
-        'description',
-        'due_date',
-        'submission_date',
-        'status',
-        'grade',
-        'student_id',
-        'teacher_id',
-        'center_id',
-      ],
-      [...baseParams, student_id, teacher_id, center_id]
-    );
-  } catch (error: any) {
-    if (error?.code !== '42703') {
-      throw error;
-    }
-  }
-
-  try {
-    return await tryInsert(
-      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'student_id', 'teacher_id'],
-      [...baseParams, student_id, teacher_id]
-    );
-  } catch (error: any) {
-    if (error?.code !== '42703') {
-      throw error;
-    }
-  }
-
-  try {
-    return await tryInsert(
-      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'teacher_id'],
-      [...baseParams, teacher_id]
-    );
-  } catch (error: any) {
-    if (error?.code !== '42703') {
-      throw error;
-    }
-  }
-
-  try {
-    return await tryInsert(
-      ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade', 'center_id'],
-      [...baseParams, center_id]
-    );
-  } catch (error: any) {
-    if (error?.code !== '42703') {
-      throw error;
-    }
-  }
-
-  return tryInsert(
-    ['class_id', 'assignment_title', 'description', 'due_date', 'submission_date', 'status', 'grade'],
-    baseParams
-  );
+  const rows = await db
+    .insert(assignments)
+    .values({
+      classId: payload.class_id ?? null,
+      assignmentTitle: payload.assignment_title,
+      description: payload.description,
+      dueDate: payload.due_date,
+      submissionDate: payload.submission_date,
+      status: payload.status || 'Pending',
+      grade: payload.grade,
+      studentId: payload.student_id,
+      teacherId: payload.teacher_id,
+      centerId: payload.center_id,
+    })
+    .returning(selection);
+  return rows[0];
 };
 
 const update = async (id: number, payload: any, centerId?: number, teacherId?: number) => {
-  const { assignment_title, description, due_date, status, grade } = payload;
-  let query = `UPDATE assignments SET
-      assignment_title = COALESCE($1, assignment_title),
-      description = COALESCE($2, description),
-      due_date = COALESCE($3, due_date),
-      status = COALESCE($4, status),
-      grade = COALESCE($5, grade),
-      updated_at = CURRENT_TIMESTAMP
-    WHERE assignment_id = $6`;
-  const params: any[] = [assignment_title, description, due_date, status, grade, id];
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  if (teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    params.push(teacherId);
-    query += ` AND teacher_id = $${params.length}`;
-    query += ')';
-  }
-  query += ' RETURNING *';
-  const result = await pool.query(query, params);
-  return result.rows[0] || null;
+  const existing = await getById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(assignments)
+    .set({
+      assignmentTitle: sql`COALESCE(${payload.assignment_title ?? null}, ${assignments.assignmentTitle})`,
+      description: sql`COALESCE(${payload.description ?? null}, ${assignments.description})`,
+      dueDate: sql`COALESCE(${payload.due_date ?? null}, ${assignments.dueDate})`,
+      status: sql`COALESCE(${payload.status ?? null}, ${assignments.status})`,
+      grade: sql`COALESCE(${payload.grade ?? null}, ${assignments.grade})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(assignments.assignmentId, id))
+    .returning(selection);
+  return rows[0] || null;
 };
 
 const remove = async (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM assignments WHERE assignment_id = $1';
-  const params: any[] = [id];
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  if (teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    params.push(teacherId);
-    query += ` AND teacher_id = $${params.length}`;
-    query += ')';
-  }
-  query += ' RETURNING *';
-  const result = await pool.query(query, params);
-  return result.rows[0] || null;
+  const existing = await getById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db.delete(assignments).where(eq(assignments.assignmentId, id)).returning(selection);
+  return rows[0] || null;
 };
 
 module.exports = {

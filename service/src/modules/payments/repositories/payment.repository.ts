@@ -1,4 +1,6 @@
+const { and, desc, eq, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { classes, payments, students } = require('../../../db/schema');
 
 type PaymentListOptions = {
   centerId?: number;
@@ -8,173 +10,166 @@ type PaymentListOptions = {
   studentId?: number;
 };
 
+const db = pool.db;
+
+const paymentSelection = () => ({
+  payment_id: payments.paymentId,
+  student_id: payments.studentId,
+  center_id: payments.centerId,
+  payment_date: payments.paymentDate,
+  amount: payments.amount,
+  currency: payments.currency,
+  payment_method: payments.paymentMethod,
+  transaction_reference: payments.transactionReference,
+  receipt_number: payments.receiptNumber,
+  payment_status: payments.paymentStatus,
+  payment_type: payments.paymentType,
+  notes: payments.notes,
+  discount_id: payments.discountId,
+  discount_kind: payments.discountKind,
+  discount_value_type: payments.discountValueType,
+  discount_value: payments.discountValue,
+  original_amount: payments.originalAmount,
+  discount_amount: payments.discountAmount,
+  final_amount: payments.finalAmount,
+  is_complete: payments.isComplete,
+  deleted_at: payments.deletedAt,
+  created_at: payments.createdAt,
+  updated_at: payments.updatedAt,
+});
+
+const paymentListSelection = () => ({
+  ...paymentSelection(),
+  student_first_name: students.firstName,
+  student_last_name: students.lastName,
+  student_class_id: students.classId,
+  student_teacher_id: sql`COALESCE(${classes.teacherId}, ${students.teacherId})`,
+  student_status: students.status,
+  student_deleted_at: students.deletedAt,
+  student_class_name: classes.className,
+});
+
+const scopedPaymentConditions = (id: number, active: boolean, centerId?: number, teacherId?: number) => {
+  const conditions: any[] = [eq(payments.paymentId, id), active ? isNull(payments.deletedAt) : isNotNull(payments.deletedAt)];
+  if (centerId) conditions.push(eq(payments.centerId, centerId));
+  if (teacherId) conditions.push(sql`COALESCE(${classes.teacherId}, ${students.teacherId}) = ${teacherId}`);
+  return conditions;
+};
+
 const findAll = (options: PaymentListOptions = {}) => {
   const { centerId, teacherId, limit, offset, studentId } = options;
-  let query = `
-    SELECT
-      p.*,
-      s.first_name AS student_first_name,
-      s.last_name AS student_last_name,
-      s.class_id AS student_class_id,
-      s.teacher_id AS student_teacher_id,
-      s.status AS student_status,
-      s.deleted_at AS student_deleted_at,
-      c.class_name AS student_class_name
-    FROM payments p
-    LEFT JOIN students s ON s.student_id = p.student_id
-    LEFT JOIN classes c ON c.class_id = s.class_id
-  `;
-  const params: any[] = [];
-  const conditions: string[] = [];
-
+  const conditions: any[] = [isNull(payments.deletedAt)];
   if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
-    conditions.push(`(s.deleted_at IS NULL OR s.status = 'Transferred')`);
+    conditions.push(sql`COALESCE(${classes.teacherId}, ${students.teacherId}) = ${teacherId}`);
+    conditions.push(or(isNull(students.deletedAt), eq(students.status, 'Transferred')));
   }
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`p.center_id = $${params.length}`);
-  }
-  if (studentId) {
-    params.push(studentId);
-    conditions.push(`p.student_id = $${params.length}`);
-  }
-  conditions.push('p.deleted_at IS NULL');
+  if (centerId) conditions.push(eq(payments.centerId, centerId));
+  if (studentId) conditions.push(eq(payments.studentId, studentId));
 
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
-  }
-
-  query += ' ORDER BY p.payment_id DESC';
-  if (limit) {
-    params.push(limit);
-    query += ` LIMIT $${params.length}`;
-  }
-  if (offset) {
-    params.push(offset);
-    query += ` OFFSET $${params.length}`;
-  }
-  return pool.query(query, params).then((r: any) => r.rows);
+  let query = db
+    .select(paymentListSelection())
+    .from(payments)
+    .leftJoin(students, eq(students.studentId, payments.studentId))
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .where(and(...conditions))
+    .orderBy(desc(payments.paymentId));
+  if (limit) query = query.limit(limit);
+  if (offset) query = query.offset(offset);
+  return query;
 };
 
-const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT p.* FROM payments p WHERE p.payment_id = $1 AND p.deleted_at IS NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND p.center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND p.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findById = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await db
+    .select(paymentSelection())
+    .from(payments)
+    .leftJoin(students, eq(students.studentId, payments.studentId))
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .where(and(...scopedPaymentConditions(id, true, centerId, teacherId)))
+    .limit(1);
+  return rows[0] || null;
 };
 
-const insert = (params: any[], queryable: any = pool) =>
-  queryable
-    .query(
-      `INSERT INTO payments (
-        student_id,
-        center_id,
-        payment_date,
-        amount,
-        currency,
-        payment_method,
-        transaction_reference,
-        receipt_number,
-        payment_status,
-        payment_type,
-        notes,
-        discount_id,
-        discount_kind,
-        discount_value_type,
-        discount_value,
-        original_amount,
-        discount_amount,
-        final_amount,
-        is_complete
-      )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19) RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
-
-const withTransaction = async (callback: (client: any) => Promise<any>) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await callback(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+const insert = async (params: any[], queryable: any = db) => {
+  const rows = await queryable
+    .insert(payments)
+    .values({
+      studentId: params[0],
+      centerId: params[1],
+      paymentDate: params[2],
+      amount: params[3],
+      currency: params[4],
+      paymentMethod: params[5],
+      transactionReference: params[6],
+      receiptNumber: params[7],
+      paymentStatus: params[8],
+      paymentType: params[9],
+      notes: params[10],
+      discountId: params[11],
+      discountKind: params[12],
+      discountValueType: params[13],
+      discountValue: params[14],
+      originalAmount: params[15],
+      discountAmount: params[16],
+      finalAmount: params[17],
+      isComplete: params[18],
+    })
+    .returning(paymentSelection());
+  return rows[0];
 };
 
-const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
-  let query =
-    'UPDATE payments SET amount = COALESCE($1, amount), payment_status = COALESCE($2, payment_status), notes = COALESCE($3, notes), updated_at = CURRENT_TIMESTAMP WHERE payment_id = $4 AND deleted_at IS NULL';
-  const values: any[] = [...params, id];
-  if (centerId) {
-    query += ' AND center_id = $5';
-    values.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${values.length + 1} AND deleted_at IS NULL)`;
-    values.push(teacherId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, values).then((r: any) => r.rows[0] || null);
+const withTransaction = (callback: (tx: any) => Promise<any>) => db.transaction(callback);
+
+const update = async (id: number, params: any[], centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(payments)
+    .set({
+      amount: sql`COALESCE(${params[0] ?? null}, ${payments.amount})`,
+      paymentStatus: sql`COALESCE(${params[1] ?? null}, ${payments.paymentStatus})`,
+      notes: sql`COALESCE(${params[2] ?? null}, ${payments.notes})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(and(eq(payments.paymentId, id), isNull(payments.deletedAt)))
+    .returning(paymentSelection());
+  return rows[0] || null;
 };
 
 const findByStudent = (studentId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT p.* FROM payments p WHERE p.student_id = $1 AND p.deleted_at IS NULL';
-  const params: any[] = [studentId];
-  if (centerId) {
-    query += ' AND p.center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND p.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  query += ' ORDER BY payment_date DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+  const conditions: any[] = [eq(payments.studentId, studentId), isNull(payments.deletedAt)];
+  if (centerId) conditions.push(eq(payments.centerId, centerId));
+  if (teacherId) conditions.push(sql`COALESCE(${classes.teacherId}, ${students.teacherId}) = ${teacherId}`);
+  return db
+    .select(paymentSelection())
+    .from(payments)
+    .leftJoin(students, eq(students.studentId, payments.studentId))
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .where(and(...conditions))
+    .orderBy(desc(payments.paymentDate), desc(payments.paymentId));
 };
 
-const remove = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'UPDATE payments SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE payment_id = $1 AND deleted_at IS NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const remove = async (id: number, centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(payments)
+    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(eq(payments.paymentId, id), isNull(payments.deletedAt)))
+    .returning(paymentSelection());
+  return rows[0] || null;
 };
 
-const purge = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM payments WHERE payment_id = $1 AND deleted_at IS NOT NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const purge = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await db
+    .select(paymentSelection())
+    .from(payments)
+    .leftJoin(students, eq(students.studentId, payments.studentId))
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .where(and(...scopedPaymentConditions(id, false, centerId, teacherId)))
+    .limit(1);
+  if (!rows[0]) return null;
+  const deleted = await db.delete(payments).where(and(eq(payments.paymentId, id), isNotNull(payments.deletedAt))).returning(paymentSelection());
+  return deleted[0] || null;
 };
 
 module.exports = { findAll, findById, insert, withTransaction, update, findByStudent, remove, purge };

@@ -1,31 +1,43 @@
+const { and, desc, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { studentCoinTransactions, students } = require('../../../db/schema');
 
-const findStudentForUpdate = async (client: any, studentId: number) => {
-  const result = await client.query(
-    'SELECT student_id, center_id, teacher_id, coins FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE',
-    [studentId]
-  );
-  return result.rows[0] || null;
+const db = pool.db;
+
+const txSelection = {
+  transaction_id: studentCoinTransactions.transactionId,
+  student_id: studentCoinTransactions.studentId,
+  center_id: studentCoinTransactions.centerId,
+  delta: studentCoinTransactions.delta,
+  reason: studentCoinTransactions.reason,
+  created_by: studentCoinTransactions.createdBy,
+  created_by_type: studentCoinTransactions.createdByType,
+  source_type: studentCoinTransactions.sourceType,
+  source_id: studentCoinTransactions.sourceId,
+  metadata: studentCoinTransactions.metadata,
+  created_at: studentCoinTransactions.createdAt,
+  updated_at: studentCoinTransactions.updatedAt,
 };
 
-const listTransactions = async (studentId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT t.* FROM student_coin_transactions t JOIN students s ON s.student_id = t.student_id AND s.deleted_at IS NULL';
-  const params: any[] = [studentId];
-  const conditions: string[] = ['t.student_id = $1'];
+const findStudent = async (queryable: any, studentId: number) => {
+  const rows = await queryable
+    .select({ student_id: students.studentId, center_id: students.centerId, teacher_id: students.teacherId, coins: students.coins })
+    .from(students)
+    .where(and(eq(students.studentId, studentId), isNull(students.deletedAt)))
+    .limit(1);
+  return rows[0] || null;
+};
 
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`s.center_id = $${params.length}`);
-  }
-
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')} ORDER BY t.transaction_id DESC`;
-  const result = await pool.query(query, params);
-  return result.rows;
+const listTransactions = (studentId: number, centerId?: number, teacherId?: number) => {
+  const conditions = [eq(studentCoinTransactions.studentId, studentId), isNull(students.deletedAt)];
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  if (teacherId) conditions.push(eq(students.teacherId, teacherId));
+  return db
+    .select(txSelection)
+    .from(studentCoinTransactions)
+    .innerJoin(students, eq(students.studentId, studentCoinTransactions.studentId))
+    .where(and(...conditions))
+    .orderBy(desc(studentCoinTransactions.transactionId));
 };
 
 const addTransaction = async (
@@ -34,47 +46,28 @@ const addTransaction = async (
   reason: string | null,
   createdBy: number | null,
   createdByType: string | null
-) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const student = await findStudentForUpdate(client, studentId);
-    if (!student) {
-      await client.query('ROLLBACK');
-      return { error: 'not_found' as const };
-    }
+) =>
+  db.transaction(async (tx: any) => {
+    const student = await findStudent(tx, studentId);
+    if (!student) return { error: 'not_found' as const };
 
     const currentCoins = Number(student.coins || 0);
     const nextCoins = currentCoins + delta;
-    // Note: Allow coins to go negative (students can lose coins for poor performance)
-    // Only reject if delta would make coins go below a minimum threshold
-    const MIN_COINS = -9999; // Allow significant negative balance
-    if (nextCoins < MIN_COINS) {
-      await client.query('ROLLBACK');
-      return { error: 'insufficient' as const, balance: currentCoins };
-    }
+    const MIN_COINS = -9999;
+    if (nextCoins < MIN_COINS) return { error: 'insufficient' as const, balance: currentCoins };
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
-      nextCoins,
-      studentId,
-    ]);
+    await tx
+      .update(students)
+      .set({ coins: nextCoins, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(eq(students.studentId, studentId), isNull(students.deletedAt)));
 
-    const tx = await client.query(
-      `INSERT INTO student_coin_transactions (student_id, center_id, delta, reason, created_by, created_by_type)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING *`,
-      [studentId, student.center_id, delta, reason, createdBy, createdByType]
-    );
+    const rows = await tx
+      .insert(studentCoinTransactions)
+      .values({ studentId, centerId: student.center_id, delta, reason, createdBy, createdByType })
+      .returning(txSelection);
 
-    await client.query('COMMIT');
-    return { balance: nextCoins, transaction: tx.rows[0] };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-};
+    return { balance: nextCoins, transaction: rows[0] };
+  });
 
 const upsertSourceTransaction = async (
   studentId: number,
@@ -84,159 +77,103 @@ const upsertSourceTransaction = async (
   sourceId: number,
   createdBy: number | null,
   createdByType: string | null
-) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const student = await findStudentForUpdate(client, studentId);
-    if (!student) {
-      await client.query('ROLLBACK');
-      return { error: 'not_found' as const };
-    }
+) =>
+  db.transaction(async (tx: any) => {
+    const student = await findStudent(tx, studentId);
+    if (!student) return { error: 'not_found' as const };
 
-    const existingRes = await client.query(
-      `SELECT transaction_id, delta
-       FROM student_coin_transactions
-       WHERE student_id = $1 AND source_type = $2 AND source_id = $3
-       FOR UPDATE`,
-      [studentId, sourceType, sourceId]
-    );
-    const existing = existingRes.rows[0];
+    const existingRows = await tx
+      .select({ transaction_id: studentCoinTransactions.transactionId, delta: studentCoinTransactions.delta })
+      .from(studentCoinTransactions)
+      .where(and(eq(studentCoinTransactions.studentId, studentId), eq(studentCoinTransactions.sourceType, sourceType), eq(studentCoinTransactions.sourceId, sourceId)))
+      .limit(1);
+    const existing = existingRows[0];
     const previousDelta = Number(existing?.delta || 0);
     const currentCoins = Number(student.coins || 0);
     const nextCoins = currentCoins + (delta - previousDelta);
     const MIN_COINS = -9999;
-    if (nextCoins < MIN_COINS) {
-      await client.query('ROLLBACK');
-      return { error: 'insufficient' as const, balance: currentCoins };
-    }
+    if (nextCoins < MIN_COINS) return { error: 'insufficient' as const, balance: currentCoins };
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
-      nextCoins,
-      studentId,
-    ]);
+    await tx
+      .update(students)
+      .set({ coins: nextCoins, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(eq(students.studentId, studentId), isNull(students.deletedAt)));
 
-    const tx = existing
-      ? await client.query(
-          `UPDATE student_coin_transactions
-           SET delta = $1, reason = $2, created_by = $3, created_by_type = $4, updated_at = CURRENT_TIMESTAMP
-           WHERE transaction_id = $5
-           RETURNING *`,
-          [delta, reason, createdBy, createdByType, existing.transaction_id]
-        )
-      : await client.query(
-          `INSERT INTO student_coin_transactions
-             (student_id, center_id, delta, reason, created_by, created_by_type, source_type, source_id)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-           RETURNING *`,
-          [studentId, student.center_id, delta, reason, createdBy, createdByType, sourceType, sourceId]
-        );
+    const rows = existing
+      ? await tx
+          .update(studentCoinTransactions)
+          .set({ delta, reason, createdBy, createdByType, updatedAt: sql`CURRENT_TIMESTAMP` })
+          .where(eq(studentCoinTransactions.transactionId, existing.transaction_id))
+          .returning(txSelection)
+      : await tx
+          .insert(studentCoinTransactions)
+          .values({ studentId, centerId: student.center_id, delta, reason, createdBy, createdByType, sourceType, sourceId })
+          .returning(txSelection);
 
-    await client.query('COMMIT');
-    return { balance: nextCoins, transaction: tx.rows[0] };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-};
+    return { balance: nextCoins, transaction: rows[0] };
+  });
 
 const updateTransaction = async (
   studentId: number,
   transactionId: number,
   delta: number,
   reason: string | null
-) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const student = await findStudentForUpdate(client, studentId);
-    if (!student) {
-      await client.query('ROLLBACK');
-      return { error: 'not_found' as const };
-    }
+) =>
+  db.transaction(async (tx: any) => {
+    const student = await findStudent(tx, studentId);
+    if (!student) return { error: 'not_found' as const };
 
-    const txRes = await client.query(
-      'SELECT delta FROM student_coin_transactions WHERE transaction_id = $1 AND student_id = $2 FOR UPDATE',
-      [transactionId, studentId]
-    );
-    const existing = txRes.rows[0];
-    if (!existing) {
-      await client.query('ROLLBACK');
-      return { error: 'tx_not_found' as const };
-    }
+    const existingRows = await tx
+      .select({ delta: studentCoinTransactions.delta })
+      .from(studentCoinTransactions)
+      .where(and(eq(studentCoinTransactions.transactionId, transactionId), eq(studentCoinTransactions.studentId, studentId)))
+      .limit(1);
+    const existing = existingRows[0];
+    if (!existing) return { error: 'tx_not_found' as const };
 
     const currentCoins = Number(student.coins || 0);
     const nextCoins = currentCoins + (delta - Number(existing.delta));
-    if (nextCoins < 0) {
-      await client.query('ROLLBACK');
-      return { error: 'insufficient' as const, balance: currentCoins };
-    }
+    if (nextCoins < 0) return { error: 'insufficient' as const, balance: currentCoins };
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
-      nextCoins,
-      studentId,
-    ]);
+    await tx
+      .update(students)
+      .set({ coins: nextCoins, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(eq(students.studentId, studentId), isNull(students.deletedAt)));
 
-    const updated = await client.query(
-      'UPDATE student_coin_transactions SET delta = $1, reason = $2, updated_at = CURRENT_TIMESTAMP WHERE transaction_id = $3 RETURNING *',
-      [delta, reason, transactionId]
-    );
+    const rows = await tx
+      .update(studentCoinTransactions)
+      .set({ delta, reason, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(studentCoinTransactions.transactionId, transactionId))
+      .returning(txSelection);
 
-    await client.query('COMMIT');
-    return { balance: nextCoins, transaction: updated.rows[0] };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-};
+    return { balance: nextCoins, transaction: rows[0] };
+  });
 
-const deleteTransaction = async (studentId: number, transactionId: number) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const student = await findStudentForUpdate(client, studentId);
-    if (!student) {
-      await client.query('ROLLBACK');
-      return { error: 'not_found' as const };
-    }
+const deleteTransaction = async (studentId: number, transactionId: number) =>
+  db.transaction(async (tx: any) => {
+    const student = await findStudent(tx, studentId);
+    if (!student) return { error: 'not_found' as const };
 
-    const txRes = await client.query(
-      'SELECT delta FROM student_coin_transactions WHERE transaction_id = $1 AND student_id = $2 FOR UPDATE',
-      [transactionId, studentId]
-    );
-    const existing = txRes.rows[0];
-    if (!existing) {
-      await client.query('ROLLBACK');
-      return { error: 'tx_not_found' as const };
-    }
+    const existingRows = await tx
+      .select({ delta: studentCoinTransactions.delta })
+      .from(studentCoinTransactions)
+      .where(and(eq(studentCoinTransactions.transactionId, transactionId), eq(studentCoinTransactions.studentId, studentId)))
+      .limit(1);
+    const existing = existingRows[0];
+    if (!existing) return { error: 'tx_not_found' as const };
 
     const currentCoins = Number(student.coins || 0);
     const nextCoins = currentCoins - Number(existing.delta);
-    if (nextCoins < 0) {
-      await client.query('ROLLBACK');
-      return { error: 'insufficient' as const, balance: currentCoins };
-    }
+    if (nextCoins < 0) return { error: 'insufficient' as const, balance: currentCoins };
 
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
-      nextCoins,
-      studentId,
-    ]);
+    await tx
+      .update(students)
+      .set({ coins: nextCoins, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(eq(students.studentId, studentId), isNull(students.deletedAt)));
 
-    await client.query('DELETE FROM student_coin_transactions WHERE transaction_id = $1', [transactionId]);
-
-    await client.query('COMMIT');
+    await tx.delete(studentCoinTransactions).where(eq(studentCoinTransactions.transactionId, transactionId));
     return { balance: nextCoins };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
-};
+  });
 
 module.exports = {
   listTransactions,

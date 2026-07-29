@@ -1,9 +1,12 @@
 const gradeRepository = require('../repositories/grade.repository');
+const { and, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { attendance, grades, studentCoinTransactions, students } = require('../../../db/schema');
 const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
 const studentService = require('../../students/services/student.service');
 const { calculateCoins } = require('../../../utils/coinCalculator');
 const settingsService = require('../../settings/services/settings.service');
+const db = pool.db;
 
 const listGrades = (centerId?: number, teacherId?: number, studentId?: number) =>
   gradeRepository.findAll(centerId, teacherId, studentId);
@@ -210,112 +213,143 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
   return row;
 };
 
-const upsertAttendanceInTransaction = (client: any, payload: any) =>
-  client
-    .query(
-      `INSERT INTO attendance (center_id, student_id, teacher_id, class_id, session_id, attendance_date, status, remarks)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (student_id, session_id) WHERE session_id IS NOT NULL
-       DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         teacher_id = EXCLUDED.teacher_id,
-         class_id = EXCLUDED.class_id,
-         attendance_date = EXCLUDED.attendance_date,
-         status = EXCLUDED.status,
-         remarks = EXCLUDED.remarks
-       RETURNING *`,
-      [
-        payload.center_id,
-        payload.student_id,
-        payload.teacher_id,
-        payload.class_id,
-        payload.session_id,
-        payload.attendance_date,
-        payload.status || 'Present',
-        payload.remarks,
-      ]
-    )
-    .then((r: any) => r.rows[0]);
+const attendanceSelection = {
+  attendance_id: attendance.attendanceId,
+  center_id: attendance.centerId,
+  student_id: attendance.studentId,
+  teacher_id: attendance.teacherId,
+  class_id: attendance.classId,
+  session_id: attendance.sessionId,
+  attendance_date: attendance.attendanceDate,
+  status: attendance.status,
+  remarks: attendance.remarks,
+};
 
-const upsertSessionScoreInTransaction = (client: any, payload: any) =>
-  client
-    .query(
-      `INSERT INTO grades (
-         student_id,
-         teacher_id,
-         subject,
-         class_id,
-         session_id,
-         total_marks,
-         academic_year,
-         term,
-         center_id,
-         attendance_score,
-         homework_score,
-         activity_score,
-         points_score,
-         marks_obtained,
-         percentage
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-         (COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0) + COALESCE($13, 0)),
-         CASE
-           WHEN $6 > 0 THEN
-             ROUND((COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0) + COALESCE($13, 0)) * 100.0 / $6, 2)
-           ELSE NULL
-         END
-       )
-       ON CONFLICT (student_id, session_id) WHERE session_id IS NOT NULL
-       DO UPDATE SET
-         attendance_score = COALESCE(EXCLUDED.attendance_score, grades.attendance_score),
-         homework_score = COALESCE(EXCLUDED.homework_score, grades.homework_score),
-         activity_score = COALESCE(EXCLUDED.activity_score, grades.activity_score),
-         points_score = COALESCE(EXCLUDED.points_score, grades.points_score),
-         total_marks = COALESCE(EXCLUDED.total_marks, grades.total_marks, 100),
-         subject = COALESCE(EXCLUDED.subject, grades.subject),
-         teacher_id = COALESCE(EXCLUDED.teacher_id, grades.teacher_id),
-         class_id = COALESCE(EXCLUDED.class_id, grades.class_id),
-         academic_year = COALESCE(EXCLUDED.academic_year, grades.academic_year),
-         term = COALESCE(EXCLUDED.term, grades.term),
-         center_id = COALESCE(EXCLUDED.center_id, grades.center_id),
-         marks_obtained = (
-           COALESCE(EXCLUDED.attendance_score, grades.attendance_score, 0) +
-           COALESCE(EXCLUDED.homework_score, grades.homework_score, 0) +
-           COALESCE(EXCLUDED.activity_score, grades.activity_score, 0) +
-           COALESCE(EXCLUDED.points_score, grades.points_score, 0)
-         ),
-         percentage = CASE
-           WHEN COALESCE(EXCLUDED.total_marks, grades.total_marks, 100) > 0 THEN
-             ROUND(
-               (
-                 COALESCE(EXCLUDED.attendance_score, grades.attendance_score, 0) +
-                 COALESCE(EXCLUDED.homework_score, grades.homework_score, 0) +
-                 COALESCE(EXCLUDED.activity_score, grades.activity_score, 0) +
-                 COALESCE(EXCLUDED.points_score, grades.points_score, 0)
-               ) * 100.0 / COALESCE(EXCLUDED.total_marks, grades.total_marks, 100),
-               2
-             )
-           ELSE NULL
-         END,
-         updated_at = CURRENT_TIMESTAMP
-       RETURNING *`,
-      [
-        payload.student_id,
-        payload.teacher_id,
-        payload.subject || 'Session',
-        payload.class_id,
-        payload.session_id,
-        payload.total_marks || 100,
-        payload.academic_year,
-        payload.term,
-        payload.center_id,
-        payload.attendance_score ?? null,
-        payload.homework_score ?? null,
-        payload.activity_score ?? null,
-        payload.points_score ?? null,
-      ]
-    )
-    .then((r: any) => r.rows[0]);
+const gradeSelection = {
+  grade_id: grades.gradeId,
+  center_id: grades.centerId,
+  student_id: grades.studentId,
+  teacher_id: grades.teacherId,
+  subject: grades.subject,
+  class_id: grades.classId,
+  session_id: grades.sessionId,
+  total_marks: grades.totalMarks,
+  attendance_score: grades.attendanceScore,
+  homework_score: grades.homeworkScore,
+  activity_score: grades.activityScore,
+  points_score: grades.pointsScore,
+  marks_obtained: grades.marksObtained,
+  percentage: grades.percentage,
+  academic_year: grades.academicYear,
+  term: grades.term,
+};
+
+const calculateSessionScore = (payload: any) => {
+  const totalMarks = Number(payload.total_marks || 100);
+  const marks =
+    Number(payload.attendance_score || 0) +
+    Number(payload.homework_score || 0) +
+    Number(payload.activity_score || 0) +
+    Number(payload.points_score || 0);
+  return {
+    marksObtained: marks,
+    percentage: totalMarks > 0 ? Number(((marks * 100) / totalMarks).toFixed(2)) : null,
+  };
+};
+
+const upsertAttendanceInTransaction = async (tx: any, payload: any) => {
+  const existing = await tx
+    .select({ attendance_id: attendance.attendanceId })
+    .from(attendance)
+    .where(and(eq(attendance.studentId, payload.student_id), eq(attendance.sessionId, payload.session_id)))
+    .limit(1);
+  const values = {
+    centerId: payload.center_id,
+    studentId: payload.student_id,
+    teacherId: payload.teacher_id,
+    classId: payload.class_id,
+    sessionId: payload.session_id,
+    attendanceDate: payload.attendance_date,
+    status: payload.status || 'Present',
+    remarks: payload.remarks,
+  };
+  if (existing[0]) {
+    const rows = await tx.update(attendance).set(values).where(eq(attendance.attendanceId, existing[0].attendance_id)).returning(attendanceSelection);
+    return rows[0];
+  }
+  const rows = await tx.insert(attendance).values(values).returning(attendanceSelection);
+  return rows[0];
+};
+
+const upsertSessionScoreInTransaction = async (tx: any, payload: any) => {
+  const normalized = {
+    ...payload,
+    subject: payload.subject || 'Session',
+    total_marks: payload.total_marks || 100,
+    attendance_score: payload.attendance_score ?? null,
+    homework_score: payload.homework_score ?? null,
+    activity_score: payload.activity_score ?? null,
+    points_score: payload.points_score ?? null,
+  };
+  const totals = calculateSessionScore(normalized);
+  const existing = await tx
+    .select(gradeSelection)
+    .from(grades)
+    .where(and(eq(grades.studentId, normalized.student_id), eq(grades.sessionId, normalized.session_id)))
+    .limit(1);
+  if (existing[0]) {
+    const merged = {
+      attendance_score: normalized.attendance_score ?? existing[0].attendance_score,
+      homework_score: normalized.homework_score ?? existing[0].homework_score,
+      activity_score: normalized.activity_score ?? existing[0].activity_score,
+      points_score: normalized.points_score ?? existing[0].points_score,
+      total_marks: normalized.total_marks ?? existing[0].total_marks ?? 100,
+    };
+    const mergedTotals = calculateSessionScore(merged);
+    const rows = await tx
+      .update(grades)
+      .set({
+        attendanceScore: merged.attendance_score,
+        homeworkScore: merged.homework_score,
+        activityScore: merged.activity_score,
+        pointsScore: merged.points_score,
+        totalMarks: merged.total_marks,
+        subject: normalized.subject ?? existing[0].subject,
+        teacherId: normalized.teacher_id ?? existing[0].teacher_id,
+        classId: normalized.class_id ?? existing[0].class_id,
+        academicYear: normalized.academic_year ?? existing[0].academic_year,
+        term: normalized.term ?? existing[0].term,
+        centerId: normalized.center_id ?? existing[0].center_id,
+        marksObtained: mergedTotals.marksObtained,
+        percentage: mergedTotals.percentage,
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      })
+      .where(eq(grades.gradeId, existing[0].grade_id))
+      .returning(gradeSelection);
+    return rows[0];
+  }
+  const rows = await tx
+    .insert(grades)
+    .values({
+      studentId: normalized.student_id,
+      teacherId: normalized.teacher_id,
+      subject: normalized.subject,
+      classId: normalized.class_id,
+      sessionId: normalized.session_id,
+      totalMarks: normalized.total_marks,
+      academicYear: normalized.academic_year,
+      term: normalized.term,
+      centerId: normalized.center_id,
+      attendanceScore: normalized.attendance_score,
+      homeworkScore: normalized.homework_score,
+      activityScore: normalized.activity_score,
+      pointsScore: normalized.points_score,
+      marksObtained: totals.marksObtained,
+      percentage: totals.percentage,
+    })
+    .returning(gradeSelection);
+  return rows[0];
+};
 
 const calculateCoinsFromMapping = (marksObtained: number, totalMarks: number, mapping: any[]) => {
   if (!totalMarks || totalMarks <= 0) return 0;
@@ -334,93 +368,85 @@ const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId
   const coinsToAdd = baseCoins + stellarBonusCoins;
   const reason = `Academic performance: ${marksNum}/${totalNum} in ${grade.subject}${stellarBonusCoins > 0 ? ` | Stellar student bonus: +${stellarBonusCoins}` : ''}`;
 
-  const studentRes = await client.query(
-    'SELECT student_id, center_id, coins FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE',
-    [grade.student_id]
-  );
-  const student = studentRes.rows[0];
+  const studentRows = await client
+    .select({ student_id: students.studentId, center_id: students.centerId, coins: students.coins })
+    .from(students)
+    .where(and(eq(students.studentId, grade.student_id), isNull(students.deletedAt)))
+    .limit(1);
+  const student = studentRows[0];
   if (!student) return { error: 'student_not_found' as const };
 
-  const existingRes = await client.query(
-    `SELECT transaction_id, delta
-     FROM student_coin_transactions
-     WHERE student_id = $1 AND source_type = $2 AND source_id = $3
-     FOR UPDATE`,
-    [grade.student_id, 'lesson_session', Number(grade.session_id)]
-  );
-  const existing = existingRes.rows[0];
+  const existingRows = await client
+    .select({ transaction_id: studentCoinTransactions.transactionId, delta: studentCoinTransactions.delta })
+    .from(studentCoinTransactions)
+    .where(and(eq(studentCoinTransactions.studentId, grade.student_id), eq(studentCoinTransactions.sourceType, 'lesson_session'), eq(studentCoinTransactions.sourceId, Number(grade.session_id))))
+    .limit(1);
+  const existing = existingRows[0];
   const previousDelta = Number(existing?.delta || 0);
   const nextCoins = Number(student.coins || 0) + (coinsToAdd - previousDelta);
   if (nextCoins < -9999) return { error: 'insufficient' as const, balance: Number(student.coins || 0) };
 
-  await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
-    nextCoins,
-    grade.student_id,
-  ]);
+  await client
+    .update(students)
+    .set({ coins: nextCoins, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(eq(students.studentId, grade.student_id), isNull(students.deletedAt)));
 
   const tx = existing
-    ? await client.query(
-        `UPDATE student_coin_transactions
-         SET delta = $1, reason = $2, created_by = $3, created_by_type = $4, updated_at = CURRENT_TIMESTAMP
-         WHERE transaction_id = $5
-         RETURNING *`,
-        [coinsToAdd, reason, teacherId, 'teacher', existing.transaction_id]
-      )
-    : await client.query(
-        `INSERT INTO student_coin_transactions
-           (student_id, center_id, delta, reason, created_by, created_by_type, source_type, source_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING *`,
-        [grade.student_id, student.center_id, coinsToAdd, reason, teacherId, 'teacher', 'lesson_session', Number(grade.session_id)]
-      );
+    ? await client
+        .update(studentCoinTransactions)
+        .set({ delta: coinsToAdd, reason, createdBy: teacherId, createdByType: 'teacher', updatedAt: sql`CURRENT_TIMESTAMP` })
+        .where(eq(studentCoinTransactions.transactionId, existing.transaction_id))
+        .returning()
+    : await client
+        .insert(studentCoinTransactions)
+        .values({
+          studentId: grade.student_id,
+          centerId: student.center_id,
+          delta: coinsToAdd,
+          reason,
+          createdBy: teacherId,
+          createdByType: 'teacher',
+          sourceType: 'lesson_session',
+          sourceId: Number(grade.session_id),
+        })
+        .returning();
 
-  await client.query(
-    `UPDATE grades
-     SET base_coin = $1,
-         total_daily_coin = $2,
-         coin_comment = $3,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE grade_id = $4`,
-    [baseCoins, coinsToAdd, reason, grade.grade_id]
-  );
+  await client
+    .update(grades)
+    .set({ baseCoin: baseCoins, totalDailyCoin: coinsToAdd, coinComment: reason, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(grades.gradeId, grade.grade_id));
 
-  return { balance: nextCoins, transaction: tx.rows[0] };
+  return { balance: nextCoins, transaction: tx[0] };
 };
 
 const clearLessonCoinsInTransaction = async (client: any, grade: any) => {
-  const studentRes = await client.query(
-    'SELECT student_id, coins FROM students WHERE student_id = $1 AND deleted_at IS NULL FOR UPDATE',
-    [grade.student_id]
-  );
-  const student = studentRes.rows[0];
+  const studentRows = await client
+    .select({ student_id: students.studentId, coins: students.coins })
+    .from(students)
+    .where(and(eq(students.studentId, grade.student_id), isNull(students.deletedAt)))
+    .limit(1);
+  const student = studentRows[0];
   if (!student) return null;
 
-  const existingRes = await client.query(
-    `SELECT transaction_id, delta
-     FROM student_coin_transactions
-     WHERE student_id = $1 AND source_type = $2 AND source_id = $3
-     FOR UPDATE`,
-    [grade.student_id, 'lesson_session', Number(grade.session_id)]
-  );
-  const existing = existingRes.rows[0];
+  const existingRows = await client
+    .select({ transaction_id: studentCoinTransactions.transactionId, delta: studentCoinTransactions.delta })
+    .from(studentCoinTransactions)
+    .where(and(eq(studentCoinTransactions.studentId, grade.student_id), eq(studentCoinTransactions.sourceType, 'lesson_session'), eq(studentCoinTransactions.sourceId, Number(grade.session_id))))
+    .limit(1);
+  const existing = existingRows[0];
   if (existing) {
     const nextCoins = Number(student.coins || 0) - Number(existing.delta || 0);
-    await client.query('UPDATE students SET coins = $1, updated_at = CURRENT_TIMESTAMP WHERE student_id = $2 AND deleted_at IS NULL', [
-      nextCoins,
-      grade.student_id,
-    ]);
-    await client.query('DELETE FROM student_coin_transactions WHERE transaction_id = $1', [existing.transaction_id]);
+    await client
+      .update(students)
+      .set({ coins: nextCoins, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(eq(students.studentId, grade.student_id), isNull(students.deletedAt)));
+    await client.delete(studentCoinTransactions).where(eq(studentCoinTransactions.transactionId, existing.transaction_id));
   }
 
-  await client.query(
-    `UPDATE grades
-     SET base_coin = 0,
-         total_daily_coin = 0,
-         coin_comment = NULL,
-         updated_at = CURRENT_TIMESTAMP
-     WHERE grade_id = $1`,
-    [grade.grade_id]
-  );
+  await client
+    .update(grades)
+    .set({ baseCoin: 0, totalDailyCoin: 0, coinComment: null, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(grades.gradeId, grade.grade_id));
 
   return existing || null;
 };
@@ -451,10 +477,7 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
   }
   const scoringSettings = await settingsService.getLessonScoring(resolvedCenterId);
 
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-
+  return db.transaction(async (client: any) => {
     const attendanceRows: any[] = [];
     const gradeRows: any[] = [];
     const coinRows: any[] = [];
@@ -464,11 +487,12 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
       if (!studentId) throw new Error('student_id is required for every record');
 
       if (resolvedCenterId) {
-        const studentRes = await client.query(
-          'SELECT student_id FROM students WHERE student_id = $1 AND center_id = $2 AND deleted_at IS NULL',
-          [studentId, resolvedCenterId]
-        );
-        if (studentRes.rowCount === 0) throw new Error(`Student ${studentId} does not belong to this center.`);
+        const studentRows = await client
+          .select({ student_id: students.studentId })
+          .from(students)
+          .where(and(eq(students.studentId, studentId), eq(students.centerId, resolvedCenterId), isNull(students.deletedAt)))
+          .limit(1);
+        if (studentRows.length === 0) throw new Error(`Student ${studentId} does not belong to this center.`);
       }
 
       if (record.attendance_status) {
@@ -510,14 +534,8 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
       }
     }
 
-    await client.query('COMMIT');
     return { attendance: attendanceRows, grades: gradeRows, coins: coinRows };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  });
 };
 
 module.exports = {

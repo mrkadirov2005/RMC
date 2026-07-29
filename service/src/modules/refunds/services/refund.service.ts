@@ -2,21 +2,11 @@ const refundRepository = require('../repositories/refund.repository');
 const paymentRepository = require('../../payments/repositories/payment.repository');
 
 const list = (query: { payment_id?: string; status?: string }, centerId?: number) => {
-  const params: any[] = [];
-  const conditions: string[] = [];
-  if (query.payment_id) {
-    params.push(query.payment_id);
-    conditions.push(`payment_id = $${params.length}`);
-  }
-  if (query.status) {
-    params.push(query.status);
-    conditions.push(`status = $${params.length}`);
-  }
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`payment_id IN (SELECT payment_id FROM payments WHERE center_id = $${params.length} AND deleted_at IS NULL)`);
-  }
-  return refundRepository.findAllFiltered(conditions, params);
+  return refundRepository.findAllFiltered({
+    paymentId: query.payment_id ? Number(query.payment_id) : undefined,
+    status: query.status,
+    centerId,
+  });
 };
 
 const getById = async (id: number, centerId?: number) => {

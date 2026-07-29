@@ -1,178 +1,161 @@
+const { and, asc, desc, eq, gte, isNull, lte, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { debts, payments, students } = require('../../../db/schema');
+
+const db = pool.db;
+
+const debtSelection = {
+  debt_id: debts.debtId,
+  center_id: debts.centerId,
+  student_id: debts.studentId,
+  debt_amount: debts.debtAmount,
+  debt_date: debts.debtDate,
+  due_date: debts.dueDate,
+  amount_paid: debts.amountPaid,
+  balance: debts.balance,
+  remarks: debts.remarks,
+  status: debts.status,
+  created_at: debts.createdAt,
+  updated_at: debts.updatedAt,
+};
+
+const scopedDebtConditions = (centerId?: number, teacherId?: number) => {
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(debts.centerId, centerId));
+  if (teacherId) conditions.push(eq(students.teacherId, teacherId), isNull(students.deletedAt));
+  return conditions;
+};
+
+const debtQuery = (conditions: any[], teacherId?: number, orderBy: any = desc(debts.debtId)) => {
+  let query = db.select(debtSelection).from(debts);
+  if (teacherId) query = query.innerJoin(students, eq(students.studentId, debts.studentId));
+  return query.where(and(...conditions)).orderBy(orderBy);
+};
 
 const findAll = (centerId?: number, teacherId?: number) => {
-  let query = 'SELECT d.* FROM debts d';
-  const params: any[] = [];
-  const conditions: string[] = [];
-
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`d.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    query += ' JOIN students s ON s.student_id = d.student_id AND s.deleted_at IS NULL';
-    params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
-  }
-
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
-  }
-  query += ' ORDER BY d.debt_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+  const conditions = scopedDebtConditions(centerId, teacherId);
+  return debtQuery(conditions.length ? conditions : [sql`TRUE`], teacherId);
 };
 
-const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT d.* FROM debts d WHERE d.debt_id = $1';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND d.center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND d.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findById = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await debtQuery([eq(debts.debtId, id), ...scopedDebtConditions(centerId, teacherId)], teacherId).limit(1);
+  return rows[0] || null;
 };
 
-const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO debts (student_id, center_id, debt_amount, debt_date, due_date, amount_paid, balance, remarks)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
-
-const findAmounts = (id: number) =>
-  pool.query('SELECT debt_amount, amount_paid FROM debts WHERE debt_id = $1', [id]).then((r: any) => r.rows[0] || null);
-
-const updatePaid = (id: number, amount_paid: number, balance: number, remarks: any, centerId?: number, teacherId?: number) => {
-  let query =
-    'UPDATE debts SET amount_paid = $1, balance = $2, remarks = COALESCE($3, remarks), updated_at = CURRENT_TIMESTAMP WHERE debt_id = $4';
-  const params: any[] = [amount_paid, balance, remarks, id];
-  if (centerId) {
-    query += ' AND center_id = $5';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(debts)
+    .values({
+      studentId: params[0],
+      centerId: params[1],
+      debtAmount: params[2],
+      debtDate: params[3],
+      dueDate: params[4],
+      amountPaid: params[5],
+      balance: params[6],
+      remarks: params[7],
+    })
+    .returning(debtSelection);
+  return rows[0];
 };
 
-const findByStudent = (studentId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT d.* FROM debts d WHERE d.student_id = $1';
-  const params: any[] = [studentId];
-  if (centerId) {
-    query += ' AND d.center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND d.student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  query += ' ORDER BY d.debt_date DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+const findAmounts = async (id: number) => {
+  const rows = await db.select({ debt_amount: debts.debtAmount, amount_paid: debts.amountPaid }).from(debts).where(eq(debts.debtId, id)).limit(1);
+  return rows[0] || null;
 };
 
-const remove = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM debts WHERE debt_id = $1';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND student_id IN (SELECT student_id FROM students WHERE teacher_id = $${params.length + 1} AND deleted_at IS NULL)`;
-    params.push(teacherId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const updatePaid = async (id: number, amount_paid: number, balance: number, remarks: any, centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(debts)
+    .set({ amountPaid: amount_paid, balance, remarks: sql`COALESCE(${remarks ?? null}, ${debts.remarks})`, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(debts.debtId, id))
+    .returning(debtSelection);
+  return rows[0] || null;
+};
+
+const findByStudent = (studentId: number, centerId?: number, teacherId?: number) =>
+  debtQuery([eq(debts.studentId, studentId), ...scopedDebtConditions(centerId, teacherId)], teacherId, desc(debts.debtDate));
+
+const remove = async (id: number, centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db.delete(debts).where(eq(debts.debtId, id)).returning(debtSelection);
+  return rows[0] || null;
 };
 
 const findActiveStudents = (center_id?: string, teacherId?: number) => {
-  let q = 'SELECT student_id, first_name, last_name, enrollment_number, center_id FROM students WHERE status = $1 AND deleted_at IS NULL';
-  const params: any[] = ['Active'];
-  if (center_id) {
-    q += ' AND center_id = $2';
-    params.push(center_id);
-  }
-  if (teacherId) {
-    q += ` AND teacher_id = $${params.length + 1}`;
-    params.push(teacherId);
-  }
-  return pool.query(q, params).then((r: any) => r.rows);
+  const conditions = [eq(students.status, 'Active'), isNull(students.deletedAt)];
+  if (center_id) conditions.push(eq(students.centerId, Number(center_id)));
+  if (teacherId) conditions.push(eq(students.teacherId, teacherId));
+  return db
+    .select({
+      student_id: students.studentId,
+      first_name: students.firstName,
+      last_name: students.lastName,
+      enrollment_number: students.enrollmentNumber,
+      center_id: students.centerId,
+    })
+    .from(students)
+    .where(and(...conditions));
 };
 
 const findPaymentsForStudentInRange = (studentId: number, start: Date, end: Date) =>
-  pool
-    .query(
-      `
-      SELECT payment_date, amount, payment_status, payment_type
-      FROM payments
-      WHERE student_id = $1
-        AND payment_date >= $2
-        AND payment_date <= $3
-        AND payment_status = 'Completed'
-        AND deleted_at IS NULL
-      ORDER BY payment_date ASC
-    `,
-      [studentId, start, end]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select({
+      payment_date: payments.paymentDate,
+      amount: payments.amount,
+      payment_status: payments.paymentStatus,
+      payment_type: payments.paymentType,
+    })
+    .from(payments)
+    .where(and(eq(payments.studentId, studentId), gte(payments.paymentDate, start.toISOString().slice(0, 10)), lte(payments.paymentDate, end.toISOString().slice(0, 10)), eq(payments.paymentStatus, 'Completed'), isNull(payments.deletedAt)))
+    .orderBy(asc(payments.paymentDate));
 
 const findOpenDebtsForStudent = (studentId: number) =>
-  pool
-    .query(
-      `
-      SELECT debt_id, debt_amount, debt_date, due_date, amount_paid, balance
-      FROM debts
-      WHERE student_id = $1 AND balance > 0
-      ORDER BY debt_date ASC
-    `,
-      [studentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select({
+      debt_id: debts.debtId,
+      debt_amount: debts.debtAmount,
+      debt_date: debts.debtDate,
+      due_date: debts.dueDate,
+      amount_paid: debts.amountPaid,
+      balance: debts.balance,
+    })
+    .from(debts)
+    .where(and(eq(debts.studentId, studentId), sql`${debts.balance} > 0`))
+    .orderBy(asc(debts.debtDate));
 
-const getStudentCenter = (studentId: number) =>
-  pool.query('SELECT center_id FROM students WHERE student_id = $1 AND deleted_at IS NULL', [studentId]).then((r: any) => r.rows[0]?.center_id);
+const getStudentCenter = async (studentId: number) => {
+  const rows = await db.select({ center_id: students.centerId }).from(students).where(and(eq(students.studentId, studentId), isNull(students.deletedAt))).limit(1);
+  return rows[0]?.center_id;
+};
 
 const paymentMonthlySummary = (studentId: number) =>
-  pool
-    .query(
-      `
-      SELECT
-        EXTRACT(YEAR FROM payment_date) as year,
-        EXTRACT(MONTH FROM payment_date) as month,
-        SUM(amount) as total_paid,
-        COUNT(*) as payment_count
-      FROM payments
-      WHERE student_id = $1 AND payment_status = 'Completed' AND deleted_at IS NULL
-      GROUP BY EXTRACT(YEAR FROM payment_date), EXTRACT(MONTH FROM payment_date)
-      ORDER BY year DESC, month DESC
-    `,
-      [studentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select({
+      year: sql`EXTRACT(YEAR FROM ${payments.paymentDate})`,
+      month: sql`EXTRACT(MONTH FROM ${payments.paymentDate})`,
+      total_paid: sql`SUM(${payments.amount})`,
+      payment_count: sql`COUNT(*)`,
+    })
+    .from(payments)
+    .where(and(eq(payments.studentId, studentId), eq(payments.paymentStatus, 'Completed'), isNull(payments.deletedAt)))
+    .groupBy(sql`EXTRACT(YEAR FROM ${payments.paymentDate})`, sql`EXTRACT(MONTH FROM ${payments.paymentDate})`)
+    .orderBy(desc(sql`EXTRACT(YEAR FROM ${payments.paymentDate})`), desc(sql`EXTRACT(MONTH FROM ${payments.paymentDate})`));
 
-const debtAggregate = (studentId: number) =>
-  pool
-    .query(
-      `
-      SELECT
-        SUM(debt_amount) as total_debt,
-        SUM(amount_paid) as total_paid,
-        SUM(balance) as total_balance
-      FROM debts
-      WHERE student_id = $1
-    `,
-      [studentId]
-    )
-    .then((r: any) => r.rows[0]);
+const debtAggregate = async (studentId: number) => {
+  const rows = await db
+    .select({
+      total_debt: sql`SUM(${debts.debtAmount})`,
+      total_paid: sql`SUM(${debts.amountPaid})`,
+      total_balance: sql`SUM(${debts.balance})`,
+    })
+    .from(debts)
+    .where(eq(debts.studentId, studentId));
+  return rows[0];
+};
 
 module.exports = {
   findAll,

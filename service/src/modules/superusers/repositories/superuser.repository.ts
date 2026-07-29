@@ -1,97 +1,152 @@
+const { and, desc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { centers, superusers } = require('../../../db/schema');
+
+const db = pool.db;
+
+const safeSelection = {
+  superuser_id: superusers.superuserId,
+  center_id: superusers.centerId,
+  username: superusers.username,
+  email: superusers.email,
+  first_name: superusers.firstName,
+  last_name: superusers.lastName,
+  role: superusers.role,
+  permissions: superusers.permissions,
+  status: superusers.status,
+  last_login: superusers.lastLogin,
+  created_at: superusers.createdAt,
+  updated_at: superusers.updatedAt,
+};
+
+const scoped = (id?: number, centerId?: number) => {
+  const conditions: any[] = [];
+  if (id) conditions.push(eq(superusers.superuserId, id));
+  if (centerId) conditions.push(eq(superusers.centerId, centerId));
+  return conditions;
+};
 
 const findAllSafe = (centerId?: number) => {
-  const params: any[] = [];
-  let query =
-    'SELECT superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, last_login, created_at, updated_at FROM superusers';
-
-  if (centerId) {
-    params.push(centerId);
-    query += ' WHERE center_id = $1';
-  }
-
-  query += ' ORDER BY superuser_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+  let query = db.select(safeSelection).from(superusers).orderBy(desc(superusers.superuserId));
+  if (centerId) query = query.where(eq(superusers.centerId, centerId));
+  return query;
 };
 
-const findById = (id: number, centerId?: number) => {
-  const params: any[] = [id];
-  let query =
-    'SELECT superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, last_login, created_at, updated_at FROM superusers WHERE superuser_id = $1';
-
-  if (centerId) {
-    params.push(centerId);
-    query += ' AND center_id = $2';
-  }
-
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findById = async (id: number, centerId?: number) => {
+  const rows = await db.select(safeSelection).from(superusers).where(and(...scoped(id, centerId))).limit(1);
+  return rows[0] || null;
 };
 
-const firstCenterId = () =>
-  pool.query('SELECT center_id FROM edu_centers LIMIT 1').then((r: any) => r.rows[0]?.center_id);
-
-const countByUsername = (username: string) =>
-  pool.query('SELECT superuser_id FROM superusers WHERE username = $1', [username]).then((r: any) => r.rows.length);
-
-const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO superusers (center_id, username, email, password_hash, first_name, last_name, role, permissions, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-       RETURNING superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, created_at`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
-
-const update = (id: number, params: any[], centerId?: number) => {
-  const queryParams = [...params, id];
-  let query =
-    `UPDATE superusers SET email = COALESCE($1, email), first_name = COALESCE($2, first_name), last_name = COALESCE($3, last_name), role = COALESCE($4, role), permissions = COALESCE($5, permissions), status = COALESCE($6, status), updated_at = CURRENT_TIMESTAMP WHERE superuser_id = $7`;
-
-  if (centerId) {
-    query += ' AND center_id = $8';
-    queryParams.push(centerId);
-  }
-
-  query += '\n       RETURNING superuser_id, center_id, username, email, first_name, last_name, role, permissions, status, updated_at';
-  return pool.query(query, queryParams).then((r: any) => r.rows[0] || null);
+const firstCenterId = async () => {
+  const rows = await db.select({ center_id: centers.centerId }).from(centers).limit(1);
+  return rows[0]?.center_id;
 };
 
-const remove = (id: number, centerId?: number) => {
-  const params: any[] = [id];
-  let query = 'DELETE FROM superusers WHERE superuser_id = $1';
-
-  if (centerId) {
-    params.push(centerId);
-    query += ' AND center_id = $2';
-  }
-
-  query += ' RETURNING superuser_id, username, email';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const countByUsername = async (username: string) => {
+  const rows = await db.select({ superuser_id: superusers.superuserId }).from(superusers).where(eq(superusers.username, username));
+  return rows.length;
 };
 
-const findByUsernameForLogin = (username: string) =>
-  pool
-    .query(
-      'SELECT superuser_id, center_id, username, email, first_name, last_name, role, permissions, password_hash, status, is_locked FROM superusers WHERE username = $1',
-      [username]
-    )
-    .then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(superusers)
+    .values({
+      centerId: params[0],
+      username: params[1],
+      email: params[2],
+      passwordHash: params[3],
+      firstName: params[4],
+      lastName: params[5],
+      role: params[6],
+      permissions: params[7],
+      status: params[8],
+    })
+    .returning({
+      superuser_id: superusers.superuserId,
+      center_id: superusers.centerId,
+      username: superusers.username,
+      email: superusers.email,
+      first_name: superusers.firstName,
+      last_name: superusers.lastName,
+      role: superusers.role,
+      permissions: superusers.permissions,
+      status: superusers.status,
+      created_at: superusers.createdAt,
+    });
+  return rows[0];
+};
+
+const update = async (id: number, params: any[], centerId?: number) => {
+  const rows = await db
+    .update(superusers)
+    .set({
+      email: sql`COALESCE(${params[0] ?? null}, ${superusers.email})`,
+      firstName: sql`COALESCE(${params[1] ?? null}, ${superusers.firstName})`,
+      lastName: sql`COALESCE(${params[2] ?? null}, ${superusers.lastName})`,
+      role: sql`COALESCE(${params[3] ?? null}, ${superusers.role})`,
+      permissions: sql`COALESCE(${params[4] ?? null}, ${superusers.permissions})`,
+      status: sql`COALESCE(${params[5] ?? null}, ${superusers.status})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(and(...scoped(id, centerId)))
+    .returning({
+      superuser_id: superusers.superuserId,
+      center_id: superusers.centerId,
+      username: superusers.username,
+      email: superusers.email,
+      first_name: superusers.firstName,
+      last_name: superusers.lastName,
+      role: superusers.role,
+      permissions: superusers.permissions,
+      status: superusers.status,
+      updated_at: superusers.updatedAt,
+    });
+  return rows[0] || null;
+};
+
+const remove = async (id: number, centerId?: number) => {
+  const rows = await db.delete(superusers).where(and(...scoped(id, centerId))).returning({
+    superuser_id: superusers.superuserId,
+    username: superusers.username,
+    email: superusers.email,
+  });
+  return rows[0] || null;
+};
+
+const findByUsernameForLogin = async (username: string) => {
+  const rows = await db
+    .select({
+      superuser_id: superusers.superuserId,
+      center_id: superusers.centerId,
+      username: superusers.username,
+      email: superusers.email,
+      first_name: superusers.firstName,
+      last_name: superusers.lastName,
+      role: superusers.role,
+      permissions: superusers.permissions,
+      password_hash: superusers.passwordHash,
+      status: superusers.status,
+      is_locked: superusers.isLocked,
+    })
+    .from(superusers)
+    .where(eq(superusers.username, username))
+    .limit(1);
+  return rows[0] || null;
+};
 
 const incrementLoginAttempts = (id: number) =>
-  pool.query('UPDATE superusers SET login_attempts = login_attempts + 1 WHERE superuser_id = $1', [id]);
+  db.update(superusers).set({ loginAttempts: sql`${superusers.loginAttempts} + 1` }).where(eq(superusers.superuserId, id));
 
 const resetLoginSuccess = (id: number) =>
-  pool.query('UPDATE superusers SET login_attempts = 0, last_login = CURRENT_TIMESTAMP WHERE superuser_id = $1', [id]);
+  db.update(superusers).set({ loginAttempts: 0, lastLogin: sql`CURRENT_TIMESTAMP` }).where(eq(superusers.superuserId, id));
 
-const findPasswordHash = (id: number) =>
-  pool.query('SELECT password_hash FROM superusers WHERE superuser_id = $1', [id]).then((r: any) => r.rows[0]?.password_hash);
+const findPasswordHash = async (id: number) => {
+  const rows = await db.select({ password_hash: superusers.passwordHash }).from(superusers).where(eq(superusers.superuserId, id)).limit(1);
+  return rows[0]?.password_hash;
+};
 
 const updatePasswordHash = (id: number, password_hash: string) =>
-  pool.query('UPDATE superusers SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE superuser_id = $2', [
-    password_hash,
-    id,
-  ]);
+  db.update(superusers).set({ passwordHash: password_hash, updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(superusers.superuserId, id));
 
 module.exports = {
   findAllSafe,

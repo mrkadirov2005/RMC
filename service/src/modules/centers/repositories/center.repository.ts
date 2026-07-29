@@ -1,117 +1,78 @@
+const { asc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { centers, classes, payments, students, teachers } = require('../../../db/schema');
+
+const db = pool.db;
 
 const findAll = (centerId?: number) => {
-  let query = 'SELECT * FROM edu_centers';
-  const params: any[] = [];
-
-  if (centerId) {
-    query += ' WHERE center_id = $1';
-    params.push(centerId);
-  }
-
-  query += ' ORDER BY center_id';
-  return pool.query(query, params).then((r: any) => r.rows);
+  const query = db.select().from(centers).orderBy(asc(centers.centerId));
+  return centerId ? query.where(eq(centers.centerId, centerId)) : query;
 };
 
-const findById = (id: number, centerId?: number) => {
-  let query = 'SELECT * FROM edu_centers WHERE center_id = $1';
-  const params: any[] = [id];
-
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findById = async (id: number, centerId?: number) => {
+  const rows = await db
+    .select()
+    .from(centers)
+    .where(eq(centers.centerId, centerId || id))
+    .limit(1);
+  return rows[0] || null;
 };
 
 const getSummaries = (centerId?: number) => {
-  const params: any[] = [];
-  const centerFilter = centerId ? 'WHERE ec.center_id = $1' : '';
-  if (centerId) params.push(centerId);
-
-  const query = `
-    SELECT
-      ec.center_id,
-      COALESCE(s.students, 0)::int AS students,
-      COALESCE(t.teachers, 0)::int AS teachers,
-      COALESCE(c.classes, 0)::int AS classes,
-      COALESCE(p.payments, 0)::int AS payments,
-      COALESCE(p.collected, 0)::numeric AS collected
-    FROM edu_centers ec
-    LEFT JOIN (
-      SELECT center_id, COUNT(*)::int AS students
-      FROM students
-      WHERE deleted_at IS NULL
-      GROUP BY center_id
-    ) s ON s.center_id = ec.center_id
-    LEFT JOIN (
-      SELECT center_id, COUNT(*)::int AS teachers
-      FROM teachers
-      WHERE deleted_at IS NULL
-      GROUP BY center_id
-    ) t ON t.center_id = ec.center_id
-    LEFT JOIN (
-      SELECT center_id, COUNT(*)::int AS classes
-      FROM classes
-      WHERE deleted_at IS NULL
-      GROUP BY center_id
-    ) c ON c.center_id = ec.center_id
-    LEFT JOIN (
-      SELECT
-        center_id,
-        COUNT(*)::int AS payments,
-        SUM(
-          CASE
-            WHEN LOWER(COALESCE(payment_status, '')) IN ('completed', 'paid')
-            THEN COALESCE(amount, 0)
-            ELSE 0
-          END
-        )::numeric AS collected
-      FROM payments
-      WHERE deleted_at IS NULL
-      GROUP BY center_id
-    ) p ON p.center_id = ec.center_id
-    ${centerFilter}
-    ORDER BY ec.center_id
-  `;
-
-  return pool.query(query, params).then((r: any) => r.rows);
+  const query = db
+    .select({
+      center_id: centers.centerId,
+      students: sql`(SELECT COUNT(*)::int FROM ${students} s WHERE s.center_id = ${centers.centerId} AND s.deleted_at IS NULL)`,
+      teachers: sql`(SELECT COUNT(*)::int FROM ${teachers} t WHERE t.center_id = ${centers.centerId} AND t.deleted_at IS NULL)`,
+      classes: sql`(SELECT COUNT(*)::int FROM ${classes} c WHERE c.center_id = ${centers.centerId} AND c.deleted_at IS NULL)`,
+      payments: sql`(SELECT COUNT(*)::int FROM ${payments} p WHERE p.center_id = ${centers.centerId} AND p.deleted_at IS NULL)`,
+      collected: sql`(
+        SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid') THEN COALESCE(p.amount, 0) ELSE 0 END), 0)::numeric
+        FROM ${payments} p
+        WHERE p.center_id = ${centers.centerId} AND p.deleted_at IS NULL
+      )`,
+    })
+    .from(centers)
+    .orderBy(asc(centers.centerId));
+  return centerId ? query.where(eq(centers.centerId, centerId)) : query;
 };
 
-const insert = (values: any[]) =>
-  pool
-    .query(
-      'INSERT INTO edu_centers (center_name, center_code, email, phone, address, city, principal_name) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      values
-    )
-    .then((r: any) => r.rows[0]);
-
-const update = (id: number, values: any[], centerId?: number) => {
-  const params: any[] = [...values, id];
-  let query =
-    'UPDATE edu_centers SET center_name = COALESCE($1, center_name), email = COALESCE($2, email), phone = COALESCE($3, phone), address = COALESCE($4, address), city = COALESCE($5, city), principal_name = COALESCE($6, principal_name), updated_at = CURRENT_TIMESTAMP WHERE center_id = $7';
-
-  if (centerId) {
-    query += ' AND center_id = $8';
-    params.push(centerId);
-  }
-
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const insert = async (values: any[]) => {
+  const rows = await db
+    .insert(centers)
+    .values({
+      centerName: values[0],
+      centerCode: values[1],
+      email: values[2],
+      phone: values[3],
+      address: values[4],
+      city: values[5],
+      principalName: values[6],
+    })
+    .returning();
+  return rows[0];
 };
 
-const remove = (id: number, centerId?: number) => {
-  const params: any[] = [id];
-  let query = 'DELETE FROM edu_centers WHERE center_id = $1';
+const update = async (id: number, values: any[], centerId?: number) => {
+  const rows = await db
+    .update(centers)
+    .set({
+      centerName: sql`COALESCE(${values[0] ?? null}, ${centers.centerName})`,
+      email: sql`COALESCE(${values[1] ?? null}, ${centers.email})`,
+      phone: sql`COALESCE(${values[2] ?? null}, ${centers.phone})`,
+      address: sql`COALESCE(${values[3] ?? null}, ${centers.address})`,
+      city: sql`COALESCE(${values[4] ?? null}, ${centers.city})`,
+      principalName: sql`COALESCE(${values[5] ?? null}, ${centers.principalName})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(centers.centerId, centerId || id))
+    .returning();
+  return rows[0] || null;
+};
 
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const remove = async (id: number, centerId?: number) => {
+  const rows = await db.delete(centers).where(eq(centers.centerId, centerId || id)).returning();
+  return rows[0] || null;
 };
 
 module.exports = { findAll, findById, getSummaries, insert, update, remove };

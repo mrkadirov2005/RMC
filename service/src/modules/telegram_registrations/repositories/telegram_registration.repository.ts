@@ -1,7 +1,60 @@
+const { and, desc, eq, ne, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { students, telegramStudentRegistrations } = require('../../../db/schema');
+
+const db = pool.db;
+
+const registrationSelection = {
+  registration_id: telegramStudentRegistrations.registrationId,
+  telegram_user_id: telegramStudentRegistrations.telegramUserId,
+  telegram_chat_id: telegramStudentRegistrations.telegramChatId,
+  telegram_username: telegramStudentRegistrations.telegramUsername,
+  first_name: telegramStudentRegistrations.firstName,
+  last_name: telegramStudentRegistrations.lastName,
+  phone: telegramStudentRegistrations.phone,
+  date_of_birth: telegramStudentRegistrations.dateOfBirth,
+  parent_name: telegramStudentRegistrations.parentName,
+  parent_phone: telegramStudentRegistrations.parentPhone,
+  gender: telegramStudentRegistrations.gender,
+  username: telegramStudentRegistrations.username,
+  password_hash: telegramStudentRegistrations.passwordHash,
+  school_name: telegramStudentRegistrations.schoolName,
+  school_class: telegramStudentRegistrations.schoolClass,
+  center_id: telegramStudentRegistrations.centerId,
+  class_label: telegramStudentRegistrations.classLabel,
+  status: telegramStudentRegistrations.status,
+  converted_student_id: telegramStudentRegistrations.convertedStudentId,
+  converted_at: telegramStudentRegistrations.convertedAt,
+  created_at: telegramStudentRegistrations.createdAt,
+  updated_at: telegramStudentRegistrations.updatedAt,
+};
+
+const studentSelection = {
+  student_id: students.studentId,
+  center_id: students.centerId,
+  enrollment_number: students.enrollmentNumber,
+  first_name: students.firstName,
+  last_name: students.lastName,
+  username: students.username,
+  password_hash: students.passwordHash,
+  email: students.email,
+  phone: students.phone,
+  date_of_birth: students.dateOfBirth,
+  parent_name: students.parentName,
+  parent_phone: students.parentPhone,
+  gender: students.gender,
+  status: students.status,
+  teacher_id: students.teacherId,
+  class_id: students.classId,
+  school_name: students.schoolName,
+  school_class: students.schoolClass,
+  is_frozen: students.isFrozen,
+  created_at: students.createdAt,
+  updated_at: students.updatedAt,
+};
 
 const ensureTable = () =>
-  pool.query(`
+  db.execute(sql`
     CREATE TABLE IF NOT EXISTS telegram_student_registrations (
       registration_id SERIAL PRIMARY KEY,
       telegram_user_id BIGINT NOT NULL,
@@ -25,152 +78,99 @@ const ensureTable = () =>
       converted_at TIMESTAMP,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    );
-
-    ALTER TABLE telegram_student_registrations
-      ADD COLUMN IF NOT EXISTS converted_student_id INT,
-      ADD COLUMN IF NOT EXISTS converted_at TIMESTAMP;
+    )
   `);
 
 const list = async (centerId?: number, status?: string) => {
   await ensureTable();
-  const params: any[] = [];
-  const conditions: string[] = [];
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`r.center_id = $${params.length}`);
-  }
-  if (status) {
-    params.push(status);
-    conditions.push(`r.status = $${params.length}`);
-  }
-  const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
-  const result = await pool.query(
-    `SELECT
-       r.*,
-       s.enrollment_number AS converted_enrollment_number,
-       s.first_name AS converted_first_name,
-       s.last_name AS converted_last_name
-     FROM telegram_student_registrations r
-     LEFT JOIN students s ON s.student_id = r.converted_student_id
-     ${where}
-     ORDER BY r.created_at DESC, r.registration_id DESC`,
-    params
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(telegramStudentRegistrations.centerId, centerId));
+  if (status) conditions.push(eq(telegramStudentRegistrations.status, status));
+  const query: any = db
+    .select({
+      ...registrationSelection,
+      converted_enrollment_number: students.enrollmentNumber,
+      converted_first_name: students.firstName,
+      converted_last_name: students.lastName,
+    })
+    .from(telegramStudentRegistrations)
+    .leftJoin(students, eq(students.studentId, telegramStudentRegistrations.convertedStudentId));
+
+  return (conditions.length ? query.where(and(...conditions)) : query).orderBy(
+    desc(telegramStudentRegistrations.createdAt),
+    desc(telegramStudentRegistrations.registrationId)
   );
-  return result.rows;
 };
 
 const convertToStudent = async (id: number, centerId?: number, assignData?: { class_id?: number; teacher_id?: number }) => {
   await ensureTable();
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const params: any[] = [id];
-    let query = `
-      SELECT *
-      FROM telegram_student_registrations
-      WHERE registration_id = $1
-      FOR UPDATE
-    `;
-    const result = await client.query(query, params);
-    const registration = result.rows[0];
-    if (!registration) {
-      await client.query('ROLLBACK');
-      return { error: 'not_found' as const };
-    }
-    if (centerId && Number(registration.center_id) !== Number(centerId)) {
-      await client.query('ROLLBACK');
-      return { error: 'not_found' as const };
-    }
+  return db.transaction(async (tx: any) => {
+    const rows = await tx
+      .select(registrationSelection)
+      .from(telegramStudentRegistrations)
+      .where(eq(telegramStudentRegistrations.registrationId, id))
+      .limit(1);
+    const registration = rows[0];
+    if (!registration) return { error: 'not_found' as const };
+    if (centerId && Number(registration.center_id) !== Number(centerId)) return { error: 'not_found' as const };
     if (registration.converted_student_id || String(registration.status || '').toLowerCase() === 'imported') {
-      await client.query('ROLLBACK');
       return { error: 'already_imported' as const, registration };
     }
 
     const targetCenterId = centerId || registration.center_id;
-    if (!targetCenterId) {
-      await client.query('ROLLBACK');
-      return { error: 'center_required' as const };
-    }
+    if (!targetCenterId) return { error: 'center_required' as const };
 
     const enrollmentNumber = `TG-${String(id).padStart(6, '0')}`;
-    const inserted = await client.query(
-      `INSERT INTO students (
-         center_id,
-         enrollment_number,
-         first_name,
-         last_name,
-         username,
-         password_hash,
-         email,
-         phone,
-         date_of_birth,
-         parent_name,
-         parent_phone,
-         gender,
-         status,
-         teacher_id,
-         class_id,
-         school_name,
-         school_class,
-         is_frozen
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, NULL, $7, $8, $9, $10, $11, 'Active', $14, $15, $12, $13, false)
-       RETURNING *`,
-      [
-        targetCenterId,
+    const inserted = await tx
+      .insert(students)
+      .values({
+        centerId: targetCenterId,
         enrollmentNumber,
-        registration.first_name,
-        registration.last_name,
-        registration.username,
-        registration.password_hash,
-        registration.phone,
-        registration.date_of_birth,
-        registration.parent_name,
-        registration.parent_phone,
-        registration.gender,
-        registration.school_name,
-        registration.school_class,
-        assignData?.teacher_id || null,
-        assignData?.class_id || null,
-      ]
-    );
-    const student = inserted.rows[0];
+        firstName: registration.first_name,
+        lastName: registration.last_name,
+        username: registration.username,
+        passwordHash: registration.password_hash,
+        email: null,
+        phone: registration.phone,
+        dateOfBirth: registration.date_of_birth,
+        parentName: registration.parent_name,
+        parentPhone: registration.parent_phone,
+        gender: registration.gender,
+        status: 'Active',
+        teacherId: assignData?.teacher_id || null,
+        classId: assignData?.class_id || null,
+        schoolName: registration.school_name,
+        schoolClass: registration.school_class,
+        isFrozen: false,
+      })
+      .returning(studentSelection);
+    const student = inserted[0];
 
-    const updated = await client.query(
-      `UPDATE telegram_student_registrations
-       SET status = 'Imported',
-           converted_student_id = $1,
-           converted_at = CURRENT_TIMESTAMP,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE registration_id = $2
-       RETURNING *`,
-      [student.student_id, id]
-    );
+    const updated = await tx
+      .update(telegramStudentRegistrations)
+      .set({
+        status: 'Imported',
+        convertedStudentId: student.student_id,
+        convertedAt: sql`CURRENT_TIMESTAMP`,
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      })
+      .where(eq(telegramStudentRegistrations.registrationId, id))
+      .returning(registrationSelection);
 
-    await client.query('COMMIT');
-    return { registration: updated.rows[0], student };
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+    return { registration: updated[0], student };
+  });
 };
 
 const remove = async (id: number, centerId?: number) => {
   await ensureTable();
-  const params: any[] = [id];
-  let query = `UPDATE telegram_student_registrations
-    SET status = 'Rejected', updated_at = CURRENT_TIMESTAMP
-    WHERE registration_id = $1 AND status <> 'Imported'`;
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  query += ' RETURNING *';
-  const result = await pool.query(query, params);
-  return result.rows[0] || null;
+  const conditions = [eq(telegramStudentRegistrations.registrationId, id), ne(telegramStudentRegistrations.status, 'Imported')];
+  if (centerId) conditions.push(eq(telegramStudentRegistrations.centerId, centerId));
+  const rows = await db
+    .update(telegramStudentRegistrations)
+    .set({ status: 'Rejected', updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...conditions))
+    .returning(registrationSelection);
+  return rows[0] || null;
 };
 
 module.exports = { list, convertToStudent, remove };

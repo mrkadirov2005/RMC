@@ -57,53 +57,35 @@ const canViewTest = async (test: any, user: any, centerId?: number) => {
 };
 
 const withTransaction = async (handler: (db: any) => Promise<any>) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await handler(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
-  }
+  return pool.db.transaction(handler);
 };
 
 const listTests = async (query: any, centerId?: number, user?: any) => {
-  const conditions: string[] = [];
-  const params: any[] = [];
+  const filters: Record<string, any> = {};
   const scopedCenterId = centerId ?? query.center_id;
   if (scopedCenterId) {
-    params.push(scopedCenterId);
-    conditions.push(`center_id = $${params.length}`);
+    filters.center_id = scopedCenterId;
   }
   if (query.subject_id) {
-    params.push(query.subject_id);
-    conditions.push(`subject_id = $${params.length}`);
+    filters.subject_id = query.subject_id;
   }
   if (query.test_type) {
-    params.push(query.test_type);
-    conditions.push(`test_type = $${params.length}`);
+    filters.test_type = query.test_type;
   }
   if (query.is_active !== undefined) {
-    params.push(toBool(query.is_active));
-    conditions.push(`is_active = $${params.length}`);
+    filters.is_active = toBool(query.is_active);
   }
   if (isCreatorScopedUser(user)) {
-    params.push(Number(user.id));
-    conditions.push(`(COALESCE(is_private, false) = false OR created_by = $${params.length})`);
+    filters.visible_to_creator_id = Number(user.id);
   } else if (user?.userType === 'student') {
     const teacherId = await getStudentTeacherId(Number(user.id), scopedCenterId ? Number(scopedCenterId) : undefined);
     if (teacherId !== null) {
-      params.push(Number(teacherId));
-      conditions.push(`(COALESCE(is_private, false) = false OR created_by = $${params.length})`);
+      filters.visible_to_creator_id = Number(teacherId);
     } else {
-      conditions.push('COALESCE(is_private, false) = false');
+      filters.public_only = true;
     }
   }
-  return testRepository.findAll(conditions, params);
+  return testRepository.findAll(filters);
 };
 
 const getTestById = async (id: number, centerId?: number, user?: any) => {

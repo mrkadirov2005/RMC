@@ -2,7 +2,9 @@ export {};
 
 require('dotenv/config');
 
-const { Client } = require('pg');
+const { Pool } = require('pg');
+const { drizzle } = require('drizzle-orm/node-postgres');
+const { sql } = require('drizzle-orm');
 const path = require('path');
 const { exec } = require('child_process');
 const { promisify } = require('util');
@@ -29,18 +31,17 @@ async function ensureDatabaseExists(): Promise<void> {
   const adminUser = process.env.DB_ADMIN_USER || targetUser;
   const adminPassword = process.env.DB_ADMIN_PASSWORD || targetPassword;
 
-  const client = new Client({
+  const adminPool = new Pool({
     host,
     port,
     user: adminUser,
     password: adminPassword,
     database: adminDb,
   });
+  const adminDbConnection = drizzle(adminPool);
 
   try {
-    await client.connect();
-
-    const exists = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [targetDb]);
+    const exists = await adminDbConnection.execute(sql`SELECT 1 FROM pg_database WHERE datname = ${targetDb}`);
     if (exists.rowCount && exists.rowCount > 0) return;
 
     const escapedDbName = '"' + String(targetDb).replace(/"/g, '""') + '"';
@@ -48,13 +49,13 @@ async function ensureDatabaseExists(): Promise<void> {
     // If the target role exists, make it the owner. If it doesn't, Postgres will error;
     // in that case, create without OWNER and let the admin role own it.
     try {
-      await client.query(`CREATE DATABASE ${escapedDbName} OWNER ${escapedOwner}`);
+      await adminDbConnection.execute(sql.raw(`CREATE DATABASE ${escapedDbName} OWNER ${escapedOwner}`));
     } catch (err: any) {
-      await client.query(`CREATE DATABASE ${escapedDbName}`);
+      await adminDbConnection.execute(sql.raw(`CREATE DATABASE ${escapedDbName}`));
     }
     console.log(`[db] created database ${targetDb}`);
   } finally {
-    await client.end().catch(() => {});
+    await adminPool.end().catch(() => {});
   }
 }
 

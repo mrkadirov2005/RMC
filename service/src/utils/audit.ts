@@ -1,4 +1,7 @@
-const audit_db = require('../db/pool');
+const pool = require('../db/pool');
+const { auditLogs } = require('../db/schema');
+
+const db = pool.db;
 
 interface AuditPayload {
   user_type: string;
@@ -24,22 +27,18 @@ exports.logAudit = async (payload: AuditPayload) => {
       ip_address,
     } = payload;
 
-    await audit_db.query(
-      `INSERT INTO audit_logs (user_type, user_id, action, entity_type, entity_id, details, ip_address)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        user_type,
-        user_id,
-        action,
-        entity_type,
-        entity_id || null,
-        JSON.stringify({
-          ...(details || {}),
-          center_id: center_id ?? details?.center_id ?? null,
-        }),
-        ip_address || null,
-      ]
-    );
+    await db.insert(auditLogs).values({
+      userType: user_type,
+      userId: user_id,
+      action,
+      entityType: entity_type,
+      entityId: entity_id || null,
+      details: {
+        ...(details || {}),
+        center_id: center_id ?? details?.center_id ?? null,
+      },
+      ipAddress: ip_address || null,
+    });
   } catch (err) {
     // Audit logging should never block main flow
     console.error('Audit log error:', err);

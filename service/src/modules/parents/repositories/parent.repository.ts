@@ -1,147 +1,268 @@
+const { and, desc, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const {
+  attendance,
+  grades,
+  parentStudents,
+  parents,
+  payments,
+  students,
+  testSubmissions,
+} = require('../../../db/schema');
 
-const findAllSafe = (centerId?: number) => {
-  let query = `
-    SELECT DISTINCT p.parent_id, p.first_name, p.last_name, p.email, p.phone, p.username, p.status, p.created_at
-    FROM parents p
-  `;
-  const params: any[] = [];
-  if (centerId) {
-    query += `
-      JOIN parent_students ps ON ps.parent_id = p.parent_id
-      JOIN students s ON s.student_id = ps.student_id
-      WHERE s.center_id = $1 AND s.deleted_at IS NULL
-    `;
-    params.push(centerId);
-  }
-  query += ' ORDER BY p.parent_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+const db = pool.db;
+
+const parentSafeSelection = {
+  parent_id: parents.parentId,
+  first_name: parents.firstName,
+  last_name: parents.lastName,
+  email: parents.email,
+  phone: parents.phone,
+  username: parents.username,
+  status: parents.status,
+  created_at: parents.createdAt,
 };
 
-const findByIdSafe = (id: number, centerId?: number) => {
-  let query = 'SELECT parent_id, first_name, last_name, email, phone, username, status, created_at FROM parents WHERE parent_id = $1';
-  const params: any[] = [id];
+const studentSelection = {
+  student_id: students.studentId,
+  center_id: students.centerId,
+  enrollment_number: students.enrollmentNumber,
+  first_name: students.firstName,
+  last_name: students.lastName,
+  username: students.username,
+  email: students.email,
+  phone: students.phone,
+  date_of_birth: students.dateOfBirth,
+  parent_name: students.parentName,
+  parent_phone: students.parentPhone,
+  gender: students.gender,
+  status: students.status,
+  teacher_id: students.teacherId,
+  class_id: students.classId,
+  school_name: students.schoolName,
+  school_class: students.schoolClass,
+  is_frozen: students.isFrozen,
+  coins: students.coins,
+  created_at: students.createdAt,
+  updated_at: students.updatedAt,
+};
+
+const paymentSelection = {
+  payment_id: payments.paymentId,
+  student_id: payments.studentId,
+  center_id: payments.centerId,
+  payment_date: payments.paymentDate,
+  amount: payments.amount,
+  currency: payments.currency,
+  payment_method: payments.paymentMethod,
+  transaction_reference: payments.transactionReference,
+  receipt_number: payments.receiptNumber,
+  payment_status: payments.paymentStatus,
+  payment_type: payments.paymentType,
+  notes: payments.notes,
+  discount_id: payments.discountId,
+  discount_kind: payments.discountKind,
+  discount_value_type: payments.discountValueType,
+  discount_value: payments.discountValue,
+  original_amount: payments.originalAmount,
+  discount_amount: payments.discountAmount,
+  final_amount: payments.finalAmount,
+  is_complete: payments.isComplete,
+  created_at: payments.createdAt,
+  updated_at: payments.updatedAt,
+};
+
+const attendanceSelection = {
+  attendance_id: attendance.attendanceId,
+  center_id: attendance.centerId,
+  student_id: attendance.studentId,
+  class_id: attendance.classId,
+  session_id: attendance.sessionId,
+  teacher_id: attendance.teacherId,
+  attendance_date: attendance.attendanceDate,
+  status: attendance.status,
+  notes: attendance.notes,
+  remarks: attendance.remarks,
+  created_at: attendance.createdAt,
+  updated_at: attendance.updatedAt,
+};
+
+const gradeSelection = {
+  grade_id: grades.gradeId,
+  center_id: grades.centerId,
+  student_id: grades.studentId,
+  class_id: grades.classId,
+  subject_id: grades.subjectId,
+  session_id: grades.sessionId,
+  teacher_id: grades.teacherId,
+  subject: grades.subject,
+  marks_obtained: grades.marksObtained,
+  total_marks: grades.totalMarks,
+  percentage: grades.percentage,
+  grade_letter: grades.gradeLetter,
+  academic_year: grades.academicYear,
+  term: grades.term,
+  score: grades.score,
+  grade_type: grades.gradeType,
+  attendance_score: grades.attendanceScore,
+  homework_score: grades.homeworkScore,
+  activity_score: grades.activityScore,
+  points_score: grades.pointsScore,
+  notes: grades.notes,
+  created_at: grades.createdAt,
+  updated_at: grades.updatedAt,
+};
+
+const testSubmissionSelection = {
+  submission_id: testSubmissions.submissionId,
+  test_id: testSubmissions.testId,
+  student_id: testSubmissions.studentId,
+  center_id: testSubmissions.centerId,
+  score: testSubmissions.score,
+  status: testSubmissions.status,
+  created_at: testSubmissions.createdAt,
+  updated_at: testSubmissions.updatedAt,
+};
+
+const scopedParentCondition = (id: number, centerId?: number) => {
+  const conditions = [eq(parents.parentId, id)];
   if (centerId) {
-    query = `
-      SELECT DISTINCT p.parent_id, p.first_name, p.last_name, p.email, p.phone, p.username, p.status, p.created_at
-      FROM parents p
-      JOIN parent_students ps ON ps.parent_id = p.parent_id
-      JOIN students s ON s.student_id = ps.student_id
-      WHERE p.parent_id = $1 AND s.center_id = $2 AND s.deleted_at IS NULL
-    `;
-    params.push(centerId);
+    conditions.push(eq(students.centerId, centerId), isNull(students.deletedAt));
   }
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+  return conditions;
+};
+
+const findAllSafe = (centerId?: number) => {
+  let query = db.selectDistinct(parentSafeSelection).from(parents);
+  if (centerId) {
+    query = query
+      .innerJoin(parentStudents, eq(parentStudents.parentId, parents.parentId))
+      .innerJoin(students, eq(students.studentId, parentStudents.studentId))
+      .where(and(eq(students.centerId, centerId), isNull(students.deletedAt))) as any;
+  }
+  return query.orderBy(desc(parents.parentId));
+};
+
+const findByIdSafe = async (id: number, centerId?: number) => {
+  let query: any = db.selectDistinct(parentSafeSelection).from(parents);
+  if (centerId) {
+    query = query
+      .innerJoin(parentStudents, eq(parentStudents.parentId, parents.parentId))
+      .innerJoin(students, eq(students.studentId, parentStudents.studentId));
+  }
+  const rows = await query.where(and(...scopedParentCondition(id, centerId)));
+  return rows[0] || null;
 };
 
 const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO parents (first_name, last_name, email, phone, username, password_hash, status)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING parent_id, first_name, last_name, email, phone, username, status`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
+  db
+    .insert(parents)
+    .values({
+      firstName: params[0],
+      lastName: params[1],
+      email: params[2],
+      phone: params[3],
+      username: params[4],
+      passwordHash: params[5],
+      status: params[6],
+    })
+    .returning(parentSafeSelection)
+    .then((rows: any[]) => rows[0]);
 
-const update = (id: number, params: any[], centerId?: number) =>
-  pool
-    .query(
-      `UPDATE parents SET
-        first_name = COALESCE($1, first_name),
-        last_name = COALESCE($2, last_name),
-        email = COALESCE($3, email),
-        phone = COALESCE($4, phone),
-        status = COALESCE($5, status),
-        updated_at = CURRENT_TIMESTAMP
-       WHERE parent_id = $6${centerId ? ' AND parent_id IN (SELECT ps.parent_id FROM parent_students ps JOIN students s ON s.student_id = ps.student_id WHERE s.center_id = $7 AND s.deleted_at IS NULL)' : ''} RETURNING parent_id, first_name, last_name, email, phone, username, status`,
-      centerId ? [...params, id, centerId] : [...params, id]
-    )
-    .then((r: any) => r.rows[0] || null);
-
-const remove = (id: number, centerId?: number) => {
-  let query = 'DELETE FROM parents WHERE parent_id = $1';
-  const params: any[] = [id];
+const update = async (id: number, params: any[], centerId?: number) => {
   if (centerId) {
-    query += ' AND parent_id IN (SELECT ps.parent_id FROM parent_students ps JOIN students s ON s.student_id = ps.student_id WHERE s.center_id = $2 AND s.deleted_at IS NULL)';
-    params.push(centerId);
+    const existing = await findByIdSafe(id, centerId);
+    if (!existing) return null;
   }
-  query += ' RETURNING parent_id';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+  const setData: any = { updatedAt: sql`CURRENT_TIMESTAMP` };
+  if (params[0] !== undefined) setData.firstName = params[0];
+  if (params[1] !== undefined) setData.lastName = params[1];
+  if (params[2] !== undefined) setData.email = params[2];
+  if (params[3] !== undefined) setData.phone = params[3];
+  if (params[4] !== undefined) setData.status = params[4];
+  const rows = await db.update(parents).set(setData).where(eq(parents.parentId, id)).returning(parentSafeSelection);
+  return rows[0] || null;
 };
 
-const upsertParentStudent = (params: any[]) =>
-  pool.query(
-    `INSERT INTO parent_students (parent_id, student_id, relationship, is_primary)
-     VALUES ($1,$2,$3,$4)
-     ON CONFLICT (parent_id, student_id) DO UPDATE SET
-       relationship = EXCLUDED.relationship,
-       is_primary = EXCLUDED.is_primary`,
-    params
-  );
+const remove = async (id: number, centerId?: number) => {
+  if (centerId) {
+    const existing = await findByIdSafe(id, centerId);
+    if (!existing) return null;
+  }
+  const rows = await db.delete(parents).where(eq(parents.parentId, id)).returning({ parent_id: parents.parentId });
+  return rows[0] || null;
+};
+
+const upsertParentStudent = async (params: any[]) => {
+  const [parentId, studentId, relationship, isPrimary] = params;
+  const existing = await db
+    .select({ parent_id: parentStudents.parentId })
+    .from(parentStudents)
+    .where(and(eq(parentStudents.parentId, parentId), eq(parentStudents.studentId, studentId)));
+  if (existing[0]) {
+    return db
+      .update(parentStudents)
+      .set({ relationship, isPrimary, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(eq(parentStudents.parentId, parentId), eq(parentStudents.studentId, studentId)));
+  }
+  return db.insert(parentStudents).values({ parentId, studentId, relationship, isPrimary });
+};
 
 const findByUsernameLogin = (username: string) =>
-  pool
-    .query('SELECT parent_id, first_name, last_name, email, password_hash, status FROM parents WHERE username = $1', [
-      username,
-    ])
-    .then((r: any) => r.rows[0] || null);
+  db
+    .select({
+      parent_id: parents.parentId,
+      first_name: parents.firstName,
+      last_name: parents.lastName,
+      email: parents.email,
+      password_hash: parents.passwordHash,
+      status: parents.status,
+    })
+    .from(parents)
+    .where(eq(parents.username, username))
+    .then((rows: any[]) => rows[0] || null);
 
 const findStudentsForParent = (parentId: number) =>
-  pool
-    .query(
-      `SELECT s.* FROM parent_students ps
-       JOIN students s ON s.student_id = ps.student_id
-       WHERE ps.parent_id = $1 AND s.deleted_at IS NULL`,
-      [parentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select(studentSelection)
+    .from(parentStudents)
+    .innerJoin(students, eq(students.studentId, parentStudents.studentId))
+    .where(and(eq(parentStudents.parentId, parentId), isNull(students.deletedAt)));
 
 const findPaymentsForParent = (parentId: number) =>
-  pool
-    .query(
-      `SELECT p.* FROM parent_students ps
-       JOIN payments p ON p.student_id = ps.student_id
-       JOIN students s ON s.student_id = ps.student_id
-       WHERE ps.parent_id = $1 AND p.deleted_at IS NULL AND s.deleted_at IS NULL
-       ORDER BY p.payment_date DESC`,
-      [parentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select(paymentSelection)
+    .from(parentStudents)
+    .innerJoin(payments, eq(payments.studentId, parentStudents.studentId))
+    .innerJoin(students, eq(students.studentId, parentStudents.studentId))
+    .where(and(eq(parentStudents.parentId, parentId), isNull(payments.deletedAt), isNull(students.deletedAt)))
+    .orderBy(desc(payments.paymentDate));
 
 const findAttendanceForParent = (parentId: number) =>
-  pool
-    .query(
-      `SELECT a.* FROM parent_students ps
-       JOIN attendance a ON a.student_id = ps.student_id
-       JOIN students s ON s.student_id = ps.student_id
-       WHERE ps.parent_id = $1 AND s.deleted_at IS NULL
-       ORDER BY a.attendance_date DESC`,
-      [parentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select(attendanceSelection)
+    .from(parentStudents)
+    .innerJoin(attendance, eq(attendance.studentId, parentStudents.studentId))
+    .innerJoin(students, eq(students.studentId, parentStudents.studentId))
+    .where(and(eq(parentStudents.parentId, parentId), isNull(students.deletedAt)))
+    .orderBy(desc(attendance.attendanceDate));
 
 const findGradesForParent = (parentId: number) =>
-  pool
-    .query(
-      `SELECT g.* FROM parent_students ps
-       JOIN grades g ON g.student_id = ps.student_id
-       JOIN students s ON s.student_id = ps.student_id
-       WHERE ps.parent_id = $1 AND s.deleted_at IS NULL
-       ORDER BY g.academic_year DESC, g.term DESC`,
-      [parentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select(gradeSelection)
+    .from(parentStudents)
+    .innerJoin(grades, eq(grades.studentId, parentStudents.studentId))
+    .innerJoin(students, eq(students.studentId, parentStudents.studentId))
+    .where(and(eq(parentStudents.parentId, parentId), isNull(students.deletedAt)))
+    .orderBy(desc(grades.academicYear), desc(grades.term));
 
 const findTestSubmissionsForParent = (parentId: number) =>
-  pool
-    .query(
-      `SELECT ts.* FROM parent_students ps
-       JOIN test_submissions ts ON ts.student_id = ps.student_id
-       WHERE ps.parent_id = $1
-       ORDER BY ts.created_at DESC`,
-      [parentId]
-    )
-    .then((r: any) => r.rows);
+  db
+    .select(testSubmissionSelection)
+    .from(parentStudents)
+    .innerJoin(testSubmissions, eq(testSubmissions.studentId, parentStudents.studentId))
+    .where(eq(parentStudents.parentId, parentId))
+    .orderBy(desc(testSubmissions.createdAt));
 
 module.exports = {
   findAllSafe,

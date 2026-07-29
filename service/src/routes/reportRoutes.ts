@@ -7,6 +7,7 @@ const reportController = require('../modules/reports');
 router.get('/overview', reportController.getOverviewReport);
 router.get('/payments', reportController.getPaymentsReport);
 router.get('/attendance', reportController.getAttendanceReport);
+router.get('/retention', reportController.getRetentionReport);
 
 module.exports = router;
 export {};

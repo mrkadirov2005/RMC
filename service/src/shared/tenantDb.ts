@@ -1,64 +1,67 @@
+const { and, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../db/pool');
+const { classes, students, superusers, teachers, tests } = require('../db/schema');
+
+const db = pool.db;
 
 const studentBelongsToTeacher = async (studentId: number, teacherId: number) => {
-  const result = await pool.query(
-    `SELECT s.student_id
-     FROM students s
-     LEFT JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
-     WHERE s.student_id = $1
-       AND COALESCE(c.teacher_id, s.teacher_id) = $2
-       AND s.deleted_at IS NULL`,
-    [studentId, teacherId]
-  );
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ student_id: students.studentId })
+    .from(students)
+    .leftJoin(classes, and(eq(classes.classId, students.classId), isNull(classes.deletedAt)))
+    .where(and(eq(students.studentId, studentId), sql`COALESCE(${classes.teacherId}, ${students.teacherId}) = ${teacherId}`, isNull(students.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 const studentInCenter = async (studentId: number, centerId: number) => {
-  const result = await pool.query('SELECT student_id FROM students WHERE student_id = $1 AND center_id = $2 AND deleted_at IS NULL', [
-    studentId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ student_id: students.studentId })
+    .from(students)
+    .where(and(eq(students.studentId, studentId), eq(students.centerId, centerId), isNull(students.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 const classInCenter = async (classId: number, centerId: number) => {
-  const result = await pool.query('SELECT class_id FROM classes WHERE class_id = $1 AND center_id = $2 AND deleted_at IS NULL', [
-    classId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ class_id: classes.classId })
+    .from(classes)
+    .where(and(eq(classes.classId, classId), eq(classes.centerId, centerId), isNull(classes.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 const classBelongsToTeacher = async (classId: number, teacherId: number) => {
-  const result = await pool.query('SELECT class_id FROM classes WHERE class_id = $1 AND teacher_id = $2 AND deleted_at IS NULL', [
-    classId,
-    teacherId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ class_id: classes.classId })
+    .from(classes)
+    .where(and(eq(classes.classId, classId), eq(classes.teacherId, teacherId), isNull(classes.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 const testInCenter = async (testId: number, centerId: number) => {
-  const result = await pool.query('SELECT test_id FROM tests WHERE test_id = $1 AND center_id = $2', [
-    testId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db.select({ test_id: tests.testId }).from(tests).where(and(eq(tests.testId, testId), eq(tests.centerId, centerId))).limit(1);
+  return rows.length > 0;
 };
 
 const teacherInCenter = async (teacherId: number, centerId: number) => {
-  const result = await pool.query('SELECT teacher_id FROM teachers WHERE teacher_id = $1 AND center_id = $2 AND deleted_at IS NULL', [
-    teacherId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ teacher_id: teachers.teacherId })
+    .from(teachers)
+    .where(and(eq(teachers.teacherId, teacherId), eq(teachers.centerId, centerId), isNull(teachers.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 const superuserInCenter = async (superuserId: number, centerId: number) => {
-  const result = await pool.query('SELECT superuser_id FROM superusers WHERE superuser_id = $1 AND center_id = $2', [
-    superuserId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ superuser_id: superusers.superuserId })
+    .from(superusers)
+    .where(and(eq(superusers.superuserId, superuserId), eq(superusers.centerId, centerId)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 module.exports = {

@@ -4,7 +4,11 @@ export {};
  * JWT Authentication & Role-Based Access Control Middleware
  */
 const jwt = require('jsonwebtoken');
+const { and, eq, isNull } = require('drizzle-orm');
 const pool = require('../db/pool');
+const { students } = require('../db/schema');
+
+const db = pool.db;
 
 const JWT_SECRET = process.env.JWT_SECRET || 'crm_jwt_secret_key_2024_change_in_production';
 const JWT_EXPIRES_IN = '24h';
@@ -70,8 +74,12 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
       decoded.userType === 'student' &&
       ['POST', 'PUT', 'PATCH', 'DELETE'].includes(String(req.method || '').toUpperCase())
     ) {
-      const result = await pool.query('SELECT is_frozen FROM students WHERE student_id = $1 AND deleted_at IS NULL', [decoded.id]);
-      const isFrozen = Boolean(result.rows?.[0]?.is_frozen);
+      const rows = await db
+        .select({ is_frozen: students.isFrozen })
+        .from(students)
+        .where(and(eq(students.studentId, decoded.id), isNull(students.deletedAt)))
+        .limit(1);
+      const isFrozen = Boolean(rows?.[0]?.is_frozen);
       if (isFrozen) {
         res.status(423).json({
           error: 'Student account is frozen and is currently view-only.',

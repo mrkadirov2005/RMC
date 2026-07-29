@@ -33,6 +33,7 @@ const DebtsPage = lazy(() => import('./features/crm/debts/DebtsPage'));
 const FinancePage = lazy(() => import('./features/crm/finance/FinancePage'));
 const RoomsPage = lazy(() => import('./features/crm/rooms/RoomsPage'));
 const ArchivePage = lazy(() => import('./features/crm/archive/ArchivePage'));
+const RetentionPage = lazy(() => import('./features/crm/retention/RetentionPage'));
 const TelegramRegistrationsPage = lazy(() => import('./features/crm/telegram/TelegramRegistrationsPage'));
 const TeacherFinanceDetailPage = lazy(() => import('./features/crm/finance/TeacherFinanceDetailPage'));
 const AssignmentsPage = lazy(() => import('./features/crm/assignments/AssignmentsPage'));
@@ -376,6 +377,17 @@ function AppContent() {
             <ProtectedRoute allowedUserTypes={['superuser']}>
               <Layout>
                 <ArchivePage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/retention"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']}>
+              <Layout>
+                <RetentionPage />
               </Layout>
             </ProtectedRoute>
           }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BadgePercent, BarChart3, DollarSign, GraduationCap, Loader2, Users } from 'lucide-react';
+import { BadgePercent, BarChart3, DollarSign, GraduationCap, Loader2, TrendingDown, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ownerManagerApi } from './api';
@@ -8,12 +8,14 @@ import { OwnerFinancePanel } from './components/OwnerFinancePanel';
 import { DiscountStatsPanel } from './components/discount-stats/DiscountStatsPanel';
 import { StudentStatsCarousel } from './components/student-stats/StudentStatsCarousel';
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
+import RetentionPage from '../crm/retention/RetentionPage';
 
-type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts';
+type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention';
 
 const tabs = [
   { value: 'finance', label: 'Moliya', Icon: DollarSign },
   { value: 'discounts', label: 'Chegirmalar', Icon: BadgePercent },
+  { value: 'retention', label: 'Retention', Icon: TrendingDown },
   { value: 'students', label: "O'quvchilar", Icon: GraduationCap },
   { value: 'teachers', label: "O'qituvchilar", Icon: Users },
 ] as const;
@@ -64,6 +66,11 @@ const OwnerReports = () => {
       setLoading(true);
       try {
         const nextCollections: OwnerManagerStatisticsCollections = { ...emptyCollections };
+        if (activeTab === 'retention') {
+          if (!alive) return;
+          setCollections(nextCollections);
+          return;
+        }
         if (activeTab === 'finance') {
           const [studentsRes, teachersRes, classesRes, paymentsRes] = await Promise.all([
             ownerManagerApi.students.getAllAcrossCenters(),
@@ -183,6 +190,7 @@ const OwnerReports = () => {
           <>
             {activeTab === 'finance' && <OwnerFinancePanel collections={collections} loading={false} />}
             {activeTab === 'discounts' && <DiscountStatsPanel collections={collections} />}
+            {activeTab === 'retention' && <RetentionPage embedded />}
             {activeTab === 'students' && <StudentStatsCarousel data={collections.students} collections={collections} />}
             {activeTab === 'teachers' && <TeacherStatsPanel data={collections.teachers} collections={collections} />}
           </>

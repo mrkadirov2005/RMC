@@ -1,303 +1,268 @@
+const { and, desc, eq, isNotNull, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const {
+  classes,
+  grades,
+  payments: paymentsTable,
+  sessions,
+  studentCoinTransactions,
+  students,
+  teachers,
+  telegramStudentRegistrations,
+} = require('../../../db/schema');
+
+const db = pool.db;
+
+const rankRows = (rows: any[], score: (row: any) => any[]) => {
+  let previousKey = '';
+  let previousRank = 0;
+  return rows.map((row, index) => {
+    const key = JSON.stringify(score(row));
+    const rank = key === previousKey ? previousRank : index + 1;
+    previousKey = key;
+    previousRank = rank;
+    return { ...row, rank, total_students: rows.length };
+  });
+};
 
 const resolveStudent = async (telegramUserId: string) => {
-  const result = await pool.query(
-    `SELECT
-       r.registration_id,
-       r.telegram_user_id,
-       r.telegram_chat_id,
-       r.telegram_username,
-       s.student_id,
-       s.center_id,
-       s.class_id,
-       s.teacher_id,
-       s.first_name,
-       s.last_name,
-       s.status,
-       s.coins,
-       c.class_name,
-       c.class_code,
-       t.first_name AS teacher_first_name,
-       t.last_name AS teacher_last_name
-     FROM telegram_student_registrations r
-     JOIN students s ON s.student_id = r.converted_student_id AND s.deleted_at IS NULL
-     LEFT JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL
-     LEFT JOIN teachers t ON t.teacher_id = s.teacher_id AND t.deleted_at IS NULL
-     WHERE r.telegram_user_id = $1
-       AND r.converted_student_id IS NOT NULL
-       AND LOWER(r.status) = 'imported'
-     ORDER BY r.converted_at DESC NULLS LAST, r.registration_id DESC
-     LIMIT 1`,
-    [telegramUserId]
-  );
-  return result.rows[0] || null;
+  const rows = await db
+    .select({
+      registration_id: telegramStudentRegistrations.registrationId,
+      telegram_user_id: telegramStudentRegistrations.telegramUserId,
+      telegram_chat_id: telegramStudentRegistrations.telegramChatId,
+      telegram_username: telegramStudentRegistrations.telegramUsername,
+      student_id: students.studentId,
+      center_id: students.centerId,
+      class_id: students.classId,
+      teacher_id: students.teacherId,
+      first_name: students.firstName,
+      last_name: students.lastName,
+      status: students.status,
+      coins: students.coins,
+      class_name: classes.className,
+      class_code: classes.classCode,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+    })
+    .from(telegramStudentRegistrations)
+    .innerJoin(students, and(eq(students.studentId, telegramStudentRegistrations.convertedStudentId), isNull(students.deletedAt)))
+    .leftJoin(classes, and(eq(classes.classId, students.classId), isNull(classes.deletedAt)))
+    .leftJoin(teachers, and(eq(teachers.teacherId, students.teacherId), isNull(teachers.deletedAt)))
+    .where(
+      and(
+        eq(telegramStudentRegistrations.telegramUserId, Number(telegramUserId)),
+        isNotNull(telegramStudentRegistrations.convertedStudentId),
+        eq(sql`LOWER(${telegramStudentRegistrations.status})`, 'imported')
+      )
+    )
+    .orderBy(desc(telegramStudentRegistrations.convertedAt), desc(telegramStudentRegistrations.registrationId))
+    .limit(1);
+  return rows[0] || null;
 };
 
 const findLastLesson = async (studentId: number) => {
-  const result = await pool.query(
-    `WITH latest_grade AS (
-       SELECT g.*
-       FROM grades g
-       JOIN sessions se ON se.session_id = g.session_id AND se.deleted_at IS NULL
-       WHERE g.student_id = $1
-       ORDER BY se.session_date DESC, se.start_time DESC, g.grade_id DESC
-       LIMIT 1
-     ),
-     lesson_rank AS (
-       SELECT
-         g.student_id,
-         RANK() OVER (
-           ORDER BY COALESCE(g.percentage, 0) DESC,
-                    COALESCE(g.marks_obtained, 0) DESC,
-                    COALESCE(g.total_daily_coin, 0) DESC,
-                    g.grade_id ASC
-         )::int AS rank,
-         COUNT(*) OVER ()::int AS total_students
-       FROM grades g
-       JOIN latest_grade lg ON lg.session_id = g.session_id
-     ),
-     lesson_coins AS (
-       SELECT COALESCE(SUM(delta), 0)::int AS coins_given
-       FROM student_coin_transactions tx
-       JOIN latest_grade lg ON lg.student_id = tx.student_id
-       WHERE tx.student_id = $1
-         AND tx.source_type = 'lesson_session'
-         AND tx.source_id = lg.session_id
-     )
-     SELECT
-       lg.grade_id,
-       lg.session_id,
-       lg.marks_obtained,
-       lg.total_marks,
-       lg.percentage,
-       lg.grade_letter,
-       lg.attendance_score,
-       lg.homework_score,
-       lg.activity_score,
-       lg.total_daily_coin,
-       se.session_date,
-       se.start_time,
-       se.end_time,
-       c.class_id,
-       c.class_name,
-       t.teacher_id,
-       t.first_name AS teacher_first_name,
-       t.last_name AS teacher_last_name,
-       lr.rank,
-       lr.total_students,
-       COALESCE(lc.coins_given, lg.total_daily_coin, 0)::int AS coins_given
-     FROM latest_grade lg
-     JOIN sessions se ON se.session_id = lg.session_id
-     LEFT JOIN classes c ON c.class_id = lg.class_id
-     LEFT JOIN teachers t ON t.teacher_id = lg.teacher_id
-     LEFT JOIN lesson_rank lr ON lr.student_id = lg.student_id
-     LEFT JOIN lesson_coins lc ON TRUE`,
-    [studentId]
-  );
-  return result.rows[0] || null;
+  const latestRows = await db
+    .select({
+      grade_id: grades.gradeId,
+      session_id: grades.sessionId,
+      student_id: grades.studentId,
+      class_id: grades.classId,
+      teacher_id: grades.teacherId,
+      marks_obtained: grades.marksObtained,
+      total_marks: grades.totalMarks,
+      percentage: grades.percentage,
+      grade_letter: grades.gradeLetter,
+      attendance_score: grades.attendanceScore,
+      homework_score: grades.homeworkScore,
+      activity_score: grades.activityScore,
+      total_daily_coin: grades.totalDailyCoin,
+      session_date: sessions.sessionDate,
+      start_time: sessions.startTime,
+      end_time: sessions.endTime,
+      class_name: classes.className,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+    })
+    .from(grades)
+    .innerJoin(sessions, and(eq(sessions.sessionId, grades.sessionId), isNull(sessions.deletedAt)))
+    .leftJoin(classes, eq(classes.classId, grades.classId))
+    .leftJoin(teachers, eq(teachers.teacherId, grades.teacherId))
+    .where(eq(grades.studentId, studentId))
+    .orderBy(desc(sessions.sessionDate), desc(sessions.startTime), desc(grades.gradeId))
+    .limit(1);
+  const latest = latestRows[0];
+  if (!latest) return null;
+
+  const [lessonGrades, lessonCoins] = await Promise.all([
+    db
+      .select({
+        student_id: grades.studentId,
+        percentage: grades.percentage,
+        marks_obtained: grades.marksObtained,
+        total_daily_coin: grades.totalDailyCoin,
+        grade_id: grades.gradeId,
+      })
+      .from(grades)
+      .where(eq(grades.sessionId, latest.session_id)),
+    db
+      .select({ coins_given: sql`COALESCE(SUM(${studentCoinTransactions.delta}), 0)::int` })
+      .from(studentCoinTransactions)
+      .where(
+        and(
+          eq(studentCoinTransactions.studentId, studentId),
+          eq(studentCoinTransactions.sourceType, 'lesson_session'),
+          eq(studentCoinTransactions.sourceId, latest.session_id)
+        )
+      ),
+  ]);
+
+  const ranked = rankRows(
+    lessonGrades
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          Number(b.percentage || 0) - Number(a.percentage || 0) ||
+          Number(b.marks_obtained || 0) - Number(a.marks_obtained || 0) ||
+          Number(b.total_daily_coin || 0) - Number(a.total_daily_coin || 0) ||
+          Number(a.grade_id) - Number(b.grade_id)
+      ),
+    (row: any) => [Number(row.percentage || 0), Number(row.marks_obtained || 0), Number(row.total_daily_coin || 0)]
+  ).find((row: any) => Number(row.student_id) === Number(studentId));
+
+  return {
+    ...latest,
+    teacher_id: latest.teacher_id,
+    class_id: latest.class_id,
+    rank: ranked?.rank || null,
+    total_students: ranked?.total_students || lessonGrades.length,
+    coins_given: Number((lessonCoins[0] as any)?.coins_given ?? latest.total_daily_coin ?? 0),
+  };
 };
 
-const classRank = async (centerId: number, classId: number) => {
-  const result = await pool.query(
-    `WITH points AS (
-       SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
-       FROM grades
-       WHERE center_id = $1 AND class_id = $2
-       GROUP BY student_id
-     )
-     SELECT
-       s.student_id,
-       s.first_name,
-       s.last_name,
-       s.status,
-       s.coins,
-       COALESCE(p.points, 0) AS points,
-       RANK() OVER (
-         ORDER BY COALESCE(s.coins, 0) DESC,
-                  COALESCE(p.points, 0) DESC,
-                  s.student_id ASC
-       )::int AS rank
-     FROM students s
-     LEFT JOIN points p ON p.student_id = s.student_id
-     WHERE s.center_id = $1
-       AND s.class_id = $2
-       AND s.deleted_at IS NULL
-     ORDER BY rank, s.last_name, s.first_name`,
-    [centerId, classId]
+const classRankRows = async (centerId: number, classId?: number) => {
+  const points = db
+    .select({
+      student_id: grades.studentId,
+      points: sql`COALESCE(SUM(${grades.marksObtained}), 0)::numeric`.as('points'),
+    })
+    .from(grades)
+    .where(classId ? and(eq(grades.centerId, centerId), eq(grades.classId, classId)) : eq(grades.centerId, centerId))
+    .groupBy(grades.studentId)
+    .as('points');
+
+  const conditions = [eq(students.centerId, centerId), isNull(students.deletedAt)];
+  if (classId) conditions.push(eq(students.classId, classId));
+
+  const rows = await db
+    .select({
+      student_id: students.studentId,
+      first_name: students.firstName,
+      last_name: students.lastName,
+      status: students.status,
+      class_id: students.classId,
+      class_name: classes.className,
+      coins: students.coins,
+      points: sql`COALESCE(${points.points}, 0)`,
+    })
+    .from(students)
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .leftJoin(points, eq(points.student_id, students.studentId))
+    .where(and(...conditions));
+
+  return rankRows(
+    rows
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          Number(b.coins || 0) - Number(a.coins || 0) ||
+          Number(b.points || 0) - Number(a.points || 0) ||
+          Number(a.student_id) - Number(b.student_id)
+      ),
+    (row: any) => [Number(row.coins || 0), Number(row.points || 0)]
   );
-  return result.rows;
 };
 
-const classRankSummary = async (centerId: number, classId: number, studentId: number) => {
-  const result = await pool.query(
-    `WITH points AS (
-       SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
-       FROM grades
-       WHERE center_id = $1 AND class_id = $2
-       GROUP BY student_id
-     ),
-     ranked AS (
-       SELECT
-         s.student_id,
-         s.coins,
-         COALESCE(p.points, 0) AS points,
-         RANK() OVER (
-           ORDER BY COALESCE(s.coins, 0) DESC,
-                    COALESCE(p.points, 0) DESC,
-                    s.student_id ASC
-         )::int AS rank,
-         COUNT(*) OVER ()::int AS total_students
-       FROM students s
-       LEFT JOIN points p ON p.student_id = s.student_id
-       WHERE s.center_id = $1
-         AND s.class_id = $2
-         AND s.deleted_at IS NULL
-     )
-     SELECT * FROM ranked WHERE student_id = $3`,
-    [centerId, classId, studentId]
+const classRank = async (centerId: number, classId: number) =>
+  (await classRankRows(centerId, classId)).sort(
+    (a: any, b: any) => Number(a.rank) - Number(b.rank) || String(a.last_name || '').localeCompare(String(b.last_name || '')) || String(a.first_name || '').localeCompare(String(b.first_name || ''))
   );
-  return result.rows[0] || null;
-};
 
-const centerRank = async (centerId: number, limit = 100) => {
-  const result = await pool.query(
-    `WITH points AS (
-       SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
-       FROM grades
-       WHERE center_id = $1
-       GROUP BY student_id
-     )
-     SELECT
-       s.student_id,
-       s.first_name,
-       s.last_name,
-       s.status,
-       s.class_id,
-       c.class_name,
-       s.coins,
-       COALESCE(p.points, 0) AS points,
-       RANK() OVER (
-         ORDER BY COALESCE(s.coins, 0) DESC,
-                  COALESCE(p.points, 0) DESC,
-                  s.student_id ASC
-       )::int AS rank
-     FROM students s
-     LEFT JOIN classes c ON c.class_id = s.class_id
-     LEFT JOIN points p ON p.student_id = s.student_id
-     WHERE s.center_id = $1
-       AND s.deleted_at IS NULL
-     ORDER BY rank, s.last_name, s.first_name
-     LIMIT $2`,
-    [centerId, limit]
-  );
-  return result.rows;
-};
+const classRankSummary = async (centerId: number, classId: number, studentId: number) =>
+  (await classRankRows(centerId, classId)).find((row: any) => Number(row.student_id) === Number(studentId)) || null;
 
-const centerRankSummary = async (centerId: number, studentId: number) => {
-  const result = await pool.query(
-    `WITH points AS (
-       SELECT student_id, COALESCE(SUM(marks_obtained), 0)::numeric AS points
-       FROM grades
-       WHERE center_id = $1
-       GROUP BY student_id
-     ),
-     ranked AS (
-       SELECT
-         s.student_id,
-         s.class_id,
-         c.class_name,
-         s.coins,
-         COALESCE(p.points, 0) AS points,
-         RANK() OVER (
-           ORDER BY COALESCE(s.coins, 0) DESC,
-                    COALESCE(p.points, 0) DESC,
-                    s.student_id ASC
-         )::int AS rank,
-         COUNT(*) OVER ()::int AS total_students
-       FROM students s
-       LEFT JOIN classes c ON c.class_id = s.class_id
-       LEFT JOIN points p ON p.student_id = s.student_id
-       WHERE s.center_id = $1
-         AND s.deleted_at IS NULL
-     )
-     SELECT * FROM ranked WHERE student_id = $2`,
-    [centerId, studentId]
+const centerRank = async (centerId: number, limit = 100) =>
+  (await classRankRows(centerId)).slice(0, limit).sort(
+    (a: any, b: any) => Number(a.rank) - Number(b.rank) || String(a.last_name || '').localeCompare(String(b.last_name || '')) || String(a.first_name || '').localeCompare(String(b.first_name || ''))
   );
-  return result.rows[0] || null;
-};
+
+const centerRankSummary = async (centerId: number, studentId: number) =>
+  (await classRankRows(centerId)).find((row: any) => Number(row.student_id) === Number(studentId)) || null;
 
 const results = async (studentId: number, page: number, limit: number) => {
   const offset = (page - 1) * limit;
-  const params = [studentId, limit, offset];
   const [rows, count] = await Promise.all([
-    pool.query(
-      `SELECT
-         g.grade_id,
-         g.session_id,
-         g.subject,
-         g.marks_obtained,
-         g.total_marks,
-         g.percentage,
-         g.grade_letter,
-         g.attendance_score,
-         g.homework_score,
-         g.activity_score,
-         g.total_daily_coin,
-         g.created_at,
-         se.session_date,
-         se.start_time,
-         c.class_name,
-         t.first_name AS teacher_first_name,
-         t.last_name AS teacher_last_name
-       FROM grades g
-       LEFT JOIN sessions se ON se.session_id = g.session_id
-       LEFT JOIN classes c ON c.class_id = g.class_id
-       LEFT JOIN teachers t ON t.teacher_id = g.teacher_id
-       WHERE g.student_id = $1
-       ORDER BY se.session_date DESC NULLS LAST, se.start_time DESC NULLS LAST, g.grade_id DESC
-       LIMIT $2 OFFSET $3`,
-      params
-    ),
-    pool.query('SELECT COUNT(*)::int AS total FROM grades WHERE student_id = $1', [studentId]),
+    db
+      .select({
+        grade_id: grades.gradeId,
+        session_id: grades.sessionId,
+        subject: grades.subject,
+        marks_obtained: grades.marksObtained,
+        total_marks: grades.totalMarks,
+        percentage: grades.percentage,
+        grade_letter: grades.gradeLetter,
+        attendance_score: grades.attendanceScore,
+        homework_score: grades.homeworkScore,
+        activity_score: grades.activityScore,
+        total_daily_coin: grades.totalDailyCoin,
+        created_at: grades.createdAt,
+        session_date: sessions.sessionDate,
+        start_time: sessions.startTime,
+        class_name: classes.className,
+        teacher_first_name: teachers.firstName,
+        teacher_last_name: teachers.lastName,
+      })
+      .from(grades)
+      .leftJoin(sessions, eq(sessions.sessionId, grades.sessionId))
+      .leftJoin(classes, eq(classes.classId, grades.classId))
+      .leftJoin(teachers, eq(teachers.teacherId, grades.teacherId))
+      .where(eq(grades.studentId, studentId))
+      .orderBy(desc(sessions.sessionDate), desc(sessions.startTime), desc(grades.gradeId))
+      .limit(limit)
+      .offset(offset),
+    db.select({ total: sql`COUNT(*)::int` }).from(grades).where(eq(grades.studentId, studentId)),
   ]);
-  return { data: rows.rows, total: Number(count.rows[0]?.total || 0), page, limit };
+  return { data: rows, total: Number((count[0] as any)?.total || 0), page, limit };
 };
 
 const payments = async (studentId: number, centerId: number, page: number, limit: number) => {
   const offset = (page - 1) * limit;
-  const params = [studentId, centerId, limit, offset];
   const [rows, count] = await Promise.all([
-    pool.query(
-      `SELECT
-         payment_id,
-         payment_date,
-         amount,
-         currency,
-         payment_method,
-         payment_status,
-         payment_type,
-         receipt_number,
-         final_amount,
-         discount_amount,
-         is_complete
-       FROM payments
-       WHERE student_id = $1
-         AND center_id = $2
-         AND deleted_at IS NULL
-       ORDER BY payment_date DESC, payment_id DESC
-       LIMIT $3 OFFSET $4`,
-      params
-    ),
-    pool.query(
-      `SELECT COUNT(*)::int AS total
-       FROM payments
-       WHERE student_id = $1
-         AND center_id = $2
-         AND deleted_at IS NULL`,
-      [studentId, centerId]
-    ),
+    db
+      .select({
+        payment_id: paymentsTable.paymentId,
+        payment_date: paymentsTable.paymentDate,
+        amount: paymentsTable.amount,
+        currency: paymentsTable.currency,
+        payment_method: paymentsTable.paymentMethod,
+        payment_status: paymentsTable.paymentStatus,
+        payment_type: paymentsTable.paymentType,
+        receipt_number: paymentsTable.receiptNumber,
+        final_amount: paymentsTable.finalAmount,
+        discount_amount: paymentsTable.discountAmount,
+        is_complete: paymentsTable.isComplete,
+      })
+      .from(paymentsTable)
+      .where(and(eq(paymentsTable.studentId, studentId), eq(paymentsTable.centerId, centerId), isNull(paymentsTable.deletedAt)))
+      .orderBy(desc(paymentsTable.paymentDate), desc(paymentsTable.paymentId))
+      .limit(limit)
+      .offset(offset),
+    db
+      .select({ total: sql`COUNT(*)::int` })
+      .from(paymentsTable)
+      .where(and(eq(paymentsTable.studentId, studentId), eq(paymentsTable.centerId, centerId), isNull(paymentsTable.deletedAt))),
   ]);
-  return { data: rows.rows, total: Number(count.rows[0]?.total || 0), page, limit };
+  return { data: rows, total: Number((count[0] as any)?.total || 0), page, limit };
 };
 
 module.exports = {

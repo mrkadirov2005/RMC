@@ -1,19 +1,22 @@
+const { and, desc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { auditLogs } = require('../../../db/schema');
 
-const findFiltered = (conditions: string[], params: any[], limit?: number, offset?: number) => {
-  let query = 'SELECT * FROM audit_logs';
-  if (conditions.length > 0) query += ` WHERE ${conditions.join(' AND ')}`;
-  query += ' ORDER BY created_at DESC';
-  const p = [...params];
-  if (limit != null) {
-    p.push(limit);
-    query += ` LIMIT $${p.length}`;
-  }
-  if (offset != null) {
-    p.push(offset);
-    query += ` OFFSET $${p.length}`;
-  }
-  return pool.query(query, p).then((r: any) => r.rows);
+const db = pool.db;
+
+const findFiltered = (filters: { entityType?: string; entityId?: number; userType?: string; userId?: number; centerId?: number } = {}, limit?: number, offset?: number) => {
+  const conditions: any[] = [];
+  if (filters.entityType) conditions.push(eq(auditLogs.entityType, filters.entityType));
+  if (filters.entityId) conditions.push(eq(auditLogs.entityId, filters.entityId));
+  if (filters.userType) conditions.push(eq(auditLogs.userType, filters.userType));
+  if (filters.userId) conditions.push(eq(auditLogs.userId, filters.userId));
+  if (filters.centerId) conditions.push(sql`COALESCE(${auditLogs.details}->>'center_id', '') = ${String(filters.centerId)}`);
+
+  let query = db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt));
+  if (conditions.length) query = query.where(and(...conditions));
+  if (limit != null) query = query.limit(limit);
+  if (offset != null) query = query.offset(offset);
+  return query;
 };
 
 module.exports = { findFiltered };

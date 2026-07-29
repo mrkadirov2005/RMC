@@ -1,37 +1,74 @@
+const { and, desc, eq, inArray, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { payments, refunds } = require('../../../db/schema');
 
-const findAllFiltered = (conditions: string[], params: any[]) => {
-  let query = 'SELECT * FROM refunds';
-  if (conditions.length > 0) query += ` WHERE ${conditions.join(' AND ')}`;
-  query += ' ORDER BY created_at DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+const db = pool.db;
+
+const selection = {
+  refund_id: refunds.refundId,
+  payment_id: refunds.paymentId,
+  amount: refunds.amount,
+  reason: refunds.reason,
+  status: refunds.status,
+  refunded_at: refunds.refundedAt,
+  created_at: refunds.createdAt,
+  updated_at: refunds.updatedAt,
 };
 
-const findById = (id: number) =>
-  pool.query('SELECT * FROM refunds WHERE refund_id = $1', [id]).then((r: any) => r.rows[0] || null);
+const findAllFiltered = async (filters: { paymentId?: number; status?: string; centerId?: number } = {}) => {
+  const conditions: any[] = [];
+  if (filters.paymentId) conditions.push(eq(refunds.paymentId, filters.paymentId));
+  if (filters.status) conditions.push(eq(refunds.status, filters.status));
+  if (filters.centerId) {
+    const scopedPayments = await db
+      .select({ paymentId: payments.paymentId })
+      .from(payments)
+      .where(and(eq(payments.centerId, filters.centerId), isNull(payments.deletedAt)));
+    const paymentIds = scopedPayments.map((payment: any) => payment.paymentId);
+    if (paymentIds.length === 0) return [];
+    conditions.push(inArray(refunds.paymentId, paymentIds));
+  }
+  let query = db.select(selection).from(refunds).orderBy(desc(refunds.createdAt));
+  if (conditions.length) query = query.where(and(...conditions));
+  return query;
+};
 
-const insert = (params: any[]) =>
-  pool
-    .query(`INSERT INTO refunds (payment_id, amount, reason) VALUES ($1,$2,$3) RETURNING *`, params)
-    .then((r: any) => r.rows[0]);
+const findById = async (id: number) => {
+  const rows = await db.select(selection).from(refunds).where(eq(refunds.refundId, id)).limit(1);
+  return rows[0] || null;
+};
 
-const update = (id: number, status: any, refunded_at: any) =>
-  pool
-    .query(
-      `UPDATE refunds SET
-        status = COALESCE($1, status),
-        refunded_at = COALESCE($2, refunded_at),
-        updated_at = CURRENT_TIMESTAMP
-       WHERE refund_id = $3 RETURNING *`,
-      [status, refunded_at, id]
-    )
-    .then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(refunds)
+    .values({ paymentId: params[0], amount: params[1], reason: params[2] })
+    .returning(selection);
+  return rows[0];
+};
+
+const update = async (id: number, status: any, refunded_at: any) => {
+  const rows = await db
+    .update(refunds)
+    .set({
+      status: sql`COALESCE(${status ?? null}, ${refunds.status})`,
+      refundedAt: sql`COALESCE(${refunded_at ?? null}, ${refunds.refundedAt})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(refunds.refundId, id))
+    .returning(selection);
+  return rows[0] || null;
+};
 
 const updatePaymentRefunded = (paymentId: number) =>
-  pool.query(`UPDATE payments SET payment_status = 'Refunded', updated_at = CURRENT_TIMESTAMP WHERE payment_id = $1 AND deleted_at IS NULL`, [paymentId]);
+  db
+    .update(payments)
+    .set({ paymentStatus: 'Refunded', updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(eq(payments.paymentId, paymentId), isNull(payments.deletedAt)));
 
-const remove = (id: number) =>
-  pool.query('DELETE FROM refunds WHERE refund_id = $1 RETURNING *', [id]).then((r: any) => r.rows[0] || null);
+const remove = async (id: number) => {
+  const rows = await db.delete(refunds).where(eq(refunds.refundId, id)).returning(selection);
+  return rows[0] || null;
+};
 
 module.exports = { findAllFiltered, findById, insert, update, updatePaymentRefunded, remove };
 

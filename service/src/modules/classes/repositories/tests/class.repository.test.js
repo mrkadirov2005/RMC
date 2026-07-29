@@ -1,43 +1,74 @@
+const mockDb = {
+  select: jest.fn(),
+  insert: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
+
 jest.mock('../../../../db/pool', () => ({
-  query: jest.fn(),
+  db: mockDb,
+  sql: require('drizzle-orm').sql,
 }));
 
-const pool = require('../../../../db/pool');
 const classRepository = require('../class.repository');
+
+const createSelectChain = (rows) => {
+  const chain = {};
+  chain.from = jest.fn(() => chain);
+  chain.where = jest.fn(() => chain);
+  chain.orderBy = jest.fn(() => chain);
+  chain.limit = jest.fn(() => chain);
+  chain.then = jest.fn((resolve, reject) => Promise.resolve(rows).then(resolve, reject));
+  return chain;
+};
+
+const createMutationChain = (rows) => {
+  const chain = {};
+  chain.set = jest.fn(() => chain);
+  chain.where = jest.fn(() => chain);
+  chain.returning = jest.fn(() => Promise.resolve(rows));
+  return chain;
+};
 
 describe('classes repository', () => {
   beforeEach(() => {
-    pool.query.mockReset();
+    jest.clearAllMocks();
   });
 
-  it('adds center and teacher scope to findAll', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ class_id: 1 }] });
+  it('adds center and teacher scope to findAll with Drizzle builders', async () => {
+    const chain = createSelectChain([{ class_id: 1 }]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     const rows = await classRepository.findAll(2, 7);
 
-    expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('c.center_id = $1'), [2, 7]);
-    expect(pool.query.mock.calls[0][0]).toContain('c.teacher_id = $2');
+    expect(mockDb.select).toHaveBeenCalled();
+    expect(chain.from).toHaveBeenCalled();
+    expect(chain.where).toHaveBeenCalled();
+    expect(chain.orderBy).toHaveBeenCalled();
     expect(rows).toEqual([{ class_id: 1 }]);
   });
 
-  it('checks teacher existence inside center scope', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ teacher_id: 4 }] });
+  it('checks teacher existence inside center scope with Drizzle builders', async () => {
+    const chain = createSelectChain([{ teacher_id: 4 }]);
+    mockDb.select.mockReturnValueOnce(chain);
 
     await expect(classRepository.teacherExists(4, 2)).resolves.toBe(true);
 
-    expect(pool.query).toHaveBeenCalledWith(
-      expect.stringContaining('teacher_id = $1'),
-      [4, 2]
-    );
-    expect(pool.query.mock.calls[0][0]).toContain('center_id = $2');
+    expect(mockDb.select).toHaveBeenCalledWith(expect.objectContaining({ teacher_id: expect.any(Object) }));
+    expect(chain.from).toHaveBeenCalled();
+    expect(chain.where).toHaveBeenCalled();
+    expect(chain.limit).toHaveBeenCalledWith(1);
   });
 
-  it('soft deletes classes with center scope', async () => {
-    pool.query.mockResolvedValueOnce({ rows: [{ class_id: 9 }] });
+  it('soft deletes classes with center scope using Drizzle update', async () => {
+    const chain = createMutationChain([{ class_id: 9 }]);
+    mockDb.update.mockReturnValueOnce(chain);
 
-    await classRepository.remove(9, 3);
+    await expect(classRepository.remove(9, 3)).resolves.toEqual({ class_id: 9 });
 
-    expect(pool.query).toHaveBeenCalledWith(expect.stringContaining('deleted_at = CURRENT_TIMESTAMP'), [9, 3]);
-    expect(pool.query.mock.calls[0][0]).toContain('center_id = $2');
+    expect(mockDb.update).toHaveBeenCalled();
+    expect(chain.set).toHaveBeenCalledWith(expect.objectContaining({ deletedAt: expect.any(Object), updatedAt: expect.any(Object) }));
+    expect(chain.where).toHaveBeenCalled();
+    expect(chain.returning).toHaveBeenCalled();
   });
 });

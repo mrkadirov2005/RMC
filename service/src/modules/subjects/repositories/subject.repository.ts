@@ -1,104 +1,82 @@
+const { and, desc, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { classes, subjects } = require('../../../db/schema');
 
-const findAll = (centerId?: number, teacherId?: number) => {
-  let query = 'SELECT s.* FROM subjects s';
-  const params: any[] = [];
-  const conditions: string[] = [];
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
-  }
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
-  }
-  query += ' ORDER BY s.subject_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+const db = pool.db;
+
+const selection = {
+  subject_id: subjects.subjectId,
+  center_id: subjects.centerId,
+  class_id: subjects.classId,
+  subject_name: subjects.subjectName,
+  subject_code: subjects.subjectCode,
+  teacher_id: subjects.teacherId,
+  total_marks: subjects.totalMarks,
+  passing_marks: subjects.passingMarks,
 };
 
-const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT s.* FROM subjects s';
-  const params: any[] = [id];
-  const conditions: string[] = ['s.subject_id = $1'];
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
-  }
-  query += ` WHERE ${conditions.join(' AND ')}`;
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findSubjects = (filters: { subjectId?: number; classId?: number } = {}, centerId?: number, teacherId?: number, byClass = false) => {
+  const conditions: any[] = [];
+  if (filters.subjectId) conditions.push(eq(subjects.subjectId, filters.subjectId));
+  if (filters.classId) conditions.push(eq(subjects.classId, filters.classId));
+  if (centerId) conditions.push(eq(classes.centerId, centerId), isNull(classes.deletedAt));
+  if (teacherId) conditions.push(eq(subjects.teacherId, teacherId));
+
+  let query = db.select(selection).from(subjects);
+  if (centerId) query = query.innerJoin(classes, eq(classes.classId, subjects.classId));
+  if (conditions.length) query = query.where(and(...conditions));
+  return byClass ? query.orderBy(subjects.subjectName) : query.orderBy(desc(subjects.subjectId));
 };
 
-const findByClass = (classId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT s.* FROM subjects s';
-  const params: any[] = [classId];
-  const conditions: string[] = ['s.class_id = $1'];
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = s.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`s.teacher_id = $${params.length}`);
-  }
-  query += ` WHERE ${conditions.join(' AND ')} ORDER BY s.subject_name`;
-  return pool.query(query, params).then((r: any) => r.rows);
+const findAll = (centerId?: number, teacherId?: number) => findSubjects({}, centerId, teacherId);
+
+const findById = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await findSubjects({ subjectId: id }, centerId, teacherId).limit(1);
+  return rows[0] || null;
 };
 
-const insert = (params: any[]) =>
-  pool
-    .query(
-      'INSERT INTO subjects (center_id, class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-      params
-    )
-    .then((r: any) => r.rows[0]);
+const findByClass = (classId: number, centerId?: number, teacherId?: number) =>
+  findSubjects({ classId }, centerId, teacherId, true);
 
-const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
-  let query =
-    'UPDATE subjects SET class_id = COALESCE($1, class_id), subject_name = COALESCE($2, subject_name), subject_code = COALESCE($3, subject_code), teacher_id = COALESCE($4, teacher_id), total_marks = COALESCE($5, total_marks), passing_marks = COALESCE($6, passing_marks) WHERE subject_id = $7';
-  const values: any[] = [...params, id];
-  if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    if (centerId) {
-      values.push(centerId);
-      query += ` AND center_id = $${values.length}`;
-    }
-    if (teacherId) {
-      values.push(teacherId);
-      query += ` AND teacher_id = $${values.length}`;
-    }
-    query += ')';
-  }
-  query += ' RETURNING *';
-  return pool.query(query, values).then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(subjects)
+    .values({
+      centerId: params[0],
+      classId: params[1],
+      subjectName: params[2],
+      subjectCode: params[3],
+      teacherId: params[4],
+      totalMarks: params[5],
+      passingMarks: params[6],
+    })
+    .returning(selection);
+  return rows[0];
 };
 
-const remove = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM subjects WHERE subject_id = $1';
-  const params: any[] = [id];
-  if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    if (centerId) {
-      params.push(centerId);
-      query += ` AND center_id = $${params.length}`;
-    }
-    if (teacherId) {
-      params.push(teacherId);
-      query += ` AND teacher_id = $${params.length}`;
-    }
-    query += ')';
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const update = async (id: number, params: any[], centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(subjects)
+    .set({
+      classId: sql`COALESCE(${params[0] ?? null}, ${subjects.classId})`,
+      subjectName: sql`COALESCE(${params[1] ?? null}, ${subjects.subjectName})`,
+      subjectCode: sql`COALESCE(${params[2] ?? null}, ${subjects.subjectCode})`,
+      teacherId: sql`COALESCE(${params[3] ?? null}, ${subjects.teacherId})`,
+      totalMarks: sql`COALESCE(${params[4] ?? null}, ${subjects.totalMarks})`,
+      passingMarks: sql`COALESCE(${params[5] ?? null}, ${subjects.passingMarks})`,
+    })
+    .where(eq(subjects.subjectId, id))
+    .returning(selection);
+  return rows[0] || null;
+};
+
+const remove = async (id: number, centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db.delete(subjects).where(eq(subjects.subjectId, id)).returning(selection);
+  return rows[0] || null;
 };
 
 module.exports = { findAll, findById, findByClass, insert, update, remove };

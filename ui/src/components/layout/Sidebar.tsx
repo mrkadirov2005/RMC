@@ -10,6 +10,7 @@ import {
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
   School, BadgeAlert, Server,
+  TrendingDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -55,6 +56,7 @@ const iconMap: Record<string, ElementType> = {
   Owner: Crown,
   Centers: School,
   Reports: BarChart3,
+  Retention: TrendingDown,
 };
 
 const iconToneMap: Record<string, string> = {
@@ -80,6 +82,7 @@ const iconToneMap: Record<string, string> = {
   Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
   Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
   Reports: 'from-slate-800 to-slate-950 shadow-slate-500/25',
+  Retention: 'from-rose-600 to-red-700 shadow-rose-500/25',
 };
 
 const filledIconNames = new Set(['Students', 'PortalStudent', 'Attendance', 'Owner']);
@@ -173,6 +176,7 @@ const Sidebar = memo(() => {
     { label: 'Students', path: '/students', iconName: 'Students', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'] },
+    { label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'] },
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },

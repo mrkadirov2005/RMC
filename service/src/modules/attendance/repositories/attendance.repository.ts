@@ -1,209 +1,129 @@
+const { and, desc, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { attendance, classes, students } = require('../../../db/schema');
 
-const findAll = (centerId?: number, teacherId?: number) => {
-  let query = 'SELECT a.* FROM attendance a';
-  const params: any[] = [];
-  const conditions: string[] = [];
+const db = pool.db;
 
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`a.teacher_id = $${params.length}`);
-  }
-
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
-  }
-
-  query += ' ORDER BY a.attendance_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+const selection = {
+  attendance_id: attendance.attendanceId,
+  center_id: attendance.centerId,
+  student_id: attendance.studentId,
+  teacher_id: attendance.teacherId,
+  class_id: attendance.classId,
+  session_id: attendance.sessionId,
+  attendance_date: attendance.attendanceDate,
+  status: attendance.status,
+  notes: attendance.notes,
+  remarks: attendance.remarks,
+  created_at: attendance.createdAt,
+  updated_at: attendance.updatedAt,
 };
 
-const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT a.* FROM attendance a';
-  const params: any[] = [id];
-  const conditions: string[] = ['a.attendance_id = $1'];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`a.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')}`;
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const scope = (centerId?: number, teacherId?: number) => {
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(classes.centerId, centerId), isNull(classes.deletedAt));
+  if (teacherId) conditions.push(eq(attendance.teacherId, teacherId));
+  return conditions;
 };
 
-const insert = (params: any[]) => {
-  const sessionId = params[4];
-  if (sessionId) {
-    return pool
-      .query(
-        `INSERT INTO attendance (center_id, student_id, teacher_id, class_id, session_id, attendance_date, status, remarks)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         ON CONFLICT (student_id, session_id) WHERE session_id IS NOT NULL
-         DO UPDATE SET
-           center_id = EXCLUDED.center_id,
-           teacher_id = EXCLUDED.teacher_id,
-           class_id = EXCLUDED.class_id,
-           attendance_date = EXCLUDED.attendance_date,
-           status = EXCLUDED.status,
-           remarks = EXCLUDED.remarks
-         RETURNING *`,
-        params
-      )
-      .then((r: any) => r.rows[0]);
-  }
-
-  return pool
-    .query(
-      `INSERT INTO attendance (center_id, student_id, teacher_id, class_id, session_id, attendance_date, status, remarks)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (student_id, class_id, attendance_date) WHERE session_id IS NULL
-       DO UPDATE SET
-         center_id = EXCLUDED.center_id,
-         teacher_id = EXCLUDED.teacher_id,
-         status = EXCLUDED.status,
-         remarks = EXCLUDED.remarks
-       RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
+const queryAttendance = (conditions: any[], centerId?: number, orderBy: any = desc(attendance.attendanceId)) => {
+  let query = db.select(selection).from(attendance);
+  if (centerId) query = query.innerJoin(classes, eq(classes.classId, attendance.classId));
+  return query.where(and(...conditions)).orderBy(orderBy);
 };
 
-const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
-  let query =
-    'UPDATE attendance SET status = COALESCE($1, status), remarks = COALESCE($2, remarks) WHERE attendance_id = $3';
-  const values: any[] = [...params, id];
-  if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    if (centerId) {
-      values.push(centerId);
-      query += ` AND center_id = $${values.length}`;
-    }
-    if (teacherId) {
-      values.push(teacherId);
-      query += ` AND teacher_id = $${values.length}`;
-    }
-    query += ')';
-  }
-  query += ' RETURNING *';
-  return pool.query(query, values).then((r: any) => r.rows[0] || null);
+const findAll = (centerId?: number, teacherId?: number) =>
+  queryAttendance(scope(centerId, teacherId), centerId, desc(attendance.attendanceId));
+
+const findById = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await queryAttendance([eq(attendance.attendanceId, id), ...scope(centerId, teacherId)], centerId).limit(1);
+  return rows[0] || null;
 };
 
-const findByStudent = (studentId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT a.* FROM attendance a';
-  const params: any[] = [studentId];
-  const conditions: string[] = ['a.student_id = $1'];
+const insert = async (params: any[]) => {
+  const payload = {
+    centerId: params[0],
+    studentId: params[1],
+    teacherId: params[2],
+    classId: params[3],
+    sessionId: params[4] || null,
+    attendanceDate: params[5],
+    status: params[6],
+    remarks: params[7],
+  };
 
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
+  const existingConditions = payload.sessionId
+    ? [eq(attendance.studentId, payload.studentId), eq(attendance.sessionId, payload.sessionId)]
+    : [eq(attendance.studentId, payload.studentId), eq(attendance.classId, payload.classId), eq(attendance.attendanceDate, payload.attendanceDate), isNull(attendance.sessionId)];
+
+  const existing = await db.select({ attendance_id: attendance.attendanceId }).from(attendance).where(and(...existingConditions)).limit(1);
+  if (existing[0]) {
+    const rows = await db
+      .update(attendance)
+      .set({ ...payload, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(eq(attendance.attendanceId, existing[0].attendance_id))
+      .returning(selection);
+    return rows[0];
   }
 
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`a.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')} ORDER BY a.attendance_date DESC`;
-  return pool.query(query, params).then((r: any) => r.rows);
+  const rows = await db.insert(attendance).values(payload).returning(selection);
+  return rows[0];
 };
 
-const findByClass = (classId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT a.* FROM attendance a';
-  const params: any[] = [classId];
-  const conditions: string[] = ['a.class_id = $1'];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`a.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')} ORDER BY a.attendance_date DESC`;
-  return pool.query(query, params).then((r: any) => r.rows);
+const update = async (id: number, params: any[], centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(attendance)
+    .set({
+      status: sql`COALESCE(${params[0] ?? null}, ${attendance.status})`,
+      remarks: sql`COALESCE(${params[1] ?? null}, ${attendance.remarks})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(attendance.attendanceId, id))
+    .returning(selection);
+  return rows[0] || null;
 };
 
-const remove = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM attendance WHERE attendance_id = $1';
-  const params: any[] = [id];
-  if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    if (centerId) {
-      params.push(centerId);
-      query += ` AND center_id = $${params.length}`;
-    }
-    if (teacherId) {
-      params.push(teacherId);
-      query += ` AND teacher_id = $${params.length}`;
-    }
-    query += ')';
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findByStudent = (studentId: number, centerId?: number, teacherId?: number) =>
+  queryAttendance([eq(attendance.studentId, studentId), ...scope(centerId, teacherId)], centerId, desc(attendance.attendanceDate));
+
+const findByClass = (classId: number, centerId?: number, teacherId?: number) =>
+  queryAttendance([eq(attendance.classId, classId), ...scope(centerId, teacherId)], centerId, desc(attendance.attendanceDate));
+
+const findBySession = (sessionId: number, centerId?: number, teacherId?: number) =>
+  queryAttendance([eq(attendance.sessionId, sessionId), ...scope(centerId, teacherId)], centerId);
+
+const remove = async (id: number, centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db.delete(attendance).where(eq(attendance.attendanceId, id)).returning(selection);
+  return rows[0] || null;
 };
 
-const removeByClass = (classId: number, centerId?: number) => {
-  let query = 'DELETE FROM attendance WHERE class_id = $1';
-  const params: any[] = [classId];
-  if (centerId) {
-    params.push(centerId);
-    query += ` AND center_id = $${params.length}`;
-  }
-  return pool.query(query, params).then((r: any) => r.rowCount || 0);
+const removeByClass = async (classId: number, centerId?: number) => {
+  const conditions = [eq(attendance.classId, classId)];
+  if (centerId) conditions.push(eq(attendance.centerId, centerId));
+  const rows = await db.delete(attendance).where(and(...conditions)).returning({ attendance_id: attendance.attendanceId });
+  return rows.length;
 };
 
 const studentInCenter = async (studentId: number, centerId: number) => {
-  const result = await pool.query('SELECT student_id FROM students WHERE student_id = $1 AND center_id = $2 AND deleted_at IS NULL', [
-    studentId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
+  const rows = await db
+    .select({ student_id: students.studentId })
+    .from(students)
+    .where(and(eq(students.studentId, studentId), eq(students.centerId, centerId), isNull(students.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 const classInCenter = async (classId: number, centerId: number) => {
-  const result = await pool.query('SELECT class_id FROM classes WHERE class_id = $1 AND center_id = $2 AND deleted_at IS NULL', [
-    classId,
-    centerId,
-  ]);
-  return result.rows.length > 0;
-};
-
-const findBySession = (sessionId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT a.* FROM attendance a';
-  const params: any[] = [sessionId];
-  const conditions: string[] = ['a.session_id = $1'];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = a.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`a.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')}`;
-  return pool.query(query, params).then((r: any) => r.rows);
+  const rows = await db
+    .select({ class_id: classes.classId })
+    .from(classes)
+    .where(and(eq(classes.classId, classId), eq(classes.centerId, centerId), isNull(classes.deletedAt)))
+    .limit(1);
+  return rows.length > 0;
 };
 
 module.exports = {

@@ -1,290 +1,228 @@
+const { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { classes, teachers } = require('../../../db/schema');
 
-const findAll = (centerId?: number, teacherId?: number) => {
-  let query = `
+const db = pool.db;
+
+const roomNumbersSql = sql`(
+  SELECT STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number)
+  FROM (
+    SELECT r.room_number
+    FROM rooms r
+    WHERE r.class_id = ${classes.classId}
+      AND r.center_id = ${classes.centerId}
+    UNION
+    SELECT r.room_number
+    FROM room_bookings rb
+    JOIN room_slots rs ON rs.slot_id = rb.slot_id
+    JOIN rooms r ON r.room_id = rs.room_id
+    WHERE rb.class_id = ${classes.classId}
+      AND rb.center_id = ${classes.centerId}
+  ) assigned_rooms
+)`;
+
+const roomAssignmentsSql = sql`(
+  SELECT JSON_AGG(
+    JSON_BUILD_OBJECT(
+      'room_id', assigned_rooms.room_id,
+      'room_number', assigned_rooms.room_number,
+      'day', assigned_rooms.day,
+      'time', assigned_rooms.time,
+      'end_time', assigned_rooms.end_time,
+      'slot_date', assigned_rooms.slot_date
+    )
+    ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
+  )
+  FROM (
     SELECT
-      c.*,
-      COALESCE(NULLIF(c.room_number, ''), rooms.room_numbers) AS room_number,
-      rooms.room_assignments
-    FROM classes c
-    LEFT JOIN LATERAL (
-      SELECT
-        STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number) AS room_numbers,
-        JSON_AGG(
-          JSON_BUILD_OBJECT(
-            'room_id', assigned_rooms.room_id,
-            'room_number', assigned_rooms.room_number,
-            'day', assigned_rooms.day,
-            'time', assigned_rooms.time,
-            'end_time', assigned_rooms.end_time,
-            'slot_date', assigned_rooms.slot_date
-          )
-          ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
-        ) AS room_assignments
-      FROM (
-        SELECT
-          r.room_id,
-          r.room_number,
-          r.day,
-          r.time,
-          r.end_time,
-          NULL::TEXT AS slot_date
-        FROM rooms r
-        WHERE r.class_id = c.class_id
-          AND r.center_id = c.center_id
-        UNION
-        SELECT
-          r.room_id,
-          r.room_number,
-          TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
-          rs.start_time AS time,
-          rs.end_time,
-          rs.slot_date::TEXT AS slot_date
-        FROM room_bookings rb
-        JOIN room_slots rs ON rs.slot_id = rb.slot_id
-        JOIN rooms r ON r.room_id = rs.room_id
-        WHERE rb.class_id = c.class_id
-          AND rb.center_id = c.center_id
-      ) assigned_rooms
-    ) rooms ON TRUE
-  `;
-  const params: any[] = [];
-  const conditions: string[] = ['c.deleted_at IS NULL'];
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`c.teacher_id = $${params.length}`);
-  }
-  if (conditions.length > 0) {
-    query += ' WHERE ' + conditions.join(' AND ');
-  }
-  query += ' ORDER BY c.class_id';
-  return pool.query(query, params).then((r: any) => r.rows);
+      r.room_id,
+      r.room_number,
+      r.day,
+      r.time,
+      r.end_time,
+      NULL::TEXT AS slot_date
+    FROM rooms r
+    WHERE r.class_id = ${classes.classId}
+      AND r.center_id = ${classes.centerId}
+    UNION
+    SELECT
+      r.room_id,
+      r.room_number,
+      TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
+      rs.start_time AS time,
+      rs.end_time,
+      rs.slot_date::TEXT AS slot_date
+    FROM room_bookings rb
+    JOIN room_slots rs ON rs.slot_id = rb.slot_id
+    JOIN rooms r ON r.room_id = rs.room_id
+    WHERE rb.class_id = ${classes.classId}
+      AND rb.center_id = ${classes.centerId}
+  ) assigned_rooms
+)`;
+
+const classSelection = (extra: Record<string, any> = {}) => ({
+  class_id: classes.classId,
+  center_id: classes.centerId,
+  class_name: classes.className,
+  class_code: classes.classCode,
+  level: classes.level,
+  section: classes.section,
+  capacity: classes.capacity,
+  teacher_id: classes.teacherId,
+  room_number: sql`COALESCE(NULLIF(${classes.roomNumber}, ''), ${roomNumbersSql})`,
+  total_students: classes.totalStudents,
+  payment_amount: classes.paymentAmount,
+  payment_frequency: classes.paymentFrequency,
+  start_date: classes.startDate,
+  end_date: classes.endDate,
+  deleted_at: classes.deletedAt,
+  created_at: classes.createdAt,
+  updated_at: classes.updatedAt,
+  room_assignments: roomAssignmentsSql,
+  ...extra,
+});
+
+const scopeConditions = (centerId?: number, teacherId?: number, deleted = true) => {
+  const conditions = deleted ? [isNull(classes.deletedAt)] : [];
+  if (centerId) conditions.push(eq(classes.centerId, centerId));
+  if (teacherId) conditions.push(eq(classes.teacherId, teacherId));
+  return conditions;
+};
+
+const findAll = async (centerId?: number, teacherId?: number) => {
+  const conditions = scopeConditions(centerId, teacherId);
+  return db
+    .select(classSelection())
+    .from(classes)
+    .where(and(...conditions))
+    .orderBy(asc(classes.classId));
 };
 
 const findPaginated = async (filters: Record<string, any> = {}, centerId?: number, teacherId?: number) => {
-  let query = `
-    SELECT
-      c.*,
-      COALESCE(NULLIF(c.room_number, ''), rooms.room_numbers) AS room_number,
-      rooms.room_assignments,
-      COALESCE(student_counts.student_count, 0)::int AS student_count
-    FROM classes c
-    LEFT JOIN LATERAL (
-      SELECT
-        STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number) AS room_numbers,
-        JSON_AGG(
-          JSON_BUILD_OBJECT(
-            'room_id', assigned_rooms.room_id,
-            'room_number', assigned_rooms.room_number,
-            'day', assigned_rooms.day,
-            'time', assigned_rooms.time,
-            'end_time', assigned_rooms.end_time,
-            'slot_date', assigned_rooms.slot_date
-          )
-          ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
-        ) AS room_assignments
-      FROM (
-        SELECT
-          r.room_id,
-          r.room_number,
-          r.day,
-          r.time,
-          r.end_time,
-          NULL::TEXT AS slot_date
-        FROM rooms r
-        WHERE r.class_id = c.class_id
-          AND r.center_id = c.center_id
-        UNION
-        SELECT
-          r.room_id,
-          r.room_number,
-          TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
-          rs.start_time AS time,
-          rs.end_time,
-          rs.slot_date::TEXT AS slot_date
-        FROM room_bookings rb
-        JOIN room_slots rs ON rs.slot_id = rb.slot_id
-        JOIN rooms r ON r.room_id = rs.room_id
-        WHERE rb.class_id = c.class_id
-          AND rb.center_id = c.center_id
-      ) assigned_rooms
-    ) rooms ON TRUE
-    LEFT JOIN (
-      SELECT class_id, COUNT(*) AS student_count
-      FROM students
-      WHERE deleted_at IS NULL
-      GROUP BY class_id
-    ) student_counts ON student_counts.class_id = c.class_id
-  `;
-  let countQuery = 'SELECT COUNT(*)::int AS total FROM classes c';
-  const params: any[] = [];
-  const conditions: string[] = ['c.deleted_at IS NULL'];
+  const conditions = scopeConditions(centerId, teacherId);
 
-  if (centerId) {
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`c.teacher_id = $${params.length}`);
-  }
   if (filters.teacher_id != null) {
-    params.push(filters.teacher_id);
-    conditions.push(`c.teacher_id = $${params.length}`);
+    conditions.push(eq(classes.teacherId, Number(filters.teacher_id)));
   }
 
   const search = String(filters.q || filters.search || '').trim();
   if (search) {
-    params.push(`%${search}%`);
-    conditions.push(`(
-      c.class_name ILIKE $${params.length}
-      OR c.class_code ILIKE $${params.length}
-      OR c.section ILIKE $${params.length}
-      OR c.room_number ILIKE $${params.length}
-    )`);
+    const pattern = `%${search}%`;
+    conditions.push(
+      or(
+        ilike(classes.className, pattern),
+        ilike(classes.classCode, pattern),
+        ilike(classes.section, pattern),
+        ilike(classes.roomNumber, pattern),
+      ),
+    );
   }
 
   if (filters.level != null) {
-    params.push(filters.level);
-    conditions.push(`c.level = $${params.length}`);
+    conditions.push(eq(classes.level, Number(filters.level)));
   }
 
-  const where = ` WHERE ${conditions.join(' AND ')}`;
-  query += where;
-  countQuery += where;
-
-  const countResult = await pool.query(countQuery, params);
-  const total = Number(countResult.rows[0]?.total || 0);
+  const where = and(...conditions);
+  const countRows = await db.select({ total: sql`COUNT(*)::int` }).from(classes).where(where);
+  const total = Number(countRows[0]?.total || 0);
   const page = Math.max(1, Number(filters.page || 1));
   const limit = Math.min(100, Math.max(1, Number(filters.limit || 20)));
   const offset = (page - 1) * limit;
 
-  query += ' ORDER BY c.class_id DESC';
-  params.push(limit);
-  query += ` LIMIT $${params.length}`;
-  params.push(offset);
-  query += ` OFFSET $${params.length}`;
+  const data = await db
+    .select(classSelection({
+      student_count: sql`(
+        SELECT COUNT(*)::int
+        FROM students s
+        WHERE s.class_id = ${classes.classId}
+          AND s.deleted_at IS NULL
+      )`,
+    }))
+    .from(classes)
+    .where(where)
+    .orderBy(desc(classes.classId))
+    .limit(limit)
+    .offset(offset);
 
-  const result = await pool.query(query, params);
-  return { data: result.rows, total, page, limit };
+  return { data, total, page, limit };
 };
 
-const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = `
-    SELECT
-      c.*,
-      COALESCE(NULLIF(c.room_number, ''), rooms.room_numbers) AS room_number,
-      rooms.room_assignments
-    FROM classes c
-    LEFT JOIN LATERAL (
-      SELECT
-        STRING_AGG(DISTINCT assigned_rooms.room_number, ', ' ORDER BY assigned_rooms.room_number) AS room_numbers,
-        JSON_AGG(
-          JSON_BUILD_OBJECT(
-            'room_id', assigned_rooms.room_id,
-            'room_number', assigned_rooms.room_number,
-            'day', assigned_rooms.day,
-            'time', assigned_rooms.time,
-            'end_time', assigned_rooms.end_time,
-            'slot_date', assigned_rooms.slot_date
-          )
-          ORDER BY assigned_rooms.day, assigned_rooms.time, assigned_rooms.room_number
-        ) AS room_assignments
-      FROM (
-        SELECT
-          r.room_id,
-          r.room_number,
-          r.day,
-          r.time,
-          r.end_time,
-          NULL::TEXT AS slot_date
-        FROM rooms r
-        WHERE r.class_id = c.class_id
-          AND r.center_id = c.center_id
-        UNION
-        SELECT
-          r.room_id,
-          r.room_number,
-          TRIM(TO_CHAR(rs.slot_date, 'Day')) AS day,
-          rs.start_time AS time,
-          rs.end_time,
-          rs.slot_date::TEXT AS slot_date
-        FROM room_bookings rb
-        JOIN room_slots rs ON rs.slot_id = rb.slot_id
-        JOIN rooms r ON r.room_id = rs.room_id
-        WHERE rb.class_id = c.class_id
-          AND rb.center_id = c.center_id
-      ) assigned_rooms
-    ) rooms ON TRUE
-    WHERE c.class_id = $1 AND c.deleted_at IS NULL
-  `;
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND c.center_id = $2';
-    params.push(centerId);
-  }
-  if (teacherId) {
-    query += ` AND c.teacher_id = $${params.length + 1}`;
-    params.push(teacherId);
-  }
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findById = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await db
+    .select(classSelection())
+    .from(classes)
+    .where(and(eq(classes.classId, id), ...scopeConditions(centerId, teacherId)))
+    .limit(1);
+  return rows[0] || null;
 };
 
-const teacherExists = (teacherId: number, centerId?: number) => {
-  let query = 'SELECT teacher_id FROM teachers WHERE teacher_id = $1 AND deleted_at IS NULL';
-  const params: any[] = [teacherId];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  return pool.query(query, params).then((r: any) => r.rows.length > 0);
+const teacherExists = async (teacherId: number, centerId?: number) => {
+  const conditions = [eq(teachers.teacherId, teacherId), isNull(teachers.deletedAt)];
+  if (centerId) conditions.push(eq(teachers.centerId, centerId));
+  const rows = await db.select({ teacher_id: teachers.teacherId }).from(teachers).where(and(...conditions)).limit(1);
+  return rows.length > 0;
 };
 
-const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO classes (center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
-
-const update = (id: number, params: any[], centerId?: number) => {
-  let query =
-    'UPDATE classes SET class_name = COALESCE($1, class_name), class_code = COALESCE($2, class_code), level = COALESCE($3, level), section = COALESCE($4, section), capacity = COALESCE($5, capacity), teacher_id = COALESCE($6, teacher_id), room_number = COALESCE($7, room_number), start_date = $8, end_date = $9, payment_amount = COALESCE($10, payment_amount), updated_at = CURRENT_TIMESTAMP WHERE class_id = $11 AND deleted_at IS NULL';
-  const values: any[] = [...params, id];
-  if (centerId) {
-    query += ' AND center_id = $12';
-    values.push(centerId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, values).then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(classes)
+    .values({
+      centerId: params[0],
+      className: params[1],
+      classCode: params[2],
+      level: params[3],
+      section: params[4],
+      capacity: params[5],
+      teacherId: params[6],
+      roomNumber: params[7],
+      startDate: params[8],
+      endDate: params[9],
+      paymentAmount: params[10],
+      paymentFrequency: params[11],
+    })
+    .returning(classSelection());
+  return rows[0];
 };
 
-const remove = (id: number, centerId?: number) => {
-  let query = 'UPDATE classes SET deleted_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE class_id = $1 AND deleted_at IS NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const update = async (id: number, params: any[], centerId?: number) => {
+  const conditions = [eq(classes.classId, id), isNull(classes.deletedAt)];
+  if (centerId) conditions.push(eq(classes.centerId, centerId));
+  const rows = await db
+    .update(classes)
+    .set({
+      className: sql`COALESCE(${params[0] ?? null}, ${classes.className})`,
+      classCode: sql`COALESCE(${params[1] ?? null}, ${classes.classCode})`,
+      level: sql`COALESCE(${params[2] ?? null}, ${classes.level})`,
+      section: sql`COALESCE(${params[3] ?? null}, ${classes.section})`,
+      capacity: sql`COALESCE(${params[4] ?? null}, ${classes.capacity})`,
+      teacherId: sql`COALESCE(${params[5] ?? null}, ${classes.teacherId})`,
+      roomNumber: sql`COALESCE(${params[6] ?? null}, ${classes.roomNumber})`,
+      startDate: params[7] || null,
+      endDate: params[8] || null,
+      paymentAmount: sql`COALESCE(${params[9] ?? null}, ${classes.paymentAmount})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(and(...conditions))
+    .returning(classSelection());
+  return rows[0] || null;
 };
 
-const purge = (id: number, centerId?: number) => {
-  let query = 'DELETE FROM classes WHERE class_id = $1 AND deleted_at IS NOT NULL';
-  const params: any[] = [id];
-  if (centerId) {
-    query += ' AND center_id = $2';
-    params.push(centerId);
-  }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const remove = async (id: number, centerId?: number) => {
+  const conditions = [eq(classes.classId, id), isNull(classes.deletedAt)];
+  if (centerId) conditions.push(eq(classes.centerId, centerId));
+  const rows = await db
+    .update(classes)
+    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...conditions))
+    .returning(classSelection());
+  return rows[0] || null;
+};
+
+const purge = async (id: number, centerId?: number) => {
+  const conditions = [eq(classes.classId, id), isNotNull(classes.deletedAt)];
+  if (centerId) conditions.push(eq(classes.centerId, centerId));
+  const rows = await db.delete(classes).where(and(...conditions)).returning(classSelection());
+  return rows[0] || null;
 };
 
 module.exports = { findAll, findPaginated, findById, teacherExists, insert, update, remove, purge };

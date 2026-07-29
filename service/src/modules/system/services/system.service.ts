@@ -3,7 +3,10 @@ const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
 const pool = require('../../../db/pool');
+const { sql } = require('drizzle-orm');
 const v8 = require('v8');
+
+const db = pool.db;
 
 const RESET_CONFIRMATION = 'TRUNCATE_EDUCATION_DATA';
 const RESET_TABLES = {
@@ -76,11 +79,11 @@ type ResetTableKey = keyof typeof RESET_TABLES;
 
 const resetTable = async (tableKey: ResetTableKey) => {
   const tableName = RESET_TABLES[tableKey];
-  const beforeResult = await pool.query(`SELECT COUNT(*)::int AS count FROM ${tableName}`);
+  const beforeRows = await db.execute(sql.raw(`SELECT COUNT(*)::int AS count FROM ${tableName}`));
 
-  await pool.query(`TRUNCATE TABLE ${tableName} RESTART IDENTITY CASCADE`);
+  await db.execute(sql.raw(`TRUNCATE TABLE ${tableName} RESTART IDENTITY CASCADE`));
 
-  const beforeCount = beforeResult.rows[0]?.count ?? 0;
+  const beforeCount = beforeRows.rows?.[0]?.count ?? 0;
   return {
     truncated: tableName,
     cascade: true,
@@ -109,7 +112,7 @@ const getStats = async () => {
   let database = { status: 'unknown', latencyMs: null as number | null };
   const dbStart = Date.now();
   try {
-    await pool.query('SELECT 1');
+    await db.execute(sql`SELECT 1`);
     database = { status: 'healthy', latencyMs: Date.now() - dbStart };
   } catch {
     database = { status: 'unhealthy', latencyMs: null };

@@ -1,232 +1,202 @@
+const { and, desc, eq, isNull, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
+const { classes, grades } = require('../../../db/schema');
+
+const db = pool.db;
+
+const selection = {
+  grade_id: grades.gradeId,
+  center_id: grades.centerId,
+  student_id: grades.studentId,
+  teacher_id: grades.teacherId,
+  subject: grades.subject,
+  subject_id: grades.subjectId,
+  class_id: grades.classId,
+  session_id: grades.sessionId,
+  marks_obtained: grades.marksObtained,
+  total_marks: grades.totalMarks,
+  percentage: grades.percentage,
+  grade_letter: grades.gradeLetter,
+  academic_year: grades.academicYear,
+  term: grades.term,
+  attendance_score: grades.attendanceScore,
+  homework_score: grades.homeworkScore,
+  activity_score: grades.activityScore,
+  points_score: grades.pointsScore,
+  base_coin: grades.baseCoin,
+  total_daily_coin: grades.totalDailyCoin,
+  coin_comment: grades.coinComment,
+  score: grades.score,
+  grade_type: grades.gradeType,
+  notes: grades.notes,
+  created_at: grades.createdAt,
+  updated_at: grades.updatedAt,
+};
+
+const scope = (centerId?: number, teacherId?: number) => {
+  const conditions: any[] = [];
+  if (centerId) conditions.push(eq(classes.centerId, centerId), isNull(classes.deletedAt));
+  if (teacherId) conditions.push(eq(grades.teacherId, teacherId));
+  return conditions;
+};
+
+const queryGrades = (conditions: any[], centerId?: number, orderBy: any = desc(grades.gradeId)) => {
+  let query = db.select(selection).from(grades);
+  if (centerId) query = query.innerJoin(classes, eq(classes.classId, grades.classId));
+  return query.where(and(...conditions)).orderBy(orderBy);
+};
 
 const findAll = (centerId?: number, teacherId?: number, studentId?: number) => {
-  let query = 'SELECT g.* FROM grades g';
-  const conditions: string[] = [];
-  const params: any[] = [];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`g.teacher_id = $${params.length}`);
-  }
-  if (studentId) {
-    params.push(studentId);
-    conditions.push(`g.student_id = $${params.length}`);
-  }
-
-  if (conditions.length > 0) {
-    query += ` WHERE ${conditions.join(' AND ')}`;
-  }
-
-  query += ' ORDER BY g.grade_id DESC';
-  return pool.query(query, params).then((r: any) => r.rows);
+  const conditions = [...scope(centerId, teacherId)];
+  if (studentId) conditions.push(eq(grades.studentId, studentId));
+  return queryGrades(conditions.length ? conditions : [sql`TRUE`], centerId);
 };
 
-const findById = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT g.* FROM grades g';
-  const params: any[] = [id];
-  const conditions: string[] = ['g.grade_id = $1'];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`g.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')}`;
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+const findById = async (id: number, centerId?: number, teacherId?: number) => {
+  const rows = await queryGrades([eq(grades.gradeId, id), ...scope(centerId, teacherId)], centerId).limit(1);
+  return rows[0] || null;
 };
 
-const insert = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO grades (
-         student_id,
-         teacher_id,
-         subject,
-         class_id,
-         session_id,
-         marks_obtained,
-         total_marks,
-         percentage,
-         grade_letter,
-         academic_year,
-         term,
-         center_id,
-         attendance_score,
-         homework_score,
-         activity_score,
-         points_score
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
-
-const update = (id: number, params: any[], centerId?: number, teacherId?: number) => {
-  let query =
-    'UPDATE grades SET marks_obtained = COALESCE($1, marks_obtained), percentage = COALESCE($2, percentage), grade_letter = COALESCE($3, grade_letter), attendance_score = COALESCE($4, attendance_score), homework_score = COALESCE($5, homework_score), activity_score = COALESCE($6, activity_score), points_score = COALESCE($7, points_score), updated_at = CURRENT_TIMESTAMP WHERE grade_id = $8';
-  const values: any[] = [...params, id];
-  if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    if (centerId) {
-      values.push(centerId);
-      query += ` AND center_id = $${values.length}`;
-    }
-    if (teacherId) {
-      values.push(teacherId);
-      query += ` AND teacher_id = $${values.length}`;
-    }
-    query += ')';
-  }
-  query += ' RETURNING *';
-  return pool.query(query, values).then((r: any) => r.rows[0] || null);
+const insert = async (params: any[]) => {
+  const rows = await db
+    .insert(grades)
+    .values({
+      studentId: params[0],
+      teacherId: params[1],
+      subject: params[2],
+      classId: params[3],
+      sessionId: params[4],
+      marksObtained: params[5],
+      totalMarks: params[6],
+      percentage: params[7],
+      gradeLetter: params[8],
+      academicYear: params[9],
+      term: params[10],
+      centerId: params[11],
+      attendanceScore: params[12],
+      homeworkScore: params[13],
+      activityScore: params[14],
+      pointsScore: params[15],
+    })
+    .returning(selection);
+  return rows[0];
 };
 
-const upsertSessionScores = (params: any[]) =>
-  pool
-    .query(
-      `INSERT INTO grades (
-         student_id,
-         teacher_id,
-         subject,
-         class_id,
-         session_id,
-         total_marks,
-         academic_year,
-         term,
-         center_id,
-         attendance_score,
-         homework_score,
-         activity_score,
-         points_score,
-         marks_obtained,
-         percentage
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-         (COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0) + COALESCE($13, 0)),
-         CASE
-           WHEN $6 > 0 THEN
-             ROUND((COALESCE($10, 0) + COALESCE($11, 0) + COALESCE($12, 0) + COALESCE($13, 0)) * 100.0 / $6, 2)
-           ELSE NULL
-         END
-       )
-       ON CONFLICT (student_id, session_id) WHERE session_id IS NOT NULL
-       DO UPDATE SET
-         attendance_score = COALESCE(EXCLUDED.attendance_score, grades.attendance_score),
-         homework_score = COALESCE(EXCLUDED.homework_score, grades.homework_score),
-         activity_score = COALESCE(EXCLUDED.activity_score, grades.activity_score),
-         points_score = COALESCE(EXCLUDED.points_score, grades.points_score),
-         total_marks = COALESCE(EXCLUDED.total_marks, grades.total_marks, 100),
-         subject = COALESCE(EXCLUDED.subject, grades.subject),
-         teacher_id = COALESCE(EXCLUDED.teacher_id, grades.teacher_id),
-         class_id = COALESCE(EXCLUDED.class_id, grades.class_id),
-         academic_year = COALESCE(EXCLUDED.academic_year, grades.academic_year),
-         term = COALESCE(EXCLUDED.term, grades.term),
-         center_id = COALESCE(EXCLUDED.center_id, grades.center_id),
-         marks_obtained = (
-           COALESCE(EXCLUDED.attendance_score, grades.attendance_score, 0) +
-           COALESCE(EXCLUDED.homework_score, grades.homework_score, 0) +
-           COALESCE(EXCLUDED.activity_score, grades.activity_score, 0) +
-           COALESCE(EXCLUDED.points_score, grades.points_score, 0)
-         ),
-         percentage = CASE
-           WHEN COALESCE(EXCLUDED.total_marks, grades.total_marks, 100) > 0 THEN
-             ROUND(
-               (
-                 COALESCE(EXCLUDED.attendance_score, grades.attendance_score, 0) +
-                 COALESCE(EXCLUDED.homework_score, grades.homework_score, 0) +
-                 COALESCE(EXCLUDED.activity_score, grades.activity_score, 0) +
-                 COALESCE(EXCLUDED.points_score, grades.points_score, 0)
-               ) * 100.0 / COALESCE(EXCLUDED.total_marks, grades.total_marks, 100),
-               2
-             )
-           ELSE NULL
-         END,
-         updated_at = CURRENT_TIMESTAMP
-       RETURNING *`,
-      params
-    )
-    .then((r: any) => r.rows[0]);
-
-const findByStudent = (studentId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT g.* FROM grades g';
-  const params: any[] = [studentId];
-  const conditions: string[] = ['g.student_id = $1'];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`g.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')} ORDER BY g.academic_year DESC, g.term`;
-  return pool.query(query, params).then((r: any) => r.rows);
+const update = async (id: number, params: any[], centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db
+    .update(grades)
+    .set({
+      marksObtained: sql`COALESCE(${params[0] ?? null}, ${grades.marksObtained})`,
+      percentage: sql`COALESCE(${params[1] ?? null}, ${grades.percentage})`,
+      gradeLetter: sql`COALESCE(${params[2] ?? null}, ${grades.gradeLetter})`,
+      attendanceScore: sql`COALESCE(${params[3] ?? null}, ${grades.attendanceScore})`,
+      homeworkScore: sql`COALESCE(${params[4] ?? null}, ${grades.homeworkScore})`,
+      activityScore: sql`COALESCE(${params[5] ?? null}, ${grades.activityScore})`,
+      pointsScore: sql`COALESCE(${params[6] ?? null}, ${grades.pointsScore})`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(grades.gradeId, id))
+    .returning(selection);
+  return rows[0] || null;
 };
 
-const findBySession = (sessionId: number, centerId?: number, teacherId?: number) => {
-  let query = 'SELECT g.* FROM grades g';
-  const params: any[] = [sessionId];
-  const conditions: string[] = ['g.session_id = $1'];
-
-  if (centerId) {
-    query += ' JOIN classes c ON c.class_id = g.class_id AND c.deleted_at IS NULL';
-    params.push(centerId);
-    conditions.push(`c.center_id = $${params.length}`);
-  }
-  if (teacherId) {
-    params.push(teacherId);
-    conditions.push(`g.teacher_id = $${params.length}`);
-  }
-
-  query += ` WHERE ${conditions.join(' AND ')}`;
-  return pool.query(query, params).then((r: any) => r.rows);
+const calculateSessionTotals = (values: any) => {
+  const totalMarks = Number(values.totalMarks || 100);
+  const total =
+    Number(values.attendanceScore || 0) +
+    Number(values.homeworkScore || 0) +
+    Number(values.activityScore || 0) +
+    Number(values.pointsScore || 0);
+  return {
+    marksObtained: total,
+    percentage: totalMarks > 0 ? Number(((total * 100) / totalMarks).toFixed(2)) : null,
+  };
 };
 
-const updateLessonCoins = (gradeId: number, baseCoin: number, totalDailyCoin: number, coinComment: string) =>
-  pool
-    .query(
-      `UPDATE grades
-       SET base_coin = $1,
-           total_daily_coin = $2,
-           coin_comment = $3,
-           updated_at = CURRENT_TIMESTAMP
-       WHERE grade_id = $4
-       RETURNING *`,
-      [baseCoin, totalDailyCoin, coinComment, gradeId]
-    )
-    .then((r: any) => r.rows[0]);
+const upsertSessionScores = async (params: any[]) => {
+  const values = {
+    studentId: params[0],
+    teacherId: params[1],
+    subject: params[2],
+    classId: params[3],
+    sessionId: params[4],
+    totalMarks: params[5],
+    academicYear: params[6],
+    term: params[7],
+    centerId: params[8],
+    attendanceScore: params[9],
+    homeworkScore: params[10],
+    activityScore: params[11],
+    pointsScore: params[12],
+  };
+  const totals = calculateSessionTotals(values);
+  const existing = await db
+    .select(selection)
+    .from(grades)
+    .where(and(eq(grades.studentId, values.studentId), eq(grades.sessionId, values.sessionId)))
+    .limit(1);
 
-const remove = (id: number, centerId?: number, teacherId?: number) => {
-  let query = 'DELETE FROM grades WHERE grade_id = $1';
-  const params: any[] = [id];
-  if (centerId || teacherId) {
-    query += ' AND class_id IN (SELECT class_id FROM classes WHERE deleted_at IS NULL';
-    if (centerId) {
-      params.push(centerId);
-      query += ` AND center_id = $${params.length}`;
-    }
-    if (teacherId) {
-      params.push(teacherId);
-      query += ` AND teacher_id = $${params.length}`;
-    }
-    query += ')';
+  if (existing[0]) {
+    const merged = {
+      attendanceScore: values.attendanceScore ?? existing[0].attendance_score,
+      homeworkScore: values.homeworkScore ?? existing[0].homework_score,
+      activityScore: values.activityScore ?? existing[0].activity_score,
+      pointsScore: values.pointsScore ?? existing[0].points_score,
+      totalMarks: values.totalMarks ?? existing[0].total_marks ?? 100,
+    };
+    const recalculated = calculateSessionTotals(merged);
+    const rows = await db
+      .update(grades)
+      .set({
+        attendanceScore: merged.attendanceScore,
+        homeworkScore: merged.homeworkScore,
+        activityScore: merged.activityScore,
+        pointsScore: merged.pointsScore,
+        totalMarks: merged.totalMarks,
+        subject: values.subject ?? existing[0].subject,
+        teacherId: values.teacherId ?? existing[0].teacher_id,
+        classId: values.classId ?? existing[0].class_id,
+        academicYear: values.academicYear ?? existing[0].academic_year,
+        term: values.term ?? existing[0].term,
+        centerId: values.centerId ?? existing[0].center_id,
+        marksObtained: recalculated.marksObtained,
+        percentage: recalculated.percentage,
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      })
+      .where(eq(grades.gradeId, existing[0].grade_id))
+      .returning(selection);
+    return rows[0];
   }
-  query += ' RETURNING *';
-  return pool.query(query, params).then((r: any) => r.rows[0] || null);
+
+  const rows = await db
+    .insert(grades)
+    .values({ ...values, marksObtained: totals.marksObtained, percentage: totals.percentage })
+    .returning(selection);
+  return rows[0];
+};
+
+const findByStudent = (studentId: number, centerId?: number, teacherId?: number) =>
+  queryGrades([eq(grades.studentId, studentId), ...scope(centerId, teacherId)], centerId, desc(grades.academicYear));
+
+const findBySession = (sessionId: number, centerId?: number, teacherId?: number) =>
+  queryGrades([eq(grades.sessionId, sessionId), ...scope(centerId, teacherId)], centerId);
+
+const updateLessonCoins = async (gradeId: number, baseCoin: number, totalDailyCoin: number, coinComment: string) => {
+  const rows = await db
+    .update(grades)
+    .set({ baseCoin, totalDailyCoin, coinComment, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(grades.gradeId, gradeId))
+    .returning(selection);
+  return rows[0];
+};
+
+const remove = async (id: number, centerId?: number, teacherId?: number) => {
+  const existing = await findById(id, centerId, teacherId);
+  if (!existing) return null;
+  const rows = await db.delete(grades).where(eq(grades.gradeId, id)).returning(selection);
+  return rows[0] || null;
 };
 
 module.exports = { findAll, findById, insert, update, findByStudent, findBySession, updateLessonCoins, remove, upsertSessionScores };
