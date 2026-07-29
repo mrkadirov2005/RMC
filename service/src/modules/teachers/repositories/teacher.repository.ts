@@ -50,26 +50,26 @@ const teacherListSelection = {
     COALESCE((
       SELECT COUNT(DISTINCT teacher_students.student_id)::int
       FROM (
-        SELECT ${students.studentId} AS student_id
-        FROM ${students}
-        WHERE ${students.deletedAt} IS NULL
-          AND ${students.teacherId} = ${teachers.teacherId}
+        SELECT students.student_id AS student_id
+        FROM students
+        WHERE students.deleted_at IS NULL
+          AND students.teacher_id = teachers.teacher_id
         UNION
-        SELECT ${students.studentId} AS student_id
-        FROM ${students}
-        JOIN ${classes} ON ${classes.classId} = ${students.classId}
-          AND ${classes.deletedAt} IS NULL
-        WHERE ${students.deletedAt} IS NULL
-          AND ${classes.teacherId} = ${teachers.teacherId}
+        SELECT students.student_id AS student_id
+        FROM students
+        JOIN classes ON classes.class_id = students.class_id
+          AND classes.deleted_at IS NULL
+        WHERE students.deleted_at IS NULL
+          AND classes.teacher_id = teachers.teacher_id
       ) teacher_students
     ), 0)::int
   `,
   class_count: sql`
     COALESCE((
       SELECT COUNT(*)::int
-      FROM ${classes}
-      WHERE ${classes.deletedAt} IS NULL
-        AND ${classes.teacherId} = ${teachers.teacherId}
+      FROM classes
+      WHERE classes.deleted_at IS NULL
+        AND classes.teacher_id = teachers.teacher_id
     ), 0)::int
   `,
 };
