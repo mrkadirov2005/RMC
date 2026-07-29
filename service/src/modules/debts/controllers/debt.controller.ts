@@ -10,7 +10,7 @@ const getAllDebts = async (req: any, res: any) => {
     res.json(await debtService.listDebts(centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch debts' });
+    res.status(500).json({ error: 'Failed to fetch debts', details: error.message || String(error) });
   }
 };
 
@@ -77,7 +77,7 @@ const getDebtsByStudent = async (req: any, res: any) => {
     res.json(await debtService.listByStudent(studentId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch debts' });
+    res.status(500).json({ error: 'Failed to fetch debts', details: error.message || String(error) });
   }
 };
 

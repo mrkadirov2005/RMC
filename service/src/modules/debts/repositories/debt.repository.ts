@@ -20,7 +20,7 @@ const debtSelection = {
 };
 
 const scopedDebtConditions = (centerId?: number, teacherId?: number) => {
-  const conditions: any[] = [];
+  const conditions: any[] = [isNull(debts.deletedAt)];
   if (centerId) conditions.push(eq(debts.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId), isNull(students.deletedAt));
   return conditions;
