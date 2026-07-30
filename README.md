@@ -51,3 +51,60 @@ Control flags (all optional):
 - `DB_ADMIN_USER`, `DB_ADMIN_PASSWORD`, `DB_ADMIN_DB` (defaults to `DB_USER/DB_PASSWORD` and `postgres`)
 
 For Docker-based setup, see `README.docker.md`.
+
+## Automated backups
+
+The project includes `scripts/backup.sh` for scheduled database backups.
+
+It backs up:
+- PostgreSQL CRM data with `pg_dump`
+- MongoDB request logs with `mongodump` when Mongo is available
+- optional S3 upload via `BACKUP_S3_URI`
+- optional Telegram bot upload via `BACKUP_TELEGRAM_BOT_TOKEN` and `BACKUP_TELEGRAM_CHAT_ID`
+- local retention cleanup via `BACKUP_RETENTION_DAYS`
+
+Configure these in `service/.env`:
+
+```bash
+BACKUP_DIR=/home/ubuntu/rmc-backups
+BACKUP_CRON_SCHEDULE=0 * * * *
+BACKUP_LOG_FILE=/var/log/rmc-backup.log
+BACKUP_RETENTION_DAYS=14
+BACKUP_S3_URI=s3://your-rmc-backups/prod
+BACKUP_MONGO=true
+BACKUP_TELEGRAM_BOT_TOKEN=123456789:AA...
+BACKUP_TELEGRAM_CHAT_ID=-1001234567890
+BACKUP_TELEGRAM_CAPTION=RMC automated backup
+```
+
+For Telegram backups, add the bot to the target chat/channel first, then set the chat ID. The script sends one compressed archive for the whole backup run.
+
+Run once manually:
+
+```bash
+npm run backup
+```
+
+Install hourly cron:
+
+```bash
+npm run backup:install-cron
+```
+
+Equivalent manual cron entry:
+
+```bash
+0 * * * * cd /path/to/RMC && /bin/sh scripts/backup.sh >> /var/log/rmc-backup.log 2>&1
+```
+
+Restore PostgreSQL:
+
+```bash
+pg_restore --clean --if-exists -d "$DB_NAME" /path/to/postgres_crm_db_YYYYMMDD_HHMMSS.dump
+```
+
+Restore MongoDB logs:
+
+```bash
+mongorestore --uri "$MONGO_URI" --archive=/path/to/mongo_crm_logs_YYYYMMDD_HHMMSS.archive.gz --gzip
+```

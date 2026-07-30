@@ -8,6 +8,8 @@
     "dev:ui": "npm --prefix ui run dev",
     "dev:bot": "npm --prefix bot run dev",
     "build": "npm --prefix service run build && npm --prefix ui run build",
+    "backup": "sh scripts/backup.sh",
+    "backup:install-cron": "sh scripts/install-backup-cron.sh",
     "start": "npm --prefix service run start",
     "start:bot": "npm --prefix bot run start"
   },

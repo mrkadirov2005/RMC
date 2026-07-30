@@ -1,3 +1,6 @@
 bot/.env
 dist/
 node_modules
+backups/
+*.dump
+*.archive.gz
