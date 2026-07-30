@@ -141,8 +141,8 @@ export const useClassesPage = () => {
       }
       dispatch(fetchClassesForce());
       handleCloseModal();
-    } catch {
-      showToast.error('Error saving class');
+    } catch (error) {
+      showToast.error(handleApiError(error) || 'Error saving class');
     }
   };
 
@@ -163,7 +163,7 @@ export const useClassesPage = () => {
         setDeleteModalOpen(true);
         return;
       }
-      showToast.error('Error deleting class');
+      showToast.error(handleApiError(error) || 'Error deleting class');
     } finally {
       setDeleteLoading(false);
     }
@@ -188,7 +188,7 @@ export const useClassesPage = () => {
       handleCloseDeleteModal();
     } catch (e) {
       console.error('Error forcing class delete:', e);
-      showToast.error('Failed to delete class');
+      showToast.error(handleApiError(e) || 'Failed to delete class');
     } finally {
       setDeleteLoading(false);
     }

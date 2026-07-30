@@ -1,7 +1,7 @@
 // React hooks for the crm feature.
 
 import { useState, useCallback } from 'react';
-import { showToast } from '../../../utils/toast';
+import { handleApiError, showToast } from '../../../utils/toast';
 
 interface CRUDState<T> {
   items: T[];
@@ -45,8 +45,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
         loading: false,
       }));
     } catch (error: unknown) {
-      const err = error as { response?: { data?: { message?: string } } };
-      const message = err.response?.data?.message || `Failed to fetch ${resourceName}`;
+      const message = handleApiError(error) || `Failed to fetch ${resourceName}`;
       setState((prev) => ({ ...prev, error: message, loading: false }));
       showToast.error(message);
     }
@@ -63,8 +62,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
         const item = (response as { data?: T }).data ?? (response as T);
         return item;
       } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-        const message = err.response?.data?.message || `Failed to fetch ${resourceName}`;
+        const message = handleApiError(error) || `Failed to fetch ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
         return null;
@@ -84,8 +82,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
         setState((prev) => ({ ...prev, loading: false }));
         return true;
       } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-        const message = err.response?.data?.message || `Failed to create ${resourceName}`;
+        const message = handleApiError(error) || `Failed to create ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
         return false;
@@ -105,8 +102,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
         setState((prev) => ({ ...prev, loading: false }));
         return true;
       } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-        const message = err.response?.data?.message || `Failed to update ${resourceName}`;
+        const message = handleApiError(error) || `Failed to update ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
         return false;
@@ -126,8 +122,7 @@ export const useCRUD = <T,>(apiService: APIService<T>, resourceName: string): [C
         setState((prev) => ({ ...prev, loading: false }));
         return true;
       } catch (error: unknown) {
-        const err = error as { response?: { data?: { message?: string } } };
-        const message = err.response?.data?.message || `Failed to delete ${resourceName}`;
+        const message = handleApiError(error) || `Failed to delete ${resourceName}`;
         setState((prev) => ({ ...prev, error: message, loading: false }));
         showToast.error(message);
         return false;

@@ -3,7 +3,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { studentAPI } from '../shared/api/api';
-import { showToast } from '../utils/toast';
+import { handleApiError, showToast } from '../utils/toast';
 import type { RootState } from '../store';
 
 export interface Student {
@@ -105,7 +105,7 @@ export const fetchStudents = createAsyncThunk(
             },
           };
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch students');
+      return rejectWithValue(handleApiError(err) || 'Failed to fetch students');
     }
   }
 );
@@ -128,7 +128,7 @@ export const fetchStudentsForce = createAsyncThunk(
             },
           };
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch students');
+      return rejectWithValue(handleApiError(err) || 'Failed to fetch students');
     }
   }
 );
@@ -142,7 +142,7 @@ export const createStudent = createAsyncThunk(
       dispatch(fetchStudentsForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to create student';
+      const msg = handleApiError(err) || 'Failed to create student';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -158,7 +158,7 @@ export const updateStudent = createAsyncThunk(
       dispatch(fetchStudentsForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to update student';
+      const msg = handleApiError(err) || 'Failed to update student';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -174,7 +174,7 @@ export const deleteStudent = createAsyncThunk(
       dispatch(fetchStudentsForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to delete student';
+      const msg = handleApiError(err) || 'Failed to delete student';
       showToast.error(msg);
       return rejectWithValue(msg);
     }

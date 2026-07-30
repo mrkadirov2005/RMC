@@ -81,6 +81,42 @@ export const showToast = {
 
 // Helper for API error handling
 export const handleApiError = (error: any): string => {
+  const formatDetails = (details: any): string | null => {
+    if (details == null) return null;
+    if (typeof details === 'string') return details.trim() || null;
+    if (typeof details === 'number' || typeof details === 'boolean') return String(details);
+
+    if (Array.isArray(details)) {
+      const messages = details
+        .map((item) => {
+          if (typeof item === 'string') return item;
+          if (item && typeof item === 'object') {
+            const field = (item as any).field || (item as any).path || (item as any).property;
+            const message = (item as any).message || (item as any).msg || (item as any).error;
+            if (field && message) return `${field}: ${message}`;
+            if (message) return String(message);
+          }
+          return toMessage(item);
+        })
+        .filter(Boolean);
+      return messages.length ? messages.join('\n') : null;
+    }
+
+    if (typeof details === 'object') {
+      const entries = Object.entries(details)
+        .map(([field, value]) => {
+          if (Array.isArray(value)) return `${field}: ${value.join(', ')}`;
+          if (typeof value === 'string') return `${field}: ${value}`;
+          if (value && typeof value === 'object' && 'message' in value) return `${field}: ${(value as any).message}`;
+          return null;
+        })
+        .filter(Boolean);
+      if (entries.length) return entries.join('\n');
+    }
+
+    return null;
+  };
+
   const toMessage = (value: any): string | null => {
     if (value == null) return null;
     if (typeof value === 'string') return value;
@@ -107,6 +143,7 @@ export const handleApiError = (error: any): string => {
   };
 
   const message =
+    formatDetails(error?.response?.data?.details) ??
     toMessage(error?.response?.data?.message) ??
     toMessage(error?.response?.data?.error) ??
     toMessage(error?.response?.data) ??

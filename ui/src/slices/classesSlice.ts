@@ -3,7 +3,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { classAPI } from '../shared/api/api';
-import { showToast } from '../utils/toast';
+import { handleApiError, showToast } from '../utils/toast';
 import type { RootState } from '../store';
 
 export interface Class {
@@ -76,7 +76,7 @@ export const fetchClasses = createAsyncThunk(
             },
           };
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch classes');
+      return rejectWithValue(handleApiError(err) || 'Failed to fetch classes');
     }
   }
 );
@@ -99,7 +99,7 @@ export const fetchClassesForce = createAsyncThunk(
             },
           };
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch classes');
+      return rejectWithValue(handleApiError(err) || 'Failed to fetch classes');
     }
   }
 );
@@ -113,7 +113,7 @@ export const createClass = createAsyncThunk(
       dispatch(fetchClassesForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to create class';
+      const msg = handleApiError(err) || 'Failed to create class';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -129,7 +129,7 @@ export const updateClass = createAsyncThunk(
       dispatch(fetchClassesForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to update class';
+      const msg = handleApiError(err) || 'Failed to update class';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -145,7 +145,7 @@ export const deleteClass = createAsyncThunk(
       dispatch(fetchClassesForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to delete class';
+      const msg = handleApiError(err) || 'Failed to delete class';
       showToast.error(msg);
       return rejectWithValue(msg);
     }

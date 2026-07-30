@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { centerAPI } from '../../../../shared/api/api';
-import { showToast } from '../../../../utils/toast';
+import { handleApiError, showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { fetchCentersForce } from '../../../../slices/centersSlice';
@@ -93,8 +93,8 @@ export const useCentersPage = () => {
       }
       dispatch(fetchCentersForce());
       handleCloseModal();
-    } catch {
-      showToast.error('Error saving center');
+    } catch (error) {
+      showToast.error(handleApiError(error) || 'Error saving center');
     }
   };
 
@@ -108,8 +108,8 @@ export const useCentersPage = () => {
         }
         showToast.success('Center deleted successfully!');
         dispatch(fetchCentersForce());
-      } catch {
-        showToast.error('Error deleting center');
+      } catch (error) {
+        showToast.error(handleApiError(error) || 'Error deleting center');
       }
     }
   };

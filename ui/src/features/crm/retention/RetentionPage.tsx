@@ -16,6 +16,7 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { reportAPI } from '@/shared/api/api';
 import { PieChart } from '@/shared/components/PieChart';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -44,6 +45,7 @@ interface RetentionReport {
     left_count: number;
     class_count: number;
     latest_deleted_at?: string | null;
+    students?: Array<Record<string, any>>;
   }>;
   by_class: Array<{
     class_id: number | null;
@@ -101,6 +103,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
   const [mode, setMode] = useState<RetentionMode>('overview');
   const [report, setReport] = useState<RetentionReport>(emptyReport);
   const [loading, setLoading] = useState(true);
+  const [selectedTeacher, setSelectedTeacher] = useState<RetentionReport['by_teacher'][number] | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -127,7 +130,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
 
   const teacherPie = useMemo(
     () =>
-      report.by_teacher.slice(0, 6).map((row, index) => ({
+      report.by_teacher.filter((row) => Number(row.left_count || 0) > 0).slice(0, 6).map((row, index) => ({
         label: row.teacher_name,
         value: Number(row.left_count || 0),
         color: colors[index % colors.length],
@@ -135,7 +138,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
     [report.by_teacher]
   );
 
-  const topTeacher = report.by_teacher[0];
+  const topTeacher = report.by_teacher.find((row) => Number(row.left_count || 0) > 0);
   const trendUp = report.summary.trend === 'up';
   const trendDown = report.summary.trend === 'down';
 
@@ -231,10 +234,11 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
                 <ClassPanel rows={report.by_class} />
               </div>
             ) : (
-              <TeacherPanel rows={report.by_teacher} pie={teacherPie} />
+              <TeacherPanel rows={report.by_teacher} pie={teacherPie} onTeacherClick={setSelectedTeacher} />
             )}
 
             <RecentStudents rows={report.recent_students} />
+            <TeacherStudentsDialog teacher={selectedTeacher} onOpenChange={(open) => !open && setSelectedTeacher(null)} />
           </>
         )}
       </div>
@@ -280,7 +284,15 @@ const TrendPanel = ({ rows, max }: { rows: RetentionReport['monthly']; max: numb
   );
 };
 
-const TeacherPanel = ({ rows, pie }: { rows: RetentionReport['by_teacher']; pie: Array<{ label: string; value: number; color: string }> }) => {
+const TeacherPanel = ({
+  rows,
+  pie,
+  onTeacherClick,
+}: {
+  rows: RetentionReport['by_teacher'];
+  pie: Array<{ label: string; value: number; color: string }>;
+  onTeacherClick: (teacher: RetentionReport['by_teacher'][number]) => void;
+}) => {
   const { t } = useLanguage();
   return (
     <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
@@ -303,11 +315,26 @@ const TeacherPanel = ({ rows, pie }: { rows: RetentionReport['by_teacher']; pie:
           </TableHeader>
           <TableBody>
             {rows.map((row) => (
-              <TableRow key={`${row.teacher_id || 'none'}-${row.teacher_name}`}>
-                <TableCell className="font-bold">{row.teacher_name}</TableCell>
+              <TableRow
+                key={`${row.teacher_id || 'none'}-${row.teacher_name}`}
+                className="cursor-pointer"
+                onClick={() => onTeacherClick(row)}
+              >
+                <TableCell>
+                  <button
+                    type="button"
+                    className="text-left font-bold text-slate-900 hover:text-cyan-700 dark:text-white dark:hover:text-cyan-300"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      onTeacherClick(row);
+                    }}
+                  >
+                    {row.teacher_name}
+                  </button>
+                </TableCell>
                 <TableCell>{row.class_count}</TableCell>
                 <TableCell>{formatDate(row.latest_deleted_at)}</TableCell>
-                <TableCell className="text-right font-black text-rose-600">{row.left_count}</TableCell>
+                <TableCell className={cn('text-right font-black', row.left_count > 0 ? 'text-rose-600' : 'text-slate-400')}>{row.left_count}</TableCell>
               </TableRow>
             ))}
             {rows.length === 0 && (
@@ -321,6 +348,68 @@ const TeacherPanel = ({ rows, pie }: { rows: RetentionReport['by_teacher']; pie:
     </div>
   );
 };
+
+const TeacherStudentsDialog = ({
+  teacher,
+  onOpenChange,
+}: {
+  teacher: RetentionReport['by_teacher'][number] | null;
+  onOpenChange: (open: boolean) => void;
+}) => {
+  const { t } = useLanguage();
+  const students = teacher?.students || [];
+
+  return (
+    <Dialog open={Boolean(teacher)} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[86vh] overflow-y-auto sm:max-w-4xl">
+        <DialogHeader>
+          <DialogTitle>{teacher?.teacher_name || t('Teacher')}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <ModalStat label={t('Gone students')} value={String(teacher?.left_count || 0)} />
+          <ModalStat label={t('Groups affected')} value={String(teacher?.class_count || 0)} />
+          <ModalStat label={t('Last left')} value={formatDate(teacher?.latest_deleted_at)} />
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{t('Student')}</TableHead>
+              <TableHead>{t('Group')}</TableHead>
+              <TableHead>{t('Status')}</TableHead>
+              <TableHead>{t('Phone')}</TableHead>
+              <TableHead className="text-right">{t('Deleted at')}</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {students.map((student) => (
+              <TableRow key={student.student_id}>
+                <TableCell className="font-bold">{getName(student)}</TableCell>
+                <TableCell>{student.class_name || '-'}</TableCell>
+                <TableCell>{student.status || '-'}</TableCell>
+                <TableCell>{student.phone || '-'}</TableCell>
+                <TableCell className="text-right">{formatDate(student.deleted_at)}</TableCell>
+              </TableRow>
+            ))}
+            {students.length === 0 && (
+              <TableRow>
+                <TableCell colSpan={5} className="py-8 text-center text-slate-500">
+                  {t('No gone students for this teacher in the selected month.')}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const ModalStat = ({ label, value }: { label: string; value: string }) => (
+  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.04]">
+    <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">{label}</p>
+    <p className="mt-1 text-lg font-black text-slate-900 dark:text-white">{value}</p>
+  </div>
+);
 
 const ClassPanel = ({ rows }: { rows: RetentionReport['by_class'] }) => {
   const { t } = useLanguage();

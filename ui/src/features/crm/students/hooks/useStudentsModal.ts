@@ -7,7 +7,7 @@ import { useAppSelector } from '../../hooks';
 
 import { studentAPI } from '../../../../shared/api/api';
 import { createStudentIdentity } from '../../../../shared/studentIdentity';
-import { showToast } from '../../../../utils/toast';
+import { handleApiError, showToast } from '../../../../utils/toast';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 
 // Provides students modal.
@@ -39,8 +39,8 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
       }
       refreshStudents?.();
       handleCloseModal();
-    } catch {
-      showToast.error('Error saving student');
+    } catch (error) {
+      showToast.error(handleApiError(error) || 'Error saving student');
     } finally {
       setSaving(false);
     }
@@ -52,8 +52,8 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
         await studentAPI.delete(id);
         showToast.success('Student deleted successfully!');
         refreshStudents?.();
-      } catch {
-        showToast.error('Error deleting student');
+      } catch (error) {
+        showToast.error(handleApiError(error) || 'Error deleting student');
       }
     } 
   };

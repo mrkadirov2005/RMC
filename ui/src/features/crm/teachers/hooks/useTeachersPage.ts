@@ -86,12 +86,12 @@ export const useTeachersPage = (teacherParams?: TeacherListParams) => {
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      await dispatch(updateTeacher({ id: editingId, data: formData }));
-    } else {
-      await dispatch(createTeacher(formData));
+    const action = editingId
+      ? await dispatch(updateTeacher({ id: editingId, data: formData }))
+      : await dispatch(createTeacher(formData));
+    if (createTeacher.fulfilled.match(action) || updateTeacher.fulfilled.match(action)) {
+      handleCloseModal();
     }
-    handleCloseModal();
   };
 
 // Handles delete.

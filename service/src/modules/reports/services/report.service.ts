@@ -90,13 +90,16 @@ const retentionReport = async (query: { center_id?: string; month?: string; mont
   const currentRange = monthRange(selectedMonth);
   const previousRange = monthRange(previousMonth);
 
-  const [current, previous, seriesRows, teacherRows, classRows, recentRows] = await Promise.all([
+  const recentLimit = Math.min(100, Math.max(1, Number(query.limit || 30) || 30));
+  const studentListLimit = 1000;
+
+  const [current, previous, seriesRows, teacherRows, classRows, deletedStudentRows] = await Promise.all([
     reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...currentRange }),
     reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...previousRange }),
     reportRepository.deletedStudentsByMonth({ centerId: scopedCenterId, start: dateOnly(seriesStart), end: dateOnly(seriesEnd) }),
     reportRepository.deletedStudentsByTeacher({ centerId: scopedCenterId, ...currentRange }),
     reportRepository.deletedStudentsByClass({ centerId: scopedCenterId, ...currentRange }),
-    reportRepository.recentDeletedStudents({ centerId: scopedCenterId, ...currentRange, limit: Number(query.limit || 30) }),
+    reportRepository.recentDeletedStudents({ centerId: scopedCenterId, ...currentRange, limit: studentListLimit }),
   ]);
 
   const seriesMap = new Map(seriesRows.map((row: any) => [String(row.month_start).slice(0, 7), Number(row.left_count || 0)]));
@@ -132,19 +135,28 @@ const retentionReport = async (query: { center_id?: string; month?: string; mont
       trend: delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat',
     },
     monthly,
-    by_teacher: teacherRows.map((row: any) => ({
-      ...row,
-      teacher_name: [row.teacher_first_name, row.teacher_last_name].filter(Boolean).join(' ') || 'No teacher',
-      left_count: Number(row.left_count || 0),
-      class_count: Number(row.class_count || 0),
-    })),
+    by_teacher: teacherRows.map((row: any) => {
+      const teacherId = row.teacher_id == null ? null : Number(row.teacher_id);
+      const teacherStudents = deletedStudentRows.filter((student: any) => {
+        const studentTeacherId = student.teacher_id == null ? null : Number(student.teacher_id);
+        return teacherId != null && studentTeacherId === teacherId;
+      });
+      return {
+        ...row,
+        teacher_id: teacherId,
+        teacher_name: [row.teacher_first_name, row.teacher_last_name].filter(Boolean).join(' ') || 'No teacher',
+        left_count: Number(row.left_count || 0),
+        class_count: Number(row.class_count || 0),
+        students: teacherStudents,
+      };
+    }),
     by_class: classRows.map((row: any) => ({
       ...row,
       class_name: row.class_name || 'No group',
       teacher_name: [row.teacher_first_name, row.teacher_last_name].filter(Boolean).join(' ') || 'No teacher',
       left_count: Number(row.left_count || 0),
     })),
-    recent_students: recentRows,
+    recent_students: deletedStudentRows.slice(0, recentLimit),
   };
 };
 

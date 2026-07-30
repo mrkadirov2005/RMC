@@ -1,4 +1,4 @@
-const { and, desc, eq, gte, isNotNull, isNull, lte, sql } = require('drizzle-orm');
+const { and, asc, desc, eq, gte, isNotNull, isNull, lte, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { attendance, classes, debts, payments, students, teachers } = require('../../../db/schema');
 
@@ -114,20 +114,25 @@ const deletedStudentsByMonth = (filters: { centerId?: number; start?: string | n
 const deletedStudentsByTeacher = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
   db
     .select({
-      teacher_id: sql`COALESCE(${classes.teacherId}, ${students.teacherId})`,
+      teacher_id: teachers.teacherId,
       teacher_first_name: teachers.firstName,
       teacher_last_name: teachers.lastName,
       employee_id: teachers.employeeId,
-      left_count: sql`COUNT(*)::int`,
+      left_count: sql`COUNT(DISTINCT ${students.studentId})::int`,
       latest_deleted_at: sql`MAX(${students.deletedAt})`,
       class_count: sql`COUNT(DISTINCT ${students.classId})::int`,
     })
-    .from(students)
-    .leftJoin(classes, eq(classes.classId, students.classId))
-    .leftJoin(teachers, eq(teachers.teacherId, sql`COALESCE(${classes.teacherId}, ${students.teacherId})`))
-    .where(and(...retentionDeletedFilters(filters)))
-    .groupBy(sql`COALESCE(${classes.teacherId}, ${students.teacherId})`, teachers.firstName, teachers.lastName, teachers.employeeId)
-    .orderBy(desc(sql`COUNT(*)`));
+    .from(teachers)
+    .leftJoin(
+      students,
+      and(
+        ...retentionDeletedFilters(filters),
+        eq(sql`COALESCE((SELECT c.teacher_id FROM classes c WHERE c.class_id = ${students.classId}), ${students.teacherId})`, teachers.teacherId),
+      ),
+    )
+    .where(and(isNull(teachers.deletedAt), ...scoped(teachers, filters.centerId)))
+    .groupBy(teachers.teacherId, teachers.firstName, teachers.lastName, teachers.employeeId)
+    .orderBy(desc(sql`COUNT(DISTINCT ${students.studentId})`), asc(teachers.firstName), asc(teachers.lastName));
 
 const deletedStudentsByClass = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
   db

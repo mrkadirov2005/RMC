@@ -3,7 +3,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { teacherAPI } from '../shared/api/api';
-import { showToast } from '../utils/toast';
+import { handleApiError, showToast } from '../utils/toast';
 import type { RootState } from '../store';
 
 export interface Teacher {
@@ -85,7 +85,7 @@ export const fetchTeachers = createAsyncThunk(
             },
           };
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch teachers');
+      return rejectWithValue(handleApiError(err) || 'Failed to fetch teachers');
     }
   }
 );
@@ -108,7 +108,7 @@ export const fetchTeachersForce = createAsyncThunk(
             },
           };
     } catch (err: any) {
-      return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch teachers');
+      return rejectWithValue(handleApiError(err) || 'Failed to fetch teachers');
     }
   }
 );
@@ -122,7 +122,7 @@ export const createTeacher = createAsyncThunk(
       dispatch(fetchTeachersForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to create teacher';
+      const msg = handleApiError(err) || 'Failed to create teacher';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -138,7 +138,7 @@ export const updateTeacher = createAsyncThunk(
       dispatch(fetchTeachersForce());
       return true;
     } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Failed to update teacher';
+      const msg = handleApiError(err) || 'Failed to update teacher';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
@@ -165,13 +165,13 @@ export const deleteTeacher = createAsyncThunk(
             dispatch(fetchTeachersForce());
             return true;
           } catch (forceErr: any) {
-            const forceMsg = forceErr?.response?.data?.message ?? forceErr?.response?.data?.error ?? 'Failed to delete teacher';
+            const forceMsg = handleApiError(forceErr) || 'Failed to delete teacher';
             showToast.error(forceMsg);
             return rejectWithValue(forceMsg);
           }
         }
       }
-      const msg = data?.message ?? data?.error ?? 'Failed to delete teacher';
+      const msg = handleApiError(err) || 'Failed to delete teacher';
       showToast.error(msg);
       return rejectWithValue(msg);
     }
