@@ -15,7 +15,7 @@ const getAllAttendance = async (req: any, res: any) => {
     res.json(await attendanceService.list(centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance' });
+    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
   }
 };
 
@@ -117,7 +117,7 @@ const getAttendanceByStudent = async (req: any, res: any) => {
     res.json(await attendanceService.byStudent(studentId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance' });
+    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
   }
 };
 
@@ -134,7 +134,7 @@ const getAttendanceByClass = async (req: any, res: any) => {
     res.json(await attendanceService.byClass(Number(req.params.classId), centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance' });
+    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
   }
 };
 
@@ -148,7 +148,7 @@ const getAttendanceBySession = async (req: any, res: any) => {
     res.json(await attendanceService.bySession(Number(req.params.sessionId), centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance' });
+    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
   }
 };
 
