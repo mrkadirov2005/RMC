@@ -38,7 +38,18 @@ const updateClass = (id: number, body: any, centerId?: number) => {
   const { class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
   return classRepository.update(
     id,
-    [class_name, class_code ? String(class_code).trim() : undefined, level, section, capacity, teacher_id, room_number, start_date || null, end_date || null, payment_amount],
+    [
+      class_name,
+      class_code ? String(class_code).trim() : undefined,
+      level,
+      section,
+      capacity,
+      teacher_id,
+      room_number,
+      start_date === undefined ? undefined : start_date || null,
+      end_date === undefined ? undefined : end_date || null,
+      payment_amount,
+    ],
     centerId
   );
 };

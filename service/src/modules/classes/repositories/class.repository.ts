@@ -163,6 +163,14 @@ const teacherExists = async (teacherId: number, centerId?: number) => {
   return rows.length > 0;
 };
 
+const toTimestamp = (value: any) => {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const insert = async (params: any[]) => {
   const rows = await db
     .insert(classes)
@@ -175,8 +183,8 @@ const insert = async (params: any[]) => {
       capacity: params[5],
       teacherId: params[6],
       roomNumber: params[7],
-      startDate: params[8],
-      endDate: params[9],
+      startDate: toTimestamp(params[8]),
+      endDate: toTimestamp(params[9]),
       paymentAmount: params[10],
       paymentFrequency: params[11],
     })
@@ -187,21 +195,24 @@ const insert = async (params: any[]) => {
 const update = async (id: number, params: any[], centerId?: number) => {
   const conditions = [eq(classes.classId, id), isNull(classes.deletedAt)];
   if (centerId) conditions.push(eq(classes.centerId, centerId));
+  const startDate = toTimestamp(params[7]);
+  const endDate = toTimestamp(params[8]);
+  const updates: Record<string, any> = {
+    className: sql`COALESCE(${params[0] ?? null}, ${classes.className})`,
+    classCode: sql`COALESCE(${params[1] ?? null}, ${classes.classCode})`,
+    level: sql`COALESCE(${params[2] ?? null}, ${classes.level})`,
+    section: sql`COALESCE(${params[3] ?? null}, ${classes.section})`,
+    capacity: sql`COALESCE(${params[4] ?? null}, ${classes.capacity})`,
+    teacherId: sql`COALESCE(${params[5] ?? null}, ${classes.teacherId})`,
+    roomNumber: sql`COALESCE(${params[6] ?? null}, ${classes.roomNumber})`,
+    paymentAmount: sql`COALESCE(${params[9] ?? null}, ${classes.paymentAmount})`,
+    updatedAt: sql`CURRENT_TIMESTAMP`,
+  };
+  if (startDate !== undefined) updates.startDate = startDate;
+  if (endDate !== undefined) updates.endDate = endDate;
   const rows = await db
     .update(classes)
-    .set({
-      className: sql`COALESCE(${params[0] ?? null}, ${classes.className})`,
-      classCode: sql`COALESCE(${params[1] ?? null}, ${classes.classCode})`,
-      level: sql`COALESCE(${params[2] ?? null}, ${classes.level})`,
-      section: sql`COALESCE(${params[3] ?? null}, ${classes.section})`,
-      capacity: sql`COALESCE(${params[4] ?? null}, ${classes.capacity})`,
-      teacherId: sql`COALESCE(${params[5] ?? null}, ${classes.teacherId})`,
-      roomNumber: sql`COALESCE(${params[6] ?? null}, ${classes.roomNumber})`,
-      startDate: params[7] || null,
-      endDate: params[8] || null,
-      paymentAmount: sql`COALESCE(${params[9] ?? null}, ${classes.paymentAmount})`,
-      updatedAt: sql`CURRENT_TIMESTAMP`,
-    })
+    .set(updates)
     .where(and(...conditions))
     .returning(classSelection());
   return rows[0] || null;
