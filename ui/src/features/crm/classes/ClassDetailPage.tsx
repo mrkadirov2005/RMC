@@ -104,6 +104,7 @@ const ClassDetailPage = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
   const [startingLesson, setStartingLesson] = useState(false);
+  const [openingPoints, setOpeningPoints] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
   const [loading, setLoading] = useState(true);
@@ -190,10 +191,12 @@ const ClassDetailPage = () => {
     { label: 'Tuition', value: formatMoney(classData?.payment_amount), detail: classData?.payment_frequency || 'Monthly', icon: DollarSign, color: 'bg-fuchsia-600' },
   ];
 
-  const openSessionWorkflow = (session: any, actions: LessonAction[] = defaultLessonActions) => {
+  const openSessionWorkflow = (session: any, actions: LessonAction[] = defaultLessonActions, tab?: LessonAction) => {
     const nextSessionId = Number(session.session_id || session.id);
     if (!nextSessionId) return;
-    navigate(`/classes/${classId}/sessions/${nextSessionId}/workflow?actions=${actions.join(',')}`);
+    const params = new URLSearchParams({ actions: actions.join(',') });
+    if (tab) params.set('tab', tab);
+    navigate(`/classes/${classId}/sessions/${nextSessionId}/workflow?${params.toString()}`);
   };
 
   const toggleLessonAction = (action: LessonAction, checked: boolean) => {
@@ -248,6 +251,53 @@ const ClassDetailPage = () => {
     }
   };
 
+  const getLatestSession = () => {
+    const datedSessions = [...sessions]
+      .filter((session) => session.session_date && Number(session.session_id || session.id))
+      .sort((a, b) => {
+        const dateA = new Date(a.session_date).getTime();
+        const dateB = new Date(b.session_date).getTime();
+        if (dateA !== dateB) return dateB - dateA;
+        return Number(b.session_id || b.id || 0) - Number(a.session_id || a.id || 0);
+      });
+    const todayTime = new Date(todayKey).getTime();
+    return datedSessions.find((session) => new Date(session.session_date).getTime() <= todayTime) || datedSessions[0];
+  };
+
+  const openPointsSection = async () => {
+    if (!classData || !classId) return;
+    const latestSession = getLatestSession();
+    if (latestSession) {
+      openSessionWorkflow(latestSession, ['points'], 'points');
+      return;
+    }
+
+    setOpeningPoints(true);
+    try {
+      const targetClassId = Number(classData.class_id || classData.id || classId);
+      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(authUser) || undefined;
+      if (!targetCenterId) {
+        showToast.error('Please select an active center before opening points.');
+        return;
+      }
+      const response = await classAPI.createSession(targetClassId, {
+        center_id: targetCenterId,
+        session_date: todayKey,
+        start_time: schedule.time || new Date().toTimeString().slice(0, 5),
+        duration_minutes: scheduleDurationMinutes,
+        teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData.teacher_id || 0) || undefined,
+      });
+      const nextSession = response?.data ?? response;
+      setSessions((current) => [...current, nextSession]);
+      openSessionWorkflow(nextSession, ['points'], 'points');
+    } catch (err) {
+      console.error('Failed to open points:', err);
+      showToast.error('Failed to open points.');
+    } finally {
+      setOpeningPoints(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -296,14 +346,25 @@ const ClassDetailPage = () => {
               </div>
             </div>
           </div>
-          <Button
-            onClick={() => setLessonPickerOpen(true)}
-            disabled={startingLesson}
-            className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
-          >
-            {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-            Start Lesson
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              onClick={openPointsSection}
+              disabled={openingPoints || startingLesson}
+              variant="outline"
+              className="h-9 border-violet-200 bg-violet-50 px-3 text-xs font-bold text-violet-800 shadow-sm hover:bg-violet-100"
+            >
+              {openingPoints ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PencilLine className="mr-2 h-4 w-4" />}
+              Points
+            </Button>
+            <Button
+              onClick={() => setLessonPickerOpen(true)}
+              disabled={startingLesson || openingPoints}
+              className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
+            >
+              {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+              Start Lesson
+            </Button>
+          </div>
         </div>
       </div>
 

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { attendanceAPI, classAPI, gradeAPI, settingsAPI, studentAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
@@ -39,6 +40,8 @@ const getPayload = (response: any) => response?.data ?? response;
 
 const getStudentId = (student: any) => Number(student.student_id || student.id || 0);
 
+const toDateKey = (value?: string) => (value ? new Date(value).toISOString().split('T')[0] : '');
+
 const fetchAllClassStudents = async (classId: number) => {
   const directRows = unwrapRows<any>(await studentAPI.getByClassWithTransfers(classId, { _fresh: Date.now() }).catch(() => ({ data: [] })));
   if (directRows.length > 0) return directRows;
@@ -65,6 +68,7 @@ export default function SessionWorkflowPage() {
   const authUser = useAppSelector((state) => state.auth.user);
   const [classData, setClassData] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [attendance, setAttendance] = useState<Map<number, string>>(new Map());
   const [homeworkScores, setHomeworkScores] = useState<Map<number, string>>(new Map());
@@ -72,7 +76,12 @@ export default function SessionWorkflowPage() {
   const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
   const [stellarStudentId, setStellarStudentId] = useState<number | null>(null);
   const [scoringSettings, setScoringSettings] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
-  const [activeTab, setActiveTab] = useState<WorkflowTab>('attendance');
+  const [activeTab, setActiveTab] = useState<WorkflowTab>(() => {
+    const requestedTab = searchParams.get('tab') as WorkflowTab | null;
+    return requestedTab && WORKFLOW_TABS.includes(requestedTab) ? requestedTab : 'attendance';
+  });
+  const [selectedDate, setSelectedDate] = useState('');
+  const [switchingDate, setSwitchingDate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -96,7 +105,6 @@ export default function SessionWorkflowPage() {
   const homeworkPoints = useMemo(() => toPointMap(scoringSettings.homework), [scoringSettings.homework]);
   const activityPoints = useMemo(() => toPointMap(scoringSettings.activity), [scoringSettings.activity]);
   const centerId = Number(session?.center_id || classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
-  const selectedDate = session?.session_date ? new Date(session.session_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
 
   useEffect(() => {
     let cancelled = false;
@@ -116,7 +124,8 @@ export default function SessionWorkflowPage() {
         if (cancelled) return;
 
         const nextClass = getPayload(classResponse);
-        const nextSession = unwrapRows<any>(sessionsResponse).find((item) => Number(item.session_id || item.id) === numericSessionId);
+        const nextSessions = unwrapRows<any>(sessionsResponse);
+        const nextSession = nextSessions.find((item) => Number(item.session_id || item.id) === numericSessionId);
         const nextStudents = Array.isArray(studentsResponse) ? studentsResponse : [];
         const nextAttendanceRecords = unwrapRows<any>(attendanceResponse);
         const nextGrades = unwrapRows<any>(gradesResponse);
@@ -155,7 +164,9 @@ export default function SessionWorkflowPage() {
 
         setClassData(nextClass);
         setScoringSettings(nextScoringSettings);
+        setSessions(nextSessions);
         setSession(nextSession || { session_id: numericSessionId, class_id: numericClassId, center_id: nextClass?.center_id });
+        setSelectedDate(toDateKey(nextSession?.session_date) || new Date().toISOString().split('T')[0]);
         setStudents(nextStudents.filter((student) => !student.deleted_at));
         setAttendance(nextAttendance);
         setHomeworkScores(nextHomework);
@@ -279,6 +290,44 @@ export default function SessionWorkflowPage() {
     });
   };
 
+  const handleDateChange = async (nextDate: string) => {
+    if (!nextDate || !numericClassId || !classData) return;
+    setSelectedDate(nextDate);
+    const existingSession = sessions.find((item) => toDateKey(item.session_date) === nextDate);
+    const nextActions = selectedActions.join(',');
+    const nextTab = selectedTabs.includes(activeTab) ? activeTab : selectedTabs[0] || 'points';
+
+    if (existingSession) {
+      const nextSessionId = Number(existingSession.session_id || existingSession.id);
+      if (nextSessionId && nextSessionId !== numericSessionId) {
+        navigate(`/classes/${numericClassId}/sessions/${nextSessionId}/workflow?actions=${nextActions}&tab=${nextTab}`, { replace: true });
+      }
+      return;
+    }
+
+    setSwitchingDate(true);
+    try {
+      const response = await classAPI.createSession(numericClassId, {
+        center_id: centerId,
+        session_date: nextDate,
+        start_time: session?.start_time || new Date().toTimeString().slice(0, 5),
+        duration_minutes: Number(session?.duration_minutes || 90),
+        teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id || session?.teacher_id || 0) || undefined,
+      });
+      const nextSession = getPayload(response);
+      const nextSessionId = Number(nextSession?.session_id || nextSession?.id || 0);
+      if (!nextSessionId) throw new Error('Session was created without an id.');
+      setSessions((current) => [...current, nextSession]);
+      navigate(`/classes/${numericClassId}/sessions/${nextSessionId}/workflow?actions=${nextActions}&tab=${nextTab}`, { replace: true });
+    } catch (err) {
+      console.error('Failed to switch lesson date:', err);
+      setSelectedDate(toDateKey(session?.session_date) || new Date().toISOString().split('T')[0]);
+      showToast.error('Failed to open lesson for this date.');
+    } finally {
+      setSwitchingDate(false);
+    }
+  };
+
   const saveSession = async () => {
     if (!numericSessionId || !numericClassId) return;
     if (selectedTabs.length === 0) {
@@ -372,9 +421,24 @@ export default function SessionWorkflowPage() {
             {searchParams.get('from') === 'teacher' ? 'Back to teacher portal' : 'Back to class'}
           </Button>
           <h1 className="truncate text-xl font-bold text-slate-950 dark:text-foreground">{classData?.class_name || 'Lesson workflow'}</h1>
-          <p className="text-sm text-muted-foreground">
-            {selectedDate} / {session?.start_time || '-'} / {students.length} students / {shouldAwardCoins ? 'coins on' : 'coins off'}
-          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <label className="flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 text-xs font-semibold text-slate-700 dark:border-border dark:bg-background dark:text-foreground">
+              <CalendarDays className="h-4 w-4 text-violet-600" />
+              <Input
+                type="date"
+                value={selectedDate}
+                onChange={(event) => handleDateChange(event.target.value)}
+                disabled={switchingDate || submitting}
+                className="h-7 w-[150px] border-0 bg-transparent p-0 text-xs font-bold shadow-none focus-visible:ring-0"
+              />
+            </label>
+            <span>{session?.start_time || '-'}</span>
+            <span>/</span>
+            <span>{students.length} students</span>
+            <span>/</span>
+            <span>{shouldAwardCoins ? 'coins on' : 'coins off'}</span>
+            {switchingDate && <Loader2 className="h-4 w-4 animate-spin text-violet-600" />}
+          </div>
         </div>
         <Button className="h-9 bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveSession} disabled={submitting || students.length === 0}>
           {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Star } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Circle, MinusCircle, Star, TrendingUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
@@ -88,6 +88,43 @@ const SelectedFill = ({ option, active }: { option: ScoreOption; active: boolean
       }}
     />
   );
+};
+
+const getPointStatus = (value: string | undefined) => {
+  if (value === undefined || value === '') {
+    return {
+      label: 'Missing',
+      icon: AlertCircle,
+      className: 'border-rose-200 bg-rose-50 text-rose-800',
+    };
+  }
+  const points = Number(value || 0);
+  if (points === 0) {
+    return {
+      label: 'Zero',
+      icon: MinusCircle,
+      className: 'border-slate-200 bg-slate-50 text-slate-700',
+    };
+  }
+  if (points < 50) {
+    return {
+      label: 'Low',
+      icon: Circle,
+      className: 'border-amber-200 bg-amber-50 text-amber-800',
+    };
+  }
+  if (points < 80) {
+    return {
+      label: 'Good',
+      icon: TrendingUp,
+      className: 'border-sky-200 bg-sky-50 text-sky-800',
+    };
+  }
+  return {
+    label: 'Strong',
+    icon: CheckCircle2,
+    className: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  };
 };
 
 export const StepTile = ({ active, title, value, tone }: { active: boolean; title: string; value: string; tone: keyof typeof stepToneClasses }) => (
@@ -259,16 +296,19 @@ export const ManualPointsTable = ({
         <TableRow className="bg-primary">
           <TableHead className="h-10 w-[220px] min-w-[220px] px-3 text-xs font-semibold text-primary-foreground">Student</TableHead>
           <TableHead className="h-10 w-[160px] min-w-[160px] px-3 text-center text-xs font-semibold text-primary-foreground">Manual Points</TableHead>
+          <TableHead className="h-10 w-[140px] min-w-[140px] px-3 text-center text-xs font-semibold text-primary-foreground">Status</TableHead>
           <TableHead className="h-10 px-3 text-center text-xs font-semibold text-primary-foreground">Combined Score</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {students.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={3} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
+            <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
           </TableRow>
         ) : students.map((student) => {
           const studentId = getStudentId(student);
+          const status = getPointStatus(values.get(studentId));
+          const StatusIcon = status.icon;
           return (
             <TableRow key={studentId} className="h-12">
               <TableCell className="w-[220px] max-w-[220px] px-3 py-1.5 text-sm font-medium">
@@ -285,6 +325,12 @@ export const ManualPointsTable = ({
                   className="mx-auto h-8 max-w-[120px] text-center text-sm font-semibold"
                   placeholder="0"
                 />
+              </TableCell>
+              <TableCell className="px-3 py-1.5 text-center">
+                <span className={cn('inline-flex h-8 min-w-[92px] items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-bold', status.className)}>
+                  <StatusIcon className="h-3.5 w-3.5" />
+                  {status.label}
+                </span>
               </TableCell>
               <TableCell className="px-3 py-1.5 text-center text-base font-bold">
                 {getTotalScore(studentId)} <span className="text-xs text-muted-foreground">/ 100</span>
