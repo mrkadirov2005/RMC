@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, CheckCircle2, Clock, Coins, DollarSign, FileQuestion, Loader2, MapPin, PencilLine, PlayCircle, Star, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock, Coins, DollarSign, FileQuestion, Loader2, MapPin, PencilLine, PlayCircle, Star, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -67,6 +67,7 @@ type AssignedTestItem = {
 type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
 
 const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
+const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const lessonActionOptions: Array<{ id: LessonAction; label: string; detail: string; icon: typeof CalendarCheck }> = [
   { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
@@ -95,6 +96,29 @@ const unwrapRows = (response: any) => {
   return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
 };
 
+const toDateKey = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getMonthKey = (dateKey?: string) => {
+  if (dateKey && /^\d{4}-\d{2}/.test(dateKey)) return dateKey.slice(0, 7);
+  return toDateKey(new Date()).slice(0, 7);
+};
+
+const shiftMonth = (monthKey: string, offset: number) => {
+  const [yearRaw, monthRaw] = monthKey.split('-');
+  const date = new Date(Number(yearRaw), Number(monthRaw) - 1 + offset, 1);
+  return toDateKey(date).slice(0, 7);
+};
+
+const monthLabel = (monthKey: string) => {
+  const [yearRaw, monthRaw] = monthKey.split('-');
+  return new Date(Number(yearRaw), Number(monthRaw) - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+};
+
 const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
@@ -107,8 +131,8 @@ const ClassDetailPage = () => {
   const [startingLesson, setStartingLesson] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
-  const [pointsDate, setPointsDate] = useState('');
-  const [pointsGrades, setPointsGrades] = useState<any[]>([]);
+  const [pointsMonth, setPointsMonth] = useState('');
+  const [monthlyPointsGrades, setMonthlyPointsGrades] = useState<Record<string, any[]>>({});
   const [pointsLoading, setPointsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -169,7 +193,7 @@ const ClassDetailPage = () => {
   const transferredStudents = students.filter((student) => String(student.status || '').toLowerCase() === 'transferred').length;
   const capacity = Number(classData?.capacity || 0);
   const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
-  const todayKey = new Date().toISOString().split('T')[0];
+  const todayKey = toDateKey(new Date());
   const getSessionDateKey = (session: any) => session?.session_date ? new Date(session.session_date).toISOString().split('T')[0] : '';
   const teacherName = classData?.teacher_name || 'No teacher assigned';
   const scheduleRange = schedule.time ? `${schedule.time}${schedule.endTime ? ` - ${schedule.endTime}` : ''}` : '';
@@ -202,12 +226,59 @@ const ClassDetailPage = () => {
     const datedSessions = [...sessionsByDate.entries()].sort(([dateA], [dateB]) => dateB.localeCompare(dateA));
     return datedSessions.find(([date]) => date <= todayKey)?.[0] || datedSessions[0]?.[0] || '';
   }, [sessionsByDate, todayKey]);
-  const selectedPointsSession = pointsDate ? sessionsByDate.get(pointsDate) : undefined;
-  const pointsByStudentId = useMemo(() => {
-    const map = new Map<number, any>();
-    pointsGrades.forEach((grade) => map.set(Number(grade.student_id), grade));
+  const monthlyLessonDays = useMemo(() => {
+    if (!pointsMonth) return [];
+    const [yearRaw, monthRaw] = pointsMonth.split('-');
+    const year = Number(yearRaw);
+    const monthIndex = Number(monthRaw) - 1;
+    if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) return [];
+    const scheduledDays = new Set(schedule.days.map((day) => day.trim().toLowerCase()).filter(Boolean));
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, index) => {
+      const date = new Date(year, monthIndex, index + 1);
+      const dateKey = toDateKey(date);
+      const dayName = dayNames[date.getDay()];
+      return {
+        dateKey,
+        day: index + 1,
+        dayName,
+        session: sessionsByDate.get(dateKey),
+        isClassDay: scheduledDays.has(dayName.toLowerCase()),
+      };
+    }).filter((day) => day.isClassDay);
+  }, [pointsMonth, schedule.days, sessionsByDate]);
+  const monthlySessionIds = useMemo(() => {
+    return Array.from(new Set(monthlyLessonDays
+      .map((day) => Number(day.session?.session_id || day.session?.id || 0))
+      .filter(Boolean)));
+  }, [monthlyLessonDays]);
+  const monthlyPointsBySessionStudent = useMemo(() => {
+    const map = new Map<string, any>();
+    Object.entries(monthlyPointsGrades).forEach(([sessionId, grades]) => {
+      grades.forEach((grade) => {
+        const studentId = Number(grade.student_id || 0);
+        if (studentId) map.set(`${sessionId}:${studentId}`, grade);
+      });
+    });
     return map;
-  }, [pointsGrades]);
+  }, [monthlyPointsGrades]);
+  const monthlyPointStats = useMemo(() => {
+    const cells = monthlyLessonDays.length * studentRows.length;
+    const values: number[] = [];
+    let missing = 0;
+    monthlyLessonDays.forEach((day) => {
+      const sessionId = Number(day.session?.session_id || day.session?.id || 0);
+      studentRows.forEach((student) => {
+        const studentId = Number(student.student_id || student.id || 0);
+        const grade = sessionId ? monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) : null;
+        const raw = grade?.points_score;
+        if (raw === null || raw === undefined || raw === '') missing += 1;
+        else values.push(Number(raw || 0));
+      });
+    });
+    const average = values.length > 0 ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : 0;
+    return { cells, filled: values.length, missing, average };
+  }, [monthlyLessonDays, monthlyPointsBySessionStudent, studentRows]);
   // const recentSessions = sessions.slice(0, 80);
   const statTiles = [
     { label: 'Active students', value: activeStudents, detail: `${transferredStudents} transferred`, icon: Users, color: 'bg-blue-600' },
@@ -277,24 +348,27 @@ const ClassDetailPage = () => {
   };
 
   useEffect(() => {
-    if (!pointsDate && latestLessonDate) setPointsDate(latestLessonDate);
-  }, [latestLessonDate, pointsDate]);
+    if (!pointsMonth) setPointsMonth(getMonthKey(latestLessonDate));
+  }, [latestLessonDate, pointsMonth]);
 
   useEffect(() => {
     let cancelled = false;
     const loadPoints = async () => {
-      const sessionId = Number(selectedPointsSession?.session_id || selectedPointsSession?.id || 0);
-      if (!sessionId) {
-        setPointsGrades([]);
+      if (monthlySessionIds.length === 0) {
+        setMonthlyPointsGrades({});
         return;
       }
       setPointsLoading(true);
       try {
-        const response = await gradeAPI.getBySession(sessionId);
-        if (!cancelled) setPointsGrades(unwrapRows(response));
+        const centerId = Number(classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
+        const responses = await Promise.all(monthlySessionIds.map(async (sessionId) => {
+          const response = await gradeAPI.getBySession(sessionId, centerId ? { center_id: centerId } : undefined);
+          return [String(sessionId), unwrapRows(response)] as const;
+        }));
+        if (!cancelled) setMonthlyPointsGrades(Object.fromEntries(responses));
       } catch (err) {
         console.error('Failed to load lesson points:', err);
-        if (!cancelled) setPointsGrades([]);
+        if (!cancelled) setMonthlyPointsGrades({});
       } finally {
         if (!cancelled) setPointsLoading(false);
       }
@@ -303,7 +377,7 @@ const ClassDetailPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [selectedPointsSession]);
+  }, [authUser, classData?.center_id, monthlySessionIds]);
 
   const getPointTone = (points: number | null) => {
     if (points === null) return { label: 'Missing', className: 'bg-rose-50 text-rose-800 border-rose-200', icon: '!' };
@@ -533,66 +607,121 @@ const ClassDetailPage = () => {
                   <PencilLine className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-950">Lesson points</p>
-                  <p className="text-xs text-muted-foreground">Showing saved manual points for the selected lesson date.</p>
+                  <p className="text-sm font-bold text-slate-950">Monthly points</p>
+                  <p className="text-xs text-muted-foreground">
+                    {monthLabel(pointsMonth || getMonthKey())} lessons from {schedule.days.length ? schedule.days.join(', ') : 'class settings'}
+                  </p>
                 </div>
               </div>
-              <Input
-                type="date"
-                value={pointsDate}
-                onChange={(event) => setPointsDate(event.target.value)}
-                className="h-9 w-full border-violet-200 bg-white text-sm font-semibold sm:w-[180px]"
-              />
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" className="h-9 w-9 bg-white" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), -1))}>
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Input
+                  type="month"
+                  value={pointsMonth}
+                  onChange={(event) => setPointsMonth(event.target.value)}
+                  className="h-9 w-[160px] border-violet-200 bg-white text-sm font-semibold"
+                />
+                <Button variant="outline" size="icon" className="h-9 w-9 bg-white" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), 1))}>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
-            {!selectedPointsSession ? (
+            <div className="grid gap-2 sm:grid-cols-4">
+              <div className="rounded-lg border bg-white p-3">
+                <p className="text-xs font-semibold text-muted-foreground">Lesson days</p>
+                <p className="mt-1 text-xl font-black text-slate-950">{monthlyLessonDays.length}</p>
+              </div>
+              <div className="rounded-lg border bg-white p-3">
+                <p className="text-xs font-semibold text-muted-foreground">Filled cells</p>
+                <p className="mt-1 text-xl font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
+              </div>
+              <div className="rounded-lg border bg-white p-3">
+                <p className="text-xs font-semibold text-muted-foreground">Missing</p>
+                <p className="mt-1 text-xl font-black text-rose-700">{monthlyPointStats.missing}</p>
+              </div>
+              <div className="rounded-lg border bg-white p-3">
+                <p className="text-xs font-semibold text-muted-foreground">Average</p>
+                <p className="mt-1 text-xl font-black text-violet-700">{monthlyPointStats.average}</p>
+              </div>
+            </div>
+
+            {schedule.days.length === 0 ? (
               <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-                No lesson session found for this date.
+                No class weekdays are configured in class settings.
+              </div>
+            ) : monthlyLessonDays.length === 0 ? (
+              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                No scheduled lesson days found for this month.
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead className="text-center">Points</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-center">Total Score</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {pointsLoading ? (
-                    <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
-                  ) : studentRows.length === 0 ? (
-                    <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
-                  ) : studentRows.map((student, index) => {
-                    const studentId = Number(student.student_id || student.id || 0);
-                    const grade = pointsByStudentId.get(studentId);
-                    const points = grade?.points_score === null || grade?.points_score === undefined ? null : Number(grade.points_score || 0);
-                    const totalScore = grade?.marks_obtained === null || grade?.marks_obtained === undefined ? null : Number(grade.marks_obtained || 0);
-                    const tone = getPointTone(points);
-                    return (
-                      <TableRow key={studentId || index}>
-                        <TableCell className="py-2 font-semibold">
-                          <div className="flex items-center gap-2">
-                            <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
-                              {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
-                            </div>
-                            <span>{student.first_name} {student.last_name}</span>
+              <div className="overflow-x-auto rounded-lg border bg-white">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="sticky left-0 z-10 min-w-[220px] bg-white">Student</TableHead>
+                      {monthlyLessonDays.map((day) => (
+                        <TableHead key={day.dateKey} className="min-w-[104px] text-center">
+                          <div className="flex flex-col items-center gap-0.5">
+                            <span className="text-sm font-black">{day.day}</span>
+                            <span className="text-[10px] font-semibold uppercase text-muted-foreground">{day.dayName.slice(0, 3)}</span>
+                            {!day.session ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">No session</span> : null}
                           </div>
-                        </TableCell>
-                        <TableCell className="text-center text-base font-black">{points === null ? '-' : points}</TableCell>
-                        <TableCell className="text-center">
-                          <span className={`inline-flex min-w-[96px] items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${tone.className}`}>
-                            <span>{tone.icon}</span>
-                            {tone.label}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-center font-bold">{totalScore === null ? '-' : `${totalScore}/100`}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                        </TableHead>
+                      ))}
+                      <TableHead className="min-w-[92px] text-center">Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {pointsLoading ? (
+                      <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
+                    ) : studentRows.length === 0 ? (
+                      <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
+                    ) : studentRows.map((student, index) => {
+                      const studentId = Number(student.student_id || student.id || 0);
+                      let studentTotal = 0;
+                      let studentFilled = 0;
+                      return (
+                        <TableRow key={studentId || index}>
+                          <TableCell className="sticky left-0 z-10 bg-white py-2 font-semibold">
+                            <div className="flex items-center gap-2">
+                              <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
+                                {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                              </div>
+                              <span>{student.first_name} {student.last_name}</span>
+                            </div>
+                          </TableCell>
+                          {monthlyLessonDays.map((day) => {
+                            const sessionId = Number(day.session?.session_id || day.session?.id || 0);
+                            const grade = sessionId ? monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) : null;
+                            const points = grade?.points_score === null || grade?.points_score === undefined ? null : Number(grade.points_score || 0);
+                            if (points !== null) {
+                              studentTotal += points;
+                              studentFilled += 1;
+                            }
+                            const tone = getPointTone(points);
+                            return (
+                              <TableCell key={`${studentId}-${day.dateKey}`} className="text-center">
+                                <span className={`inline-flex h-8 min-w-[72px] items-center justify-center gap-1 rounded-md border px-2 text-xs font-black ${tone.className}`}>
+                                  <span>{tone.icon}</span>
+                                  {points === null ? '-' : points}
+                                </span>
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell className="text-center">
+                            <span className="inline-flex min-w-[72px] items-center justify-center rounded-md bg-violet-50 px-2 py-1 text-sm font-black text-violet-800">
+                              {studentFilled ? studentTotal : '-'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </TabsContent>
 
