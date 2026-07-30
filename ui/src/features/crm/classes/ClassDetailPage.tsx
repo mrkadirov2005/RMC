@@ -7,10 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
+import { classAPI, gradeAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
@@ -104,9 +105,11 @@ const ClassDetailPage = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
   const [startingLesson, setStartingLesson] = useState(false);
-  const [openingPoints, setOpeningPoints] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
+  const [pointsDate, setPointsDate] = useState('');
+  const [pointsGrades, setPointsGrades] = useState<any[]>([]);
+  const [pointsLoading, setPointsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -167,6 +170,7 @@ const ClassDetailPage = () => {
   const capacity = Number(classData?.capacity || 0);
   const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
   const todayKey = new Date().toISOString().split('T')[0];
+  const getSessionDateKey = (session: any) => session?.session_date ? new Date(session.session_date).toISOString().split('T')[0] : '';
   const teacherName = classData?.teacher_name || 'No teacher assigned';
   const scheduleRange = schedule.time ? `${schedule.time}${schedule.endTime ? ` - ${schedule.endTime}` : ''}` : '';
   const scheduleText = [schedule.days.join(', '), scheduleRange].filter(Boolean).join(' / ') || 'No schedule';
@@ -183,6 +187,27 @@ const ClassDetailPage = () => {
     return duration > 0 ? duration : 90;
   }, [schedule.endTime, schedule.time]);
   const studentRows = students.filter((student) => !student.deleted_at);
+  const sessionsByDate = useMemo(() => {
+    const map = new Map<string, any>();
+    [...sessions]
+      .filter((session) => getSessionDateKey(session))
+      .sort((a, b) => Number(b.session_id || b.id || 0) - Number(a.session_id || a.id || 0))
+      .forEach((session) => {
+        const key = getSessionDateKey(session);
+        if (key && !map.has(key)) map.set(key, session);
+      });
+    return map;
+  }, [sessions]);
+  const latestLessonDate = useMemo(() => {
+    const datedSessions = [...sessionsByDate.entries()].sort(([dateA], [dateB]) => dateB.localeCompare(dateA));
+    return datedSessions.find(([date]) => date <= todayKey)?.[0] || datedSessions[0]?.[0] || '';
+  }, [sessionsByDate, todayKey]);
+  const selectedPointsSession = pointsDate ? sessionsByDate.get(pointsDate) : undefined;
+  const pointsByStudentId = useMemo(() => {
+    const map = new Map<number, any>();
+    pointsGrades.forEach((grade) => map.set(Number(grade.student_id), grade));
+    return map;
+  }, [pointsGrades]);
   // const recentSessions = sessions.slice(0, 80);
   const statTiles = [
     { label: 'Active students', value: activeStudents, detail: `${transferredStudents} transferred`, icon: Users, color: 'bg-blue-600' },
@@ -251,51 +276,41 @@ const ClassDetailPage = () => {
     }
   };
 
-  const getLatestSession = () => {
-    const datedSessions = [...sessions]
-      .filter((session) => session.session_date && Number(session.session_id || session.id))
-      .sort((a, b) => {
-        const dateA = new Date(a.session_date).getTime();
-        const dateB = new Date(b.session_date).getTime();
-        if (dateA !== dateB) return dateB - dateA;
-        return Number(b.session_id || b.id || 0) - Number(a.session_id || a.id || 0);
-      });
-    const todayTime = new Date(todayKey).getTime();
-    return datedSessions.find((session) => new Date(session.session_date).getTime() <= todayTime) || datedSessions[0];
-  };
+  useEffect(() => {
+    if (!pointsDate && latestLessonDate) setPointsDate(latestLessonDate);
+  }, [latestLessonDate, pointsDate]);
 
-  const openPointsSection = async () => {
-    if (!classData || !classId) return;
-    const latestSession = getLatestSession();
-    if (latestSession) {
-      openSessionWorkflow(latestSession, ['points'], 'points');
-      return;
-    }
-
-    setOpeningPoints(true);
-    try {
-      const targetClassId = Number(classData.class_id || classData.id || classId);
-      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(authUser) || undefined;
-      if (!targetCenterId) {
-        showToast.error('Please select an active center before opening points.');
+  useEffect(() => {
+    let cancelled = false;
+    const loadPoints = async () => {
+      const sessionId = Number(selectedPointsSession?.session_id || selectedPointsSession?.id || 0);
+      if (!sessionId) {
+        setPointsGrades([]);
         return;
       }
-      const response = await classAPI.createSession(targetClassId, {
-        center_id: targetCenterId,
-        session_date: todayKey,
-        start_time: schedule.time || new Date().toTimeString().slice(0, 5),
-        duration_minutes: scheduleDurationMinutes,
-        teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData.teacher_id || 0) || undefined,
-      });
-      const nextSession = response?.data ?? response;
-      setSessions((current) => [...current, nextSession]);
-      openSessionWorkflow(nextSession, ['points'], 'points');
-    } catch (err) {
-      console.error('Failed to open points:', err);
-      showToast.error('Failed to open points.');
-    } finally {
-      setOpeningPoints(false);
-    }
+      setPointsLoading(true);
+      try {
+        const response = await gradeAPI.getBySession(sessionId);
+        if (!cancelled) setPointsGrades(unwrapRows(response));
+      } catch (err) {
+        console.error('Failed to load lesson points:', err);
+        if (!cancelled) setPointsGrades([]);
+      } finally {
+        if (!cancelled) setPointsLoading(false);
+      }
+    };
+    loadPoints();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedPointsSession]);
+
+  const getPointTone = (points: number | null) => {
+    if (points === null) return { label: 'Missing', className: 'bg-rose-50 text-rose-800 border-rose-200', icon: '!' };
+    if (points === 0) return { label: 'Zero', className: 'bg-slate-50 text-slate-700 border-slate-200', icon: '0' };
+    if (points < 50) return { label: 'Low', className: 'bg-amber-50 text-amber-800 border-amber-200', icon: '-' };
+    if (points < 80) return { label: 'Good', className: 'bg-sky-50 text-sky-800 border-sky-200', icon: '+' };
+    return { label: 'Strong', className: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' };
   };
 
   if (loading) {
@@ -346,25 +361,14 @@ const ClassDetailPage = () => {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              onClick={openPointsSection}
-              disabled={openingPoints || startingLesson}
-              variant="outline"
-              className="h-9 border-violet-200 bg-violet-50 px-3 text-xs font-bold text-violet-800 shadow-sm hover:bg-violet-100"
-            >
-              {openingPoints ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PencilLine className="mr-2 h-4 w-4" />}
-              Points
-            </Button>
-            <Button
-              onClick={() => setLessonPickerOpen(true)}
-              disabled={startingLesson || openingPoints}
-              className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
-            >
-              {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-              Start Lesson
-            </Button>
-          </div>
+          <Button
+            onClick={() => setLessonPickerOpen(true)}
+            disabled={startingLesson}
+            className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
+          >
+            {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+            Start Lesson
+          </Button>
         </div>
       </div>
 
@@ -436,6 +440,7 @@ const ClassDetailPage = () => {
           <TabsTrigger value="students" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white">Students</TabsTrigger>
           <TabsTrigger value="overview" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Overview</TabsTrigger>
           <TabsTrigger value="subjects" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white">Subjects</TabsTrigger>
+          <TabsTrigger value="points" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white">Points</TabsTrigger>
           <TabsTrigger value="tests" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white">Tests</TabsTrigger>
           <TabsTrigger value="sessions" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white">Sessions</TabsTrigger>
         </TabsList>
@@ -519,6 +524,76 @@ const ClassDetailPage = () => {
                 </CardContent>
               </Card>
             ))}
+          </TabsContent>
+
+          <TabsContent value="points" className="mt-0 space-y-3">
+            <div className="flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
+                  <PencilLine className="h-4 w-4" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-950">Lesson points</p>
+                  <p className="text-xs text-muted-foreground">Showing saved manual points for the selected lesson date.</p>
+                </div>
+              </div>
+              <Input
+                type="date"
+                value={pointsDate}
+                onChange={(event) => setPointsDate(event.target.value)}
+                className="h-9 w-full border-violet-200 bg-white text-sm font-semibold sm:w-[180px]"
+              />
+            </div>
+
+            {!selectedPointsSession ? (
+              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                No lesson session found for this date.
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead className="text-center">Points</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-center">Total Score</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pointsLoading ? (
+                    <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
+                  ) : studentRows.length === 0 ? (
+                    <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
+                  ) : studentRows.map((student, index) => {
+                    const studentId = Number(student.student_id || student.id || 0);
+                    const grade = pointsByStudentId.get(studentId);
+                    const points = grade?.points_score === null || grade?.points_score === undefined ? null : Number(grade.points_score || 0);
+                    const totalScore = grade?.marks_obtained === null || grade?.marks_obtained === undefined ? null : Number(grade.marks_obtained || 0);
+                    const tone = getPointTone(points);
+                    return (
+                      <TableRow key={studentId || index}>
+                        <TableCell className="py-2 font-semibold">
+                          <div className="flex items-center gap-2">
+                            <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
+                              {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                            </div>
+                            <span>{student.first_name} {student.last_name}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center text-base font-black">{points === null ? '-' : points}</TableCell>
+                        <TableCell className="text-center">
+                          <span className={`inline-flex min-w-[96px] items-center justify-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold ${tone.className}`}>
+                            <span>{tone.icon}</span>
+                            {tone.label}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-center font-bold">{totalScore === null ? '-' : `${totalScore}/100`}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </TabsContent>
 
           <TabsContent value="tests" className="mt-0">
