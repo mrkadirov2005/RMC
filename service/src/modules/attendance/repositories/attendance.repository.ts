@@ -13,7 +13,7 @@ const selection = {
   session_id: attendance.sessionId,
   attendance_date: attendance.attendanceDate,
   status: attendance.status,
-  notes: attendance.notes,
+  notes: sql<string | null>`NULL`,
   remarks: attendance.remarks,
   created_at: attendance.createdAt,
   updated_at: attendance.updatedAt,
