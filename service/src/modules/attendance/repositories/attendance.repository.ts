@@ -16,7 +16,7 @@ const selection = {
   notes: sql<string | null>`NULL`,
   remarks: attendance.remarks,
   created_at: attendance.createdAt,
-  updated_at: attendance.updatedAt,
+  updated_at: sql<string | null>`NULL`,
 };
 
 const scope = (centerId?: number, teacherId?: number) => {
@@ -60,7 +60,7 @@ const insert = async (params: any[]) => {
   if (existing[0]) {
     const rows = await db
       .update(attendance)
-      .set({ ...payload, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .set(payload)
       .where(eq(attendance.attendanceId, existing[0].attendance_id))
       .returning(selection);
     return rows[0];
@@ -78,7 +78,6 @@ const update = async (id: number, params: any[], centerId?: number, teacherId?: 
     .set({
       status: sql`COALESCE(${params[0] ?? null}, ${attendance.status})`,
       remarks: sql`COALESCE(${params[1] ?? null}, ${attendance.remarks})`,
-      updatedAt: sql`CURRENT_TIMESTAMP`,
     })
     .where(eq(attendance.attendanceId, id))
     .returning(selection);
