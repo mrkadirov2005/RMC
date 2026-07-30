@@ -13,7 +13,7 @@ const selection = {
   start_time: sessions.startTime,
   duration_minutes: sessions.durationMinutes,
   end_time: sessions.endTime,
-  status: sessions.status,
+  status: sql<string>`'Scheduled'`,
   deleted_at: sessions.deletedAt,
   created_at: sessions.createdAt,
   updated_at: sessions.updatedAt,
