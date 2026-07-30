@@ -16,7 +16,7 @@ const getAllGrades = async (req: any, res: any) => {
     res.json(await gradeService.listGrades(centerId ?? undefined, teacherId, studentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch grades' });
+    res.status(500).json({ error: 'Failed to fetch grades', details: error.message || String(error) });
   }
 };
 
@@ -112,7 +112,7 @@ const getGradesByStudent = async (req: any, res: any) => {
     res.json(await gradeService.listByStudent(studentId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch grades' });
+    res.status(500).json({ error: 'Failed to fetch grades', details: error.message || String(error) });
   }
 };
 
@@ -175,7 +175,7 @@ const getGradesBySession = async (req: any, res: any) => {
     res.json(await gradeService.listBySession(sessionId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch grades' });
+    res.status(500).json({ error: 'Failed to fetch grades', details: error.message || String(error) });
   }
 };
 

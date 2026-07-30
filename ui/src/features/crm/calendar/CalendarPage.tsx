@@ -496,6 +496,10 @@ const CalendarPage = () => {
                 <span className="inline-block h-3 w-3 rounded border border-amber-400/80 bg-amber-50/60" />
                 Today
               </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block h-3 w-3 rounded border border-cyan-300 bg-cyan-50" />
+                Class day
+              </div>
             </div>
           </CardContent>
         </Card>
