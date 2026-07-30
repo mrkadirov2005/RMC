@@ -57,7 +57,8 @@ For Docker-based setup, see `README.docker.md`.
 The project includes `scripts/backup.sh` for scheduled database backups.
 
 It backs up:
-- PostgreSQL CRM data with `pg_dump`
+- full PostgreSQL CRM data with `pg_dump`
+- readable CSV exports for every public PostgreSQL table
 - MongoDB request logs with `mongodump` when Mongo is available
 - optional S3 upload via `BACKUP_S3_URI`
 - optional Telegram bot upload via `BACKUP_TELEGRAM_BOT_TOKEN` and `BACKUP_TELEGRAM_CHAT_ID`
@@ -67,17 +68,18 @@ Configure these in `service/.env`:
 
 ```bash
 BACKUP_DIR=/home/ubuntu/rmc-backups
-BACKUP_CRON_SCHEDULE=0 * * * *
+BACKUP_CRON_SCHEDULE="0 * * * *"
 BACKUP_LOG_FILE=/var/log/rmc-backup.log
 BACKUP_RETENTION_DAYS=14
 BACKUP_S3_URI=s3://your-rmc-backups/prod
 BACKUP_MONGO=true
+BACKUP_EXPORT_POSTGRES_TABLES=true
 BACKUP_TELEGRAM_BOT_TOKEN=123456789:AA...
 BACKUP_TELEGRAM_CHAT_ID=-1001234567890
 BACKUP_TELEGRAM_CAPTION=RMC automated backup
 ```
 
-For Telegram backups, add the bot to the target chat/channel first, then set the chat ID. The script sends one compressed archive for the whole backup run.
+For Telegram backups, add the bot to the target chat/channel first, then set the chat ID. The script sends one compressed archive for the whole backup run. Inside the archive, `postgres_*.dump` is the restore-ready full database backup and `postgres_tables/*.csv` contains readable exports for tables such as students, teachers, classes, payments, discounts, attendance, grades, and the rest of the public schema.
 
 Run once manually:
 

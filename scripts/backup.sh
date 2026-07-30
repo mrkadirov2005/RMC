@@ -22,6 +22,7 @@ DB_USER="${DB_USER:-crm_user}"
 DB_PASSWORD="${DB_PASSWORD:-crm_password}"
 DB_NAME="${DB_NAME:-crm_db}"
 POSTGRES_CONTAINER="${POSTGRES_CONTAINER:-crm_postgres}"
+EXPORT_POSTGRES_TABLES="${BACKUP_EXPORT_POSTGRES_TABLES:-true}"
 
 MONGO_URI="${MONGO_URI:-}"
 MONGO_CONTAINER="${MONGO_CONTAINER:-crm_mongo}"
@@ -43,7 +44,7 @@ require_command() {
 
 backup_postgres() {
   local_file="$RUN_DIR/postgres_${DB_NAME}_${TIMESTAMP}.dump"
-  log "Starting PostgreSQL backup: $local_file"
+  log "Starting PostgreSQL full database backup: $local_file"
 
   if require_command pg_dump; then
     PGPASSWORD="$DB_PASSWORD" pg_dump \
@@ -67,7 +68,88 @@ backup_postgres() {
     return 1
   fi
 
-  log "PostgreSQL backup completed."
+  log "PostgreSQL full database backup completed."
+}
+
+postgres_query() {
+  query="$1"
+
+  if require_command psql; then
+    PGPASSWORD="$DB_PASSWORD" psql \
+      --host "$DB_HOST" \
+      --port "$DB_PORT" \
+      --username "$DB_USER" \
+      --dbname "$DB_NAME" \
+      --tuples-only \
+      --no-align \
+      --command "$query"
+  elif require_command docker; then
+    docker exec -e PGPASSWORD="$DB_PASSWORD" "$POSTGRES_CONTAINER" psql \
+      --username "$DB_USER" \
+      --dbname "$DB_NAME" \
+      --tuples-only \
+      --no-align \
+      --command "$query"
+  else
+    return 1
+  fi
+}
+
+postgres_copy_to_file() {
+  table_name="$1"
+  output_file="$2"
+  copy_command="\\copy (SELECT * FROM $table_name) TO STDOUT WITH CSV HEADER"
+
+  if require_command psql; then
+    PGPASSWORD="$DB_PASSWORD" psql \
+      --host "$DB_HOST" \
+      --port "$DB_PORT" \
+      --username "$DB_USER" \
+      --dbname "$DB_NAME" \
+      --command "$copy_command" > "$output_file"
+  elif require_command docker; then
+    docker exec -e PGPASSWORD="$DB_PASSWORD" "$POSTGRES_CONTAINER" psql \
+      --username "$DB_USER" \
+      --dbname "$DB_NAME" \
+      --command "$copy_command" > "$output_file"
+  else
+    return 1
+  fi
+}
+
+export_postgres_tables() {
+  if [ "$EXPORT_POSTGRES_TABLES" != "true" ]; then
+    log "Readable PostgreSQL table exports skipped by BACKUP_EXPORT_POSTGRES_TABLES."
+    return 0
+  fi
+
+  export_dir="$RUN_DIR/postgres_tables"
+  mkdir -p "$export_dir"
+
+  table_query="
+    SELECT quote_ident(table_schema) || '.' || quote_ident(table_name) || '|' || table_schema || '_' || table_name
+    FROM information_schema.tables
+    WHERE table_schema = 'public'
+      AND table_type = 'BASE TABLE'
+    ORDER BY table_name;
+  "
+
+  tables_file="$RUN_DIR/postgres_tables.txt"
+  if ! postgres_query "$table_query" > "$tables_file"; then
+    log "Readable PostgreSQL table exports skipped; psql or docker psql is required."
+    return 0
+  fi
+
+  table_count=0
+  while IFS='|' read -r qualified_table raw_name; do
+    [ -n "$qualified_table" ] || continue
+    safe_name="$(printf '%s' "$raw_name" | tr -c 'A-Za-z0-9_-' '_')"
+    output_file="$export_dir/${safe_name}.csv"
+    postgres_copy_to_file "$qualified_table" "$output_file"
+    table_count=$((table_count + 1))
+  done < "$tables_file"
+
+  log "Readable PostgreSQL table exports completed: $table_count tables."
 }
 
 backup_mongo() {
@@ -169,6 +251,7 @@ cleanup_old_backups() {
 }
 
 backup_postgres
+export_postgres_tables
 backup_mongo
 write_manifest
 archive_backup_run
