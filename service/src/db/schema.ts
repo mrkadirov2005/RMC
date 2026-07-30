@@ -215,7 +215,6 @@ const attendance = pgTable('attendance', {
   notes: text('notes'),
   remarks: text('remarks'),
   createdAt: timestamp('created_at'),
-  updatedAt: timestamp('updated_at'),
 });
 
 const auditLogs = pgTable('audit_logs', {

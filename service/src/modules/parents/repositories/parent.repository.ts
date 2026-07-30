@@ -84,7 +84,7 @@ const attendanceSelection = {
   notes: attendance.notes,
   remarks: attendance.remarks,
   created_at: attendance.createdAt,
-  updated_at: attendance.updatedAt,
+  updated_at: sql<string | null>`NULL`,
 };
 
 const gradeSelection = {
