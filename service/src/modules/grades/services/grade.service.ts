@@ -244,6 +244,20 @@ const gradeSelection = {
   term: grades.term,
 };
 
+const coinTransactionSelection = {
+  transaction_id: studentCoinTransactions.transactionId,
+  student_id: studentCoinTransactions.studentId,
+  center_id: studentCoinTransactions.centerId,
+  delta: studentCoinTransactions.delta,
+  reason: studentCoinTransactions.reason,
+  created_by: studentCoinTransactions.createdBy,
+  created_by_type: studentCoinTransactions.createdByType,
+  source_type: studentCoinTransactions.sourceType,
+  source_id: studentCoinTransactions.sourceId,
+  created_at: studentCoinTransactions.createdAt,
+  updated_at: studentCoinTransactions.updatedAt,
+};
+
 const calculateSessionScore = (payload: any) => {
   const totalMarks = Number(payload.total_marks || 100);
   const marks =
@@ -396,7 +410,7 @@ const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId
         .update(studentCoinTransactions)
         .set({ delta: coinsToAdd, reason, createdBy: teacherId, createdByType: 'teacher', updatedAt: sql`CURRENT_TIMESTAMP` })
         .where(eq(studentCoinTransactions.transactionId, existing.transaction_id))
-        .returning()
+        .returning(coinTransactionSelection)
     : await client
         .insert(studentCoinTransactions)
         .values({
@@ -409,7 +423,7 @@ const upsertLessonCoinsInTransaction = async (client: any, grade: any, teacherId
           sourceType: 'lesson_session',
           sourceId: Number(grade.session_id),
         })
-        .returning();
+        .returning(coinTransactionSelection);
 
   await client
     .update(grades)

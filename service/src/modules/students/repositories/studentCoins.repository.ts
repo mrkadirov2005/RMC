@@ -14,7 +14,7 @@ const txSelection = {
   created_by_type: studentCoinTransactions.createdByType,
   source_type: studentCoinTransactions.sourceType,
   source_id: studentCoinTransactions.sourceId,
-  metadata: studentCoinTransactions.metadata,
+  metadata: sql<null>`NULL`,
   created_at: studentCoinTransactions.createdAt,
   updated_at: studentCoinTransactions.updatedAt,
 };

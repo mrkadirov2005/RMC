@@ -696,7 +696,6 @@ const studentCoinTransactions = pgTable('student_coin_transactions', {
   createdByType: varchar('created_by_type', { length: 50 }),
   sourceType: varchar('source_type', { length: 50 }),
   sourceId: integer('source_id'),
-  metadata: jsonb('metadata'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 });
