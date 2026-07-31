@@ -4,7 +4,7 @@ import { CalendarX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ClassItem, CalendarDay, SessionItem } from './types';
 import { weekDays } from '@/features/crm/classes/queries';
-import { getCalendarGroupColorTheme } from './utils';
+import { getCalendarGroupColorTheme, isWithinScheduleRange, normalizeWeekdayName } from './utils';
 
 interface MonthViewProps {
   weeks: CalendarDay[][];
@@ -23,14 +23,6 @@ interface MonthViewProps {
   onDeleteSession: (classId: number, sessionId: number) => void;
   schedule?: any[];
 }
-
-const isWithinScheduleRange = (item: any, isoDate: string) => {
-  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
-  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
-  if (startDate && isoDate < startDate) return false;
-  if (endDate && isoDate > endDate) return false;
-  return true;
-};
 
 // Renders the month view view.
 export const MonthView: React.FC<MonthViewProps> = ({
@@ -70,7 +62,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
             {week.map((day, dayIndex) => {
               const events = eventsByDate.get(day.isoDate) || [];
               const plannedForDay = day.isCurrentMonth
-                ? schedule.filter((item) => item.day === day.dayName && isWithinScheduleRange(item, day.isoDate))
+                ? schedule.filter((item) => normalizeWeekdayName(item.day) === day.dayName && isWithinScheduleRange(item, day.isoDate))
                 : [];
               const hasClassDay = events.length > 0 || plannedForDay.length > 0;
               const isToday =

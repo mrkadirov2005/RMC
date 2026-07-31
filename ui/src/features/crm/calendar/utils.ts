@@ -55,6 +55,47 @@ export const getCalendarGroupColorTheme = (classId: number | string | undefined)
   return calendarGroupColorThemes[Math.abs(hash) % calendarGroupColorThemes.length];
 };
 
+const WEEKDAY_ALIASES: Record<string, string> = {
+  sunday: 'Sunday',
+  sun: 'Sunday',
+  yakshanba: 'Sunday',
+  monday: 'Monday',
+  mon: 'Monday',
+  dushanba: 'Monday',
+  dush: 'Monday',
+  tuesday: 'Tuesday',
+  tue: 'Tuesday',
+  seshanba: 'Tuesday',
+  sesh: 'Tuesday',
+  wednesday: 'Wednesday',
+  wed: 'Wednesday',
+  chorshanba: 'Wednesday',
+  chor: 'Wednesday',
+  payshanba: 'Thursday',
+  thursday: 'Thursday',
+  thu: 'Thursday',
+  pay: 'Thursday',
+  friday: 'Friday',
+  fri: 'Friday',
+  juma: 'Friday',
+  saturday: 'Saturday',
+  sat: 'Saturday',
+  shanba: 'Saturday',
+};
+
+export const normalizeWeekdayName = (value: unknown) => {
+  const key = String(value || '').trim().toLowerCase();
+  return WEEKDAY_ALIASES[key] || String(value || '').trim();
+};
+
+export const isWithinScheduleRange = (item: any, isoDate: string) => {
+  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
+  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
+  if (startDate && isoDate < startDate) return false;
+  if (endDate && isoDate > endDate) return false;
+  return true;
+};
+
 // Handles to local date key.
 export const toLocalDateKey = (value: Date | string): string => {
   const date = value instanceof Date ? value : new Date(value);
@@ -66,7 +107,7 @@ export const toLocalDateKey = (value: Date | string): string => {
 
 // Builds calendar days.
 export const buildCalendarDays = (year: number, month: number): CalendarDay[] => {
-  const firstDay = new Date(year, month, 1).getDay();
+  const firstDay = (new Date(year, month, 1).getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const daysInPrevMonth = new Date(year, month, 0).getDate();
   const days: CalendarDay[] = [];

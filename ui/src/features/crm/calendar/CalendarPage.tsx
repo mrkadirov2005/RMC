@@ -19,7 +19,7 @@ import { WeekView } from './WeekView';
 import { DayModal } from './DayModal';
 import { DetailsModal } from './DetailsModal';
 import { useCalendarData } from './hooks/useCalendarData';
-import { buildCalendarDays, getConfiguredLessonDurationMinutes, toLocalDateKey } from './utils';
+import { buildCalendarDays, getConfiguredLessonDurationMinutes, normalizeWeekdayName, toLocalDateKey } from './utils';
 import type { ClassItem, AttendanceItem, GradeItem, SessionItem, StudentItem } from './types';
 import { RoomFilter } from './components/RoomFilter';
 import { CalendarPageHeader } from './components/CalendarPageHeader';
@@ -44,7 +44,7 @@ const CalendarPage = () => {
   const [calendarView, setCalendarView] = useState<'month' | 'week'>('week');
   const [weekStartDate, setWeekStartDate] = useState(() => {
     const d = new Date(today);
-    d.setDate(d.getDate() - d.getDay());
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     return d;
   });
 
@@ -147,7 +147,7 @@ const CalendarPage = () => {
             return true;
           })
           .map(r => ({
-            day: r.day,
+            day: normalizeWeekdayName(r.day),
             time: r.time,
             end_time: r.end_time,
             room_number: r.room_number,
@@ -157,7 +157,52 @@ const CalendarPage = () => {
             start_date: r.start_date,
             end_date: r.end_date,
           }));
-        setSchedule(roomSchedule);
+        const roomsByClass = new Map<number, string[]>();
+        rooms.forEach((room) => {
+          const classId = Number(room.class_id);
+          const roomNumber = String(room.room_number || '').trim();
+          if (!classId || !roomNumber) return;
+          if (!roomsByClass.has(classId)) roomsByClass.set(classId, []);
+          const values = roomsByClass.get(classId)!;
+          if (!values.includes(roomNumber)) values.push(roomNumber);
+        });
+        const classSchedule = classes.flatMap((cls) => {
+          let parsed: any = null;
+          try {
+            parsed = cls.section ? JSON.parse(String(cls.section)) : null;
+          } catch {
+            parsed = null;
+          }
+          const days = Array.isArray(parsed?.days) ? parsed.days : [];
+          const classId = Number(cls.class_id || cls.id);
+          const roomNumbers = String(cls.room_number || '')
+            .split(',')
+            .map((room) => room.trim())
+            .filter(Boolean);
+          const fallbackRooms = roomNumbers.length > 0 ? roomNumbers : roomsByClass.get(classId) || [''];
+          return days.flatMap((day: unknown) => fallbackRooms.map((roomNumber) => ({
+            day: normalizeWeekdayName(day),
+            time: parsed?.time || '09:00',
+            end_time: parsed?.endTime || parsed?.end_time || '',
+            room_number: roomNumber,
+            class_id: classId,
+            class_name: cls.class_name,
+            teacher_id: cls.teacher_id,
+            start_date: cls.start_date,
+            end_date: cls.end_date,
+          })));
+        });
+        const merged = new Map<string, any>();
+        [...classSchedule, ...roomSchedule].forEach((item) => {
+          const key = [
+            item.class_id,
+            normalizeWeekdayName(item.day),
+            String(item.time || '').substring(0, 5),
+            String(item.room_number || ''),
+          ].join('|');
+          merged.set(key, { ...item, day: normalizeWeekdayName(item.day) });
+        });
+        setSchedule(Array.from(merged.values()));
       }
     };
     loadSchedule();
@@ -223,12 +268,10 @@ const CalendarPage = () => {
     for (let i = 0; i < 7; i++) {
       const date = new Date(weekStartDate);
       date.setDate(date.getDate() + i);
-// Handles day index.
-      const dayIndex = (date.getDay() + 6) % 7;
       weekDaysData.push({
         date: date.getDate(),
         isCurrentMonth: date.getMonth() === displayMonth,
-        dayName: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dayIndex],
+        dayName: normalizeWeekdayName(date.toLocaleDateString('en-US', { weekday: 'long' })),
         isoDate: toLocalDateKey(date),
       });
     }

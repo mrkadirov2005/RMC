@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import type { ClassItem, SessionItem } from './types';
 import { SessionListItem } from './components/SessionListItem';
 import { PlannedClassItem } from './components/PlannedClassItem';
+import { isWithinScheduleRange, normalizeWeekdayName } from './utils';
 
 
 
@@ -24,14 +25,6 @@ interface DayModalProps {
   classes?: ClassItem[];
   schedule?: any[];
 }
-
-const isWithinScheduleRange = (item: any, isoDate: string) => {
-  const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
-  const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';
-  if (startDate && isoDate < startDate) return false;
-  if (endDate && isoDate > endDate) return false;
-  return true;
-};
 
 // Renders the day modal modal.
 export const DayModal = ({
@@ -58,7 +51,7 @@ export const DayModal = ({
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
     
     // Find schedule items for this day
-    const daySchedule = schedule.filter(s => s.day === dayName && isWithinScheduleRange(s, selectedDay));
+    const daySchedule = schedule.filter(s => normalizeWeekdayName(s.day) === dayName && isWithinScheduleRange(s, selectedDay));
     
     // Filter out those that already have a session in selectedDayEvents
     return daySchedule.filter(s => {

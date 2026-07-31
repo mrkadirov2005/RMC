@@ -1,73 +1,29 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, CheckCircle2, ChevronLeft, ChevronRight, Clock, Coins, DollarSign, FileQuestion, Loader2, MapPin, PencilLine, PlayCircle, Star, Users } from 'lucide-react';
+import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, CheckCircle2, Clock, Coins, DollarSign, FileQuestion, Loader2, MapPin, PencilLine, PlayCircle, Star, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { classAPI, gradeAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
+import { classAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
-
-type ClassItem = {
-  class_id?: number;
-  id?: number;
-  class_name?: string;
-  class_code?: string;
-  center_id?: number;
-  level?: number;
-  capacity?: number;
-  teacher_id?: number;
-  teacher_name?: string;
-  room_number?: string;
-  room_assignments?: any[];
-  payment_amount?: number;
-  payment_frequency?: string;
-  section?: string;
-};
-
-type StudentItem = {
-  student_id?: number;
-  id?: number;
-  class_id?: number;
-  first_name?: string;
-  last_name?: string;
-  enrollment_number?: string;
-  status?: string;
-  phone?: string;
-  deleted_at?: string | null;
-};
-
-type ClassSchedule = { days: string[]; time: string; endTime?: string };
-
-type AssignedTestItem = {
-  test_id?: number;
-  id?: number;
-  test_name?: string;
-  test_type?: string;
-  description?: string;
-  duration_minutes?: number;
-  total_marks?: number;
-  passing_marks?: number;
-  is_active?: boolean;
-  is_mandatory?: boolean;
-  assigned_at?: string;
-  due_date?: string;
-  notes?: string;
-};
+import { ClassMonthlyPointsView } from './components/ClassMonthlyPointsView';
+import { useClassDetailData } from './hooks/useClassDetailData';
+import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
+import { toDateKey } from './utils/date';
+import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 
 type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
 
 const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
-const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 const lessonActionOptions: Array<{ id: LessonAction; label: string; detail: string; icon: typeof CalendarCheck }> = [
   { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
@@ -77,115 +33,14 @@ const lessonActionOptions: Array<{ id: LessonAction; label: string; detail: stri
   { id: 'points', label: 'Points', detail: 'Enter manual points for each student.', icon: PencilLine },
 ];
 
-const parseSchedule = (section?: string): ClassSchedule => {
-  if (!section) return { days: [] as string[], time: '', endTime: '' };
-  try {
-    const parsed = JSON.parse(section);
-    return {
-      days: Array.isArray(parsed?.days) ? parsed.days.map((day: unknown) => String(day)) : [],
-      time: String(parsed?.time || ''),
-      endTime: String(parsed?.endTime || ''),
-    };
-  } catch {
-    return { days: [] as string[], time: '', endTime: '' };
-  }
-};
-
-const unwrapRows = (response: any) => {
-  const data = response?.data ?? response;
-  return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-};
-
-const toDateKey = (date: Date) => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-const getMonthKey = (dateKey?: string) => {
-  if (dateKey && /^\d{4}-\d{2}/.test(dateKey)) return dateKey.slice(0, 7);
-  return toDateKey(new Date()).slice(0, 7);
-};
-
-const shiftMonth = (monthKey: string, offset: number) => {
-  const [yearRaw, monthRaw] = monthKey.split('-');
-  const date = new Date(Number(yearRaw), Number(monthRaw) - 1 + offset, 1);
-  return toDateKey(date).slice(0, 7);
-};
-
-const monthLabel = (monthKey: string) => {
-  const [yearRaw, monthRaw] = monthKey.split('-');
-  return new Date(Number(yearRaw), Number(monthRaw) - 1, 1).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-};
-
 const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const authUser = useAppSelector((state) => state.auth.user);
-  const [classData, setClassData] = useState<ClassItem | null>(null);
-  const [students, setStudents] = useState<StudentItem[]>([]);
-  const [subjects, setSubjects] = useState<any[]>([]);
-  const [sessions, setSessions] = useState<any[]>([]);
-  const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
+  const { classData, students, subjects, sessions, setSessions, assignedTests, loading, error } = useClassDetailData(classId, authUser);
   const [startingLesson, setStartingLesson] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
-  const [pointsMonth, setPointsMonth] = useState('');
-  const [monthlyPointsGrades, setMonthlyPointsGrades] = useState<Record<string, any[]>>({});
-  const [pointsLoading, setPointsLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      if (!classId) return;
-      setLoading(true);
-      setError('');
-      try {
-        const targetClassId = Number(classId);
-        const centerId = getResolvedCenterId(authUser) || undefined;
-        const [classResponse, studentsResponse, subjectsResponse, sessionsResponse, testsResponse, roomsResponse, bookingResponse] = await Promise.all([
-          classAPI.getById(Number(classId)),
-          studentAPI.getByClassWithTransfers(targetClassId).catch(() => ({ data: [] })),
-          subjectAPI.getByClass(targetClassId).catch(() => ({ data: [] })),
-          classAPI.getSessions(targetClassId).catch(() => ({ data: [] })),
-          testAPI.getAssignedTests('class', targetClassId).catch(() => ({ data: [] })),
-          roomAPI.getAll(centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
-          roomSlotAPI.getBookingsByClass(targetClassId, centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
-        ]);
-        if (cancelled) return;
-        const nextClass = classResponse?.data ?? classResponse;
-        const roomNumbers = new Set<string>();
-        String(nextClass?.room_number || '').split(',').map((room: string) => room.trim()).filter(Boolean).forEach((room) => roomNumbers.add(room));
-        const roomAssignments = Array.isArray(nextClass?.room_assignments) ? nextClass.room_assignments : [];
-        roomAssignments.map((room: any) => String(room.room_number || '').trim()).filter(Boolean).forEach((room: string) => roomNumbers.add(room));
-        unwrapRows(roomsResponse)
-          .filter((room: any) => Number(room.class_id) === targetClassId)
-          .map((room: any) => String(room.room_number || '').trim())
-          .filter(Boolean)
-          .forEach((room: string) => roomNumbers.add(room));
-        unwrapRows(bookingResponse)
-          .map((booking: any) => String(booking.room_number || '').trim())
-          .filter(Boolean)
-          .forEach((room: string) => roomNumbers.add(room));
-        setClassData({ ...nextClass, room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number });
-        setStudents(unwrapRows(studentsResponse));
-        setSubjects(unwrapRows(subjectsResponse));
-        setSessions(unwrapRows(sessionsResponse));
-        setAssignedTests(unwrapRows(testsResponse));
-      } catch (err: any) {
-        if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load class.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-    load();
-    return () => {
-      cancelled = true;
-    };
-  }, [classId]);
 
   const schedule = useMemo(() => parseSchedule(classData?.section), [classData?.section]);
   const className = classData?.class_name || 'Class';
@@ -194,91 +49,26 @@ const ClassDetailPage = () => {
   const capacity = Number(classData?.capacity || 0);
   const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
   const todayKey = toDateKey(new Date());
-  const getSessionDateKey = (session: any) => session?.session_date ? new Date(session.session_date).toISOString().split('T')[0] : '';
   const teacherName = classData?.teacher_name || 'No teacher assigned';
   const scheduleRange = schedule.time ? `${schedule.time}${schedule.endTime ? ` - ${schedule.endTime}` : ''}` : '';
   const scheduleText = [schedule.days.join(', '), scheduleRange].filter(Boolean).join(' / ') || 'No schedule';
-  const scheduleDurationMinutes = useMemo(() => {
-    if (!schedule.time || !schedule.endTime) return 90;
-    const [startHoursRaw, startMinutesRaw] = schedule.time.split(':');
-    const [endHoursRaw, endMinutesRaw] = schedule.endTime.split(':');
-    const startHours = Number(startHoursRaw);
-    const startMinutes = Number(startMinutesRaw);
-    const endHours = Number(endHoursRaw);
-    const endMinutes = Number(endMinutesRaw);
-    if (![startHours, startMinutes, endHours, endMinutes].every(Number.isFinite)) return 90;
-    const duration = endHours * 60 + endMinutes - (startHours * 60 + startMinutes);
-    return duration > 0 ? duration : 90;
-  }, [schedule.endTime, schedule.time]);
+  const scheduleDurationMinutes = useMemo(() => getScheduleDurationMinutes(schedule), [schedule]);
   const studentRows = students.filter((student) => !student.deleted_at);
-  const sessionsByDate = useMemo(() => {
-    const map = new Map<string, any>();
-    [...sessions]
-      .filter((session) => getSessionDateKey(session))
-      .sort((a, b) => Number(b.session_id || b.id || 0) - Number(a.session_id || a.id || 0))
-      .forEach((session) => {
-        const key = getSessionDateKey(session);
-        if (key && !map.has(key)) map.set(key, session);
-      });
-    return map;
-  }, [sessions]);
-  const latestLessonDate = useMemo(() => {
-    const datedSessions = [...sessionsByDate.entries()].sort(([dateA], [dateB]) => dateB.localeCompare(dateA));
-    return datedSessions.find(([date]) => date <= todayKey)?.[0] || datedSessions[0]?.[0] || '';
-  }, [sessionsByDate, todayKey]);
-  const monthlyLessonDays = useMemo(() => {
-    if (!pointsMonth) return [];
-    const [yearRaw, monthRaw] = pointsMonth.split('-');
-    const year = Number(yearRaw);
-    const monthIndex = Number(monthRaw) - 1;
-    if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) return [];
-    const scheduledDays = new Set(schedule.days.map((day) => day.trim().toLowerCase()).filter(Boolean));
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-    return Array.from({ length: daysInMonth }, (_, index) => {
-      const date = new Date(year, monthIndex, index + 1);
-      const dateKey = toDateKey(date);
-      const dayName = dayNames[date.getDay()];
-      return {
-        dateKey,
-        day: index + 1,
-        dayName,
-        session: sessionsByDate.get(dateKey),
-        isClassDay: scheduledDays.has(dayName.toLowerCase()),
-      };
-    }).filter((day) => day.isClassDay);
-  }, [pointsMonth, schedule.days, sessionsByDate]);
-  const monthlySessionIds = useMemo(() => {
-    return Array.from(new Set(monthlyLessonDays
-      .map((day) => Number(day.session?.session_id || day.session?.id || 0))
-      .filter(Boolean)));
-  }, [monthlyLessonDays]);
-  const monthlyPointsBySessionStudent = useMemo(() => {
-    const map = new Map<string, any>();
-    Object.entries(monthlyPointsGrades).forEach(([sessionId, grades]) => {
-      grades.forEach((grade) => {
-        const studentId = Number(grade.student_id || 0);
-        if (studentId) map.set(`${sessionId}:${studentId}`, grade);
-      });
-    });
-    return map;
-  }, [monthlyPointsGrades]);
-  const monthlyPointStats = useMemo(() => {
-    const cells = monthlyLessonDays.length * studentRows.length;
-    const values: number[] = [];
-    let missing = 0;
-    monthlyLessonDays.forEach((day) => {
-      const sessionId = Number(day.session?.session_id || day.session?.id || 0);
-      studentRows.forEach((student) => {
-        const studentId = Number(student.student_id || student.id || 0);
-        const grade = sessionId ? monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) : null;
-        const raw = grade?.points_score;
-        if (raw === null || raw === undefined || raw === '') missing += 1;
-        else values.push(Number(raw || 0));
-      });
-    });
-    const average = values.length > 0 ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : 0;
-    return { cells, filled: values.length, missing, average };
-  }, [monthlyLessonDays, monthlyPointsBySessionStudent, studentRows]);
+  const {
+    pointsMonth,
+    setPointsMonth,
+    pointsLoading,
+    monthlyLessonDays,
+    monthlyPointsBySessionStudent,
+    monthlyPointStats,
+  } = useMonthlyClassPoints({
+    authUser,
+    centerId: Number(classData?.center_id || 0) || undefined,
+    schedule,
+    sessions,
+    students: studentRows,
+    todayKey,
+  });
   // const recentSessions = sessions.slice(0, 80);
   const statTiles = [
     { label: 'Active students', value: activeStudents, detail: `${transferredStudents} transferred`, icon: Users, color: 'bg-blue-600' },
@@ -345,46 +135,6 @@ const ClassDetailPage = () => {
     } finally {
       setStartingLesson(false);
     }
-  };
-
-  useEffect(() => {
-    if (!pointsMonth) setPointsMonth(getMonthKey(latestLessonDate));
-  }, [latestLessonDate, pointsMonth]);
-
-  useEffect(() => {
-    let cancelled = false;
-    const loadPoints = async () => {
-      if (monthlySessionIds.length === 0) {
-        setMonthlyPointsGrades({});
-        return;
-      }
-      setPointsLoading(true);
-      try {
-        const centerId = Number(classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
-        const responses = await Promise.all(monthlySessionIds.map(async (sessionId) => {
-          const response = await gradeAPI.getBySession(sessionId, centerId ? { center_id: centerId } : undefined);
-          return [String(sessionId), unwrapRows(response)] as const;
-        }));
-        if (!cancelled) setMonthlyPointsGrades(Object.fromEntries(responses));
-      } catch (err) {
-        console.error('Failed to load lesson points:', err);
-        if (!cancelled) setMonthlyPointsGrades({});
-      } finally {
-        if (!cancelled) setPointsLoading(false);
-      }
-    };
-    loadPoints();
-    return () => {
-      cancelled = true;
-    };
-  }, [authUser, classData?.center_id, monthlySessionIds]);
-
-  const getPointTone = (points: number | null) => {
-    if (points === null) return { label: 'Missing', className: 'bg-rose-50 text-rose-800 border-rose-200', icon: '!' };
-    if (points === 0) return { label: 'Zero', className: 'bg-slate-50 text-slate-700 border-slate-200', icon: '0' };
-    if (points < 50) return { label: 'Low', className: 'bg-amber-50 text-amber-800 border-amber-200', icon: '-' };
-    if (points < 80) return { label: 'Good', className: 'bg-sky-50 text-sky-800 border-sky-200', icon: '+' };
-    return { label: 'Strong', className: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' };
   };
 
   if (loading) {
@@ -600,129 +350,17 @@ const ClassDetailPage = () => {
             ))}
           </TabsContent>
 
-          <TabsContent value="points" className="mt-0 space-y-3">
-            <div className="flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/60 p-3 sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
-                  <PencilLine className="h-4 w-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-slate-950">Monthly points</p>
-                  <p className="text-xs text-muted-foreground">
-                    {monthLabel(pointsMonth || getMonthKey())} lessons from {schedule.days.length ? schedule.days.join(', ') : 'class settings'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" className="h-9 w-9 bg-white" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), -1))}>
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Input
-                  type="month"
-                  value={pointsMonth}
-                  onChange={(event) => setPointsMonth(event.target.value)}
-                  className="h-9 w-[160px] border-violet-200 bg-white text-sm font-semibold"
-                />
-                <Button variant="outline" size="icon" className="h-9 w-9 bg-white" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), 1))}>
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid gap-2 sm:grid-cols-4">
-              <div className="rounded-lg border bg-white p-3">
-                <p className="text-xs font-semibold text-muted-foreground">Lesson days</p>
-                <p className="mt-1 text-xl font-black text-slate-950">{monthlyLessonDays.length}</p>
-              </div>
-              <div className="rounded-lg border bg-white p-3">
-                <p className="text-xs font-semibold text-muted-foreground">Filled cells</p>
-                <p className="mt-1 text-xl font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
-              </div>
-              <div className="rounded-lg border bg-white p-3">
-                <p className="text-xs font-semibold text-muted-foreground">Missing</p>
-                <p className="mt-1 text-xl font-black text-rose-700">{monthlyPointStats.missing}</p>
-              </div>
-              <div className="rounded-lg border bg-white p-3">
-                <p className="text-xs font-semibold text-muted-foreground">Average</p>
-                <p className="mt-1 text-xl font-black text-violet-700">{monthlyPointStats.average}</p>
-              </div>
-            </div>
-
-            {schedule.days.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-                No class weekdays are configured in class settings.
-              </div>
-            ) : monthlyLessonDays.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-                No scheduled lesson days found for this month.
-              </div>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border bg-white">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="sticky left-0 z-10 min-w-[220px] bg-white">Student</TableHead>
-                      {monthlyLessonDays.map((day) => (
-                        <TableHead key={day.dateKey} className="min-w-[104px] text-center">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-sm font-black">{day.day}</span>
-                            <span className="text-[10px] font-semibold uppercase text-muted-foreground">{day.dayName.slice(0, 3)}</span>
-                            {!day.session ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">No session</span> : null}
-                          </div>
-                        </TableHead>
-                      ))}
-                      <TableHead className="min-w-[92px] text-center">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {pointsLoading ? (
-                      <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
-                    ) : studentRows.length === 0 ? (
-                      <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
-                    ) : studentRows.map((student, index) => {
-                      const studentId = Number(student.student_id || student.id || 0);
-                      let studentTotal = 0;
-                      let studentFilled = 0;
-                      return (
-                        <TableRow key={studentId || index}>
-                          <TableCell className="sticky left-0 z-10 bg-white py-2 font-semibold">
-                            <div className="flex items-center gap-2">
-                              <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
-                                {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
-                              </div>
-                              <span>{student.first_name} {student.last_name}</span>
-                            </div>
-                          </TableCell>
-                          {monthlyLessonDays.map((day) => {
-                            const sessionId = Number(day.session?.session_id || day.session?.id || 0);
-                            const grade = sessionId ? monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) : null;
-                            const points = grade?.points_score === null || grade?.points_score === undefined ? null : Number(grade.points_score || 0);
-                            if (points !== null) {
-                              studentTotal += points;
-                              studentFilled += 1;
-                            }
-                            const tone = getPointTone(points);
-                            return (
-                              <TableCell key={`${studentId}-${day.dateKey}`} className="text-center">
-                                <span className={`inline-flex h-8 min-w-[72px] items-center justify-center gap-1 rounded-md border px-2 text-xs font-black ${tone.className}`}>
-                                  <span>{tone.icon}</span>
-                                  {points === null ? '-' : points}
-                                </span>
-                              </TableCell>
-                            );
-                          })}
-                          <TableCell className="text-center">
-                            <span className="inline-flex min-w-[72px] items-center justify-center rounded-md bg-violet-50 px-2 py-1 text-sm font-black text-violet-800">
-                              {studentFilled ? studentTotal : '-'}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
+          <TabsContent value="points" className="mt-0">
+            <ClassMonthlyPointsView
+              scheduleDays={schedule.days}
+              pointsMonth={pointsMonth}
+              setPointsMonth={setPointsMonth}
+              monthlyLessonDays={monthlyLessonDays}
+              monthlyPointStats={monthlyPointStats}
+              pointsLoading={pointsLoading}
+              studentRows={studentRows}
+              monthlyPointsBySessionStudent={monthlyPointsBySessionStudent}
+            />
           </TabsContent>
 
           <TabsContent value="tests" className="mt-0">

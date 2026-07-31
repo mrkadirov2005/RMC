@@ -8,6 +8,7 @@ import type { ClassItem, CalendarDay, SessionItem } from './types';
 import {
   getConfiguredLessonDurationMinutes,
   getTimeSlots,
+  normalizeWeekdayName,
   parseTimeToMinutes,
   toLocalDateKey,
 } from './utils';
@@ -145,7 +146,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   const getGroupRows = (days: string[], bandRooms: string[]) => {
     const boundaries = new Set<number>();
     schedule
-      .filter((item) => days.includes(item.day) && bandRooms.includes(String(item.room_number)))
+      .filter((item) => days.includes(normalizeWeekdayName(item.day)) && bandRooms.includes(String(item.room_number)))
       .forEach((item) => {
         boundaries.add(parseTimeToMinutes(String(item.time || '').substring(0, 5)));
         boundaries.add(getPlannedEndMinutes(item));
@@ -166,7 +167,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
   const getScheduleForCell = (days: string[], room: string, start: number, end: number) =>
     schedule.find((item) => {
-      if (!days.includes(item.day) || String(item.room_number) !== room) return false;
+      if (!days.includes(normalizeWeekdayName(item.day)) || String(item.room_number) !== room) return false;
       const itemStart = parseTimeToMinutes(String(item.time || '').substring(0, 5));
       const itemEnd = getPlannedEndMinutes(item);
       return itemStart < end && itemEnd > start;
@@ -269,7 +270,10 @@ export const WeekView: React.FC<WeekViewProps> = ({
                               </div>
                               {bandRooms.map((room) => {
                                 const item = getScheduleForCell(group.days, room, row.start, row.end);
-                                const day = weekDays.find((weekDay) => group.days.includes(weekDay.dayName)) || weekDays[0];
+                                const itemDayName = normalizeWeekdayName(item?.day);
+                                const day = weekDays.find((weekDay) => weekDay.dayName === itemDayName)
+                                  || weekDays.find((weekDay) => group.days.includes(weekDay.dayName))
+                                  || weekDays[0];
                                 const cellSessions = getSessionsForCell(day, item, row.start, row.end);
                                 const cls = classes.find((classItem) => Number(classItem.class_id || classItem.id) === Number(item?.class_id));
                                 const teacherName = getTeacherName(cls?.teacher_id || item?.teacher_id);
