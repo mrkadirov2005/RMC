@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { attendanceAPI, classAPI, gradeAPI, settingsAPI, studentAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
-import { useAppSelector } from '../hooks';
+import { clearSessionWorkflowDraft, saveSessionWorkflowDraft, type SessionWorkflowDraft } from '@/slices/sessionWorkflowDraftsSlice';
+import { useAppDispatch, useAppSelector } from '../hooks';
 import { ManualPointsTable, ScoreTable, StepTile, type ScoreOption } from './components/SessionWorkflowScoring';
 import { defaultLessonScoringSettings, normalizeLessonScoringSettings, type LessonScoringSettings } from './lessonScoringSettings';
 
@@ -66,6 +67,7 @@ export default function SessionWorkflowPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const authUser = useAppSelector((state) => state.auth.user);
+  const dispatch = useAppDispatch();
   const [classData, setClassData] = useState<any>(null);
   const [session, setSession] = useState<any>(null);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -85,9 +87,12 @@ export default function SessionWorkflowPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const suppressDraftPersistence = useRef(false);
 
   const numericClassId = Number(classId);
   const numericSessionId = Number(sessionId);
+  const draftKey = `${numericClassId}:${numericSessionId}`;
+  const savedDraft = useAppSelector((state) => state.sessionWorkflowDrafts.drafts[draftKey]);
   const selectedActions = useMemo(() => {
     const raw = searchParams.get('actions');
     const values = raw ? raw.split(',') : DEFAULT_WORKFLOW_ACTIONS;
@@ -162,6 +167,34 @@ export default function SessionWorkflowPage() {
           if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarStudentId = id;
         });
 
+        if (savedDraft) {
+            const draft = savedDraft;
+              const studentIds = new Set(nextStudents.map(getStudentId).filter(Boolean));
+              const restoreMap = (entries: [number, string][] | undefined, fallback: Map<number, string>) => {
+                const restored = new Map(fallback);
+                if (Array.isArray(entries)) {
+                  entries.forEach(([studentId, value]) => {
+                    if (studentIds.has(Number(studentId))) restored.set(Number(studentId), String(value ?? ''));
+                  });
+                }
+                return restored;
+              };
+              const restoredAttendance = restoreMap(draft.attendance, nextAttendance);
+              const restoredHomework = restoreMap(draft.homeworkScores, nextHomework);
+              const restoredActivity = restoreMap(draft.activityScores, nextActivity);
+              const restoredPoints = restoreMap(draft.pointsScores, nextPoints);
+              nextAttendance.clear();
+              restoredAttendance.forEach((value, key) => nextAttendance.set(key, value));
+              nextHomework.clear();
+              restoredHomework.forEach((value, key) => nextHomework.set(key, value));
+              nextActivity.clear();
+              restoredActivity.forEach((value, key) => nextActivity.set(key, value));
+              nextPoints.clear();
+              restoredPoints.forEach((value, key) => nextPoints.set(key, value));
+              nextStellarStudentId = draft.stellarStudentId && studentIds.has(Number(draft.stellarStudentId)) ? Number(draft.stellarStudentId) : null;
+              if (WORKFLOW_TABS.includes(draft.activeTab)) setActiveTab(draft.activeTab);
+        }
+
         setClassData(nextClass);
         setScoringSettings(nextScoringSettings);
         setSessions(nextSessions);
@@ -184,6 +217,19 @@ export default function SessionWorkflowPage() {
       cancelled = true;
     };
   }, [numericClassId, numericSessionId]);
+
+  useEffect(() => {
+    if (loading || !numericClassId || !numericSessionId || suppressDraftPersistence.current) return;
+    const draft: SessionWorkflowDraft = {
+      attendance: Array.from(attendance.entries()),
+      homeworkScores: Array.from(homeworkScores.entries()),
+      activityScores: Array.from(activityScores.entries()),
+      pointsScores: Array.from(pointsScores.entries()),
+      stellarStudentId,
+      activeTab,
+    };
+    dispatch(saveSessionWorkflowDraft({ key: draftKey, draft }));
+  }, [activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, loading, numericClassId, numericSessionId, pointsScores, stellarStudentId]);
 
   useEffect(() => {
     if (selectedTabs.length === 0) return;
@@ -380,6 +426,8 @@ export default function SessionWorkflowPage() {
         award_coins: shouldAwardCoins,
         records,
       });
+      suppressDraftPersistence.current = true;
+      dispatch(clearSessionWorkflowDraft(draftKey));
       showToast.success(shouldAwardCoins ? 'Session data and coins saved successfully.' : 'Session data saved successfully.');
       navigate(backPath);
     } catch (err) {

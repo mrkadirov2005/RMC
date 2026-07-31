@@ -1,6 +1,8 @@
 // Barrel exports for this module.
 
 import { configureStore } from '@reduxjs/toolkit';
+import { persistReducer, persistStore } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import authReducer from '../slices/authSlice';
 import paymentAccessReducer from '../slices/paymentAccessSlice';
 import serviceStatusReducer from '../slices/serviceStatusSlice';
@@ -18,6 +20,12 @@ import testsReducer from '../slices/testsSlice';
 import roomsReducer from '../slices/roomsSlice';
 import studentDashboardReducer from '../slices/studentDashboardSlice';
 import pagesUiReducer from '../slices/pagesUiSlice';
+import sessionWorkflowDraftsReducer from '../slices/sessionWorkflowDraftsSlice';
+
+const persistedSessionWorkflowDraftsReducer = persistReducer(
+  { key: 'sessionWorkflowDrafts', storage },
+  sessionWorkflowDraftsReducer,
+);
 
 export const store = configureStore({
   reducer: {
@@ -41,8 +49,16 @@ export const store = configureStore({
     rooms: roomsReducer,
     studentDashboard: studentDashboardReducer,
     pagesUi: pagesUiReducer,
+    sessionWorkflowDrafts: persistedSessionWorkflowDraftsReducer,
   },
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware({
+    serializableCheck: {
+      ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE'],
+    },
+  }),
 });
+
+export const persistor = persistStore(store);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

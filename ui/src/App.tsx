@@ -3,7 +3,8 @@
 import { useEffect, lazy, Suspense, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
-import { store } from './store';
+import { PersistGate } from 'redux-persist/integration/react';
+import { persistor, store } from './store';
 import { useAppDispatch, useAppSelector } from './features/crm/hooks';
 import { initializeAuth } from './slices/authSlice';
 import { fetchCentersForce } from './slices/centersSlice';
@@ -892,10 +893,12 @@ function AppContent() {
 function App() {
   return (
     <Provider store={store}>
-      <HashRouter>
-        <TopStatusLine />
-        <AppContent />
-      </HashRouter>
+      <PersistGate loading={null} persistor={persistor}>
+        <HashRouter>
+          <TopStatusLine />
+          <AppContent />
+        </HashRouter>
+      </PersistGate>
     </Provider>
   );
 }
