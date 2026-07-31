@@ -75,22 +75,22 @@ export const ClassMonthlyPointsView = ({
       </div>
     </div>
 
-    <div className="grid gap-2 sm:grid-cols-4">
-      <div className="rounded-lg border bg-white p-3">
-        <p className="text-xs font-semibold text-muted-foreground">Lesson days</p>
-        <p className="mt-1 text-xl font-black text-slate-950">{monthlyLessonDays.length}</p>
+    <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+        <p className="text-[11px] font-semibold text-muted-foreground">Lesson days</p>
+        <p className="text-base font-black text-slate-950">{monthlyLessonDays.length}</p>
       </div>
-      <div className="rounded-lg border bg-white p-3">
-        <p className="text-xs font-semibold text-muted-foreground">Filled cells</p>
-        <p className="mt-1 text-xl font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+        <p className="text-[11px] font-semibold text-muted-foreground">Filled</p>
+        <p className="text-base font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
       </div>
-      <div className="rounded-lg border bg-white p-3">
-        <p className="text-xs font-semibold text-muted-foreground">Missing</p>
-        <p className="mt-1 text-xl font-black text-rose-700">{monthlyPointStats.missing}</p>
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+        <p className="text-[11px] font-semibold text-muted-foreground">Missing</p>
+        <p className="text-base font-black text-rose-700">{monthlyPointStats.missing}</p>
       </div>
-      <div className="rounded-lg border bg-white p-3">
-        <p className="text-xs font-semibold text-muted-foreground">Average</p>
-        <p className="mt-1 text-xl font-black text-violet-700">{monthlyPointStats.average}</p>
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+        <p className="text-[11px] font-semibold text-muted-foreground">Average</p>
+        <p className="text-base font-black text-violet-700">{monthlyPointStats.average}</p>
       </div>
     </div>
 
@@ -103,21 +103,21 @@ export const ClassMonthlyPointsView = ({
         No scheduled lesson days found for this month.
       </div>
     ) : (
-      <div className="overflow-x-auto rounded-lg border bg-white">
-        <Table>
-          <TableHeader>
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+        <Table className="text-xs">
+          <TableHeader className="bg-slate-50/95">
             <TableRow>
-              <TableHead className="sticky left-0 z-10 min-w-[220px] bg-white">Student</TableHead>
+              <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] bg-slate-50 px-2 text-[11px] font-bold uppercase tracking-wide">Student</TableHead>
               {monthlyLessonDays.map((day) => (
-                <TableHead key={day.dateKey} className="min-w-[104px] text-center">
-                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-sm font-black">{day.day}</span>
-                    <span className="text-[10px] font-semibold uppercase text-muted-foreground">{day.dayName.slice(0, 3)}</span>
-                    {!day.session ? <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700">No session</span> : null}
+                <TableHead key={day.dateKey} className="h-9 min-w-[70px] px-1 text-center">
+                  <div className="flex items-center justify-center gap-1 leading-none">
+                    <span className="text-xs font-black">{day.day}</span>
+                    <span className="text-[9px] font-bold uppercase text-muted-foreground">{day.dayName.slice(0, 2)}</span>
+                    {!day.session ? <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title="No session" /> : null}
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="min-w-[92px] text-center">Total</TableHead>
+              <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -130,13 +130,13 @@ export const ClassMonthlyPointsView = ({
               let studentTotal = 0;
               let studentFilled = 0;
               return (
-                <TableRow key={studentId || index}>
-                  <TableCell className="sticky left-0 z-10 bg-white py-2 font-semibold">
-                    <div className="flex items-center gap-2">
-                      <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
+                <TableRow key={studentId || index} className="group h-9 hover:bg-violet-50/40">
+                  <TableCell className="sticky left-0 z-10 bg-white px-2 py-1 font-semibold group-hover:bg-violet-50/40">
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[9px] font-bold text-white shadow-sm`}>
                         {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
                       </div>
-                      <span>{student.first_name} {student.last_name}</span>
+                      <span className="max-w-[128px] truncate text-[11px]">{student.first_name} {student.last_name}</span>
                     </div>
                   </TableCell>
                   {monthlyLessonDays.map((day) => {
@@ -149,16 +149,16 @@ export const ClassMonthlyPointsView = ({
                     }
                     const tone = getPointTone(points);
                     return (
-                      <TableCell key={`${studentId}-${day.dateKey}`} className="text-center">
-                        <span className={`inline-flex h-8 min-w-[72px] items-center justify-center gap-1 rounded-md border px-2 text-xs font-black ${tone.className}`}>
-                          <span>{tone.icon}</span>
+                      <TableCell key={`${studentId}-${day.dateKey}`} className="px-1 py-1 text-center">
+                        <span className={`inline-flex h-6 min-w-[46px] items-center justify-center gap-1 rounded-md border px-1.5 text-[10px] font-black ${tone.className}`}>
+                          <span className="text-[9px]">{tone.icon}</span>
                           {points === null ? '-' : points}
                         </span>
                       </TableCell>
                     );
                   })}
-                  <TableCell className="text-center">
-                    <span className="inline-flex min-w-[72px] items-center justify-center rounded-md bg-violet-50 px-2 py-1 text-sm font-black text-violet-800">
+                  <TableCell className="px-1 py-1 text-center">
+                    <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-violet-100 px-1.5 text-[11px] font-black text-violet-800">
                       {studentFilled ? studentTotal : '-'}
                     </span>
                   </TableCell>
