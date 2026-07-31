@@ -322,6 +322,7 @@ const StudentsPage = () => {
             classOptions={s.classes}
             teacherOptions={s.teacherOptions}
             viewMode={viewMode}
+            startIndex={(s.page - 1) * s.limit}
           />
           <div className="mt-4 flex flex-wrap items-center justify-end gap-2 rounded-lg border border-slate-200 bg-slate-50/70 p-3 dark:border-border dark:bg-transparent">
               <Select value={String(s.limit)} onValueChange={(value) => s.setLimit(Number(value))}>

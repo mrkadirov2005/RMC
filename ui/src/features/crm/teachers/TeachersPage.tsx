@@ -379,6 +379,7 @@ const TeachersPage = () => {
                     className="h-4 w-4"
                   />
                 </TableHead>
+                <TableHead className="h-8 w-12 px-2">#</TableHead>
                 <TableHead className="h-8 px-2">Teacher</TableHead>
                 <TableHead className="h-8 px-2 text-right">Students</TableHead>
                 <TableHead className="h-8 px-2 text-right">Share</TableHead>
@@ -397,6 +398,9 @@ const TeachersPage = () => {
                         aria-label={`Select ${teacher.first_name} ${teacher.last_name}`}
                         className="h-4 w-4"
                       />
+                    </TableCell>
+                    <TableCell className="px-2 py-2 font-semibold tabular-nums text-muted-foreground">
+                      {(page - 1) * pageSize + index + 1}
                     </TableCell>
                     <TableCell className="px-2 py-2 font-medium">
                       <div className="flex min-w-0 items-center gap-2">
@@ -455,6 +459,9 @@ const TeachersPage = () => {
                 className="relative cursor-pointer overflow-hidden border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
                 onClick={() => navigate(getTeacherProfilePath(teacher))}
               >
+                <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
+                  {(page - 1) * pageSize + index + 1}
+                </span>
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
                   <input
                     type="checkbox"
@@ -510,6 +517,9 @@ const TeachersPage = () => {
                 key={teacher.teacher_id || teacher.id}
                 className="relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
               >
+                <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
+                  {(page - 1) * pageSize + index + 1}
+                </span>
                 <div className="absolute right-3 top-3 z-10">
                   <input
                     type="checkbox"

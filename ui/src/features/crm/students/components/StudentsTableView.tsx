@@ -37,6 +37,7 @@ interface Props {
   hideTeacherGroup?: boolean;
   showMonthlyPaymentStatus?: boolean;
   viewMode?: ViewMode;
+  startIndex?: number;
 }
 
 const PasswordField = ({
@@ -113,6 +114,7 @@ export const StudentsTableView = ({
   hideTeacherGroup = false,
   showMonthlyPaymentStatus = false,
   viewMode = 'list',
+  startIndex = 0,
 }: Props) => {
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -375,6 +377,9 @@ export const StudentsTableView = ({
                   ]
                 )}
               >
+                <span className="absolute left-2 top-2 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
+                  {startIndex + index + 1}
+                </span>
                 <div className="absolute right-2 top-2 z-10">
                   <input
                     type="checkbox"
@@ -480,6 +485,7 @@ export const StudentsTableView = ({
                 className="h-3.5 w-3.5"
               />
             </TableHead>
+            <TableHead className="h-8 w-12 px-2 text-xs">#</TableHead>
             <TableHead className="h-8 px-2 text-xs">Name</TableHead>
             {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Group</TableHead>}
             {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Teacher</TableHead>}
@@ -495,18 +501,18 @@ export const StudentsTableView = ({
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center">
+              <TableCell colSpan={(hideTeacherGroup ? 9 : 11) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={(hideTeacherGroup ? 9 : 11) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
           ) : (
-            students.map((student) => (
+            students.map((student, index) => (
               <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                 <TableCell className="px-2 py-2">
                   <input
@@ -516,6 +522,9 @@ export const StudentsTableView = ({
                     aria-label={`Select ${student.first_name} ${student.last_name}`}
                     className="h-3.5 w-3.5"
                   />
+                </TableCell>
+                <TableCell className="px-2 py-2 font-semibold tabular-nums text-muted-foreground">
+                  {startIndex + index + 1}
                 </TableCell>
                 <TableCell className="px-2 py-2 font-medium">
                   <button
