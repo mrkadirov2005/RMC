@@ -5,6 +5,7 @@ import type { ClassSchedule } from '../types';
 import { unwrapRows } from '../utils/api';
 import { getMonthKey, toDateKey } from '../utils/date';
 import { dayNames } from '../utils/schedule';
+import { getCombinedLessonPoints } from '../utils/points';
 
 type StudentLike = {
   student_id?: number;
@@ -130,9 +131,9 @@ export const useMonthlyClassPoints = ({ authUser, centerId, schedule, sessions, 
       students.forEach((student) => {
         const studentId = Number(student.student_id || student.id || 0);
         const grade = sessionId ? monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) : null;
-        const raw = grade?.points_score;
-        if (raw === null || raw === undefined || raw === '') missing += 1;
-        else values.push(Number(raw || 0));
+        const combinedPoints = getCombinedLessonPoints(grade);
+        if (combinedPoints === null) missing += 1;
+        else values.push(combinedPoints);
       });
     });
     const average = values.length > 0 ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : 0;

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getMonthKey, monthLabel, shiftMonth } from '../utils/date';
-import { getPointTone } from '../utils/points';
+import { getCombinedLessonPoints, getPointTone } from '../utils/points';
 
 type StudentRow = {
   student_id?: number;
@@ -142,7 +142,7 @@ export const ClassMonthlyPointsView = ({
                   {monthlyLessonDays.map((day) => {
                     const sessionId = Number(day.session?.session_id || day.session?.id || 0);
                     const grade = sessionId ? monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`) : null;
-                    const points = grade?.points_score === null || grade?.points_score === undefined ? null : Number(grade.points_score || 0);
+                    const points = getCombinedLessonPoints(grade);
                     if (points !== null) {
                       studentTotal += points;
                       studentFilled += 1;
