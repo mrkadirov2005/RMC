@@ -212,7 +212,9 @@ CREATE TABLE assignments (
     class_id INT,
     student_id INT,
     teacher_id INT,
+    subject_id INT,
     assignment_title VARCHAR(255) NOT NULL,
+    title VARCHAR(255),
     description TEXT,
     due_date DATE,
     submission_date DATE,
@@ -220,14 +222,18 @@ CREATE TABLE assignments (
     status assignment_status DEFAULT 'Pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMP,
     FOREIGN KEY (class_id) REFERENCES classes(class_id) ON DELETE CASCADE,
     FOREIGN KEY (student_id) REFERENCES students(student_id),
-    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id)
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id),
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE SET NULL
 );
 
 CREATE INDEX idx_assignments_class_id ON assignments(class_id);
 CREATE INDEX idx_assignments_student_id ON assignments(student_id);
 CREATE INDEX idx_assignments_teacher_id ON assignments(teacher_id);
+CREATE INDEX idx_assignments_subject_id ON assignments(subject_id);
+CREATE INDEX idx_assignments_deleted_at ON assignments(deleted_at);
 CREATE INDEX idx_assignments_status ON assignments(status);
 
 CREATE TABLE assignment_submissions (

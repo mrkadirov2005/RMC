@@ -63,7 +63,9 @@ const create = async (payload: any) => {
     .insert(assignments)
     .values({
       classId: payload.class_id ?? null,
+      subjectId: payload.subject_id ?? null,
       assignmentTitle: payload.assignment_title,
+      title: payload.title ?? payload.assignment_title,
       description: payload.description,
       dueDate: payload.due_date,
       submissionDate: payload.submission_date,
@@ -84,6 +86,8 @@ const update = async (id: number, payload: any, centerId?: number, teacherId?: n
     .update(assignments)
     .set({
       assignmentTitle: sql`COALESCE(${payload.assignment_title ?? null}, ${assignments.assignmentTitle})`,
+      title: sql`COALESCE(${payload.title ?? payload.assignment_title ?? null}, ${assignments.title})`,
+      subjectId: sql`COALESCE(${payload.subject_id ?? null}, ${assignments.subjectId})`,
       description: sql`COALESCE(${payload.description ?? null}, ${assignments.description})`,
       dueDate: sql`COALESCE(${payload.due_date ?? null}, ${assignments.dueDate})`,
       status: sql`COALESCE(${payload.status ?? null}, ${assignments.status})`,
