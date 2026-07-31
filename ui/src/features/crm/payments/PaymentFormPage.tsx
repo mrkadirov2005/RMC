@@ -60,6 +60,10 @@ const getRows = <T,>(response: any): T[] => {
   if (Array.isArray(payload?.payments)) return payload.payments;
   return [];
 };
+const getResponseData = <T,>(response: any): T | null => {
+  const payload = response?.data ?? response;
+  return (payload?.data ?? payload) || null;
+};
 const getMonthStart = (value = new Date()) => new Date(value.getFullYear(), value.getMonth(), 1);
 const addMonths = (value: Date, months: number) => new Date(value.getFullYear(), value.getMonth() + months, 1);
 const getMonthKey = (value: Date | string | undefined) => {
@@ -260,14 +264,18 @@ const PaymentFormPage = () => {
     }
     let cancelled = false;
     setLoadingDiscount(true);
-    Promise.all([
+    Promise.allSettled([
       discountAPI.getActiveByStudent(Number(formData.student_id), { discount_kind: 'monthly_discount' }),
-      discountAPI.getActiveByStudent(Number(formData.student_id), { discount_kind: 'serial_discount' }),
+      discountAPI.getActiveSerialByStudent(Number(formData.student_id)),
     ])
-      .then(([monthlyRes, serialRes]) => {
+      .then(([monthlyResult, serialResult]) => {
         if (cancelled) return;
-        const monthlyDiscount = (monthlyRes as any).data ?? null;
-        const serialDiscount = (serialRes as any).data ?? null;
+        const monthlyDiscount = monthlyResult.status === 'fulfilled'
+          ? getResponseData<any>(monthlyResult.value)
+          : null;
+        const serialDiscount = serialResult.status === 'fulfilled'
+          ? getResponseData<any>(serialResult.value)
+          : null;
         const discount = monthlyDiscount || serialDiscount;
         setActiveDiscount(discount);
         if (discount) {
@@ -279,30 +287,18 @@ const PaymentFormPage = () => {
             discount_value: Number(discount.value || 0),
             original_amount: Number(current.original_amount || current.amount || discount.original_price || 0),
           }));
+        } else if (monthlyResult.status === 'fulfilled' || serialResult.status === 'fulfilled') {
+          setFormData((current) => ({
+            ...current,
+            discount_id: null,
+            discount_kind: null,
+            discount_value_type: null,
+            discount_value: 0,
+            discount_amount: 0,
+            final_amount: undefined,
+          }));
         } else {
-          setFormData((current) => ({
-            ...current,
-            discount_id: null,
-            discount_kind: null,
-            discount_value_type: null,
-            discount_value: 0,
-            discount_amount: 0,
-            final_amount: undefined,
-          }));
-        }
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setActiveDiscount(null);
-          setFormData((current) => ({
-            ...current,
-            discount_id: null,
-            discount_kind: null,
-            discount_value_type: null,
-            discount_value: 0,
-            discount_amount: 0,
-            final_amount: undefined,
-          }));
+          setError('Failed to load the active discount. Please try selecting the student again.');
         }
       })
       .finally(() => {
