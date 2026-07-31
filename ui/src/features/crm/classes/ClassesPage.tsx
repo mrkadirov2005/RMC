@@ -5,7 +5,7 @@ import { Pencil, Trash2, Info, CalendarDays, BookOpen, MapPin } from 'lucide-rea
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
-import { studentAPI } from '@/shared/api/api';
+import { studentAPI } from './api';
 import { useClassesPage } from './hooks/useClassesPage';
 import { ClassDialogs } from './components/ClassDialogs';
 import { ClassesMainView } from './components/ClassesMainView';

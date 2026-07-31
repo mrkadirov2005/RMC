@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { classAPI, paymentAPI, studentAPI, teacherAPI } from '@/shared/api/api';
+import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
 
 type MonthCellState = 'full' | 'partial' | 'none';

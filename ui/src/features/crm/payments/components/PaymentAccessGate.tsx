@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { ShieldCheck, KeyRound, Loader2 } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '../../hooks';
-import { authAPI } from '../../../../shared/api/api';
+import { authAPI } from '../api';
 import {
   initializePaymentAccess,
   paymentLoginFailure,

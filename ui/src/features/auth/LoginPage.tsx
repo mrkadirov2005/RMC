@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
-import { authAPI } from '../../shared/api/api';
+import { authAPI } from './api';
 import { setAuthPersistencePreference } from '../../shared/auth/authStorage';
 import { showToast, handleApiError } from '../../utils/toast';
 

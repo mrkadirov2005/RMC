@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { studentAPI } from '../../../shared/api/api';
+import { studentAPI } from '../api';
 import { useAppSelector } from '../../crm/hooks';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import TeacherStudentDirectory, { type TeacherStudentItem } from './TeacherStudentDirectory';

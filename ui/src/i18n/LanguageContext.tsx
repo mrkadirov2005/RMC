@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { translationAPI, type TranslationRow } from '../shared/api/api';
+import { translationAPI, type TranslationRow } from './api';
 
 export type AppLanguage = 'en' | 'uz';
 

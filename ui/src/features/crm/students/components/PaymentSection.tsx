@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { paymentAPI } from '../../../../shared/api/api';
+import { paymentAPI } from '../api';
 import { showToast } from '../../../../utils/toast';
 import { formatMoney } from '../../../../utils/helpers';
 import { PaymentFormDialog } from '../../payments/components/PaymentFormDialog';

@@ -23,7 +23,7 @@ import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { classAPI, roomAPI, roomSlotAPI, studentAPI } from '../../../shared/api/api';
+import { classAPI, roomAPI, roomSlotAPI, studentAPI } from '../api';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { useAppSelector } from '../../crm/hooks';
 import { showToast } from '../../../utils/toast';

@@ -12,7 +12,7 @@ export default defineConfig({
           if (id.includes('/react/') || id.includes('/react-dom/') || id.includes('/react-router-dom/')) {
             return 'vendor-react'
           }
-          if (id.includes('/@reduxjs/') || id.includes('/react-redux/') || id.includes('/axios/')) {
+          if (id.includes('/@reduxjs/') || id.includes('/react-redux/') || id.includes('/redux-persist/') || id.includes('/axios/')) {
             return 'vendor-data'
           }
           if (id.includes('/@radix-ui/')) {

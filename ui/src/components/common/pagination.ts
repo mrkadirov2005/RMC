@@ -22,3 +22,6 @@ export const buildPageNumbers = (currentPage: number, totalPages: number) => {
     .filter((page) => page >= 1 && page <= totalPages)
     .sort((a, b) => a - b);
 };
+
+export const getPaginatedRowNumber = (index: number, page = 1, pageSize = 0) =>
+  (Math.max(1, page) - 1) * Math.max(0, pageSize) + Math.max(0, index) + 1;

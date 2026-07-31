@@ -1,4 +1,1 @@
-export const unwrapRows = (response: any) => {
-  const data = response?.data ?? response;
-  return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : [];
-};
+export { unwrapApiRows as unwrapRows } from '@/shared/api/response';

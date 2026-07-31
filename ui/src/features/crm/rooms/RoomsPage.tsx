@@ -22,7 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { roomAPI } from '@/shared/api/api';
+import { roomAPI } from './api';
 import {
   setRoomsPageEditingId,
   setRoomsPageModalOpen,

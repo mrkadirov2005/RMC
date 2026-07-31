@@ -16,7 +16,7 @@ import { fetchCenters } from '@/slices/centersSlice';
 import { fetchClasses } from '@/slices/classesSlice';
 import { selectCenterOptions, selectClassItems } from '@/store/selectors';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
-import { discountAPI, paymentAPI, studentAPI } from '@/shared/api/api';
+import { discountAPI, paymentAPI, studentAPI } from './api';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';

@@ -32,7 +32,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { classAPI, subjectAPI, assignmentAPI } from '../../../shared/api/api';
+import { classAPI, subjectAPI, assignmentAPI } from '../api';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {

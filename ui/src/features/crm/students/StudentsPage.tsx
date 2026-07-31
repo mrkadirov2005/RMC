@@ -9,7 +9,6 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { classAPI, dataAPI, studentAPI } from '@/shared/api/api';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { StudentsFilterPanel } from './components/StudentsFilterPanel';
@@ -23,6 +22,7 @@ import { useStudentsModal } from './hooks/useStudentsModal';
 import type { Student } from './types';
 import { showToast } from '@/utils/toast';
 import { studentGenderOptions, studentStatusOptions } from './utils/studentFormOptions';
+import { studentsApi } from './api/studentsApi';
 
 const headerActionClass = 'h-8 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-white shadow-sm';
 const headerActionIconClass = 'h-3.5 w-3.5';
@@ -82,7 +82,7 @@ const StudentsPage = () => {
     try {
       setIsImporting(true);
       const csv = await file.text();
-      await dataAPI.importEntity('students', csv);
+      await studentsApi.importCsv(csv);
       s.actions.fetchAll();
       s.actions.fetchClasses();
     } catch (error: any) {
@@ -102,7 +102,7 @@ const StudentsPage = () => {
   const handlePushStudentsToSheets = async () => {
     try {
       setIsSheetsPushing(true);
-      await dataAPI.pushEntityToSheets('students');
+      await studentsApi.pushToSheets();
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update Google Sheets.');
     } finally {
@@ -113,7 +113,7 @@ const StudentsPage = () => {
   const handlePullStudentsFromSheets = async () => {
     try {
       setIsSheetsPulling(true);
-      await dataAPI.pullEntityFromSheets('students');
+      await studentsApi.pullFromSheets();
       await refreshStudents();
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import from Google Sheets.');
@@ -135,7 +135,7 @@ const StudentsPage = () => {
     }
 
     try {
-      await studentAPI.setPassword(id, { username, password });
+      await studentsApi.setPassword(id, username, password);
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to update password.');
       throw error;
@@ -148,7 +148,7 @@ const StudentsPage = () => {
     let failed = 0;
     for (const id of ids) {
       try {
-        await studentAPI.delete(id);
+        await studentsApi.deleteStudent(id);
       } catch {
         failed += 1;
       }
@@ -168,7 +168,7 @@ const StudentsPage = () => {
     }
 
     try {
-      await studentAPI.transfer(id, targetClassId);
+      await studentsApi.transferStudent(id, targetClassId);
       showToast.success('Student transferred successfully.');
       await refreshStudents();
     } catch (error: any) {
@@ -178,7 +178,7 @@ const StudentsPage = () => {
   };
   const handleTransferGroupOwner = async (classId: number, teacherId: number) => {
     try {
-      await classAPI.update(classId, { teacher_id: teacherId });
+      await studentsApi.updateGroupTeacher(classId, teacherId);
       showToast.success('Group teacher updated successfully.');
       await refreshStudents();
     } catch (error: any) {
@@ -194,7 +194,7 @@ const StudentsPage = () => {
     let failed = 0;
     for (const id of ids) {
       try {
-        await classAPI.delete(id);
+        await studentsApi.deleteGroup(id);
       } catch {
         failed += 1;
       }

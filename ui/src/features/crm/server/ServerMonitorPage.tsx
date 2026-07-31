@@ -4,7 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
-import { systemAPI } from '@/shared/api/api';
+import { systemAPI } from './api';
 
 type ServerStats = {
   status: string;

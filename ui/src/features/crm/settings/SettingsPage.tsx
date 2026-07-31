@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { settingsAPI } from '@/shared/api/api';
+import { settingsAPI } from './api';
 import { showToast } from '@/utils/toast';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SectionPanel } from '@/components/common/SectionPanel';

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { systemAPI } from '@/shared/api/api';
+import { systemAPI } from '../systemApi';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '../../../i18n/LanguageContext';
 

@@ -20,7 +20,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
+import { testAPI } from './api';
 import {
   clearStudentTestsPageError,
   setStudentTestsPageError,

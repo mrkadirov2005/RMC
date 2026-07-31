@@ -6,15 +6,23 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { attendanceAPI, classAPI, gradeAPI, settingsAPI, studentAPI } from '@/shared/api/api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { clearSessionWorkflowDraft, saveSessionWorkflowDraft, type SessionWorkflowDraft } from '@/slices/sessionWorkflowDraftsSlice';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { ManualPointsTable, ScoreTable, StepTile, type ScoreOption } from './components/SessionWorkflowScoring';
 import { defaultLessonScoringSettings, normalizeLessonScoringSettings, type LessonScoringSettings } from './lessonScoringSettings';
+import {
+  buildSessionWorkflowRecords,
+  clampWorkflowPoints,
+  getWorkflowCounts,
+  getWorkflowStudentId,
+  getWorkflowTotalScore,
+  toWorkflowPointMap,
+} from './sessionWorkflowModel';
+import { sessionWorkflowApi } from './api/sessionWorkflowApi';
 
-const toPointMap = (options: ScoreOption[]) => Object.fromEntries(options.map((option) => [option.label, option.score]));
+const toPointMap = (options: ScoreOption[]) => toWorkflowPointMap(options);
 
 type WorkflowTab = 'attendance' | 'homework' | 'activity' | 'points';
 type WorkflowAction = WorkflowTab | 'coins';
@@ -28,39 +36,9 @@ const ACTION_LABELS: Record<WorkflowTab, string> = {
   points: 'Points',
 };
 
-const unwrapRows = <T,>(response: any): T[] => {
-  const data = response?.data ?? response;
-  if (Array.isArray(data)) return data;
-  if (Array.isArray(data?.data)) return data.data;
-  if (Array.isArray(data?.students)) return data.students;
-  if (Array.isArray(data?.rows)) return data.rows;
-  return [];
-};
-
-const getPayload = (response: any) => response?.data ?? response;
-
-const getStudentId = (student: any) => Number(student.student_id || student.id || 0);
+const getStudentId = getWorkflowStudentId;
 
 const toDateKey = (value?: string) => (value ? new Date(value).toISOString().split('T')[0] : '');
-
-const fetchAllClassStudents = async (classId: number) => {
-  const directRows = unwrapRows<any>(await studentAPI.getByClassWithTransfers(classId, { _fresh: Date.now() }).catch(() => ({ data: [] })));
-  if (directRows.length > 0) return directRows;
-
-  const allRows: any[] = [];
-  let page = 1;
-  let total = 0;
-  do {
-    const response = await studentAPI.getAll({ class_id: classId, page, limit: 100, _fresh: Date.now() });
-    const payload = getPayload(response);
-    const rows = unwrapRows<any>(response);
-    total = Number(payload?.total || rows.length || allRows.length);
-    allRows.push(...rows);
-    page += 1;
-  } while (allRows.length < total && page < 100);
-
-  return allRows;
-};
 
 export default function SessionWorkflowPage() {
   const { classId, sessionId } = useParams<{ classId: string; sessionId: string }>();
@@ -93,6 +71,8 @@ export default function SessionWorkflowPage() {
   const numericSessionId = Number(sessionId);
   const draftKey = `${numericClassId}:${numericSessionId}`;
   const savedDraft = useAppSelector((state) => state.sessionWorkflowDrafts.drafts[draftKey]);
+  const savedDraftRef = useRef(savedDraft);
+  savedDraftRef.current = savedDraft;
   const selectedActions = useMemo(() => {
     const raw = searchParams.get('actions');
     const values = raw ? raw.split(',') : DEFAULT_WORKFLOW_ACTIONS;
@@ -106,9 +86,6 @@ export default function SessionWorkflowPage() {
     [selectedActions],
   );
   const shouldAwardCoins = selectedActions.includes('coins');
-  const attendancePoints = useMemo(() => toPointMap(scoringSettings.attendance), [scoringSettings.attendance]);
-  const homeworkPoints = useMemo(() => toPointMap(scoringSettings.homework), [scoringSettings.homework]);
-  const activityPoints = useMemo(() => toPointMap(scoringSettings.activity), [scoringSettings.activity]);
   const centerId = Number(session?.center_id || classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
 
   useEffect(() => {
@@ -118,23 +95,16 @@ export default function SessionWorkflowPage() {
       setLoading(true);
       setError('');
       try {
-        const [classResponse, sessionsResponse, studentsResponse, attendanceResponse, gradesResponse, scoringResponse] = await Promise.all([
-          classAPI.getById(numericClassId),
-          classAPI.getSessions(numericClassId).catch(() => ({ data: [] })),
-          fetchAllClassStudents(numericClassId),
-          attendanceAPI.getBySession(numericSessionId).catch(() => ({ data: [] })),
-          gradeAPI.getBySession(numericSessionId).catch(() => ({ data: [] })),
-          settingsAPI.getLessonScoring().catch(() => ({ data: defaultLessonScoringSettings })),
-        ]);
+        const loaded = await sessionWorkflowApi.load(numericClassId, numericSessionId);
         if (cancelled) return;
 
-        const nextClass = getPayload(classResponse);
-        const nextSessions = unwrapRows<any>(sessionsResponse);
+        const nextClass = loaded.classData;
+        const nextSessions = loaded.sessions;
         const nextSession = nextSessions.find((item) => Number(item.session_id || item.id) === numericSessionId);
-        const nextStudents = Array.isArray(studentsResponse) ? studentsResponse : [];
-        const nextAttendanceRecords = unwrapRows<any>(attendanceResponse);
-        const nextGrades = unwrapRows<any>(gradesResponse);
-        const nextScoringSettings = normalizeLessonScoringSettings(getPayload(scoringResponse));
+        const nextStudents = loaded.students;
+        const nextAttendanceRecords = loaded.attendanceRecords;
+        const nextGrades = loaded.grades;
+        const nextScoringSettings = normalizeLessonScoringSettings(loaded.scoringSettings as Partial<LessonScoringSettings>);
         const nextHomeworkPoints = toPointMap(nextScoringSettings.homework);
         const nextActivityPoints = toPointMap(nextScoringSettings.activity);
 
@@ -167,8 +137,8 @@ export default function SessionWorkflowPage() {
           if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarStudentId = id;
         });
 
-        if (savedDraft) {
-            const draft = savedDraft;
+        if (savedDraftRef.current) {
+            const draft = savedDraftRef.current;
               const studentIds = new Set(nextStudents.map(getStudentId).filter(Boolean));
               const restoreMap = (entries: [number, string][] | undefined, fallback: Map<number, string>) => {
                 const restored = new Map(fallback);
@@ -239,31 +209,18 @@ export default function SessionWorkflowPage() {
   }, [activeTab, selectedTabs]);
 
   const counts = useMemo(() => {
-    const total = students.length;
-    const attendanceMarked = Array.from(attendance.values()).filter(Boolean).length;
-    const homeworkMarked = Array.from(homeworkScores.values()).filter(Boolean).length;
-    const activityMarked = Array.from(activityScores.values()).filter(Boolean).length;
-    const pointsMarked = Array.from(pointsScores.values()).filter((value) => value !== '').length;
-    return {
-      total,
-      attendanceMarked,
-      homeworkMarked,
-      activityMarked,
-      pointsMarked,
-      allAttendanceMarked: total > 0 && attendanceMarked === total,
-      allHomeworkMarked: total > 0 && homeworkMarked === total,
-      allActivityMarked: total > 0 && activityMarked === total,
-      allPointsMarked: total > 0 && pointsMarked === total,
-    };
+    return getWorkflowCounts(students.length, attendance, homeworkScores, activityScores, pointsScores);
   }, [activityScores, attendance, homeworkScores, pointsScores, students.length]);
 
-  const getTotalScore = (studentId: number) => {
-    const attendanceStatus = selectedActions.includes('attendance') ? attendance.get(studentId) || '' : '';
-    const homeworkStatus = selectedActions.includes('homework') ? homeworkScores.get(studentId) || '' : '';
-    const activityStatus = selectedActions.includes('activity') ? activityScores.get(studentId) || '' : '';
-    const pointsScore = selectedActions.includes('points') ? Number(pointsScores.get(studentId) || 0) : 0;
-    return (attendancePoints[attendanceStatus] || 0) + (homeworkPoints[homeworkStatus] || 0) + (activityPoints[activityStatus] || 0) + (Number.isFinite(pointsScore) ? pointsScore : 0);
-  };
+  const getTotalScore = (studentId: number) => getWorkflowTotalScore({
+    studentId,
+    selectedActions,
+    attendance,
+    homework: homeworkScores,
+    activity: activityScores,
+    points: pointsScores,
+    settings: scoringSettings,
+  });
 
   const getNextTab = (tab: WorkflowTab) => {
     const index = selectedTabs.indexOf(tab);
@@ -293,8 +250,7 @@ export default function SessionWorkflowPage() {
   };
 
   const setPointScore = (studentId: number, value: string) => {
-    const numericValue = Number(value);
-    const nextValue = value === '' || !Number.isFinite(numericValue) ? '' : String(Math.max(0, Math.min(100, Math.round(numericValue))));
+    const nextValue = clampWorkflowPoints(value);
     setPointsScores((current) => {
       const next = new Map(current);
       next.set(studentId, nextValue);
@@ -353,14 +309,13 @@ export default function SessionWorkflowPage() {
 
     setSwitchingDate(true);
     try {
-      const response = await classAPI.createSession(numericClassId, {
+      const nextSession = await sessionWorkflowApi.createSession(numericClassId, {
         center_id: centerId,
         session_date: nextDate,
         start_time: session?.start_time || new Date().toTimeString().slice(0, 5),
         duration_minutes: Number(session?.duration_minutes || 90),
         teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id || session?.teacher_id || 0) || undefined,
       });
-      const nextSession = getPayload(response);
       const nextSessionId = Number(nextSession?.session_id || nextSession?.id || 0);
       if (!nextSessionId) throw new Error('Session was created without an id.');
       setSessions((current) => [...current, nextSession]);
@@ -393,29 +348,18 @@ export default function SessionWorkflowPage() {
     setSubmitting(true);
     try {
       const teacherId = authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id || session?.teacher_id || 0);
-      const statusMap: Record<string, string> = { 'On time': 'Present', Late: 'Late', Excused: 'Absent R', Absent: 'Absent' };
-      const records = students.map((student) => {
-        const studentId = getStudentId(student);
-        const status = attendance.get(studentId);
-        const attendanceStatus = status || '';
-        const homeworkStatus = homeworkScores.get(studentId);
-        const activityStatus = activityScores.get(studentId);
-        const pointsScore = Number(pointsScores.get(studentId) || 0);
+      const records = buildSessionWorkflowRecords({
+        students,
+        selectedActions,
+        attendance,
+        homework: homeworkScores,
+        activity: activityScores,
+        points: pointsScores,
+        stellarStudentId,
+        settings: scoringSettings,
+      });
 
-        return {
-          student_id: studentId,
-          is_stellar_student: shouldAwardCoins && stellarStudentId === studentId,
-          stellar_bonus_coins: shouldAwardCoins && stellarStudentId === studentId ? scoringSettings.stellarBonusCoins : 0,
-          attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
-          attendance_remarks: selectedActions.includes('attendance') ? 'Daily Session Grading' : null,
-          attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
-          homework_score: selectedActions.includes('homework') && homeworkStatus ? (homeworkPoints[homeworkStatus] ?? 0) : null,
-          activity_score: selectedActions.includes('activity') && activityStatus ? (activityPoints[activityStatus] ?? 0) : null,
-          points_score: selectedActions.includes('points') && Number.isFinite(pointsScore) ? pointsScore : null,
-        };
-      }).filter((record) => Number(record.student_id) > 0);
-
-      await gradeAPI.saveSessionWorkflow({
+      await sessionWorkflowApi.save({
         center_id: centerId,
         class_id: numericClassId,
         session_id: numericSessionId,

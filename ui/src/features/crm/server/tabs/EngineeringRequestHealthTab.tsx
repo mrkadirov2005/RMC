@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { requestLogsAPI } from '@/shared/api/api';
+import { requestLogsAPI } from '../api';
 
 type RequestKind = 'owner' | 'superuser' | 'teacher' | 'student';
 type RequestHealthMode = 'warnings' | 'failed';

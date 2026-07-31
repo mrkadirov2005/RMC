@@ -26,7 +26,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
+import { testAPI } from './api';
 
 // Renders the take test page screen.
 const TakeTestPage = () => {

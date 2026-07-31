@@ -8,7 +8,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { createStudentIdentity } from '@/shared/studentIdentity';
-import { studentAPI } from '@/shared/api/api';
+import { studentAPI } from './api';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useStudentsData } from './hooks/useStudentsData';

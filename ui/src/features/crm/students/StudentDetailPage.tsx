@@ -19,7 +19,7 @@ import {
   Trash2,
   User,
 } from 'lucide-react';
-import { studentAPI, classAPI, teacherAPI } from '../../../shared/api/api';
+import { studentAPI, classAPI, teacherAPI } from './api';
 import { StudentInfoSection } from './components/StudentInfoSection';
 import { StatisticsSection } from './components/StatisticsSection';
 import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab } from './tabs';

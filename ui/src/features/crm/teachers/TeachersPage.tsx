@@ -29,11 +29,13 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import type { Teacher } from './types';
-import { dataAPI, teacherAPI } from '@/shared/api/api';
 import { showToast } from '@/utils/toast';
 import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultCardPageSizeOptions } from '@/components/common/PaginationBar';
+import { getPaginatedRowNumber } from '@/components/common/pagination';
+import { useListSelection } from '@/components/common/useListSelection';
+import { teachersApi } from './api/teachersApi';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -73,7 +75,6 @@ const TeachersPage = () => {
   const [pageSize, setPageSize] = useState(12);
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [selectedTeacherIds, setSelectedTeacherIds] = useState<Set<number>>(new Set());
   const { t } = useLanguage();
   const teacherParams = useMemo(() => ({
     q: debouncedSearchTerm.trim() || undefined,
@@ -111,30 +112,17 @@ const TeachersPage = () => {
   const totalPages = Math.max(1, Math.ceil(totalTeachers / pageSize));
   const pageStart = totalTeachers === 0 ? 0 : (page - 1) * pageSize + 1;
   const pageEnd = Math.min(totalTeachers, page * pageSize);
-  const visibleTeacherIds = visibleTeachers.map(getTeacherId).filter((id) => id > 0);
-  const selectedVisibleTeacherCount = visibleTeacherIds.filter((id) => selectedTeacherIds.has(id)).length;
-  const allVisibleTeachersSelected = visibleTeacherIds.length > 0 && selectedVisibleTeacherCount === visibleTeacherIds.length;
+  const {
+    selectedIds: selectedTeacherIds,
+    selectedVisibleCount: selectedVisibleTeacherCount,
+    allVisibleSelected: allVisibleTeachersSelected,
+    toggle: toggleTeacher,
+    toggleAllVisible: toggleAllVisibleTeachers,
+    clear: clearTeacherSelection,
+  } = useListSelection(visibleTeachers, getTeacherId);
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm, viewMode]);
-  const toggleTeacher = (id: number, checked: boolean) => {
-    setSelectedTeacherIds((current) => {
-      const next = new Set(current);
-      if (checked) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  };
-  const toggleAllVisibleTeachers = (checked: boolean) => {
-    setSelectedTeacherIds((current) => {
-      const next = new Set(current);
-      for (const id of visibleTeacherIds) {
-        if (checked) next.add(id);
-        else next.delete(id);
-      }
-      return next;
-    });
-  };
   const activeTeachers = visibleTeachers.filter((teacher) => String(teacher.status || '').toLowerCase() === 'active').length;
   const specializations = new Set(
     visibleTeachers.map((teacher) => String(teacher.specialization || '').trim()).filter(Boolean)
@@ -201,7 +189,7 @@ const TeachersPage = () => {
     try {
       setIsImporting(true);
       const csv = await file.text();
-      await dataAPI.importEntity('teachers', csv);
+      await teachersApi.importCsv(csv);
       await refresh();
     } catch (error: any) {
       showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to import teachers.');
@@ -218,13 +206,13 @@ const TeachersPage = () => {
     let failed = 0;
     for (const id of ids) {
       try {
-        await teacherAPI.delete(id);
+        await teachersApi.deleteTeacher(id);
       } catch {
         failed += 1;
       }
     }
     await refresh();
-    setSelectedTeacherIds(new Set());
+    clearTeacherSelection();
     if (failed > 0) {
       showToast.error(`Deleted ${ids.length - failed}; ${failed} failed.`);
     } else {
@@ -358,7 +346,7 @@ const TeachersPage = () => {
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={() => setSelectedTeacherIds(new Set())}>
+                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={clearTeacherSelection}>
                   Clear
                 </Button>
               </div>
@@ -400,7 +388,7 @@ const TeachersPage = () => {
                       />
                     </TableCell>
                     <TableCell className="px-2 py-2 font-semibold tabular-nums text-muted-foreground">
-                      {(page - 1) * pageSize + index + 1}
+                      {getPaginatedRowNumber(index, page, pageSize)}
                     </TableCell>
                     <TableCell className="px-2 py-2 font-medium">
                       <div className="flex min-w-0 items-center gap-2">
@@ -446,7 +434,7 @@ const TeachersPage = () => {
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={() => setSelectedTeacherIds(new Set())}>
+                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={clearTeacherSelection}>
                   Clear
                 </Button>
               </div>
@@ -460,7 +448,7 @@ const TeachersPage = () => {
                 onClick={() => navigate(getTeacherProfilePath(teacher))}
               >
                 <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
-                  {(page - 1) * pageSize + index + 1}
+                  {getPaginatedRowNumber(index, page, pageSize)}
                 </span>
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
                   <input
@@ -505,7 +493,7 @@ const TeachersPage = () => {
                   <Trash2 className="h-3.5 w-3.5" />
                   Delete
                 </Button>
-                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={() => setSelectedTeacherIds(new Set())}>
+                <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={clearTeacherSelection}>
                   Clear
                 </Button>
               </div>
@@ -518,7 +506,7 @@ const TeachersPage = () => {
                 className="relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
               >
                 <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
-                  {(page - 1) * pageSize + index + 1}
+                  {getPaginatedRowNumber(index, page, pageSize)}
                 </span>
                 <div className="absolute right-3 top-3 z-10">
                   <input

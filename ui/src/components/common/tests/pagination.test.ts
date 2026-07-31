@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPageNumbers, clampPage, paginateItems } from '../pagination';
+import { buildPageNumbers, clampPage, getPaginatedRowNumber, paginateItems } from '../pagination';
 
 describe('pagination helpers', () => {
   it('clamps pages into a valid range', () => {
@@ -24,5 +24,13 @@ describe('pagination helpers', () => {
   it('builds compact page number windows', () => {
     expect(buildPageNumbers(5, 10)).toEqual([1, 4, 5, 6, 10]);
     expect(buildPageNumbers(1, 3)).toEqual([1, 2, 3]);
+  });
+});
+
+describe('getPaginatedRowNumber', () => {
+  it('continues numbering across server-paginated pages', () => {
+    expect(getPaginatedRowNumber(0, 1, 10)).toBe(1);
+    expect(getPaginatedRowNumber(0, 2, 10)).toBe(11);
+    expect(getPaginatedRowNumber(9, 3, 10)).toBe(30);
   });
 });

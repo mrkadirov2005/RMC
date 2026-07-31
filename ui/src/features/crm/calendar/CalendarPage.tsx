@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { classAPI, portalAPI } from '@/shared/api/api';
+import { classAPI, portalAPI } from './api';
 import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
 import { fetchStudents, fetchStudentsForce } from '@/slices/studentsSlice';
 import { fetchGrades, fetchGradesForce } from '@/slices/gradesSlice';

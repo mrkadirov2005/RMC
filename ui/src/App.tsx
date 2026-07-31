@@ -11,6 +11,7 @@ import { fetchCentersForce } from './slices/centersSlice';
 import { setAppCenterReady } from './slices/pagesUiSlice';
 import Layout from './components/layout/Layout';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
+import { RouteErrorBoundary } from './components/common/RouteErrorBoundary';
 const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) => ({ default: module.LoginPage })));
 const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then((module) => ({ default: module.OwnerLoginPage })));
 const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
@@ -895,8 +896,10 @@ function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <HashRouter>
-          <TopStatusLine />
-          <AppContent />
+          <RouteErrorBoundary>
+            <TopStatusLine />
+            <AppContent />
+          </RouteErrorBoundary>
         </HashRouter>
       </PersistGate>
     </Provider>

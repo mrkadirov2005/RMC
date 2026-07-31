@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { attendanceAPI, gradeAPI, studentAPI, testAPI } from '../../../shared/api/api';
+import { attendanceAPI, gradeAPI, studentAPI, testAPI } from './api';
 import { showToast } from '../../../utils/toast';
 import { formatMoney } from '../../../utils/helpers';
 import { fetchSubjects as fetchSubjectsThunk } from '../../../slices/subjectsSlice';

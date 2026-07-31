@@ -24,7 +24,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { formatMoney } from '@/utils/helpers';
-import { centerAPI } from '@/shared/api/api';
+import { centerAPI } from './api';
 import { useCentersPage } from './hooks/useCentersPage';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import {

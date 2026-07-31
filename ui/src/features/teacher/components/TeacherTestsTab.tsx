@@ -39,7 +39,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
+import { testAPI } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../i18n/LanguageContext';
 

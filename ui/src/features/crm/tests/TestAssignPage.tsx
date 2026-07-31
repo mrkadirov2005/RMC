@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
+import { testAPI } from './api';
 import { fetchClasses } from '../../../slices/classesSlice';
 import { fetchStudents } from '../../../slices/studentsSlice';
 import { selectClassItems, selectStudentItems } from '../../../store/selectors';

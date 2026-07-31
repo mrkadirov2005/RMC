@@ -14,7 +14,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Wallet, Calendar, Loader2, GraduationCap } from 'lucide-react';
-import { paymentAPI, classAPI, studentAPI } from '../../../shared/api/api';
+import { paymentAPI, classAPI, studentAPI } from '../api';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface TeacherPaymentsTabProps {

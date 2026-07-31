@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
-import { telegramRegistrationAPI, classAPI, teacherAPI } from '@/shared/api/api';
+import { telegramRegistrationAPI, classAPI, teacherAPI } from './api';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { showToast } from '@/utils/toast';
 

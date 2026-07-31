@@ -17,7 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { cn } from '@/lib/utils';
-import { testAPI } from '../../../shared/api/api';
+import { testAPI } from './api';
 
 interface Answer {
   answer_id: number;

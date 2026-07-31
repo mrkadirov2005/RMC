@@ -21,7 +21,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { loginSuccess, setLoading, loginFailure } from '../../slices/authSlice';
-import { authAPI } from '../../shared/api/api';
+import { authAPI } from './api';
 import { handleApiError, showToast } from '../../utils/toast';
 
 const OWNER_INVITE_KEY = import.meta.env.VITE_OWNER_INVITE_KEY ?? 'owner-create-2026';

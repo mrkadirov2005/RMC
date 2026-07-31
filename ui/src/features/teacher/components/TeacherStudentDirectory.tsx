@@ -54,7 +54,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { studentAPI, gradeAPI, attendanceAPI, testAPI } from '../../../shared/api/api';
+import { studentAPI, gradeAPI, attendanceAPI, testAPI } from '../api';
 import { useNavigate } from 'react-router-dom';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import { useLanguage } from '../../../i18n/LanguageContext';

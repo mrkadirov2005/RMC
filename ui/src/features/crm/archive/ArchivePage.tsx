@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
-import { archiveAPI } from '@/shared/api/api';
+import { archiveAPI } from './api';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';

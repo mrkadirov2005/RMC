@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { classAPI } from '@/shared/api/api';
+import { classAPI } from './api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';

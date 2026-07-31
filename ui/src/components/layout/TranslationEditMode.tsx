@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '../../i18n/LanguageContext';
-import type { TranslationRow } from '../../shared/api/api';
+import type { TranslationRow } from '../../i18n/api';
 import { showToast } from '../../utils/toast';
 
 type EditableTarget = {

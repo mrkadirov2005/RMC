@@ -40,7 +40,7 @@ import {
 } from '@/components/ui/tooltip';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
-import { classAPI, studentAPI, gradeAPI, subjectAPI } from '../../../shared/api/api';
+import { classAPI, studentAPI, gradeAPI, subjectAPI } from '../api';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {

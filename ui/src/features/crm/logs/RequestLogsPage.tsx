@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, ChevronLeft, ChevronRight, Clock, Database, Filter, Search, ShieldCheck, X } from 'lucide-react';
-import { requestLogsAPI } from '../../../shared/api/api';
+import { requestLogsAPI } from './api';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';

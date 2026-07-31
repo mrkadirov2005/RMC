@@ -33,7 +33,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
   centerId,
   roomNumber,
 }) => {
-  const { slots, bookings, loading, fetchSlots, fetchBookings, bookSlot, cancelBooking } = useRoomSlots(roomId, centerId);
+  const { slots, bookings, loading, fetchSlots, fetchBookings, createSlot, bookSlot, cancelBooking } = useRoomSlots(roomId, centerId);
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -90,7 +90,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
     if (!selectedDate) return;
     
     try {
-      await useRoomSlots(roomId, centerId).createSlot({
+      await createSlot({
         room_id: roomId,
         slot_date: selectedDate,
         start_time: newSlotTime.start,

@@ -26,7 +26,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { debtAPI } from '../../../shared/api/api';
+import { debtAPI } from './api';
 
 interface UnpaidMonth {
   year: number;

@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { getPaginatedRowNumber } from '@/components/common/pagination';
+import { useListSelection } from '@/components/common/useListSelection';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
@@ -118,7 +120,6 @@ export const StudentsTableView = ({
 }: Props) => {
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [transferStudent, setTransferStudent] = useState<Student | null>(null);
   const [targetClassId, setTargetClassId] = useState('');
   const [transferring, setTransferring] = useState(false);
@@ -130,34 +131,19 @@ export const StudentsTableView = ({
     const studentClass = classOptions.find((cls) => Number(cls.class_id || cls.id || 0) === classId);
     return Number(studentClass?.teacher_id || 0);
   };
-  const visibleIds = students.map(getStudentId).filter((id) => id > 0);
-  const selectedVisibleCount = visibleIds.filter((id) => selectedIds.has(id)).length;
-  const allVisibleSelected = visibleIds.length > 0 && selectedVisibleCount === visibleIds.length;
-
-  const toggleStudent = (id: number, checked: boolean) => {
-    setSelectedIds((current) => {
-      const next = new Set(current);
-      if (checked) next.add(id);
-      else next.delete(id);
-      return next;
-    });
-  };
-
-  const toggleAllVisible = (checked: boolean) => {
-    setSelectedIds((current) => {
-      const next = new Set(current);
-      for (const id of visibleIds) {
-        if (checked) next.add(id);
-        else next.delete(id);
-      }
-      return next;
-    });
-  };
+  const {
+    selectedIds,
+    selectedVisibleCount,
+    allVisibleSelected,
+    toggle: toggleStudent,
+    toggleAllVisible,
+    clear: clearSelection,
+  } = useListSelection(students, getStudentId);
   const deleteSelected = async () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0 || !onBulkDelete) return;
     await onBulkDelete(ids);
-    setSelectedIds(new Set());
+    clearSelection();
   };
 
 // Opens coins.
@@ -351,7 +337,7 @@ export const StudentsTableView = ({
                   Delete
                 </Button>
               )}
-              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={clearSelection}>
                 Clear
               </Button>
             </div>
@@ -378,7 +364,7 @@ export const StudentsTableView = ({
                 )}
               >
                 <span className="absolute left-2 top-2 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
-                  {startIndex + index + 1}
+                  {getPaginatedRowNumber(index + startIndex)}
                 </span>
                 <div className="absolute right-2 top-2 z-10">
                   <input
@@ -464,7 +450,7 @@ export const StudentsTableView = ({
                 Delete
               </Button>
             )}
-            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
+            <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={clearSelection}>
               Clear
             </Button>
           </div>
@@ -524,7 +510,7 @@ export const StudentsTableView = ({
                   />
                 </TableCell>
                 <TableCell className="px-2 py-2 font-semibold tabular-nums text-muted-foreground">
-                  {startIndex + index + 1}
+                  {getPaginatedRowNumber(index + startIndex)}
                 </TableCell>
                 <TableCell className="px-2 py-2 font-medium">
                   <button

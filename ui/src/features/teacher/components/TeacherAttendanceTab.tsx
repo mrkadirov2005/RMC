@@ -31,7 +31,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import { classAPI, studentAPI, attendanceAPI } from '../../../shared/api/api';
+import { classAPI, studentAPI, attendanceAPI } from '../api';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {

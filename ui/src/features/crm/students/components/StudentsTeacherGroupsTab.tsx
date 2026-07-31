@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { classAPI, paymentAPI, studentAPI } from '@/shared/api/api';
+import { classAPI, paymentAPI, studentAPI } from '../api';
+import { unwrapApiRows } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import { StudentsTableView } from './StudentsTableView';
@@ -70,16 +71,7 @@ const getStudentSearchText = (student: Student) =>
     student.phone,
   ].filter(Boolean).join(' ');
 
-const getPayload = (response: any) => response?.data ?? response;
-const getRows = <T,>(response: any): T[] => {
-  const payload = getPayload(response);
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.items)) return payload.items;
-  if (Array.isArray(payload?.rows)) return payload.rows;
-  if (Array.isArray(payload?.students)) return payload.students;
-  return [];
-};
+const getRows = unwrapApiRows;
 
 type PaymentRow = {
   student_id?: number;

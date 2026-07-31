@@ -23,7 +23,7 @@ import { cn } from '@/lib/utils';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchStudents } from '../../../slices/studentsSlice';
 import { makeSelectStudentsByClassId } from '../../../store/selectors';
-import { attendanceAPI, gradeAPI } from '../../../shared/api/api';
+import { attendanceAPI, gradeAPI } from './api';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { showToast } from '../../../utils/toast';
 
