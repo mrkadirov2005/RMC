@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, CreditCard, FileText, ReceiptText, Search, UserRound, Wallet } from 'lucide-react';
+import { BadgePercent, ChevronLeft, ChevronRight, CreditCard, FileText, Loader2, ReceiptText, Search, UserRound, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { formLabelClassName } from '@/components/ui/form-control';
 import { cn } from '@/lib/utils';
 import type { Payment } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
+import { discountAPI } from '../api';
 import {
   getMonthKey,
   getMonthLabel,
@@ -91,9 +92,13 @@ export const PaymentFormDialog = ({
   submitDisabled = false,
 }: PaymentFormDialogProps) => {
   const normalizedAmount = Number(formData.amount || 0);
+  const isEditing = Boolean(formData.payment_id || formData.id);
   const [studentSearch, setStudentSearch] = useState('');
   const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [historyWindowEnd, setHistoryWindowEnd] = useState(() => getMonthStart());
+  const [activeDiscount, setActiveDiscount] = useState<any>(null);
+  const [discountLoading, setDiscountLoading] = useState(false);
+  const [discountLoadFailed, setDiscountLoadFailed] = useState(false);
   const selectedStudentOption = useMemo(
     () => studentOptions.find((option) => String(option.value) === String(formData.student_id || '')),
     [formData.student_id, studentOptions]
@@ -122,6 +127,73 @@ export const PaymentFormDialog = ({
       setHistoryWindowEnd(getMonthStart());
     }
   }, [open]);
+
+  useEffect(() => {
+    const studentId = Number(formData.student_id || 0);
+    if (!open || !studentId || isEditing) {
+      setActiveDiscount(null);
+      setDiscountLoading(false);
+      setDiscountLoadFailed(false);
+      return;
+    }
+
+    let cancelled = false;
+    setDiscountLoading(true);
+    setDiscountLoadFailed(false);
+    Promise.allSettled([
+      discountAPI.getActiveByStudent(studentId, { discount_kind: 'monthly_discount' }),
+      discountAPI.getActiveSerialByStudent(studentId),
+    ]).then(([monthlyResult, serialResult]) => {
+      if (cancelled) return;
+      const monthlyDiscount = monthlyResult.status === 'fulfilled' ? monthlyResult.value?.data ?? null : null;
+      const serialDiscount = serialResult.status === 'fulfilled' ? serialResult.value?.data ?? null : null;
+      const discount = monthlyDiscount || serialDiscount;
+      setActiveDiscount(discount);
+      setDiscountLoadFailed(monthlyResult.status === 'rejected' && serialResult.status === 'rejected');
+      setPaymentField(setFormData, discount
+        ? {
+            discount_id: discount.discount_id,
+            discount_kind: discount.discount_kind || 'serial_discount',
+            discount_value_type: discount.discount_type || 'fixed',
+            discount_value: Number(discount.value || 0),
+          }
+        : {
+            discount_id: null,
+            discount_kind: null,
+            discount_value_type: null,
+            discount_value: 0,
+            discount_amount: 0,
+            final_amount: undefined,
+            original_amount: undefined,
+          });
+    }).finally(() => {
+      if (!cancelled) setDiscountLoading(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [formData.student_id, isEditing, open, setFormData]);
+
+  const hasDiscount = Boolean(formData.discount_kind && Number(formData.discount_value || 0) > 0);
+  const discountAmount = useMemo(() => {
+    if (!hasDiscount || normalizedAmount <= 0) return 0;
+    const value = Number(formData.discount_value || 0);
+    return formData.discount_value_type === 'percent'
+      ? Math.min(normalizedAmount, (normalizedAmount * Math.min(value, 100)) / 100)
+      : Math.min(normalizedAmount, value);
+  }, [formData.discount_value, formData.discount_value_type, hasDiscount, normalizedAmount]);
+  const finalAmount = Math.max(0, normalizedAmount - discountAmount);
+
+  useEffect(() => {
+    if (!hasDiscount || isEditing) return;
+    setPaymentField(setFormData, {
+      original_amount: normalizedAmount,
+      discount_amount: discountAmount,
+      final_amount: finalAmount,
+      is_complete: normalizedAmount >= finalAmount,
+    });
+  }, [discountAmount, finalAmount, hasDiscount, isEditing, normalizedAmount, setFormData]);
 
   const historyMonths = useMemo(() => getSixMonthWindow(historyWindowEnd), [historyWindowEnd]);
   const historyPaymentsByMonth = useMemo(() => {
@@ -370,6 +442,95 @@ export const PaymentFormDialog = ({
             </section>
           ) : null}
 
+          {Number(formData.student_id || 0) > 0 && !isEditing ? (
+            <section className={cn(sectionClass, activeDiscount && 'border-emerald-200 bg-emerald-50/50 dark:border-emerald-900 dark:bg-emerald-950/20')}>
+              <div className="flex items-start gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                  {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgePercent className="h-4 w-4" />}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Student discount</h3>
+                  {discountLoading ? (
+                    <p className="mt-1 text-xs text-slate-500">Checking active discount...</p>
+                  ) : discountLoadFailed ? (
+                    <p className="mt-1 text-xs font-medium text-rose-600">Could not load the student's discount.</p>
+                  ) : activeDiscount ? (
+                    <div className="mt-1 space-y-1 text-xs text-emerald-800 dark:text-emerald-200">
+                      <p className="font-semibold">
+                        Active {activeDiscount.discount_kind === 'monthly_discount' ? 'one-time' : 'serial'} discount applied automatically
+                      </p>
+                      <p>
+                        {activeDiscount.discount_type === 'percent'
+                          ? `${Number(activeDiscount.value || 0)}% discount`
+                          : `UZS ${Number(activeDiscount.value || 0).toLocaleString()} discount`}
+                        {' · '}Payable: UZS {finalAmount.toLocaleString()}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                      This student has no active discount. You can enter a one-time discount below.
+                    </p>
+                  )}
+                </div>
+              </div>
+              {!discountLoading && !discountLoadFailed ? (
+                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                  <SelectField
+                    label="Discount type"
+                    name="discount_value_type"
+                    value={formData.discount_value_type || 'fixed'}
+                    onChange={(value) => setPaymentField(setFormData, {
+                      discount_kind: formData.discount_kind || 'monthly_discount',
+                      discount_value_type: value as 'percent' | 'fixed',
+                    })}
+                    options={[
+                      { label: 'Fixed amount', value: 'fixed' },
+                      { label: 'Percent', value: 'percent' },
+                    ]}
+                    disabled={Boolean(activeDiscount)}
+                  />
+                  <div className="space-y-2">
+                    <Label htmlFor="discount_value" className={formLabelClassName}>Discount value</Label>
+                    <Input
+                      id="discount_value"
+                      type="number"
+                      min="0"
+                      max={formData.discount_value_type === 'percent' ? 100 : undefined}
+                      step="0.01"
+                      value={formData.discount_value || ''}
+                      disabled={Boolean(activeDiscount)}
+                      onChange={(event) => {
+                        const value = Number(event.target.value);
+                        setPaymentField(setFormData, value > 0
+                          ? {
+                              discount_kind: formData.discount_kind || 'monthly_discount',
+                              discount_value_type: formData.discount_value_type || 'fixed',
+                              discount_value: value,
+                            }
+                          : {
+                              discount_id: null,
+                              discount_kind: null,
+                              discount_value: 0,
+                              discount_amount: 0,
+                              final_amount: undefined,
+                              original_amount: undefined,
+                            });
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className={formLabelClassName}>Discount amount</Label>
+                    <Input readOnly value={`UZS ${discountAmount.toLocaleString()}`} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className={formLabelClassName}>Final payable</Label>
+                    <Input readOnly value={`UZS ${finalAmount.toLocaleString()}`} />
+                  </div>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
           <section className={sectionClass}>
             <div className="mb-3 flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-100 text-violet-700 dark:bg-violet-950/40 dark:text-violet-300">
@@ -394,7 +555,9 @@ export const PaymentFormDialog = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount" className={formLabelClassName}>Amount</Label>
+                <Label htmlFor="amount" className={formLabelClassName}>
+                  {hasDiscount ? 'Original payment amount' : 'Amount'}
+                </Label>
                 <Input
                   id="amount"
                   type="number"
