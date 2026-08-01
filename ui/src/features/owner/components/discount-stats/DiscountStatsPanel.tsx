@@ -26,6 +26,9 @@ type DiscountRecord = {
   valueLabel: string;
   reason: string;
   status: string;
+  assignedDate: string;
+  appliedDate: string;
+  coveredMonth: string;
 };
 
 const colors = {
@@ -83,6 +86,20 @@ const getValueLabel = (record: any) => {
   return type === 'percent' ? `${value}%` : formatMoney(value);
 };
 
+const formatDate = (value: unknown) => {
+  if (!value) return '-';
+  const raw = String(value);
+  const date = new Date(raw.length === 10 ? `${raw}T00:00:00` : raw);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString();
+};
+
+const formatMonth = (value: unknown) => {
+  if (!value) return '-';
+  const raw = String(value);
+  const date = new Date(raw.length === 7 ? `${raw}-01T00:00:00` : raw.length === 10 ? `${raw}T00:00:00` : raw);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+};
+
 export const DiscountStatsPanel = ({ collections }: Props) => {
   const [selectedKind, setSelectedKind] = useState<DiscountKind | null>(null);
 
@@ -91,7 +108,18 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
     const classesById = new Map(collections.classes.map((cls) => [getId(cls, 'class_id', 'id'), cls]));
     const discountRows = collections.discounts || [];
     const paymentDiscountRows = collections.payments.filter((payment) => Number(payment?.discount_amount || 0) > 0);
-    const source = paymentDiscountRows.length > 0 ? paymentDiscountRows : discountRows;
+    const discountsById = new Map(discountRows.map((discount) => [getId(discount, 'discount_id'), discount]));
+    const appliedDiscountIds = new Set(paymentDiscountRows.map((payment) => getId(payment, 'discount_id')).filter(Boolean));
+    const source = [
+      ...paymentDiscountRows.map((payment) => ({
+        ...payment,
+        _source: 'payment',
+        _discount: discountsById.get(getId(payment, 'discount_id')),
+      })),
+      ...discountRows
+        .filter((discount) => !appliedDiscountIds.has(getId(discount, 'discount_id')))
+        .map((discount) => ({ ...discount, _source: 'discount' })),
+    ];
 
     const records = source
       .map<DiscountRecord | null>((item, index) => {
@@ -104,9 +132,15 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
         const discountAmount = getDiscountAmount(item);
         const originalAmount = getOriginalAmount(item, discountAmount);
         const finalAmount = getFinalAmount(item, originalAmount, discountAmount);
+        const isApplied = item?._source === 'payment';
+        const assignedAt = item?._discount?.created_at || item?.created_at;
+        const appliedAt = isApplied ? item?.payment_date || item?.created_at : null;
+        const coveredPeriod = isApplied
+          ? item?.payment_date
+          : item?.payment_period || item?.start_date;
 
         return {
-          key: String(item?.discount_id || item?.payment_id || `${kind}-${studentId}-${index}`),
+          key: String(item?.payment_id ? `payment-${item.payment_id}` : item?.discount_id ? `discount-${item.discount_id}` : `${kind}-${studentId}-${index}`),
           kind,
           raw: item,
           studentId,
@@ -117,7 +151,10 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
           discountAmount,
           valueLabel: getValueLabel(item),
           reason: String(item?.reason || item?.notes || '-'),
-          status: item?.active === false ? 'Inactive' : 'Active',
+          status: isApplied ? 'Applied' : item?.active === false ? 'Inactive' : 'Pending',
+          assignedDate: formatDate(assignedAt),
+          appliedDate: formatDate(appliedAt),
+          coveredMonth: kind === 'monthly_discount' ? formatMonth(coveredPeriod) : '-',
         };
       })
       .filter((record): record is DiscountRecord => Boolean(record));
@@ -282,13 +319,16 @@ const DiscountStudentsDialog = ({
                 <TableHead>Original</TableHead>
                 <TableHead>Discount</TableHead>
                 <TableHead>Final</TableHead>
+                <TableHead>Given on</TableHead>
+                <TableHead>Applied on</TableHead>
+                <TableHead>Discount month</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="py-8 text-center text-sm font-semibold text-muted-foreground">
+                  <TableCell colSpan={10} className="py-8 text-center text-sm font-semibold text-muted-foreground">
                     No students found for this discount type.
                   </TableCell>
                 </TableRow>
@@ -301,8 +341,11 @@ const DiscountStudentsDialog = ({
                     <TableCell>{formatMoney(row.originalAmount)}</TableCell>
                     <TableCell className="font-black text-amber-700">-{formatMoney(row.discountAmount)}</TableCell>
                     <TableCell>{formatMoney(row.finalAmount)}</TableCell>
+                    <TableCell>{row.assignedDate}</TableCell>
+                    <TableCell>{row.appliedDate}</TableCell>
+                    <TableCell className="font-semibold">{row.coveredMonth}</TableCell>
                     <TableCell>
-                      <span className={`rounded-md px-2 py-1 text-xs font-black ${row.status === 'Inactive' ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-700'}`}>
+                      <span className={`rounded-md px-2 py-1 text-xs font-black ${row.status === 'Applied' ? 'bg-emerald-100 text-emerald-700' : row.status === 'Pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                         {row.status}
                       </span>
                     </TableCell>
