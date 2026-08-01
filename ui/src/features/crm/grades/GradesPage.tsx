@@ -1,7 +1,7 @@
 // Page component for the grades screen in the crm feature.
 
-import { lazy, Suspense } from 'react';
-import { ArrowLeft, Plus, Users, BookOpen, User, BookMarked, BarChart3, Award, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
+import { lazy, Suspense, useEffect } from 'react';
+import { ArrowLeft, Plus, BookOpen, BookMarked, BarChart3, Award, TrendingUp, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle } from '@/components/common/ViewModeToggle';
@@ -15,6 +15,12 @@ const GradeListView = lazy(() => import('./components/GradeListView'));
 // Renders the grades page screen.
 const GradesPage = () => {
   const g = useGradesPage();
+
+  useEffect(() => {
+    if (g.activeTab === 'students' || g.activeTab === 'teachers') {
+      g.dispatch(g.setGradesActiveTab('classes'));
+    }
+  }, [g.activeTab, g.dispatch, g.setGradesActiveTab]);
 
   return (
     <div className="container mx-auto p-6">
@@ -95,28 +101,12 @@ const GradesPage = () => {
           <div className="border-b border-border mb-6">
             <div className="flex space-x-1 overflow-x-auto">
               <Button
-                variant={g.activeTab === 'students' ? 'default' : 'ghost'}
-                onClick={() => g.dispatch(g.setGradesActiveTab('students'))}
-                className={`rounded-b-none ${g.activeTab === 'students' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-lg shadow-blue-500/30' : ''}`}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                By Students
-              </Button>
-              <Button
                 variant={g.activeTab === 'classes' ? 'default' : 'ghost'}
                 onClick={() => g.dispatch(g.setGradesActiveTab('classes'))}
                 className={`rounded-b-none ${g.activeTab === 'classes' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 shadow-lg shadow-emerald-500/30' : ''}`}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
                 By Classes
-              </Button>
-              <Button
-                variant={g.activeTab === 'teachers' ? 'default' : 'ghost'}
-                onClick={() => g.dispatch(g.setGradesActiveTab('teachers'))}
-                className={`rounded-b-none ${g.activeTab === 'teachers' ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-lg shadow-violet-500/30' : ''}`}
-              >
-                <User className="h-4 w-4 mr-2" />
-                By Teachers
               </Button>
               <Button
                 variant={g.activeTab === 'subjects' ? 'default' : 'ghost'}

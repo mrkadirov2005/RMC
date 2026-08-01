@@ -99,7 +99,7 @@ const initialPaymentsState: PaymentsPageUiState = {
 };
 
 const initialGradesState: GradesPageUiState = {
-  activeTab: 'students',
+  activeTab: 'classes',
   selectedFolder: null,
   isModalOpen: false,
   editingId: null,

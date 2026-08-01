@@ -10,7 +10,7 @@ import {
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
   School, BadgeAlert, Server,
-  TrendingDown,
+  TrendingDown, BadgePercent, ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -57,6 +57,7 @@ const iconMap: Record<string, ElementType> = {
   Centers: School,
   Reports: BarChart3,
   Retention: TrendingDown,
+  Discounts: BadgePercent,
 };
 
 const iconToneMap: Record<string, string> = {
@@ -96,6 +97,16 @@ const getStoredSidebarOpen = () => {
   return localStorage.getItem(SIDEBAR_OPEN_KEY) === 'true';
 };
 
+type MenuItem = {
+  label: string;
+  path: string;
+  iconName: string;
+  roles: string[];
+  permission?: string;
+  ownerOnly?: boolean;
+  children?: Array<{ label: string; path: string; iconName: string }>;
+};
+
 // Renders the sidebar module.
 const Sidebar = memo(() => {
   const [isOpen, setIsOpen] = useState(getStoredSidebarOpen);
@@ -110,6 +121,7 @@ const Sidebar = memo(() => {
   const normalizedRole = String(user?.role || '').toLowerCase();
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
+  const [reportsExpanded, setReportsExpanded] = useState(() => location.pathname === '/owner/reports');
   const rawCenterOptions = useAppSelector(selectCenterOptions);
   const centerOptions = useMemo(
     () => rawCenterOptions.map((center) => ({
@@ -168,7 +180,7 @@ const Sidebar = memo(() => {
 
   const isExpanded = isMobile || isOpen;
 
-  const menuItems = [
+  const menuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'] },
     { label: 'My Portal', path: '/teacher-portal', iconName: 'PortalTeacher', roles: ['teacher'] },
     { label: 'My Portal', path: '/student-portal', iconName: 'PortalStudent', roles: ['student'] },
@@ -193,7 +205,20 @@ const Sidebar = memo(() => {
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
     { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
     { label: 'Debts', path: '/debts', iconName: 'Debts', roles: ['superuser'], permission: 'CRUD_DEBT' },
-    { label: 'Reports', path: '/owner/reports', iconName: 'Reports', roles: ['superuser'], ownerOnly: true },
+    {
+      label: 'Reports',
+      path: '/owner/reports',
+      iconName: 'Reports',
+      roles: ['superuser'],
+      ownerOnly: true,
+      children: [
+        { label: 'Moliya', path: '/owner/reports?section=finance', iconName: 'Finance' },
+        { label: "O'quvchilar", path: '/owner/reports?section=students', iconName: 'Students' },
+        { label: "O'qituvchilar", path: '/owner/reports?section=teachers', iconName: 'Teachers' },
+        { label: 'Chegirmalar', path: '/owner/reports?section=discounts', iconName: 'Discounts' },
+        { label: 'Retention', path: '/owner/reports?section=retention', iconName: 'Retention' },
+      ],
+    },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
     { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], ownerOnly: true },
   ];
@@ -320,12 +345,20 @@ const Sidebar = memo(() => {
             {filteredMenuItems.map((item) => {
               const Icon = iconMap[item.iconName] || Users;
               const isActive = location.pathname === item.path;
+              const isReportsItem = item.path === '/owner/reports';
               const iconTone = iconToneMap[item.iconName] || 'from-slate-500 to-slate-700 shadow-slate-500/20';
               return (
-                <Tooltip key={item.path}>
+                <div key={item.path}>
+                <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      onClick={() => handleNavigation(item.path)}
+                      onClick={() => {
+                        if (item.children?.length && isExpanded) {
+                          setReportsExpanded((current) => !current);
+                        } else {
+                          handleNavigation(item.children?.[0]?.path || item.path);
+                        }
+                      }}
                       className={cn(
                         'flex w-full items-center rounded-lg border-l-[3px] text-sm transition-all duration-200',
                         isExpanded ? 'gap-3 px-3 py-2' : 'justify-center gap-0 px-0 py-2.5',
@@ -348,13 +381,41 @@ const Sidebar = memo(() => {
                           )}
                         />
                       </span>
-                      {isExpanded && <span>{t(item.label)}</span>}
+                      {isExpanded && <span className="flex-1 text-left">{t(item.label)}</span>}
+                      {isExpanded && item.children?.length ? (
+                        <ChevronDown className={cn('h-4 w-4 transition-transform', reportsExpanded && 'rotate-180')} />
+                      ) : null}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="right" className={cn(isExpanded && 'hidden')}>
                     {t(item.label)}
                   </TooltipContent>
                 </Tooltip>
+                {isExpanded && isReportsItem && reportsExpanded ? (
+                  <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
+                    {item.children?.map((child) => {
+                      const ChildIcon = iconMap[child.iconName] || BarChart3;
+                      const childActive = `${location.pathname}${location.search}` === child.path;
+                      return (
+                        <button
+                          key={child.path}
+                          type="button"
+                          onClick={() => handleNavigation(child.path)}
+                          className={cn(
+                            'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors',
+                            childActive
+                              ? 'bg-indigo-500/15 text-sidebar-accent-foreground'
+                              : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                          )}
+                        >
+                          <ChildIcon className="h-3.5 w-3.5" />
+                          <span>{t(child.label)}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+                </div>
               );
             })}
           </nav>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BadgePercent, BarChart3, DollarSign, GraduationCap, Loader2, TrendingDown, Users } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { BarChart3, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { ownerManagerApi } from './api';
@@ -12,14 +13,6 @@ import RetentionPage from '../crm/retention/RetentionPage';
 
 type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention';
 
-const tabs = [
-  { value: 'finance', label: 'Moliya', Icon: DollarSign },
-  { value: 'discounts', label: 'Chegirmalar', Icon: BadgePercent },
-  { value: 'retention', label: 'Retention', Icon: TrendingDown },
-  { value: 'students', label: "O'quvchilar", Icon: GraduationCap },
-  { value: 'teachers', label: "O'qituvchilar", Icon: Users },
-] as const;
-
 const emptyCollections: OwnerManagerStatisticsCollections = {
   students: [],
   teachers: [],
@@ -31,7 +24,11 @@ const emptyCollections: OwnerManagerStatisticsCollections = {
 
 const OwnerReports = () => {
   const { t } = useLanguage();
-  const [activeTab, setActiveTab] = useState<ReportTab>('finance');
+  const [searchParams] = useSearchParams();
+  const requestedSection = searchParams.get('section');
+  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention'].includes(String(requestedSection))
+    ? requestedSection as ReportTab
+    : 'finance';
   const [collections, setCollections] = useState<OwnerManagerStatisticsCollections>(emptyCollections);
   const [summaryCounts, setSummaryCounts] = useState({ students: 0, teachers: 0, classes: 0, payments: 0 });
   const [loading, setLoading] = useState(false);
@@ -162,24 +159,6 @@ const OwnerReports = () => {
             ))}
           </div>
 
-          <div className="mt-4 flex gap-1 overflow-x-auto rounded-md border border-slate-200/70 bg-white/90 p-1 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            {tabs.map(({ value, label, Icon }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setActiveTab(value)}
-                className={cn(
-                  'flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded px-3 py-2 text-sm font-black transition-colors',
-                  activeTab === value
-                    ? 'bg-gradient-to-r from-slate-800 to-slate-950 text-white shadow-md'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-white/60 dark:hover:bg-white/5 dark:hover:text-white'
-                )}
-              >
-                <Icon className="h-4 w-4" />
-                {t(label)}
-              </button>
-            ))}
-          </div>
         </div>
 
         {loading ? (
