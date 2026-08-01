@@ -1,10 +1,9 @@
+import { useEffect } from 'react';
 import {
   Folder,
   Search,
   X,
   Users,
-  BookOpen,
-  User,
   CreditCard,
   Loader2,
   BarChart3,
@@ -85,6 +84,12 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     handleFolderClick,
   } = hook;
 
+  useEffect(() => {
+    if (activeTab !== 'groupPayments' && activeTab !== 'statistics') {
+      dispatch(setPaymentsActiveTab('groupPayments'));
+    }
+  }, [activeTab, dispatch, setPaymentsActiveTab]);
+
   const getTeacherName = (teacherId?: number | null) => {
     const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId));
     return [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ') || t('No teacher');
@@ -140,36 +145,12 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
           {/* Tab Navigation */}
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={activeTab === 'students' ? 'default' : 'ghost'}
-              onClick={() => dispatch(setPaymentsActiveTab('students'))}
-              className={cn(activeTab === 'students' && 'bg-emerald-600 text-white hover:bg-emerald-700')}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              {t('By Students')}
-            </Button>
-            <Button
-              variant={activeTab === 'classes' ? 'default' : 'ghost'}
-              onClick={() => dispatch(setPaymentsActiveTab('classes'))}
-              className={cn(activeTab === 'classes' && 'bg-cyan-600 text-white hover:bg-cyan-700')}
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              {t('By Classes')}
-            </Button>
-            <Button
               variant={activeTab === 'groupPayments' ? 'default' : 'ghost'}
               onClick={() => dispatch(setPaymentsActiveTab('groupPayments'))}
               className={cn(activeTab === 'groupPayments' && 'bg-blue-600 text-white hover:bg-blue-700')}
             >
               <CreditCard className="h-4 w-4 mr-2" />
               {t('Group payments')}
-            </Button>
-            <Button
-              variant={activeTab === 'teachers' ? 'default' : 'ghost'}
-              onClick={() => dispatch(setPaymentsActiveTab('teachers'))}
-              className={cn(activeTab === 'teachers' && 'bg-indigo-600 text-white hover:bg-indigo-700')}
-            >
-              <User className="h-4 w-4 mr-2" />
-              {t('By Teachers')}
             </Button>
             {!isTeacher && (
               <Button
@@ -178,7 +159,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                 className={cn(activeTab === 'statistics' && 'bg-slate-800 text-white hover:bg-slate-900')}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
-                {t('Statistics')}
+                {t('Reports')}
               </Button>
             )}
           </div>
