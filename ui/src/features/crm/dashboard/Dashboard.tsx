@@ -3,15 +3,11 @@
 import { memo, useEffect, useState } from 'react';
 import { useAppSelector } from '../hooks';
 import {
-  DashboardFinanceAnalysis,
+  DashboardCommandCenter,
   DashboardHeader,
   DashboardLoadingState,
-  DashboardSchoolsOverview,
   DashboardScopeSelector,
   DashboardStatDetailsDialog,
-  DashboardStatCards,
-  DashboardStudentGrowthChart,
-  DashboardTeacherChart,
 } from './components';
 import { useDashboardData } from './hooks/useDashboardData';
 import type { DashboardScope, DashboardStatCard } from './types';
@@ -23,7 +19,7 @@ const Dashboard = memo(() => {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date());
   const [scope, setScope] = useState<DashboardScope>({ type: 'all', value: 'all' });
   const [detailsCard, setDetailsCard] = useState<DashboardStatCard | null>(null);
-  const { loading, scopeOptions, scopedCollections, statCards, finance, schoolDistribution, studentGrowth } = useDashboardData(
+  const { loading, scopeOptions, scopedCollections, stats, finance, studentGrowth } = useDashboardData(
     role,
     selectedMonth,
     scope
@@ -55,9 +51,7 @@ const Dashboard = memo(() => {
             <DashboardScopeSelector scope={scope} options={scopeOptions} onScopeChange={setScope} />
           </div>
 
-          <div className="animate-slide-up animation-delay-200">
-            <DashboardStatCards cards={statCards} onCardClick={setDetailsCard} />
-          </div>
+          <div className="animate-slide-up animation-delay-200"><DashboardCommandCenter stats={stats} finance={finance} growth={studentGrowth} selectedMonth={selectedMonth} onPreviousMonth={goToPreviousMonth} onNextMonth={goToNextMonth} onOpenDetails={setDetailsCard} /></div>
 
           <DashboardStatDetailsDialog
             card={detailsCard}
@@ -69,21 +63,6 @@ const Dashboard = memo(() => {
             }}
           />
 
-          <div className="animate-fade-in animation-delay-300"><DashboardFinanceAnalysis
-            finance={finance}
-            onPreviousMonth={goToPreviousMonth}
-            onNextMonth={goToNextMonth}
-            onMetricClick={setDetailsCard}
-          /></div>
-
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 animate-fade-in animation-delay-400">
-            <DashboardStudentGrowthChart points={studentGrowth} />
-            <DashboardTeacherChart collections={scopedCollections} />
-          </div>
-
-          <div className="animate-fade-in animation-delay-400">
-            <DashboardSchoolsOverview schools={schoolDistribution} />
-          </div>
         </>
       )}
     </div>

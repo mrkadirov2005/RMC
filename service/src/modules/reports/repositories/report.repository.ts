@@ -178,6 +178,81 @@ const recentDeletedStudents = (filters: { centerId?: number; start?: string | nu
     .orderBy(desc(students.deletedAt), desc(students.studentId))
     .limit(Math.min(100, Math.max(1, Number(filters.limit || 25))));
 
+const intakeFilters = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) => {
+  const conditions: any[] = [];
+  if (filters.centerId) conditions.push(eq(students.centerId, filters.centerId));
+  if (filters.start) conditions.push(gte(sql`${students.createdAt}::date`, filters.start));
+  if (filters.end) conditions.push(lte(sql`${students.createdAt}::date`, filters.end));
+  return conditions;
+};
+
+const countIntakeStudents = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
+  one(db.select({ total: sql`COUNT(*)::int` }).from(students).where(and(...intakeFilters(filters))));
+
+const intakeStudentsByMonth = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
+  db.select({
+    month_start: sql`DATE_TRUNC('month', ${students.createdAt})::date`,
+    left_count: sql`COUNT(*)::int`,
+  }).from(students).where(and(...intakeFilters(filters)))
+    .groupBy(sql`DATE_TRUNC('month', ${students.createdAt})::date`)
+    .orderBy(sql`DATE_TRUNC('month', ${students.createdAt})::date`);
+
+const intakeStudentsByTeacher = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
+  db.select({
+    teacher_id: teachers.teacherId,
+    teacher_first_name: teachers.firstName,
+    teacher_last_name: teachers.lastName,
+    employee_id: teachers.employeeId,
+    left_count: sql`COUNT(DISTINCT ${students.studentId})::int`,
+    latest_deleted_at: sql`MAX(${students.createdAt})`,
+    class_count: sql`COUNT(DISTINCT ${students.classId})::int`,
+  }).from(teachers)
+    .leftJoin(students, and(...intakeFilters(filters), eq(sql`COALESCE((SELECT c.teacher_id FROM classes c WHERE c.class_id = ${students.classId}), ${students.teacherId})`, teachers.teacherId)))
+    .where(and(isNull(teachers.deletedAt), ...scoped(teachers, filters.centerId)))
+    .groupBy(teachers.teacherId, teachers.firstName, teachers.lastName, teachers.employeeId)
+    .orderBy(desc(sql`COUNT(DISTINCT ${students.studentId})`), asc(teachers.firstName), asc(teachers.lastName));
+
+const intakeStudentsByClass = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) =>
+  db.select({
+    class_id: students.classId,
+    class_name: classes.className,
+    class_code: classes.classCode,
+    teacher_id: sql`COALESCE(${classes.teacherId}, ${students.teacherId})`,
+    teacher_first_name: teachers.firstName,
+    teacher_last_name: teachers.lastName,
+    left_count: sql`COUNT(*)::int`,
+    latest_deleted_at: sql`MAX(${students.createdAt})`,
+  }).from(students)
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .leftJoin(teachers, eq(teachers.teacherId, sql`COALESCE(${classes.teacherId}, ${students.teacherId})`))
+    .where(and(...intakeFilters(filters)))
+    .groupBy(students.classId, classes.className, classes.classCode, sql`COALESCE(${classes.teacherId}, ${students.teacherId})`, teachers.firstName, teachers.lastName)
+    .orderBy(desc(sql`COUNT(*)`));
+
+const recentIntakeStudents = (filters: { centerId?: number; start?: string | null; end?: string | null; limit?: number } = {}) =>
+  db.select({
+    student_id: students.studentId,
+    center_id: students.centerId,
+    enrollment_number: students.enrollmentNumber,
+    first_name: students.firstName,
+    last_name: students.lastName,
+    phone: students.phone,
+    status: students.status,
+    class_id: students.classId,
+    class_name: classes.className,
+    class_code: classes.classCode,
+    teacher_id: sql`COALESCE(${classes.teacherId}, ${students.teacherId})`,
+    teacher_first_name: teachers.firstName,
+    teacher_last_name: teachers.lastName,
+    created_at: students.createdAt,
+    deleted_at: students.createdAt,
+  }).from(students)
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .leftJoin(teachers, eq(teachers.teacherId, sql`COALESCE(${classes.teacherId}, ${students.teacherId})`))
+    .where(and(...intakeFilters(filters)))
+    .orderBy(desc(students.createdAt), desc(students.studentId))
+    .limit(Math.min(1000, Math.max(1, Number(filters.limit || 25))));
+
 module.exports = {
   countStudents,
   countTeachers,
@@ -192,6 +267,11 @@ module.exports = {
   deletedStudentsByTeacher,
   deletedStudentsByClass,
   recentDeletedStudents,
+  countIntakeStudents,
+  intakeStudentsByMonth,
+  intakeStudentsByTeacher,
+  intakeStudentsByClass,
+  recentIntakeStudents,
 };
 
 export {};

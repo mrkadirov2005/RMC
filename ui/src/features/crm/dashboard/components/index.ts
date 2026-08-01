@@ -1,6 +1,7 @@
 // Barrel exports for the crm feature.
 
 export * from './DashboardFocusToday';
+export * from './DashboardCommandCenter';
 export * from './DashboardFinanceAnalysis';
 export * from './DashboardHeader';
 export * from './DashboardLoadingState';

@@ -80,7 +80,7 @@ const monthRange = (date: Date) => {
   return { start: dateOnly(start), end: dateOnly(end) };
 };
 
-const retentionReport = async (query: { center_id?: string; month?: string; months?: string; limit?: string }, centerId?: number) => {
+const retentionReport = async (query: { center_id?: string; month?: string; months?: string; limit?: string; view?: string }, centerId?: number) => {
   const scopedCenterId = centerId ?? (query.center_id ? Number(query.center_id) : undefined);
   const selectedMonth = parseMonth(query.month);
   const previousMonth = new Date(Date.UTC(selectedMonth.getUTCFullYear(), selectedMonth.getUTCMonth() - 1, 1));
@@ -93,13 +93,14 @@ const retentionReport = async (query: { center_id?: string; month?: string; mont
   const recentLimit = Math.min(100, Math.max(1, Number(query.limit || 30) || 30));
   const studentListLimit = 1000;
 
+  const intake = query.view === 'intake';
   const [current, previous, seriesRows, teacherRows, classRows, deletedStudentRows] = await Promise.all([
-    reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...currentRange }),
-    reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...previousRange }),
-    reportRepository.deletedStudentsByMonth({ centerId: scopedCenterId, start: dateOnly(seriesStart), end: dateOnly(seriesEnd) }),
-    reportRepository.deletedStudentsByTeacher({ centerId: scopedCenterId, ...currentRange }),
-    reportRepository.deletedStudentsByClass({ centerId: scopedCenterId, ...currentRange }),
-    reportRepository.recentDeletedStudents({ centerId: scopedCenterId, ...currentRange, limit: studentListLimit }),
+    intake ? reportRepository.countIntakeStudents({ centerId: scopedCenterId, ...currentRange }) : reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...currentRange }),
+    intake ? reportRepository.countIntakeStudents({ centerId: scopedCenterId, ...previousRange }) : reportRepository.countDeletedStudents({ centerId: scopedCenterId, ...previousRange }),
+    intake ? reportRepository.intakeStudentsByMonth({ centerId: scopedCenterId, start: dateOnly(seriesStart), end: dateOnly(seriesEnd) }) : reportRepository.deletedStudentsByMonth({ centerId: scopedCenterId, start: dateOnly(seriesStart), end: dateOnly(seriesEnd) }),
+    intake ? reportRepository.intakeStudentsByTeacher({ centerId: scopedCenterId, ...currentRange }) : reportRepository.deletedStudentsByTeacher({ centerId: scopedCenterId, ...currentRange }),
+    intake ? reportRepository.intakeStudentsByClass({ centerId: scopedCenterId, ...currentRange }) : reportRepository.deletedStudentsByClass({ centerId: scopedCenterId, ...currentRange }),
+    intake ? reportRepository.recentIntakeStudents({ centerId: scopedCenterId, ...currentRange, limit: studentListLimit }) : reportRepository.recentDeletedStudents({ centerId: scopedCenterId, ...currentRange, limit: studentListLimit }),
   ]);
 
   const seriesMap = new Map(seriesRows.map((row: any) => [String(row.month_start).slice(0, 7), Number(row.left_count || 0)]));
@@ -119,6 +120,7 @@ const retentionReport = async (query: { center_id?: string; month?: string; mont
   const deltaPercent = previousTotal > 0 ? Math.round((delta / previousTotal) * 1000) / 10 : currentTotal > 0 ? 100 : 0;
 
   return {
+    view: intake ? 'intake' : 'retention',
     period: {
       selected_month: monthKey(selectedMonth),
       selected_label: monthLabel(selectedMonth),

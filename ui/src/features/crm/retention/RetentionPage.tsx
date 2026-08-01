@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -100,6 +101,9 @@ const getName = (student: Record<string, any>) =>
 
 const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
+  const view = searchParams.get('view') === 'intake' ? 'intake' : 'retention';
+  const isIntake = view === 'intake';
   const { user } = useAppSelector((state) => state.auth);
   const [month, setMonth] = useState(defaultMonth);
   const [months, setMonths] = useState(6);
@@ -130,7 +134,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await reportAPI.retention({ center_id: centerId, month, months, limit: 40 });
+        const response = await reportAPI.retention({ center_id: centerId, month, months, limit: 40, view });
         if (!alive) return;
         setReport(response.data || emptyReport);
       } catch (requestError: any) {
@@ -144,7 +148,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
     return () => {
       alive = false;
     };
-  }, [centerId, month, months, t]);
+  }, [centerId, month, months, t, view]);
 
   const maxMonthly = useMemo(
     () => Math.max(1, ...report.monthly.map((row) => Number(row.left_count || 0))),
@@ -174,8 +178,8 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
               <TrendingDown className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-black">{t('Retention')}</h1>
-              <p className="text-sm text-slate-500 dark:text-white/55">{t('Student loss and recovery signals by month, teacher, and group.')}</p>
+              <h1 className="text-2xl font-black">{t(isIntake ? 'Intake' : 'Retention')}</h1>
+              <p className="text-sm text-slate-500 dark:text-white/55">{t(isIntake ? 'Incoming students by month, teacher, and group.' : 'Student loss and recovery signals by month, teacher, and group.')}</p>
             </div>
           </div>
         )}
@@ -183,7 +187,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
         <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-300">{t('Retention')}</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-rose-600 dark:text-rose-300">{t(isIntake ? 'Intake' : 'Retention')}</p>
               <h2 className="mt-1 text-xl font-black text-slate-900 dark:text-white">
                 {report.period.selected_label || month}
               </h2>
@@ -243,7 +247,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
         ) : (
           <>
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Metric label={t('Left this month')} value={report.summary.current_month_left} Icon={GraduationCap} tone="bg-rose-600" />
+              <Metric label={t(isIntake ? 'Joined this month' : 'Left this month')} value={report.summary.current_month_left} Icon={GraduationCap} tone={isIntake ? 'bg-emerald-600' : 'bg-rose-600'} />
               <Metric label={t('Previous month')} value={report.summary.previous_month_left} Icon={CalendarDays} tone="bg-slate-700" />
               <Metric
                 label={t('Month change')}
@@ -257,15 +261,15 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
 
             {mode === 'overview' ? (
               <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
-                <TrendPanel rows={report.monthly} max={maxMonthly} />
-                <ClassPanel rows={report.by_class} />
+                <TrendPanel rows={report.monthly} max={maxMonthly} intake={isIntake} />
+                <ClassPanel rows={report.by_class} intake={isIntake} />
               </div>
             ) : (
-              <TeacherPanel rows={report.by_teacher} pie={teacherPie} onTeacherClick={setSelectedTeacher} />
+              <TeacherPanel rows={report.by_teacher} pie={teacherPie} onTeacherClick={setSelectedTeacher} intake={isIntake} />
             )}
 
-            <RecentStudents rows={report.recent_students} />
-            <TeacherStudentsDialog teacher={selectedTeacher} onOpenChange={(open) => !open && setSelectedTeacher(null)} />
+            <RecentStudents rows={report.recent_students} intake={isIntake} />
+            <TeacherStudentsDialog teacher={selectedTeacher} intake={isIntake} onOpenChange={(open) => !open && setSelectedTeacher(null)} />
           </>
         )}
       </div>
@@ -288,20 +292,20 @@ const Metric = ({ label, value, detail, Icon, tone }: { label: string; value: nu
   </div>
 );
 
-const TrendPanel = ({ rows, max }: { rows: RetentionReport['monthly']; max: number }) => {
+const TrendPanel = ({ rows, max, intake }: { rows: RetentionReport['monthly']; max: number; intake: boolean }) => {
   const { t } = useLanguage();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
       <div className="mb-4 flex items-center gap-2">
         <BarChart3 className="h-5 w-5 text-cyan-600" />
-        <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Monthly leavers')}</h3>
+        <h3 className="text-base font-black text-slate-900 dark:text-white">{t(intake ? 'Monthly intake' : 'Monthly leavers')}</h3>
       </div>
       <div className="space-y-3">
         {rows.map((row) => (
           <div key={row.month} className="grid grid-cols-[86px_1fr_44px] items-center gap-3">
             <span className="text-xs font-bold text-slate-500">{row.label}</span>
             <div className="h-3 overflow-hidden rounded bg-slate-100 dark:bg-white/10">
-              <div className="animate-chart-bar-fill h-full rounded bg-rose-500" style={{ width: `${Math.max(4, (row.left_count / max) * 100)}%` }} />
+              <div className={cn('animate-chart-bar-fill h-full rounded', intake ? 'bg-emerald-500' : 'bg-rose-500')} style={{ width: `${Math.max(4, (row.left_count / max) * 100)}%` }} />
             </div>
             <span className="text-right text-sm font-black text-slate-900 dark:text-white">{row.left_count}</span>
           </div>
@@ -315,29 +319,31 @@ const TeacherPanel = ({
   rows,
   pie,
   onTeacherClick,
+  intake,
 }: {
   rows: RetentionReport['by_teacher'];
   pie: Array<{ label: string; value: number; color: string }>;
   onTeacherClick: (teacher: RetentionReport['by_teacher'][number]) => void;
+  intake: boolean;
 }) => {
   const { t } = useLanguage();
   return (
     <div className="grid gap-4 xl:grid-cols-[320px_1fr]">
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-        <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Teacher share')}</h3>
+        <h3 className="text-base font-black text-slate-900 dark:text-white">{t(intake ? 'Teacher intake share' : 'Teacher share')}</h3>
         <div className="mt-4 flex justify-center">
           <PieChart data={pie} size={240} />
         </div>
       </div>
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-        <h3 className="mb-3 text-base font-black text-slate-900 dark:text-white">{t('Students left by teacher')}</h3>
+        <h3 className="mb-3 text-base font-black text-slate-900 dark:text-white">{t(intake ? 'Students joined by teacher' : 'Students left by teacher')}</h3>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>{t('Teacher')}</TableHead>
               <TableHead>{t('Groups')}</TableHead>
-              <TableHead>{t('Last left')}</TableHead>
-              <TableHead className="text-right">{t('Left')}</TableHead>
+              <TableHead>{t(intake ? 'Last joined' : 'Last left')}</TableHead>
+              <TableHead className="text-right">{t(intake ? 'Joined' : 'Left')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -378,9 +384,11 @@ const TeacherPanel = ({
 
 const TeacherStudentsDialog = ({
   teacher,
+  intake,
   onOpenChange,
 }: {
   teacher: RetentionReport['by_teacher'][number] | null;
+  intake: boolean;
   onOpenChange: (open: boolean) => void;
 }) => {
   const { t } = useLanguage();
@@ -393,9 +401,9 @@ const TeacherStudentsDialog = ({
           <DialogTitle>{teacher?.teacher_name || t('Teacher')}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-3 sm:grid-cols-3">
-          <ModalStat label={t('Gone students')} value={String(teacher?.left_count || 0)} />
-          <ModalStat label={t('Groups affected')} value={String(teacher?.class_count || 0)} />
-          <ModalStat label={t('Last left')} value={formatDate(teacher?.latest_deleted_at)} />
+          <ModalStat label={t(intake ? 'Incoming students' : 'Gone students')} value={String(teacher?.left_count || 0)} />
+          <ModalStat label={t(intake ? 'Groups receiving' : 'Groups affected')} value={String(teacher?.class_count || 0)} />
+          <ModalStat label={t(intake ? 'Last joined' : 'Last left')} value={formatDate(teacher?.latest_deleted_at)} />
         </div>
         <Table>
           <TableHeader>
@@ -404,7 +412,7 @@ const TeacherStudentsDialog = ({
               <TableHead>{t('Group')}</TableHead>
               <TableHead>{t('Status')}</TableHead>
               <TableHead>{t('Phone')}</TableHead>
-              <TableHead className="text-right">{t('Deleted at')}</TableHead>
+              <TableHead className="text-right">{t(intake ? 'Joined at' : 'Deleted at')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -438,13 +446,13 @@ const ModalStat = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
-const ClassPanel = ({ rows }: { rows: RetentionReport['by_class'] }) => {
+const ClassPanel = ({ rows, intake }: { rows: RetentionReport['by_class']; intake: boolean }) => {
   const { t } = useLanguage();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
       <div className="mb-4 flex items-center gap-2">
         <School className="h-5 w-5 text-emerald-600" />
-        <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Groups with losses')}</h3>
+        <h3 className="text-base font-black text-slate-900 dark:text-white">{t(intake ? 'Groups receiving students' : 'Groups with losses')}</h3>
       </div>
       <div className="space-y-2">
         {rows.slice(0, 8).map((row) => (
@@ -465,11 +473,11 @@ const ClassPanel = ({ rows }: { rows: RetentionReport['by_class'] }) => {
   );
 };
 
-const RecentStudents = ({ rows }: { rows: RetentionReport['recent_students'] }) => {
+const RecentStudents = ({ rows, intake }: { rows: RetentionReport['recent_students']; intake: boolean }) => {
   const { t } = useLanguage();
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-      <h3 className="mb-3 text-base font-black text-slate-900 dark:text-white">{t('Recent leavers')}</h3>
+      <h3 className="mb-3 text-base font-black text-slate-900 dark:text-white">{t(intake ? 'Incoming students' : 'Recent leavers')}</h3>
       <Table>
         <TableHeader>
           <TableRow>
@@ -477,7 +485,7 @@ const RecentStudents = ({ rows }: { rows: RetentionReport['recent_students'] }) 
             <TableHead>{t('Group')}</TableHead>
             <TableHead>{t('Teacher')}</TableHead>
             <TableHead>{t('Status')}</TableHead>
-            <TableHead className="text-right">{t('Deleted at')}</TableHead>
+            <TableHead className="text-right">{t(intake ? 'Joined at' : 'Deleted at')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

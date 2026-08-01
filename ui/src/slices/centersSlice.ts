@@ -34,6 +34,21 @@ const initialState: CentersState = {
 
 const CACHE_TTL_MS = 60_000;
 
+const normalizeCenter = (center: any): Center => ({
+  ...center,
+  center_id: Number(center?.center_id ?? center?.centerId ?? center?.id ?? 0) || undefined,
+  center_name: String(center?.center_name ?? center?.centerName ?? ''),
+  center_code: String(center?.center_code ?? center?.centerCode ?? ''),
+  principal_name: String(center?.principal_name ?? center?.principalName ?? ''),
+  email: String(center?.email ?? ''),
+  phone: String(center?.phone ?? ''),
+  address: String(center?.address ?? ''),
+  city: String(center?.city ?? ''),
+});
+
+const normalizeCenters = (value: unknown): Center[] =>
+  Array.isArray(value) ? value.map(normalizeCenter).filter((center) => Boolean(center.center_id)) : [];
+
 export const fetchCenters = createAsyncThunk(
   'centers/fetchAll',
   async (_, { getState, rejectWithValue }) => {
@@ -44,7 +59,7 @@ export const fetchCenters = createAsyncThunk(
       const res = await centerAPI.getAll();
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return normalizeCenters(data);
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch centers');
     }
@@ -58,7 +73,7 @@ export const fetchCentersForce = createAsyncThunk(
       const res = await centerAPI.getAll();
 // Handles data.
       const data = (res as any).data ?? res;
-      return Array.isArray(data) ? data : [];
+      return normalizeCenters(data);
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.message ?? 'Failed to fetch centers');
     }

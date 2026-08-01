@@ -16,9 +16,10 @@ import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAppDispatch, useAppSelector, useRBAC } from '../../features/crm/hooks';
 import { logout } from '../../slices/authSlice';
-import { fetchCenters } from '../../slices/centersSlice';
+import { fetchCentersForce } from '../../slices/centersSlice';
 import { selectCenterOptions } from '../../store/selectors';
 import { useThemeMode } from '../../theme/ThemeContext';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
@@ -122,6 +123,7 @@ const Sidebar = memo(() => {
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
   const [reportsExpanded, setReportsExpanded] = useState(() => location.pathname === '/owner/reports');
+  const [retentionExpanded, setRetentionExpanded] = useState(() => location.pathname === '/retention');
   const rawCenterOptions = useAppSelector(selectCenterOptions);
   const centerOptions = useMemo(
     () => rawCenterOptions.map((center) => ({
@@ -151,7 +153,7 @@ const Sidebar = memo(() => {
 // Runs side effects for this component.
   useEffect(() => {
     if (!isGlobalSuperuser) return;
-    dispatch(fetchCenters());
+    dispatch(fetchCentersForce());
   }, [dispatch, isGlobalSuperuser]);
 
 // Runs side effects for this component.
@@ -172,11 +174,12 @@ const Sidebar = memo(() => {
     return () => window.removeEventListener('active-center-changed', syncActiveCenter);
   }, [isGlobalSuperuser]);
 
-// Runs side effects for this component.
-  useEffect(() => {
-    if (!isGlobalSuperuser) return;
-    setStoredActiveCenterId(activeCenterId);
-  }, [activeCenterId, isGlobalSuperuser]);
+  const handleCenterChange = (value: string) => {
+    const nextCenterId = Number(value);
+    if (!Number.isFinite(nextCenterId) || nextCenterId <= 0) return;
+    setActiveCenterId(nextCenterId);
+    setStoredActiveCenterId(nextCenterId);
+  };
 
   const isExpanded = isMobile || isOpen;
 
@@ -188,7 +191,13 @@ const Sidebar = memo(() => {
     { label: 'Students', path: '/students', iconName: 'Students', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'CRUD_STUDENT' },
     { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'] },
-    { label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'] },
+    {
+      label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'],
+      children: [
+        { label: 'Retention', path: '/retention?view=retention', iconName: 'Retention' },
+        { label: 'Intake', path: '/retention?view=intake', iconName: 'Students' },
+      ],
+    },
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
@@ -320,20 +329,18 @@ const Sidebar = memo(() => {
           <label htmlFor="active_center_sidebar" className="sr-only">
             {t('Active Branch')}
           </label>
-          <div className="flex h-9 items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/60 px-2">
+          <div className="flex items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/60 px-2">
             <Building2 className="h-4 w-4 shrink-0 text-muted-foreground" />
-            <select
-              id="active_center_sidebar"
-              value={activeCenterId ?? ''}
-              onChange={(e) => setActiveCenterId(e.target.value ? Number(e.target.value) : null)}
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none"
-            >
-              {centerOptions.map((center) => (
-                <option key={center.id} value={center.id}>
-                  {center.label}
-                </option>
-              ))}
-            </select>
+            <Select value={activeCenterId ? String(activeCenterId) : undefined} onValueChange={handleCenterChange} disabled={centerOptions.length === 0}>
+              <SelectTrigger id="active_center_sidebar" className="h-9 min-w-0 flex-1 border-0 bg-transparent px-0 shadow-none focus:ring-0">
+                <SelectValue placeholder={centerOptions.length ? t('Select a center') : t('No centers available')} />
+              </SelectTrigger>
+              <SelectContent position="popper" sideOffset={6} style={{ zIndex: 1400 }} className="min-w-[240px]">
+                {centerOptions.map((center) => (
+                  <SelectItem key={center.id} value={String(center.id)}>{center.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       )}
@@ -346,6 +353,7 @@ const Sidebar = memo(() => {
               const Icon = iconMap[item.iconName] || Users;
               const isActive = location.pathname === item.path;
               const isReportsItem = item.path === '/owner/reports';
+              const isRetentionItem = item.path === '/retention';
               const iconTone = iconToneMap[item.iconName] || 'from-slate-500 to-slate-700 shadow-slate-500/20';
               return (
                 <div key={item.path}>
@@ -354,7 +362,8 @@ const Sidebar = memo(() => {
                     <button
                       onClick={() => {
                         if (item.children?.length && isExpanded) {
-                          setReportsExpanded((current) => !current);
+                          if (isReportsItem) setReportsExpanded((current) => !current);
+                          if (isRetentionItem) setRetentionExpanded((current) => !current);
                         } else {
                           handleNavigation(item.children?.[0]?.path || item.path);
                         }
@@ -391,7 +400,7 @@ const Sidebar = memo(() => {
                     {t(item.label)}
                   </TooltipContent>
                 </Tooltip>
-                {isExpanded && isReportsItem && reportsExpanded ? (
+                {isExpanded && item.children?.length && ((isReportsItem && reportsExpanded) || (isRetentionItem && retentionExpanded)) ? (
                   <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
                     {item.children?.map((child) => {
                       const ChildIcon = iconMap[child.iconName] || BarChart3;
