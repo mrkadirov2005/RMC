@@ -4,6 +4,19 @@ const { getScopedCenterId } = require('../../../shared/tenant');
 const { hasStudentListParams, parseStudentListQuery } = require('./studentListQuery');
 const studentCoinsController = require('./studentCoins.controller');
 
+const getAcquisitionSources = async (_req: any, res: any) => {
+  try { res.json(await studentService.listAcquisitionSources()); }
+  catch (error: any) { res.status(500).json({ error: 'Failed to fetch acquisition sources', details: error.message }); }
+};
+
+const createAcquisitionSource = async (req: any, res: any) => {
+  try {
+    const name = String(req.body?.source_name || '').trim();
+    if (!name) return res.status(400).json({ error: 'source_name is required' });
+    res.status(201).json(await studentService.createAcquisitionSource(name));
+  } catch (error: any) { res.status(500).json({ error: 'Failed to create acquisition source', details: error.message }); }
+};
+
 const getAllStudents = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -290,6 +303,8 @@ const changeStudentPassword = async (req: any, res: any) => {
 };
 
 module.exports = {
+  getAcquisitionSources,
+  createAcquisitionSource,
   getAllStudents,
   getStudentById,
   getDeletedStudents,

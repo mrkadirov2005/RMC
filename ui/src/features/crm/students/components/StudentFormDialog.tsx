@@ -1,8 +1,10 @@
+import { useEffect, useState } from 'react';
 import { BadgePercent, CheckCircle2, GraduationCap, Loader2, Save, UserRound } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { StudentFormFields } from './StudentFormFields';
 import type { Class, Student } from '../types';
+import { studentAPI } from '@/shared/api/api';
 
 type Option = { id?: number; label: string; value: string | number };
 
@@ -37,6 +39,14 @@ export const StudentFormDialog = ({
   statusOptions,
   classes,
 }: StudentFormDialogProps) => {
+  const [acquisitionSourceOptions, setAcquisitionSourceOptions] = useState<Option[]>([]);
+  useEffect(() => {
+    if (!open) return;
+    studentAPI.getAcquisitionSources().then((response) => {
+      const rows = Array.isArray(response.data) ? response.data : [];
+      setAcquisitionSourceOptions(rows.map((row: any) => ({ id: Number(row.source_id), value: Number(row.source_id), label: row.source_name })));
+    }).catch(() => setAcquisitionSourceOptions([]));
+  }, [open]);
   const selectedClass = classes.find(
     (item) => Number(item.class_id || item.id || 0) === Number(formData.class_id || 0)
   );
@@ -103,6 +113,7 @@ export const StudentFormDialog = ({
             centerOptions={centerOptions}
             classOptions={classOptions}
             teacherOptions={teacherOptions}
+            acquisitionSourceOptions={acquisitionSourceOptions}
             genderOptions={genderOptions}
             statusOptions={statusOptions}
             showCenterField={showCenterField}

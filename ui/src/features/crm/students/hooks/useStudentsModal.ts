@@ -31,8 +31,15 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
         await studentAPI.update(editingId, formData);
         showToast.success('Student updated successfully!');
       } else {
+        let acquisitionSourceId = formData.acquisition_source_id;
+        if (Number(acquisitionSourceId) === -1) {
+          const createdSource = await studentAPI.createAcquisitionSource(String(formData.custom_acquisition_source || '').trim());
+          acquisitionSourceId = Number(createdSource.data?.source_id);
+        }
         await studentAPI.create({
           ...formData,
+          acquisition_source_id: acquisitionSourceId,
+          custom_acquisition_source: undefined,
           ...createStudentIdentity(),
         });
         showToast.success('Student created successfully!');

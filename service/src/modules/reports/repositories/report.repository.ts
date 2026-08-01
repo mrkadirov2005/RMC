@@ -1,4 +1,4 @@
-const { and, asc, desc, eq, gte, isNotNull, isNull, lte, sql } = require('drizzle-orm');
+const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { attendance, classes, debts, payments, students, teachers } = require('../../../db/schema');
 
@@ -178,11 +178,14 @@ const recentDeletedStudents = (filters: { centerId?: number; start?: string | nu
     .orderBy(desc(students.deletedAt), desc(students.studentId))
     .limit(Math.min(100, Math.max(1, Number(filters.limit || 25))));
 
-const intakeFilters = (filters: { centerId?: number; start?: string | null; end?: string | null } = {}) => {
+const intakeFilters = (filters: { centerId?: number; start?: string | null; end?: string | null; sourceId?: number; referredByTeacherId?: number; sourceDetail?: string } = {}) => {
   const conditions: any[] = [];
   if (filters.centerId) conditions.push(eq(students.centerId, filters.centerId));
   if (filters.start) conditions.push(gte(sql`${students.createdAt}::date`, filters.start));
   if (filters.end) conditions.push(lte(sql`${students.createdAt}::date`, filters.end));
+  if (filters.sourceId) conditions.push(eq(students.acquisitionSourceId, filters.sourceId));
+  if (filters.referredByTeacherId) conditions.push(eq(students.referredByTeacherId, filters.referredByTeacherId));
+  if (filters.sourceDetail) conditions.push(ilike(students.acquisitionDetail, `%${filters.sourceDetail}%`));
   return conditions;
 };
 

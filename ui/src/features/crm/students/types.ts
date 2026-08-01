@@ -43,6 +43,7 @@ export interface Student {
   acquisition_source_id?: number;
   acquisition_detail?: string;
   referred_by_teacher_id?: number;
+  custom_acquisition_source?: string;
 }
 
 export interface Class {

@@ -1,8 +1,20 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, ne, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { centers, classes, discounts, parentStudents, payments, students, subjects, teachers } = require('../../../db/schema');
+const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, subjects, teachers } = require('../../../db/schema');
 
 const db = pool.db;
+
+const listAcquisitionSources = () => db.select({
+  source_id: studentAcquisitionSources.sourceId,
+  source_code: studentAcquisitionSources.sourceCode,
+  source_name: studentAcquisitionSources.sourceName,
+}).from(studentAcquisitionSources).where(eq(studentAcquisitionSources.active, true)).orderBy(asc(studentAcquisitionSources.sourceName));
+
+const createAcquisitionSource = async (name: string) => {
+  const code = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50) || `source_${Date.now()}`;
+  const rows = await db.insert(studentAcquisitionSources).values({ sourceCode: code, sourceName: name.trim(), active: true }).onConflictDoUpdate({ target: studentAcquisitionSources.sourceCode, set: { sourceName: name.trim(), active: true } }).returning({ source_id: studentAcquisitionSources.sourceId, source_code: studentAcquisitionSources.sourceCode, source_name: studentAcquisitionSources.sourceName });
+  return rows[0];
+};
 
 const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -631,6 +643,8 @@ const updatePasswordHash = async (id: number, password_hash: string) => {
 };
 
 module.exports = {
+  listAcquisitionSources,
+  createAcquisitionSource,
   findAllWithClass,
   findPaginatedWithClass,
   findByIdWithClass,

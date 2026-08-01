@@ -126,6 +126,8 @@ const changePassword = async (id: number, old_password: string, new_password: st
 };
 
 module.exports = {
+  listAcquisitionSources: () => studentRepository.listAcquisitionSources(),
+  createAcquisitionSource: (name: string) => studentRepository.createAcquisitionSource(name),
   listStudents,
   listStudentsPaginated,
   getStudent,

@@ -15,6 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { reportAPI } from './api';
+import { studentAPI, teacherAPI } from '@/shared/api/api';
 import { useAppSelector } from '../hooks';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { PieChart } from '@/shared/components/PieChart';
@@ -113,6 +114,28 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
   const [error, setError] = useState<string | null>(null);
   const [centerId, setCenterId] = useState<number | null>(() => getResolvedCenterId(user));
   const [selectedTeacher, setSelectedTeacher] = useState<RetentionReport['by_teacher'][number] | null>(null);
+  const [sourceId, setSourceId] = useState(0);
+  const [referrerTeacherId, setReferrerTeacherId] = useState(0);
+  const [sourceDetail, setSourceDetail] = useState('');
+  const [sourceOptions, setSourceOptions] = useState<Array<{ id: number; name: string }>>([]);
+  const [referrerOptions, setReferrerOptions] = useState<Array<{ id: number; name: string }>>([]);
+
+  useEffect(() => {
+    if (!isIntake) return;
+    studentAPI.getAcquisitionSources().then((response) => {
+      const rows = Array.isArray(response.data) ? response.data : [];
+      setSourceOptions(rows.map((row: any) => ({ id: Number(row.source_id), name: String(row.source_name) })));
+    }).catch(() => setSourceOptions([]));
+  }, [isIntake]);
+
+  useEffect(() => {
+    if (!isIntake || !centerId) return;
+    teacherAPI.getAll({ center_id: centerId }).then((response) => {
+      const payload = response.data?.data ?? response.data;
+      const rows = Array.isArray(payload) ? payload : [];
+      setReferrerOptions(rows.map((row: any) => ({ id: Number(row.teacher_id || row.id), name: [row.first_name, row.last_name].filter(Boolean).join(' ') })).filter((row: any) => row.id > 0));
+    }).catch(() => setReferrerOptions([]));
+  }, [centerId, isIntake]);
 
   useEffect(() => {
     const syncCenter = () => setCenterId(getResolvedCenterId(user));
@@ -134,7 +157,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
       setLoading(true);
       setError(null);
       try {
-        const response = await reportAPI.retention({ center_id: centerId, month, months, limit: 40, view });
+        const response = await reportAPI.retention({ center_id: centerId, month, months, limit: 40, view, source_id: sourceId || undefined, referred_by_teacher_id: referrerTeacherId || undefined, source_detail: sourceDetail.trim() || undefined });
         if (!alive) return;
         setReport(response.data || emptyReport);
       } catch (requestError: any) {
@@ -148,7 +171,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
     return () => {
       alive = false;
     };
-  }, [centerId, month, months, t, view]);
+  }, [centerId, month, months, referrerTeacherId, sourceDetail, sourceId, t, view]);
 
   const maxMonthly = useMemo(
     () => Math.max(1, ...report.monthly.map((row) => Number(row.left_count || 0))),
@@ -235,6 +258,23 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
             </div>
           </div>
         </div>
+
+        {isIntake && (
+          <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+            <p className="mb-3 text-xs font-black uppercase tracking-[0.16em] text-emerald-600">{t('Intake filters')}</p>
+            <div className="grid gap-3 md:grid-cols-3">
+              <select value={sourceId} onChange={(event) => setSourceId(Number(event.target.value))} className="h-10 rounded-xl border border-input bg-background px-3 text-sm">
+                <option value={0}>{t('All acquisition sources')}</option>
+                {sourceOptions.map((source) => <option key={source.id} value={source.id}>{source.name}</option>)}
+              </select>
+              <select value={referrerTeacherId} onChange={(event) => setReferrerTeacherId(Number(event.target.value))} className="h-10 rounded-xl border border-input bg-background px-3 text-sm">
+                <option value={0}>{t('All referring teachers')}</option>
+                {referrerOptions.map((row) => <option key={row.id} value={row.id}>{row.name}</option>)}
+              </select>
+              <Input value={sourceDetail} onChange={(event) => setSourceDetail(event.target.value)} placeholder={t('Search source details')} />
+            </div>
+          </div>
+        )}
 
         {error ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-8 text-center text-sm font-semibold text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">

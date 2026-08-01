@@ -36,6 +36,8 @@ const {
  *                 $ref: '#/components/schemas/Student'
  */
 router_student.get('/', requireAuth, validateQuery(StudentListQueryDto), studentController.getAllStudents);
+router_student.get('/acquisition-sources', requireAuth, studentController.getAcquisitionSources);
+router_student.post('/acquisition-sources', requireAuth, requireRole('superuser'), studentController.createAcquisitionSource);
 router_student.get('/deleted', requireAuth, requireMuzaffarHardDelete, studentController.getDeletedStudents);
 router_student.get('/class/:classId', requireAuth, validateParams(ClassIdParamDto), studentController.getClassStudentsWithTransfers);
 

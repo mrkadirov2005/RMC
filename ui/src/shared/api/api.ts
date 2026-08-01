@@ -202,6 +202,8 @@ apiClient.interceptors.response.use(
 
 // API Services
 export const studentAPI = {
+  getAcquisitionSources: () => apiClient.get('/students/acquisition-sources'),
+  createAcquisitionSource: (source_name: string) => apiClient.post('/students/acquisition-sources', { source_name }),
   getAll: (params?: object, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students', {
       params,
@@ -255,7 +257,7 @@ export const archiveAPI = {
 };
 
 export const reportAPI = {
-  retention: (params?: { center_id?: number; month?: string; months?: number; limit?: number; view?: 'retention' | 'intake' }) =>
+  retention: (params?: { center_id?: number; month?: string; months?: number; limit?: number; view?: 'retention' | 'intake'; source_id?: number; referred_by_teacher_id?: number; source_detail?: string }) =>
     apiClient.get('/reports/retention', { params }),
 };
 
