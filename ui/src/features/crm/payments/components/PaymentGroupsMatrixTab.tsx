@@ -118,16 +118,7 @@ export const PaymentGroupsMatrixTab = () => {
     return students.map((student) => {
       const studentId = getStudentId(student);
       const payments = paymentsByStudent[studentId] || [];
-      const monthPayments = payments.filter((payment) => isPaidPayment(payment) && getPaymentMonthKey(payment) === selectedMonth);
-      const paidAmount = monthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-      return {
-        student,
-        studentId,
-        state: getMonthState(payments, selectedMonth, expectedAmount),
-        paidAmount,
-        remainingAmount: Math.max(0, expectedAmount - paidAmount),
-        paymentCount: monthPayments.length,
-      };
+      return { student, studentId, state: getMonthState(payments, selectedMonth, expectedAmount) };
     });
   }, [expectedAmount, paymentsByStudent, selectedMonth, students]);
 
@@ -350,20 +341,19 @@ export const PaymentGroupsMatrixTab = () => {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-md border border-slate-200/80 dark:border-border">
-              <Table className="min-w-[900px]">
+              <Table className="min-w-[640px]">
                 <TableHeader>
                   <TableRow className="h-14 bg-slate-50 dark:bg-muted/40">
-                    <TableHead className="w-[260px] text-sm">Student</TableHead>
-                    <TableHead className="w-28 text-sm">Student status</TableHead>
-                    <TableHead className="w-36 text-center text-sm">{selectedMonthLabel}</TableHead>
-                    <TableHead className="text-right text-sm">Paid</TableHead>
-                    <TableHead className="text-right text-sm">Expected</TableHead>
-                    <TableHead className="text-right text-sm">Remaining</TableHead>
-                    <TableHead className="text-center text-sm">Payments</TableHead>
+                    <TableHead className="w-[280px] text-sm">Student</TableHead>
+                    <TableHead className="w-32 text-sm">Status</TableHead>
+                    <TableHead className="min-w-[240px] text-center">
+                      <div className="text-base font-black text-slate-700 dark:text-foreground">{paidPercentage}%</div>
+                      <div className="mt-0.5 text-sm font-semibold text-muted-foreground">{selectedMonthLabel}</div>
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rowStates.map(({ student, studentId, state, paidAmount, remainingAmount, paymentCount }) => {
+                  {rowStates.map(({ student, studentId, state }) => {
                     const status = String((student as any).status || (student as any).student_status || 'Active');
                     const active = status.toLowerCase() === 'active' || status.toLowerCase() === 'aktiv';
                     return (
@@ -383,19 +373,13 @@ export const PaymentGroupsMatrixTab = () => {
                         </TableCell>
                         <TableCell className="py-3 text-center">
                           <span className={cn(
-                            'inline-flex min-w-28 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-black text-white',
+                            'inline-flex min-w-40 items-center justify-center gap-2 rounded-lg border px-5 py-3 text-sm font-black text-white shadow-sm',
                             getDotClass(state)
                           )}>
                             <span className="h-2.5 w-2.5 rounded-full bg-white/90" />
                             {getStateTitle(state)}
                           </span>
                         </TableCell>
-                        <TableCell className="py-3 text-right text-sm font-black text-emerald-700">{paidAmount.toLocaleString()} UZS</TableCell>
-                        <TableCell className="py-3 text-right text-sm font-semibold">{expectedAmount.toLocaleString()} UZS</TableCell>
-                        <TableCell className={cn('py-3 text-right text-sm font-black', remainingAmount > 0 ? 'text-rose-600' : 'text-emerald-700')}>
-                          {remainingAmount.toLocaleString()} UZS
-                        </TableCell>
-                        <TableCell className="py-3 text-center text-base font-black">{paymentCount}</TableCell>
                       </TableRow>
                     );
                   })}
