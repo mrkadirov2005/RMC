@@ -81,6 +81,9 @@ const createStudent = async (body: any) => {
     school_name: body.school_name,
     school_class: body.school_class,
     is_frozen: body.is_frozen,
+    acquisition_source_id: body.acquisition_source_id,
+    acquisition_detail: body.acquisition_detail,
+    referred_by_teacher_id: body.referred_by_teacher_id,
   });
   await syncStudentDiscount(student, body);
   return student;

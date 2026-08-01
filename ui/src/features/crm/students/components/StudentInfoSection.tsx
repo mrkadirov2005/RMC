@@ -28,6 +28,8 @@ interface Student {
   class_id?: number;
   center_id?: number;
   coins?: number;
+  created_at?: string;
+  createdAt?: string;
 }
 
 interface StudentInfoSectionProps {
@@ -81,18 +83,27 @@ const InfoItem = ({
 // Renders the student info section module.
 export const StudentInfoSection = ({ student }: StudentInfoSectionProps) => {
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const detailItems = [
-    { icon: User, label: 'Username', value: student.username, color: 'bg-sky-600' },
-    { icon: Mail, label: 'Email', value: student.email, color: 'bg-fuchsia-600' },
-    { icon: Phone, label: 'Phone', value: student.phone, color: 'bg-emerald-600' },
+  const profileItems = [
     { icon: Calendar, label: 'Date of Birth', value: formatDate(student.date_of_birth), color: 'bg-amber-500' },
     { icon: VenusAndMars, label: 'Gender', value: student.gender, color: 'bg-violet-600' },
     { icon: Coins, label: 'Coins', value: Number(student.coins || 0).toLocaleString(), color: 'bg-orange-500' },
+  ];
+  const contactItems = [
+    { icon: Mail, label: 'Email', value: student.email, color: 'bg-fuchsia-600' },
+    { icon: Phone, label: 'Phone', value: student.phone, color: 'bg-emerald-600' },
+  ];
+  const familySchoolItems = [
     { icon: Users, label: 'Parent Name', value: student.parent_name, color: 'bg-cyan-600' },
     { icon: Phone, label: 'Parent Phone', value: student.parent_phone, color: 'bg-rose-600' },
     { icon: School, label: 'School', value: student.school_name, color: 'bg-indigo-600' },
     { icon: School, label: 'School Class', value: student.school_class, color: 'bg-lime-600' },
-  ].filter((item) => item.value && item.value !== '-');
+  ];
+  const accountItems = [
+    { icon: User, label: 'Username', value: student.username, color: 'bg-sky-600' },
+    { icon: ShieldCheck, label: 'Enrollment number', value: student.enrollment_number, color: 'bg-emerald-600' },
+    { icon: Calendar, label: 'Added on', value: formatDate(student.created_at || student.createdAt || ''), color: 'bg-cyan-700' },
+    { icon: School, label: 'Center ID', value: student.center_id, color: 'bg-indigo-600' },
+  ];
 
   return (
     <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
@@ -118,26 +129,45 @@ export const StudentInfoSection = ({ student }: StudentInfoSectionProps) => {
         </CardContent>
       </Card>
 
-      <DialogContent className="max-h-[85vh] overflow-y-auto rounded-lg sm:max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="text-base">Personal Information</DialogTitle>
+      <DialogContent className="max-h-[88vh] overflow-y-auto rounded-lg p-0 sm:max-w-4xl">
+        <DialogHeader className="border-b border-slate-200 bg-slate-50 p-5 text-left dark:border-white/10 dark:bg-white/[0.04]">
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-sky-50 text-lg font-black text-sky-700 dark:bg-sky-400/10 dark:text-sky-300">
+              {student.first_name?.[0]}{student.last_name?.[0]}
+            </div>
+            <div>
+              <DialogTitle className="text-lg">{student.first_name} {student.last_name}</DialogTitle>
+              <p className="mt-1 text-xs text-muted-foreground">{student.enrollment_number || student.username}</p>
+            </div>
+          </div>
         </DialogHeader>
-        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {student.status && (
-            <InfoItem icon={ShieldCheck} label="Status" color="bg-emerald-600">
-              <Badge
-                variant="outline"
-                className={cn('text-xs font-semibold border', getStatusVariant(student.status))}
-              >
-                {student.status}
-              </Badge>
-            </InfoItem>
-          )}
-          {detailItems.map((item) => (
-            <InfoItem key={item.label} icon={item.icon} label={item.label} value={item.value} color={item.color} />
-          ))}
+        <div className="space-y-5 p-5">
+          <DetailGroup title="Account" items={accountItems}>
+            {student.status && (
+              <InfoItem icon={ShieldCheck} label="Status" color="bg-emerald-600">
+                <Badge variant="outline" className={cn('border text-xs font-semibold', getStatusVariant(student.status))}>{student.status}</Badge>
+              </InfoItem>
+            )}
+          </DetailGroup>
+          <DetailGroup title="Profile" items={profileItems} />
+          <DetailGroup title="Contact" items={contactItems} />
+          <DetailGroup title="Family & School" items={familySchoolItems} />
         </div>
       </DialogContent>
     </Dialog>
+  );
+};
+
+const DetailGroup = ({ title, items, children }: { title: string; items: Array<{ icon: ComponentType<{ className?: string }>; label: string; value?: string | number | null; color: string }>; children?: ReactNode }) => {
+  const visibleItems = items.filter((item) => item.value != null && item.value !== '' && item.value !== '-');
+  if (!visibleItems.length && !children) return null;
+  return (
+    <section>
+      <h3 className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-slate-500">{title}</h3>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {children}
+        {visibleItems.map((item) => <InfoItem key={item.label} icon={item.icon} label={item.label} value={item.value} color={item.color} />)}
+      </div>
+    </section>
   );
 };

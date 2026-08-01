@@ -130,6 +130,14 @@ const teachers = pgTable('teachers', {
   updatedAt: timestamp('updated_at'),
 });
 
+const studentAcquisitionSources = pgTable('student_acquisition_sources', {
+  sourceId: serial('source_id').primaryKey(),
+  sourceCode: varchar('source_code', { length: 50 }).notNull(),
+  sourceName: varchar('source_name', { length: 100 }).notNull(),
+  active: boolean('active'),
+  createdAt: timestamp('created_at'),
+});
+
 const students = pgTable('students', {
   studentId: serial('student_id').primaryKey(),
   centerId: integer('center_id'),
@@ -152,6 +160,9 @@ const students = pgTable('students', {
   schoolClass: varchar('school_class', { length: 50 }),
   isFrozen: boolean('is_frozen'),
   coins: integer('coins'),
+  acquisitionSourceId: integer('acquisition_source_id'),
+  acquisitionDetail: text('acquisition_detail'),
+  referredByTeacherId: integer('referred_by_teacher_id'),
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
@@ -711,6 +722,7 @@ module.exports = {
   classes,
   teachers,
   students,
+  studentAcquisitionSources,
   roomSlots,
   roomBookings,
   assignments,

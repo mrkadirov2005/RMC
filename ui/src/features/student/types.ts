@@ -12,6 +12,8 @@ export interface StudentProfile {
   teacher_id?: number;
   status?: string;
   coins?: number;
+  created_at?: string;
+  createdAt?: string;
 }
 
 export interface Teacher {

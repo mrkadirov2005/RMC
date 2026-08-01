@@ -75,6 +75,9 @@ const studentSelection = {
   school_class: students.schoolClass,
   is_frozen: students.isFrozen,
   coins: students.coins,
+  acquisition_source_id: students.acquisitionSourceId,
+  acquisition_detail: students.acquisitionDetail,
+  referred_by_teacher_id: students.referredByTeacherId,
   deleted_at: students.deletedAt,
   created_at: students.createdAt,
   updated_at: students.updatedAt,
@@ -99,6 +102,9 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
   schoolName: payload.school_name,
   schoolClass: payload.school_class,
   isFrozen: payload.is_frozen ?? false,
+  acquisitionSourceId: payload.acquisition_source_id,
+  acquisitionDetail: payload.acquisition_detail,
+  referredByTeacherId: payload.referred_by_teacher_id,
 });
 
 const effectiveTeacherExpr = sql`COALESCE(${classes.teacherId}, ${students.teacherId})`;
@@ -377,6 +383,9 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
     is_frozen: 'isFrozen',
     school_name: 'schoolName',
     school_class: 'schoolClass',
+    acquisition_source_id: 'acquisitionSourceId',
+    acquisition_detail: 'acquisitionDetail',
+    referred_by_teacher_id: 'referredByTeacherId',
   };
   for (const [snake, camel] of Object.entries(mapping)) {
     if (payload[snake] !== undefined && payload[snake] !== null) setData[camel] = payload[snake];
@@ -462,6 +471,9 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
         classId: targetClass.class_id,
         schoolName: source.school_name,
         schoolClass: source.school_class,
+        acquisitionSourceId: source.acquisition_source_id,
+        acquisitionDetail: source.acquisition_detail,
+        referredByTeacherId: source.referred_by_teacher_id,
         isFrozen: source.is_frozen ?? false,
         coins: Number(source.coins || 0),
       })

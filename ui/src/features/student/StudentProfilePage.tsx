@@ -1,7 +1,7 @@
 // Page component for the StudentProfilePage.tsx screen in the student feature.
 
 import { useEffect, useMemo } from 'react';
-import { Loader2, Mail, Phone, UserRound, Users, GraduationCap, MapPin } from 'lucide-react';
+import { CalendarDays, Loader2, Mail, Phone, UserRound, Users, GraduationCap, MapPin } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
@@ -21,6 +21,8 @@ interface StudentProfile {
   class_id?: number;
   teacher_id?: number;
   status?: string;
+  created_at?: string;
+  createdAt?: string;
 }
 
 interface Teacher {
@@ -141,6 +143,17 @@ const StudentProfilePage = () => {
                 <span>Guardian Phone: {student.parent_phone}</span>
               </div>
             )}
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-muted-foreground" />
+              <span>
+                Added on: {(() => {
+                  const value = student?.created_at || student?.createdAt;
+                  if (!value) return '-';
+                  const date = new Date(value);
+                  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+                })()}
+              </span>
+            </div>
           </CardContent>
         </Card>
 

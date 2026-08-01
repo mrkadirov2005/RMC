@@ -1,7 +1,7 @@
 // Source file for the students area in the crm feature.
 
 import type { ReactNode } from 'react';
-import { BadgePercent, Building2, GraduationCap, KeyRound, UserRound } from 'lucide-react';
+import { BadgePercent, Building2, GraduationCap, KeyRound, Megaphone, UserRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -127,6 +127,21 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
         <div className={fieldClass}>
           <SelectField compact label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" />
         </div>
+      </FormSection>
+
+      <FormSection title="How they found us" detail="Track the channel or person who introduced this student." icon={<Megaphone className="h-5 w-5" />} tone="amber">
+        <div className={fieldClass}>
+          <SelectField compact label="Source" name="acquisition_source_id" value={formData.acquisition_source_id || ''} onChange={(value) => setFormData({ ...formData, acquisition_source_id: Number(value), referred_by_teacher_id: Number(value) === 2 ? formData.referred_by_teacher_id : undefined })} options={[
+            { label: 'Advertisement', value: 1 },
+            { label: 'Teacher referral', value: 2 },
+            { label: 'Student or parent referral', value: 3 },
+            { label: 'Social media', value: 4 },
+            { label: 'Walk-in', value: 5 },
+            { label: 'Other', value: 6 },
+          ]} placeholder="Select source" />
+        </div>
+        {Number(formData.acquisition_source_id) === 2 && <div className={fieldClass}><SelectField compact label="Referring teacher" name="referred_by_teacher_id" value={formData.referred_by_teacher_id || ''} onChange={(value) => setFormData({ ...formData, referred_by_teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" /></div>}
+        <TextField label="Source details" value={formData.acquisition_detail || ''} onChange={(value) => setFormData({ ...formData, acquisition_detail: value })} placeholder="Campaign, person name, platform, or note" />
       </FormSection>
 
       <FormSection

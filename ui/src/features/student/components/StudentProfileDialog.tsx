@@ -1,5 +1,5 @@
 import type { ElementType } from 'react';
-import { ClipboardList, Coins, GraduationCap, Mail, Phone, UserRound, Users } from 'lucide-react';
+import { CalendarDays, ClipboardList, Coins, GraduationCap, Mail, Phone, UserRound, Users } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -17,6 +17,12 @@ const ProfileRow = ({ label, value, icon: Icon }: { label: string; value?: strin
     </div>
   </div>
 );
+
+const formatJoinedDate = (value?: string) => {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? '-' : date.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
+};
 
 interface StudentProfileDialogProps {
   open: boolean;
@@ -81,6 +87,7 @@ export const StudentProfileDialog = ({
           <ProfileRow label={t('Class')} value={classInfo?.class_name || (student?.class_id ? `#${student.class_id}` : '-')} icon={GraduationCap} />
           <ProfileRow label={t('Class Code')} value={classInfo?.class_code} icon={ClipboardList} />
           <ProfileRow label={t('Teacher')} value={teacher?.first_name ? `${teacher.first_name} ${teacher.last_name || ''}` : '-'} icon={UserRound} />
+          <ProfileRow label={t('Added on')} value={formatJoinedDate(student?.created_at || student?.createdAt)} icon={CalendarDays} />
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
