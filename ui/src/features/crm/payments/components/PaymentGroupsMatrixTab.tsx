@@ -41,8 +41,9 @@ const isPaidPayment = (payment: Payment) => {
   return status === 'completed' || status === 'paid';
 };
 
-const getLastMonths = (count: number) => {
-  const current = new Date();
+const getLastMonths = (count: number, endMonth: string) => {
+  const parsed = new Date(`${endMonth}-01T00:00:00`);
+  const current = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   current.setDate(1);
   return Array.from({ length: count }, (_, index) => {
     const date = new Date(current);
@@ -85,11 +86,12 @@ export const PaymentGroupsMatrixTab = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacherId, setSelectedTeacherId] = useState('all');
+  const [selectedMonth, setSelectedMonth] = useState(() => getMonthKey(new Date()));
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const months = useMemo(() => getLastMonths(12), []);
+  const months = useMemo(() => getLastMonths(12, selectedMonth), [selectedMonth]);
   const selectedGroup = useMemo(
     () => groups.find((group) => getClassId(group) === Number(selectedGroupId)) || null,
     [groups, selectedGroupId]
@@ -316,10 +318,24 @@ export const PaymentGroupsMatrixTab = () => {
                 {selectedGroup ? `${students.length} students / expected ${expectedAmount || 0} UZS` : 'Select a group to see monthly payment status'}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-muted-foreground">
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Fully done</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Partly done</span>
-              <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> None</span>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <label htmlFor="group-payment-month" className="block text-[11px] font-semibold text-muted-foreground">
+                  Select month
+                </label>
+                <Input
+                  id="group-payment-month"
+                  type="month"
+                  value={selectedMonth}
+                  onChange={(event) => event.target.value && setSelectedMonth(event.target.value)}
+                  className="h-8 w-[170px] text-xs"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-2 pb-1 text-[11px] font-semibold text-muted-foreground">
+                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Fully done</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Partly done</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> None</span>
+              </div>
             </div>
           </div>
 

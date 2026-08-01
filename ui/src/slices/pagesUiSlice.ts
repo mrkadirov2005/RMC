@@ -88,7 +88,7 @@ interface PagesUiState {
 }
 
 const initialPaymentsState: PaymentsPageUiState = {
-  activeTab: 'students',
+  activeTab: 'classes',
   selectedFolder: null,
   isModalOpen: false,
   editingId: null,

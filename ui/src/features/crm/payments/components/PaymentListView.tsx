@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import {
   Pencil,
   Trash2,
@@ -67,7 +68,143 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
     handleOpenModal,
     getStudentName,
     getStatusBadgeClasses,
+    selectedFolder,
+    students,
+    classes,
   } = hook;
+
+  const [groupPaymentFilter, setGroupPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const [groupPaymentMonth, setGroupPaymentMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
+
+  const groupStudentRows = useMemo(() => {
+    if (selectedFolder?.type !== 'class') return [];
+    const selectedClass = classes.find((item) => Number(item.class_id || item.id) === Number(selectedFolder.id));
+    const expectedAmount = Number(selectedClass?.payment_amount || 0);
+    const search = searchTerm.trim().toLowerCase();
+
+    return students
+      .filter((student) => Number(student.class_id || 0) === Number(selectedFolder.id))
+      .map((student) => {
+        const studentId = Number(student.student_id || student.id || 0);
+        const studentPayments = state.items.filter((payment) => {
+          if (Number(payment.student_id) !== studentId) return false;
+          if (!payment.payment_date || String(payment.payment_date).slice(0, 7) !== groupPaymentMonth) return false;
+          const status = String(payment.status || payment.payment_status || '').toLowerCase();
+          return status === 'completed' || status === 'paid';
+        });
+        const paidAmount = studentPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
+        const paymentState = paidAmount <= 0 ? 'unpaid' : expectedAmount > 0 && paidAmount < expectedAmount ? 'partial' : 'paid';
+        const name = `${student.first_name || ''} ${student.last_name || ''}`.trim() || `Student #${studentId}`;
+        return {
+          student,
+          studentId,
+          name,
+          payments: studentPayments,
+          paidAmount,
+          expectedAmount,
+          remainingAmount: Math.max(0, expectedAmount - paidAmount),
+          paymentState,
+          lastPaymentDate: studentPayments
+            .map((payment) => String(payment.payment_date || ''))
+            .sort((a, b) => b.localeCompare(a))[0] || '',
+        };
+      })
+      .filter((row) => !search || row.name.toLowerCase().includes(search))
+      .filter((row) => groupPaymentFilter === 'all' || (groupPaymentFilter === 'paid' ? row.paymentState === 'paid' : row.paymentState !== 'paid'));
+  }, [classes, groupPaymentFilter, groupPaymentMonth, searchTerm, selectedFolder, state.items, students]);
+
+  if (selectedFolder?.type === 'class') {
+    const paidCount = groupStudentRows.filter((row) => row.paymentState === 'paid').length;
+    const totalPaid = groupStudentRows.reduce((sum, row) => sum + row.paidAmount, 0);
+    const totalRemaining = groupStudentRows.reduce((sum, row) => sum + row.remainingAmount, 0);
+
+    return (
+      <div className="space-y-4">
+        <Card className={paymentSurfaceClass}>
+          <CardContent className="space-y-4 p-4">
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+              <div className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-white">
+                <p className="text-[11px] text-white/70">Students shown</p>
+                <p className="text-base font-bold">{groupStudentRows.length} · {paidCount} paid</p>
+              </div>
+              <div className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 text-white">
+                <p className="text-[11px] text-white/70">Collected</p>
+                <p className="text-base font-bold">{formatMoney(totalPaid)}</p>
+              </div>
+              <div className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white">
+                <p className="text-[11px] text-white/70">Remaining</p>
+                <p className="text-base font-bold">{formatMoney(totalRemaining)}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={searchTerm}
+                  onChange={(event) => dispatch(setPaymentsSearchTerm(event.target.value))}
+                  placeholder="Search students in this group..."
+                  className="pl-10"
+                />
+              </div>
+              <Input type="month" value={groupPaymentMonth} onChange={(event) => event.target.value && setGroupPaymentMonth(event.target.value)} />
+              <Select value={groupPaymentFilter} onValueChange={(value) => setGroupPaymentFilter(value as 'all' | 'paid' | 'unpaid')}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All students</SelectItem>
+                  <SelectItem value="paid">Payment done</SelectItem>
+                  <SelectItem value="unpaid">Payment undone</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className={cn(paymentSurfaceClass, 'rounded-lg')}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>Payment status</TableHead>
+                <TableHead className="text-right">Paid</TableHead>
+                <TableHead className="text-right">Expected</TableHead>
+                <TableHead className="text-right">Remaining</TableHead>
+                <TableHead className="text-center">Payments</TableHead>
+                <TableHead>Last payment</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {state.loading ? (
+                <TableRow><TableCell colSpan={7} className="py-8 text-center">Loading...</TableCell></TableRow>
+              ) : groupStudentRows.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
+              ) : groupStudentRows.map((row) => (
+                <TableRow key={row.studentId}>
+                  <TableCell>
+                    <p className="font-semibold">{row.name}</p>
+                    <p className="text-xs text-muted-foreground">{row.student.phone || `ID ${row.studentId}`}</p>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={row.paymentState === 'paid' ? 'bg-emerald-100 text-emerald-700' : row.paymentState === 'partial' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}>
+                      {row.paymentState === 'paid' ? 'Payment done' : row.paymentState === 'partial' ? 'Partly paid' : 'Payment undone'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right font-semibold text-emerald-700">{formatMoney(row.paidAmount)}</TableCell>
+                  <TableCell className="text-right">{formatMoney(row.expectedAmount)}</TableCell>
+                  <TableCell className="text-right font-semibold text-rose-600">{formatMoney(row.remainingAmount)}</TableCell>
+                  <TableCell className="text-center font-semibold">{row.payments.length}</TableCell>
+                  <TableCell>{row.lastPaymentDate ? new Date(`${row.lastPaymentDate.slice(0, 10)}T00:00:00`).toLocaleDateString() : '—'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

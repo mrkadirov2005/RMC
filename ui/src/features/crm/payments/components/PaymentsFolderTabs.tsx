@@ -1,10 +1,10 @@
+import { useEffect, useMemo, useState } from 'react';
 import {
   Folder,
   Search,
   X,
   Users,
   BookOpen,
-  User,
   CreditCard,
   Loader2,
   BarChart3,
@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -27,6 +28,7 @@ import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
 import { PaymentGroupsMatrixTab } from './PaymentGroupsMatrixTab';
+import { PaymentListView } from './PaymentListView';
 
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
@@ -85,6 +87,12 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     handleFolderClick,
   } = hook;
 
+  useEffect(() => {
+    if (activeTab === 'students' || activeTab === 'teachers') {
+      dispatch(setPaymentsActiveTab('classes'));
+    }
+  }, [activeTab, dispatch, setPaymentsActiveTab]);
+
   const getTeacherName = (teacherId?: number | null) => {
     const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId));
     return [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ') || t('No teacher');
@@ -140,14 +148,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
           {/* Tab Navigation */}
           <div className="flex flex-wrap gap-2">
             <Button
-              variant={activeTab === 'students' ? 'default' : 'ghost'}
-              onClick={() => dispatch(setPaymentsActiveTab('students'))}
-              className={cn(activeTab === 'students' && 'bg-emerald-600 text-white hover:bg-emerald-700')}
-            >
-              <Users className="h-4 w-4 mr-2" />
-              {t('By Students')}
-            </Button>
-            <Button
               variant={activeTab === 'classes' ? 'default' : 'ghost'}
               onClick={() => dispatch(setPaymentsActiveTab('classes'))}
               className={cn(activeTab === 'classes' && 'bg-cyan-600 text-white hover:bg-cyan-700')}
@@ -162,14 +162,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
             >
               <CreditCard className="h-4 w-4 mr-2" />
               {t('Group payments')}
-            </Button>
-            <Button
-              variant={activeTab === 'teachers' ? 'default' : 'ghost'}
-              onClick={() => dispatch(setPaymentsActiveTab('teachers'))}
-              className={cn(activeTab === 'teachers' && 'bg-indigo-600 text-white hover:bg-indigo-700')}
-            >
-              <User className="h-4 w-4 mr-2" />
-              {t('By Teachers')}
             </Button>
             {!isTeacher && (
               <Button
@@ -256,8 +248,10 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
           </div>
         )}
 
-        {/* By Classes Tab */}
-        {activeTab === 'classes' && (
+        {activeTab === 'classes' && <GroupPaymentsOverview hook={hook} />}
+
+        {/* Legacy class folders are intentionally kept out of the UI. */}
+        {false && (
           <div className="space-y-4">
             <div className={folderListClass}>
               {loadingData ? (
@@ -523,5 +517,72 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
         )}
       </div>
     </>
+  );
+};
+
+const GroupPaymentsOverview = ({ hook }: PaymentsFolderTabsProps) => {
+  const [teacherId, setTeacherId] = useState('all');
+  const [groupId, setGroupId] = useState('');
+  const availableGroups = useMemo(
+    () => hook.classes.filter((group) => teacherId === 'all' || Number(group.teacher_id || 0) === Number(teacherId)),
+    [hook.classes, teacherId]
+  );
+  const selectedGroup = hook.classes.find((group) => Number(group.class_id || group.id || 0) === Number(groupId));
+  const selectedFolder = selectedGroup
+    ? { type: 'class' as const, id: Number(selectedGroup.class_id || selectedGroup.id || 0), name: selectedGroup.class_name }
+    : null;
+
+  return (
+    <div className="space-y-4">
+      <Card className={paymentSurfaceClass}>
+        <CardContent className="p-4">
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-muted-foreground">Teacher</p>
+              <Select
+                value={teacherId}
+                onValueChange={(value) => {
+                  setTeacherId(value);
+                  setGroupId('');
+                }}
+              >
+                <SelectTrigger><SelectValue placeholder="Choose teacher" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All teachers</SelectItem>
+                  {hook.teachers.map((teacher) => {
+                    const id = Number(teacher.teacher_id || teacher.id || 0);
+                    return id ? (
+                      <SelectItem key={id} value={String(id)}>
+                        {[teacher.first_name, teacher.last_name].filter(Boolean).join(' ') || `Teacher ${id}`}
+                      </SelectItem>
+                    ) : null;
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-muted-foreground">Group</p>
+              <Select value={groupId} onValueChange={setGroupId}>
+                <SelectTrigger><SelectValue placeholder="Choose group" /></SelectTrigger>
+                <SelectContent>
+                  {availableGroups.map((group) => {
+                    const id = Number(group.class_id || group.id || 0);
+                    return id ? <SelectItem key={id} value={String(id)}>{group.class_name}</SelectItem> : null;
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {selectedFolder ? (
+        <PaymentListView hook={{ ...hook, selectedFolder }} />
+      ) : (
+        <div className="flex min-h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
+          Choose a teacher and group to see every student's payment status.
+        </div>
+      )}
+    </div>
   );
 };
