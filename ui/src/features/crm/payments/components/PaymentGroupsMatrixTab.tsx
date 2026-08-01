@@ -29,12 +29,6 @@ const getStudentName = (student: Student) =>
   `${student.first_name || ''} ${student.last_name || ''}`.trim() || `Student ${getStudentId(student)}`;
 
 const getMonthKey = (date: Date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-const formatMonthLabel = (monthKey: string) => {
-  const date = new Date(`${monthKey}-01T00:00:00`);
-  return Number.isNaN(date.getTime())
-    ? monthKey
-    : date.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-};
 
 const getPaymentMonthKey = (payment: Payment) => {
   if (!payment.payment_date) return '';
@@ -45,6 +39,20 @@ const getPaymentMonthKey = (payment: Payment) => {
 const isPaidPayment = (payment: Payment) => {
   const status = String(payment.status || payment.payment_status || '').trim().toLowerCase();
   return status === 'completed' || status === 'paid';
+};
+
+const getLastMonths = (count: number) => {
+  const current = new Date();
+  current.setDate(1);
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(current);
+    date.setMonth(current.getMonth() - (count - 1 - index));
+    return {
+      key: getMonthKey(date),
+      label: date.toLocaleDateString(undefined, { month: 'short' }),
+      year: date.getFullYear(),
+    };
+  });
 };
 
 const getMonthState = (payments: Payment[], monthKey: string, expectedAmount: number): MonthCellState => {
@@ -77,11 +85,11 @@ export const PaymentGroupsMatrixTab = () => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTeacherId, setSelectedTeacherId] = useState('all');
-  const [selectedMonth, setSelectedMonth] = useState(() => getMonthKey(new Date()));
   const [groupsLoading, setGroupsLoading] = useState(false);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const months = useMemo(() => getLastMonths(12), []);
   const selectedGroup = useMemo(
     () => groups.find((group) => getClassId(group) === Number(selectedGroupId)) || null,
     [groups, selectedGroupId]
@@ -118,23 +126,28 @@ export const PaymentGroupsMatrixTab = () => {
     return students.map((student) => {
       const studentId = getStudentId(student);
       const payments = paymentsByStudent[studentId] || [];
-      const monthPayments = payments.filter((payment) => isPaidPayment(payment) && getPaymentMonthKey(payment) === selectedMonth);
-      const paidAmount = monthPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-      return {
-        student,
-        studentId,
-        state: getMonthState(payments, selectedMonth, expectedAmount),
-        paidAmount,
-        remainingAmount: Math.max(0, expectedAmount - paidAmount),
-        paymentCount: monthPayments.length,
-      };
+      const states = months.reduce<Record<string, MonthCellState>>((acc, month) => {
+        acc[month.key] = getMonthState(payments, month.key, expectedAmount);
+        return acc;
+      }, {});
+      return { student, studentId, states };
     });
-  }, [expectedAmount, paymentsByStudent, selectedMonth, students]);
+  }, [expectedAmount, months, paymentsByStudent, students]);
 
-  const paidPercentage = rowStates.length
-    ? Math.round((rowStates.filter((row) => row.state === 'full').length / rowStates.length) * 100)
-    : 0;
-  const selectedMonthLabel = formatMonthLabel(selectedMonth);
+  const monthPercentages = useMemo(() => {
+    if (rowStates.length === 0) {
+      return months.reduce<Record<string, number>>((acc, month) => {
+        acc[month.key] = 0;
+        return acc;
+      }, {});
+    }
+
+    return months.reduce<Record<string, number>>((acc, month) => {
+      const fullCount = rowStates.filter((row) => row.states[month.key] === 'full').length;
+      acc[month.key] = Math.round((fullCount / rowStates.length) * 100);
+      return acc;
+    }, {});
+  }, [months, rowStates]);
 
   const loadGroups = async () => {
     setGroupsLoading(true);
@@ -303,26 +316,7 @@ export const PaymentGroupsMatrixTab = () => {
                 {selectedGroup ? `${students.length} students / expected ${expectedAmount || 0} UZS` : 'Select a group to see monthly payment status'}
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="space-y-1">
-                <label htmlFor="payment-month" className="block text-[11px] font-bold text-muted-foreground">Payment month</label>
-                <Input
-                  id="payment-month"
-                  type="month"
-                  value={selectedMonth}
-                  onChange={(event) => setSelectedMonth(event.target.value || getMonthKey(new Date()))}
-                  className="w-[190px] bg-white font-semibold dark:bg-card"
-                />
-              </div>
-              <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-center dark:border-blue-900 dark:bg-blue-950/30">
-                <p className="text-[10px] font-bold uppercase text-blue-600">Fully paid</p>
-                <p className="text-xl font-black text-blue-800 dark:text-blue-200">{paidPercentage}%</p>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-4 py-3 dark:bg-muted/30">
-            <p className="text-base font-black text-slate-900 dark:text-foreground">{selectedMonthLabel}</p>
-            <div className="flex flex-wrap items-center gap-3 text-xs font-semibold text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-muted-foreground">
               <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Fully done</span>
               <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Partly done</span>
               <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> None</span>
@@ -350,28 +344,33 @@ export const PaymentGroupsMatrixTab = () => {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-md border border-slate-200/80 dark:border-border">
-              <Table className="min-w-[900px]">
+              <Table className="min-w-[840px]">
                 <TableHeader>
-                  <TableRow className="h-14 bg-slate-50 dark:bg-muted/40">
-                    <TableHead className="w-[260px] text-sm">Student</TableHead>
-                    <TableHead className="w-28 text-sm">Student status</TableHead>
-                    <TableHead className="w-36 text-center text-sm">{selectedMonthLabel}</TableHead>
-                    <TableHead className="text-right text-sm">Paid</TableHead>
-                    <TableHead className="text-right text-sm">Expected</TableHead>
-                    <TableHead className="text-right text-sm">Remaining</TableHead>
-                    <TableHead className="text-center text-sm">Payments</TableHead>
+                  <TableRow className="bg-slate-50 dark:bg-muted/40">
+                    <TableHead className="sticky left-0 z-20 w-44 bg-slate-50 text-xs dark:bg-muted/40">Student</TableHead>
+                    <TableHead className="sticky left-44 z-20 w-24 bg-slate-50 text-xs dark:bg-muted/40">Status</TableHead>
+                    {months.map((month) => (
+                      <TableHead key={month.key} className="w-12 px-1 text-center">
+                        <div className="text-[11px] font-black text-slate-600 dark:text-muted-foreground">
+                          {monthPercentages[month.key]}%
+                        </div>
+                        <div className="mt-0.5 text-[10px] font-semibold text-muted-foreground">
+                          {month.label}
+                        </div>
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rowStates.map(({ student, studentId, state, paidAmount, remainingAmount, paymentCount }) => {
+                  {rowStates.map(({ student, studentId, states }) => {
                     const status = String((student as any).status || (student as any).student_status || 'Active');
                     const active = status.toLowerCase() === 'active' || status.toLowerCase() === 'aktiv';
                     return (
-                      <TableRow key={studentId} className="h-16">
-                        <TableCell className="py-3 text-sm font-bold">
+                      <TableRow key={studentId} className="h-10">
+                        <TableCell className="sticky left-0 z-10 bg-white py-1.5 text-xs font-bold dark:bg-card">
                           {getStudentName(student)}
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell className="sticky left-44 z-10 bg-white py-1.5 dark:bg-card">
                           <span
                             className={cn(
                               'inline-flex min-w-16 justify-center rounded-full px-2 py-0.5 text-[11px] font-black text-white shadow-sm',
@@ -381,21 +380,17 @@ export const PaymentGroupsMatrixTab = () => {
                             {active ? 'Aktiv' : 'Passive'}
                           </span>
                         </TableCell>
-                        <TableCell className="py-3 text-center">
-                          <span className={cn(
-                            'inline-flex min-w-28 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-black text-white',
-                            getDotClass(state)
-                          )}>
-                            <span className="h-2.5 w-2.5 rounded-full bg-white/90" />
-                            {getStateTitle(state)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="py-3 text-right text-sm font-black text-emerald-700">{paidAmount.toLocaleString()} UZS</TableCell>
-                        <TableCell className="py-3 text-right text-sm font-semibold">{expectedAmount.toLocaleString()} UZS</TableCell>
-                        <TableCell className={cn('py-3 text-right text-sm font-black', remainingAmount > 0 ? 'text-rose-600' : 'text-emerald-700')}>
-                          {remainingAmount.toLocaleString()} UZS
-                        </TableCell>
-                        <TableCell className="py-3 text-center text-base font-black">{paymentCount}</TableCell>
+                        {months.map((month) => {
+                          const state = states[month.key];
+                          return (
+                            <TableCell key={month.key} className="px-1 py-1 text-center">
+                              <span
+                                title={`${month.label} ${month.year}: ${getStateTitle(state)}`}
+                                className={cn('mx-auto block h-4 w-4 rounded-full border', getDotClass(state))}
+                              />
+                            </TableCell>
+                          );
+                        })}
                       </TableRow>
                     );
                   })}
