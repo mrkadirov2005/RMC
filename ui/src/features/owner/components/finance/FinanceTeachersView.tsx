@@ -3,6 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
+import { PieChart } from '@/shared/components/PieChart';
 
 interface TeacherRow {
   teacherId: number;
@@ -113,19 +114,49 @@ export const FinanceTeachersView = ({
     </div>
 
     {selectedTeacherRow && (
-      <TeacherGroupsHeader
-        selectedTeacherName={selectedTeacherName}
-        selectedTeacherRow={selectedTeacherRow}
-        teacherGroups={teacherGroups}
-        selectedGroupId={selectedGroupId}
-        salaryPercent={salaryPercent}
-        onGroupToggle={onGroupToggle}
-      />
+      <>
+        <TeacherPaymentPie teacherName={selectedTeacherName} groups={teacherGroups} />
+        <TeacherGroupsHeader
+          selectedTeacherName={selectedTeacherName}
+          selectedTeacherRow={selectedTeacherRow}
+          teacherGroups={teacherGroups}
+          selectedGroupId={selectedGroupId}
+          salaryPercent={salaryPercent}
+          onGroupToggle={onGroupToggle}
+        />
+      </>
     )}
 
     {selectedGroup && <SelectedGroupTable selectedGroup={selectedGroup} />}
   </>
 );
+
+const TeacherPaymentPie = ({ teacherName, groups }: { teacherName: string; groups: TeacherGroup[] }) => {
+  const totalStudents = groups.reduce((sum, group) => sum + group.totalStudents, 0);
+  const unpaidStudents = groups.reduce((sum, group) => sum + group.unpaidCount, 0);
+  const paidStudents = Math.max(totalStudents - unpaidStudents, 0);
+  const paidPercent = totalStudents > 0 ? Math.round((paidStudents / totalStudents) * 100) : 0;
+  const unpaidPercent = Math.max(100 - paidPercent, 0);
+
+  return (
+    <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+      <div className="mb-3 text-center">
+        <p className="text-base font-black text-slate-950 dark:text-white">{teacherName}</p>
+        <p className="text-xs font-semibold text-slate-500">Talabalar to'lov holati</p>
+      </div>
+      <div className="flex justify-center">
+        <PieChart
+          size={260}
+          strokeWidth={38}
+          data={[
+            { label: `To'lagan ${paidPercent}%`, value: paidStudents, color: '#10b981' },
+            { label: `Qarzdor ${unpaidPercent}%`, value: unpaidStudents, color: '#f59e0b' },
+          ]}
+        />
+      </div>
+    </div>
+  );
+};
 
 const TeacherGroupsHeader = ({
   selectedTeacherName,

@@ -60,119 +60,57 @@ interface Props {
   onChartModeChange: (mode: ChartMode) => void;
 }
 
-export const FinanceStatsView = ({
-  selectedMonth,
-  expectedMonthlyTotal,
-  totalCollected,
-  unpaidEstimate,
-  paymentStats,
-  teacherRows,
-  statsTeacherId,
-  selectedStatsTeacher,
-  statsTeacherGroups,
-  statsPaidPercent,
-  statsPaidStudents,
-  statsUnpaidStudents,
-  statsCollected,
-  statsExpected,
-  chartMode,
-  mostPaidGroups,
-  mostUnpaidGroups,
-  monthlyTrend,
-  maxTrendCollected,
-  linePoints,
-  initials,
-  onTeacherSelect,
-  onChartModeChange,
-}: Props) => (
-  <div className="space-y-3">
-    <div className="grid gap-2 md:grid-cols-4">
-      {[
-        ['Kutilgan tolov', formatMoney(expectedMonthlyTotal), 'border-slate-200 bg-white text-slate-900'],
-        ['Kelgan tolov', formatMoney(totalCollected), 'border-blue-200 bg-blue-50 text-blue-800'],
-        ['Taxminiy qarz', formatMoney(unpaidEstimate), 'border-amber-200 bg-amber-50 text-amber-800'],
-        ['Tolov ulushi', `${paymentStats.paidPercent}%`, 'border-emerald-200 bg-emerald-50 text-emerald-800'],
-      ].map(([label, value, tone]) => (
-        <div key={label} className={cn('rounded-md border p-3 shadow-sm', tone as string)}>
-          <p className="text-[11px] font-black uppercase opacity-70">{label}</p>
-          <p className="mt-1 text-xl font-black leading-tight">{value}</p>
-        </div>
-      ))}
-      <div className="rounded-md border border-slate-200 bg-white p-3 shadow-sm md:col-span-4 dark:border-white/10 dark:bg-white/[0.03]">
-        <div className="flex items-center justify-between gap-3 text-xs font-black text-slate-600">
-          <span>{paymentStats.paidStudents} to'lagan</span>
-          <span>{paymentStats.unpaidStudents} qarzdor</span>
-        </div>
-        <div className="mt-2 flex h-3 overflow-hidden rounded-full bg-slate-100">
-          <div className="animate-chart-bar-fill bg-emerald-500" style={{ width: `${paymentStats.paidPercent}%` }} />
-          <div className="animate-chart-bar-fill bg-amber-400" style={{ width: `${paymentStats.unpaidPercent}%`, animationDelay: '180ms' }} />
-        </div>
-      </div>
+export const FinanceStatsView = ({ selectedMonth, paymentStats, totalCollected, expectedMonthlyTotal }: Props) => (
+  <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
+    <div className="mb-4 text-center">
+      <p className="text-lg font-black text-slate-950 dark:text-white">Umumiy oylik to'lov statistikasi</p>
+      <p className="text-sm font-semibold text-slate-500">
+        {new Date(`${selectedMonth}-01T00:00:00`).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+      </p>
+      <p className="mt-1 text-xs text-slate-500">Tanlangan oyda oylik to'lovini bajargan va hali bajarmagan o'quvchilar ulushi.</p>
     </div>
-
-    <div className="rounded-md border border-slate-200 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
-      <div className="flex gap-2 overflow-x-auto border-b p-2 dark:border-white/10">
-        {teacherRows.map((teacher, index) => {
-          const active = statsTeacherId === teacher.teacherId;
-          return (
-            <button
-              key={teacher.teacherId}
-              type="button"
-              onClick={() => onTeacherSelect(teacher.teacherId)}
-              className={cn(
-                'flex min-w-[190px] items-center gap-2 rounded-md border px-2 py-1.5 text-left transition',
-                active ? 'border-blue-500 bg-blue-50 shadow-sm' : 'border-slate-200 bg-white hover:border-cyan-300 hover:bg-cyan-50'
-              )}
-            >
-              <span className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded text-xs font-black text-white', index % 2 ? 'bg-orange-600' : 'bg-blue-600')}>
-                {initials(teacher.teacherName)}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-xs font-black text-slate-950">{teacher.teacherName}</span>
-                <span className="block truncate text-[10px] font-bold text-slate-500">
-                  {teacher.classCount} guruh · {formatMoney(teacher.earnedAmount)}
-                </span>
-              </span>
-            </button>
-          );
-        })}
+    <div className="mx-auto grid max-w-3xl items-center gap-6 md:grid-cols-[360px_1fr]">
+      <div className="flex justify-center">
+        <PieChart
+          size={320}
+          strokeWidth={46}
+          data={[
+            { label: `To'lagan ${paymentStats.paidPercent}%`, value: paymentStats.paidStudents, color: '#10b981' },
+            { label: `Qarzdor ${paymentStats.unpaidPercent}%`, value: paymentStats.unpaidStudents, color: '#f59e0b' },
+          ]}
+        />
       </div>
-
-      <div className="grid gap-3 p-3 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="rounded-md border border-slate-200 bg-slate-50/70 p-3 dark:border-white/10 dark:bg-white/[0.03]">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-black text-slate-950 dark:text-white">
-                {selectedStatsTeacher?.teacherName || 'Oqituvchi tanlang'}
-              </p>
-              <p className="text-[11px] font-semibold text-slate-500">
-                {selectedMonth} · {statsTeacherGroups.length} guruh · {statsPaidPercent}% to'langan
-              </p>
-            </div>
-            <ChartModeButtons mode={chartMode} onChange={onChartModeChange} />
+      <div className="space-y-3">
+        <div className="rounded-lg border border-slate-200 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-2 text-sm font-bold text-slate-700"><span className="h-3 w-3 rounded-full bg-emerald-500" />To'lov qilgan</span>
+            <span className="text-lg font-black text-emerald-700">{paymentStats.paidStudents} · {paymentStats.paidPercent}%</span>
           </div>
-
-          <FinanceChart
-            key={`${statsTeacherId || 'all'}-${selectedMonth}-${chartMode}`}
-            mode={chartMode}
-            statsPaidStudents={statsPaidStudents}
-            statsUnpaidStudents={statsUnpaidStudents}
-            statsCollected={statsCollected}
-            statsExpected={statsExpected}
-            mostPaidGroups={mostPaidGroups}
-            monthlyTrend={monthlyTrend}
-            maxTrendCollected={maxTrendCollected}
-            linePoints={linePoints}
-          />
+          <p className="mt-1 text-xs text-slate-500">Oylik kutilgan to'lovini to'liq bajargan o'quvchilar.</p>
         </div>
-
-        <FinanceRankings mostPaidGroups={mostPaidGroups} mostUnpaidGroups={mostUnpaidGroups} monthlyTrend={monthlyTrend} maxTrendCollected={maxTrendCollected} />
+        <div className="rounded-lg border border-slate-200 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <span className="flex items-center gap-2 text-sm font-bold text-slate-700"><span className="h-3 w-3 rounded-full bg-amber-500" />To'lov qilmagan</span>
+            <span className="text-lg font-black text-amber-700">{paymentStats.unpaidStudents} · {paymentStats.unpaidPercent}%</span>
+          </div>
+          <p className="mt-1 text-xs text-slate-500">To'lovi yo'q yoki oylik summasi hali to'liq qoplanmagan o'quvchilar.</p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 text-center">
+          <div className="rounded-lg border border-slate-200 p-3">
+            <p className="text-[10px] font-bold uppercase text-slate-500">Jami o'quvchilar</p>
+            <p className="text-lg font-black text-slate-900">{paymentStats.paidStudents + paymentStats.unpaidStudents}</p>
+          </div>
+          <div className="rounded-lg border border-slate-200 p-3">
+            <p className="text-[10px] font-bold uppercase text-slate-500">Yig'ilgan / kutilgan</p>
+            <p className="text-xs font-black text-slate-900">{formatMoney(totalCollected)} / {formatMoney(expectedMonthlyTotal)}</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 );
 
-const ChartModeButtons = ({ mode, onChange }: { mode: ChartMode; onChange: (mode: ChartMode) => void }) => (
+export const ChartModeButtons = ({ mode, onChange }: { mode: ChartMode; onChange: (mode: ChartMode) => void }) => (
   <>
     {([
       { mode: 'pie', label: 'Pie', Icon: PieChartIcon },
@@ -195,7 +133,7 @@ const ChartModeButtons = ({ mode, onChange }: { mode: ChartMode; onChange: (mode
   </>
 );
 
-const FinanceChart = ({
+export const FinanceChart = ({
   mode,
   statsPaidStudents,
   statsUnpaidStudents,
@@ -297,7 +235,7 @@ const FinanceLineChart = ({ monthlyTrend, maxTrendCollected, linePoints }: { mon
   </div>
 );
 
-const FinanceRankings = ({
+export const FinanceRankings = ({
   mostPaidGroups,
   mostUnpaidGroups,
   monthlyTrend,

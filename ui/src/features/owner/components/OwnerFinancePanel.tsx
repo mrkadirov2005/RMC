@@ -216,10 +216,6 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
     <div className="space-y-3">
       <div className="rounded-md border border-blue-100 bg-white shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
         <div className="flex flex-wrap items-center gap-2 border-b bg-gradient-to-r from-blue-50 via-white to-emerald-50 p-3 dark:border-white/10 dark:from-white/[0.04] dark:via-white/[0.03] dark:to-white/[0.04]">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-blue-600 text-white">
-            <DollarSign className="h-4 w-4" />
-          </div>
-          <p className="mr-2 text-sm font-black text-slate-950 dark:text-white">Maoshlar</p>
           <Input
             type="month"
             value={selectedMonth}
@@ -230,7 +226,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             }}
             className="h-8 w-40 bg-slate-100 text-xs font-bold"
           />
-          <div className="ml-auto flex flex-wrap gap-1.5">
+          {financeView === 'teachers' && <div className="ml-auto flex flex-wrap gap-1.5">
             <span className="rounded bg-blue-100 px-2 py-1 text-[11px] font-black text-blue-700">
               <Users className="mr-1 inline h-3 w-3" />
               {teacherRows.length} o'qituvchi
@@ -243,10 +239,10 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
               <TrendingUp className="mr-1 inline h-3 w-3" />
               {formatMoney(totalSalary)}
             </span>
-          </div>
+          </div>}
         </div>
 
-        <div className="grid grid-cols-2 gap-1.5 p-2 md:grid-cols-5">
+        {financeView === 'teachers' && <div className="grid grid-cols-2 gap-1.5 p-2 md:grid-cols-5">
           {[
             ['Jami tolov', formatMoney(totalCollected), 'bg-blue-600'],
             ['Maosh 20%', formatMoney(totalSalary), 'bg-emerald-600'],
@@ -259,7 +255,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
               <p className="text-sm font-black leading-tight">{value}</p>
             </div>
           ))}
-        </div>
+        </div>}
 
         <div className="border-t p-2 dark:border-white/10">
           <div className="flex flex-wrap items-center gap-2">

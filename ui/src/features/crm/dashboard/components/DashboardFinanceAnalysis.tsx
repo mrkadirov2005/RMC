@@ -24,38 +24,35 @@ const financeMetrics: Array<{
   labelClass: string;
   valueClass: string;
   shellClass: string;
+  iconClass: string;
 }> = [
   {
     label: 'Expected',
     valueKey: 'expectedPayments',
     detailsType: 'expectedPayments',
-    labelClass: 'text-white/80',
-    valueClass: 'text-white',
-    shellClass: 'border-cyan-500/20 bg-gradient-to-br from-cyan-500 via-cyan-600 to-sky-700 shadow-cyan-500/40',
+    labelClass: 'text-slate-500', valueClass: 'text-slate-950 dark:text-card-foreground',
+    shellClass: 'border-slate-200 bg-white dark:border-border dark:bg-card', iconClass: 'bg-cyan-50 text-cyan-600',
   },
   {
     label: 'Collected',
     valueKey: 'paidPayments',
     detailsType: 'collectedPayments',
-    labelClass: 'text-white/80',
-    valueClass: 'text-white',
-    shellClass: 'border-teal-500/20 bg-gradient-to-br from-teal-400 via-teal-500 to-emerald-700 shadow-teal-500/40',
+    labelClass: 'text-slate-500', valueClass: 'text-slate-950 dark:text-card-foreground',
+    shellClass: 'border-slate-200 bg-white dark:border-border dark:bg-card', iconClass: 'bg-emerald-50 text-emerald-600',
   },
   {
     label: 'Remaining',
     valueKey: 'remainingPayments',
     detailsType: 'remainingPayments',
-    labelClass: 'text-white/80',
-    valueClass: 'text-white',
-    shellClass: 'border-amber-500/20 bg-gradient-to-br from-amber-400 via-amber-500 to-yellow-600 shadow-amber-500/40',
+    labelClass: 'text-slate-500', valueClass: 'text-slate-950 dark:text-card-foreground',
+    shellClass: 'border-slate-200 bg-white dark:border-border dark:bg-card', iconClass: 'bg-amber-50 text-amber-600',
   },
   {
     label: 'Outstanding debt',
     valueKey: 'outstandingDebt',
     detailsType: 'outstandingDebts',
-    labelClass: 'text-white/80',
-    valueClass: 'text-white',
-    shellClass: 'border-red-500/20 bg-gradient-to-br from-red-500 via-red-600 to-rose-700 shadow-red-500/40',
+    labelClass: 'text-slate-500', valueClass: 'text-slate-950 dark:text-card-foreground',
+    shellClass: 'border-slate-200 bg-white dark:border-border dark:bg-card', iconClass: 'bg-rose-50 text-rose-600',
   },
 ];
 
@@ -117,11 +114,12 @@ export const DashboardFinanceAnalysis = ({
                 })
               }
             >
+              <span className={`mb-2 flex h-8 w-8 items-center justify-center rounded-md ${metric.iconClass}`}><CreditCard className="h-4 w-4" /></span>
               <p className={`text-xs ${metric.labelClass}`}>{t(metric.label)}</p>
               <p className={`mt-1 text-xl font-bold ${metric.valueClass}`}>
                 {formatMoney(Number(finance[metric.valueKey]) || 0)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-white/70">{t('View details')}</p>
+              <p className="mt-1 text-[11px] font-medium text-slate-500">{t('View details')}</p>
             </button>
           ))}
         </div>

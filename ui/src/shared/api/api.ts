@@ -255,7 +255,7 @@ export const archiveAPI = {
 };
 
 export const reportAPI = {
-  retention: (params?: { month?: string; months?: number; limit?: number }) =>
+  retention: (params?: { center_id?: number; month?: string; months?: number; limit?: number }) =>
     apiClient.get('/reports/retention', { params }),
 };
 

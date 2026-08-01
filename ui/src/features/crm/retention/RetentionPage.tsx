@@ -14,6 +14,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { reportAPI } from './api';
+import { useAppSelector } from '../hooks';
+import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { PieChart } from '@/shared/components/PieChart';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -98,21 +100,42 @@ const getName = (student: Record<string, any>) =>
 
 const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
   const { t } = useLanguage();
+  const { user } = useAppSelector((state) => state.auth);
   const [month, setMonth] = useState(defaultMonth);
   const [months, setMonths] = useState(6);
   const [mode, setMode] = useState<RetentionMode>('overview');
   const [report, setReport] = useState<RetentionReport>(emptyReport);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [centerId, setCenterId] = useState<number | null>(() => getResolvedCenterId(user));
   const [selectedTeacher, setSelectedTeacher] = useState<RetentionReport['by_teacher'][number] | null>(null);
+
+  useEffect(() => {
+    const syncCenter = () => setCenterId(getResolvedCenterId(user));
+    syncCenter();
+    window.addEventListener('active-center-changed', syncCenter);
+    return () => window.removeEventListener('active-center-changed', syncCenter);
+  }, [user]);
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
+      if (!centerId) {
+        setReport(emptyReport);
+        setError(t('Select an active center to view retention data.'));
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+      setError(null);
       try {
-        const response = await reportAPI.retention({ month, months, limit: 40 });
+        const response = await reportAPI.retention({ center_id: centerId, month, months, limit: 40 });
         if (!alive) return;
         setReport(response.data || emptyReport);
+      } catch (requestError: any) {
+        if (!alive) return;
+        setError(requestError?.response?.data?.error || t('Failed to load retention data.'));
       } finally {
         if (alive) setLoading(false);
       }
@@ -121,7 +144,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
     return () => {
       alive = false;
     };
-  }, [month, months]);
+  }, [centerId, month, months, t]);
 
   const maxMonthly = useMemo(
     () => Math.max(1, ...report.monthly.map((row) => Number(row.left_count || 0))),
@@ -209,7 +232,11 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
           </div>
         </div>
 
-        {loading ? (
+        {error ? (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-8 text-center text-sm font-semibold text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
+            {error}
+          </div>
+        ) : loading ? (
           <div className="flex justify-center rounded-lg border border-slate-200 bg-white py-12 dark:border-white/10 dark:bg-white/[0.04]">
             <Loader2 className="h-8 w-8 animate-spin text-slate-600" />
           </div>
