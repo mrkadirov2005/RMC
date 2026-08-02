@@ -9,8 +9,9 @@ import { DiscountStatsPanel } from './components/discount-stats/DiscountStatsPan
 import { StudentStatsCarousel } from './components/student-stats/StudentStatsCarousel';
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
 import RetentionPage from '../crm/retention/RetentionPage';
+import { AttendanceReportPanel } from './components/AttendanceReportPanel';
 
-type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention';
+type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance';
 
 const emptyCollections: OwnerManagerStatisticsCollections = {
   students: [],
@@ -19,13 +20,14 @@ const emptyCollections: OwnerManagerStatisticsCollections = {
   payments: [],
   discounts: [],
   deletedStudents: [],
+  attendance: [],
 };
 
 const OwnerReports = () => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const requestedSection = searchParams.get('section');
-  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention'].includes(String(requestedSection))
+  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention', 'attendance'].includes(String(requestedSection))
     ? requestedSection as ReportTab
     : 'finance';
   const [collections, setCollections] = useState<OwnerManagerStatisticsCollections>(emptyCollections);
@@ -109,6 +111,26 @@ const OwnerReports = () => {
           nextCollections.students = toRows(studentsRes);
           nextCollections.classes = toRows(classesRes);
           nextCollections.payments = toRows(paymentsRes);
+        } else if (activeTab === 'attendance') {
+          const centersRes = await ownerManagerApi.centers.getAll();
+          const centerIds = toRows(centersRes)
+            .map((center: any) => Number(center.center_id || center.centerId || center.id || 0))
+            .filter(Boolean);
+          const [attendanceResults, teacherResults, classResults, studentResults] = await Promise.all([
+            Promise.allSettled(centerIds.map((centerId: number) => ownerManagerApi.attendance.getAllForCenter(centerId))),
+            Promise.allSettled(centerIds.map((centerId: number) => ownerManagerApi.teachers.getAll({ center_id: centerId }))),
+            Promise.allSettled(centerIds.map((centerId: number) => ownerManagerApi.classes.getAll({ center_id: centerId }))),
+            Promise.allSettled(centerIds.map((centerId: number) => ownerManagerApi.students.getAll({ center_id: centerId }))),
+          ]);
+          const mergeSuccessful = (results: PromiseSettledResult<any>[]) => results.flatMap((result) =>
+            result.status === 'fulfilled' ? toRows(result.value) : []
+          );
+          nextCollections.attendance = attendanceResults.flatMap((result) =>
+            result.status === 'fulfilled' ? toRows(result.value) : []
+          );
+          nextCollections.teachers = mergeSuccessful(teacherResults);
+          nextCollections.classes = mergeSuccessful(classResults);
+          nextCollections.students = mergeSuccessful(studentResults);
         }
         if (!alive) return;
         setCollections(nextCollections);
@@ -150,6 +172,7 @@ const OwnerReports = () => {
             {activeTab === 'retention' && <RetentionPage embedded />}
             {activeTab === 'students' && <StudentStatsCarousel data={collections.students} collections={collections} />}
             {activeTab === 'teachers' && <TeacherStatsPanel data={collections.teachers} collections={collections} />}
+            {activeTab === 'attendance' && <AttendanceReportPanel collections={collections} />}
           </>
         )}
       </div>
@@ -157,6 +180,13 @@ const OwnerReports = () => {
   );
 };
 
-const toRows = (response: any) => (Array.isArray(response) ? response : response?.data || []);
+const toRows = (response: any): any[] => {
+  const payload = response?.data ?? response;
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.items)) return payload.items;
+  if (Array.isArray(payload?.data?.items)) return payload.data.items;
+  return [];
+};
 
 export default OwnerReports;

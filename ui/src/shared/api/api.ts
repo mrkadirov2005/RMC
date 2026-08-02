@@ -356,7 +356,10 @@ export const gradeAPI = {
 };
 
 export const attendanceAPI = {
-  getAll: (params?: { center_id?: number }) => apiClient.get('/attendance', { params }),
+  getAll: (params?: { center_id?: number }, options?: { skipCenterScope?: boolean }) => apiClient.get('/attendance', {
+    params,
+    headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+  }),
   getById: (id: number) => apiClient.get(`/attendance/${id}`),
   getByStudent: (studentId: number) => apiClient.get(`/attendance/student/${studentId}`),
   getByClass: (classId: number, params?: { center_id?: number }) => apiClient.get(`/attendance/class/${classId}`, { params }),

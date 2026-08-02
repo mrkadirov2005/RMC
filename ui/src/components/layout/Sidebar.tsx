@@ -209,8 +209,6 @@ const Sidebar = memo(() => {
     // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
-    { label: 'Grades', path: '/grades', iconName: 'MdBarChart', roles: ['superuser'], permission: 'CRUD_GRADE' },
-    { label: 'Attendance', path: '/attendance', iconName: 'Attendance', roles: ['superuser'], permission: 'CRUD_ATTENDANCE' },
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
     { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
     { label: 'Debts', path: '/debts', iconName: 'Debts', roles: ['superuser'], permission: 'CRUD_DEBT' },
@@ -226,6 +224,7 @@ const Sidebar = memo(() => {
         { label: "O'qituvchilar", path: '/owner/reports?section=teachers', iconName: 'Teachers' },
         { label: 'Chegirmalar', path: '/owner/reports?section=discounts', iconName: 'Discounts' },
         { label: 'Retention', path: '/owner/reports?section=retention', iconName: 'Retention' },
+        { label: 'Davomat', path: '/owner/reports?section=attendance', iconName: 'Attendance' },
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },

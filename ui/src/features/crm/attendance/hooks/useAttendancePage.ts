@@ -78,6 +78,9 @@ export const useAttendancePage = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterDate, setFilterDate] = useState('');
   const [filterAgeRange, setFilterAgeRange] = useState('');
+  const [filterTeacherId, setFilterTeacherId] = useState('');
+  const [filterClassId, setFilterClassId] = useState('');
+  const [filterStudentId, setFilterStudentId] = useState('');
   const [showFilters, setShowFilters] = useState(false);
 
   // loadingData reflects whether supporting entities are being loaded
@@ -197,12 +200,29 @@ export const useAttendancePage = () => {
     if (filterAgeRange) {
       records = records.filter((r) => matchesAgeRange(r.student_id, filterAgeRange));
     }
+    if (filterStudentId) records = records.filter((record) => Number(record.student_id) === Number(filterStudentId));
+    if (filterClassId) {
+      records = records.filter((record) => {
+        const student = students.find((item) => Number(item.student_id || item.id) === Number(record.student_id));
+        return Number(record.class_id || student?.class_id || 0) === Number(filterClassId);
+      });
+    }
+    if (filterTeacherId) {
+      records = records.filter((record) => {
+        const student = students.find((item) => Number(item.student_id || item.id) === Number(record.student_id));
+        const studentClass = classes.find((item) => Number(item.class_id || item.id) === Number(record.class_id || student?.class_id || 0));
+        return Number(record.teacher_id || studentClass?.teacher_id || student?.teacher_id || 0) === Number(filterTeacherId);
+      });
+    }
     return records;
-  }, [filterDate, filterStatus, filterAgeRange, getFiltered, searchTerm, students]);
+  }, [classes, filterClassId, filterDate, filterStatus, filterAgeRange, filterStudentId, filterTeacherId, getFiltered, searchTerm, students]);
 
-  const hasActiveFilters = Boolean(filterStatus || filterDate || searchTerm || filterAgeRange);
+  const hasActiveFilters = Boolean(filterStatus || filterDate || searchTerm || filterAgeRange || filterTeacherId || filterClassId || filterStudentId);
 // Handles clear filters.
-  const clearFilters = () => { setSearchTerm(''); setFilterStatus(''); setFilterDate(''); setFilterAgeRange(''); };
+  const clearFilters = () => {
+    setSearchTerm(''); setFilterStatus(''); setFilterDate(''); setFilterAgeRange('');
+    setFilterTeacherId(''); setFilterClassId(''); setFilterStudentId('');
+  };
 
 // Handles folder click.
   const handleFolderClick = (type: 'teacher' | 'class' | 'student' | 'subject', id: number, name: string) => {
@@ -239,6 +259,12 @@ export const useAttendancePage = () => {
     setFilterDate,
     filterAgeRange,
     setFilterAgeRange,
+    filterTeacherId,
+    setFilterTeacherId,
+    filterClassId,
+    setFilterClassId,
+    filterStudentId,
+    setFilterStudentId,
     showFilters,
     setShowFilters,
     displayedAttendance,

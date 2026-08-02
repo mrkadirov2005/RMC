@@ -55,6 +55,7 @@ export interface OwnerManagerStatisticsCollections {
   payments: any[];
   discounts: any[];
   deletedStudents: any[];
+  attendance?: any[];
 }
 
 export interface OwnerOverviewCollections extends OwnerManagerStatisticsCollections {

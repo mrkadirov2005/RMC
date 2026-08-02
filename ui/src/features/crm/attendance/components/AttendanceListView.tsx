@@ -2,7 +2,6 @@
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -20,7 +19,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
-  Filter,
+  CalendarDays,
   Pencil,
   Search,
   Trash2,
@@ -29,13 +28,11 @@ import {
 import { SimplePaginationBar } from '@/components/common/SimplePaginationBar';
 import { paginateItems } from '@/components/common/pagination';
 import { useMemo } from 'react';
-import type { Attendance } from '../types';
+import type { Attendance, Class, Student, Teacher } from '../types';
 
 interface AttendanceListViewProps {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  showFilters: boolean;
-  setShowFilters: (show: boolean) => void;
   hasActiveFilters: boolean;
   clearFilters: () => void;
   filterStatus: string;
@@ -44,6 +41,15 @@ interface AttendanceListViewProps {
   setFilterDate: (date: string) => void;
   filterAgeRange: string;
   setFilterAgeRange: (range: string) => void;
+  filterTeacherId: string;
+  setFilterTeacherId: (id: string) => void;
+  filterClassId: string;
+  setFilterClassId: (id: string) => void;
+  filterStudentId: string;
+  setFilterStudentId: (id: string) => void;
+  teachers: Teacher[];
+  classes: Class[];
+  students: Student[];
   displayedAttendance: Attendance[];
   attendancePage: number;
   attendancePageSize: number;
@@ -61,8 +67,6 @@ interface AttendanceListViewProps {
 const AttendanceListView = ({
   searchTerm,
   setSearchTerm,
-  showFilters,
-  setShowFilters,
   hasActiveFilters,
   clearFilters,
   filterStatus,
@@ -71,6 +75,15 @@ const AttendanceListView = ({
   setFilterDate,
   filterAgeRange,
   setFilterAgeRange,
+  filterTeacherId,
+  setFilterTeacherId,
+  filterClassId,
+  setFilterClassId,
+  filterStudentId,
+  setFilterStudentId,
+  teachers,
+  classes,
+  students,
   displayedAttendance,
   attendancePage,
   attendancePageSize,
@@ -88,12 +101,26 @@ const AttendanceListView = ({
     () => paginateItems(displayedAttendance, attendancePage, attendancePageSize),
     [displayedAttendance, attendancePage, attendancePageSize]
   );
+  const classById = useMemo(() => new Map(classes.map((item) => [Number(item.class_id || item.id), item])), [classes]);
+  const teacherById = useMemo(() => new Map(teachers.map((item) => [Number(item.teacher_id || item.id), item])), [teachers]);
+  const studentById = useMemo(() => new Map(students.map((item) => [Number(item.student_id || item.id), item])), [students]);
+  const filteredStudents = useMemo(
+    () => students.filter((student) => !filterClassId || Number(student.class_id || 0) === Number(filterClassId)),
+    [filterClassId, students]
+  );
 
   return (
     <>
-      {/* Search and Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-border dark:bg-card">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="text-sm font-bold">Filters</h2>
+            <p className="text-xs text-muted-foreground">Narrow the records without leaving this page.</p>
+          </div>
+          {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters}><X className="mr-1 h-4 w-4" />Reset filters</Button>}
+        </div>
+        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+          <div className="relative xl:col-span-2">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
@@ -112,61 +139,62 @@ const AttendanceListView = ({
               <X className="h-4 w-4" />
             </Button>
           )}
-        </div>
-
-        <Button
-          variant={showFilters ? "default" : "outline"}
-          onClick={() => setShowFilters(!showFilters)}
-        >
-          <Filter className="h-4 w-4 mr-2" />
-          Filters
-          {hasActiveFilters && (
-            <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
-              {(filterStatus ? 1 : 0) + (filterDate ? 1 : 0)}
-            </span>
-          )}
-        </Button>
-
-        {hasActiveFilters && (
-          <Button variant="outline" size="sm" onClick={clearFilters}>
-            <X className="h-4 w-4 mr-2" /> Clear All
-          </Button>
-        )}
-
-        <div className="text-sm text-muted-foreground flex items-center gap-4">
-          <span>{displayedAttendance.length} records</span>
-        </div>
-      </div>
-
-      {/* Filter Options */}
-      {showFilters && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Select value={filterStatus} onValueChange={setFilterStatus}>
+          </div>
+          <Select value={filterTeacherId || 'all'} onValueChange={(value) => {
+            setFilterTeacherId(value === 'all' ? '' : value);
+            setFilterClassId('');
+            setFilterStudentId('');
+          }}>
+            <SelectTrigger><SelectValue placeholder="All teachers" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All teachers</SelectItem>
+              {teachers.map((teacher) => {
+                const id = Number(teacher.teacher_id || teacher.id);
+                return <SelectItem key={id} value={String(id)}>{teacher.first_name} {teacher.last_name}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
+          <Select value={filterClassId || 'all'} onValueChange={(value) => { setFilterClassId(value === 'all' ? '' : value); setFilterStudentId(''); }}>
+            <SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All groups</SelectItem>
+              {classes.filter((item) => !filterTeacherId || Number(item.teacher_id || 0) === Number(filterTeacherId)).map((item) => {
+                const id = Number(item.class_id || item.id);
+                return <SelectItem key={id} value={String(id)}>{item.class_name}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
+          <Select value={filterStudentId || 'all'} onValueChange={(value) => setFilterStudentId(value === 'all' ? '' : value)}>
+            <SelectTrigger><SelectValue placeholder="All students" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All students</SelectItem>
+              {filteredStudents.map((student) => {
+                const id = Number(student.student_id || student.id);
+                return <SelectItem key={id} value={String(id)}>{student.first_name} {student.last_name}</SelectItem>;
+              })}
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus || 'all'} onValueChange={(value) => setFilterStatus(value === 'all' ? '' : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All statuses</SelectItem>
                 {attendanceStatusOptions.map((opt) => (
                   <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          <div className="relative">
+            <CalendarDays className="absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input className="pl-9" type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
           </div>
-          <div className="space-y-2">
-            <Label>Date</Label>
-            <Input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
-          </div>
-          <div className="space-y-2">
-            <Label>Age Range</Label>
-            <Select value={filterAgeRange} onValueChange={setFilterAgeRange}>
+            <Select value={filterAgeRange || 'all'} onValueChange={(value) => setFilterAgeRange(value === 'all' ? '' : value)}>
               <SelectTrigger>
                 <SelectValue placeholder="All Ages" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Ages</SelectItem>
+                <SelectItem value="all">All ages</SelectItem>
                 <SelectItem value="3-6">3-6 years</SelectItem>
                 <SelectItem value="7-10">7-10 years</SelectItem>
                 <SelectItem value="11-14">11-14 years</SelectItem>
@@ -174,16 +202,18 @@ const AttendanceListView = ({
                 <SelectItem value="19-25">19-25 years</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          <div className="flex items-center justify-end text-sm font-semibold text-muted-foreground">{displayedAttendance.length} records</div>
         </div>
-      )}
+      </div>
 
       {/* Attendance Table */}
-      <div className="border rounded-lg overflow-hidden [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
+      <div className="mt-4 overflow-hidden rounded-xl border bg-white shadow-sm dark:bg-card [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Student</TableHead>
+              <TableHead>Group</TableHead>
+              <TableHead>Teacher</TableHead>
               <TableHead>Date</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Remarks</TableHead>
@@ -193,18 +223,23 @@ const AttendanceListView = ({
           <TableBody>
             {stateLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center py-6">Loading...</TableCell>
               </TableRow>
             ) : displayedAttendance.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
+                <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
                   {hasActiveFilters ? 'No attendance records match your criteria' : 'No attendance records found'}
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedAttendance.items.map((attendance) => (
-                <TableRow key={attendance.attendance_id || attendance.id}>
-                  <TableCell>{getStudentName(attendance.student_id)}</TableCell>
+              paginatedAttendance.items.map((attendance) => {
+                const student = studentById.get(Number(attendance.student_id));
+                const studentClass = classById.get(Number(attendance.class_id || student?.class_id || 0));
+                const teacher = teacherById.get(Number(attendance.teacher_id || studentClass?.teacher_id || student?.teacher_id || 0));
+                return <TableRow key={attendance.attendance_id || attendance.id}>
+                  <TableCell className="font-semibold">{getStudentName(attendance.student_id)}</TableCell>
+                  <TableCell>{studentClass?.class_name || '—'}</TableCell>
+                  <TableCell>{teacher ? `${teacher.first_name} ${teacher.last_name}` : '—'}</TableCell>
                   <TableCell>{new Date(attendance.attendance_date).toLocaleDateString()}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={getStatusBadgeClasses(attendance.status)}>
@@ -222,8 +257,8 @@ const AttendanceListView = ({
                       </Button>
                     </div>
                   </TableCell>
-                </TableRow>
-              ))
+                </TableRow>;
+              })
             )}
           </TableBody>
         </Table>

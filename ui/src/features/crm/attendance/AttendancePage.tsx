@@ -1,347 +1,142 @@
-// Page component for the attendance screen in the crm feature.
-
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { CalendarCheck2, Clock3, Plus, TrendingUp, UserCheck, UserX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
-import {
-  ArrowLeft,
-  Plus,
-  BookOpen,
-  BookMarked,
-  Users,
-  User,
-  BarChart3,
-  Clock,
-  UserCheck,
-  UserX,
-  TrendingUp,
-} from 'lucide-react';
 import { useAttendancePage } from './hooks/useAttendancePage';
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 
 const AttendanceFormDialog = lazy(() => import('./components/AttendanceFormDialog'));
-const AttendanceStatisticsSection = lazy(() => import('./components/AttendanceStatisticsSection'));
-const AttendanceFolderTabs = lazy(() => import('./components/AttendanceFolderTabs'));
 const AttendanceListView = lazy(() => import('./components/AttendanceListView'));
 
-const folderPageSizeOptions = [12, 24, 48];
 const attendancePageSizeOptions = [10, 25, 50, 100];
 
-// Renders the attendance page screen.
 const AttendancePage = () => {
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [folderPage, setFolderPage] = useState(1);
-  const [folderPageSize, setFolderPageSize] = useState(12);
   const [attendancePage, setAttendancePage] = useState(1);
   const [attendancePageSize, setAttendancePageSize] = useState(25);
-  const attendanceHelpers = useAttendancePage();
-  const {
-    state,
-    teachers,
-    classes,
-    students,
-    subjects,
-    activeTab,
-    setActiveTab,
-    selectedFolder,
-    isModalOpen,
-    editingId,
-    formData,
-    setFormData,
-    studentOptions,
-    teacherOptions,
-    classOptions,
-    isLoadingOptions,
-    loadingData,
-    searchTerm,
-    setSearchTerm,
-    filterStatus,
-    setFilterStatus,
-    filterDate,
-    setFilterDate,
-    filterAgeRange,
-    setFilterAgeRange,
-    showFilters,
-    setShowFilters,
-    displayedAttendance,
-    hasActiveFilters,
-    handleOpenModal,
-    handleCloseModal,
-    handleSubmit,
-    handleDelete,
-    handleFolderClick,
-    handleBackToFolders,
-    clearFilters,
-    getStudentName,
-    getStatusBadgeClasses,
-    getAttendanceCountForTeacher,
-    getAttendanceCountForClass,
-    getPresentCountForClass,
-    getAttendanceCountForStudent,
-    getPresentCountForStudent,
-    attendanceStatusOptions,
-  } = attendanceHelpers;
+  const attendance = useAttendancePage();
 
-  // Runs side effects for this component.
-  useEffect(() => {
-    setFolderPage(1);
-  }, [activeTab, viewMode]);
-
-  // Runs side effects for this component.
   useEffect(() => {
     setAttendancePage(1);
-  }, [searchTerm, filterStatus, filterDate, filterAgeRange, selectedFolder?.type, selectedFolder?.id]);
+  }, [
+    attendance.searchTerm,
+    attendance.filterStatus,
+    attendance.filterDate,
+    attendance.filterAgeRange,
+    attendance.filterTeacherId,
+    attendance.filterClassId,
+    attendance.filterStudentId,
+  ]);
 
-  // Memoizes the attendance statistics derived value.
-  const attendanceStatistics = useMemo(() => {
-    const totalRecords = state.items.length;
-    const uniqueStudents = new Set(state.items.map((record) => Number(record.student_id))).size;
-    const counts = {
-      present: 0,
-      late: 0,
-      absent: 0,
-      other: 0,
-    };
-
-    state.items.forEach((record) => {
-      const status = String(record.status || '').trim().toLowerCase();
-      if (status === 'present') {
-        counts.present += 1;
-      } else if (status === 'late') {
-        counts.late += 1;
-      } else if (status.includes('absent')) {
-        counts.absent += 1;
-      } else {
-        counts.other += 1;
-      }
-    });
-
+  const statistics = useMemo(() => {
+    const records = attendance.displayedAttendance;
+    const counts = records.reduce(
+      (result, record) => {
+        const status = String(record.status || '').trim().toLowerCase();
+        if (status === 'present') result.present += 1;
+        else if (status === 'late') result.late += 1;
+        else if (status.includes('absent')) result.absent += 1;
+        else result.other += 1;
+        return result;
+      },
+      { present: 0, late: 0, absent: 0, other: 0 }
+    );
     const attended = counts.present + counts.late;
-    const attendanceRate = totalRecords > 0 ? Math.round((attended / totalRecords) * 100) : 0;
-
     return {
-      totalRecords,
-      uniqueStudents,
-      attendanceRate,
-      counts,
-      segments: [
-        { label: 'Present', count: counts.present, percent: totalRecords > 0 ? (counts.present / totalRecords) * 100 : 0, className: 'bg-emerald-500' },
-        { label: 'Late', count: counts.late, percent: totalRecords > 0 ? (counts.late / totalRecords) * 100 : 0, className: 'bg-amber-500' },
-        { label: 'Absent', count: counts.absent, percent: totalRecords > 0 ? (counts.absent / totalRecords) * 100 : 0, className: 'bg-rose-500' },
-        { label: 'Other', count: counts.other, percent: totalRecords > 0 ? (counts.other / totalRecords) * 100 : 0, className: 'bg-slate-400' },
-      ],
+      total: records.length,
+      rate: records.length ? Math.round((attended / records.length) * 100) : 0,
+      ...counts,
     };
-  }, [state.items]);
+  }, [attendance.displayedAttendance]);
 
-  const folderGridClass = 'overflow-hidden rounded-md border border-slate-200/80 bg-white dark:border-border dark:bg-card';
+  const metrics = [
+    { label: 'Filtered records', value: statistics.total, icon: CalendarCheck2, tone: 'from-blue-500 to-indigo-600' },
+    { label: 'Attendance rate', value: `${statistics.rate}%`, icon: TrendingUp, tone: 'from-violet-500 to-purple-600' },
+    { label: 'Present', value: statistics.present, icon: UserCheck, tone: 'from-emerald-500 to-teal-600' },
+    { label: 'Late', value: statistics.late, icon: Clock3, tone: 'from-amber-500 to-orange-600' },
+    { label: 'Absent', value: statistics.absent, icon: UserX, tone: 'from-rose-500 to-pink-600' },
+  ];
 
   return (
-    <div className="container mx-auto p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          {selectedFolder && (
-            <Button variant="outline" size="sm" onClick={handleBackToFolders}>
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back
-            </Button>
-          )}
-          <h1 className="text-2xl font-bold">
-            {selectedFolder
-              ? `Attendance - ${selectedFolder.name}`
-              : 'Attendance Management'}
-          </h1>
+    <div className="container mx-auto space-y-4 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-950 dark:text-white">Attendance</h1>
+          <p className="text-sm text-muted-foreground">Review and manage every attendance record from one workspace.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <ViewModeToggle value={viewMode} onChange={setViewMode} />
-          <Button onClick={() => handleOpenModal()} className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:to-teal-700 border-0">
-            <Plus className="h-4 w-4 mr-2" /> Add Attendance
-          </Button>
-        </div>
+        <Button onClick={() => attendance.handleOpenModal()} className="bg-emerald-600 text-white hover:bg-emerald-700">
+          <Plus className="mr-2 h-4 w-4" /> Add attendance
+        </Button>
       </div>
 
-      {/* Overall Summary Cards - Always Visible */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 mb-4">
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Total Records</p>
-            </div>
-            <p className="text-lg font-black text-white">{attendanceStatistics.totalRecords}</p>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-600">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Attendance Rate</p>
-            </div>
-            <p className="text-lg font-black text-white">{attendanceStatistics.attendanceRate}%</p>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-500 via-cyan-600 to-blue-600">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-1.5">
-              <UserCheck className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Present</p>
-            </div>
-            <p className="text-lg font-black text-white">{attendanceStatistics.counts.present}</p>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-500 via-amber-600 to-orange-600">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Late</p>
-            </div>
-            <p className="text-lg font-black text-white">{attendanceStatistics.counts.late}</p>
-          </CardContent>
-        </Card>
-        <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-500 via-rose-600 to-pink-600">
-          <CardContent className="p-2">
-            <div className="flex items-center gap-1.5">
-              <UserX className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Absent</p>
-            </div>
-            <p className="text-lg font-black text-white">{attendanceStatistics.counts.absent}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+        {metrics.map(({ label, value, icon: Icon, tone }) => (
+          <Card key={label} className={`border-0 bg-gradient-to-br ${tone} text-white shadow-sm`}>
+            <CardContent className="flex items-center justify-between p-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-white/75">{label}</p>
+                <p className="text-xl font-black">{value}</p>
+              </div>
+              <Icon className="h-5 w-5 text-white/70" />
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {!selectedFolder ? (
-        <>
-          {/* Tab Navigation */}
-          <div className="border-b border-border mb-6">
-            <div className="flex space-x-1 overflow-x-auto">
-              <Button
-                variant={activeTab === 'students' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('students')}
-                className={`rounded-b-none ${activeTab === 'students' ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-0 shadow-lg shadow-blue-500/30' : ''}`}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                By Students
-              </Button>
-              <Button
-                variant={activeTab === 'classes' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('classes')}
-                className={`rounded-b-none ${activeTab === 'classes' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 shadow-lg shadow-emerald-500/30' : ''}`}
-              >
-                <BookOpen className="h-4 w-4 mr-2" />
-                By Classes
-              </Button>
-              <Button
-                variant={activeTab === 'teachers' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('teachers')}
-                className={`rounded-b-none ${activeTab === 'teachers' ? 'bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-lg shadow-violet-500/30' : ''}`}
-              >
-                <User className="h-4 w-4 mr-2" />
-                By Teachers
-              </Button>
-              <Button
-                variant={activeTab === 'subjects' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('subjects')}
-                className={`rounded-b-none ${activeTab === 'subjects' ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white border-0 shadow-lg shadow-cyan-500/30' : ''}`}
-              >
-                <BookMarked className="h-4 w-4 mr-2" />
-                By Subjects
-              </Button>
-              <Button
-                variant={activeTab === 'statistics' ? 'default' : 'ghost'}
-                onClick={() => setActiveTab('statistics')}
-                className={`rounded-b-none ${activeTab === 'statistics' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-0 shadow-lg shadow-amber-500/30' : ''}`}
-              >
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Statistics
-              </Button>
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div>
-            {activeTab === 'statistics' && (
-              <Suspense fallback={<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">Loading statistics...</div>}>
-                <AttendanceStatisticsSection
-                  attendanceStatistics={attendanceStatistics}
-                  classesCount={classes.length}
-                  teachersCount={teachers.length}
-                  subjectsCount={subjects.length}
-                />
-              </Suspense>
-            )}
-
-            {activeTab !== 'statistics' && (
-              <Suspense fallback={<div className="text-sm text-muted-foreground p-6">Loading...</div>}>
-                <AttendanceFolderTabs
-                  activeTab={activeTab}
-                  students={students}
-                  classes={classes}
-                  teachers={teachers}
-                  subjects={subjects}
-                  loadingData={loadingData}
-                  folderPage={folderPage}
-                  folderPageSize={folderPageSize}
-                  folderPageSizeOptions={folderPageSizeOptions}
-                  folderGridClass={folderGridClass}
-                  stateItems={state.items}
-                  onFolderPageChange={setFolderPage}
-                  onFolderPageSizeChange={setFolderPageSize}
-                  handleFolderClick={handleFolderClick}
-                  getAttendanceCountForStudent={getAttendanceCountForStudent}
-                  getPresentCountForStudent={getPresentCountForStudent}
-                  getAttendanceCountForClass={getAttendanceCountForClass}
-                  getPresentCountForClass={getPresentCountForClass}
-                  getAttendanceCountForTeacher={getAttendanceCountForTeacher}
-                  getStudentIdsForTeacher={attendanceHelpers.getStudentIdsForTeacher}
-                />
-              </Suspense>
-            )}
-          </div>
-        </>
-      ) : (
-        <Suspense fallback={<div className="text-sm text-muted-foreground p-6">Loading...</div>}>
-          <AttendanceListView
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            showFilters={showFilters}
-            setShowFilters={setShowFilters}
-            hasActiveFilters={hasActiveFilters}
-            clearFilters={clearFilters}
-            filterStatus={filterStatus}
-            setFilterStatus={setFilterStatus}
-            filterDate={filterDate}
-            setFilterDate={setFilterDate}
-            filterAgeRange={filterAgeRange}
-            setFilterAgeRange={setFilterAgeRange}
-            displayedAttendance={displayedAttendance}
-            attendancePage={attendancePage}
-            attendancePageSize={attendancePageSize}
-            attendancePageSizeOptions={attendancePageSizeOptions}
-            onAttendancePageChange={setAttendancePage}
-            onAttendancePageSizeChange={setAttendancePageSize}
-            stateLoading={state.loading}
-            getStudentName={getStudentName}
-            getStatusBadgeClasses={getStatusBadgeClasses}
-            handleOpenModal={handleOpenModal}
-            handleDelete={handleDelete}
-            attendanceStatusOptions={attendanceStatusOptions}
-          />
-        </Suspense>
+      {attendance.state.error && (
+        <div className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+          {attendance.state.error}
+        </div>
       )}
+
+      <Suspense fallback={<div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">Loading attendance...</div>}>
+        <AttendanceListView
+          searchTerm={attendance.searchTerm}
+          setSearchTerm={attendance.setSearchTerm}
+          hasActiveFilters={attendance.hasActiveFilters}
+          clearFilters={attendance.clearFilters}
+          filterStatus={attendance.filterStatus}
+          setFilterStatus={attendance.setFilterStatus}
+          filterDate={attendance.filterDate}
+          setFilterDate={attendance.setFilterDate}
+          filterAgeRange={attendance.filterAgeRange}
+          setFilterAgeRange={attendance.setFilterAgeRange}
+          filterTeacherId={attendance.filterTeacherId}
+          setFilterTeacherId={attendance.setFilterTeacherId}
+          filterClassId={attendance.filterClassId}
+          setFilterClassId={attendance.setFilterClassId}
+          filterStudentId={attendance.filterStudentId}
+          setFilterStudentId={attendance.setFilterStudentId}
+          teachers={attendance.teachers}
+          classes={attendance.classes}
+          students={attendance.students}
+          displayedAttendance={attendance.displayedAttendance}
+          attendancePage={attendancePage}
+          attendancePageSize={attendancePageSize}
+          attendancePageSizeOptions={attendancePageSizeOptions}
+          onAttendancePageChange={setAttendancePage}
+          onAttendancePageSizeChange={setAttendancePageSize}
+          stateLoading={attendance.state.loading}
+          getStudentName={attendance.getStudentName}
+          getStatusBadgeClasses={attendance.getStatusBadgeClasses}
+          handleOpenModal={attendance.handleOpenModal}
+          handleDelete={attendance.handleDelete}
+          attendanceStatusOptions={attendance.attendanceStatusOptions}
+        />
+      </Suspense>
 
       <Suspense fallback={null}>
         <AttendanceFormDialog
-          open={isModalOpen}
-          editingId={editingId}
-          loading={state.loading}
-          formData={formData}
-          setFormData={setFormData}
-          studentOptions={studentOptions}
-          teacherOptions={teacherOptions}
-          classOptions={classOptions}
-          isLoadingOptions={isLoadingOptions}
-          attendanceStatusOptions={attendanceStatusOptions}
-          onClose={handleCloseModal}
-          onSubmit={handleSubmit}
+          open={attendance.isModalOpen}
+          editingId={attendance.editingId}
+          loading={attendance.state.loading}
+          formData={attendance.formData}
+          setFormData={attendance.setFormData}
+          studentOptions={attendance.studentOptions}
+          teacherOptions={attendance.teacherOptions}
+          classOptions={attendance.classOptions}
+          isLoadingOptions={attendance.isLoadingOptions}
+          attendanceStatusOptions={attendance.attendanceStatusOptions}
+          onClose={attendance.handleCloseModal}
+          onSubmit={attendance.handleSubmit}
         />
       </Suspense>
     </div>

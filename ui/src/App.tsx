@@ -25,8 +25,6 @@ const TeachersPage = lazy(() => import('./features/crm/teachers/TeachersPage'));
 const TeacherDetailPage = lazy(() => import('./features/crm/teachers/TeacherDetailPage'));
 const PaymentsPage = lazy(() => import('./features/crm/payments/PaymentsPage'));
 const PaymentFormPage = lazy(() => import('./features/crm/payments/PaymentFormPage'));
-const GradesPage = lazy(() => import('./features/crm/grades/GradesPage'));
-const AttendancePage = lazy(() => import('./features/crm/attendance/AttendancePage'));
 const ClassesPage = lazy(() => import('./features/crm/classes/ClassesPage'));
 const ClassDetailPage = lazy(() => import('./features/crm/classes/ClassDetailPage'));
 const SessionWorkflowPage = lazy(() => import('./features/crm/classes/SessionWorkflowPage'));
@@ -517,34 +515,6 @@ function AppContent() {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherFinanceDetailPage />
-                </Suspense>
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/grades"
-          element={
-            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_GRADE}>
-              <Layout>
-                <Suspense fallback={<LoadingSpinner />}>
-
-                  <GradesPage />
-                </Suspense>
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/attendance"
-          element={
-            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_ATTENDANCE}>
-              <Layout>
-                <Suspense fallback={<LoadingSpinner />}>
-
-                  <AttendancePage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

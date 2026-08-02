@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import {
+  BadgePercent,
+  CalendarDays,
   Pencil,
+  ReceiptText,
   Trash2,
   X,
   Search,
@@ -18,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -35,6 +39,8 @@ import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
 
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
+
+const formatAmount = (amount: number) => Number(amount || 0).toLocaleString();
 
 interface PaymentListViewProps {
   hook: UsePaymentsPageReturn;
@@ -74,15 +80,21 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
   } = hook;
 
   const [groupPaymentFilter, setGroupPaymentFilter] = useState<'all' | 'paid' | 'unpaid'>('all');
+  const [paymentHistoryRow, setPaymentHistoryRow] = useState<null | {
+    name: string;
+    payments: typeof state.items;
+  }>(null);
   const [groupPaymentMonth, setGroupPaymentMonth] = useState(() => {
     const now = new Date();
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   });
+  const selectedGroupClass = selectedFolder?.type === 'class'
+    ? classes.find((item) => Number(item.class_id || item.id) === Number(selectedFolder.id))
+    : undefined;
 
   const groupStudentRows = useMemo(() => {
     if (selectedFolder?.type !== 'class') return [];
-    const selectedClass = classes.find((item) => Number(item.class_id || item.id) === Number(selectedFolder.id));
-    const expectedAmount = Number(selectedClass?.payment_amount || 0);
+    const expectedAmount = Number(selectedGroupClass?.payment_amount || 0);
     const search = searchTerm.trim().toLowerCase();
 
     return students
@@ -96,7 +108,9 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           return status === 'completed' || status === 'paid';
         });
         const paidAmount = studentPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
-        const paymentState = paidAmount <= 0 ? 'unpaid' : expectedAmount > 0 && paidAmount < expectedAmount ? 'partial' : 'paid';
+        const discountAmount = Math.max(0, ...studentPayments.map((payment) => Number(payment.discount_amount || 0)));
+        const discountedExpectedAmount = Math.max(0, expectedAmount - discountAmount);
+        const paymentState = paidAmount <= 0 ? 'unpaid' : discountedExpectedAmount > 0 && paidAmount < discountedExpectedAmount ? 'partial' : 'paid';
         const name = `${student.first_name || ''} ${student.last_name || ''}`.trim() || `Student #${studentId}`;
         return {
           student,
@@ -105,7 +119,8 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           payments: studentPayments,
           paidAmount,
           expectedAmount,
-          remainingAmount: Math.max(0, expectedAmount - paidAmount),
+          discountAmount,
+          remainingAmount: Math.max(0, discountedExpectedAmount - paidAmount),
           paymentState,
           lastPaymentDate: studentPayments
             .map((payment) => String(payment.payment_date || ''))
@@ -114,7 +129,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
       })
       .filter((row) => !search || row.name.toLowerCase().includes(search))
       .filter((row) => groupPaymentFilter === 'all' || (groupPaymentFilter === 'paid' ? row.paymentState === 'paid' : row.paymentState !== 'paid'));
-  }, [classes, groupPaymentFilter, groupPaymentMonth, searchTerm, selectedFolder, state.items, students]);
+  }, [groupPaymentFilter, groupPaymentMonth, searchTerm, selectedFolder, selectedGroupClass, state.items, students]);
 
   if (selectedFolder?.type === 'class') {
     const paidCount = groupStudentRows.filter((row) => row.paymentState === 'paid').length;
@@ -132,12 +147,20 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
               </div>
               <div className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 text-white">
                 <p className="text-[11px] text-white/70">Collected</p>
-                <p className="text-base font-bold">{formatMoney(totalPaid)}</p>
+                <p className="text-base font-bold">{formatAmount(totalPaid)}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white">
                 <p className="text-[11px] text-white/70">Remaining</p>
-                <p className="text-base font-bold">{formatMoney(totalRemaining)}</p>
+                <p className="text-base font-bold">{formatAmount(totalRemaining)}</p>
               </div>
+            </div>
+
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-border dark:bg-muted/30">
+              <ReceiptText className="h-4 w-4 text-slate-500" />
+              <span className="text-muted-foreground">Monthly group fee:</span>
+              <span className="font-bold text-slate-900 dark:text-foreground">
+                {formatAmount(Number(selectedGroupClass?.payment_amount || 0))}
+              </span>
             </div>
 
             <div className="grid gap-3 md:grid-cols-[1fr_180px_180px]">
@@ -163,45 +186,90 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           </CardContent>
         </Card>
 
-        <div className={cn(paymentSurfaceClass, 'rounded-lg')}>
-          <Table>
+        <div className={cn(paymentSurfaceClass, 'overflow-x-auto rounded-lg px-4 [&_th]:h-9 [&_th]:px-3 [&_td]:px-3 [&_td]:py-1.5')}>
+          <Table className="mx-auto min-w-[720px] max-w-4xl table-auto text-sm">
             <TableHeader>
               <TableRow>
                 <TableHead>Student</TableHead>
-                <TableHead>Payment status</TableHead>
-                <TableHead className="text-right">Paid</TableHead>
-                <TableHead className="text-right">Expected</TableHead>
-                <TableHead className="text-right">Remaining</TableHead>
                 <TableHead className="text-center">Payments</TableHead>
-                <TableHead>Last payment</TableHead>
+                <TableHead>Payment date</TableHead>
+                <TableHead className="text-right">Remaining</TableHead>
+                <TableHead className="text-right">Paid</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {state.loading ? (
-                <TableRow><TableCell colSpan={7} className="py-8 text-center">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="py-8 text-center">Loading...</TableCell></TableRow>
               ) : groupStudentRows.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
               ) : groupStudentRows.map((row) => (
                 <TableRow key={row.studentId}>
                   <TableCell>
-                    <p className="font-semibold">{row.name}</p>
-                    <p className="text-xs text-muted-foreground">{row.student.phone || `ID ${row.studentId}`}</p>
+                    <p className="truncate font-semibold leading-tight">{row.name}</p>
+                    <p className="truncate text-[11px] leading-tight text-muted-foreground">{row.student.phone || `ID ${row.studentId}`}</p>
+                    {row.discountAmount > 0 && (
+                      <Badge variant="outline" className="mt-0.5 h-5 gap-1 px-1.5 text-[10px] border-violet-200 bg-violet-50 text-violet-700">
+                        <BadgePercent className="h-3 w-3" />
+                        Discount {formatAmount(row.discountAmount)}
+                      </Badge>
+                    )}
                   </TableCell>
-                  <TableCell>
-                    <Badge className={row.paymentState === 'paid' ? 'bg-emerald-100 text-emerald-700' : row.paymentState === 'partial' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}>
-                      {row.paymentState === 'paid' ? 'Payment done' : row.paymentState === 'partial' ? 'Partly paid' : 'Payment undone'}
-                    </Badge>
+                  <TableCell className="text-center">
+                    {row.payments.length > 0 ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 gap-1.5 font-semibold text-blue-700 hover:text-blue-800"
+                        onClick={() => setPaymentHistoryRow({ name: row.name, payments: row.payments })}
+                      >
+                        <ReceiptText className="h-4 w-4" />
+                        {row.payments.length}
+                      </Button>
+                    ) : <span className="text-muted-foreground">0</span>}
                   </TableCell>
-                  <TableCell className="text-right font-semibold text-emerald-700">{formatMoney(row.paidAmount)}</TableCell>
-                  <TableCell className="text-right">{formatMoney(row.expectedAmount)}</TableCell>
-                  <TableCell className="text-right font-semibold text-rose-600">{formatMoney(row.remainingAmount)}</TableCell>
-                  <TableCell className="text-center font-semibold">{row.payments.length}</TableCell>
                   <TableCell>{row.lastPaymentDate ? new Date(`${row.lastPaymentDate.slice(0, 10)}T00:00:00`).toLocaleDateString() : '—'}</TableCell>
+                  <TableCell className="text-right font-semibold text-rose-600">{formatAmount(row.remainingAmount)}</TableCell>
+                  <TableCell className="text-right font-semibold text-emerald-700">{formatAmount(row.paidAmount)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+
+        <Dialog open={Boolean(paymentHistoryRow)} onOpenChange={(open) => !open && setPaymentHistoryRow(null)}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Payment history</DialogTitle>
+              <DialogDescription>
+                {paymentHistoryRow?.name} · {groupPaymentMonth}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="max-h-[360px] space-y-2 overflow-y-auto">
+              {[...(paymentHistoryRow?.payments || [])]
+                .sort((a, b) => String(b.payment_date || '').localeCompare(String(a.payment_date || '')))
+                .map((payment, index) => (
+                  <div
+                    key={payment.payment_id || payment.id || `${payment.payment_date}-${index}`}
+                    className="flex items-center justify-between rounded-lg border border-slate-200 p-3 dark:border-border"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-blue-50 p-2 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
+                        <CalendarDays className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-semibold">
+                          {payment.payment_date ? new Date(`${String(payment.payment_date).slice(0, 10)}T00:00:00`).toLocaleDateString() : 'Date unavailable'}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{payment.payment_method || 'Payment'}</p>
+                      </div>
+                    </div>
+                    <p className="font-bold text-emerald-700">{formatAmount(Number(payment.amount || 0))}</p>
+                  </div>
+                ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
