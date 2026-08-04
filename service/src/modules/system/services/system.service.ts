@@ -7,6 +7,7 @@ const { sql } = require('drizzle-orm');
 const v8 = require('v8');
 
 const db = pool.db;
+const SENSITIVE_COLUMN = /(password|secret|token|credential|private_key|api_key|hash)/i;
 
 const RESET_CONFIRMATION = 'TRUNCATE_EDUCATION_DATA';
 const RESET_TABLES = {
@@ -159,12 +160,70 @@ const getStats = async () => {
   };
 };
 
+const getDatabaseTables = async () => {
+  const result = await pool.query(`
+    SELECT t.table_name,
+      COALESCE(s.n_live_tup, 0)::int AS estimated_rows,
+      COUNT(c.column_name)::int AS column_count
+    FROM information_schema.tables t
+    LEFT JOIN pg_stat_user_tables s ON s.relname = t.table_name AND s.schemaname = t.table_schema
+    LEFT JOIN information_schema.columns c ON c.table_schema = t.table_schema AND c.table_name = t.table_name
+    WHERE t.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+    GROUP BY t.table_name, s.n_live_tup
+    ORDER BY t.table_name
+  `);
+  return result.rows;
+};
+
+const assertPublicTable = async (tableName: string) => {
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(tableName)) {
+    const error: any = new Error('Invalid table name.'); error.statusCode = 400; throw error;
+  }
+  const result = await pool.query(
+    `SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name = $1`,
+    [tableName]
+  );
+  if (!result.rowCount) {
+    const error: any = new Error('Table not found.'); error.statusCode = 404; throw error;
+  }
+};
+
+const getDatabaseTableRows = async (tableName: string, options: { limit?: number; offset?: number; query?: string }) => {
+  await assertPublicTable(tableName);
+  const limit = Math.min(100, Math.max(1, Number(options.limit) || 25));
+  const offset = Math.max(0, Number(options.offset) || 0);
+  const columnsResult = await pool.query(`
+    SELECT column_name, data_type, is_nullable, column_default
+    FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = $1
+    ORDER BY ordinal_position
+  `, [tableName]);
+  const columns = columnsResult.rows;
+  const searchable = columns.filter((column: any) => !SENSITIVE_COLUMN.test(column.column_name));
+  const query = String(options.query || '').trim();
+  const where = query && searchable.length
+    ? ` WHERE ${searchable.map((column: any) => `CAST("${column.column_name}" AS TEXT) ILIKE $1`).join(' OR ')}`
+    : '';
+  const params = query && searchable.length ? [`%${query}%`] : [];
+  const countResult = await pool.query(`SELECT COUNT(*)::int AS count FROM "${tableName}"${where}`, params);
+  const rowsResult = await pool.query(
+    `SELECT * FROM "${tableName}"${where} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset]
+  );
+  const rows = rowsResult.rows.map((row: Record<string, unknown>) => Object.fromEntries(
+    Object.entries(row).map(([key, value]) => [key, SENSITIVE_COLUMN.test(key) && value != null ? '[REDACTED]' : value])
+  ));
+  return { table: tableName, columns, rows, total: Number(countResult.rows[0]?.count || 0), limit, offset };
+};
+
 module.exports = {
   validateRedeployPassword,
   scheduleRedeploy,
   validateDevResetRequest,
   resetTable,
   getStats,
+  getDatabaseTables,
+  getDatabaseTableRows,
   RESET_CONFIRMATION,
 };
 

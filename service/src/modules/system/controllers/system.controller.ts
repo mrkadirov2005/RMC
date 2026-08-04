@@ -34,8 +34,23 @@ const getStats = async (req: any, res: any) => {
   }
 };
 
+const getDatabaseTables = async (_req: any, res: any) => {
+  try { res.json(await systemService.getDatabaseTables()); }
+  catch (error: any) { res.status(error.statusCode || 500).json({ error: error.message || 'Failed to load database tables.' }); }
+};
+
+const getDatabaseTableRows = async (req: any, res: any) => {
+  try {
+    res.json(await systemService.getDatabaseTableRows(String(req.params.table || ''), {
+      limit: Number(req.query.limit), offset: Number(req.query.offset), query: String(req.query.q || ''),
+    }));
+  } catch (error: any) { res.status(error.statusCode || 500).json({ error: error.message || 'Failed to load table rows.' }); }
+};
+
 module.exports = {
   getStats,
+  getDatabaseTables,
+  getDatabaseTableRows,
   redeployServer,
   resetStudents: resetTable('students'),
   resetTeachers: resetTable('teachers'),
