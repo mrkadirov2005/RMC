@@ -88,7 +88,6 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
   const { loading, error } = useAppSelector((state) => state.auth);
 
   const config = roleConfig[userType];
-  const RoleIcon = config.icon;
 
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
@@ -174,8 +173,8 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
   };
 
   return (
-    <main data-translation-skip className="min-h-screen bg-[#f6fbff] text-[#21116a] lg:grid lg:grid-cols-2">
-      <section className="relative overflow-hidden border-b border-[#d8e4f1] bg-[#fbfdff] px-5 py-4 lg:min-h-screen lg:border-b-0 lg:border-r lg:px-12 lg:py-10 xl:px-14">
+    <main data-translation-skip className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-8 text-slate-950">
+      <section className="hidden">
         <div className="flex items-center gap-4">
           <img src={logoSrc} alt="Temurbek School" className="h-14 w-auto object-contain sm:h-20 lg:h-24" />
         </div>
@@ -217,20 +216,11 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
         </div>
       </section>
 
-      <section className="flex min-h-screen items-center justify-center bg-[#eef8ff] px-5 py-7 sm:px-8 lg:px-12">
-        <div className="mx-auto w-full max-w-[460px]">
-          <div className="mb-7 h-1 w-16 rounded-full bg-[#16a7e2]" aria-hidden="true" />
-          <div className="mb-9 flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-[#16a7e2]/25 bg-[#16a7e2]/10 text-[#16a7e2]">
-              <RoleIcon className="h-7 w-7" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#16a7e2]">{config.eyebrow}</p>
-              <h2 className="mt-1 text-2xl font-semibold tracking-normal text-[#21116a] xl:text-[1.85rem]">
-                {config.title} sign in
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600 xl:text-[0.95rem]">{config.subtitle}</p>
-            </div>
+      <section className="w-full max-w-[420px]">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="mb-8">
+            <img src={logoSrc} alt="Temurbek School" className="mb-7 h-14 w-auto object-contain" />
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950">{config.title} sign in</h1>
           </div>
 
           {error && (
@@ -239,13 +229,13 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </Alert>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div className="space-y-2">
-              <label htmlFor={`${userType}-username`} className="text-sm font-semibold text-[#21116a] xl:text-[0.95rem]">
+              <label htmlFor={`${userType}-username`} className="text-sm font-medium text-slate-700">
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id={`${userType}-username`}
                   placeholder="Enter username"
@@ -261,11 +251,11 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </div>
 
             <div className="space-y-2">
-              <label htmlFor={`${userType}-password`} className="text-sm font-semibold text-[#21116a] xl:text-[0.95rem]">
+              <label htmlFor={`${userType}-password`} className="text-sm font-medium text-slate-700">
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
+                <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id={`${userType}-password`}
                   placeholder="Enter password"
@@ -312,7 +302,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             <Button
               type="submit"
               disabled={loading}
-              className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d] focus-visible:ring-[#16a7e2]/40 lg:h-[3.15rem] xl:text-[0.95rem]"
+                className="h-12 w-full rounded-lg bg-slate-950 text-white hover:bg-slate-800"
             >
               {loading ? (
                 <>
@@ -328,19 +318,18 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             </Button>
           </form>
 
-          <div className="mt-9 border-t border-[#d8e4f1] pt-6">
-            <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Switch workspace</p>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-7 border-t border-slate-100 pt-5">
+            <div className="flex flex-wrap gap-x-4 gap-y-2">
               {otherRoles[userType].map((role) => {
                 const OtherIcon = roleConfig[role.type].icon;
                 return (
                   <Button
                     key={role.type}
                     type="button"
-                    variant="outline"
+                    variant="link"
                     size="sm"
                     onClick={() => navigate(role.path)}
-                    className="border-[#d8e4f1] bg-white text-[#21116a] hover:border-[#16a7e2] hover:bg-[#16a7e2]/5 hover:text-[#21116a] focus-visible:ring-[#16a7e2]/35"
+                    className="h-auto p-0 text-xs font-medium text-slate-500 hover:text-slate-950"
                   >
                     <OtherIcon className="mr-1.5 h-4 w-4" />
                     {role.label}
@@ -354,7 +343,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
             <button
               type="button"
               onClick={() => navigate('/owner/register')}
-              className="mt-5 text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 hover:text-[#16a7e2]"
+              className="mt-5 text-xs font-medium text-slate-500 hover:text-slate-950"
             >
               Create owner account with keyword
             </button>
