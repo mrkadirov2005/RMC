@@ -6,8 +6,6 @@ import { OwnerManagerContentHeader } from './components/OwnerManagerContentHeade
 import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerOverviewPanel } from './components/OwnerOverviewPanel';
-import { OwnerManagerTabStats } from './components/OwnerManagerTabStats';
-import { OwnerSystemSettings } from './components/OwnerSystemSettings';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -36,20 +34,6 @@ const OwnerManager = memo(() => {
           loading={vm.overviewLoading}
         />
 
-        <OwnerSystemSettings />
-
-        <OwnerManagerTabStats
-          activeTab={vm.activeTab}
-          data={vm.data}
-          loading={vm.loading}
-          crossCounts={vm.crossCounts}
-          collections={vm.statisticsCollections}
-          onEdit={vm.handleEdit}
-          onDelete={vm.handleDelete}
-          onHardDelete={vm.handleHardDelete}
-          onResetPassword={vm.handleResetPassword}
-          canHardDelete={vm.canHardDelete}
-        />
         <OwnerManagerTable
           activeTab={vm.activeTab}
           columns={vm.columns}
