@@ -116,6 +116,10 @@ export const ClassDialogs = ({
                   <Label htmlFor="class_name" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Class Name')} *</Label>
                   <Input id="class_name" required value={formData.class_name || ''} onChange={(e) => setFormData({ ...formData, class_name: e.target.value })} className="h-8 border-sky-100 bg-sky-50/60 text-xs font-semibold shadow-sm focus-visible:ring-sky-500 dark:border-input dark:bg-background" />
                 </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label htmlFor="subject_name" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Subject')} *</Label>
+                  <Input id="subject_name" required value={formData.subject_name || ''} onChange={(e) => setFormData({ ...formData, subject_name: e.target.value })} placeholder={t('e.g. Mathematics, English, IELTS')} className="h-8 border-teal-100 bg-teal-50/60 text-xs font-semibold shadow-sm focus-visible:ring-teal-500 dark:border-input dark:bg-background" />
+                </div>
                 {editingId && (
                   <div className="space-y-1">
                     <Label htmlFor="class_code" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Class Code')}</Label>

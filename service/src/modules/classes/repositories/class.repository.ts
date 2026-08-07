@@ -1,6 +1,6 @@
 const { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { classes, teachers } = require('../../../db/schema');
+const { classes, subjects, teachers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -78,6 +78,16 @@ const classSelection = (extra: Record<string, any> = {}) => ({
   deleted_at: classes.deletedAt,
   created_at: classes.createdAt,
   updated_at: classes.updatedAt,
+  subject_id: sql`(
+    SELECT s.subject_id FROM subjects s
+    WHERE s.class_id = classes.class_id
+    ORDER BY s.subject_id ASC LIMIT 1
+  )`,
+  subject_name: sql`(
+    SELECT s.subject_name FROM subjects s
+    WHERE s.class_id = classes.class_id
+    ORDER BY s.subject_id ASC LIMIT 1
+  )`,
   room_assignments: roomAssignmentsSql,
   ...extra,
 });
@@ -172,9 +182,8 @@ const toTimestamp = (value: any) => {
 };
 
 const insert = async (params: any[]) => {
-  const rows = await db
-    .insert(classes)
-    .values({
+  return db.transaction(async (tx: any) => {
+    const rows = await tx.insert(classes).values({
       centerId: params[0],
       className: params[1],
       classCode: params[2],
@@ -187,9 +196,20 @@ const insert = async (params: any[]) => {
       endDate: toTimestamp(params[9]),
       paymentAmount: params[10],
       paymentFrequency: params[11],
-    })
-    .returning(classSelection());
-  return rows[0];
+    }).returning({ class_id: classes.classId });
+    const classId = rows[0].class_id;
+    await tx.insert(subjects).values({
+      centerId: params[0],
+      classId,
+      subjectName: params[12],
+      subjectCode: params[13] || null,
+      teacherId: params[6] || null,
+      totalMarks: 100,
+      passingMarks: 40,
+    });
+    const created = await tx.select(classSelection()).from(classes).where(eq(classes.classId, classId)).limit(1);
+    return created[0];
+  });
 };
 
 const update = async (id: number, params: any[], centerId?: number) => {
@@ -215,6 +235,23 @@ const update = async (id: number, params: any[], centerId?: number) => {
     .set(updates)
     .where(and(...conditions))
     .returning(classSelection());
+  if (rows[0] && params[10] !== undefined) {
+    const existing = await db.select({ subject_id: subjects.subjectId }).from(subjects).where(eq(subjects.classId, id)).limit(1);
+    if (existing[0]) {
+      await db.update(subjects).set({ subjectName: params[10], teacherId: params[5] ?? undefined }).where(eq(subjects.subjectId, existing[0].subject_id));
+    } else {
+      await db.insert(subjects).values({
+        centerId: rows[0].center_id,
+        classId: id,
+        subjectName: params[10],
+        teacherId: params[5] || null,
+        totalMarks: 100,
+        passingMarks: 40,
+      });
+    }
+    const refreshed = await findById(id, centerId);
+    return refreshed;
+  }
   return rows[0] || null;
 };
 

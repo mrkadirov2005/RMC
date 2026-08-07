@@ -5,6 +5,8 @@ export interface Class {
   id?: number;
   center_id: number;
   class_name: string;
+  subject_id?: number;
+  subject_name?: string;
   class_code: string;
   level: number;
   section?: string;

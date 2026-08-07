@@ -11,7 +11,7 @@ const getClass = (id: number, centerId?: number, teacherId?: number) => classRep
 const generateClassCode = () => `CLS-${Date.now().toString(36).toUpperCase()}`;
 
 const createClass = async (body: any, centerId?: number) => {
-  const { center_id, class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency } = body;
+  const { center_id, class_name, subject_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency } = body;
   let validatedTeacherId = teacher_id || null;
   if (teacher_id) {
     const ok = await classRepository.teacherExists(teacher_id, centerId || center_id);
@@ -30,12 +30,14 @@ const createClass = async (body: any, centerId?: number) => {
     end_date || null,
     payment_amount,
     payment_frequency || 'Monthly',
+    String(subject_name).trim(),
+    null,
   ]);
   return { row };
 };
 
 const updateClass = (id: number, body: any, centerId?: number) => {
-  const { class_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
+  const { class_name, subject_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
   return classRepository.update(
     id,
     [
@@ -49,6 +51,7 @@ const updateClass = (id: number, body: any, centerId?: number) => {
       start_date === undefined ? undefined : start_date || null,
       end_date === undefined ? undefined : end_date || null,
       payment_amount,
+      subject_name === undefined ? undefined : String(subject_name).trim(),
     ],
     centerId
   );

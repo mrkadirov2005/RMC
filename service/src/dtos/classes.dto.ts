@@ -12,6 +12,10 @@ class CreateClassDto {
   @IsNotEmpty()
   class_name!: string;
 
+  @IsString()
+  @IsNotEmpty()
+  subject_name!: string;
+
   @IsOptional()
   @IsString()
   class_code?: string;
@@ -64,6 +68,11 @@ class UpdateClassDto {
   @IsOptional()
   @IsString()
   class_name?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  subject_name?: string;
 
   @IsOptional()
   @IsString()
