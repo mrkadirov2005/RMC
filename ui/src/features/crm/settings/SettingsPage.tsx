@@ -1,7 +1,7 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, Clock, Coins, Globe, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { CalendarDays, Clock, Coins, Globe, Palette, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,6 +22,14 @@ import {
   CALENDAR_DAY_START_HOUR_KEY,
   CALENDAR_DEFAULT_VIEW_KEY,
 } from '../calendar/utils';
+import {
+  applyListRowColors,
+  DEFAULT_LIST_ROW_ALTERNATE,
+  DEFAULT_LIST_ROW_PRIMARY,
+  LIST_ROW_ALTERNATE_KEY,
+  LIST_ROW_PRIMARY_KEY,
+  readListRowColors,
+} from './listAppearance';
 
 const DEFAULT_DURATION_KEY = 'lesson_duration_default';
 const OVERRIDE_DURATION_KEY = 'lesson_duration_override';
@@ -70,6 +78,8 @@ const SettingsPage = () => {
   const [calendarStartHour, setCalendarStartHour] = useState(8);
   const [calendarEndHour, setCalendarEndHour] = useState(18);
   const [lessonScoring, setLessonScoring] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
+  const [primaryRowColor, setPrimaryRowColor] = useState(DEFAULT_LIST_ROW_PRIMARY);
+  const [alternateRowColor, setAlternateRowColor] = useState(DEFAULT_LIST_ROW_ALTERNATE);
 
   useEffect(() => {
     setDefaultDuration(readStoredNumber(DEFAULT_DURATION_KEY, 90));
@@ -78,6 +88,9 @@ const SettingsPage = () => {
     setCalendarDefaultView(readStoredView());
     setCalendarStartHour(readStoredHour(CALENDAR_DAY_START_HOUR_KEY, 8));
     setCalendarEndHour(readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 18));
+    const rowColors = readListRowColors();
+    setPrimaryRowColor(rowColors.primary);
+    setAlternateRowColor(rowColors.alternate);
     settingsAPI.getLessonScoring()
       .then((response) => setLessonScoring(normalizeLessonScoringSettings(response.data)))
       .catch(() => setLessonScoring(defaultLessonScoringSettings));
@@ -118,6 +131,9 @@ const SettingsPage = () => {
     localStorage.setItem(CALENDAR_DEFAULT_VIEW_KEY, calendarDefaultView);
     localStorage.setItem(CALENDAR_DAY_START_HOUR_KEY, String(calendarStartHour));
     localStorage.setItem(CALENDAR_DAY_END_HOUR_KEY, String(calendarEndHour));
+    localStorage.setItem(LIST_ROW_PRIMARY_KEY, primaryRowColor);
+    localStorage.setItem(LIST_ROW_ALTERNATE_KEY, alternateRowColor);
+    applyListRowColors(primaryRowColor, alternateRowColor);
     try {
       await settingsAPI.saveLessonScoring(lessonScoring);
       showToast.success('Settings saved.');
@@ -148,12 +164,17 @@ const SettingsPage = () => {
     localStorage.removeItem(CALENDAR_DEFAULT_VIEW_KEY);
     localStorage.removeItem(CALENDAR_DAY_START_HOUR_KEY);
     localStorage.removeItem(CALENDAR_DAY_END_HOUR_KEY);
+    localStorage.removeItem(LIST_ROW_PRIMARY_KEY);
+    localStorage.removeItem(LIST_ROW_ALTERNATE_KEY);
     settingsAPI.saveLessonScoring(defaultLessonScoringSettings).catch(() => null);
     setDefaultDuration(90);
     setOverrideDuration('');
     setCalendarDefaultView('month');
     setCalendarStartHour(8);
     setCalendarEndHour(18);
+    setPrimaryRowColor(DEFAULT_LIST_ROW_PRIMARY);
+    setAlternateRowColor(DEFAULT_LIST_ROW_ALTERNATE);
+    applyListRowColors(DEFAULT_LIST_ROW_PRIMARY, DEFAULT_LIST_ROW_ALTERNATE);
     setLessonScoring(defaultLessonScoringSettings);
     showToast.success('Settings reset to defaults.');
   };
@@ -215,6 +236,35 @@ const SettingsPage = () => {
       </SectionPanel>
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <SectionPanel
+          title={
+            <span className="flex items-center gap-2">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm">
+                <Palette className="h-4 w-4" />
+              </span>
+              List row colors
+            </span>
+          }
+        >
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="primaryRowColor">First row color</Label>
+                <Input id="primaryRowColor" type="color" value={primaryRowColor} onChange={(event) => setPrimaryRowColor(event.target.value)} className="h-11 cursor-pointer p-1" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="alternateRowColor">Alternate row color</Label>
+                <Input id="alternateRowColor" type="color" value={alternateRowColor} onChange={(event) => setAlternateRowColor(event.target.value)} className="h-11 cursor-pointer p-1" />
+              </div>
+            </div>
+            <div className="overflow-hidden rounded-lg border text-sm">
+              <div className="px-4 py-3" style={{ backgroundColor: primaryRowColor }}>Example first row</div>
+              <div className="px-4 py-3" style={{ backgroundColor: alternateRowColor }}>Example alternate row</div>
+            </div>
+            <p className="text-xs text-muted-foreground">These colors apply to all table lists after saving and remain on this device.</p>
+          </div>
+        </SectionPanel>
+
         <SectionPanel
           title={
             <span className="flex items-center gap-2">

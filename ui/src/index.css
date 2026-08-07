@@ -33,6 +33,8 @@
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
     --info: 189 94% 43%;
+    --list-row-primary: #ffffff;
+    --list-row-alternate: #e5e7eb;
 
     /* Hero / gradient tokens */
     --hero-from: 239 84% 67%;
@@ -74,6 +76,14 @@
     --hero-via: 199 89% 48%;
     --hero-to: 160 84% 39%;
   }
+}
+
+tbody[data-list-body='true'] > tr:nth-child(odd) {
+  background-color: var(--list-row-primary) !important;
+}
+
+tbody[data-list-body='true'] > tr:nth-child(even) {
+  background-color: var(--list-row-alternate) !important;
 }
 
 @layer base {

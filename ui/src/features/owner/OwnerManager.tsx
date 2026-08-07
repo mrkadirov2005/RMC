@@ -6,6 +6,7 @@ import { OwnerManagerContentHeader } from './components/OwnerManagerContentHeade
 import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerOverviewPanel } from './components/OwnerOverviewPanel';
+import { OwnerWelcomeHero } from './components/OwnerWelcomeHero';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -14,6 +15,8 @@ const OwnerManager = memo(() => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/70 to-fuchsia-50/60 text-foreground dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
       <div className="mx-auto max-w-7xl space-y-4 px-4 py-4 sm:px-6 lg:px-8">
+        <OwnerWelcomeHero />
+
         <OwnerManagerContentHeader
           currentMeta={vm.currentMeta}
           activeTab={vm.activeTab}
@@ -30,7 +33,7 @@ const OwnerManager = memo(() => {
         <OwnerOverviewPanel
           collections={vm.overviewCollections}
           summary={vm.overviewSummary}
-          activeCenterLabel={vm.activeCenterLabel}
+          activeCenterLabel={vm.overviewCenterLabel}
           loading={vm.overviewLoading}
         />
 

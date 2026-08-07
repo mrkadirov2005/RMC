@@ -6,6 +6,9 @@ import './index.css'
 import App from './App.tsx'
 import { ThemeContextProvider } from './theme/ThemeContext.tsx'
 import { LanguageProvider } from './i18n/LanguageContext.tsx'
+import { initializeListRowColors } from './features/crm/settings/listAppearance.ts'
+
+initializeListRowColors()
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

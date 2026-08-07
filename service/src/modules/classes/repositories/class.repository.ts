@@ -1,6 +1,6 @@
 const { and, asc, desc, eq, ilike, isNotNull, isNull, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { classes, teachers } = require('../../../db/schema');
+const { classes, students, teachers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -133,9 +133,9 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
     .select(classSelection({
       student_count: sql`(
         SELECT COUNT(*)::int
-        FROM students s
-        WHERE s.class_id = ${classes.classId}
-          AND s.deleted_at IS NULL
+        FROM ${students}
+        WHERE ${students.classId} = ${classes.classId}
+          AND ${students.deletedAt} IS NULL
       )`,
     }))
     .from(classes)

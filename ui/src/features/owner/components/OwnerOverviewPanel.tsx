@@ -1,7 +1,6 @@
-import { Banknote, BookOpen, Building2, GraduationCap, ShieldCheck, Users } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatMoney } from '@/utils/helpers';
 import type { OwnerOverviewCollections } from '../types';
+import { OwnerStatisticsCarousel } from './OwnerStatisticsCarousel';
 
 interface Props {
   collections: OwnerOverviewCollections;
@@ -16,42 +15,18 @@ interface Props {
   loading: boolean;
 }
 
-export const OwnerOverviewPanel = ({ collections, summary, loading }: Props) => {
+export const OwnerOverviewPanel = ({ collections, summary, activeCenterLabel, loading }: Props) => {
   const students = Number(summary?.totalStudents || 0);
   const teachers = Number(summary?.totalTeachers || 0);
   const groups = Number(summary?.totalClasses || 0);
-  const centers = collections.centers.length;
+  const centers = summary ? 1 : 0;
   const admins = collections.superusers.length;
-  const collected = Number(summary?.collected || 0);
   const studentsPerTeacher = teachers ? Math.round(students / teachers) : 0;
   const studentsPerGroup = groups ? Math.round(students / groups) : 0;
 
-  const metrics = [
-    { label: 'Centers', value: centers.toLocaleString(), icon: Building2 },
-    { label: 'Students', value: students.toLocaleString(), icon: GraduationCap },
-    { label: 'Teachers', value: teachers.toLocaleString(), icon: Users },
-    { label: 'Groups', value: groups.toLocaleString(), icon: BookOpen },
-    { label: 'Admins', value: admins.toLocaleString(), icon: ShieldCheck },
-    { label: 'Collected', value: formatMoney(collected), icon: Banknote },
-  ];
-
   return (
     <section className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 md:grid-cols-3 xl:grid-cols-6">
-        {metrics.map(({ label, value, icon: Icon }) => (
-          <Card key={label} className="border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-muted-foreground">{label}</p>
-                <Icon className="h-4 w-4 text-slate-400" />
-              </div>
-              <p className="mt-2 truncate text-xl font-bold text-slate-950 dark:text-white">
-                {loading ? '—' : value}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {loading ? <Card><CardContent className="p-12 text-center text-sm text-muted-foreground">Loading overview...</CardContent></Card> : <OwnerStatisticsCarousel centerLabel={activeCenterLabel} centers={centers} students={students} teachers={teachers} groups={groups} admins={admins} payments={Number(summary?.totalPayments || 0)} />}
 
       <Card className="border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="grid divide-y p-0 sm:grid-cols-3 sm:divide-x sm:divide-y-0">

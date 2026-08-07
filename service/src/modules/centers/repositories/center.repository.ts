@@ -22,14 +22,14 @@ const getSummaries = (centerId?: number) => {
   const query = db
     .select({
       center_id: centers.centerId,
-      students: sql`(SELECT COUNT(*)::int FROM ${students} s WHERE s.center_id = ${centers.centerId} AND s.deleted_at IS NULL)`,
-      teachers: sql`(SELECT COUNT(*)::int FROM ${teachers} t WHERE t.center_id = ${centers.centerId} AND t.deleted_at IS NULL)`,
-      classes: sql`(SELECT COUNT(*)::int FROM ${classes} c WHERE c.center_id = ${centers.centerId} AND c.deleted_at IS NULL)`,
-      payments: sql`(SELECT COUNT(*)::int FROM ${payments} p WHERE p.center_id = ${centers.centerId} AND p.deleted_at IS NULL)`,
+      students: sql`(SELECT COUNT(*)::int FROM ${students} WHERE ${students.centerId} = ${centers.centerId} AND ${students.deletedAt} IS NULL)`,
+      teachers: sql`(SELECT COUNT(*)::int FROM ${teachers} WHERE ${teachers.centerId} = ${centers.centerId} AND ${teachers.deletedAt} IS NULL)`,
+      classes: sql`(SELECT COUNT(*)::int FROM ${classes} WHERE ${classes.centerId} = ${centers.centerId} AND ${classes.deletedAt} IS NULL)`,
+      payments: sql`(SELECT COUNT(*)::int FROM ${payments} WHERE ${payments.centerId} = ${centers.centerId} AND ${payments.deletedAt} IS NULL)`,
       collected: sql`(
-        SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(p.payment_status, '')) IN ('completed', 'paid') THEN COALESCE(p.amount, 0) ELSE 0 END), 0)::numeric
-        FROM ${payments} p
-        WHERE p.center_id = ${centers.centerId} AND p.deleted_at IS NULL
+        SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid') THEN COALESCE(${payments.amount}, 0) ELSE 0 END), 0)::numeric
+        FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId} AND ${payments.deletedAt} IS NULL
       )`,
     })
     .from(centers)

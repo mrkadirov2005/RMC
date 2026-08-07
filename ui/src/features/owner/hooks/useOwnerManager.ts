@@ -118,6 +118,9 @@ export const useOwnerManager = () => {
       : activeCenterId
         ? centerLookup.get(Number(activeCenterId)) || `Center ${activeCenterId}`
         : 'None selected';
+  const overviewCenterLabel = activeCenterId
+    ? centerLookup.get(Number(activeCenterId)) || `Center ${activeCenterId}`
+    : 'the selected center';
   const isScopedAndMissingCenter = needsCenterScope && !activeCenterId;
   const scopedMessage = isScopedAndMissingCenter
     ? 'Select an active branch first to load and manage this section.'
@@ -252,18 +255,25 @@ export const useOwnerManager = () => {
         canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
       ]);
       const summaries = toRows(summariesRes);
+      const selectedSummary = summaries.find(
+        (row: any) => Number(row.center_id || row.centerId) === Number(activeCenterId),
+      );
       setOverviewSummary({
-        totalStudents: summaries.reduce((sum: number, row: any) => sum + Number(row.students || 0), 0),
-        totalTeachers: summaries.reduce((sum: number, row: any) => sum + Number(row.teachers || 0), 0),
-        totalClasses: summaries.reduce((sum: number, row: any) => sum + Number(row.classes || 0), 0),
-        totalPayments: summaries.reduce((sum: number, row: any) => sum + Number(row.payments || 0), 0),
-        collected: summaries.reduce((sum: number, row: any) => sum + Number(row.collected || 0), 0),
+        totalStudents: Number(selectedSummary?.students || 0),
+        totalTeachers: Number(selectedSummary?.teachers || 0),
+        totalClasses: Number(selectedSummary?.classes || 0),
+        totalPayments: Number(selectedSummary?.payments || 0),
+        collected: Number(selectedSummary?.collected || 0),
       });
 
       setOverviewCollections({
-        centers: toRows(centersRes),
+        centers: toRows(centersRes).filter(
+          (center: any) => Number(center.center_id || center.id) === Number(activeCenterId),
+        ),
         owners: toRows(ownersRes),
-        superusers: toRows(superusersRes),
+        superusers: toRows(superusersRes).filter(
+          (admin: any) => Number(admin.center_id || admin.centerId) === Number(activeCenterId),
+        ),
         students: [],
         teachers: [],
         classes: [],
@@ -274,7 +284,7 @@ export const useOwnerManager = () => {
     } finally {
       setOverviewLoading(false);
     }
-  }, [canHardDelete]);
+  }, [activeCenterId, canHardDelete]);
 
 // Memoizes the load centers callback.
   const loadCenters = useCallback(async () => {
@@ -596,6 +606,7 @@ export const useOwnerManager = () => {
     dataCount,
     centerCount,
     activeCenterLabel,
+    overviewCenterLabel,
     scopedMessage,
     needsCenterScope,
     isScopedAndMissingCenter,
