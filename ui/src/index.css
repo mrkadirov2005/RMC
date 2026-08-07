@@ -34,7 +34,7 @@
     --warning: 38 92% 50%;
     --info: 189 94% 43%;
     --list-row-primary: #ffffff;
-    --list-row-alternate: #e5e7eb;
+    --list-row-alternate: #f1f5f9;
 
     /* Hero / gradient tokens */
     --hero-from: 239 84% 67%;
@@ -84,6 +84,10 @@ tbody[data-list-body='true'] > tr:nth-child(odd) {
 
 tbody[data-list-body='true'] > tr:nth-child(even) {
   background-color: var(--list-row-alternate) !important;
+}
+
+tbody[data-list-body='true'] > tr {
+  border-bottom: 1px solid #cbd5e1;
 }
 
 @layer base {

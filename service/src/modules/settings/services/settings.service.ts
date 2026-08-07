@@ -46,6 +46,20 @@ const saveLessonScoring = async (settings: any, centerId?: number) => {
   return settingsRepository.saveSetting(LESSON_SCORING_KEY, normalized, centerId);
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring };
+const sidebarOrderKey = (userType: string, userId: number) => `sidebar_order:${userType}:${userId}`;
+
+const getSidebarOrder = async (userType: string, userId: number) => {
+  const saved = await settingsRepository.getSetting(sidebarOrderKey(userType, userId));
+  return Array.isArray(saved) ? saved.filter((path: unknown) => typeof path === 'string').slice(0, 100) : [];
+};
+
+const saveSidebarOrder = async (userType: string, userId: number, order: unknown) => {
+  const normalized = Array.isArray(order)
+    ? Array.from(new Set(order.filter((path): path is string => typeof path === 'string' && path.startsWith('/')))).slice(0, 100)
+    : [];
+  return settingsRepository.saveSetting(sidebarOrderKey(userType, userId), normalized);
+};
+
+module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring, getSidebarOrder, saveSidebarOrder };
 
 export {};

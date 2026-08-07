@@ -28,6 +28,22 @@ const saveLessonScoring = async (req: any, res: any) => {
   }
 };
 
-module.exports = { getLessonScoring, saveLessonScoring };
+const getSidebarOrder = async (req: any, res: any) => {
+  try {
+    res.json(await settingsService.getSidebarOrder(String(req.user.userType), Number(req.user.id)));
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch sidebar order', details: error.message || String(error) });
+  }
+};
+
+const saveSidebarOrder = async (req: any, res: any) => {
+  try {
+    res.json(await settingsService.saveSidebarOrder(String(req.user.userType), Number(req.user.id), req.body?.order));
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to save sidebar order', details: error.message || String(error) });
+  }
+};
+
+module.exports = { getLessonScoring, saveLessonScoring, getSidebarOrder, saveSidebarOrder };
 
 export {};

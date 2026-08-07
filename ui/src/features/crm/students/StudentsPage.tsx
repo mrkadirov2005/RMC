@@ -1,12 +1,12 @@
 // Page component for the students screen in the crm feature.
 
 import { useMemo, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, Plus, Upload, Users } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Download, FileSpreadsheet, MoreHorizontal, Plus, Upload, Users } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
-import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { exportCsvEntity } from '@/shared/dataCsv';
@@ -39,7 +39,6 @@ const StudentsPage = () => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLanguage();
   const s = useStudentsPage();
-  const title = t('Students');
   const canImportStudents = s.user?.userType === 'superuser';
   const schoolOptions = useMemo(() => {
     const values = new Set<string>();
@@ -211,68 +210,6 @@ const StudentsPage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title={title}
-        description={t('Browse, filter, and manage student profiles with quick access to classes, schools, status, and coin balances.')}
-        icon={Users}
-        actions={
-          <>
-            <ViewModeToggle value={viewMode} onChange={setViewMode} />
-            {canImportStudents && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="hidden"
-                  onChange={(event) => handleImportStudents(event.target.files?.[0])}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isImporting}
-                  className={`${headerActionClass} bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:text-white`}
-                >
-                  <Upload className={headerActionIconClass} /> {isImporting ? t('Importing...') : t('Import CSV')}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleExportStudents}
-                  className={`${headerActionClass} bg-emerald-600 hover:bg-emerald-700`}
-                >
-                  <Download className={headerActionIconClass} /> {t('Export CSV')}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handlePushStudentsToSheets}
-                  disabled={isSheetsPushing || isSheetsPulling}
-                  className={`${headerActionClass} bg-fuchsia-600 hover:bg-fuchsia-700 disabled:bg-fuchsia-400 disabled:text-white`}
-                >
-                  <FileSpreadsheet className={headerActionIconClass} /> {isSheetsPushing ? t('Updating...') : t('Update Sheets')}
-                </Button>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handlePullStudentsFromSheets}
-                  disabled={isSheetsPushing || isSheetsPulling}
-                  className={`${headerActionClass} bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:text-white`}
-                >
-                  <Download className={headerActionIconClass} /> {isSheetsPulling ? t('Importing...') : t('Import Sheets')}
-                </Button>
-              </>
-            )}
-          </>
-        }
-        primaryAction={
-          <Button size="sm" onClick={() => studentModal.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
-            <Plus className={headerActionIconClass} /> {t('Add Student')}
-          </Button>
-        }
-      />
-
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
         <div className="mb-5 flex flex-wrap items-stretch gap-3">
@@ -300,6 +237,38 @@ const StudentsPage = () => {
                 {total.toLocaleString()} {t('Students').toLowerCase()}
               </p>
             </div>}
+          </div>
+          <div className="ml-auto flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" variant="outline" size="icon" className="h-10 w-10" aria-label="More student actions">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-[220px] p-2">
+                <div className="flex flex-col gap-1.5 [&_button]:w-full [&_button]:justify-start">
+                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                  {canImportStudents && <>
+                    <input ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleImportStudents(event.target.files?.[0])} />
+                    <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isImporting}>
+                      <Upload className={headerActionIconClass} /> {isImporting ? t('Importing...') : t('Import CSV')}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={handleExportStudents}>
+                      <Download className={headerActionIconClass} /> {t('Export CSV')}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={handlePushStudentsToSheets} disabled={isSheetsPushing || isSheetsPulling}>
+                      <FileSpreadsheet className={headerActionIconClass} /> {isSheetsPushing ? t('Updating...') : t('Update Sheets')}
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" onClick={handlePullStudentsFromSheets} disabled={isSheetsPushing || isSheetsPulling}>
+                      <Download className={headerActionIconClass} /> {isSheetsPulling ? t('Importing...') : t('Import Sheets')}
+                    </Button>
+                  </>}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="sm" onClick={() => studentModal.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+              <Plus className={headerActionIconClass} /> {t('Add Student')}
+            </Button>
           </div>
         </div>
         <TabsContent value="students" className="mt-0">

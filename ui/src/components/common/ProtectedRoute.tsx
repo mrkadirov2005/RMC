@@ -9,6 +9,7 @@ interface ProtectedRouteProps {
   requiredUserType?: 'superuser' | 'teacher' | 'student';
   allowedUserTypes?: Array<'superuser' | 'teacher' | 'student'>;
   requiredRole?: string;
+  excludedRoles?: string[];
   requiredPermission?: string;
 }
 
@@ -18,6 +19,7 @@ export const ProtectedRoute = ({
   requiredUserType,
   allowedUserTypes,
   requiredRole,
+  excludedRoles,
   requiredPermission,
 }: ProtectedRouteProps) => {
   const { isAuthenticated, user, isInitialized } = useAppSelector((state) => state.auth);
@@ -45,6 +47,10 @@ export const ProtectedRoute = ({
 
   if (requiredRole && (user.role || '').toLowerCase() !== requiredRole.toLowerCase()) {
     return <Navigate to="/unauthorized" replace />;
+  }
+
+  if (excludedRoles?.some((role) => role.toLowerCase() === String(user.role || '').toLowerCase())) {
+    return <Navigate to={String(user.role || '').toLowerCase() === 'owner' ? '/owner/manage' : '/unauthorized'} replace />;
   }
 
   if (requiredPermission && !canAccess(requiredPermission)) {

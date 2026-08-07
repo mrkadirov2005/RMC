@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from 'react';
-import { Plus, Trash2, Loader2, CalendarDays, Search, X, BookOpen, Upload, Download, UserRound, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Loader2, CalendarDays, Search, X, BookOpen, Upload, Download, UserRound, ChevronDown, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
@@ -23,6 +23,7 @@ import {
 import { PaginationBar, defaultCardPageSizeOptions } from '@/components/common/PaginationBar';
 import { cn } from '@/lib/utils';
 import { formatSchedule } from '../queries';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type ClassesMainViewProps = {
   t: (key: string) => string;
@@ -112,7 +113,7 @@ export const ClassesMainView = ({
   renderClassActions,
 }: ClassesMainViewProps) => (
   <>
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
+      <div className="hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
         <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
         <div className="relative flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -246,6 +247,29 @@ export const ClassesMainView = ({
             ))}
           </SelectContent>
         </Select>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0" aria-label="More group actions">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[220px] p-2">
+            <div className="flex flex-col gap-1.5 [&_button]:w-full [&_button]:justify-start">
+              <ViewModeToggle value={viewMode} onChange={setViewMode} />
+              <input ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleImportClasses(event.target.files?.[0])} />
+              <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isImporting}>
+                {isImporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
+                {isImporting ? t('Importing...') : t('Import CSV')}
+              </Button>
+              <Button type="button" variant="ghost" size="sm" onClick={handleExportClasses}>
+                <Download className="mr-2 h-4 w-4" />{t('Export CSV')}
+              </Button>
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button size="sm" onClick={() => handleOpenModal()} className="h-10 shrink-0">
+          <Plus className="mr-1.5 h-4 w-4" />{t('Add Class')}
+        </Button>
       </div>
 
       {state.loading ? (
@@ -262,10 +286,10 @@ export const ClassesMainView = ({
         </Alert>
       ) : groupView === 'teachers' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-500 dark:hidden" />
           <Table>
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
+                <TableHead className="h-8 w-12 px-2">#</TableHead>
                 <TableHead className="min-w-[180px]">{t('Teacher')}</TableHead>
                 <TableHead className="w-[90px] text-center">{t('Groups')}</TableHead>
                 <TableHead className="w-[120px] text-center">{t('Scheduled')}</TableHead>
@@ -275,30 +299,28 @@ export const ClassesMainView = ({
             <TableBody>
               {teacherRows.map((row, index) => {
                 const scheduled = row.classes.filter((cls: any) => formatSchedule(cls) !== 'No schedule').length;
-                const accent = index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600';
                 const isTeacherExpanded = expandedTeacherIds.has(row.id);
+                if (expandedTeacherIds.size > 0 && !isTeacherExpanded) return null;
                 return (
                   <Fragment key={row.id || row.name}>
                     <TableRow className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+                      <TableCell className="px-2 py-1.5 text-xs font-bold tabular-nums text-muted-foreground">{index + 1}</TableCell>
                       <TableCell className="py-2">
                         <button
                           type="button"
                           onClick={() => toggleTeacherExpanded(row.id)}
                           className="flex min-w-0 items-center gap-2 text-left"
                         >
-                          <div className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md ${accent} text-white shadow-sm`}>
-                            <UserRound className="h-3.5 w-3.5" />
-                          </div>
                           <span className="truncate text-sm font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{row.name}</span>
                         </button>
                       </TableCell>
                       <TableCell className="py-2 text-center">
-                        <span className="inline-flex min-w-14 justify-center rounded-md bg-blue-600 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                        <span className="inline-flex min-w-14 justify-center text-xs font-bold text-slate-700 dark:text-slate-200">
                           {row.classes.length}
                         </span>
                       </TableCell>
                       <TableCell className="py-2 text-center">
-                        <span className="inline-flex min-w-14 justify-center rounded-md bg-amber-500 px-2 py-1 text-xs font-bold text-white shadow-sm">
+                        <span className="inline-flex min-w-14 justify-center text-xs font-bold text-slate-700 dark:text-slate-200">
                           {scheduled}
                         </span>
                       </TableCell>
@@ -306,18 +328,19 @@ export const ClassesMainView = ({
                         <Button
                           type="button"
                           size="sm"
+                          variant="outline"
                           onClick={() => toggleTeacherExpanded(row.id)}
-                          className={`h-7 rounded-md px-2 text-[11px] font-semibold text-white ${isTeacherExpanded ? 'bg-rose-600 hover:bg-rose-700' : 'bg-cyan-600 hover:bg-cyan-700'}`}
+                          className="h-7 rounded-md border-slate-300 bg-transparent px-2 text-[11px] font-semibold text-slate-700 hover:bg-transparent hover:text-sky-700 dark:text-slate-200"
                         >
                           <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isTeacherExpanded && 'rotate-180')} />
-                          {isTeacherExpanded ? t('Close') : t('Open')}
+                          {isTeacherExpanded ? t('Back') : t('Open')}
                         </Button>
                       </TableCell>
                     </TableRow>
                     {isTeacherExpanded && (
                       <TableRow>
-                        <TableCell colSpan={4} className="bg-slate-50/70 p-2 dark:bg-muted/30">
-                          <div className="grid gap-2">
+                        <TableCell colSpan={5} className="p-2">
+                          <div className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
                             {row.classes.map((cls: any, classIndex: number) => {
                               const classId = getClassId(cls);
                               const isClassExpanded = expandedClassIds.has(classId);
@@ -326,26 +349,28 @@ export const ClassesMainView = ({
                               return (
                                 <div
                                   key={classId || cls.class_name}
-                                  className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-background"
+                                  className="overflow-hidden border-b last:border-b-0"
+                                  style={{ backgroundColor: `var(${classIndex % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}
                                 >
-                                  <div className="grid gap-2 px-2 py-2 md:grid-cols-[minmax(220px,1fr)_120px_minmax(260px,auto)_90px] md:items-center">
+                                  <div className="grid gap-1.5 px-2 py-1.5 md:grid-cols-[minmax(220px,1fr)_100px_minmax(260px,auto)_70px] md:items-center">
                                     <button
                                       type="button"
                                       onClick={() => toggleClassExpanded(classId)}
                                       className="min-w-0 text-left"
                                     >
-                                      <span className={`mr-2 inline-flex h-5 min-w-5 items-center justify-center rounded ${classIndex % 4 === 0 ? 'bg-cyan-600' : classIndex % 4 === 1 ? 'bg-violet-600' : classIndex % 4 === 2 ? 'bg-orange-500' : 'bg-rose-600'} px-1.5 text-[10px] font-bold text-white`}>
+                                      <span className="mr-2 inline-flex h-5 min-w-5 items-center justify-center px-1.5 text-[10px] font-bold text-slate-500">
                                         {classIndex + 1}
                                       </span>
                                       <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
                                     </button>
-                                    <span className="rounded-md bg-amber-500 px-2 py-1 text-center text-[11px] font-semibold text-white">{getClassRoomLabel(cls) || t('No room')}</span>
+                                    <span className="px-2 py-1 text-center text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || t('No room')}</span>
                                     {renderClassActions(cls)}
                                     <Button
                                       type="button"
                                       size="sm"
+                                      variant="outline"
                                       onClick={() => toggleClassExpanded(classId)}
-                                      className={`h-7 rounded-md px-2 text-[11px] font-semibold text-white ${isClassExpanded ? 'bg-rose-600 hover:bg-rose-700' : 'bg-emerald-600 hover:bg-emerald-700'}`}
+                                      className="h-7 rounded-md border-slate-300 bg-transparent px-2 text-[11px] font-semibold text-slate-700 hover:bg-transparent hover:text-sky-700 dark:text-slate-200"
                                     >
                                       <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isClassExpanded && 'rotate-180')} />
                                       {studentCount}
@@ -373,8 +398,8 @@ export const ClassesMainView = ({
                                                 <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                                                   <TableCell className="px-2 py-2">
                                                     <div className="flex min-w-0 items-center gap-2">
-                                                      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[10px] font-bold text-white ${studentIndex % 4 === 0 ? 'bg-sky-600' : studentIndex % 4 === 1 ? 'bg-emerald-600' : studentIndex % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'}`}>
-                                                        {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                                                      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[10px] font-bold tabular-nums text-slate-500">
+                                                        {studentIndex + 1}
                                                       </span>
                                                       <span className="truncate font-semibold text-slate-950 dark:text-card-foreground">
                                                         {[student.first_name, student.last_name].filter(Boolean).join(' ') || t('Unnamed student')}
@@ -407,7 +432,6 @@ export const ClassesMainView = ({
         </Card>
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
           {selectedClassIds.size > 0 && (
             <div className="flex items-center justify-between border-b bg-sky-50/70 px-4 py-2 text-sm dark:bg-muted/50">
               <span className="font-medium">{selectedClassIds.size} {t('selected')}</span>
@@ -437,6 +461,7 @@ export const ClassesMainView = ({
                     className="h-4 w-4"
                   />
                 </TableHead>
+                <TableHead className="h-8 w-12 px-2">#</TableHead>
                 <TableHead>{t('Class')}</TableHead>
                 <TableHead>{t('Teacher')}</TableHead>
                 <TableHead>{t('Schedule')}</TableHead>
@@ -445,7 +470,7 @@ export const ClassesMainView = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedClasses.items.map((cls: any) => (
+              {paginatedClasses.items.map((cls: any, index: number) => (
                 <TableRow key={cls.class_id || cls.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                   <TableCell>
                     <input
@@ -456,6 +481,7 @@ export const ClassesMainView = ({
                       className="h-4 w-4"
                     />
                   </TableCell>
+                  <TableCell className="px-2 py-1.5 text-xs font-bold tabular-nums text-muted-foreground">{paginatedClasses.start + index + 1}</TableCell>
                   <TableCell className="py-2 font-medium">
                     <button
                       type="button"
@@ -466,11 +492,11 @@ export const ClassesMainView = ({
                     </button>
                   </TableCell>
                   <TableCell className="py-2">
-                    <span className="rounded-md bg-violet-600 px-2 py-1 text-[11px] font-semibold text-white">{getTeacherName(cls.teacher_id)}</span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getTeacherName(cls.teacher_id)}</span>
                   </TableCell>
                   <TableCell className="max-w-[180px] py-2 text-xs text-muted-foreground">{formatSchedule(cls)}</TableCell>
                   <TableCell className="py-2">
-                    <span className="rounded-md bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white">{getClassRoomLabel(cls) || '-'}</span>
+                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || '-'}</span>
                   </TableCell>
                   <TableCell className="text-right">
                     {renderClassActions(cls)}

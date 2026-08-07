@@ -207,10 +207,8 @@ const ClassesPage = () => {
   };
   const toggleTeacherExpanded = (id: number) => {
     setExpandedTeacherIds((current) => {
-      const next = new Set(current);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
+      if (current.has(id)) return new Set();
+      return new Set([id]);
     });
   };
   const toggleClassExpanded = (id: number) => {
@@ -278,8 +276,9 @@ const ClassesPage = () => {
       <Button
         type="button"
         size="sm"
+        variant="ghost"
         onClick={() => navigate(`/classes/${getClassId(cls)}`)}
-        className="h-7 rounded-md bg-cyan-600 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-cyan-700"
+        className="h-7 px-2 text-[11px] font-semibold text-slate-700"
       >
         <Info className="mr-1 h-3.5 w-3.5" />
         {t('View')}
@@ -287,8 +286,9 @@ const ClassesPage = () => {
       <Button
         type="button"
         size="sm"
+        variant="ghost"
         onClick={() => handleGenerateSessions(cls)}
-        className="h-7 rounded-md bg-indigo-600 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-indigo-700"
+        className="h-7 px-2 text-[11px] font-semibold text-slate-700"
       >
         <CalendarDays className="mr-1 h-3.5 w-3.5" />
         {t('Sessions')}
@@ -296,8 +296,9 @@ const ClassesPage = () => {
       <Button
         type="button"
         size="sm"
+        variant="ghost"
         onClick={() => handleOpenModal(cls)}
-        className="h-7 rounded-md bg-amber-500 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-amber-600"
+        className="h-7 px-2 text-[11px] font-semibold text-slate-700"
       >
         <Pencil className="mr-1 h-3.5 w-3.5" />
         {t('Edit')}
@@ -305,8 +306,9 @@ const ClassesPage = () => {
       <Button
         type="button"
         size="sm"
+        variant="ghost"
         onClick={() => handleDelete(cls.class_id || cls.id || 0, cls.class_name)}
-        className="h-7 rounded-md bg-rose-600 px-2 text-[11px] font-semibold text-white shadow-sm hover:bg-rose-700"
+        className="h-7 px-2 text-[11px] font-semibold text-rose-600"
       >
         <Trash2 className="mr-1 h-3.5 w-3.5" />
         {t('Delete')}
@@ -315,7 +317,7 @@ const ClassesPage = () => {
   );
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6">
+    <div className="space-y-4">
       <ClassesMainView
         t={t}
         viewMode={viewMode}

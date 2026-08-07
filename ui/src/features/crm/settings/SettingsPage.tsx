@@ -1,7 +1,8 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { CalendarDays, Clock, Coins, Globe, Palette, RotateCcw, Save, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { Activity, CalendarDays, Clock, Coins, Globe, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -71,6 +72,7 @@ type ScoreSection = 'attendance' | 'homework' | 'activity';
 
 // Renders the settings page screen.
 const SettingsPage = () => {
+  const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const [defaultDuration, setDefaultDuration] = useState(90);
   const [overrideDuration, setOverrideDuration] = useState<number | ''>('');
@@ -232,6 +234,28 @@ const SettingsPage = () => {
               </button>
             ))}
           </div>
+        </div>
+      </SectionPanel>
+
+      <SectionPanel
+        title={
+          <span className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm">
+              <Server className="h-4 w-4" />
+            </span>
+            System tools
+          </span>
+        }
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
+          <button type="button" onClick={() => navigate('/logs')} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-slate-300 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted">
+            <Activity className="h-5 w-5 text-slate-500" />
+            <span><strong className="block text-sm">Journals</strong><small className="text-muted-foreground">Review request and activity logs.</small></span>
+          </button>
+          <button type="button" onClick={() => navigate('/engineering')} className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left transition hover:border-slate-300 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted">
+            <Server className="h-5 w-5 text-slate-500" />
+            <span><strong className="block text-sm">Engineering</strong><small className="text-muted-foreground">Open database and server tools.</small></span>
+          </button>
         </div>
       </SectionPanel>
 

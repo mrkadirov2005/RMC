@@ -1,12 +1,11 @@
 // Page component for the teachers screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, Upload, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, Upload, Download, MoreHorizontal } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
-import { PageHeader } from '@/components/common/PageHeader';
 import { MetricCard } from '@/components/common/MetricCard';
 import { PageToolbar } from '@/components/common/PageToolbar';
 import { Input } from '@/components/ui/input';
@@ -36,6 +35,7 @@ import { PaginationBar, defaultCardPageSizeOptions } from '@/components/common/P
 import { getPaginatedRowNumber } from '@/components/common/pagination';
 import { useListSelection } from '@/components/common/useListSelection';
 import { teachersApi } from './api/teachersApi';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -160,18 +160,19 @@ const TeachersPage = () => {
   ];
   const renderTeacherActions = (teacher: Teacher) => (
     <div className="flex flex-wrap justify-end gap-1.5">
-      <Button type="button" size="sm" className="h-7 gap-1 bg-cyan-600 px-2 text-xs text-white hover:bg-cyan-700" onClick={() => navigate(getTeacherProfilePath(teacher))}>
+      <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs text-slate-700" onClick={() => navigate(getTeacherProfilePath(teacher))}>
         <Eye className="h-3.5 w-3.5" />
         Profile
       </Button>
-      <Button type="button" size="sm" className="h-7 gap-1 bg-blue-600 px-2 text-xs text-white hover:bg-blue-700" onClick={() => handleOpenModal(teacher)}>
+      <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs text-slate-700" onClick={() => handleOpenModal(teacher)}>
         <Pencil className="h-3.5 w-3.5" />
         Edit
       </Button>
       <Button
         type="button"
         size="sm"
-        className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700"
+        variant="ghost"
+        className="h-7 gap-1 px-2 text-xs text-rose-600"
         onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
       >
         <Trash2 className="h-3.5 w-3.5" />
@@ -237,48 +238,6 @@ const TeachersPage = () => {
 
   return (
     <div className="space-y-4">
-      <PageHeader
-        title="Teachers"
-        description="Manage instructors, specializations, access, and profile details in one place."
-        icon={GraduationCap}
-        actions={
-          <>
-            <ViewModeToggle value={viewMode} onChange={setViewMode} />
-            {canImportTeachers && (
-              <>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="hidden"
-                  onChange={(event) => handleImportTeachers(event.target.files?.[0])}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isImporting}
-                  className={`${headerActionClass} bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:text-white`}
-                >
-                  {isImporting ? <Loader2 className={`${headerActionIconClass} animate-spin`} /> : <Upload className={headerActionIconClass} />}
-                  {isImporting ? t('Importing...') : t('Import CSV')}
-                </Button>
-                <Button type="button" size="sm" className={`${headerActionClass} bg-emerald-600 hover:bg-emerald-700`} onClick={handleExportTeachers}>
-                  <Download className={headerActionIconClass} />
-                  {t('Export CSV')}
-                </Button>
-              </>
-            )}
-          </>
-        }
-        primaryAction={
-          <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
-            <Plus className={headerActionIconClass} />
-            Add Teacher
-          </Button>
-        }
-      />
-
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <MetricCard
@@ -298,8 +257,8 @@ const TeachersPage = () => {
         </Alert>
       )}
 
-      <PageToolbar>
-        <div className="relative max-w-xl">
+      <PageToolbar className="flex items-center gap-2">
+        <div className="relative max-w-xl flex-1">
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
@@ -320,6 +279,20 @@ const TeachersPage = () => {
             </Button>
           )}
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild><Button type="button" variant="outline" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[210px] p-2">
+            <div className="flex flex-col gap-1.5 [&_button]:w-full [&_button]:justify-start">
+              <ViewModeToggle value={viewMode} onChange={setViewMode} />
+              {canImportTeachers && <>
+                <input ref={fileInputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => handleImportTeachers(event.target.files?.[0])} />
+                <Button type="button" variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()} disabled={isImporting}>{isImporting ? <Loader2 className={`${headerActionIconClass} animate-spin`} /> : <Upload className={headerActionIconClass} />}{isImporting ? t('Importing...') : t('Import CSV')}</Button>
+                <Button type="button" variant="ghost" size="sm" onClick={handleExportTeachers}><Download className={headerActionIconClass} />{t('Export CSV')}</Button>
+              </>}
+            </div>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}><Plus className={headerActionIconClass} />Add Teacher</Button>
       </PageToolbar>
 
       {state.loading ? (
@@ -402,15 +375,14 @@ const TeachersPage = () => {
                           >
                             {teacher.first_name} {teacher.last_name}
                           </button>
-                          {teacher.username && <p className="truncate text-[11px] text-muted-foreground">@{teacher.username}</p>}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
-                      <span className="inline-flex rounded-md bg-emerald-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">{Number(teacher.student_count || 0)}</span>
+                      <span className="inline-flex text-[11px] font-bold text-slate-700 dark:text-slate-200">{Number(teacher.student_count || 0)}</span>
                     </TableCell>
                     <TableCell className="px-2 py-2 text-right">
-                      <span className="inline-flex rounded-md bg-fuchsia-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">
+                      <span className="inline-flex text-[11px] font-bold text-slate-700 dark:text-slate-200">
                         {Number(teacher.salary_percentage ?? 50)}%
                       </span>
                     </TableCell>

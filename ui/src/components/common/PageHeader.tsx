@@ -15,6 +15,7 @@ interface PageHeaderProps {
   variant?: 'default' | 'hero';
   heroGradient?: string;
   className?: string;
+  compact?: boolean;
 }
 
 export const PageHeader = ({
@@ -27,13 +28,16 @@ export const PageHeader = ({
   variant = 'default',
   heroGradient = 'from-indigo-600 via-sky-600 to-emerald-500',
   className,
+  compact = false,
 }: PageHeaderProps) => {
   const isHero = variant === 'hero';
 
   return (
     <section
       className={cn(
-        'relative overflow-hidden rounded-lg border px-5 py-5 shadow-sm sm:px-6',
+        compact
+          ? 'relative overflow-hidden rounded-lg border px-2 py-2 shadow-sm'
+          : 'relative overflow-hidden rounded-lg border px-5 py-5 shadow-sm sm:px-6',
         isHero
           ? `border-transparent bg-gradient-to-br ${heroGradient} text-white`
           : 'bg-card text-card-foreground',
@@ -43,8 +47,8 @@ export const PageHeader = ({
       {!isHero && (
         <div className="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden="true" />
       )}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="flex min-w-0 gap-3">
+      <div className={cn('flex gap-4', compact ? 'items-center justify-end' : 'flex-col lg:flex-row lg:items-start lg:justify-between')}>
+        {!compact && <div className="flex min-w-0 gap-3">
           {Icon && (
             <div
               className={cn(
@@ -80,7 +84,7 @@ export const PageHeader = ({
               </p>
             )}
           </div>
-        </div>
+        </div>}
         {(actions || primaryAction) && (
           <div className="flex items-center gap-2 lg:justify-end">
             {actions && (

@@ -278,7 +278,7 @@ function AppContent() {
         <Route
           path="/dashboard"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser']} excludedRoles={['owner']}>
               <Layout>
                 <Dashboard />
               </Layout>

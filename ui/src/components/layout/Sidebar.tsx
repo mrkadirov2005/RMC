@@ -10,7 +10,7 @@ import {
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
   School, BadgeAlert, Server,
-  TrendingDown, BadgePercent, ChevronDown,
+  TrendingDown, BadgePercent, ChevronDown, GripVertical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -24,6 +24,7 @@ import { selectCenterOptions } from '../../store/selectors';
 import { useThemeMode } from '../../theme/ThemeContext';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { settingsAPI } from '@/shared/api/api';
 
 const iconMap: Record<string, ElementType> = {
   Dashboard: LayoutDashboard,
@@ -105,6 +106,7 @@ type MenuItem = {
   roles: string[];
   permission?: string;
   ownerOnly?: boolean;
+  hideFromOwner?: boolean;
   children?: Array<{ label: string; path: string; iconName: string }>;
 };
 
@@ -124,6 +126,8 @@ const Sidebar = memo(() => {
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
   const [reportsExpanded, setReportsExpanded] = useState(() => location.pathname === '/owner/reports');
   const [retentionExpanded, setRetentionExpanded] = useState(() => location.pathname === '/retention');
+  const [sidebarOrder, setSidebarOrder] = useState<string[]>([]);
+  const [draggedPath, setDraggedPath] = useState<string | null>(null);
   const rawCenterOptions = useAppSelector(selectCenterOptions);
   const centerOptions = useMemo(
     () => rawCenterOptions.map((center) => ({
@@ -132,6 +136,21 @@ const Sidebar = memo(() => {
     })),
     [rawCenterOptions]
   );
+
+  useEffect(() => {
+    if (!user?.id || !user?.userType) return;
+    let active = true;
+    settingsAPI.getSidebarOrder()
+      .then((response) => {
+        if (!active) return;
+        const order = (response as any)?.data ?? response;
+        setSidebarOrder(Array.isArray(order) ? order.map(String) : []);
+      })
+      .catch(() => {
+        if (active) setSidebarOrder([]);
+      });
+    return () => { active = false; };
+  }, [user?.id, user?.userType]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -184,7 +203,7 @@ const Sidebar = memo(() => {
   const isExpanded = isMobile || isOpen;
 
   const menuItems: MenuItem[] = [
-    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'] },
+    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'], hideFromOwner: true },
     { label: 'My Portal', path: '/teacher-portal', iconName: 'PortalTeacher', roles: ['teacher'] },
     { label: 'My Portal', path: '/student-portal', iconName: 'PortalStudent', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
@@ -201,8 +220,6 @@ const Sidebar = memo(() => {
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
-    { label: 'Logs', path: '/logs', iconName: 'Logs', roles: ['superuser'] },
-    { label: 'Engineering', path: '/engineering', iconName: 'Server', roles: ['superuser'] },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'] },
 
 
@@ -236,9 +253,32 @@ const Sidebar = memo(() => {
     if (!user?.userType) return false;
     if (!item.roles?.includes(user.userType)) return false;
     if (item.ownerOnly && (user.role || '').toLowerCase() !== 'owner') return false;
+    if (item.hideFromOwner && (user.role || '').toLowerCase() === 'owner') return false;
     if (item.permission && !canAccess(item.permission)) return false;
     return true;
   });
+  const orderIndex = new Map(sidebarOrder.map((path, index) => [path, index]));
+  const orderedMenuItems = filteredMenuItems.slice().sort((a, b) => {
+    const aIndex = orderIndex.get(a.path) ?? menuItems.findIndex((item) => item.path === a.path) + sidebarOrder.length;
+    const bIndex = orderIndex.get(b.path) ?? menuItems.findIndex((item) => item.path === b.path) + sidebarOrder.length;
+    return aIndex - bIndex;
+  });
+
+  const reorderSidebar = (targetPath: string) => {
+    if (!draggedPath || draggedPath === targetPath) return;
+    const completeOrder = [
+      ...sidebarOrder.filter((path) => menuItems.some((item) => item.path === path)),
+      ...menuItems.map((item) => item.path).filter((path) => !sidebarOrder.includes(path)),
+    ];
+    const fromIndex = completeOrder.indexOf(draggedPath);
+    const targetIndex = completeOrder.indexOf(targetPath);
+    if (fromIndex < 0 || targetIndex < 0) return;
+    completeOrder.splice(fromIndex, 1);
+    completeOrder.splice(targetIndex, 0, draggedPath);
+    setSidebarOrder(completeOrder);
+    void settingsAPI.saveSidebarOrder(completeOrder).catch(() => null);
+    setDraggedPath(null);
+  };
 
 // Handles logout.
   const handleLogout = () => {
@@ -348,14 +388,22 @@ const Sidebar = memo(() => {
       <ScrollArea className="flex-1 pt-2 px-2">
         <TooltipProvider delayDuration={0}>
           <nav className="space-y-0.5">
-            {filteredMenuItems.map((item) => {
+            {orderedMenuItems.map((item, itemIndex) => {
               const Icon = iconMap[item.iconName] || Users;
               const isActive = location.pathname === item.path;
               const isReportsItem = item.path === '/owner/reports';
               const isRetentionItem = item.path === '/retention';
               const iconTone = iconToneMap[item.iconName] || 'from-slate-500 to-slate-700 shadow-slate-500/20';
               return (
-                <div key={item.path}>
+                <div
+                  key={item.path}
+                  draggable={isExpanded}
+                  onDragStart={() => setDraggedPath(item.path)}
+                  onDragEnd={() => setDraggedPath(null)}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDrop={() => reorderSidebar(item.path)}
+                  className={cn(draggedPath === item.path && 'opacity-50')}
+                >
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -390,6 +438,8 @@ const Sidebar = memo(() => {
                         />
                       </span>
                       {isExpanded && <span className="flex-1 text-left">{t(item.label)}</span>}
+                      {isExpanded && <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">{itemIndex + 1}</span>}
+                      {isExpanded && <GripVertical className="h-3.5 w-3.5 cursor-grab text-muted-foreground active:cursor-grabbing" />}
                       {isExpanded && item.children?.length ? (
                         <ChevronDown className={cn('h-4 w-4 transition-transform', reportsExpanded && 'rotate-180')} />
                       ) : null}

@@ -526,6 +526,8 @@ export const systemAPI = {
 export const settingsAPI = {
   getLessonScoring: () => apiClient.get('/settings/lesson-scoring'),
   saveLessonScoring: (data: any) => apiClient.put('/settings/lesson-scoring', data),
+  getSidebarOrder: () => apiClient.get('/settings/sidebar-order'),
+  saveSidebarOrder: (order: string[]) => apiClient.put('/settings/sidebar-order', { order }),
 };
 
 export const portalAPI = {
