@@ -23,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { roomAPI } from './api';
+import { formatGroupLabel } from '@/shared/groupLabel';
 import {
   setRoomsPageEditingId,
   setRoomsPageModalOpen,
@@ -541,7 +542,7 @@ const RoomsPage = () => {
                   <SelectItem value="none">Unassigned</SelectItem>
                   {classes.map((cls) => (
                     <SelectItem key={cls.class_id || cls.id} value={String(cls.class_id || cls.id)}>
-                      {cls.class_name} ({cls.class_code})
+                      {formatGroupLabel(cls)}
                     </SelectItem>
                   ))}
                 </SelectContent>

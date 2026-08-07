@@ -31,25 +31,23 @@ export default function TeacherClassesStudentsTab({
 
   return (
     <div className="space-y-2">
-      {studentClassGroups.map(({ classId, classItem, students: classStudents, isTeacherOwned }) => {
+      {studentClassGroups.map(({ classId, classItem, students: classStudents, isTeacherOwned }, index) => {
         const isExpanded = expandedClassIds.has(classId);
         return (
-          <div key={classId} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+          <div key={classId} className="overflow-hidden rounded-lg border border-slate-200 shadow-sm dark:border-border" style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}>
             <button
               type="button"
               onClick={() => onToggleClassExpanded(classId)}
-              className="flex w-full items-center gap-2 bg-white p-2.5 text-left transition-colors hover:bg-sky-50 dark:bg-muted/40 dark:hover:bg-muted/60"
+              className="flex w-full items-center gap-2 bg-transparent px-2.5 py-1.5 text-left"
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
-                <BookOpen className="h-4 w-4" />
-              </div>
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500">{index + 1}</span>
               <div className="flex-grow">
-                <h3 className="text-sm font-semibold">{classItem.class_name}</h3>
-                <p className="text-xs text-muted-foreground">
+                <h3 className="text-xs font-semibold">{classItem.class_name}</h3>
+                <p className="text-[10px] text-muted-foreground">
                   {isTeacherOwned ? 'Teacher group' : 'Group'} / Level: {classItem.level || 'N/A'}
                 </p>
               </div>
-              <Badge className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-600">
+              <Badge variant="outline" className="bg-transparent text-xs font-semibold">
                 {classStudents.length} Students
               </Badge>
               <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
@@ -77,17 +75,10 @@ const StudentList = ({ students }: { students: any[] }) => (
     {students.map((student, index) => (
       <div
         key={student.student_id || student.id}
-        className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70"
+        className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 shadow-sm dark:border-border"
+        style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}
       >
-        <div className={cn(
-          'flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-semibold text-white shadow-sm',
-          index % 4 === 0 && 'bg-sky-600',
-          index % 4 === 1 && 'bg-emerald-600',
-          index % 4 === 2 && 'bg-amber-500',
-          index % 4 === 3 && 'bg-fuchsia-600'
-        )}>
-          {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
-        </div>
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500">{index + 1}</span>
         <span className="truncate text-xs font-semibold">
           {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
         </span>

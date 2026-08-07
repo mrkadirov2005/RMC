@@ -134,13 +134,15 @@ const PaymentsPage = () => {
                   <Download className="mr-2 h-4 w-4" />
                   {t('Export CSV')}
                 </Button>
-                <Button onClick={() => handleOpenModal()}>
-                  <Plus className="mr-2 h-4 w-4" /> Add Payment
-                </Button>
               </>
             )}
           </>
         }
+        primaryAction={!isTeacher ? (
+          <Button onClick={() => handleOpenModal()}>
+            <Plus className="mr-2 h-4 w-4" /> Add Payment
+          </Button>
+        ) : undefined}
       />
 
       {isTeacher && (

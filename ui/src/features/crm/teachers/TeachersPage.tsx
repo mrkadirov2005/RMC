@@ -269,11 +269,13 @@ const TeachersPage = () => {
                 </Button>
               </>
             )}
-            <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
-              <Plus className={headerActionIconClass} />
-              Add Teacher
-            </Button>
           </>
+        }
+        primaryAction={
+          <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+            <Plus className={headerActionIconClass} />
+            Add Teacher
+          </Button>
         }
       />
 
@@ -392,9 +394,6 @@ const TeachersPage = () => {
                     </TableCell>
                     <TableCell className="px-2 py-2 font-medium">
                       <div className="flex min-w-0 items-center gap-2">
-                        <button type="button" className={`${getTeacherTone(index)} flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm`} onClick={() => navigate(getTeacherProfilePath(teacher))}>
-                          {getInitials(teacher.first_name, teacher.last_name)}
-                        </button>
                         <div className="min-w-0">
                           <button
                             type="button"

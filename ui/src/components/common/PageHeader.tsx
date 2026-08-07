@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 interface PageHeaderProps {
   title: string;
@@ -8,6 +11,7 @@ interface PageHeaderProps {
   icon?: LucideIcon;
   meta?: ReactNode;
   actions?: ReactNode;
+  primaryAction?: ReactNode;
   variant?: 'default' | 'hero';
   heroGradient?: string;
   className?: string;
@@ -19,6 +23,7 @@ export const PageHeader = ({
   icon: Icon,
   meta,
   actions,
+  primaryAction,
   variant = 'default',
   heroGradient = 'from-indigo-600 via-sky-600 to-emerald-500',
   className,
@@ -76,7 +81,25 @@ export const PageHeader = ({
             )}
           </div>
         </div>
-        {actions && <div className="flex flex-wrap items-center gap-2 lg:justify-end">{actions}</div>}
+        {(actions || primaryAction) && (
+          <div className="flex items-center gap-2 lg:justify-end">
+            {actions && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button type="button" variant="outline" size="icon" className="h-9 w-9 shrink-0" aria-label="More page actions">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-auto min-w-[220px] p-2">
+                  <div className="flex flex-col gap-1.5 [&_button]:w-full [&_button]:justify-start [&_button]:bg-transparent [&_button]:text-foreground [&_button]:shadow-none [&_button:hover]:bg-muted [&_button:hover]:text-foreground">
+                    {actions}
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {primaryAction}
+          </div>
+        )}
       </div>
     </section>
   );

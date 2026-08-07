@@ -32,6 +32,7 @@ const StudentsPage = () => {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [activeTab, setActiveTab] = useState('students');
+  const [openedTeacherSummary, setOpenedTeacherSummary] = useState<{ name: string; students: number; group?: string } | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isSheetsPushing, setIsSheetsPushing] = useState(false);
   const [isSheetsPulling, setIsSheetsPulling] = useState(false);
@@ -263,20 +264,44 @@ const StudentsPage = () => {
                 </Button>
               </>
             )}
-            <Button size="sm" onClick={() => studentModal.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
-              <Plus className={headerActionIconClass} /> {t('Add Student')}
-            </Button>
           </>
+        }
+        primaryAction={
+          <Button size="sm" onClick={() => studentModal.handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}>
+            <Plus className={headerActionIconClass} /> {t('Add Student')}
+          </Button>
         }
       />
 
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
-        <TabsList className="mb-5 bg-slate-100/80 dark:bg-muted">
-          <TabsTrigger value="students">{t('Students')}</TabsTrigger>
-          <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
-          <TabsTrigger value="teachers">Teachers</TabsTrigger>
-        </TabsList>
+        <div className="mb-5 flex flex-wrap items-stretch gap-3">
+          <TabsList className="bg-slate-100/80 dark:bg-muted">
+            <TabsTrigger value="students">{t('Students')}</TabsTrigger>
+            <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
+            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+          </TabsList>
+          <div className="flex h-10 min-w-[145px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm dark:border-border dark:bg-card">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-muted">
+              <Users className="h-3.5 w-3.5" />
+            </span>
+            {activeTab === 'teachers' && openedTeacherSummary ? (
+              <div className="flex min-w-0 items-center gap-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+                <span className="max-w-[120px] truncate">{openedTeacherSummary.name}</span>
+                <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
+                <span className="shrink-0">{openedTeacherSummary.students.toLocaleString()} {t('Students').toLowerCase()}</span>
+                {openedTeacherSummary.group && <><ChevronRight className="h-3 w-3 shrink-0 text-slate-400" /><span className="max-w-[120px] truncate">{openedTeacherSummary.group}</span></>}
+              </div>
+            ) : <div className="min-w-0 leading-none">
+              <p className="max-w-[150px] truncate text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {t('Total Students')}
+              </p>
+              <p className="mt-1 text-sm font-bold text-slate-950 dark:text-white">
+                {total.toLocaleString()} {t('Students').toLowerCase()}
+              </p>
+            </div>}
+          </div>
+        </div>
         <TabsContent value="students" className="mt-0">
           <StudentsFiltersBar searchTerm={s.searchTerm} onSearchChange={s.setSearchTerm} onClearSearch={() => s.setSearchTerm('')} showFilters={s.showFilters} onToggleFilters={() => s.setShowFilters(!s.showFilters)} hasActiveFilters={s.hasActiveFilters} onClearAll={s.clearFilters} />
           <StudentsFilterPanel
@@ -360,6 +385,7 @@ const StudentsPage = () => {
             onCoinsUpdated={s.actions.fetchAll}
             onTransferGroup={handleTransferGroupOwner}
             onDeleteGroups={handleBulkDeleteGroups}
+            onTeacherSummaryChange={setOpenedTeacherSummary}
           />
         </TabsContent>
       </Tabs>

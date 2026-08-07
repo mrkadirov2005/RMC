@@ -16,6 +16,7 @@ import { useListSelection } from '@/components/common/useListSelection';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
+import { formatGroupLabel } from '@/shared/groupLabel';
 
 type TeacherOption = {
   id?: string | number;
@@ -121,6 +122,8 @@ export const StudentsTableView = ({
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [transferStudent, setTransferStudent] = useState<Student | null>(null);
+  const [bulkTransferOpen, setBulkTransferOpen] = useState(false);
+  const [targetTeacherId, setTargetTeacherId] = useState('');
   const [targetClassId, setTargetClassId] = useState('');
   const [transferring, setTransferring] = useState(false);
 
@@ -154,22 +157,41 @@ export const StudentsTableView = ({
 
   const openTransfer = (student: Student) => {
     setTransferStudent(student);
+    setTargetTeacherId('');
+    setTargetClassId('');
+  };
+
+  const openBulkTransfer = () => {
+    if (selectedIds.size === 0) return;
+    setTransferStudent(null);
+    setBulkTransferOpen(true);
+    setTargetTeacherId('');
     setTargetClassId('');
   };
 
   const closeTransfer = () => {
     if (transferring) return;
     setTransferStudent(null);
+    setBulkTransferOpen(false);
+    setTargetTeacherId('');
     setTargetClassId('');
   };
 
   const submitTransfer = async () => {
     const nextClassId = Number(targetClassId);
-    if (!transferStudent || !nextClassId || !onTransfer) return;
+    if ((!transferStudent && !bulkTransferOpen) || !nextClassId || !onTransfer) return;
     setTransferring(true);
     try {
-      await onTransfer(transferStudent, nextClassId);
+      if (bulkTransferOpen) {
+        const selectedStudents = students.filter((student) => selectedIds.has(getStudentId(student)));
+        for (const student of selectedStudents) await onTransfer(student, nextClassId);
+        clearSelection();
+      } else if (transferStudent) {
+        await onTransfer(transferStudent, nextClassId);
+      }
       setTransferStudent(null);
+      setBulkTransferOpen(false);
+      setTargetTeacherId('');
       setTargetClassId('');
     } finally {
       setTransferring(false);
@@ -276,33 +298,61 @@ export const StudentsTableView = ({
         currentCoins={selectedStudent?.coins}
         onSaved={onCoinsUpdated}
       />
-      <Dialog open={transferStudent != null} onOpenChange={(open) => (!open ? closeTransfer() : undefined)}>
+      <Dialog open={transferStudent != null || bulkTransferOpen} onOpenChange={(open) => (!open ? closeTransfer() : undefined)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Transfer student</DialogTitle>
+            <DialogTitle>{bulkTransferOpen ? `Transfer ${selectedIds.size} students` : 'Transfer student'}</DialogTitle>
             <DialogDescription>
-              Move this student into another group. The current group keeps a transferred record, and a new active student record is created in the target group.
+              {bulkTransferOpen ? 'Move the selected students into another teacher’s group.' : 'Move this student into another group. The current group keeps a transferred record, and a new active student record is created in the target group.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="rounded-lg border bg-slate-50 px-3 py-2 text-sm dark:bg-muted/40">
-              <p className="font-medium">{transferStudent?.first_name} {transferStudent?.last_name}</p>
-              <p className="text-xs text-muted-foreground">Current group: {transferStudent?.class_name || transferStudent?.class_id || 'Unassigned'}</p>
+              {bulkTransferOpen ? (
+                <p className="font-medium">{selectedIds.size} selected students</p>
+              ) : <>
+                <p className="font-medium">{transferStudent?.first_name} {transferStudent?.last_name}</p>
+                <p className="text-xs text-muted-foreground">Current group: {transferStudent?.class_name || transferStudent?.class_id || 'Unassigned'}</p>
+              </>}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="target-teacher">New teacher</Label>
+              <Select
+                value={targetTeacherId}
+                onValueChange={(value) => {
+                  setTargetTeacherId(value);
+                  setTargetClassId('');
+                }}
+                disabled={transferring}
+              >
+                <SelectTrigger id="target-teacher">
+                  <SelectValue placeholder="Select target teacher" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teacherOptions
+                    .filter((teacher) => classOptions.some((cls) => Number(cls.teacher_id || 0) === Number(teacher.value || teacher.id || 0)))
+                    .map((teacher) => {
+                      const id = Number(teacher.value || teacher.id || 0);
+                      return <SelectItem key={id} value={String(id)}>{teacher.label}</SelectItem>;
+                    })}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="target-class">New group</Label>
-              <Select value={targetClassId} onValueChange={setTargetClassId} disabled={transferring}>
+              <Select value={targetClassId} onValueChange={setTargetClassId} disabled={transferring || !targetTeacherId}>
                 <SelectTrigger id="target-class">
-                  <SelectValue placeholder="Select target group" />
+                  <SelectValue placeholder={targetTeacherId ? 'Select target group' : 'Choose a teacher first'} />
                 </SelectTrigger>
                 <SelectContent>
                   {classOptions
+                    .filter((cls) => Number(cls.teacher_id || 0) === Number(targetTeacherId))
                     .filter((cls) => Number(cls.class_id || cls.id || 0) !== Number(transferStudent?.class_id || 0))
                     .map((cls) => {
                       const id = Number(cls.class_id || cls.id || 0);
                       return (
                         <SelectItem key={id} value={String(id)}>
-                          {[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || `Group #${id}`}
+                          {formatGroupLabel(cls)}
                         </SelectItem>
                       );
                     })}
@@ -331,6 +381,12 @@ export const StudentsTableView = ({
           <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
             <span className="font-medium">{selectedIds.size} selected</span>
             <div className="flex items-center gap-2">
+              {onTransfer && (
+                <Button type="button" variant="outline" size="sm" onClick={openBulkTransfer}>
+                  <ArrowRightLeft className="mr-2 h-4 w-4" />
+                  Transfer
+                </Button>
+              )}
               {onBulkDelete && (
                 <Button type="button" variant="outline" size="sm" onClick={deleteSelected}>
                   <Trash2 className="mr-2 h-4 w-4" />
@@ -444,6 +500,12 @@ export const StudentsTableView = ({
         <div className="flex items-center justify-between border-b bg-sky-50/70 px-3 py-1.5 text-xs dark:bg-muted/50">
           <span className="font-medium">{selectedIds.size} selected</span>
           <div className="flex items-center gap-2">
+            {onTransfer && (
+              <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={openBulkTransfer}>
+                <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
+                Transfer
+              </Button>
+            )}
             {onBulkDelete && (
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={deleteSelected}>
                 <Trash2 className="mr-1.5 h-3.5 w-3.5" />

@@ -56,4 +56,6 @@ export interface Class {
   center_id?: number;
   teacher_id?: number;
   student_count?: number;
+  section?: string | null;
+  room_assignments?: Array<{ day?: string | null }>;
 }

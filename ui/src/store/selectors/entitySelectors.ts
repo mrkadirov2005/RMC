@@ -2,6 +2,7 @@
 
 import { createSelector } from '@reduxjs/toolkit';
 import type { RootState } from '../index';
+import { formatGroupLabel } from '@/shared/groupLabel';
 
 export interface SelectOption {
   id: number;
@@ -77,14 +78,10 @@ export const selectClassOptions = createSelector([selectClassItems], (classes): 
     .map<SelectOption | null>((cls) => {
       const id = firstId(cls, ['class_id', 'id']);
       if (!id) return null;
-      const className = String(cls?.class_name || '').trim();
-      const level = cls?.level != null ? `Level ${cls.level}` : '';
-      const section = String(cls?.section || '').trim();
-      const details = [level, section].filter(Boolean).join(' ');
       return {
         id,
         value: id,
-        label: details ? `${className} - ${details}` : className || `Class ${id}`,
+        label: formatGroupLabel(cls),
       };
     })
     .filter((option): option is SelectOption => option !== null)

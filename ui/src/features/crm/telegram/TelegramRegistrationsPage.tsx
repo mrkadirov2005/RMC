@@ -15,6 +15,7 @@ import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/componen
 import { telegramRegistrationAPI, classAPI, teacherAPI } from './api';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { showToast } from '@/utils/toast';
+import { formatGroupLabel } from '@/shared/groupLabel';
 
 type TelegramRegistration = {
   registration_id: number;
@@ -352,7 +353,7 @@ const TelegramRegistrationsPage = () => {
                 <SelectContent>
                   {classes.map((cls: any) => (
                     <SelectItem key={cls.class_id} value={String(cls.class_id)}>
-                      {[cls.class_name, cls.class_code].filter(Boolean).join(' / ')}
+                      {formatGroupLabel(cls)}
                     </SelectItem>
                   ))}
                 </SelectContent>

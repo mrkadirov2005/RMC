@@ -13,6 +13,7 @@ import { archiveAPI } from './api';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
+import { formatGroupLabel } from '@/shared/groupLabel';
 
 type ArchivePayload = {
   students: any[];
@@ -286,7 +287,7 @@ const ArchivePage = () => {
                     <TableRow key={student.student_id}>
                       <TableCell className="font-medium">{fullName(student)}</TableCell>
                       <TableCell>{student.enrollment_number || '-'}</TableCell>
-                      <TableCell>{[student.class_name, student.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
+                      <TableCell>{student.class_name || '-'}</TableCell>
                       <TableCell><Badge variant="outline">{student.status || t('Archived')}</Badge></TableCell>
                       <TableCell>{formatDate(student.deleted_at)}</TableCell>
                       <TableCell>{rowActions('students', Number(student.student_id))}</TableCell>
@@ -340,7 +341,7 @@ const ArchivePage = () => {
                 <TableBody>
                   {archive.classes.length === 0 ? <EmptyRow colSpan={6} label={t('No archived classes.')} /> : paginatedArchive.classes.items.map((cls) => (
                     <TableRow key={cls.class_id}>
-                      <TableCell className="font-medium">{[cls.class_name, cls.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
+                      <TableCell className="font-medium">{formatGroupLabel(cls)}</TableCell>
                       <TableCell>{teacherName(cls)}</TableCell>
                       <TableCell>{cls.room_number || '-'}</TableCell>
                       <TableCell>{formatMoney(Number(cls.payment_amount || 0))}</TableCell>
@@ -397,7 +398,7 @@ const ArchivePage = () => {
                   {archive.sessions.length === 0 ? <EmptyRow colSpan={6} label={t('No archived calendar sessions.')} /> : paginatedArchive.sessions.items.map((session) => (
                     <TableRow key={session.session_id}>
                       <TableCell className="font-medium">{formatDate(session.session_date)}</TableCell>
-                      <TableCell>{[session.class_name, session.class_code].filter(Boolean).join(' / ') || '-'}</TableCell>
+                      <TableCell>{session.class_name || '-'}</TableCell>
                       <TableCell>{teacherName(session)}</TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">

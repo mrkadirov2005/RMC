@@ -378,7 +378,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       <DialogContent className="max-w-6xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center pr-8">
-            <span>Class: {classData.class_name} ({classData.class_code})</span>
+            <span>Class: {classData.class_name}</span>
             {selectedDate && <span className="text-sm font-normal text-muted-foreground mr-4">Date: {selectedDate}</span>}
           </DialogTitle>
         </DialogHeader>

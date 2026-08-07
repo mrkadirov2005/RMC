@@ -1,15 +1,16 @@
-import { ArrowLeft, ArrowRight, ArrowRightLeft, BookOpen, Loader2, Search, Trash2, Users, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowRightLeft, Loader2, Search, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { classAPI, paymentAPI, studentAPI } from '../api';
-import { unwrapApiRows } from '@/shared/api/response';
+import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { showToast } from '@/utils/toast';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import { StudentsTableView } from './StudentsTableView';
 import type { Class, Student } from '../types';
+import { getGroupWeekdays } from '@/shared/groupLabel';
 
 interface Option {
   id?: number;
@@ -42,23 +43,13 @@ interface Props {
   onCoinsUpdated?: () => void;
   onTransferGroup: (classId: number, teacherId: number) => Promise<void> | void;
   onDeleteGroups?: (classIds: number[]) => Promise<void> | void;
+  onTeacherSummaryChange?: (summary: { name: string; students: number; group?: string } | null) => void;
 }
 
 const toId = (value: unknown) => {
   const id = Number(value);
   return Number.isFinite(id) && id > 0 ? id : null;
 };
-
-const buttonToneClasses = [
-  'bg-sky-600 hover:bg-sky-700',
-  'bg-emerald-600 hover:bg-emerald-700',
-  'bg-amber-500 hover:bg-amber-600',
-  'bg-fuchsia-600 hover:bg-fuchsia-700',
-  'bg-rose-600 hover:bg-rose-700',
-  'bg-cyan-600 hover:bg-cyan-700',
-];
-
-const getTone = (index: number) => buttonToneClasses[index % buttonToneClasses.length];
 
 const normalizeSearch = (value: unknown) => String(value || '').trim().toLowerCase();
 
@@ -177,6 +168,7 @@ export const StudentsTeacherGroupsTab = ({
   onCoinsUpdated,
   onTransferGroup,
   onDeleteGroups,
+  onTeacherSummaryChange,
 }: Props) => {
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -187,6 +179,7 @@ export const StudentsTeacherGroupsTab = ({
   const [bulkSaving, setBulkSaving] = useState(false);
   const [teacherClasses, setTeacherClasses] = useState<Class[]>([]);
   const [teacherStudents, setTeacherStudents] = useState<Student[]>([]);
+  const [teacherStudentTotal, setTeacherStudentTotal] = useState(0);
   const [selectedClassStudents, setSelectedClassStudents] = useState<Student[]>([]);
   const [teacherLoading, setTeacherLoading] = useState(false);
   const [classLoading, setClassLoading] = useState(false);
@@ -296,11 +289,13 @@ export const StudentsTeacherGroupsTab = ({
     if (!selectedTeacherId) {
       setTeacherClasses([]);
       setTeacherStudents([]);
+      setTeacherStudentTotal(0);
       return;
     }
 
     let alive = true;
     setTeacherLoading(true);
+    setTeacherStudentTotal(0);
     setSelectedClassId(null);
     setSelectedClassStudents([]);
     Promise.all([
@@ -310,12 +305,23 @@ export const StudentsTeacherGroupsTab = ({
       .then(([classesResponse, studentsResponse]) => {
         if (!alive) return;
         setTeacherClasses(getRows<Class>(classesResponse));
-        setTeacherStudents(getRows<Student>(studentsResponse));
+        const loadedTeacherStudents = getRows<Student>(studentsResponse);
+        const studentPayload = getApiPayload<any>(studentsResponse);
+        setTeacherStudents(loadedTeacherStudents);
+        const responseTotal = Array.isArray(studentPayload)
+          ? studentPayload.length
+          : Number(studentPayload?.total ?? loadedTeacherStudents.length);
+        const selectedTeacherSummary = teachers.find((teacher) => teacher.id === selectedTeacherId);
+        const total = selectedTeacherSummary?.studentCount ?? responseTotal;
+        setTeacherStudentTotal(total);
+        const teacherName = selectedTeacherSummary?.name || `Teacher ${selectedTeacherId}`;
+        onTeacherSummaryChange?.({ name: teacherName, students: total });
       })
       .catch((error: any) => {
         if (!alive) return;
         setTeacherClasses([]);
         setTeacherStudents([]);
+        setTeacherStudentTotal(0);
         showToast.error(error?.response?.data?.error || error?.response?.data?.details || 'Failed to load teacher groups.');
       })
       .finally(() => {
@@ -331,12 +337,21 @@ export const StudentsTeacherGroupsTab = ({
     setSelectedTeacherId(teacherId);
     setSelectedClassId(null);
     setSelectedClassStudents([]);
+    const teacher = teachers.find((item) => item.id === teacherId);
+    onTeacherSummaryChange?.({ name: teacher?.name || `Teacher ${teacherId}`, students: Number(teacher?.studentCount || 0) });
   };
 
   const openClass = async (classId: number) => {
     const row = selectedTeacherClassRows.find((item) => item.classId === classId);
     setSelectedClassId(classId);
     setSelectedClassStudents([]);
+    if (selectedTeacher) {
+      onTeacherSummaryChange?.({
+        name: selectedTeacher.name,
+        students: teacherStudentTotal,
+        group: row?.cls.class_name || `Class #${classId}`,
+      });
+    }
 
     setClassLoading(true);
     try {
@@ -454,11 +469,15 @@ export const StudentsTeacherGroupsTab = ({
     setSelectedTeacherId(null);
     setSelectedClassId(null);
     setSelectedClassStudents([]);
+    onTeacherSummaryChange?.(null);
   };
 
   const goBackToClasses = () => {
     setSelectedClassId(null);
     setSelectedClassStudents([]);
+    if (selectedTeacher) {
+      onTeacherSummaryChange?.({ name: selectedTeacher.name, students: teacherStudentTotal });
+    }
   };
 
   if (loading) {
@@ -496,6 +515,7 @@ export const StudentsTeacherGroupsTab = ({
           onPasswordUpdate={onPasswordUpdate}
           onCoinsUpdated={onCoinsUpdated}
           classOptions={classes}
+          teacherOptions={teacherOptions}
           hideTeacherGroup
           showMonthlyPaymentStatus
           viewMode="list"
@@ -512,7 +532,9 @@ export const StudentsTeacherGroupsTab = ({
             <ArrowLeft className="h-3.5 w-3.5" />
             Back to teachers
           </Button>
-          <div className="text-xs text-muted-foreground">{selectedTeacher.name}</div>
+          <div className="text-xs text-muted-foreground">
+            {selectedTeacher.name} · {teacherStudentTotal.toLocaleString()} students
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center">
@@ -588,7 +610,7 @@ export const StudentsTeacherGroupsTab = ({
           </Card>
         ) : (
           <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-            <div className="grid grid-cols-[32px_minmax(0,1fr)_100px_minmax(260px,320px)] items-center gap-3 border-b bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-muted-foreground dark:bg-muted/40">
+            <div className="grid grid-cols-[28px_minmax(0,1fr)_90px_minmax(240px,300px)] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[11px] font-bold uppercase text-muted-foreground dark:bg-muted/40">
               <span>
                 <input
                   type="checkbox"
@@ -606,7 +628,7 @@ export const StudentsTeacherGroupsTab = ({
               <span className="text-right">Teacher transfer</span>
             </div>
             {selectedTeacherClasses.map(({ cls, classId, teacherId, studentCount }, index) => (
-              <div key={classId} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[32px_minmax(0,1fr)_100px_minmax(260px,320px)] lg:items-center">
+              <div key={classId} className="grid gap-1.5 border-b px-3 py-1.5 last:border-b-0 lg:grid-cols-[28px_minmax(0,1fr)_90px_minmax(240px,300px)] lg:items-center" style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}>
                 <div>
                   <input
                     type="checkbox"
@@ -616,19 +638,19 @@ export const StudentsTeacherGroupsTab = ({
                     className="h-3.5 w-3.5"
                   />
                 </div>
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => openClass(classId)} aria-label={`Open ${cls.class_name || `Class #${classId}`}`}>
-                    <Users className="h-4 w-4" />
+                <div className="flex min-w-0 items-center gap-2">
+                  <button type="button" className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500" onClick={() => openClass(classId)} aria-label={`Open ${cls.class_name || `Class #${classId}`}`}>
+                    {index + 1}
                   </button>
                   <div className="min-w-0">
-                    <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openClass(classId)}>
+                    <button type="button" className="truncate text-left text-xs font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openClass(classId)}>
                       {cls.class_name || `Class #${classId}`}
                     </button>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{[cls.class_code, cls.level ? `Level ${cls.level}` : null].filter(Boolean).join(' / ') || 'Group'}</p>
+                    {getGroupWeekdays(cls).length > 0 ? <p className="truncate text-[10px] text-muted-foreground">{getGroupWeekdays(cls).join(', ')}</p> : null}
                   </div>
                 </div>
 
-                <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => openClass(classId)}>
+                <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openClass(classId)}>
                   {studentCount} students
                 </button>
 
@@ -638,7 +660,7 @@ export const StudentsTeacherGroupsTab = ({
                     onValueChange={(value) => setTargetTeachers((current) => ({ ...current, [classId]: value }))}
                     disabled={savingClassId === classId}
                   >
-                    <SelectTrigger className="h-7 bg-white text-xs dark:bg-background">
+                    <SelectTrigger className="h-6 bg-white px-2 text-[11px] dark:bg-background">
                       <SelectValue placeholder="Transfer teacher" />
                     </SelectTrigger>
                     <SelectContent>
@@ -651,7 +673,7 @@ export const StudentsTeacherGroupsTab = ({
                         ))}
                     </SelectContent>
                   </Select>
-                  <Button type="button" size="sm" className={`${getTone(index)} h-7 gap-1.5 px-2 text-xs text-white`} onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
+                  <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-2 text-[11px] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
                     {savingClassId === classId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
                     Transfer
                   </Button>
@@ -701,7 +723,7 @@ export const StudentsTeacherGroupsTab = ({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-        <div className="grid grid-cols-[minmax(0,1fr)_100px_110px_86px] items-center gap-3 border-b bg-slate-50 px-3 py-2 text-xs font-bold uppercase text-muted-foreground dark:bg-muted/40">
+        <div className="grid grid-cols-[minmax(0,1fr)_80px_90px_70px] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[11px] font-bold uppercase text-muted-foreground dark:bg-muted/40">
           <span>Teacher</span>
           <span className="text-center">Groups</span>
           <span className="text-center">Students</span>
@@ -715,25 +737,24 @@ export const StudentsTeacherGroupsTab = ({
             const studentCount = teacher.studentCount ?? groups.reduce((sum, group) => sum + group.studentCount, 0);
             const groupCount = teacher.classCount ?? groups.length;
             return (
-              <div key={teacher.id} className="grid gap-2 border-b px-3 py-2 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_100px_110px_86px] lg:items-center">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  <button type="button" className={`${getTone(index)} flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white shadow-sm`} onClick={() => openTeacher(teacher.id)} aria-label={`Open ${teacher.name}`}>
-                    <BookOpen className="h-4 w-4" />
+              <div key={teacher.id} className="grid gap-1.5 border-b px-3 py-1.5 last:border-b-0 lg:grid-cols-[minmax(0,1fr)_80px_90px_70px] lg:items-center" style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}>
+                <div className="flex min-w-0 items-center gap-2">
+                  <button type="button" className="flex h-6 w-6 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500" onClick={() => openTeacher(teacher.id)} aria-label={`Open ${teacher.name}`}>
+                    {index + 1}
                   </button>
                   <div className="min-w-0">
-                    <button type="button" className="truncate text-left text-sm font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openTeacher(teacher.id)}>
+                    <button type="button" className="truncate text-left text-xs font-semibold text-slate-950 hover:text-sky-700 dark:text-foreground" onClick={() => openTeacher(teacher.id)}>
                       {teacher.name}
                     </button>
-                    <p className="mt-0.5 text-xs text-muted-foreground">Teacher groups and students</p>
                   </div>
                 </div>
-                <button type="button" className="w-fit rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
+                <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {groupCount} groups
                 </button>
-                <button type="button" className="w-fit rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
+                <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {studentCount} students
                 </button>
-                <Button type="button" size="sm" className={`${getTone(index)} h-7 gap-1 px-2 text-xs text-white`} onClick={() => openTeacher(teacher.id)}>
+                <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-1.5 text-[11px] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => openTeacher(teacher.id)}>
                   Open
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>

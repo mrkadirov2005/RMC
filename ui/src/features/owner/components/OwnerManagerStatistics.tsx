@@ -56,7 +56,7 @@ const getTeacherDisplayName = (teacher: any, fallbackId?: number) => {
 };
 
 const getClassDisplayName = (cls: any, fallbackId?: number) => {
-  const name = [cls?.class_name, cls?.class_code].filter(Boolean).join(' / ').trim();
+  const name = String(cls?.class_name || '').trim();
   if (name) return name;
   if (fallbackId) return `Group #${fallbackId}`;
   return 'No group';
@@ -131,7 +131,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
         teacherLookup.get(teacherId) ||
         getTeacherDisplayName(null, teacherId);
       const groupName =
-        [student?.class_name, student?.class_code].filter(Boolean).join(' / ').trim() ||
+        String(student?.class_name || '').trim() ||
         classLookup.get(classId) ||
         getClassDisplayName(null, classId);
       const key = `${teacherId || 'none'}:${classId || 'none'}`;
