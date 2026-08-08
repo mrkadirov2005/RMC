@@ -39,8 +39,8 @@ services:
 
   backend:
     build:
-      context: ./service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: service/Dockerfile
     container_name: crm_backend
     environment:
       PORT: "4000"
@@ -55,6 +55,12 @@ services:
       MONGO_DB: crm_logs
       REQUEST_LOG_TTL_DAYS: "0"
       OWNER_DATA_RESET_ENABLED: "${OWNER_DATA_RESET_ENABLED:-true}"
+      E2E_UI_DIR: /app/ui
+      E2E_DB_NAME: crm_frontend_e2e_test
+      E2E_DB_HOST: postgres
+      E2E_DB_PORT: "5432"
+      E2E_DB_USER: crm_user
+      E2E_DB_PASSWORD: crm_password
     depends_on:
       postgres:
         condition: service_healthy
