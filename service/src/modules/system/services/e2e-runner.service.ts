@@ -76,7 +76,32 @@ const assertSafeDatabase = () => {
   return database;
 };
 
-const getUiDirectory = () => process.env.E2E_UI_DIR || path.resolve(process.cwd(), '..', 'ui');
+const getUiDirectory = () => {
+  const candidates = [
+    process.env.E2E_UI_DIR,
+    path.resolve(process.cwd(), 'ui'),
+    path.resolve(process.cwd(), '..', 'ui'),
+    path.resolve(__dirname, '..', '..', '..', '..', '..', 'ui'),
+  ].filter(Boolean).map((candidate) => path.resolve(String(candidate)));
+  const uniqueCandidates = [...new Set(candidates)];
+  const withPlaywright = uniqueCandidates.find((candidate) =>
+    fs.existsSync(path.join(candidate, 'node_modules', '@playwright', 'test', 'cli.js'))
+  );
+  if (withPlaywright) return withPlaywright;
+
+  const uiProject = uniqueCandidates.find((candidate) =>
+    fs.existsSync(path.join(candidate, 'package.json')) && fs.existsSync(path.join(candidate, 'playwright.config.ts'))
+  );
+  if (uiProject) {
+    const error: any = new Error(`Playwright dependencies are missing in ${uiProject}. Run npm install in that directory.`);
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const error: any = new Error(`UI E2E project was not found. Checked: ${uniqueCandidates.join(', ')}`);
+  error.statusCode = 503;
+  throw error;
+};
 
 const appendOutput = (chunk: unknown) => {
   if (!activeRun) return;
@@ -111,11 +136,6 @@ const startRun = (flowId: string) => {
 
   const uiDirectory = getUiDirectory();
   const cliPath = path.join(uiDirectory, 'node_modules', '@playwright', 'test', 'cli.js');
-  if (!fs.existsSync(cliPath)) {
-    const error: any = new Error('Playwright is not installed in the UI directory.');
-    error.statusCode = 503;
-    throw error;
-  }
 
   const runId = crypto.randomUUID();
   activeRun = {
