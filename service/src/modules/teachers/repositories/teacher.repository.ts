@@ -48,20 +48,21 @@ const teacherListSelection = {
   ...teacherSelection,
   student_count: sql`
     COALESCE((
-      SELECT COUNT(DISTINCT teacher_students.student_id)::int
-      FROM (
-        SELECT directly_assigned.student_id AS student_id
-        FROM students AS directly_assigned
-        WHERE directly_assigned.deleted_at IS NULL
-          AND directly_assigned.teacher_id = teachers.teacher_id
-        UNION
-        SELECT grouped_students.student_id AS student_id
-        FROM students AS grouped_students
-        JOIN classes AS assigned_classes ON assigned_classes.class_id = grouped_students.class_id
-          AND assigned_classes.deleted_at IS NULL
-        WHERE grouped_students.deleted_at IS NULL
-          AND assigned_classes.teacher_id = teachers.teacher_id
-      ) teacher_students
+      SELECT COUNT(DISTINCT counted_students.student_id)::int
+      FROM students AS counted_students
+      WHERE counted_students.deleted_at IS NULL
+        AND counted_students.center_id = teachers.center_id
+        AND (
+          counted_students.teacher_id = teachers.teacher_id
+          OR EXISTS (
+            SELECT 1
+            FROM classes AS assigned_class
+            WHERE assigned_class.class_id = counted_students.class_id
+              AND assigned_class.center_id = teachers.center_id
+              AND assigned_class.teacher_id = teachers.teacher_id
+              AND assigned_class.deleted_at IS NULL
+          )
+        )
     ), 0)::int
   `,
   class_count: sql`
