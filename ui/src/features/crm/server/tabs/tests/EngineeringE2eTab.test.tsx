@@ -17,7 +17,6 @@ describe('EngineeringE2eTab', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     api.getE2eFlows.mockResolvedValue({ data: {
-      enabled: true,
       database: 'crm_frontend_e2e_test',
       flows: [{ id: 'E2E-01', label: 'Admin login', group: 'Numbered flows' }],
     } });
@@ -46,14 +45,4 @@ describe('EngineeringE2eTab', () => {
     expect(await screen.findByText(/E2E-01: Admin login/)).toBeInTheDocument();
   });
 
-  test('disables execution when the backend runner is disabled', async () => {
-    api.getE2eFlows.mockResolvedValueOnce({ data: {
-      enabled: false,
-      database: 'crm_frontend_e2e_test',
-      flows: [{ id: 'E2E-01', label: 'Admin login', group: 'Numbered flows' }],
-    } });
-    render(<EngineeringE2eTab />);
-    expect(await screen.findByText(/runner disabled/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /E2E-01 Admin login/i })).toBeDisabled();
-  });
 });

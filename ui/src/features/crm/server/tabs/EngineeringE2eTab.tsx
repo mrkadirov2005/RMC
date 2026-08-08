@@ -38,7 +38,6 @@ const formatDuration = (durationMs: number | null) => {
 
 const EngineeringE2eTab = () => {
   const [flows, setFlows] = useState<Flow[]>([]);
-  const [enabled, setEnabled] = useState(false);
   const [database, setDatabase] = useState('');
   const [active, setActive] = useState<Run | null>(null);
   const [recent, setRecent] = useState<Run[]>([]);
@@ -56,7 +55,6 @@ const EngineeringE2eTab = () => {
       const catalog = catalogResponse.data;
       const status = statusResponse.data;
       setFlows(Array.isArray(catalog?.flows) ? catalog.flows : []);
-      setEnabled(Boolean(catalog?.enabled));
       setDatabase(String(catalog?.database || ''));
       setActive(status?.active || null);
       setRecent(Array.isArray(status?.recent) ? status.recent : []);
@@ -112,14 +110,12 @@ const EngineeringE2eTab = () => {
         <div>
           <div className="flex items-center gap-2"><FlaskConical className="h-5 w-5 text-violet-600" /><h2 className="text-lg font-bold">E2E Flows</h2></div>
           <p className="mt-1 text-sm text-muted-foreground">Run predefined Playwright flows against the isolated E2E stack.</p>
-          <div className="mt-2 flex flex-wrap gap-2"><Badge variant={enabled ? 'success' : 'destructive'}>{enabled ? 'Runner enabled' : 'Runner disabled'}</Badge><Badge variant="outline">Database: {database || 'not configured'}</Badge></div>
+          <div className="mt-2 flex flex-wrap gap-2"><Badge variant="success">Runner ready</Badge><Badge variant="outline">Database: {database || 'not configured'}</Badge></div>
         </div>
         <Button variant="outline" size="sm" onClick={() => void load()}><RefreshCw className="mr-2 h-4 w-4" />Refresh</Button>
       </div>
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
-      {!enabled && <Alert><AlertDescription>Set E2E_RUNNER_ENABLED=true on the development backend to enable execution.</AlertDescription></Alert>}
-
       {active && (
         <Card>
           <CardHeader className="pb-3">
@@ -139,7 +135,7 @@ const EngineeringE2eTab = () => {
           <h3 className="text-sm font-bold uppercase tracking-wide text-muted-foreground">{group}</h3>
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {groupFlows.map((flow) => (
-              <button key={flow.id} type="button" disabled={!enabled || active?.status === 'running' || startingId !== null} onClick={() => void start(flow.id)} className="flex items-center justify-between gap-3 rounded-lg border bg-card p-3 text-left transition hover:border-violet-400 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50">
+              <button key={flow.id} type="button" disabled={active?.status === 'running' || startingId !== null} onClick={() => void start(flow.id)} className="flex items-center justify-between gap-3 rounded-lg border bg-card p-3 text-left transition hover:border-violet-400 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50">
                 <div className="min-w-0"><p className="text-xs font-black text-violet-700">{flow.id}</p><p className="mt-0.5 text-sm font-semibold">{flow.label}</p></div>
                 {startingId === flow.id ? <Loader2 className="h-5 w-5 shrink-0 animate-spin" /> : <CirclePlay className="h-5 w-5 shrink-0 text-violet-600" />}
               </button>

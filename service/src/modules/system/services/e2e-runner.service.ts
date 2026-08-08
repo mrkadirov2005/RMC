@@ -64,21 +64,6 @@ let activeRun: PublicRun | null = null;
 let activeTimer: ReturnType<typeof setTimeout> | null = null;
 const recentRuns: PublicRun[] = [];
 
-const runnerEnabled = () => {
-  if (process.env.NODE_ENV === 'production') return false;
-  const configured = String(process.env.E2E_RUNNER_ENABLED || '').trim().toLowerCase();
-  if (configured) return ['1', 'true', 'yes', 'on'].includes(configured);
-  return process.env.NODE_ENV !== 'production';
-};
-
-const assertEnabled = () => {
-  if (!runnerEnabled()) {
-    const error: any = new Error('E2E runner is disabled. Set E2E_RUNNER_ENABLED=true in a development environment.');
-    error.statusCode = 403;
-    throw error;
-  }
-};
-
 const getE2eDatabase = () => process.env.E2E_DB_NAME || 'crm_frontend_e2e_test';
 
 const assertSafeDatabase = () => {
@@ -102,7 +87,6 @@ const appendOutput = (chunk: unknown) => {
 const snapshot = (run: PublicRun | null) => run ? { ...run } : null;
 
 const getCatalog = () => ({
-  enabled: runnerEnabled(),
   database: getE2eDatabase(),
   running: Boolean(activeRun?.status === 'running'),
   flows: FLOW_CATALOG.map(({ id, label, group }) => ({ id, label, group })),
@@ -111,7 +95,6 @@ const getCatalog = () => ({
 const getStatus = () => ({ active: snapshot(activeRun), recent: recentRuns.map(snapshot) });
 
 const startRun = (flowId: string) => {
-  assertEnabled();
   const database = assertSafeDatabase();
   const normalizedId = String(flowId || '').trim().toUpperCase();
   const flow = FLOW_BY_ID.get(normalizedId);
@@ -192,7 +175,6 @@ const startRun = (flowId: string) => {
 };
 
 const cancelRun = (runId: string) => {
-  assertEnabled();
   if (!activeRun || activeRun.runId !== String(runId) || activeRun.status !== 'running' || !activeChild) {
     const error: any = new Error('Active E2E run not found.');
     error.statusCode = 404;

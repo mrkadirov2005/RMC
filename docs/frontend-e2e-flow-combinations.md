@@ -401,11 +401,10 @@ ui/e2e/
 
 Owners can run an individual allowlisted flow or the complete suite from **Engineering → E2E Flows**. The page polls the backend for output and shows the active run, exit state, duration, recent runs, cancellation, and the isolated database name.
 
-The backend runner is deliberately unavailable in production. On the EC2 development service configure:
+On the EC2 service configure the runner paths and isolated database:
 
 ```env
 NODE_ENV=development
-E2E_RUNNER_ENABLED=true
 E2E_UI_DIR=/absolute/path/to/RMC/ui
 E2E_DB_NAME=crm_frontend_e2e_test
 E2E_DB_HOST=127.0.0.1
@@ -425,4 +424,4 @@ npm install
 npx playwright install --with-deps chromium
 ```
 
-The API accepts only the flow IDs returned by `GET /api/system/dev/e2e/flows`; it does not accept spec paths or arbitrary command arguments. Only authenticated owners can list, start, inspect, or cancel runs.
+No runner enable flag is required. The API accepts only the flow IDs returned by `GET /api/system/dev/e2e/flows`; it does not accept spec paths or arbitrary command arguments. Only authenticated owners can list, start, inspect, or cancel runs.
