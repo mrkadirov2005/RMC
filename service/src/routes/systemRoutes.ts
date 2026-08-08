@@ -11,6 +11,10 @@ router.post('/dev/reset-students', requireAuth, requireOwner, systemController.r
 router.post('/dev/reset-teachers', requireAuth, requireOwner, systemController.resetTeachers);
 router.post('/dev/reset-classes', requireAuth, requireOwner, systemController.resetClasses);
 router.post('/dev/reset-payments', requireAuth, requireOwner, systemController.resetPayments);
+router.get('/dev/e2e/flows', requireAuth, requireOwner, systemController.getE2eCatalog);
+router.get('/dev/e2e/status', requireAuth, requireOwner, systemController.getE2eStatus);
+router.post('/dev/e2e/runs', requireAuth, requireOwner, systemController.startE2eRun);
+router.delete('/dev/e2e/runs/:runId', requireAuth, requireOwner, systemController.cancelE2eRun);
 
 module.exports = router;
 

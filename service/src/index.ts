@@ -3,9 +3,16 @@ require('dotenv/config');
 
 const { ensureDatabaseAndMigrate } = require('./db/ensureDatabaseAndMigrate');
 
-async function main() {
+type CreateAppOptions = {
+  initializeDatabase?: boolean;
+  initializeMongo?: boolean;
+};
+
+async function createApp(options: CreateAppOptions = {}) {
+  const { initializeDatabase = true, initializeMongo = true } = options;
+
   // Must happen before requiring modules that connect to Postgres at import-time.
-  await ensureDatabaseAndMigrate();
+  if (initializeDatabase) await ensureDatabaseAndMigrate();
 
   const express = require('express');
   const cors = require('cors');
@@ -54,7 +61,6 @@ async function main() {
   const telegramStudentRoutes = require('./routes/telegramStudentRoutes');
 
   const app = express();
-  const PORT = process.env.PORT || 4000;
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
 
   app.use(cors());
@@ -65,9 +71,11 @@ async function main() {
 
   // Init Mongo connection + indexes in the background.
   // If Mongo is unavailable, the API will still work; it will just skip request log inserts.
-  void initMongo().catch((err: any) => {
-    console.warn('[mongo] init failed:', err?.message || err);
-  });
+  if (initializeMongo) {
+    void initMongo().catch((err: any) => {
+      console.warn('[mongo] init failed:', err?.message || err);
+    });
+  }
 
   // Health check
   app.get(['/health', '/api/health', '/api//health'], (req: any, res: any): void => {
@@ -138,6 +146,14 @@ async function main() {
     res.status(500).json({ error: 'Something went wrong!' });
   });
 
+  return app;
+}
+
+async function main() {
+  const app = await createApp();
+  const { closeMongo } = require('./db/mongo');
+  const PORT = process.env.PORT || 4000;
+
   const server = app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
@@ -169,7 +185,11 @@ async function main() {
   process.on('SIGTERM', gracefulShutdown);
 }
 
-void main().catch((err: any) => {
-  console.error('[startup] failed:', err?.stack || err);
-  process.exit(1);
-});
+if (require.main === module) {
+  void main().catch((err: any) => {
+    console.error('[startup] failed:', err?.stack || err);
+    process.exit(1);
+  });
+}
+
+module.exports = { createApp };

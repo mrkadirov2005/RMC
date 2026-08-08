@@ -7,6 +7,8 @@ module.exports = {
         module: ts.ModuleKind.CommonJS,
         target: ts.ScriptTarget.ES2020,
         esModuleInterop: true,
+        experimentalDecorators: true,
+        emitDecoratorMetadata: true,
       },
       fileName: sourcePath,
     });

@@ -580,10 +580,7 @@ const tests = pgTable('tests', {
   isPrivate: boolean('is_private'),
   startDate: timestamp('start_date'),
   endDate: timestamp('end_date'),
-  teacherId: integer('teacher_id'),
-  title: varchar('title', { length: 255 }),
   description: text('description'),
-  status: varchar('status', { length: 50 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 });
@@ -662,7 +659,6 @@ const testSubmissions = pgTable('test_submissions', {
   gradedAt: timestamp('graded_at'),
   attemptNumber: integer('attempt_number'),
   ipAddress: varchar('ip_address', { length: 50 }),
-  score: numeric('score'),
   status: varchar('status', { length: 50 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),

@@ -491,7 +491,7 @@ const assignTest = async (testId: number, body: any, reqMeta: any = {}, centerId
       item.assigned_to_type,
       item.assigned_to_id,
       item.assigned_by ?? assignedBy,
-      item.due_date || null,
+      item.due_date ? new Date(item.due_date) : null,
       item.is_mandatory !== undefined ? toBool(item.is_mandatory) : true,
       item.notes || null,
     ]);

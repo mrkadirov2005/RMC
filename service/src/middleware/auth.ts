@@ -10,7 +10,16 @@ const { students } = require('../db/schema');
 
 const db = pool.db;
 
-const JWT_SECRET = process.env.JWT_SECRET || 'crm_jwt_secret_key_2024_change_in_production';
+const DEVELOPMENT_JWT_SECRET = 'crm_jwt_secret_key_2024_change_in_production';
+const resolveJwtSecret = (environment = process.env.NODE_ENV, configuredSecret = process.env.JWT_SECRET) => {
+  const configured = String(configuredSecret || '').trim();
+  if (configured) return configured;
+  if (environment === 'production') {
+    throw new Error('JWT_SECRET must be configured in production.');
+  }
+  return DEVELOPMENT_JWT_SECRET;
+};
+const JWT_SECRET = resolveJwtSecret();
 const JWT_EXPIRES_IN = '24h';
 const PAYMENT_TOKEN_EXPIRES_IN = process.env.PAYMENT_TOKEN_EXPIRES_IN || '8h';
 
@@ -213,4 +222,5 @@ module.exports = {
   JWT_SECRET,
   JWT_EXPIRES_IN,
   PAYMENT_TOKEN_EXPIRES_IN,
+  resolveJwtSecret,
 };

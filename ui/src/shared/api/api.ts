@@ -521,6 +521,10 @@ export const systemAPI = {
   resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),
   resetClasses: (confirmation: string) => apiClient.post('/system/dev/reset-classes', { confirmation }),
   resetPayments: (confirmation: string) => apiClient.post('/system/dev/reset-payments', { confirmation }),
+  getE2eFlows: () => apiClient.get('/system/dev/e2e/flows'),
+  getE2eStatus: () => apiClient.get('/system/dev/e2e/status'),
+  startE2eRun: (flowId: string) => apiClient.post('/system/dev/e2e/runs', { flowId }),
+  cancelE2eRun: (runId: string) => apiClient.delete(`/system/dev/e2e/runs/${encodeURIComponent(runId)}`),
 };
 
 export const settingsAPI = {

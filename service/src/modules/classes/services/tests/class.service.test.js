@@ -47,7 +47,7 @@ describe('classes service', () => {
       undefined,
       12,
     ]));
-    expect(classRepository.insert.mock.calls[0][0].at(-1)).toBe('Monthly');
+    expect(classRepository.insert.mock.calls[0][0][11]).toBe('Monthly');
   });
 
   it('soft deletes class sessions after deleting a class', async () => {

@@ -232,6 +232,75 @@ const markSlotAsAvailable = (slotId: number, centerId: number) =>
     .returning(slotSelection)
     .then((rows: any[]) => rows[0] || null);
 
+const bookingError = (message: string, code: string) => {
+  const error: any = new Error(message);
+  error.code = code;
+  return error;
+};
+
+const bookSlotAtomic = async (params: any[]) => {
+  const [centerId, slotId, classId, sessionId, teacherId, bookingStatus, notes] = params;
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const slot = await client.query(
+      `SELECT slot_id, center_id, is_available FROM room_slots
+       WHERE slot_id = $1 AND center_id = $2 FOR UPDATE`,
+      [slotId, centerId]
+    );
+    if (!slot.rows[0]) throw bookingError('Slot not found', 'SLOT_NOT_FOUND');
+    if (!slot.rows[0].is_available) throw bookingError('Slot is not available', 'SLOT_UNAVAILABLE');
+    const classRow = await client.query(
+      `SELECT class_id FROM classes WHERE class_id = $1 AND center_id = $2 AND deleted_at IS NULL`,
+      [classId, centerId]
+    );
+    if (!classRow.rows[0]) throw bookingError('Class not found', 'CLASS_NOT_FOUND');
+    const inserted = await client.query(
+      `INSERT INTO room_bookings
+       (center_id, slot_id, class_id, session_id, teacher_id, booking_status, notes)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
+      [centerId, slotId, classId, sessionId, teacherId, bookingStatus, notes]
+    );
+    await client.query(
+      `UPDATE room_slots SET is_available = false, updated_at = CURRENT_TIMESTAMP
+       WHERE slot_id = $1 AND center_id = $2`,
+      [slotId, centerId]
+    );
+    await client.query('COMMIT');
+    return inserted.rows[0];
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
+const cancelBookingAtomic = async (bookingId: number, centerId: number) => {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const booking = await client.query(
+      `SELECT * FROM room_bookings WHERE booking_id = $1 AND center_id = $2 FOR UPDATE`,
+      [bookingId, centerId]
+    );
+    if (!booking.rows[0]) throw bookingError('Booking not found', 'BOOKING_NOT_FOUND');
+    await client.query('DELETE FROM room_bookings WHERE booking_id = $1 AND center_id = $2', [bookingId, centerId]);
+    await client.query(
+      `UPDATE room_slots SET is_available = true, updated_at = CURRENT_TIMESTAMP
+       WHERE slot_id = $1 AND center_id = $2`,
+      [booking.rows[0].slot_id, centerId]
+    );
+    await client.query('COMMIT');
+    return booking.rows[0];
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 module.exports = {
   // Slots
   findSlotsByRoom,
@@ -244,6 +313,8 @@ module.exports = {
   deleteSlot,
   markSlotAsBooked,
   markSlotAsAvailable,
+  bookSlotAtomic,
+  cancelBookingAtomic,
   // Bookings
   findBookingsBySlot,
   findBookingsByClass,

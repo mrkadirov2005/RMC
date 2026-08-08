@@ -98,14 +98,19 @@ const round = (value: number, digits = 2) => {
   return Math.round(value * factor) / factor;
 };
 
+const safeOsValue = <T>(read: () => T, fallback: T): T => {
+  try { return read(); }
+  catch { return fallback; }
+};
+
 const getStats = async () => {
   const memory = process.memoryUsage();
   const heapStats = v8.getHeapStatistics();
   const totalMemory = os.totalmem();
   const freeMemory = os.freemem();
   const usedMemory = totalMemory - freeMemory;
-  const cpus = os.cpus() || [];
-  const loadAverage = os.loadavg();
+  const cpus = safeOsValue(() => os.cpus(), []) || [];
+  const loadAverage = safeOsValue(() => os.loadavg(), [0, 0, 0]);
   const oneMinuteLoad = Number(loadAverage[0] || 0);
   const cpuCount = Math.max(cpus.length, 1);
   const cpuLoadPercent = Math.min(100, round((oneMinuteLoad / cpuCount) * 100, 1));
@@ -130,11 +135,11 @@ const getStats = async () => {
       uptimeSeconds: round(process.uptime(), 0),
     },
     host: {
-      hostname: os.hostname(),
-      platform: os.platform(),
-      release: os.release(),
-      arch: os.arch(),
-      uptimeSeconds: round(os.uptime(), 0),
+      hostname: safeOsValue(() => os.hostname(), 'unknown'),
+      platform: safeOsValue(() => os.platform(), 'unknown'),
+      release: safeOsValue(() => os.release(), 'unknown'),
+      arch: safeOsValue(() => os.arch(), 'unknown'),
+      uptimeSeconds: round(safeOsValue(() => os.uptime(), 0), 0),
     },
     cpu: {
       cores: cpuCount,

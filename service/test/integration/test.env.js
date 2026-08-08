@@ -1,0 +1,9 @@
+process.env.NODE_ENV = 'test';
+process.env.DB_HOST = process.env.TEST_DB_HOST || '127.0.0.1';
+process.env.DB_PORT = process.env.TEST_DB_PORT || '5432';
+process.env.DB_USER = process.env.TEST_DB_USER || 'crm_user';
+process.env.DB_PASSWORD = process.env.TEST_DB_PASSWORD || 'crm_password';
+process.env.DB_NAME = process.env.TEST_DB_NAME || 'crm_backend_test';
+process.env.AUTO_CREATE_DB = 'false';
+process.env.AUTO_MIGRATE = 'false';
+process.env.JWT_SECRET = process.env.TEST_JWT_SECRET || 'crm-integration-test-secret';

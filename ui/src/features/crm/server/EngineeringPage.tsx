@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, Boxes, Database, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
+import { AlertTriangle, Boxes, Database, FlaskConical, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import ServerMonitorPage from './ServerMonitorPage';
 import EngineeringDatabaseTab from './tabs/EngineeringDatabaseTab';
@@ -7,10 +7,12 @@ import EngineeringLoggingTab from './tabs/EngineeringLoggingTab';
 import EngineeringOperationsTab from './tabs/EngineeringOperationsTab';
 import EngineeringRequestHealthTab from './tabs/EngineeringRequestHealthTab';
 import EngineeringStudioTab from './tabs/EngineeringStudioTab';
+import EngineeringE2eTab from './tabs/EngineeringE2eTab';
+import { useAppSelector } from '../hooks';
 
-type EngineeringTab = 'server' | 'database' | 'studio' | 'warnings' | 'failed' | 'logging' | 'operations';
+type EngineeringTab = 'server' | 'database' | 'studio' | 'warnings' | 'failed' | 'logging' | 'operations' | 'e2e';
 
-const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = [
+const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server; ownerOnly?: boolean }> = [
   { id: 'server', label: 'Server', icon: Server },
   { id: 'database', label: 'Database', icon: Database },
   { id: 'studio', label: 'Studio', icon: Table2 },
@@ -18,10 +20,13 @@ const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = 
   { id: 'failed', label: 'Failed Requests', icon: ShieldAlert },
   { id: 'logging', label: 'Logging', icon: ScrollText },
   { id: 'operations', label: 'Operations', icon: Boxes },
+  { id: 'e2e', label: 'E2E Flows', icon: FlaskConical, ownerOnly: true },
 ];
 
 const EngineeringPage = () => {
   const [activeTab, setActiveTab] = useState<EngineeringTab>('server');
+  const user = useAppSelector((state) => state.auth.user);
+  const visibleTabs = tabs.filter((tab) => !tab.ownerOnly || String(user?.role || '').toLowerCase() === 'owner');
 
   return (
     <div className="space-y-4">
@@ -32,7 +37,7 @@ const EngineeringPage = () => {
       />
 
       <div className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2">
-        {tabs.map((tab) => {
+        {visibleTabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
@@ -58,6 +63,7 @@ const EngineeringPage = () => {
       {activeTab === 'failed' && <EngineeringRequestHealthTab mode="failed" />}
       {activeTab === 'logging' && <EngineeringLoggingTab />}
       {activeTab === 'operations' && <EngineeringOperationsTab />}
+      {activeTab === 'e2e' && <EngineeringE2eTab />}
     </div>
   );
 };

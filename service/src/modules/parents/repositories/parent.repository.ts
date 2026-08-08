@@ -118,7 +118,7 @@ const testSubmissionSelection = {
   test_id: testSubmissions.testId,
   student_id: testSubmissions.studentId,
   center_id: testSubmissions.centerId,
-  score: testSubmissions.score,
+  score: testSubmissions.obtainedMarks,
   status: testSubmissions.status,
   created_at: testSubmissions.createdAt,
   updated_at: testSubmissions.updatedAt,

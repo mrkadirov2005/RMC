@@ -72,7 +72,6 @@ const studentSelection = {
   first_name: students.firstName,
   last_name: students.lastName,
   username: students.username,
-  password_hash: students.passwordHash,
   email: students.email,
   phone: students.phone,
   date_of_birth: students.dateOfBirth,
@@ -434,7 +433,11 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
     if (teacherId) sourceConditions.push(eq(students.teacherId, teacherId));
 
     const sourceRows = await tx
-      .select({ ...studentSelection, source_payment_amount: classes.paymentAmount })
+      .select({
+        ...studentSelection,
+        source_password_hash: students.passwordHash,
+        source_payment_amount: classes.paymentAmount,
+      })
       .from(students)
       .leftJoin(classes, eq(classes.classId, students.classId))
       .where(and(...sourceConditions))
@@ -471,7 +474,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
         firstName: source.first_name,
         lastName: source.last_name,
         username: source.username,
-        passwordHash: source.password_hash,
+        passwordHash: source.source_password_hash,
         email: source.email,
         phone: source.phone,
         dateOfBirth: source.date_of_birth,
@@ -481,6 +484,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
         status: 'Active',
         teacherId: targetClass.teacher_id || null,
         classId: targetClass.class_id,
+        previousClassId: source.class_id,
         schoolName: source.school_name,
         schoolClass: source.school_class,
         acquisitionSourceId: source.acquisition_source_id,

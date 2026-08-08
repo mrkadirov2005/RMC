@@ -115,8 +115,7 @@ const getBookingById = async (bookingId: number, centerId: number) => {
 const bookSlot = async (data: any) => {
   const { center_id, slot_id, class_id, session_id, teacher_id, notes } = data;
   
-  // Create booking
-  const booking = await roomSlotsRepository.createBooking([
+  return roomSlotsRepository.bookSlotAtomic([
     center_id,
     slot_id,
     class_id,
@@ -125,11 +124,6 @@ const bookSlot = async (data: any) => {
     'Confirmed',
     notes || null
   ]);
-  
-  // Mark slot as booked
-  await roomSlotsRepository.markSlotAsBooked(slot_id, center_id);
-  
-  return booking;
 };
 
 const modifyBooking = async (bookingId: number, data: any, centerId: number) => {
@@ -138,19 +132,7 @@ const modifyBooking = async (bookingId: number, data: any, centerId: number) => 
 };
 
 const cancelBooking = async (bookingId: number, centerId: number) => {
-  // Get booking first
-  const booking = await roomSlotsRepository.findBookingById(bookingId, centerId);
-  if (!booking) {
-    throw new Error('Booking not found');
-  }
-  
-  // Delete booking
-  await roomSlotsRepository.deleteBooking(bookingId, centerId);
-  
-  // Mark slot as available again
-  await roomSlotsRepository.markSlotAsAvailable(booking.slot_id, centerId);
-  
-  return booking;
+  return roomSlotsRepository.cancelBookingAtomic(bookingId, centerId);
 };
 
 module.exports = {

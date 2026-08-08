@@ -20,7 +20,9 @@ const createGeneratedStudentIdentity = () => {
 
 const escapeCsv = (value: any) => {
   if (value === null || value === undefined) return '';
-  const str = String(value);
+  const raw = String(value);
+  // Prevent spreadsheet applications from evaluating imported text as a formula.
+  const str = typeof value === 'string' && /^[\t\r ]*[=+\-@]/.test(raw) ? `'${raw}` : raw;
   if (str.includes('"') || str.includes(',') || str.includes('\n')) {
     return `"${str.replace(/"/g, '""')}"`;
   }
