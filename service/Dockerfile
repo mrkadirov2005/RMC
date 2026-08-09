@@ -14,6 +14,11 @@ COPY service/tsconfig.json service/.sequelizerc ./
 COPY service/src ./src
 COPY service/config ./config
 COPY service/db ./db
+# The Playwright global setup runs the E2E seed from the service tree. The seed
+# reuses the integration database setup helper to create and migrate its
+# isolated database, so both files must be present in the runtime image.
+COPY service/test/e2e ./test/e2e
+COPY service/test/integration/globalSetup.js ./test/integration/globalSetup.js
 RUN rm -rf dist \
     && npm run build \
     && ! grep -q "config/dbcon" dist/db/pool.js
