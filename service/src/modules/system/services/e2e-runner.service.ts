@@ -64,6 +64,26 @@ let activeRun: PublicRun | null = null;
 let activeTimer: ReturnType<typeof setTimeout> | null = null;
 const recentRuns: PublicRun[] = [];
 
+const allocateRunPorts = () => {
+  // Each run gets its own ports so a stale process from an interrupted run
+  // cannot block the next Playwright invocation on the default 4100/5174 pair.
+  const backendPort = crypto.randomInt(20_000, 40_000);
+  const frontendPort = crypto.randomInt(40_001, 60_000);
+  return { backendPort, frontendPort };
+};
+
+const terminateProcessTree = (child: any) => {
+  if (!child?.pid) return;
+  try {
+    // Playwright launches Vite and a test backend as descendants. Killing the
+    // process group prevents those servers from surviving cancellation/timeouts.
+    if (process.platform !== 'win32') process.kill(-child.pid, 'SIGTERM');
+    else child.kill('SIGTERM');
+  } catch {
+    child.kill?.('SIGTERM');
+  }
+};
+
 const getE2eDatabase = () => process.env.E2E_DB_NAME || 'crm_frontend_e2e_test';
 
 const assertSafeDatabase = () => {
@@ -136,6 +156,7 @@ const startRun = (flowId: string) => {
 
   const uiDirectory = getUiDirectory();
   const cliPath = path.join(uiDirectory, 'node_modules', '@playwright', 'test', 'cli.js');
+  const { backendPort, frontendPort } = allocateRunPorts();
 
   const runId = crypto.randomUUID();
   activeRun = {
@@ -147,7 +168,7 @@ const startRun = (flowId: string) => {
     finishedAt: null,
     exitCode: null,
     durationMs: null,
-    output: `[runner] Starting ${flow.id}: ${flow.label}\n`,
+    output: `[runner] Starting ${flow.id}: ${flow.label}\n[runner] Ports: backend ${backendPort}, frontend ${frontendPort}\n`,
   };
 
   const args = [cliPath, 'test'];
@@ -158,10 +179,13 @@ const startRun = (flowId: string) => {
     cwd: uiDirectory,
     shell: false,
     stdio: ['ignore', 'pipe', 'pipe'],
+    detached: process.platform !== 'win32',
     env: {
       ...process.env,
       CI: '1',
       E2E_DB_NAME: database,
+      E2E_BACKEND_PORT: String(backendPort),
+      E2E_FRONTEND_PORT: String(frontendPort),
     },
   });
   activeChild = child;
@@ -186,7 +210,7 @@ const startRun = (flowId: string) => {
   activeTimer = setTimeout(() => {
     if (activeChild === child && activeRun?.runId === runId) {
       appendOutput(`\n[runner] Timeout after ${timeoutMs}ms; terminating run.\n`);
-      child.kill('SIGTERM');
+      terminateProcessTree(child);
     }
   }, timeoutMs);
   activeTimer.unref?.();
@@ -200,7 +224,7 @@ const cancelRun = (runId: string) => {
     error.statusCode = 404;
     throw error;
   }
-  activeChild.kill('SIGTERM');
+  terminateProcessTree(activeChild);
   return snapshot(activeRun);
 };
 
