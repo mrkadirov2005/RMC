@@ -422,9 +422,25 @@ Each line is one visible local-browser test. The browser stops after the final r
 
 ## Run locally
 
+Run these commands from `ui/`. Playwright starts its own frontend and backend,
+uses the isolated `crm_frontend_e2e_test` database, and runs the global seed.
+
 ```bash
-cd ui
-npx playwright test --headed --project=chromium
+# One workflow by ID
+npm run test:e2e:flow -- WF-042
+
+# Watch one workflow in a browser
+npm run test:e2e:headed -- --grep WF-042
+
+# Pause and step through one workflow with Playwright Inspector
+npm run test:e2e:debug -- --grep WF-042
+
+# Run every desktop workflow
+npm run test:e2e
+
+# Check that WF-001 through WF-320 each exist exactly once
+npm run test:e2e:verify
 ```
 
-Use `--debug` to pause and move through a test manually.
+PostgreSQL must be running locally with the E2E database already created and
+migrated. The test setup never uses the normal development database.

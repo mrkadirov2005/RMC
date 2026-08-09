@@ -10,9 +10,11 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
-    "test:e2e:ui": "playwright test --ui",
+    "test:e2e": "playwright test --project=chromium",
+    "test:e2e:flow": "playwright test --project=chromium --grep",
+    "test:e2e:headed": "playwright test --project=chromium --headed",
+    "test:e2e:debug": "playwright test --project=chromium --debug",
+    "test:e2e:verify": "node e2e/verify-workflows.cjs",
     "test:e2e:report": "playwright show-report"
   },
   "dependencies": {

@@ -157,7 +157,6 @@ async function main() {
   const server = app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
-  require('./modules/system/services/e2e-viewer-proxy.service').attachE2eViewerProxy(server);
 
   // Graceful shutdown - use a flag to prevent multiple calls
   let isShuttingDown = false;
