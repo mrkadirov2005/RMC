@@ -1,6 +1,9 @@
 FROM node:20-bookworm-slim
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    E2E_LIVE_VIEW_ENABLED=true \
+    E2E_HEADED=true \
+    E2E_DISPLAY=:99
 
 # Install and compile the backend in place. Keeping this as a single-stage
 # image avoids copying the large service node_modules tree through multiple
@@ -32,8 +35,14 @@ COPY ui ./
 
 # Install the browser and required Linux libraries in the execution image.
 RUN npx playwright install --with-deps chromium \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends xvfb x11-utils x11vnc novnc websockify \
     && rm -rf /var/lib/apt/lists/* /tmp/*
+
+COPY service/docker/e2e-live-view-entrypoint.sh /usr/local/bin/e2e-live-view-entrypoint
+RUN chmod 0755 /usr/local/bin/e2e-live-view-entrypoint
 
 WORKDIR /app/service
 EXPOSE 4000
-CMD ["sh", "-lc", "npm run db:migrate && node dist/index.js"]
+EXPOSE 6080
+CMD ["/usr/local/bin/e2e-live-view-entrypoint"]

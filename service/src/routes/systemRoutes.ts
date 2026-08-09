@@ -3,6 +3,16 @@ const router = express.Router();
 const systemController = require('../modules/system');
 const { requireAuth, requireOwner, requireRole } = require('../middleware/auth');
 
+// The viewer shell and noVNC client code contain no data. Access to the live
+// framebuffer is separately protected by a short-lived, per-run token during
+// the WebSocket upgrade.
+router.get('/dev/e2e/viewer', systemController.getE2eViewer);
+router.use('/dev/e2e/novnc', express.static(process.env.E2E_NOVNC_WEB_ROOT || '/usr/share/novnc', {
+  fallthrough: false,
+  immutable: true,
+  maxAge: '1d',
+}));
+
 router.get('/stats', requireAuth, requireRole('superuser'), systemController.getStats);
 router.get('/database/tables', requireAuth, requireOwner, systemController.getDatabaseTables);
 router.get('/database/tables/:table/rows', requireAuth, requireOwner, systemController.getDatabaseTableRows);

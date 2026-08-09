@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { systemAPI } from '@/shared/api/api';
+import { buildApiUrl, systemAPI } from '@/shared/api/api';
 import { getErrorMessage } from '@/utils/errorMessage';
 
 type Flow = { id: string; label: string; group: string };
@@ -19,6 +19,24 @@ type Run = {
   exitCode: number | null;
   durationMs: number | null;
   output: string;
+  viewerUrl?: string;
+  viewerToken?: string;
+};
+
+type Viewer = { url: string; token?: string };
+
+const buildViewerUrl = (viewer: Viewer | null) => {
+  if (!viewer?.url) return '';
+  try {
+    if (/^[a-z][a-z\d+.-]*:/i.test(viewer.url) && !/^https?:\/\//i.test(viewer.url)) return '';
+    const rawUrl = /^https?:\/\//i.test(viewer.url) ? viewer.url : buildApiUrl(viewer.url);
+    const url = new URL(rawUrl, window.location.origin);
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return '';
+    if (viewer.token) url.hash = new URLSearchParams({ token: viewer.token }).toString();
+    return url.toString();
+  } catch {
+    return '';
+  }
 };
 
 const statusIcon = {
@@ -47,6 +65,8 @@ const EngineeringE2eTab = () => {
   const [startingId, setStartingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [query, setQuery] = useState('');
+  const [viewer, setViewer] = useState<Viewer | null>(null);
+  const [viewerConnected, setViewerConnected] = useState(false);
 
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -60,6 +80,18 @@ const EngineeringE2eTab = () => {
       setFlows(Array.isArray(catalog?.flows) ? catalog.flows : []);
       setDatabase(String(catalog?.database || ''));
       setActive(status?.active || null);
+      const viewerUrl = status?.active?.viewerUrl || catalog?.viewerUrl;
+      const viewerToken = status?.active?.viewerToken || catalog?.viewerToken;
+      if (viewerUrl) {
+        const nextViewer = { url: String(viewerUrl), token: viewerToken ? String(viewerToken) : undefined };
+        setViewer((current) => {
+          if (current?.url !== nextViewer.url || current?.token !== nextViewer.token) setViewerConnected(false);
+          return nextViewer;
+        });
+      } else if (!status?.active) {
+        setViewer(null);
+        setViewerConnected(false);
+      }
       setRecent(Array.isArray(status?.recent) ? status.recent : []);
       setError('');
     } catch (requestError) {
@@ -90,6 +122,10 @@ const EngineeringE2eTab = () => {
     try {
       const response = await systemAPI.startE2eRun(flowId);
       setActive(response.data);
+      if (response.data?.viewerUrl) {
+        setViewer({ url: String(response.data.viewerUrl), token: response.data.viewerToken ? String(response.data.viewerToken) : undefined });
+        setViewerConnected(false);
+      }
       await load(true);
     } catch (requestError) {
       setError(getErrorMessage(requestError));
@@ -109,6 +145,9 @@ const EngineeringE2eTab = () => {
   };
 
   if (loading) return <div className="flex min-h-52 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+
+  const viewerSrc = buildViewerUrl(viewer);
+  const viewerState = active?.status === 'running' ? (viewerConnected ? 'running' : 'connecting') : active ? 'finished' : 'connecting';
 
   return (
     <div className="space-y-4">
@@ -136,6 +175,30 @@ const EngineeringE2eTab = () => {
           </CardHeader>
           <CardContent>
             <pre className="max-h-[420px] overflow-auto whitespace-pre-wrap rounded-md bg-slate-950 p-4 font-mono text-xs leading-5 text-slate-100">{active.output || 'Waiting for output...'}</pre>
+          </CardContent>
+        </Card>
+      )}
+
+      {viewerSrc && (
+        <Card aria-label="Live browser viewer">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between gap-3">
+              <div><CardTitle className="text-base">Live browser</CardTitle><CardDescription>Watch the selected Playwright flow in real time.</CardDescription></div>
+              <Badge variant={viewerState === 'running' ? 'info' : viewerState === 'finished' ? 'success' : 'outline'}>{viewerState}</Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-hidden rounded-md border bg-slate-950">
+              <iframe
+                title="Live Playwright browser"
+                src={viewerSrc}
+                className="aspect-video min-h-[360px] w-full bg-slate-950"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-pointer-lock"
+                referrerPolicy="no-referrer"
+                allow="clipboard-read; clipboard-write; fullscreen"
+                onLoad={() => setViewerConnected(true)}
+              />
+            </div>
           </CardContent>
         </Card>
       )}

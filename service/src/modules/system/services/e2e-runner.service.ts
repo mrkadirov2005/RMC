@@ -15,6 +15,8 @@ type PublicRun = {
   exitCode: number | null;
   durationMs: number | null;
   output: string;
+  viewerUrl?: string;
+  viewerToken?: string;
 };
 
 const workflowDefinitions = require('../../../../config/e2e-workflows.json') as Array<{
@@ -105,6 +107,15 @@ const appendOutput = (chunk: unknown) => {
 
 const snapshot = (run: PublicRun | null) => run ? { ...run } : null;
 
+const isViewerEnabled = () => process.env.E2E_LIVE_VIEW_ENABLED === 'true';
+const isViewerTokenValid = (token: string) => Boolean(
+  isViewerEnabled()
+  && activeRun?.viewerToken
+  && activeRun.viewerToken.length === token.length
+  && crypto.timingSafeEqual(Buffer.from(activeRun.viewerToken), Buffer.from(token))
+  && activeRun.status === 'running'
+);
+
 const getCompletedStatus = (flowId: string, output: string, code: number | null, signal: string | null): RunStatus => {
   if (signal) return 'cancelled';
   if (code !== 0) return 'failed';
@@ -116,6 +127,7 @@ const getCompletedStatus = (flowId: string, output: string, code: number | null,
 
 const getCatalog = () => ({
   database: getE2eDatabase(),
+  viewerEnabled: isViewerEnabled(),
   running: Boolean(activeRun?.status === 'running'),
   flows: FLOW_CATALOG.map(({ id, label, group }) => ({ id, label, group })),
 });
@@ -152,6 +164,10 @@ const startRun = (flowId: string) => {
     exitCode: null,
     durationMs: null,
     output: `[runner] Starting ${flow.id}: ${flow.label}\n[runner] Ports: backend ${backendPort}, frontend ${frontendPort}\n`,
+    ...(isViewerEnabled() ? {
+      viewerUrl: '/system/dev/e2e/viewer',
+      viewerToken: crypto.randomBytes(32).toString('base64url'),
+    } : {}),
   };
 
   const args = [cliPath, 'test'];
@@ -182,6 +198,7 @@ const startRun = (flowId: string) => {
     activeRun.exitCode = code;
     activeRun.status = getCompletedStatus(flow.id, activeRun.output, code, signal);
     appendOutput(`\n[runner] Finished with ${signal ? `signal ${signal}` : `exit code ${code}`}\n`);
+    delete activeRun.viewerToken;
     recentRuns.unshift({ ...activeRun });
     recentRuns.splice(10);
     activeChild = null;
@@ -218,6 +235,6 @@ const resetForTests = () => {
   recentRuns.splice(0);
 };
 
-module.exports = { getCatalog, getStatus, startRun, cancelRun, assertSafeDatabase, FLOW_CATALOG, resetForTests, getCompletedStatus };
+module.exports = { getCatalog, getStatus, startRun, cancelRun, assertSafeDatabase, FLOW_CATALOG, resetForTests, getCompletedStatus, isViewerTokenValid };
 
 export {};

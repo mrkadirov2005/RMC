@@ -3,6 +3,8 @@ import { defineConfig, devices } from '@playwright/test';
 const backendPort = Number(process.env.E2E_BACKEND_PORT || 4100);
 const frontendPort = Number(process.env.E2E_FRONTEND_PORT || 5174);
 const database = process.env.E2E_DB_NAME || 'crm_frontend_e2e_test';
+const headed = process.env.E2E_HEADED === 'true';
+const slowMo = Math.max(0, Number(process.env.E2E_SLOW_MO_MS || (headed ? 400 : 0)) || 0);
 
 export default defineConfig({
   testDir: './e2e',
@@ -20,6 +22,8 @@ export default defineConfig({
   use: {
     baseURL: `http://127.0.0.1:${frontendPort}`,
     channel: 'chromium',
+    headless: !headed,
+    launchOptions: { slowMo },
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
