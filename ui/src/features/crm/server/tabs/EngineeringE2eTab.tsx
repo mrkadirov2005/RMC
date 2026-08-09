@@ -4,6 +4,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { systemAPI } from '@/shared/api/api';
 import { getErrorMessage } from '@/utils/errorMessage';
 
@@ -12,7 +13,7 @@ type Run = {
   runId: string;
   flowId: string;
   label: string;
-  status: 'running' | 'passed' | 'failed' | 'cancelled';
+  status: 'running' | 'passed' | 'failed' | 'cancelled' | 'skipped';
   startedAt: string;
   finishedAt: string | null;
   exitCode: number | null;
@@ -25,10 +26,11 @@ const statusIcon = {
   passed: CheckCircle2,
   failed: XCircle,
   cancelled: Ban,
+  skipped: Clock3,
 };
 
 const statusTone = (status: Run['status']) =>
-  status === 'passed' ? 'success' : status === 'running' ? 'info' : status === 'cancelled' ? 'warning' : 'destructive';
+  status === 'passed' ? 'success' : status === 'running' ? 'info' : status === 'cancelled' || status === 'skipped' ? 'warning' : 'destructive';
 
 const formatDuration = (durationMs: number | null) => {
   if (durationMs == null) return 'Running';
@@ -44,6 +46,7 @@ const EngineeringE2eTab = () => {
   const [loading, setLoading] = useState(true);
   const [startingId, setStartingId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [query, setQuery] = useState('');
 
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -73,10 +76,13 @@ const EngineeringE2eTab = () => {
     return () => window.clearInterval(interval);
   }, [active?.status, load]);
 
-  const groups = useMemo(() => flows.reduce<Record<string, Flow[]>>((all, flow) => {
+  const groups = useMemo(() => flows.filter((flow) => {
+    const needle = query.trim().toLowerCase();
+    return !needle || `${flow.id} ${flow.label} ${flow.group}`.toLowerCase().includes(needle);
+  }).reduce<Record<string, Flow[]>>((all, flow) => {
     (all[flow.group] ||= []).push(flow);
     return all;
-  }, {}), [flows]);
+  }, {}), [flows, query]);
 
   const start = async (flowId: string) => {
     setStartingId(flowId);
@@ -116,6 +122,10 @@ const EngineeringE2eTab = () => {
       </div>
 
       {error && <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>}
+      <div className="flex items-center gap-3 rounded-lg border bg-card p-3">
+        <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by workflow ID, action, or page..." aria-label="Search E2E workflows" />
+        <Badge variant="outline">{flows.length} flows</Badge>
+      </div>
       {active && (
         <Card>
           <CardHeader className="pb-3">

@@ -3,8 +3,8 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-type FlowDefinition = { id: string; label: string; spec: string; grep: string; group: string };
-type RunStatus = 'running' | 'passed' | 'failed' | 'cancelled';
+type FlowDefinition = { id: string; label: string; grep: string; group: string };
+type RunStatus = 'running' | 'passed' | 'failed' | 'cancelled' | 'skipped';
 type PublicRun = {
   runId: string;
   flowId: string;
@@ -17,46 +17,20 @@ type PublicRun = {
   output: string;
 };
 
-const definitions: Array<[string, string, string, string]> = [
-  ['ALL', 'Run the complete E2E suite', '', ''],
-  ['E2E-01', 'Center admin login and logout', 'auth/authentication.spec.ts', 'E2E-01'],
-  ['E2E-02', 'Owner login and center switching', 'auth/authentication.spec.ts', 'E2E-02'],
-  ['E2E-03', 'Teacher and student login', 'auth/authentication.spec.ts', 'E2E-03'],
-  ['E2E-04', 'Authorization and permission matrix', 'auth/authentication.spec.ts', 'E2E-04'],
-  ['E2E-05', 'Center management', 'setup/center-management.spec.ts', 'E2E-05'],
-  ['E2E-06', 'Teacher management', 'people/teacher-create.spec.ts', 'E2E-06'],
-  ['E2E-07', 'Student management', 'people/student-create.spec.ts', 'E2E-07'],
-  ['E2E-08', 'Student transfer, freeze and archive', 'people/student-lifecycle.spec.ts', 'E2E-08'],
-  ['E2E-09', 'Telegram registration conversion', 'people/telegram-conversion.spec.ts', 'E2E-09'],
-  ['E2E-10', 'Subjects and assignments', 'academic/subjects-assignments.spec.ts', 'E2E-10'],
-  ['E2E-11', 'Rooms and booking', 'academic/rooms-classes-calendar.spec.ts', 'E2E-11'],
-  ['E2E-12', 'Class scheduling and enrollment', 'academic/rooms-classes-calendar.spec.ts', 'E2E-12'],
-  ['E2E-13', 'Lesson completion', 'academic/rooms-classes-calendar.spec.ts', 'E2E-13'],
-  ['E2E-14', 'Calendar actor scope', 'academic/rooms-classes-calendar.spec.ts', 'E2E-14'],
-  ['E2E-15', 'Payments, discounts and debts', 'finance/finance-flows.spec.ts', 'E2E-15'],
-  ['E2E-16', 'Teacher payment access', 'finance/finance-flows.spec.ts', 'E2E-16'],
-  ['E2E-17', 'Finance reporting', 'finance/finance-flows.spec.ts', 'E2E-17'],
-  ['E2E-18', 'Online test lifecycle', 'tests/online-test-lifecycle.spec.ts', 'E2E-18'],
-  ['E2E-19', 'Teacher portal', 'portals/portal-flows.spec.ts', 'E2E-19'],
-  ['E2E-20', 'Student portal', 'portals/portal-flows.spec.ts', 'E2E-20'],
-  ['E2E-21', 'Owner reports and retention', 'reports/owner-reports.spec.ts', 'E2E-21'],
-  ['E2E-22', 'Supporting administration modules', 'supporting/supporting-modules.spec.ts', 'E2E-22'],
-  ['E2E-23', 'Search, filters and pagination', 'supporting/supporting-modules.spec.ts', 'E2E-23'],
-  ['E2E-24', 'Service failure and recovery', 'reliability/service-recovery.spec.ts', 'E2E-24'],
-  ['CHAIN-A', 'Center to completed lesson', 'chains/business-chains.spec.ts', 'Chain A'],
-  ['CHAIN-B', 'Student onboarding to paid tuition', 'chains/business-chains.spec.ts', 'Chain B'],
-  ['CHAIN-C', 'Student lifecycle across classes', 'chains/business-chains.spec.ts', 'Chain C'],
-  ['CHAIN-D', 'Online test lifecycle chain', 'chains/business-chains.spec.ts', 'Chain D'],
-  ['CHAIN-E', 'Room and schedule conflict chain', 'chains/business-chains.spec.ts', 'Chain E'],
+const workflowDefinitions = require('../../../../config/e2e-workflows.json') as Array<{
+  id: string;
+  label: string;
+  group: string;
+}>;
+const FLOW_CATALOG: FlowDefinition[] = [
+  { id: 'ALL', label: 'Run the complete E2E suite', grep: '', group: 'Complete suite' },
+  ...workflowDefinitions.map(({ id, label, group }) => ({
+    id,
+    label,
+    group,
+    grep: `\\b${id}\\b`,
+  })),
 ];
-
-const FLOW_CATALOG: FlowDefinition[] = definitions.map(([id, label, spec, grep]) => ({
-  id,
-  label,
-  spec: `e2e/${spec}`,
-  grep,
-  group: id === 'ALL' ? 'Complete suite' : id.startsWith('CHAIN-') ? 'Cross-feature chains' : 'Numbered flows',
-}));
 const FLOW_BY_ID = new Map(FLOW_CATALOG.map((flow) => [flow.id, flow]));
 const MAX_OUTPUT = 250_000;
 let activeChild: any = null;
@@ -131,6 +105,15 @@ const appendOutput = (chunk: unknown) => {
 
 const snapshot = (run: PublicRun | null) => run ? { ...run } : null;
 
+const getCompletedStatus = (flowId: string, output: string, code: number | null, signal: string | null): RunStatus => {
+  if (signal) return 'cancelled';
+  if (code !== 0) return 'failed';
+  const selectedFlowWasSkipped = flowId !== 'ALL'
+    && /\b(?:1|one) skipped\b/i.test(output)
+    && !/\b(?:1|one) passed\b/i.test(output);
+  return selectedFlowWasSkipped ? 'skipped' : 'passed';
+};
+
 const getCatalog = () => ({
   database: getE2eDatabase(),
   running: Boolean(activeRun?.status === 'running'),
@@ -172,7 +155,6 @@ const startRun = (flowId: string) => {
   };
 
   const args = [cliPath, 'test'];
-  if (flow.spec) args.push(flow.spec);
   if (flow.grep) args.push('--grep', flow.grep);
   args.push('--project=chromium', '--reporter=line');
   const child = spawn(process.execPath, args, {
@@ -198,7 +180,7 @@ const startRun = (flowId: string) => {
     activeRun.finishedAt = finishedAt.toISOString();
     activeRun.durationMs = finishedAt.getTime() - new Date(activeRun.startedAt).getTime();
     activeRun.exitCode = code;
-    activeRun.status = signal ? 'cancelled' : code === 0 ? 'passed' : 'failed';
+    activeRun.status = getCompletedStatus(flow.id, activeRun.output, code, signal);
     appendOutput(`\n[runner] Finished with ${signal ? `signal ${signal}` : `exit code ${code}`}\n`);
     recentRuns.unshift({ ...activeRun });
     recentRuns.splice(10);
@@ -236,6 +218,6 @@ const resetForTests = () => {
   recentRuns.splice(0);
 };
 
-module.exports = { getCatalog, getStatus, startRun, cancelRun, assertSafeDatabase, FLOW_CATALOG, resetForTests };
+module.exports = { getCatalog, getStatus, startRun, cancelRun, assertSafeDatabase, FLOW_CATALOG, resetForTests, getCompletedStatus };
 
 export {};

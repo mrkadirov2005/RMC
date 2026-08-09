@@ -18,18 +18,21 @@ describe('EngineeringE2eTab', () => {
     vi.clearAllMocks();
     api.getE2eFlows.mockResolvedValue({ data: {
       database: 'crm_frontend_e2e_test',
-      flows: [{ id: 'E2E-01', label: 'Admin login', group: 'Numbered flows' }],
+      flows: [
+        { id: 'WF-001', label: 'Admin valid login', group: 'Authentication' },
+        { id: 'WF-041', label: 'Open Students', group: 'Students' },
+      ],
     } });
     api.getE2eStatus.mockResolvedValue({ data: { active: null, recent: [] } });
     api.startE2eRun.mockResolvedValue({ data: {
-      runId: 'run-1', flowId: 'E2E-01', label: 'Admin login', status: 'running',
+      runId: 'run-1', flowId: 'WF-001', label: 'Admin valid login', status: 'running',
       startedAt: new Date().toISOString(), finishedAt: null, exitCode: null, durationMs: null, output: 'starting',
     } });
   });
 
   test('lists allowlisted flows and starts the selected flow', async () => {
     const running = {
-      runId: 'run-1', flowId: 'E2E-01', label: 'Admin login', status: 'running',
+      runId: 'run-1', flowId: 'WF-001', label: 'Admin valid login', status: 'running',
       startedAt: new Date().toISOString(), finishedAt: null, exitCode: null, durationMs: null, output: 'starting',
     };
     api.getE2eStatus.mockResolvedValueOnce({ data: { active: null, recent: [] } });
@@ -39,10 +42,13 @@ describe('EngineeringE2eTab', () => {
 
     expect(await screen.findByText('E2E Flows')).toBeInTheDocument();
     expect(screen.getByText('Database: crm_frontend_e2e_test')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: /E2E-01 Admin login/i }));
+    expect(screen.getByText('2 flows')).toBeInTheDocument();
+    await user.type(screen.getByRole('textbox', { name: /search e2e workflows/i }), 'WF-001');
+    expect(screen.queryByRole('button', { name: /WF-041 Open Students/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: /WF-001 Admin valid login/i }));
 
-    await waitFor(() => expect(api.startE2eRun).toHaveBeenCalledWith('E2E-01'));
-    expect(await screen.findByText(/E2E-01: Admin login/)).toBeInTheDocument();
+    await waitFor(() => expect(api.startE2eRun).toHaveBeenCalledWith('WF-001'));
+    expect(await screen.findByText(/WF-001: Admin valid login/)).toBeInTheDocument();
   });
 
 });
