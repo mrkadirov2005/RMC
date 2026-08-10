@@ -51,6 +51,26 @@ const saveOwnerPalette = async (req: any, res: any) => {
   }
 };
 
+const getVisualOverrides = async (req: any, res: any) => {
+  try {
+    const { centerId } = getScopedCenterId(req);
+    if (!centerId) return res.status(403).json({ error: 'Center scope required.' });
+    res.json(await settingsService.getVisualOverrides(centerId));
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch visual overrides', details: error.message || String(error) });
+  }
+};
+
+const saveVisualOverrides = async (req: any, res: any) => {
+  try {
+    const { centerId } = getScopedCenterId(req);
+    if (!centerId) return res.status(403).json({ error: 'Center scope required.' });
+    res.json(await settingsService.saveVisualOverrides(req.body?.overrides, centerId));
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to save visual overrides', details: error.message || String(error) });
+  }
+};
+
 const getSidebarOrder = async (req: any, res: any) => {
   try {
     res.json(await settingsService.getSidebarOrder(String(req.user.userType), Number(req.user.id)));
@@ -67,6 +87,6 @@ const saveSidebarOrder = async (req: any, res: any) => {
   }
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, getOwnerPalette, saveOwnerPalette, getSidebarOrder, saveSidebarOrder };
+module.exports = { getLessonScoring, saveLessonScoring, getOwnerPalette, saveOwnerPalette, getVisualOverrides, saveVisualOverrides, getSidebarOrder, saveSidebarOrder };
 
 export {};

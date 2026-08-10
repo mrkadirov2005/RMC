@@ -60,6 +60,7 @@ import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
 import { useLanguage } from './i18n/LanguageContext';
 import { settingsAPI } from './shared/api/api';
 import { saveOwnerPalette } from './features/crm/settings/ownerPalette';
+import { applyVisualOverrides, type VisualOverride } from './features/crm/settings/visualOverrides';
 
 const scheduleIdleWork = (callback: () => void) => {
   if (typeof window === 'undefined') return;
@@ -234,6 +235,23 @@ function AppContent() {
   useEffect(() => {
     if (!isInitialized || !centerReady || !user) return;
     scheduleIdleWork(() => prefetchPrimaryRoute(user));
+  }, [centerReady, isInitialized, user]);
+
+  useEffect(() => {
+    if (!isInitialized || !centerReady || !user) return;
+    let active = true;
+    let overrides: VisualOverride[] = [];
+    const apply = () => applyVisualOverrides(overrides);
+    const load = () => settingsAPI.getVisualOverrides().then((response) => {
+      if (!active) return;
+      overrides = Array.isArray(response.data) ? response.data : [];
+      apply();
+    }).catch(() => null);
+    void load();
+    const observer = new MutationObserver(apply);
+    observer.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener('active-center-changed', load);
+    return () => { active = false; observer.disconnect(); window.removeEventListener('active-center-changed', load); };
   }, [centerReady, isInitialized, user]);
 
   useEffect(() => {

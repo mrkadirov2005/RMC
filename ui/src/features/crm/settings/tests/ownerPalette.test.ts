@@ -18,6 +18,11 @@ describe('owner panel palette', () => {
     expect(ownerPalettePresets.map((palette) => palette.id)).toEqual(['ocean', 'forest', 'sunset', 'royal', 'slate']);
   });
 
+  it('uses vivid primary and secondary preset colors', () => {
+    expect(getOwnerPalette('ocean')).toMatchObject({ primary: '#0066ff', secondary: '#00c2ff' });
+    expect(getOwnerPalette('forest')).toMatchObject({ primary: '#00c853', secondary: '#00e5a8' });
+  });
+
   it('accepts safe custom colors and keeps a custom identity', () => {
     expect(getOwnerPalette({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' })).toMatchObject({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' });
   });

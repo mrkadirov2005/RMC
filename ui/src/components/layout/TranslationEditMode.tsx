@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationRow } from '../../i18n/api';
 import { showToast } from '../../utils/toast';
+import { settingsAPI } from '../../shared/api/api';
+import { applyVisualOverrides, findColorSurface, getVisualOverrideKey, type VisualOverride } from '../../features/crm/settings/visualOverrides';
 
 type EditableTarget = {
   element: HTMLElement;
@@ -37,6 +39,10 @@ const TEXT_SELECTOR = [
 ].join(',');
 
 const normalizeText = (value: string) => value.replace(/\s+/g, ' ').trim();
+const rgbToHex = (value: string) => {
+  const channels = value.match(/\d+(?:\.\d+)?/g)?.slice(0, 3).map(Number);
+  return channels?.length === 3 ? `#${channels.map((channel) => Math.round(channel).toString(16).padStart(2, '0')).join('')}` : '#0066ff';
+};
 
 const isUsefulStaticText = (value: string) => {
   const normalized = normalizeText(value);
@@ -90,6 +96,9 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
   const [form, setForm] = useState<TranslationRow>({ id: '', english: '', uzbek: '' });
   const [saving, setSaving] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [colorSurface, setColorSurface] = useState<HTMLElement | null>(null);
+  const [surfaceColor, setSurfaceColor] = useState('#0066ff');
+  const [visualOverrides, setVisualOverrides] = useState<VisualOverride[]>([]);
 
   const targetDescription = useMemo(() => {
     if (!target?.attribute) return 'Visible text';
@@ -102,18 +111,26 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
     const onClick = (event: MouseEvent) => {
       if (!event.altKey) return;
       const editableTarget = findEditableTarget(event.target);
-      if (!editableTarget) return;
+      const surface = findColorSurface(event.target);
+      if (!editableTarget && !surface) return;
 
       event.preventDefault();
       event.stopPropagation();
       event.stopImmediatePropagation();
       setTarget(editableTarget);
-      setForm(getInitialForm(editableTarget.text, translations, language));
+      setColorSurface(surface);
+      if (surface) setSurfaceColor(rgbToHex(getComputedStyle(surface).backgroundColor));
+      if (editableTarget) setForm(getInitialForm(editableTarget.text, translations, language));
     };
 
     document.addEventListener('click', onClick, true);
     return () => document.removeEventListener('click', onClick, true);
   }, [enabled, isOwner, language, translations]);
+
+  useEffect(() => {
+    if (!isOwner) return;
+    settingsAPI.getVisualOverrides().then((response) => setVisualOverrides(Array.isArray(response.data) ? response.data : [])).catch(() => null);
+  }, [isOwner]);
 
   useEffect(() => {
     if (!isOwner) {
@@ -126,6 +143,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
 
   const closeDialog = () => {
     setTarget(null);
+    setColorSurface(null);
     setSaving(false);
   };
 
@@ -158,6 +176,23 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
       closeDialog();
     } catch {
       showToast.error('Could not save translation');
+      setSaving(false);
+    }
+  };
+
+  const saveCardColor = async () => {
+    if (!colorSurface) return;
+    const key = getVisualOverrideKey(colorSurface);
+    const next = [...visualOverrides.filter((item) => item.key !== key), { key, color: surfaceColor }];
+    setSaving(true);
+    try {
+      await settingsAPI.saveVisualOverrides(next);
+      setVisualOverrides(next);
+      applyVisualOverrides(next);
+      showToast.success('This card color was saved for the center');
+      closeDialog();
+    } catch {
+      showToast.error('Could not save card color');
       setSaving(false);
     }
   };
@@ -197,7 +232,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
           onClick={() => setEnabled((current) => !current)}
         >
           {enabled ? <Check className="h-4 w-4" /> : <PencilLine className="h-4 w-4" />}
-          {enabled ? 'Translation pick on' : 'Edit translations'}
+          {enabled ? 'Content editing on' : 'Edit text and colors'}
         </Button>
         {enabled && (
           <Button type="button" size="icon" variant="outline" className="h-9 w-9 shadow-lg" onClick={() => setEnabled(false)}>
@@ -208,25 +243,25 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
 
       {enabled && (
         <div className="pointer-events-none fixed left-1/2 top-4 z-[1590] -translate-x-1/2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 shadow-lg dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
-          Hold Alt/Option and click text to edit its translation. Normal clicks still work.
+          Hold Alt/Option and click text to translate it, or click a themed card/tag to change only its color.
         </div>
       )}
 
-      <Dialog open={Boolean(target)} onOpenChange={(open) => !open && closeDialog()}>
+      <Dialog open={Boolean(target || colorSurface)} onOpenChange={(open) => !open && closeDialog()}>
         <DialogContent className="max-w-xl" data-translation-editor>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Languages className="h-5 w-5" />
-              Edit translation
+              Edit text or selected card
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+            {target && <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               Editing: <span className="font-semibold text-foreground">{targetDescription}</span>
-            </div>
+            </div>}
 
-            <div className="space-y-2">
+            {target && <div className="space-y-2">
               <Label htmlFor="translation-id">ID / key</Label>
               <Input
                 id="translation-id"
@@ -234,9 +269,18 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
                 onChange={(event) => setForm((current) => ({ ...current, id: event.target.value }))}
                 placeholder="dashboard.title"
               />
-            </div>
+            </div>}
+            {colorSurface && (
+              <div className="space-y-2 rounded-lg border p-3">
+                <Label htmlFor="selected-card-color">Only this selected card</Label>
+                <div className="flex items-center gap-3">
+                  <Input id="selected-card-color" type="color" value={surfaceColor} onChange={(event) => setSurfaceColor(event.target.value)} className="h-11 w-20 cursor-pointer p-1" />
+                  <Button type="button" variant="outline" onClick={saveCardColor} disabled={saving}>Save card color</Button>
+                </div>
+              </div>
+            )}
 
-            <div className="space-y-2">
+            {target && <div className="space-y-2">
               <Label htmlFor="translation-english">English</Label>
               <Textarea
                 id="translation-english"
@@ -244,9 +288,9 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
                 onChange={(event) => setForm((current) => ({ ...current, english: event.target.value }))}
                 rows={3}
               />
-            </div>
+            </div>}
 
-            <div className="space-y-2">
+            {target && <div className="space-y-2">
               <Label htmlFor="translation-uzbek">Uzbek</Label>
               <Textarea
                 id="translation-uzbek"
@@ -254,16 +298,16 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
                 onChange={(event) => setForm((current) => ({ ...current, uzbek: event.target.value }))}
                 rows={3}
               />
-            </div>
+            </div>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeDialog} disabled={saving}>
               Cancel
             </Button>
-            <Button type="button" onClick={save} disabled={saving}>
+            {target && <Button type="button" onClick={save} disabled={saving}>
               {saving ? 'Saving...' : 'Save translation'}
-            </Button>
+            </Button>}
           </DialogFooter>
         </DialogContent>
       </Dialog>

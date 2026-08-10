@@ -1,11 +1,11 @@
 export const OWNER_PALETTE_KEY = 'owner_panel_palette';
 
 export const ownerPalettePresets = [
-  { id: 'ocean', name: 'Ocean', primary: '#2563eb', secondary: '#0891b2', tertiary: '#eff6ff' },
-  { id: 'forest', name: 'Forest', primary: '#059669', secondary: '#0d9488', tertiary: '#ecfdf5' },
-  { id: 'sunset', name: 'Sunset', primary: '#ea580c', secondary: '#db2777', tertiary: '#fff7ed' },
-  { id: 'royal', name: 'Royal', primary: '#7c3aed', secondary: '#c026d3', tertiary: '#f5f3ff' },
-  { id: 'slate', name: 'Slate', primary: '#334155', secondary: '#64748b', tertiary: '#f1f5f9' },
+  { id: 'ocean', name: 'Electric Ocean', primary: '#0066ff', secondary: '#00c2ff', tertiary: '#eaf3ff' },
+  { id: 'forest', name: 'Neon Forest', primary: '#00c853', secondary: '#00e5a8', tertiary: '#e8fff3' },
+  { id: 'sunset', name: 'Vivid Sunset', primary: '#ff5a00', secondary: '#ff1493', tertiary: '#fff0e6' },
+  { id: 'royal', name: 'Electric Royal', primary: '#7a00ff', secondary: '#e000ff', tertiary: '#f4eaff' },
+  { id: 'slate', name: 'Bright Graphite', primary: '#364cff', secondary: '#647dff', tertiary: '#eef0ff' },
 ] as const;
 
 export type OwnerPaletteId = typeof ownerPalettePresets[number]['id'];
@@ -16,6 +16,7 @@ export const getOwnerPalette = (value?: string | Partial<OwnerPalette> | null): 
   const id = typeof value === 'string' ? value : value?.id;
   const preset = ownerPalettePresets.find((palette) => palette.id === id) || ownerPalettePresets[0];
   if (!value || typeof value === 'string') return { ...preset };
+  if (ownerPalettePresets.some((palette) => palette.id === id)) return { ...preset };
   const hex = (color: unknown, fallback: string) => /^#[0-9a-f]{6}$/i.test(String(color)) ? String(color) : fallback;
   return { id: id || 'custom', name: value.name, primary: hex(value.primary, preset.primary), secondary: hex(value.secondary, preset.secondary), tertiary: hex(value.tertiary, preset.tertiary) };
 };

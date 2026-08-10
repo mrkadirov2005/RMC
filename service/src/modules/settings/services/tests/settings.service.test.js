@@ -28,9 +28,13 @@ describe('settings service', () => {
   });
   test('loads and saves a normalized center-wide owner palette', async () => {
     repository.getSetting.mockResolvedValue('sunset');
-    await expect(service.getOwnerPalette(3)).resolves.toMatchObject({ id: 'sunset', primary: '#ea580c' });
+    await expect(service.getOwnerPalette(3)).resolves.toMatchObject({ id: 'sunset', primary: '#ff5a00' });
     await service.saveOwnerPalette({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' }, 3);
     expect(repository.saveSetting).toHaveBeenCalledWith('owner_panel_palette', { id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' }, 3);
     expect(service.normalizeOwnerPalette('unknown')).toMatchObject({ id: 'ocean' });
+  });
+  test('keeps only safe exact-card color overrides', () => {
+    expect(service.normalizeVisualOverrides([{ key: '/students/1|card|profile', color: '#AABBCC' }, { key: 'bad', color: 'red' }]))
+      .toEqual([{ key: '/students/1|card|profile', color: '#aabbcc' }]);
   });
 });

@@ -3,12 +3,13 @@ const { DEFAULT_LESSON_SCORING_SETTINGS } = require('../lessonScoringDefaults');
 
 const LESSON_SCORING_KEY = 'lesson_scoring';
 const OWNER_PALETTE_KEY = 'owner_panel_palette';
+const VISUAL_OVERRIDES_KEY = 'owner_visual_overrides';
 const OWNER_PALETTES: Record<string, any> = {
-  ocean: { id: 'ocean', primary: '#2563eb', secondary: '#0891b2', tertiary: '#eff6ff' },
-  forest: { id: 'forest', primary: '#059669', secondary: '#0d9488', tertiary: '#ecfdf5' },
-  sunset: { id: 'sunset', primary: '#ea580c', secondary: '#db2777', tertiary: '#fff7ed' },
-  royal: { id: 'royal', primary: '#7c3aed', secondary: '#c026d3', tertiary: '#f5f3ff' },
-  slate: { id: 'slate', primary: '#334155', secondary: '#64748b', tertiary: '#f1f5f9' },
+  ocean: { id: 'ocean', primary: '#0066ff', secondary: '#00c2ff', tertiary: '#eaf3ff' },
+  forest: { id: 'forest', primary: '#00c853', secondary: '#00e5a8', tertiary: '#e8fff3' },
+  sunset: { id: 'sunset', primary: '#ff5a00', secondary: '#ff1493', tertiary: '#fff0e6' },
+  royal: { id: 'royal', primary: '#7a00ff', secondary: '#e000ff', tertiary: '#f4eaff' },
+  slate: { id: 'slate', primary: '#364cff', secondary: '#647dff', tertiary: '#eef0ff' },
 };
 const allowedTones = new Set(['emerald', 'sky', 'violet', 'amber', 'rose', 'orange']);
 
@@ -58,6 +59,7 @@ const validHex = (value: unknown, fallback: string) => /^#[0-9a-f]{6}$/i.test(St
 const normalizeOwnerPalette = (value: any) => {
   const preset = OWNER_PALETTES[String(value?.id || value)] || OWNER_PALETTES.ocean;
   if (!value || typeof value !== 'object') return { ...preset };
+  if (OWNER_PALETTES[String(value.id)]) return { ...preset };
   return {
     id: OWNER_PALETTES[String(value.id)] ? String(value.id) : 'custom',
     primary: validHex(value.primary, preset.primary),
@@ -74,6 +76,13 @@ const getOwnerPalette = async (centerId?: number) => {
 const saveOwnerPalette = (value: unknown, centerId?: number) =>
   settingsRepository.saveSetting(OWNER_PALETTE_KEY, normalizeOwnerPalette(value), centerId);
 
+const normalizeVisualOverrides = (items: unknown) => Array.isArray(items)
+  ? items.filter((item: any) => typeof item?.key === 'string' && item.key.length <= 300 && /^#[0-9a-f]{6}$/i.test(String(item?.color)))
+      .map((item: any) => ({ key: item.key, color: String(item.color).toLowerCase() })).slice(0, 500)
+  : [];
+const getVisualOverrides = async (centerId?: number) => normalizeVisualOverrides(await settingsRepository.getSetting(VISUAL_OVERRIDES_KEY, centerId));
+const saveVisualOverrides = (items: unknown, centerId?: number) => settingsRepository.saveSetting(VISUAL_OVERRIDES_KEY, normalizeVisualOverrides(items), centerId);
+
 const sidebarOrderKey = (userType: string, userId: number) => `sidebar_order:${userType}:${userId}`;
 
 const getSidebarOrder = async (userType: string, userId: number) => {
@@ -88,6 +97,6 @@ const saveSidebarOrder = async (userType: string, userId: number, order: unknown
   return settingsRepository.saveSetting(sidebarOrderKey(userType, userId), normalized);
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring, getOwnerPalette, saveOwnerPalette, normalizeOwnerPalette, getSidebarOrder, saveSidebarOrder };
+module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring, getOwnerPalette, saveOwnerPalette, normalizeOwnerPalette, getVisualOverrides, saveVisualOverrides, normalizeVisualOverrides, getSidebarOrder, saveSidebarOrder };
 
 export {};
