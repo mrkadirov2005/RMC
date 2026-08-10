@@ -5,7 +5,7 @@ export interface Subject {
   id?: number;
   class_id?: number;
   subject_name: string;
-  subject_code: string;
+  subject_code?: string;
   teacher_id?: number;
   total_marks: number;
   passing_marks: number;

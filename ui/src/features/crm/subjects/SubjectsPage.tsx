@@ -36,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { SelectField } from '../students/components/SelectField';
 import { useSubjectsPage } from './hooks/useSubjectsPage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
@@ -58,8 +57,6 @@ const SubjectsPage = () => {
     editingId,
     formData,
     setFormData,
-    teacherOptions,
-    isLoadingOptions,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
@@ -339,27 +336,11 @@ const SubjectsPage = () => {
             <DialogTitle>{editingId ? t('Edit Subject') : t('Add New Subject')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <div className="space-y-2">
                 <Label>{t('Subject Name')} *</Label>
                 <Input type="text" required value={formData.subject_name || ''} onChange={(e) => setFormData({ ...formData, subject_name: e.target.value })} />
               </div>
-              <div className="space-y-2">
-                <Label>{t('Subject Code')} *</Label>
-                <Input type="text" required value={formData.subject_code || ''} onChange={(e) => setFormData({ ...formData, subject_code: e.target.value })} />
-              </div>
-            </div>
-            <div className="grid gap-4">
-              <SelectField
-                label={t('Teacher')}
-                name="teacher_id"
-                value={formData.teacher_id || ''}
-                onChange={(value) => setFormData({ ...formData, teacher_id: value ? Number(value) : undefined })}
-                options={teacherOptions}
-                isLoading={isLoadingOptions}
-                required
-                placeholder={t('Select a teacher')}
-              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -371,7 +352,7 @@ const SubjectsPage = () => {
                 <Input type="number" required value={formData.passing_marks || 40} onChange={(e) => setFormData({ ...formData, passing_marks: Number(e.target.value) })} />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">{t('Create the subject here, then assign it from the Group create or edit form.')}</p>
+            <p className="text-xs text-muted-foreground">{t('Create the subject here. Choose both the subject and teacher from the Group create or edit form.')}</p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>{t('Cancel')}</Button>
               <Button type="submit" disabled={state.loading}>{state.loading ? t('Saving...') : t('Save')}</Button>

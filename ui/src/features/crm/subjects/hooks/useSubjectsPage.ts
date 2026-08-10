@@ -12,7 +12,6 @@ import {
 } from '../../../../slices/subjectsSlice';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
 import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSlice';
-import { selectTeacherOptions } from '../../../../store/selectors';
 import type { Subject } from '../types';
 import { getStoredActiveCenterId } from '../../../../shared/auth/authStorage';
 import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
@@ -25,10 +24,6 @@ export const useSubjectsPage = () => {
   const loading = useAppSelector((state) => state.subjects.loading);
   const error = useAppSelector((state) => state.subjects.error);
   const state = { items, loading, error };
-  const teacherOptions = useAppSelector(selectTeacherOptions);
-  const isLoadingOptions = useAppSelector(
-    (state) => state.classes.loading || state.teachers.loading
-  );
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -127,8 +122,6 @@ export const useSubjectsPage = () => {
     editingId,
     formData,
     setFormData,
-    teacherOptions,
-    isLoadingOptions,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
