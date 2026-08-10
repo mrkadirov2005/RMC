@@ -26,6 +26,30 @@ const getSummaries = (centerId?: number) => {
       teachers: sql`(SELECT COUNT(*)::int FROM ${teachers} WHERE ${teachers.centerId} = ${centers.centerId} AND ${teachers.deletedAt} IS NULL)`,
       classes: sql`(SELECT COUNT(*)::int FROM ${classes} WHERE ${classes.centerId} = ${centers.centerId} AND ${classes.deletedAt} IS NULL)`,
       payments: sql`(SELECT COUNT(*)::int FROM ${payments} WHERE ${payments.centerId} = ${centers.centerId} AND ${payments.deletedAt} IS NULL)`,
+      current_month_payments: sql`(
+        SELECT COUNT(*)::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE)
+          AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+      )`,
+      previous_month_payments: sql`(
+        SELECT COUNT(*)::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month'
+          AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE)
+      )`,
+      paid_students_this_month: sql`(
+        SELECT COUNT(DISTINCT ${payments.studentId})::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE)
+          AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+      )`,
       collected: sql`(
         SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid') THEN COALESCE(${payments.amount}, 0) ELSE 0 END), 0)::numeric
         FROM ${payments}
