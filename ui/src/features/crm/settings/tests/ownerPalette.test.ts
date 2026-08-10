@@ -17,4 +17,8 @@ describe('owner panel palette', () => {
   it('uses the same identifiers accepted by the center setting API', () => {
     expect(ownerPalettePresets.map((palette) => palette.id)).toEqual(['ocean', 'forest', 'sunset', 'royal', 'slate']);
   });
+
+  it('accepts safe custom colors and keeps a custom identity', () => {
+    expect(getOwnerPalette({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' })).toMatchObject({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' });
+  });
 });

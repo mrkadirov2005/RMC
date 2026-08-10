@@ -9,31 +9,39 @@ export const ownerPalettePresets = [
 ] as const;
 
 export type OwnerPaletteId = typeof ownerPalettePresets[number]['id'];
+export type OwnerPalette = { id: string; name?: string; primary: string; secondary: string; tertiary: string };
 export const DEFAULT_OWNER_PALETTE: OwnerPaletteId = 'ocean';
 
-export const getOwnerPalette = (id?: string | null) =>
-  ownerPalettePresets.find((palette) => palette.id === id) || ownerPalettePresets[0];
+export const getOwnerPalette = (value?: string | Partial<OwnerPalette> | null): OwnerPalette => {
+  const id = typeof value === 'string' ? value : value?.id;
+  const preset = ownerPalettePresets.find((palette) => palette.id === id) || ownerPalettePresets[0];
+  if (!value || typeof value === 'string') return { ...preset };
+  const hex = (color: unknown, fallback: string) => /^#[0-9a-f]{6}$/i.test(String(color)) ? String(color) : fallback;
+  return { id: id || 'custom', name: value.name, primary: hex(value.primary, preset.primary), secondary: hex(value.secondary, preset.secondary), tertiary: hex(value.tertiary, preset.tertiary) };
+};
 
 export const readOwnerPalette = () => {
   try {
-    return getOwnerPalette(localStorage.getItem(OWNER_PALETTE_KEY));
+    const stored = localStorage.getItem(OWNER_PALETTE_KEY);
+    if (!stored) return getOwnerPalette(DEFAULT_OWNER_PALETTE);
+    try { return getOwnerPalette(JSON.parse(stored)); } catch { return getOwnerPalette(stored); }
   } catch {
     return getOwnerPalette(DEFAULT_OWNER_PALETTE);
   }
 };
 
-export const applyOwnerPalette = (id: string) => {
-  const palette = getOwnerPalette(id);
+export const applyOwnerPalette = (value: string | Partial<OwnerPalette>) => {
+  const palette = getOwnerPalette(value);
   document.documentElement.style.setProperty('--owner-primary-card', palette.primary);
   document.documentElement.style.setProperty('--owner-secondary-tag', palette.secondary);
   document.documentElement.style.setProperty('--owner-tertiary-card', palette.tertiary);
   return palette;
 };
 
-export const saveOwnerPalette = (id: string) => {
-  const palette = applyOwnerPalette(id);
-  localStorage.setItem(OWNER_PALETTE_KEY, palette.id);
+export const saveOwnerPalette = (value: string | Partial<OwnerPalette>) => {
+  const palette = applyOwnerPalette(value);
+  localStorage.setItem(OWNER_PALETTE_KEY, JSON.stringify(palette));
   return palette;
 };
 
-export const initializeOwnerPalette = () => applyOwnerPalette(readOwnerPalette().id);
+export const initializeOwnerPalette = () => applyOwnerPalette(readOwnerPalette());

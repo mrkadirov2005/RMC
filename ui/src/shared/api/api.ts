@@ -525,7 +525,7 @@ export const systemAPI = {
 
 export const settingsAPI = {
   getOwnerPalette: () => apiClient.get('/settings/owner-palette'),
-  saveOwnerPalette: (palette: string) => apiClient.put('/settings/owner-palette', { palette }),
+  saveOwnerPalette: (palette: { id: string; primary: string; secondary: string; tertiary: string } | string) => apiClient.put('/settings/owner-palette', { palette }),
   getLessonScoring: () => apiClient.get('/settings/lesson-scoring'),
   saveLessonScoring: (data: any) => apiClient.put('/settings/lesson-scoring', data),
   getSidebarOrder: () => apiClient.get('/settings/sidebar-order'),

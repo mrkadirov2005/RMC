@@ -31,7 +31,7 @@ import {
   LIST_ROW_PRIMARY_KEY,
   readListRowColors,
 } from './listAppearance';
-import { DEFAULT_OWNER_PALETTE, ownerPalettePresets, readOwnerPalette, saveOwnerPalette, type OwnerPaletteId } from './ownerPalette';
+import { DEFAULT_OWNER_PALETTE, getOwnerPalette, ownerPalettePresets, readOwnerPalette, saveOwnerPalette, type OwnerPalette } from './ownerPalette';
 
 const DEFAULT_DURATION_KEY = 'lesson_duration_default';
 const OVERRIDE_DURATION_KEY = 'lesson_duration_override';
@@ -83,7 +83,7 @@ const SettingsPage = () => {
   const [lessonScoring, setLessonScoring] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
   const [primaryRowColor, setPrimaryRowColor] = useState(DEFAULT_LIST_ROW_PRIMARY);
   const [alternateRowColor, setAlternateRowColor] = useState(DEFAULT_LIST_ROW_ALTERNATE);
-  const [ownerPalette, setOwnerPalette] = useState<OwnerPaletteId>(DEFAULT_OWNER_PALETTE);
+  const [ownerPalette, setOwnerPalette] = useState<OwnerPalette>(() => getOwnerPalette(DEFAULT_OWNER_PALETTE));
 
   useEffect(() => {
     setDefaultDuration(readStoredNumber(DEFAULT_DURATION_KEY, 90));
@@ -95,16 +95,16 @@ const SettingsPage = () => {
     const rowColors = readListRowColors();
     setPrimaryRowColor(rowColors.primary);
     setAlternateRowColor(rowColors.alternate);
-    setOwnerPalette(readOwnerPalette().id);
+    setOwnerPalette(readOwnerPalette());
     settingsAPI.getLessonScoring()
       .then((response) => setLessonScoring(normalizeLessonScoringSettings(response.data)))
       .catch(() => setLessonScoring(defaultLessonScoringSettings));
     settingsAPI.getOwnerPalette()
       .then((response) => {
         const palette = response.data?.palette;
-        setOwnerPalette(saveOwnerPalette(palette).id);
+        setOwnerPalette(saveOwnerPalette(palette));
       })
-      .catch(() => setOwnerPalette(readOwnerPalette().id));
+      .catch(() => setOwnerPalette(readOwnerPalette()));
   }, []);
 
   const updateScoreOption = (section: ScoreSection, index: number, key: 'label' | 'score' | 'symbol' | 'fill', value: string) => {
@@ -147,7 +147,10 @@ const SettingsPage = () => {
     applyListRowColors(primaryRowColor, alternateRowColor);
     saveOwnerPalette(ownerPalette);
     try {
-      await settingsAPI.saveLessonScoring(lessonScoring);
+      await Promise.all([
+        settingsAPI.saveLessonScoring(lessonScoring),
+        settingsAPI.saveOwnerPalette(ownerPalette),
+      ]);
       showToast.success('Settings saved.');
     } catch {
       showToast.error('Failed to save lesson scoring settings.');
@@ -188,7 +191,7 @@ const SettingsPage = () => {
     setCalendarEndHour(18);
     setPrimaryRowColor(DEFAULT_LIST_ROW_PRIMARY);
     setAlternateRowColor(DEFAULT_LIST_ROW_ALTERNATE);
-    setOwnerPalette(DEFAULT_OWNER_PALETTE);
+    setOwnerPalette(getOwnerPalette(DEFAULT_OWNER_PALETTE));
     applyListRowColors(DEFAULT_LIST_ROW_PRIMARY, DEFAULT_LIST_ROW_ALTERNATE);
     setLessonScoring(defaultLessonScoringSettings);
     showToast.success('Settings reset to defaults.');
@@ -280,12 +283,21 @@ const SettingsPage = () => {
             <p className="text-xs text-muted-foreground">Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {ownerPalettePresets.map((palette) => (
-                <button key={palette.id} type="button" onClick={async () => { setOwnerPalette(palette.id); saveOwnerPalette(palette.id); try { await settingsAPI.saveOwnerPalette(palette.id); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
+                <button key={palette.id} type="button" onClick={async () => { const selected = saveOwnerPalette(palette); setOwnerPalette(selected); try { await settingsAPI.saveOwnerPalette(selected); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette.id === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
                   <span className="mb-2 block text-sm font-semibold">{palette.name}</span>
                   <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title="Primary cards" /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title="Secondary tags" /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title="Tertiary cards" /></span>
                 </button>
               ))}
             </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {([['primary', 'Primary cards'], ['secondary', 'Secondary tags'], ['tertiary', 'Tertiary cards']] as const).map(([key, label]) => (
+                <div key={key} className="space-y-2">
+                  <Label htmlFor={`owner-${key}`}>{label}</Label>
+                  <Input id={`owner-${key}`} type="color" value={ownerPalette[key]} onChange={(event) => { const custom = saveOwnerPalette({ ...ownerPalette, id: 'custom', [key]: event.target.value }); setOwnerPalette(custom); }} className="h-11 cursor-pointer p-1" />
+                </div>
+              ))}
+            </div>
+            <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>Save custom colors</Button>
           </div>
         </SectionPanel>
 

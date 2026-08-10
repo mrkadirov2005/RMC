@@ -28,9 +28,9 @@ describe('settings service', () => {
   });
   test('loads and saves a normalized center-wide owner palette', async () => {
     repository.getSetting.mockResolvedValue('sunset');
-    await expect(service.getOwnerPalette(3)).resolves.toBe('sunset');
-    await service.saveOwnerPalette('royal', 3);
-    expect(repository.saveSetting).toHaveBeenCalledWith('owner_panel_palette', 'royal', 3);
-    expect(service.normalizeOwnerPalette('unknown')).toBe('ocean');
+    await expect(service.getOwnerPalette(3)).resolves.toMatchObject({ id: 'sunset', primary: '#ea580c' });
+    await service.saveOwnerPalette({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' }, 3);
+    expect(repository.saveSetting).toHaveBeenCalledWith('owner_panel_palette', { id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' }, 3);
+    expect(service.normalizeOwnerPalette('unknown')).toMatchObject({ id: 'ocean' });
   });
 });

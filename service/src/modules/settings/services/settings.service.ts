@@ -3,7 +3,13 @@ const { DEFAULT_LESSON_SCORING_SETTINGS } = require('../lessonScoringDefaults');
 
 const LESSON_SCORING_KEY = 'lesson_scoring';
 const OWNER_PALETTE_KEY = 'owner_panel_palette';
-const OWNER_PALETTES = new Set(['ocean', 'forest', 'sunset', 'royal', 'slate']);
+const OWNER_PALETTES: Record<string, any> = {
+  ocean: { id: 'ocean', primary: '#2563eb', secondary: '#0891b2', tertiary: '#eff6ff' },
+  forest: { id: 'forest', primary: '#059669', secondary: '#0d9488', tertiary: '#ecfdf5' },
+  sunset: { id: 'sunset', primary: '#ea580c', secondary: '#db2777', tertiary: '#fff7ed' },
+  royal: { id: 'royal', primary: '#7c3aed', secondary: '#c026d3', tertiary: '#f5f3ff' },
+  slate: { id: 'slate', primary: '#334155', secondary: '#64748b', tertiary: '#f1f5f9' },
+};
 const allowedTones = new Set(['emerald', 'sky', 'violet', 'amber', 'rose', 'orange']);
 
 const normalizeOption = (option: any, fallback: any) => ({
@@ -48,7 +54,17 @@ const saveLessonScoring = async (settings: any, centerId?: number) => {
   return settingsRepository.saveSetting(LESSON_SCORING_KEY, normalized, centerId);
 };
 
-const normalizeOwnerPalette = (value: unknown) => OWNER_PALETTES.has(String(value)) ? String(value) : 'ocean';
+const validHex = (value: unknown, fallback: string) => /^#[0-9a-f]{6}$/i.test(String(value)) ? String(value).toLowerCase() : fallback;
+const normalizeOwnerPalette = (value: any) => {
+  const preset = OWNER_PALETTES[String(value?.id || value)] || OWNER_PALETTES.ocean;
+  if (!value || typeof value !== 'object') return { ...preset };
+  return {
+    id: OWNER_PALETTES[String(value.id)] ? String(value.id) : 'custom',
+    primary: validHex(value.primary, preset.primary),
+    secondary: validHex(value.secondary, preset.secondary),
+    tertiary: validHex(value.tertiary, preset.tertiary),
+  };
+};
 
 const getOwnerPalette = async (centerId?: number) => {
   const saved = await settingsRepository.getSetting(OWNER_PALETTE_KEY, centerId);
