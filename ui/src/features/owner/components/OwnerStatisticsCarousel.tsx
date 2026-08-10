@@ -1,8 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, LayoutGrid } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { PieChart, type PieSlice } from '@/shared/components/PieChart';
 
 type Slide = { title: string; value: string; detail: string; data: PieSlice[] };
@@ -37,9 +34,6 @@ const Chart = ({ slide, compact = false }: { slide: Slide; compact?: boolean }) 
 );
 
 export const OwnerStatisticsCarousel = ({ centerLabel, centers, students, teachers, groups, admins, payments }: Props) => {
-  const [index, setIndex] = useState(0);
-  const [showAll, setShowAll] = useState(false);
-  const [paused, setPaused] = useState(false);
   const slides = useMemo<Slide[]>(() => [
     {
       title: 'Students', value: students.toLocaleString(), detail: `Enrolled at ${centerLabel}.`,
@@ -55,49 +49,13 @@ export const OwnerStatisticsCarousel = ({ centerLabel, centers, students, teache
     },
   ], [admins, centerLabel, centers, groups, payments, students, teachers]);
 
-  useEffect(() => {
-    if (showAll || paused) return;
-    const timer = window.setInterval(() => setIndex((current) => (current + 1) % slides.length), 5600);
-    return () => window.clearInterval(timer);
-  }, [paused, showAll, slides.length]);
-
-  const move = (direction: number) => setIndex((current) => (current + direction + slides.length) % slides.length);
-
-  return <>
-    <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <CardContent className="p-4 sm:p-5">
-        <div className="grid overflow-hidden">
-          {slides.map((slide, slideIndex) => (
-            <div
-              key={slide.title}
-              aria-hidden={slideIndex !== index}
-              className={`col-start-1 row-start-1 transition-all duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${
-                slideIndex === index
-                  ? 'pointer-events-auto translate-x-0 scale-100 opacity-100'
-                  : slideIndex < index
-                    ? 'pointer-events-none -translate-x-8 scale-[0.985] opacity-0'
-                    : 'pointer-events-none translate-x-8 scale-[0.985] opacity-0'
-              }`}
-            >
-              <Chart slide={slide} />
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 flex items-center justify-between border-t pt-3">
-          <div className="flex items-center gap-1.5">{slides.map((slide, slideIndex) => <button key={slide.title} type="button" aria-label={`Show ${slide.title}`} onClick={() => setIndex(slideIndex)} className={`h-1.5 rounded-full transition-all ${slideIndex === index ? 'w-7 bg-indigo-600' : 'w-2 bg-slate-200 dark:bg-slate-700'}`} />)}</div>
-          <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => move(-1)}><ChevronLeft className="h-4 w-4" /></Button>
-            <Button variant="outline" size="sm" className="h-8" onClick={() => setShowAll(true)}><LayoutGrid className="mr-1.5 h-4 w-4" />See all</Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => move(1)}><ChevronRight className="h-4 w-4" /></Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-
-    <Dialog open={showAll} onOpenChange={setShowAll}>
-      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto"><DialogHeader><DialogTitle>Platform overview</DialogTitle></DialogHeader>
-        <div className="grid gap-3 md:grid-cols-3">{slides.map((slide) => <Card key={slide.title}><CardContent className="p-4"><Chart slide={slide} compact /></CardContent></Card>)}</div>
-      </DialogContent>
-    </Dialog>
-  </>;
+  return (
+    <div className="grid gap-3 xl:grid-cols-3">
+      {slides.map((slide) => (
+        <Card key={slide.title} className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+          <CardContent className="p-4"><Chart slide={slide} compact /></CardContent>
+        </Card>
+      ))}
+    </div>
+  );
 };

@@ -14,7 +14,7 @@ test.describe('workflow catalog: authentication and routes', () => {
     await page.goto('/#/login/superuser');
     await page.getByLabel('Username').fill(actors.admin.username);
     await page.getByLabel('Password', { exact: true }).fill('wrong-password');
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByRole('button', { name: /^continue to/i }).click();
     await expect(page.getByText(/invalid username or password/i).first()).toBeVisible();
   });
 
@@ -27,7 +27,7 @@ test.describe('workflow catalog: authentication and routes', () => {
     await page.getByLabel('Username').fill(actors.admin.username);
     await page.getByLabel('Password', { exact: true }).fill(actors.admin.password);
     await page.getByRole('checkbox', { name: /remember/i }).uncheck();
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByRole('button', { name: /^continue to/i }).click();
     await expect(page).toHaveURL(/#\/dashboard/);
     expect(await page.evaluate(() => sessionStorage.getItem('token'))).toBeTruthy();
     expect(await page.evaluate(() => localStorage.getItem('token'))).toBeNull();

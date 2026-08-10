@@ -9,6 +9,7 @@ export async function openAsAdmin(page: Page, route: string) {
 
 export async function openSeededClass(page: Page) {
   await openAsAdmin(page, '/classes');
+  await page.getByRole('button', { name: /groups|guruhlar/i }).click();
   const seededClass = page.getByText('E2E Class A').first();
   await expect(seededClass).toBeVisible();
   await seededClass.click();

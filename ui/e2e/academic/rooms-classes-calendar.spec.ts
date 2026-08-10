@@ -8,10 +8,11 @@ test.describe('E2E-11 rooms and booking', () => {
     await page.goto('/#/rooms');
     await expect(page.getByText(/rooms/i).first()).toBeVisible();
     await page.getByRole('button', { name: /add.*room/i }).first().click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog.getByLabel(/room number/i)).toBeVisible();
-    await dialog.getByRole('button', { name: /save|create/i }).click();
-    await expect(dialog).toBeVisible();
+    const formTitle = page.getByRole('heading', { name: /add new room assignment/i });
+    await expect(formTitle).toBeVisible();
+    await expect(page.getByLabel(/room number/i)).toBeVisible();
+    await page.getByRole('button', { name: /save|create/i }).click();
+    await expect(formTitle).toBeVisible();
   });
 });
 
@@ -20,6 +21,7 @@ test.describe('E2E-12 class scheduling and enrollment', () => {
     await clearBrowserSession(page);
     await loginAs(page, 'admin');
     await page.goto('/#/classes');
+    await page.getByRole('button', { name: /groups|guruhlar/i }).click();
     await expect(page.getByText('E2E Class A').first()).toBeVisible();
     await page.getByText('E2E Class A').first().click();
     await expect(page).toHaveURL(/#\/classes\/\d+/);

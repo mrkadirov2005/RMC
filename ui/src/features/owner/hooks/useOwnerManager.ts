@@ -91,6 +91,9 @@ export const useOwnerManager = () => {
     totalTeachers: 0,
     totalClasses: 0,
     totalPayments: 0,
+    currentMonthPayments: 0,
+    previousMonthPayments: 0,
+    paidStudentsThisMonth: 0,
     collected: 0,
   });
   const [overviewLoading, setOverviewLoading] = useState(false);
@@ -263,6 +266,9 @@ export const useOwnerManager = () => {
         totalTeachers: Number(selectedSummary?.teachers || 0),
         totalClasses: Number(selectedSummary?.classes || 0),
         totalPayments: Number(selectedSummary?.payments || 0),
+        currentMonthPayments: Number(selectedSummary?.current_month_payments || 0),
+        previousMonthPayments: Number(selectedSummary?.previous_month_payments || 0),
+        paidStudentsThisMonth: Number(selectedSummary?.paid_students_this_month || 0),
         collected: Number(selectedSummary?.collected || 0),
       });
 

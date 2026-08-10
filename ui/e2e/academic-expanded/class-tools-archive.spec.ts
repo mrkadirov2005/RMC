@@ -7,8 +7,9 @@ unsupported('WF-241 Admin imports a valid classes CSV', 'Import mutates shared d
 
 test('WF-242 Admin imports an invalid classes CSV and sees an error', async ({ page }) => {
   await openAsAdmin(page, '/classes');
+  await page.getByRole('button', { name: /more group actions/i }).click();
   const chooser = page.waitForEvent('filechooser');
-  await page.getByRole('button', { name: /import csv/i }).click();
+  await page.getByRole('button', { name: /import csv|csv import/i }).click();
   const fileChooser = await chooser;
   await fileChooser.setFiles({ name: 'invalid-classes.csv', mimeType: 'text/csv', buffer: Buffer.from('wrong,columns\ninvalid,row') });
   await expect(page.getByText(/invalid|error|failed|required/i).first()).toBeVisible();
@@ -16,8 +17,9 @@ test('WF-242 Admin imports an invalid classes CSV and sees an error', async ({ p
 
 test('WF-243 Admin exports classes CSV as a download', async ({ page }) => {
   await openAsAdmin(page, '/classes');
+  await page.getByRole('button', { name: /more group actions/i }).click();
   const downloadPromise = page.waitForEvent('download');
-  await page.getByRole('button', { name: /export csv/i }).click();
+  await page.getByRole('button', { name: /export csv|csv eksport/i }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/classes.*\.csv/i);
 });

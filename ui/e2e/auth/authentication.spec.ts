@@ -14,7 +14,7 @@ test.describe('authentication and access', () => {
     await page.goto('/#/login/superuser');
     await page.getByLabel('Username').fill('e2e_admin');
     await page.getByLabel('Password', { exact: true }).fill('wrong-password');
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByRole('button', { name: /^continue to/i }).click();
     await expect(page.getByText(/invalid username or password/i).first()).toBeVisible();
     await expect(page.getByLabel('Username')).toHaveValue('e2e_admin');
   });
@@ -54,7 +54,7 @@ test.describe('authentication and access', () => {
     await page.getByLabel('Username').fill(actors.admin.username);
     await page.getByLabel('Password', { exact: true }).fill(actors.admin.password);
     await page.getByRole('checkbox', { name: /remember/i }).uncheck();
-    await page.getByRole('button', { name: /sign in/i }).click();
+    await page.getByRole('button', { name: /^continue to/i }).click();
     await expect(page).toHaveURL(/#\/dashboard/);
     const storage = await page.evaluate(() => ({
       local: localStorage.getItem('token'),

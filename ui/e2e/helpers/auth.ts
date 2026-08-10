@@ -6,7 +6,7 @@ export async function loginAs(page: Page, actorName: ActorName) {
   await page.goto(`/#${actor.route}`);
   await page.getByLabel('Username').fill(actor.username);
   await page.getByLabel('Password', { exact: true }).fill(actor.password);
-  await page.getByRole('button', { name: /sign in/i }).click();
+  await page.getByRole('button', { name: /^continue to/i }).click();
   await expect(page).toHaveURL(new RegExp(`#${actor.landing.replaceAll('/', '\\/')}(?:$|\\?)`));
 }
 

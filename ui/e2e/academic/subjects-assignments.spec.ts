@@ -10,14 +10,14 @@ test.describe('E2E-10 subjects and assignments', () => {
     await expect(page.getByText(/subjects/i).first()).toBeVisible();
     const addSubject = page.getByRole('button', { name: /add subject/i });
     await addSubject.click();
-    await expect(page.getByRole('dialog', { name: /add new subject/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /add new subject/i })).toBeVisible();
     await page.keyboard.press('Escape');
 
     await page.goto('/#/assignments');
     await expect(page.getByText(/assignments/i).first()).toBeVisible();
     const addAssignment = page.getByRole('button', { name: /add assignment/i }).first();
     await addAssignment.click();
-    await expect(page.getByRole('dialog', { name: /add new assignment/i })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /add new assignment/i })).toBeVisible();
   });
 
   test('student cannot open assignment administration directly', async ({ page }) => {
