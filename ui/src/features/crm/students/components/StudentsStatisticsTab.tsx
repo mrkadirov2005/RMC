@@ -53,7 +53,7 @@ const MetricCard = ({
   icon: typeof Users;
   color: string;
 }) => (
-  <Card className={`${color} overflow-hidden border-0 text-white shadow-sm`}>
+  <Card className={`${color} owner-primary-card overflow-hidden border-0 text-white shadow-sm`}>
     <CardContent className="flex items-center justify-between gap-3 p-3">
       <div className="min-w-0">
         <p className="text-[11px] font-bold uppercase text-white/80">{label}</p>

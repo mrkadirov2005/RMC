@@ -31,6 +31,7 @@ import {
   LIST_ROW_PRIMARY_KEY,
   readListRowColors,
 } from './listAppearance';
+import { DEFAULT_OWNER_PALETTE, ownerPalettePresets, readOwnerPalette, saveOwnerPalette, type OwnerPaletteId } from './ownerPalette';
 
 const DEFAULT_DURATION_KEY = 'lesson_duration_default';
 const OVERRIDE_DURATION_KEY = 'lesson_duration_override';
@@ -82,6 +83,7 @@ const SettingsPage = () => {
   const [lessonScoring, setLessonScoring] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
   const [primaryRowColor, setPrimaryRowColor] = useState(DEFAULT_LIST_ROW_PRIMARY);
   const [alternateRowColor, setAlternateRowColor] = useState(DEFAULT_LIST_ROW_ALTERNATE);
+  const [ownerPalette, setOwnerPalette] = useState<OwnerPaletteId>(DEFAULT_OWNER_PALETTE);
 
   useEffect(() => {
     setDefaultDuration(readStoredNumber(DEFAULT_DURATION_KEY, 90));
@@ -93,6 +95,7 @@ const SettingsPage = () => {
     const rowColors = readListRowColors();
     setPrimaryRowColor(rowColors.primary);
     setAlternateRowColor(rowColors.alternate);
+    setOwnerPalette(readOwnerPalette().id);
     settingsAPI.getLessonScoring()
       .then((response) => setLessonScoring(normalizeLessonScoringSettings(response.data)))
       .catch(() => setLessonScoring(defaultLessonScoringSettings));
@@ -136,6 +139,7 @@ const SettingsPage = () => {
     localStorage.setItem(LIST_ROW_PRIMARY_KEY, primaryRowColor);
     localStorage.setItem(LIST_ROW_ALTERNATE_KEY, alternateRowColor);
     applyListRowColors(primaryRowColor, alternateRowColor);
+    saveOwnerPalette(ownerPalette);
     try {
       await settingsAPI.saveLessonScoring(lessonScoring);
       showToast.success('Settings saved.');
@@ -168,6 +172,7 @@ const SettingsPage = () => {
     localStorage.removeItem(CALENDAR_DAY_END_HOUR_KEY);
     localStorage.removeItem(LIST_ROW_PRIMARY_KEY);
     localStorage.removeItem(LIST_ROW_ALTERNATE_KEY);
+    saveOwnerPalette(DEFAULT_OWNER_PALETTE);
     settingsAPI.saveLessonScoring(defaultLessonScoringSettings).catch(() => null);
     setDefaultDuration(90);
     setOverrideDuration('');
@@ -176,6 +181,7 @@ const SettingsPage = () => {
     setCalendarEndHour(18);
     setPrimaryRowColor(DEFAULT_LIST_ROW_PRIMARY);
     setAlternateRowColor(DEFAULT_LIST_ROW_ALTERNATE);
+    setOwnerPalette(DEFAULT_OWNER_PALETTE);
     applyListRowColors(DEFAULT_LIST_ROW_PRIMARY, DEFAULT_LIST_ROW_ALTERNATE);
     setLessonScoring(defaultLessonScoringSettings);
     showToast.success('Settings reset to defaults.');
@@ -260,6 +266,22 @@ const SettingsPage = () => {
       </SectionPanel>
 
       <div className="grid gap-6 lg:grid-cols-2">
+        <SectionPanel
+          title={<span className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white"><Palette className="h-4 w-4" /></span>Owner panel color palette</span>}
+        >
+          <div className="space-y-4">
+            <p className="text-xs text-muted-foreground">Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.</p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {ownerPalettePresets.map((palette) => (
+                <button key={palette.id} type="button" onClick={() => setOwnerPalette(palette.id)} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
+                  <span className="mb-2 block text-sm font-semibold">{palette.name}</span>
+                  <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title="Primary cards" /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title="Secondary tags" /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title="Tertiary cards" /></span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </SectionPanel>
+
         <SectionPanel
           title={
             <span className="flex items-center gap-2">

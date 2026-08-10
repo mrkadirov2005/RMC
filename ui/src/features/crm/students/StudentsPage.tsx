@@ -209,16 +209,16 @@ const StudentsPage = () => {
   const handleExportStudents = () => exportCsvEntity('students', 'Students');
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 owner-palette-scope">
       {s.state.error && <Alert variant="destructive" className="mb-6"><AlertDescription>{s.state.error}</AlertDescription></Alert>}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="rounded-lg border bg-card p-4 shadow-sm">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="owner-tertiary-card rounded-lg border bg-card p-4 shadow-sm">
         <div className="mb-5 flex flex-wrap items-stretch gap-3">
           <TabsList className="bg-slate-100/80 dark:bg-muted">
             <TabsTrigger value="students">{t('Students')}</TabsTrigger>
             <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
           </TabsList>
-          <div className="flex h-10 min-w-[145px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm dark:border-border dark:bg-card">
+          <div className="owner-primary-card flex h-10 min-w-[145px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm dark:border-border dark:bg-card">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-muted">
               <Users className="h-3.5 w-3.5" />
             </span>

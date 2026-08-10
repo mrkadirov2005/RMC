@@ -113,7 +113,7 @@ export const ClassesMainView = ({
   setPage,
   renderClassActions,
 }: ClassesMainViewProps) => (
-  <>
+  <div className="owner-palette-scope">
       <div className="hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
         <div className="pointer-events-none absolute right-0 top-0 h-full w-72 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
@@ -286,7 +286,7 @@ export const ClassesMainView = ({
           <AlertDescription>{t('No classes match your search.')}</AlertDescription>
         </Alert>
       ) : groupView === 'teachers' ? (
-        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
+        <Card className="owner-tertiary-card overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
           <Table>
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
@@ -364,7 +364,7 @@ export const ClassesMainView = ({
                                       </span>
                                       <span className="inline-flex flex-col align-middle">
                                         <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
-                                        <span className="text-[10px] font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</span>
+                                        <span className="owner-secondary-tag rounded px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</span>
                                       </span>
                                     </button>
                                     <span className="px-2 py-1 text-center text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || t('No room')}</span>
@@ -532,7 +532,7 @@ export const ClassesMainView = ({
             {paginatedClasses.items.map((cls: any) => (
               <Card
                 key={cls.class_id || cls.id}
-                className="relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
+                className="owner-tertiary-card relative cursor-pointer overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0"
                 onClick={() => navigate(`/classes/${getClassId(cls)}`)}
               >
                 <div className="absolute right-3 top-3 z-10" onClick={(event) => event.stopPropagation()}>
@@ -551,7 +551,7 @@ export const ClassesMainView = ({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{cls.class_name}</p>
-                      <p className="truncate text-xs font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</p>
+                      <p className="owner-secondary-tag mt-1 inline-block truncate rounded px-1.5 py-0.5 text-xs font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -579,7 +579,7 @@ export const ClassesMainView = ({
             {paginatedClasses.items.map((cls: any, index: number) => (
               <Card
                 key={cls.class_id || cls.id}
-                className="relative flex h-full flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
+                className="owner-tertiary-card relative flex h-full flex-col overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:-translate-y-2 hover:shadow-xl hover:shadow-indigo-500/15 dark:border-border/60 dark:bg-card"
               >
                 <div className="absolute right-3 top-3 z-10">
                   <input
@@ -591,16 +591,16 @@ export const ClassesMainView = ({
                   />
                 </div>
                 <CardHeader className={
-                  index % 4 === 0 ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white' :
+                  `owner-primary-card ${index % 4 === 0 ? 'bg-gradient-to-br from-indigo-500 to-sky-500 text-white' :
                   index % 4 === 1 ? 'bg-gradient-to-br from-emerald-500 to-teal-500 text-white' :
                   index % 4 === 2 ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white' :
-                  'bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-white'
+                  'bg-gradient-to-br from-cyan-500 to-fuchsia-500 text-white'}`
                 }>
                   <CardTitle className="text-lg">{cls.class_name}</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 pt-4">
                   <p className="font-semibold text-slate-950 dark:text-card-foreground">{cls.class_name}</p>
-                  <p className="mt-1 text-sm font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</p>
+                  <p className="owner-secondary-tag mt-1 inline-block rounded px-2 py-1 text-sm font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</p>
                 </CardContent>
                 <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
                   {renderClassActions(cls)}
@@ -627,5 +627,5 @@ export const ClassesMainView = ({
           }}
         />
       )}
-  </>
+  </div>
 );

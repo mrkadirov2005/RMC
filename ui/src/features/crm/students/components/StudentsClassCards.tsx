@@ -87,7 +87,7 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
 
     if (viewMode !== 'cards') {
       return (
-        <Card key={classId} onClick={() => onClassClick(cls)} className="cursor-pointer transition-shadow hover:shadow-md">
+        <Card key={classId} onClick={() => onClassClick(cls)} className="owner-tertiary-card cursor-pointer transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-3">
             <Icon className="h-8 w-8 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
@@ -104,8 +104,8 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
     }
 
     return (
-      <Card key={classId} onClick={() => onClassClick(cls)} className="cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-indigo-500/20 border-0 overflow-hidden">
-        <div className={cn('bg-gradient-to-br p-6 text-white', accent)}>
+      <Card key={classId} onClick={() => onClassClick(cls)} className="owner-tertiary-card cursor-pointer transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-indigo-500/20 border-0 overflow-hidden">
+        <div className={cn('owner-primary-card bg-gradient-to-br p-6 text-white', accent)}>
           <div className="flex items-center gap-3 mb-3">
             <Icon className="h-10 w-10" />
             <div>

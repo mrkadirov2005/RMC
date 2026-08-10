@@ -237,7 +237,7 @@ const TeachersPage = () => {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 owner-palette-scope">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {summaryCards.map((card) => (
           <MetricCard
@@ -247,6 +247,7 @@ const TeachersPage = () => {
             detail={card.detail}
             icon={card.icon}
             tone={card.tone}
+            className="owner-primary-card"
           />
         ))}
       </div>
@@ -415,7 +416,7 @@ const TeachersPage = () => {
             {visibleTeachers.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
-                className="relative cursor-pointer overflow-hidden border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
+                className="owner-tertiary-card relative cursor-pointer overflow-hidden border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
                 onClick={() => navigate(getTeacherProfilePath(teacher))}
               >
                 <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
@@ -443,8 +444,8 @@ const TeachersPage = () => {
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-[11px]">
-                    <span className="rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} students</span>
-                    <span className="rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
+                    <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} students</span>
+                    <span className="owner-secondary-tag rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
                   </div>
                   <div className="mt-2 border-t pt-2" onClick={(event) => event.stopPropagation()}>
                     {renderTeacherActions(teacher)}
@@ -474,7 +475,7 @@ const TeachersPage = () => {
             {visibleTeachers.map((teacher, index) => (
               <Card
                 key={teacher.teacher_id || teacher.id}
-                className="relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
+                className="owner-tertiary-card relative flex h-full flex-col overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-border dark:bg-card"
               >
                 <span className="absolute left-3 top-3 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
                   {getPaginatedRowNumber(index, page, pageSize)}
@@ -489,7 +490,7 @@ const TeachersPage = () => {
                   />
                 </div>
                 <div className={cn(
-                  'relative flex flex-col items-center p-3 text-white',
+                  'owner-primary-card relative flex flex-col items-center p-3 text-white',
                   index % 4 === 0 && 'bg-sky-600',
                   index % 4 === 1 && 'bg-emerald-600',
                   index % 4 === 2 && 'bg-amber-500',
@@ -507,11 +508,11 @@ const TeachersPage = () => {
                   <p className="text-center text-sm font-semibold text-slate-950 dark:text-card-foreground">
                     {getTeacherSubtitle(teacher)}
                   </p>
-                  <div className="mt-2 rounded-lg bg-emerald-600 p-2 text-center text-xs text-white shadow-sm">
+                  <div className="owner-secondary-tag mt-2 rounded-lg bg-emerald-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.student_count || 0)}</p>
                     <p className="text-[11px] text-white/80">Students</p>
                   </div>
-                  <div className="mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
+                  <div className="owner-secondary-tag mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>
                     <p className="text-[11px] text-white/80">Teacher share</p>
                   </div>
