@@ -23,6 +23,9 @@ const { requireAuth } = require('../middleware/auth');
  */
 router_subject.get('/', requireAuth, subjectController.getAllSubjects);
 
+// Keep the specific class route before `/:id` so "class" is not parsed as a subject ID.
+router_subject.get('/class/:classId', requireAuth, subjectController.getSubjectsByClass);
+
 /**
  * @swagger
  * /subjects/{id}:
@@ -71,8 +74,6 @@ router_subject.get('/:id', requireAuth, subjectController.getSubjectById);
  *       404:
  *         description: Class not found
  */
-router_subject.get('/class/:classId', requireAuth, subjectController.getSubjectsByClass);
-
 /**
  * @swagger
  * /subjects:

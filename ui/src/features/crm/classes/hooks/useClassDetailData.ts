@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
+import { resolveClassSubjects } from '../classSubjects';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { unwrapRows } from '../utils/api';
 
@@ -92,7 +93,7 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
           .forEach((room: string) => roomNumbers.add(room));
         setClassData({ ...nextClass, room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number });
         setStudents(unwrapRows(studentsResponse));
-        setSubjects(unwrapRows(subjectsResponse));
+        setSubjects(resolveClassSubjects(nextClass, subjectsResponse));
         setSessions(unwrapRows(sessionsResponse));
         setAssignedTests(unwrapRows(testsResponse));
       } catch (err: any) {
