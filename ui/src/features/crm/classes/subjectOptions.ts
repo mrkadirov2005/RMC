@@ -7,6 +7,12 @@ export const buildAssignableSubjectOptions = (subjects: any[]) => {
     const key = `${label.toLowerCase()}|${code.toLowerCase()}`;
     if (!id || !label || seen.has(key)) return [];
     seen.add(key);
-    return [{ id, value: id, label: code ? `${label} (${code})` : label }];
+    return [{ id, value: id, label: code ? `${label} (${code})` : label, subjectName: label }];
   });
 };
+
+export const getClassSubjectLabel = (group: any) =>
+  String(group?.subject_name || '').trim() || 'No subject assigned';
+
+export const hasPersistedClassSubject = (group: any, expectedSubjectName: string) =>
+  String(group?.subject_name || '').trim().toLowerCase() === expectedSubjectName.trim().toLowerCase();

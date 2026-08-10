@@ -39,6 +39,7 @@ import {
 import { useSubjectsPage } from './hooks/useSubjectsPage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import { countDuplicateClassSubjectAssignments } from './subjectAssignments';
 
 const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
 const statTileClass = 'rounded-md bg-gradient-to-br p-2 text-white shadow-sm';
@@ -120,7 +121,7 @@ const SubjectsPage = () => {
   const assignedClasses = assignedClassIds.size;
   const unassignedClasses = Math.max(totalClasses - assignedClasses, 0);
   const subjectsWithoutTeacher = state.items.filter((subject) => !subject.teacher_id).length;
-  const duplicateAssignments = Math.max(state.items.length - assignedClasses, 0);
+  const duplicateAssignments = countDuplicateClassSubjectAssignments(state.items);
 
   useEffect(() => {
     setPage(1);

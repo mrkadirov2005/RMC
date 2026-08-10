@@ -23,6 +23,7 @@ import {
 import { PaginationBar, defaultCardPageSizeOptions } from '@/components/common/PaginationBar';
 import { cn } from '@/lib/utils';
 import { formatSchedule } from '../queries';
+import { getClassSubjectLabel } from '../subjectOptions';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 type ClassesMainViewProps = {
@@ -361,7 +362,10 @@ export const ClassesMainView = ({
                                       <span className="mr-2 inline-flex h-5 min-w-5 items-center justify-center px-1.5 text-[10px] font-bold text-slate-500">
                                         {classIndex + 1}
                                       </span>
-                                      <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
+                                      <span className="inline-flex flex-col align-middle">
+                                        <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
+                                        <span className="text-[10px] font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</span>
+                                      </span>
                                     </button>
                                     <span className="px-2 py-1 text-center text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || t('No room')}</span>
                                     {renderClassActions(cls)}
@@ -463,6 +467,7 @@ export const ClassesMainView = ({
                 </TableHead>
                 <TableHead className="h-8 w-12 px-2">#</TableHead>
                 <TableHead>{t('Class')}</TableHead>
+                <TableHead>{t('Subject')}</TableHead>
                 <TableHead>{t('Teacher')}</TableHead>
                 <TableHead>{t('Schedule')}</TableHead>
                 <TableHead>{t('Room')}</TableHead>
@@ -491,6 +496,7 @@ export const ClassesMainView = ({
                       {cls.class_name}
                     </button>
                   </TableCell>
+                  <TableCell className="py-2 text-xs font-semibold text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</TableCell>
                   <TableCell className="py-2">
                     <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getTeacherName(cls.teacher_id)}</span>
                   </TableCell>
@@ -545,6 +551,7 @@ export const ClassesMainView = ({
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-semibold">{cls.class_name}</p>
+                      <p className="truncate text-xs font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -593,6 +600,7 @@ export const ClassesMainView = ({
                 </CardHeader>
                 <CardContent className="flex-1 pt-4">
                   <p className="font-semibold text-slate-950 dark:text-card-foreground">{cls.class_name}</p>
+                  <p className="mt-1 text-sm font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</p>
                 </CardContent>
                 <div className="flex justify-end border-t border-slate-100 bg-slate-50/70 px-4 py-4 dark:border-border/10 dark:bg-muted/50">
                   {renderClassActions(cls)}

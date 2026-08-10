@@ -125,7 +125,7 @@ export const ClassDialogs = ({
                     value={formData.subject_id ? String(formData.subject_id) : ''}
                     onValueChange={(value) => {
                       const selected = subjectOptions.find((option) => String(option.value) === value);
-                      setFormData({ ...formData, subject_id: Number(value), subject_name: selected?.label });
+                      setFormData({ ...formData, subject_id: Number(value), subject_name: selected?.subjectName || selected?.label });
                     }}
                   >
                     <SelectTrigger id="subject_id" className="h-8 border-teal-100 bg-teal-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
