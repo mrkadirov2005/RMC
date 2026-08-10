@@ -11,12 +11,14 @@ const listByClass = (classId: number, centerId?: number, teacherId?: number) =>
 const createSubject = async (body: any, centerId?: number) => {
   const { class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks } = body;
   const resolvedCenterId = centerId ?? body.center_id;
-  if (resolvedCenterId) {
+  if (resolvedCenterId && class_id) {
     const ok = await classInCenter(class_id, resolvedCenterId);
     if (!ok) return { error: 'invalid_center' as const };
   }
-  const existingSubjects = await subjectRepository.findByClass(class_id, resolvedCenterId);
-  if (existingSubjects.length > 0) return { error: 'class_subject_exists' as const };
+  if (class_id) {
+    const existingSubjects = await subjectRepository.findByClass(class_id, resolvedCenterId);
+    if (existingSubjects.length > 0) return { error: 'class_subject_exists' as const };
+  }
   return subjectRepository.insert([
     resolvedCenterId,
     class_id,

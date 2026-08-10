@@ -1,6 +1,6 @@
-const { and, desc, eq, isNull, sql } = require('drizzle-orm');
+const { and, desc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { classes, subjects } = require('../../../db/schema');
+const { subjects } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -19,11 +19,10 @@ const findSubjects = (filters: { subjectId?: number; classId?: number } = {}, ce
   const conditions: any[] = [];
   if (filters.subjectId) conditions.push(eq(subjects.subjectId, filters.subjectId));
   if (filters.classId) conditions.push(eq(subjects.classId, filters.classId));
-  if (centerId) conditions.push(eq(classes.centerId, centerId), isNull(classes.deletedAt));
+  if (centerId) conditions.push(eq(subjects.centerId, centerId));
   if (teacherId) conditions.push(eq(subjects.teacherId, teacherId));
 
   let query = db.select(selection).from(subjects);
-  if (centerId) query = query.innerJoin(classes, eq(classes.classId, subjects.classId));
   if (conditions.length) query = query.where(and(...conditions));
   return byClass ? query.orderBy(subjects.subjectName) : query.orderBy(desc(subjects.subjectId));
 };

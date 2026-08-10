@@ -94,6 +94,12 @@ export const useOwnerManager = () => {
     currentMonthPayments: 0,
     previousMonthPayments: 0,
     paidStudentsThisMonth: 0,
+    todayPayments: 0,
+    yesterdayPayments: 0,
+    paidStudentsToday: 0,
+    paidStudentsYesterday: 0,
+    attendancePresent: 0,
+    attendanceAbsent: 0,
     collected: 0,
   });
   const [overviewLoading, setOverviewLoading] = useState(false);
@@ -269,6 +275,12 @@ export const useOwnerManager = () => {
         currentMonthPayments: Number(selectedSummary?.current_month_payments || 0),
         previousMonthPayments: Number(selectedSummary?.previous_month_payments || 0),
         paidStudentsThisMonth: Number(selectedSummary?.paid_students_this_month || 0),
+        todayPayments: Number(selectedSummary?.today_payments || 0),
+        yesterdayPayments: Number(selectedSummary?.yesterday_payments || 0),
+        paidStudentsToday: Number(selectedSummary?.paid_students_today || 0),
+        paidStudentsYesterday: Number(selectedSummary?.paid_students_yesterday || 0),
+        attendancePresent: Number(selectedSummary?.attendance_present || 0),
+        attendanceAbsent: Number(selectedSummary?.attendance_absent || 0),
         collected: Number(selectedSummary?.collected || 0),
       });
 

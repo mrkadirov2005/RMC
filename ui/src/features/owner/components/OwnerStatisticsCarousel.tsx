@@ -1,4 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, useRef } from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, type PieSlice } from '@/shared/components/PieChart';
 
@@ -12,6 +14,15 @@ interface Props {
   groups: number;
   admins: number;
   payments: number;
+  currentMonthPayments: number;
+  previousMonthPayments: number;
+  paidStudentsThisMonth: number;
+  todayPayments: number;
+  yesterdayPayments: number;
+  paidStudentsToday: number;
+  paidStudentsYesterday: number;
+  attendancePresent: number;
+  attendanceAbsent: number;
 }
 
 const Chart = ({ slide, compact = false }: { slide: Slide; compact?: boolean }) => (
@@ -33,29 +44,71 @@ const Chart = ({ slide, compact = false }: { slide: Slide; compact?: boolean }) 
   </div>
 );
 
-export const OwnerStatisticsCarousel = ({ centerLabel, centers, students, teachers, groups, admins, payments }: Props) => {
-  const slides = useMemo<Slide[]>(() => [
-    {
-      title: 'Students', value: students.toLocaleString(), detail: `Enrolled at ${centerLabel}.`,
-      data: [{ label: 'Students', value: students, color: '#3b82f6' }, { label: 'Teachers', value: teachers, color: '#10b981' }, { label: 'Admins', value: admins, color: '#8b5cf6' }],
-    },
-    {
-      title: 'Learning network', value: `${groups ? Math.round(students / groups) : 0} / group`, detail: 'Average number of students in each group.',
-      data: [{ label: 'Groups', value: groups, color: '#f59e0b' }, { label: 'Centers', value: centers, color: '#06b6d4' }],
-    },
-    {
-      title: 'Payment activity', value: `${students ? (payments / students).toFixed(1) : '0.0'} / student`, detail: 'Average recorded payments per enrolled student.',
-      data: [{ label: 'Payments', value: payments, color: '#ec4899' }, { label: 'Students', value: students, color: '#6366f1' }],
-    },
-  ], [admins, centerLabel, centers, groups, payments, students, teachers]);
+export const OwnerStatisticsCarousel = ({ centerLabel, students, teachers, admins, currentMonthPayments, previousMonthPayments, paidStudentsToday, paidStudentsYesterday, attendancePresent, attendanceAbsent }: Props) => {
+  const sliderRef = useRef<HTMLDivElement>(null);
+  const slides = useMemo<Slide[]>(() => {
+    const paymentChange = currentMonthPayments - previousMonthPayments;
+    const todayPercentage = students ? Math.round((Math.min(paidStudentsToday, students) / students) * 100) : 0;
+    const yesterdayPercentage = students ? Math.round((Math.min(paidStudentsYesterday, students) / students) * 100) : 0;
+    const percentageChange = todayPercentage - yesterdayPercentage;
+    const attendanceTotal = attendancePresent + attendanceAbsent;
+    const attendancePercentage = attendanceTotal ? Math.round((attendancePresent / attendanceTotal) * 100) : 0;
+    const paymentTrend = paymentChange > 0
+      ? `Increasing by ${paymentChange.toLocaleString()} compared with last month.`
+      : paymentChange < 0
+        ? `Decreasing by ${Math.abs(paymentChange).toLocaleString()} compared with last month.`
+        : 'No change compared with last month.';
+    const percentageTrend = percentageChange > 0
+      ? `Up ${percentageChange} percentage points from yesterday.`
+      : percentageChange < 0
+        ? `Down ${Math.abs(percentageChange)} percentage points from yesterday.`
+        : 'No percentage change from yesterday.';
+
+    return [
+      {
+        title: 'Overall students', value: students.toLocaleString(), detail: `Enrolled at ${centerLabel}.`,
+        data: [{ label: 'Students', value: students, color: '#3b82f6' }, { label: 'Staff', value: teachers + admins, color: '#10b981' }],
+      },
+      {
+        title: 'Overall teachers', value: teachers.toLocaleString(), detail: `Teaching at ${centerLabel}.`,
+        data: [{ label: 'Teachers', value: teachers, color: '#f59e0b' }, { label: 'Admins', value: admins, color: '#06b6d4' }],
+      },
+      {
+        title: 'Monthly payment count', value: currentMonthPayments.toLocaleString(), detail: paymentTrend,
+        data: [{ label: 'This month', value: currentMonthPayments, color: '#ec4899' }, { label: 'Last month', value: previousMonthPayments, color: '#6366f1' }],
+      },
+      {
+        title: 'Daily payment percentage', value: `${todayPercentage}%`, detail: percentageTrend,
+        data: [{ label: 'Today', value: todayPercentage, color: '#10b981' }, { label: 'Yesterday', value: yesterdayPercentage, color: '#f59e0b' }],
+      },
+      {
+        title: 'Overall attendance', value: `${attendancePercentage}%`, detail: 'Present and late attendance across all recorded sessions.',
+        data: [{ label: 'Present', value: attendancePresent, color: '#14b8a6' }, { label: 'Absent', value: attendanceAbsent, color: '#f43f5e' }],
+      },
+    ];
+  }, [admins, attendanceAbsent, attendancePresent, centerLabel, currentMonthPayments, paidStudentsToday, paidStudentsYesterday, previousMonthPayments, students, teachers]);
+
+  const move = (direction: number) => sliderRef.current?.scrollBy({ left: direction * 400, behavior: 'smooth' });
 
   return (
-    <div className="grid gap-3 xl:grid-cols-3">
-      {slides.map((slide) => (
-        <Card key={slide.title} className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-          <CardContent className="p-4"><Chart slide={slide} compact /></CardContent>
-        </Card>
-      ))}
+    <div className="space-y-2">
+      <div className="flex justify-end gap-1">
+        <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Scroll statistics left" onClick={() => move(-1)}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Scroll statistics right" onClick={() => move(1)}>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      <div ref={sliderRef} className="flex snap-x snap-mandatory gap-3 overflow-x-auto pb-2">
+        {slides.map((slide) => (
+          <Card key={slide.title} className="min-w-[280px] snap-start overflow-hidden border-slate-200 bg-white shadow-sm sm:min-w-[340px] lg:min-w-[380px] dark:border-border dark:bg-card">
+            <CardContent className="p-4">
+              <Chart slide={slide} compact />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     </div>
   );
 };

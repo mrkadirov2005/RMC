@@ -1,6 +1,6 @@
 const { asc, eq, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { centers, classes, payments, students, teachers } = require('../../../db/schema');
+const { attendance, centers, classes, payments, students, teachers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -49,6 +49,44 @@ const getSummaries = (centerId?: number) => {
           AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
           AND ${payments.paymentDate} >= DATE_TRUNC('month', CURRENT_DATE)
           AND ${payments.paymentDate} < DATE_TRUNC('month', CURRENT_DATE) + INTERVAL '1 month'
+      )`,
+      today_payments: sql`(
+        SELECT COUNT(*)::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} = CURRENT_DATE
+      )`,
+      yesterday_payments: sql`(
+        SELECT COUNT(*)::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} = CURRENT_DATE - 1
+      )`,
+      paid_students_today: sql`(
+        SELECT COUNT(DISTINCT ${payments.studentId})::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} = CURRENT_DATE
+      )`,
+      paid_students_yesterday: sql`(
+        SELECT COUNT(DISTINCT ${payments.studentId})::int FROM ${payments}
+        WHERE ${payments.centerId} = ${centers.centerId}
+          AND ${payments.deletedAt} IS NULL
+          AND LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid')
+          AND ${payments.paymentDate} = CURRENT_DATE - 1
+      )`,
+      attendance_present: sql`(
+        SELECT COUNT(*)::int FROM ${attendance}
+        WHERE ${attendance.centerId} = ${centers.centerId}
+          AND LOWER(COALESCE(${attendance.status}, '')) IN ('present', 'late')
+      )`,
+      attendance_absent: sql`(
+        SELECT COUNT(*)::int FROM ${attendance}
+        WHERE ${attendance.centerId} = ${centers.centerId}
+          AND LOWER(COALESCE(${attendance.status}, '')) IN ('absent', 'absent nr', 'absent r')
       )`,
       collected: sql`(
         SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid') THEN COALESCE(${payments.amount}, 0) ELSE 0 END), 0)::numeric

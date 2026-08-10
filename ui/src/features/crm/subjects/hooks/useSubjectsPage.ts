@@ -12,7 +12,7 @@ import {
 } from '../../../../slices/subjectsSlice';
 import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice';
 import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSlice';
-import { selectClassOptions, selectTeacherOptions } from '../../../../store/selectors';
+import { selectTeacherOptions } from '../../../../store/selectors';
 import type { Subject } from '../types';
 import { getStoredActiveCenterId } from '../../../../shared/auth/authStorage';
 import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
@@ -25,7 +25,6 @@ export const useSubjectsPage = () => {
   const loading = useAppSelector((state) => state.subjects.loading);
   const error = useAppSelector((state) => state.subjects.error);
   const state = { items, loading, error };
-  const classOptions = useAppSelector(selectClassOptions);
   const teacherOptions = useAppSelector(selectTeacherOptions);
   const isLoadingOptions = useAppSelector(
     (state) => state.classes.loading || state.teachers.loading
@@ -126,8 +125,15 @@ export const useSubjectsPage = () => {
 
   const handleExportSubjects = () => exportCsvEntity('subjects', 'Subjects');
 
-  const classes = useAppSelector((state) => state.classes.items) as { class_id?: number; id?: number; class_name: string; class_code: string; level: number }[];
+  const classes = useAppSelector((state) => state.classes.items) as { class_id?: number; id?: number; class_name: string; class_code: string; level: number; teacher_id?: number }[];
   const teachers = useAppSelector((state) => state.teachers.items) as { teacher_id?: number; id?: number; first_name: string; last_name: string }[];
+  const classOptions = classes
+    .filter((group) => !formData.teacher_id || Number(group.teacher_id || 0) === Number(formData.teacher_id))
+    .map((group) => {
+      const id = Number(group.class_id || group.id || 0);
+      return { id, value: id, label: String(group.class_name || '').trim() || `Group #${id}` };
+    })
+    .filter((option) => option.id > 0);
 
   return {
     state,

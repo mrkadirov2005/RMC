@@ -46,6 +46,7 @@ const ClassesPage = () => {
     setFormData,
     centerOptions,
     teacherOptions,
+    subjectOptions,
     selectedDays,
     scheduleTime,
     scheduleEndTime,
@@ -370,6 +371,7 @@ const ClassesPage = () => {
         setFormData={setFormData}
         centerOptions={centerOptions}
         teacherOptions={teacherOptions}
+        subjectOptions={subjectOptions}
         selectedDays={selectedDays}
         scheduleTime={scheduleTime}
         scheduleEndTime={scheduleEndTime}

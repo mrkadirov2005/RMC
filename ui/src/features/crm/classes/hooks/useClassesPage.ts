@@ -10,6 +10,7 @@ import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice
 import { fetchRooms, fetchRoomsForce } from '../../../../slices/roomsSlice';
 import { fetchTeachers } from '../../../../slices/teachersSlice';
 import { fetchCenters } from '../../../../slices/centersSlice';
+import { fetchSubjects, fetchSubjectsForce } from '../../../../slices/subjectsSlice';
 import { selectCenterOptions, selectTeacherOptions } from '../../../../store/selectors';
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Class } from '../types';
@@ -42,9 +43,17 @@ export const useClassesPage = () => {
   const allCenterOptions = useAppSelector(selectCenterOptions);
   const centerOptions = isOwner ? allCenterOptions : [];
   const teacherOptions = useAppSelector(selectTeacherOptions);
+  const subjects = useAppSelector((state) => state.subjects.items);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const subjectOptions = subjects
+    .filter((subject) => !subject.class_id || Number(subject.class_id) === Number(editingId || 0))
+    .map((subject) => ({
+      id: Number(subject.subject_id || subject.id),
+      value: Number(subject.subject_id || subject.id),
+      label: subject.subject_name,
+    }));
   const [formData, setFormData] = useState<Partial<Class>>({
     center_id: defaultCenterId,
     payment_frequency: 'Monthly',
@@ -67,6 +76,7 @@ export const useClassesPage = () => {
     dispatch(fetchClasses());
     dispatch(fetchRooms());
     dispatch(fetchTeachers());
+    dispatch(fetchSubjects());
     if (isOwner) {
       dispatch(fetchCenters());
     }
@@ -80,6 +90,7 @@ export const useClassesPage = () => {
       dispatch(fetchClassesForce());
       dispatch(fetchRoomsForce());
       dispatch(fetchTeachers());
+      dispatch(fetchSubjectsForce());
       if (isOwner) {
         dispatch(fetchCenters());
       }
@@ -288,6 +299,7 @@ export const useClassesPage = () => {
     setFormData,
     centerOptions,
     teacherOptions,
+    subjectOptions,
     selectedDays,
     scheduleTime,
     scheduleEndTime,

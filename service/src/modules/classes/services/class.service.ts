@@ -11,14 +11,18 @@ const getClass = (id: number, centerId?: number, teacherId?: number) => classRep
 const generateClassCode = () => `CLS-${Date.now().toString(36).toUpperCase()}`;
 
 const createClass = async (body: any, centerId?: number) => {
-  const { center_id, class_name, subject_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency } = body;
+  const { center_id, class_name, subject_id, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount, payment_frequency } = body;
+  const resolvedCenterId = centerId || center_id;
   let validatedTeacherId = teacher_id || null;
   if (teacher_id) {
-    const ok = await classRepository.teacherExists(teacher_id, centerId || center_id);
+    const ok = await classRepository.teacherExists(teacher_id, resolvedCenterId);
     if (!ok) return { error: 'bad_teacher' as const };
   }
+  if (!subject_id || !await classRepository.subjectCanAssign(Number(subject_id), Number(resolvedCenterId))) {
+    return { error: 'bad_subject' as const };
+  }
   const row = await classRepository.insert([
-    centerId || center_id,
+    resolvedCenterId,
     class_name,
     String(class_code || '').trim() || generateClassCode(),
     level,
@@ -30,14 +34,16 @@ const createClass = async (body: any, centerId?: number) => {
     end_date || null,
     payment_amount,
     payment_frequency || 'Monthly',
-    String(subject_name).trim(),
-    null,
+    Number(subject_id),
   ]);
   return { row };
 };
 
-const updateClass = (id: number, body: any, centerId?: number) => {
-  const { class_name, subject_name, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
+const updateClass = async (id: number, body: any, centerId?: number) => {
+  const { class_name, subject_id, class_code, level, section, capacity, teacher_id, room_number, start_date, end_date, payment_amount } = body;
+  if (subject_id !== undefined && centerId && !await classRepository.subjectCanAssign(Number(subject_id), centerId, id)) {
+    return { error: 'bad_subject' as const };
+  }
   return classRepository.update(
     id,
     [
@@ -51,7 +57,7 @@ const updateClass = (id: number, body: any, centerId?: number) => {
       start_date === undefined ? undefined : start_date || null,
       end_date === undefined ? undefined : end_date || null,
       payment_amount,
-      subject_name === undefined ? undefined : String(subject_name).trim(),
+      subject_id === undefined ? undefined : Number(subject_id),
     ],
     centerId
   );

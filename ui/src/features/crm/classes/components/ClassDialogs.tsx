@@ -35,6 +35,7 @@ interface ClassDialogsProps {
   setFormData: (value: any) => void;
   centerOptions: any[];
   teacherOptions: any[];
+  subjectOptions: any[];
   selectedDays: string[];
   scheduleTime: string;
   scheduleEndTime: string;
@@ -68,6 +69,7 @@ export const ClassDialogs = ({
   setFormData,
   centerOptions,
   teacherOptions,
+  subjectOptions,
   selectedDays,
   scheduleTime,
   scheduleEndTime,
@@ -117,8 +119,25 @@ export const ClassDialogs = ({
                   <Input id="class_name" required value={formData.class_name || ''} onChange={(e) => setFormData({ ...formData, class_name: e.target.value })} className="h-8 border-sky-100 bg-sky-50/60 text-xs font-semibold shadow-sm focus-visible:ring-sky-500 dark:border-input dark:bg-background" />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <Label htmlFor="subject_name" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Subject')} *</Label>
-                  <Input id="subject_name" required value={formData.subject_name || ''} onChange={(e) => setFormData({ ...formData, subject_name: e.target.value })} placeholder={t('e.g. Mathematics, English, IELTS')} className="h-8 border-teal-100 bg-teal-50/60 text-xs font-semibold shadow-sm focus-visible:ring-teal-500 dark:border-input dark:bg-background" />
+                  <Label htmlFor="subject_id" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Subject')} *</Label>
+                  <Select
+                    required
+                    value={formData.subject_id ? String(formData.subject_id) : ''}
+                    onValueChange={(value) => {
+                      const selected = subjectOptions.find((option) => String(option.value) === value);
+                      setFormData({ ...formData, subject_id: Number(value), subject_name: selected?.label });
+                    }}
+                  >
+                    <SelectTrigger id="subject_id" className="h-8 border-teal-100 bg-teal-50/60 text-xs font-semibold shadow-sm dark:border-input dark:bg-background">
+                      <SelectValue placeholder={t('Select Subject')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectOptions.map((option) => (
+                        <SelectItem key={option.id || option.value} value={String(option.value)}>{option.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {subjectOptions.length === 0 && <p className="text-[10px] text-amber-700">{t('Create an unassigned subject first, then return to this form.')}</p>}
                 </div>
                 {editingId && (
                   <div className="space-y-1">

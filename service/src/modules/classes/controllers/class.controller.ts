@@ -56,6 +56,9 @@ const createClass = async (req: any, res: any) => {
     if (out && 'error' in out && out.error === 'bad_teacher') {
       return res.status(400).json({ error: 'Teacher not found. Please provide a valid teacher_id' });
     }
+    if (out && 'error' in out && out.error === 'bad_subject') {
+      return res.status(400).json({ error: 'Select an available subject created for this center.' });
+    }
     res.status(201).json((out as any).row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -70,6 +73,9 @@ const updateClass = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Center scope required.' });
     }
     const row = await classService.updateClass(Number(req.params.id), req.body, centerId ?? undefined);
+    if (row && row.error === 'bad_subject') {
+      return res.status(400).json({ error: 'Select an available subject created for this center.' });
+    }
     if (!row) return res.status(404).json({ error: 'Class not found' });
     res.json(row);
   } catch (error: any) {

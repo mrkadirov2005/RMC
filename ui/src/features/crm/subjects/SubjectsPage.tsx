@@ -352,23 +352,24 @@ const SubjectsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <SelectField
-                label={t('Class')}
-                name="class_id"
-                value={formData.class_id || ''}
-                onChange={(value) => setFormData({ ...formData, class_id: Number(value) })}
-                options={classOptions}
-                isLoading={isLoadingOptions}
-                required
-                placeholder={t('Select a class')}
-              />
-              <SelectField
                 label={t('Teacher')}
                 name="teacher_id"
                 value={formData.teacher_id || ''}
-                onChange={(value) => setFormData({ ...formData, teacher_id: value ? Number(value) : undefined })}
+                onChange={(value) => setFormData({ ...formData, teacher_id: value ? Number(value) : undefined, class_id: undefined })}
                 options={teacherOptions}
                 isLoading={isLoadingOptions}
-                placeholder={t('Select a teacher (optional)')}
+                required
+                placeholder={t('Select a teacher')}
+              />
+              <SelectField
+                label={t('Group')}
+                name="class_id"
+                value={formData.class_id || ''}
+                onChange={(value) => setFormData({ ...formData, class_id: value ? Number(value) : undefined })}
+                options={classOptions}
+                isLoading={isLoadingOptions}
+                disabled={!formData.teacher_id}
+                placeholder={formData.teacher_id ? t('Select a group (optional)') : t('Select a teacher first')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -381,7 +382,7 @@ const SubjectsPage = () => {
                 <Input type="number" required value={formData.passing_marks || 40} onChange={(e) => setFormData({ ...formData, passing_marks: Number(e.target.value) })} />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">{t('Each class can keep only one assigned subject.')}</p>
+            <p className="text-xs text-muted-foreground">{t('Choose a teacher first. Only that teacher’s groups are shown; leave Group empty to assign the subject later from the class form.')}</p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>{t('Cancel')}</Button>
               <Button type="submit" disabled={state.loading}>{state.loading ? t('Saving...') : t('Save')}</Button>
