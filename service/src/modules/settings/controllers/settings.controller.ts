@@ -28,6 +28,29 @@ const saveLessonScoring = async (req: any, res: any) => {
   }
 };
 
+const getOwnerPalette = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId) return res.status(400).json({ error: 'center_id is required for palette settings.' });
+    res.json({ palette: await settingsService.getOwnerPalette(centerId) });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to fetch owner palette', details: error.message || String(error) });
+  }
+};
+
+const saveOwnerPalette = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId) return res.status(400).json({ error: 'center_id is required for palette settings.' });
+    const palette = await settingsService.saveOwnerPalette(req.body?.palette, centerId);
+    res.json({ palette });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Failed to save owner palette', details: error.message || String(error) });
+  }
+};
+
 const getSidebarOrder = async (req: any, res: any) => {
   try {
     res.json(await settingsService.getSidebarOrder(String(req.user.userType), Number(req.user.id)));
@@ -44,6 +67,6 @@ const saveSidebarOrder = async (req: any, res: any) => {
   }
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, getSidebarOrder, saveSidebarOrder };
+module.exports = { getLessonScoring, saveLessonScoring, getOwnerPalette, saveOwnerPalette, getSidebarOrder, saveSidebarOrder };
 
 export {};

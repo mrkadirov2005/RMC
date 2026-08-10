@@ -58,6 +58,8 @@ import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/
 import { PERMISSION_CODES } from './types';
 import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
 import { useLanguage } from './i18n/LanguageContext';
+import { settingsAPI } from './shared/api/api';
+import { saveOwnerPalette } from './features/crm/settings/ownerPalette';
 
 const scheduleIdleWork = (callback: () => void) => {
   if (typeof window === 'undefined') return;
@@ -232,6 +234,20 @@ function AppContent() {
   useEffect(() => {
     if (!isInitialized || !centerReady || !user) return;
     scheduleIdleWork(() => prefetchPrimaryRoute(user));
+  }, [centerReady, isInitialized, user]);
+
+  useEffect(() => {
+    if (!isInitialized || !centerReady || !user) return;
+    let active = true;
+    const loadPalette = () => settingsAPI.getOwnerPalette()
+      .then((response) => { if (active) saveOwnerPalette(response.data?.palette); })
+      .catch(() => null);
+    void loadPalette();
+    window.addEventListener('active-center-changed', loadPalette);
+    return () => {
+      active = false;
+      window.removeEventListener('active-center-changed', loadPalette);
+    };
   }, [centerReady, isInitialized, user]);
 
   if (!centerReady) {

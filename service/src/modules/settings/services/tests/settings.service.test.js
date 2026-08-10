@@ -26,4 +26,11 @@ describe('settings service', () => {
     await service.saveSidebarOrder('teacher', 4, ['/a', '/a', 'invalid', '/b']);
     expect(repository.saveSetting).toHaveBeenCalledWith('sidebar_order:teacher:4', ['/a', '/b']);
   });
+  test('loads and saves a normalized center-wide owner palette', async () => {
+    repository.getSetting.mockResolvedValue('sunset');
+    await expect(service.getOwnerPalette(3)).resolves.toBe('sunset');
+    await service.saveOwnerPalette('royal', 3);
+    expect(repository.saveSetting).toHaveBeenCalledWith('owner_panel_palette', 'royal', 3);
+    expect(service.normalizeOwnerPalette('unknown')).toBe('ocean');
+  });
 });

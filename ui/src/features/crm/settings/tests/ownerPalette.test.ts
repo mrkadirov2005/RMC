@@ -13,4 +13,8 @@ describe('owner panel palette', () => {
   it('falls back to the default palette for an unknown value', () => {
     expect(getOwnerPalette('missing').id).toBe('ocean');
   });
+
+  it('uses the same identifiers accepted by the center setting API', () => {
+    expect(ownerPalettePresets.map((palette) => palette.id)).toEqual(['ocean', 'forest', 'sunset', 'royal', 'slate']);
+  });
 });

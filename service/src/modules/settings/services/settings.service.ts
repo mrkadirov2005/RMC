@@ -2,6 +2,8 @@ const settingsRepository = require('../repositories/settings.repository');
 const { DEFAULT_LESSON_SCORING_SETTINGS } = require('../lessonScoringDefaults');
 
 const LESSON_SCORING_KEY = 'lesson_scoring';
+const OWNER_PALETTE_KEY = 'owner_panel_palette';
+const OWNER_PALETTES = new Set(['ocean', 'forest', 'sunset', 'royal', 'slate']);
 const allowedTones = new Set(['emerald', 'sky', 'violet', 'amber', 'rose', 'orange']);
 
 const normalizeOption = (option: any, fallback: any) => ({
@@ -46,6 +48,16 @@ const saveLessonScoring = async (settings: any, centerId?: number) => {
   return settingsRepository.saveSetting(LESSON_SCORING_KEY, normalized, centerId);
 };
 
+const normalizeOwnerPalette = (value: unknown) => OWNER_PALETTES.has(String(value)) ? String(value) : 'ocean';
+
+const getOwnerPalette = async (centerId?: number) => {
+  const saved = await settingsRepository.getSetting(OWNER_PALETTE_KEY, centerId);
+  return normalizeOwnerPalette(saved);
+};
+
+const saveOwnerPalette = (value: unknown, centerId?: number) =>
+  settingsRepository.saveSetting(OWNER_PALETTE_KEY, normalizeOwnerPalette(value), centerId);
+
 const sidebarOrderKey = (userType: string, userId: number) => `sidebar_order:${userType}:${userId}`;
 
 const getSidebarOrder = async (userType: string, userId: number) => {
@@ -60,6 +72,6 @@ const saveSidebarOrder = async (userType: string, userId: number, order: unknown
   return settingsRepository.saveSetting(sidebarOrderKey(userType, userId), normalized);
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring, getSidebarOrder, saveSidebarOrder };
+module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring, getOwnerPalette, saveOwnerPalette, normalizeOwnerPalette, getSidebarOrder, saveSidebarOrder };
 
 export {};

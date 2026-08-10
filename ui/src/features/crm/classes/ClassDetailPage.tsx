@@ -160,8 +160,8 @@ const ClassDetailPage = () => {
   }
 
   return (
-    <div className="min-h-full space-y-4 bg-slate-50 p-4 dark:bg-background">
-      <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-border dark:bg-card">
+    <div className="owner-palette-scope min-h-full space-y-4 bg-slate-50 p-4 dark:bg-background">
+      <div className="owner-tertiary-card rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-border dark:bg-card">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <Button
@@ -179,9 +179,9 @@ const ClassDetailPage = () => {
             <div className="min-w-0">
               <h1 className="truncate text-xl font-bold text-slate-950 dark:text-card-foreground">{className}</h1>
               <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-                <span className="rounded-md bg-violet-600 px-2 py-1 text-white">{teacherName}</span>
-                {classData.level ? <span className="rounded-md bg-blue-600 px-2 py-1 text-white">Level {classData.level}</span> : null}
-                <span className="rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
+                <span className="owner-secondary-tag rounded-md bg-violet-600 px-2 py-1 text-white">{teacherName}</span>
+                {classData.level ? <span className="owner-secondary-tag rounded-md bg-blue-600 px-2 py-1 text-white">Level {classData.level}</span> : null}
+                <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
               </div>
             </div>
           </div>
@@ -243,7 +243,7 @@ const ClassDetailPage = () => {
         {statTiles.map((tile) => {
           const Icon = tile.icon;
           return (
-            <div key={tile.label} className={`${tile.color} rounded-lg p-3 text-white shadow-sm`}>
+            <div key={tile.label} className={`${tile.color} owner-primary-card rounded-lg p-3 text-white shadow-sm`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold uppercase text-white/75">{tile.label}</p>

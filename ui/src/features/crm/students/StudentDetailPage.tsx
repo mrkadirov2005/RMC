@@ -404,7 +404,7 @@ const StudentDetailPage = () => {
   ];
 
   return (
-    <div className="min-h-full space-y-3 bg-slate-50 p-3 dark:bg-background md:p-4">
+    <div className="owner-palette-scope min-h-full space-y-3 bg-slate-50 p-3 dark:bg-background md:p-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Button
           size="sm"
@@ -434,7 +434,7 @@ const StudentDetailPage = () => {
         </Alert>
       )}
 
-      <Card className="overflow-hidden rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+      <Card className="owner-tertiary-card overflow-hidden rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-2.5">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-bold text-white">
@@ -443,9 +443,9 @@ const StudentDetailPage = () => {
             <div className="min-w-0">
               <h1 className="truncate text-base font-bold text-slate-950 dark:text-foreground">{studentFullName}</h1>
               <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-                {student.username && <span className="rounded-md bg-fuchsia-100 px-2 py-0.5 text-fuchsia-800 dark:bg-muted dark:text-muted-foreground">Username: {student.username}</span>}
-                {groupName && <span className="rounded-md bg-sky-100 px-2 py-0.5 text-sky-800 dark:bg-muted dark:text-muted-foreground">Group: {groupName}</span>}
-                {teacherName && <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-muted dark:text-muted-foreground">Teacher: {teacherName}</span>}
+                {student.username && <span className="owner-secondary-tag rounded-md bg-fuchsia-100 px-2 py-0.5 text-fuchsia-800 dark:bg-muted dark:text-muted-foreground">Username: {student.username}</span>}
+                {groupName && <span className="owner-secondary-tag rounded-md bg-sky-100 px-2 py-0.5 text-sky-800 dark:bg-muted dark:text-muted-foreground">Group: {groupName}</span>}
+                {teacherName && <span className="owner-secondary-tag rounded-md bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-muted dark:text-muted-foreground">Teacher: {teacherName}</span>}
               </div>
             </div>
           </div>
@@ -459,7 +459,7 @@ const StudentDetailPage = () => {
 
       {activeTab === 'overview' && (
         <>
-          <Card className="overflow-hidden rounded-lg border-0 bg-sky-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
+          <Card className="owner-primary-card overflow-hidden rounded-lg border-0 bg-sky-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
             <CardContent className="relative p-0">
               <div className="relative flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
                 <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
@@ -477,15 +477,15 @@ const StudentDetailPage = () => {
                       <Badge variant="outline" className={cn('border text-[11px] font-semibold', getStatusClasses(student.status))}>
                         {student.status || 'Unknown'}
                       </Badge>
-                      {student.username && <span className="inline-flex items-center gap-1 rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                      {student.username && <span className="owner-secondary-tag inline-flex items-center gap-1 rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                         <User className="h-3 w-3" />
                         Username: {student.username}
                       </span>}
-                      {groupName && <span className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                      {groupName && <span className="owner-secondary-tag inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                         <BookOpen className="h-3 w-3" />
                         Group: {groupName}
                       </span>}
-                      {teacherName && <span className="inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+                      {teacherName && <span className="owner-secondary-tag inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                         <School className="h-3 w-3" />
                         Teacher: {teacherName}
                       </span>}
@@ -493,28 +493,28 @@ const StudentDetailPage = () => {
                   </div>
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 md:w-[330px]">
-                  {student.email && <div className="rounded-lg border border-white/25 bg-fuchsia-500 p-2.5 shadow-sm">
+                  {student.email && <div className="owner-secondary-tag rounded-lg border border-white/25 bg-fuchsia-500 p-2.5 shadow-sm">
                     <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
                       <Mail className="h-3.5 w-3.5" />
                       Email
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold text-white">{student.email}</p>
                   </div>}
-                  {student.phone && <div className="rounded-lg border border-white/25 bg-emerald-500 p-2.5 shadow-sm">
+                  {student.phone && <div className="owner-secondary-tag rounded-lg border border-white/25 bg-emerald-500 p-2.5 shadow-sm">
                     <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
                       <Phone className="h-3.5 w-3.5" />
                       Phone
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold text-white">{student.phone}</p>
                   </div>}
-                  {student.parent_name && <div className="rounded-lg border border-white/25 bg-cyan-500 p-2.5 shadow-sm">
+                  {student.parent_name && <div className="owner-secondary-tag rounded-lg border border-white/25 bg-cyan-500 p-2.5 shadow-sm">
                     <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
                       <User className="h-3.5 w-3.5" />
                       Parent
                     </div>
                     <p className="mt-1 truncate text-xs font-semibold text-white">{student.parent_name}</p>
                   </div>}
-                  <div className="rounded-lg border border-white/25 bg-amber-500 p-2.5 shadow-sm">
+                  <div className="owner-secondary-tag rounded-lg border border-white/25 bg-amber-500 p-2.5 shadow-sm">
                     <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
                       <Coins className="h-3.5 w-3.5" />
                       Coins
@@ -528,7 +528,7 @@ const StudentDetailPage = () => {
 
           <StudentInfoSection student={student} />
 
-          <Card className="rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+          <Card className="owner-tertiary-card rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
             <CardHeader className="p-3 pb-1">
               <CardTitle className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
                 <KeyRound className="h-4 w-4" />
@@ -567,7 +567,7 @@ const StudentDetailPage = () => {
         </>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+      <div className="owner-tertiary-card overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <div className="border-b border-slate-200 bg-white px-2 py-2 dark:border-border dark:bg-muted/40">
             <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none bg-transparent p-0">

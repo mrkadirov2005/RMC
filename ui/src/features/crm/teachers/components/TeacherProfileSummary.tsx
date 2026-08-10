@@ -17,7 +17,7 @@ export const TeacherProfileSummary = ({
   getInitials,
   getStatusClasses,
 }: TeacherProfileSummaryProps) => (
-  <Card className="overflow-hidden rounded-lg border-0 bg-indigo-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
+  <Card className="owner-primary-card overflow-hidden rounded-lg border-0 bg-indigo-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
     <CardContent className="relative p-0">
       <div className="relative flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
         <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
@@ -36,13 +36,13 @@ export const TeacherProfileSummary = ({
               <span className={cn('inline-flex items-center rounded-lg border px-2 py-1 text-[11px] font-semibold', getStatusClasses(teacher.status))}>
                 {teacher.status}
               </span>
-              <span className="inline-flex items-center rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+              <span className="owner-secondary-tag inline-flex items-center rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                 {teacher.employee_id || 'No employee ID'}
               </span>
-              <span className="inline-flex items-center rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+              <span className="owner-secondary-tag inline-flex items-center rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                 Username: {teacher.username || '-'}
               </span>
-              <span className="inline-flex items-center rounded-lg bg-cyan-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
+              <span className="owner-secondary-tag inline-flex items-center rounded-lg bg-cyan-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
                 Share: {Number(teacher.salary_percentage ?? 50)}%
               </span>
             </div>

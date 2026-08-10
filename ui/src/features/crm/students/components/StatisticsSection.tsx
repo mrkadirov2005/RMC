@@ -89,7 +89,7 @@ export const StatisticsSection = ({
         const config = statCards[index];
         const Icon = config.icon;
         return (
-          <Card key={config.key} className={cn('rounded-lg shadow-sm', config.shell)}>
+          <Card key={config.key} className={cn('owner-primary-card rounded-lg shadow-sm', config.shell)}>
             <CardContent className="flex min-h-[74px] items-center gap-2.5 p-3">
               <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', config.iconShell)}>
                 <Icon className="h-4 w-4" />

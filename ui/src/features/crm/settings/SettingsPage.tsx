@@ -99,6 +99,12 @@ const SettingsPage = () => {
     settingsAPI.getLessonScoring()
       .then((response) => setLessonScoring(normalizeLessonScoringSettings(response.data)))
       .catch(() => setLessonScoring(defaultLessonScoringSettings));
+    settingsAPI.getOwnerPalette()
+      .then((response) => {
+        const palette = response.data?.palette;
+        setOwnerPalette(saveOwnerPalette(palette).id);
+      })
+      .catch(() => setOwnerPalette(readOwnerPalette().id));
   }, []);
 
   const updateScoreOption = (section: ScoreSection, index: number, key: 'label' | 'score' | 'symbol' | 'fill', value: string) => {
@@ -173,6 +179,7 @@ const SettingsPage = () => {
     localStorage.removeItem(LIST_ROW_PRIMARY_KEY);
     localStorage.removeItem(LIST_ROW_ALTERNATE_KEY);
     saveOwnerPalette(DEFAULT_OWNER_PALETTE);
+    settingsAPI.saveOwnerPalette(DEFAULT_OWNER_PALETTE).catch(() => null);
     settingsAPI.saveLessonScoring(defaultLessonScoringSettings).catch(() => null);
     setDefaultDuration(90);
     setOverrideDuration('');
@@ -273,7 +280,7 @@ const SettingsPage = () => {
             <p className="text-xs text-muted-foreground">Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {ownerPalettePresets.map((palette) => (
-                <button key={palette.id} type="button" onClick={() => setOwnerPalette(palette.id)} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
+                <button key={palette.id} type="button" onClick={async () => { setOwnerPalette(palette.id); saveOwnerPalette(palette.id); try { await settingsAPI.saveOwnerPalette(palette.id); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
                   <span className="mb-2 block text-sm font-semibold">{palette.name}</span>
                   <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title="Primary cards" /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title="Secondary tags" /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title="Tertiary cards" /></span>
                 </button>

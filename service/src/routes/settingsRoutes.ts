@@ -5,6 +5,8 @@ const { requireAuth, requireRole } = require('../middleware/auth');
 
 router.get('/lesson-scoring', requireAuth, requireRole('superuser', 'teacher'), settingsController.getLessonScoring);
 router.put('/lesson-scoring', requireAuth, requireRole('superuser'), settingsController.saveLessonScoring);
+router.get('/owner-palette', requireAuth, settingsController.getOwnerPalette);
+router.put('/owner-palette', requireAuth, requireRole('superuser'), settingsController.saveOwnerPalette);
 router.get('/sidebar-order', requireAuth, settingsController.getSidebarOrder);
 router.put('/sidebar-order', requireAuth, settingsController.saveSidebarOrder);
 

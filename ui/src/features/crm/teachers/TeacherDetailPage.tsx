@@ -119,7 +119,7 @@ const TeacherDetailPage = () => {
   }
 
   return (
-    <div className="min-h-full space-y-3 bg-slate-50 p-3 dark:bg-background md:p-4">
+    <div className="owner-palette-scope min-h-full space-y-3 bg-slate-50 p-3 dark:bg-background md:p-4">
       {/* Header */}
       <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
         <Button
@@ -199,7 +199,7 @@ const TeacherDetailPage = () => {
       />
 
       {/* Tabs */}
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+      <div className="owner-tertiary-card overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <Tabs value={tabValue} onValueChange={setTabValue}>
           <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-white px-2 py-2 dark:border-border dark:bg-muted/40">
             <TabsTrigger value="info" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
