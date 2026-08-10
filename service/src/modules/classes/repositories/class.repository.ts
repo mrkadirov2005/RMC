@@ -173,14 +173,11 @@ const teacherExists = async (teacherId: number, centerId?: number) => {
   return rows.length > 0;
 };
 
-const subjectCanAssign = async (subjectId: number, centerId: number, classId?: number) => {
-  const assignmentCondition = classId
-    ? or(isNull(subjects.classId), eq(subjects.classId, classId))
-    : isNull(subjects.classId);
+const subjectCanAssign = async (subjectId: number, centerId: number) => {
   const rows = await db
     .select({ subject_id: subjects.subjectId })
     .from(subjects)
-    .where(and(eq(subjects.subjectId, subjectId), eq(subjects.centerId, centerId), assignmentCondition))
+    .where(and(eq(subjects.subjectId, subjectId), eq(subjects.centerId, centerId)))
     .limit(1);
   return rows.length > 0;
 };
@@ -210,7 +207,17 @@ const insert = async (params: any[]) => {
       paymentFrequency: params[11],
     }).returning({ class_id: classes.classId });
     const classId = rows[0].class_id;
-    await tx.update(subjects).set({ classId, teacherId: params[6] || null }).where(eq(subjects.subjectId, params[12]));
+    const templates = await tx.select().from(subjects).where(and(eq(subjects.subjectId, params[12]), eq(subjects.centerId, params[0]))).limit(1);
+    const template = templates[0];
+    await tx.insert(subjects).values({
+      centerId: params[0],
+      classId,
+      subjectName: template.subjectName,
+      subjectCode: template.subjectCode,
+      teacherId: params[6] || template.teacherId || null,
+      totalMarks: template.totalMarks || 100,
+      passingMarks: template.passingMarks || 40,
+    });
     const created = await tx.select(classSelection()).from(classes).where(eq(classes.classId, classId)).limit(1);
     return created[0];
   });
@@ -240,8 +247,28 @@ const update = async (id: number, params: any[], centerId?: number) => {
     .where(and(...conditions))
     .returning(classSelection());
   if (rows[0] && params[10] !== undefined) {
-    await db.update(subjects).set({ classId: null }).where(eq(subjects.classId, id));
-    await db.update(subjects).set({ classId: id, teacherId: params[5] ?? undefined }).where(eq(subjects.subjectId, params[10]));
+    const templates = await db.select().from(subjects).where(and(eq(subjects.subjectId, params[10]), eq(subjects.centerId, rows[0].center_id))).limit(1);
+    const template = templates[0];
+    const existing = await db.select({ subject_id: subjects.subjectId }).from(subjects).where(eq(subjects.classId, id)).limit(1);
+    if (existing[0]) {
+      await db.update(subjects).set({
+        subjectName: template.subjectName,
+        subjectCode: template.subjectCode,
+        teacherId: params[5] ?? template.teacherId ?? undefined,
+        totalMarks: template.totalMarks,
+        passingMarks: template.passingMarks,
+      }).where(eq(subjects.subjectId, existing[0].subject_id));
+    } else {
+      await db.insert(subjects).values({
+        centerId: rows[0].center_id,
+        classId: id,
+        subjectName: template.subjectName,
+        subjectCode: template.subjectCode,
+        teacherId: params[5] || template.teacherId || null,
+        totalMarks: template.totalMarks || 100,
+        passingMarks: template.passingMarks || 40,
+      });
+    }
     const refreshed = await findById(id, centerId);
     return refreshed;
   }

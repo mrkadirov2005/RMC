@@ -1,0 +1,4 @@
+interface:
+  display_name: "Update Affected Tests"
+  short_description: "Keep tests aligned with implementation changes"
+  default_prompt: "Use $update-affected-tests to implement this change and update every affected test."

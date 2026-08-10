@@ -16,7 +16,7 @@ import { selectTeacherOptions } from '../../../../store/selectors';
 import type { Subject } from '../types';
 import { getStoredActiveCenterId } from '../../../../shared/auth/authStorage';
 import { exportCsvEntity, importCsvEntity } from '../../../../shared/dataCsv';
-import { showToast } from '../../../../utils/toast';
+import { buildSubjectSavePayload } from '../subjectForm';
 
 // Provides subjects page.
 export const useSubjectsPage = () => {
@@ -84,22 +84,13 @@ export const useSubjectsPage = () => {
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const normalizedClassId = Number(formData.class_id || 0);
-    const hasDifferentSubjectForClass = items.some((subject) => {
-      const subjectId = Number(subject.subject_id || subject.id || 0);
-      return Number(subject.class_id || 0) === normalizedClassId && subjectId !== Number(editingId || 0);
-    });
-
-    if (normalizedClassId && hasDifferentSubjectForClass) {
-      showToast.error('This class already has an assigned subject.');
-      return;
-    }
+    const payload = buildSubjectSavePayload(formData);
 
     try {
       if (editingId) {
-        await dispatch(updateSubject({ id: editingId, data: formData })).unwrap();
+        await dispatch(updateSubject({ id: editingId, data: payload })).unwrap();
       } else {
-        await dispatch(createSubject(formData)).unwrap();
+        await dispatch(createSubject(payload)).unwrap();
       }
       handleCloseModal();
     } catch {
@@ -127,13 +118,6 @@ export const useSubjectsPage = () => {
 
   const classes = useAppSelector((state) => state.classes.items) as { class_id?: number; id?: number; class_name: string; class_code: string; level: number; teacher_id?: number }[];
   const teachers = useAppSelector((state) => state.teachers.items) as { teacher_id?: number; id?: number; first_name: string; last_name: string }[];
-  const classOptions = classes
-    .filter((group) => !formData.teacher_id || Number(group.teacher_id || 0) === Number(formData.teacher_id))
-    .map((group) => {
-      const id = Number(group.class_id || group.id || 0);
-      return { id, value: id, label: String(group.class_name || '').trim() || `Group #${id}` };
-    })
-    .filter((option) => option.id > 0);
 
   return {
     state,
@@ -143,7 +127,6 @@ export const useSubjectsPage = () => {
     editingId,
     formData,
     setFormData,
-    classOptions,
     teacherOptions,
     isLoadingOptions,
     handleOpenModal,

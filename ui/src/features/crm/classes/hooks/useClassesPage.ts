@@ -15,6 +15,7 @@ import { selectCenterOptions, selectTeacherOptions } from '../../../../store/sel
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
+import { buildAssignableSubjectOptions } from '../subjectOptions';
 
 interface AttendanceRecord {
   attendance_id?: number;
@@ -47,13 +48,7 @@ export const useClassesPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const subjectOptions = subjects
-    .filter((subject) => !subject.class_id || Number(subject.class_id) === Number(editingId || 0))
-    .map((subject) => ({
-      id: Number(subject.subject_id || subject.id),
-      value: Number(subject.subject_id || subject.id),
-      label: subject.subject_name,
-    }));
+  const subjectOptions = buildAssignableSubjectOptions(subjects);
   const [formData, setFormData] = useState<Partial<Class>>({
     center_id: defaultCenterId,
     payment_frequency: 'Monthly',

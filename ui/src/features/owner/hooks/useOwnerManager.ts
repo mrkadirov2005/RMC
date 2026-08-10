@@ -19,7 +19,7 @@ import {
 import { selectOwnerManagerUi } from '../selectors';
 import { OWNER_MANAGER_TAB_META } from '../constants';
 import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, OwnerOverviewCollections } from '../types';
-import { buildOwnerStudentStatistics, createInitialFormState, getOwnerManagerRowId, normalizePermissions } from '../utils';
+import { buildOwnerStudentStatistics, createInitialFormState, getOwnerManagerRowId, normalizePermissions, summarizeOwnerAttendance } from '../utils';
 import { ownerManagerApi } from '../api';
 
 // Builds columns.
@@ -256,17 +256,21 @@ export const useOwnerManager = () => {
         superusersRes,
         summariesRes,
         deletedStudentsRes,
+        attendanceRes,
       ] = await Promise.all([
         ownerManagerApi.centers.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.owners.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.superusers.getAll().catch(() => ({ data: [] })),
         ownerManagerApi.centerSummaries.getAllAcrossCenters().catch(() => ({ data: [] })),
         canHardDelete ? ownerManagerApi.students.getDeletedAcrossCenters().catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
+        activeCenterId ? ownerManagerApi.attendance.getAllForCenter(Number(activeCenterId)).catch(() => ({ data: [] })) : Promise.resolve({ data: [] }),
       ]);
       const summaries = toRows(summariesRes);
       const selectedSummary = summaries.find(
         (row: any) => Number(row.center_id || row.centerId) === Number(activeCenterId),
       );
+      const attendanceRows = toRows(attendanceRes);
+      const attendanceFallback = summarizeOwnerAttendance(attendanceRows);
       setOverviewSummary({
         totalStudents: Number(selectedSummary?.students || 0),
         totalTeachers: Number(selectedSummary?.teachers || 0),
@@ -279,8 +283,12 @@ export const useOwnerManager = () => {
         yesterdayPayments: Number(selectedSummary?.yesterday_payments || 0),
         paidStudentsToday: Number(selectedSummary?.paid_students_today || 0),
         paidStudentsYesterday: Number(selectedSummary?.paid_students_yesterday || 0),
-        attendancePresent: Number(selectedSummary?.attendance_present || 0),
-        attendanceAbsent: Number(selectedSummary?.attendance_absent || 0),
+        attendancePresent: selectedSummary?.attendance_present == null
+          ? attendanceFallback.present
+          : Number(selectedSummary.attendance_present || 0),
+        attendanceAbsent: selectedSummary?.attendance_absent == null
+          ? attendanceFallback.absent
+          : Number(selectedSummary.attendance_absent || 0),
         collected: Number(selectedSummary?.collected || 0),
       });
 
@@ -298,6 +306,7 @@ export const useOwnerManager = () => {
         payments: [],
         discounts: [],
         deletedStudents: toRows(deletedStudentsRes),
+        attendance: attendanceRows,
       });
     } finally {
       setOverviewLoading(false);

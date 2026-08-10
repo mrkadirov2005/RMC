@@ -23,6 +23,17 @@ export const normalizePermissions = (value: unknown): string[] => {
 export const getOwnerManagerRowId = (item: any) =>
   item.id || item.owner_id || item.superuser_id || item.teacher_id || item.student_id || item.center_id;
 
+// Summarizes attendance using the same present/absent rules as the owner overview.
+export const summarizeOwnerAttendance = (rows: any[]) => rows.reduce(
+  (summary, row) => {
+    const status = String(row?.status || '').trim().toLowerCase();
+    if (status === 'present' || status === 'late') summary.present += 1;
+    if (status === 'absent' || status === 'absent nr' || status === 'absent r') summary.absent += 1;
+    return summary;
+  },
+  { present: 0, absent: 0 },
+);
+
 // Creates initial form state.
 export const createInitialFormState = (activeTab: string, activeCenterId: number | null): OwnerManagerFormData => {
   if (activeTab === 'superusers') {

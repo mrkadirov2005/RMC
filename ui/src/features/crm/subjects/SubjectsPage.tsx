@@ -58,7 +58,6 @@ const SubjectsPage = () => {
     editingId,
     formData,
     setFormData,
-    classOptions,
     teacherOptions,
     isLoadingOptions,
     handleOpenModal,
@@ -350,26 +349,16 @@ const SubjectsPage = () => {
                 <Input type="text" required value={formData.subject_code || ''} onChange={(e) => setFormData({ ...formData, subject_code: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-4">
               <SelectField
                 label={t('Teacher')}
                 name="teacher_id"
                 value={formData.teacher_id || ''}
-                onChange={(value) => setFormData({ ...formData, teacher_id: value ? Number(value) : undefined, class_id: undefined })}
+                onChange={(value) => setFormData({ ...formData, teacher_id: value ? Number(value) : undefined })}
                 options={teacherOptions}
                 isLoading={isLoadingOptions}
                 required
                 placeholder={t('Select a teacher')}
-              />
-              <SelectField
-                label={t('Group')}
-                name="class_id"
-                value={formData.class_id || ''}
-                onChange={(value) => setFormData({ ...formData, class_id: value ? Number(value) : undefined })}
-                options={classOptions}
-                isLoading={isLoadingOptions}
-                disabled={!formData.teacher_id}
-                placeholder={formData.teacher_id ? t('Select a group (optional)') : t('Select a teacher first')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -382,7 +371,7 @@ const SubjectsPage = () => {
                 <Input type="number" required value={formData.passing_marks || 40} onChange={(e) => setFormData({ ...formData, passing_marks: Number(e.target.value) })} />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground">{t('Choose a teacher first. Only that teacher’s groups are shown; leave Group empty to assign the subject later from the class form.')}</p>
+            <p className="text-xs text-muted-foreground">{t('Create the subject here, then assign it from the Group create or edit form.')}</p>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>{t('Cancel')}</Button>
               <Button type="submit" disabled={state.loading}>{state.loading ? t('Saving...') : t('Save')}</Button>
