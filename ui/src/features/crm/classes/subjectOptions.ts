@@ -16,3 +16,13 @@ export const getClassSubjectLabel = (group: any) =>
 
 export const hasPersistedClassSubject = (group: any, expectedSubjectName: string) =>
   String(group?.subject_name || '').trim().toLowerCase() === expectedSubjectName.trim().toLowerCase();
+
+export const buildClassSubjectAssignment = (subject: any, group: any) => ({
+  center_id: Number(group?.center_id || subject?.center_id),
+  class_id: Number(group?.class_id || group?.id),
+  subject_name: String(subject?.subject_name || '').trim(),
+  subject_code: subject?.subject_code || undefined,
+  teacher_id: group?.teacher_id || subject?.teacher_id || undefined,
+  total_marks: Number(subject?.total_marks || 100),
+  passing_marks: Number(subject?.passing_marks || 40),
+});

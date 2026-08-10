@@ -1,7 +1,7 @@
 // React hooks for the crm feature.
 
 import { useEffect, useState } from 'react';
-import { classAPI, dataAPI } from '../../../../shared/api/api';
+import { classAPI, dataAPI, subjectAPI } from '../../../../shared/api/api';
 import { frequencyOptions } from '../../../../utils/dropdownOptions';
 import { handleApiError, showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
@@ -15,7 +15,7 @@ import { selectCenterOptions, selectTeacherOptions } from '../../../../store/sel
 import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
-import { buildAssignableSubjectOptions, hasPersistedClassSubject } from '../subjectOptions';
+import { buildAssignableSubjectOptions, buildClassSubjectAssignment, hasPersistedClassSubject } from '../subjectOptions';
 
 interface AttendanceRecord {
   attendance_id?: number;
@@ -141,10 +141,22 @@ export const useClassesPage = () => {
       if (editingId) {
         await classAPI.update(editingId, dataToSubmit);
         if (formData.subject_id && formData.subject_name) {
-          const verifyResponse = await classAPI.getById(editingId);
-          const verifiedClass = (verifyResponse as any)?.data ?? verifyResponse;
+          let verifyResponse = await classAPI.getById(editingId);
+          let verifiedClass = (verifyResponse as any)?.data ?? verifyResponse;
           if (!hasPersistedClassSubject(verifiedClass, formData.subject_name)) {
-            throw new Error('The class was updated, but the selected subject was not saved. Deploy the updated backend and try again.');
+            const selectedSubject = subjects.find((subject: any) =>
+              Number(subject?.subject_id || subject?.id) === Number(formData.subject_id)
+            );
+            if (!selectedSubject) throw new Error('The selected subject could not be found. Refresh the page and try again.');
+            await subjectAPI.create(buildClassSubjectAssignment(selectedSubject, {
+              ...formData,
+              class_id: editingId,
+            }));
+            verifyResponse = await classAPI.getById(editingId);
+            verifiedClass = (verifyResponse as any)?.data ?? verifyResponse;
+          }
+          if (!hasPersistedClassSubject(verifiedClass, formData.subject_name)) {
+            throw new Error('The class was updated, but the selected subject was not saved.');
           }
         }
         showToast.success('Class updated successfully!');

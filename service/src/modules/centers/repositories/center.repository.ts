@@ -81,12 +81,12 @@ const getSummaries = (centerId?: number) => {
       attendance_present: sql`(
         SELECT COUNT(*)::int FROM ${attendance}
         WHERE ${attendance.centerId} = ${centers.centerId}
-          AND LOWER(COALESCE(${attendance.status}, '')) IN ('present', 'late')
+          AND LOWER(COALESCE(${attendance.status}::text, '')) IN ('present', 'late')
       )`,
       attendance_absent: sql`(
         SELECT COUNT(*)::int FROM ${attendance}
         WHERE ${attendance.centerId} = ${centers.centerId}
-          AND LOWER(COALESCE(${attendance.status}, '')) IN ('absent', 'absent nr', 'absent r')
+          AND LOWER(COALESCE(${attendance.status}::text, '')) IN ('absent', 'absent nr', 'absent r')
       )`,
       collected: sql`(
         SELECT COALESCE(SUM(CASE WHEN LOWER(COALESCE(${payments.paymentStatus}, '')) IN ('completed', 'paid') THEN COALESCE(${payments.amount}, 0) ELSE 0 END), 0)::numeric

@@ -8,6 +8,7 @@ import {
   GraduationCap,
   Layers3,
   Loader2,
+  Eye,
   Pencil,
   Plus,
   Search,
@@ -40,6 +41,7 @@ import { useSubjectsPage } from './hooks/useSubjectsPage';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { countDuplicateClassSubjectAssignments } from './subjectAssignments';
+import { buildSubjectCatalog, getSubjectTeacherCount } from './subjectCatalog';
 
 const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
 const statTileClass = 'rounded-md bg-gradient-to-br p-2 text-white shadow-sm';
@@ -49,6 +51,7 @@ const SubjectsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
   const { t } = useLanguage();
   const {
     state,
@@ -66,29 +69,6 @@ const SubjectsPage = () => {
     handleExportSubjects,
     isImporting,
   } = useSubjectsPage();
-
-  const filteredSubjects = useMemo(() => {
-    const search = searchTerm.trim().toLowerCase();
-    if (!search) return state.items;
-
-    return state.items.filter((subject) =>
-      [
-        subject.subject_code,
-        subject.subject_name,
-        subject.class_id,
-        subject.teacher_id,
-        subject.total_marks,
-        subject.passing_marks,
-      ]
-        .filter((value) => value != null)
-        .some((value) => String(value).toLowerCase().includes(search))
-    );
-  }, [searchTerm, state.items]);
-
-  const paginatedSubjects = useMemo(
-    () => paginateItems(filteredSubjects, page, pageSize),
-    [filteredSubjects, page, pageSize]
-  );
 
   const classLabelMap = useMemo(
     () =>
@@ -112,6 +92,32 @@ const SubjectsPage = () => {
     [teachers]
   );
 
+  const catalogSubjects = useMemo(() => buildSubjectCatalog(state.items), [state.items]);
+
+  const filteredSubjects = useMemo(() => {
+    const search = searchTerm.trim().toLowerCase();
+    if (!search) return catalogSubjects;
+
+    return catalogSubjects.filter((subject) =>
+      [
+        subject.subject_name,
+        subject.total_marks,
+        subject.passing_marks,
+        ...subject.assignments.flatMap((assignment: any) => [
+          classLabelMap.get(Number(assignment.class_id || 0)),
+          teacherLabelMap.get(Number(assignment.teacher_id || 0)),
+        ]),
+      ]
+        .filter((value) => value != null)
+        .some((value) => String(value).toLowerCase().includes(search))
+    );
+  }, [catalogSubjects, classLabelMap, searchTerm, teacherLabelMap]);
+
+  const paginatedSubjects = useMemo(
+    () => paginateItems(filteredSubjects, page, pageSize),
+    [filteredSubjects, page, pageSize]
+  );
+
   const assignedClassIds = useMemo(
     () => new Set(state.items.map((subject) => Number(subject.class_id || 0)).filter(Boolean)),
     [state.items]
@@ -120,7 +126,7 @@ const SubjectsPage = () => {
   const totalClasses = classes.length;
   const assignedClasses = assignedClassIds.size;
   const unassignedClasses = Math.max(totalClasses - assignedClasses, 0);
-  const subjectsWithoutTeacher = state.items.filter((subject) => !subject.teacher_id).length;
+  const subjectsWithoutTeacher = catalogSubjects.filter((subject) => getSubjectTeacherCount(subject) === 0).length;
   const duplicateAssignments = countDuplicateClassSubjectAssignments(state.items);
 
   useEffect(() => {
@@ -179,7 +185,7 @@ const SubjectsPage = () => {
               <BookOpen className="h-3.5 w-3.5 text-white/75" />
               <p className="text-[10px] font-black uppercase text-white/75">{t('Total Subjects')}</p>
             </div>
-            <p className="text-lg font-black leading-tight">{state.items.length.toLocaleString()}</p>
+            <p className="text-lg font-black leading-tight">{catalogSubjects.length.toLocaleString()}</p>
           </div>
           <div className={`${statTileClass} from-emerald-500 to-teal-600`}>
             <div className="flex items-center gap-1.5">
@@ -250,8 +256,8 @@ const SubjectsPage = () => {
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50">
                   <TableHead className="h-9 text-xs">{t('Name')}</TableHead>
-                  <TableHead className="h-9 text-xs">{t('Class')}</TableHead>
-                  <TableHead className="h-9 text-xs">{t('Teacher')}</TableHead>
+                  <TableHead className="h-9 text-xs">{t('Groups')}</TableHead>
+                  <TableHead className="h-9 text-xs">{t('Teachers')}</TableHead>
                   <TableHead className="h-9 text-xs">{t('Marks')}</TableHead>
                   <TableHead className="h-9 text-right text-xs">{t('Actions')}</TableHead>
                 </TableRow>
@@ -282,12 +288,12 @@ const SubjectsPage = () => {
                       </TableCell>
                       <TableCell className="py-1.5">
                         <span className={`${infoPillClass} inline-block bg-cyan-600 text-white`}>
-                          {classLabelMap.get(Number(subject.class_id || 0)) || '-'}
+                          {subject.assignments.length.toLocaleString()}
                         </span>
                       </TableCell>
                       <TableCell className="py-1.5">
-                        <span className={`${infoPillClass} inline-block ${subject.teacher_id ? 'bg-fuchsia-600 text-white' : 'bg-rose-600 text-white'}`}>
-                          {teacherLabelMap.get(Number(subject.teacher_id || 0)) || t('Unassigned')}
+                        <span className={`${infoPillClass} inline-block ${getSubjectTeacherCount(subject) ? 'bg-fuchsia-600 text-white' : 'bg-rose-600 text-white'}`}>
+                          {getSubjectTeacherCount(subject).toLocaleString()}
                         </span>
                       </TableCell>
                       <TableCell className="py-1.5">
@@ -298,10 +304,13 @@ const SubjectsPage = () => {
                       </TableCell>
                       <TableCell className="py-1.5 text-right">
                         <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(subject)} className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white">
+                          <Button variant="ghost" size="icon" onClick={() => setSelectedSubject(subject)} className="h-7 w-7 rounded bg-violet-100 text-violet-700 hover:bg-violet-600 hover:text-white">
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleOpenModal(subject.catalogSubject || subject)} className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white">
                             <Pencil className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.subject_id || subject.id || 0)} className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white">
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(subject.catalogSubject?.subject_id || subject.catalogSubject?.id || subject.subject_id || subject.id || 0)} className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white">
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -330,6 +339,34 @@ const SubjectsPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={Boolean(selectedSubject)} onOpenChange={(open) => !open && setSelectedSubject(null)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{selectedSubject?.subject_name}</DialogTitle>
+          </DialogHeader>
+          {selectedSubject && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className={`${statTileClass} from-violet-500 to-indigo-600`}><p className="text-[10px] font-black uppercase text-white/75">{t('Groups')}</p><p className="text-2xl font-black">{selectedSubject.assignments.length}</p></div>
+                <div className={`${statTileClass} from-fuchsia-500 to-pink-600`}><p className="text-[10px] font-black uppercase text-white/75">{t('Teachers')}</p><p className="text-2xl font-black">{getSubjectTeacherCount(selectedSubject)}</p></div>
+                <div className={`${statTileClass} from-emerald-500 to-teal-600`}><p className="text-[10px] font-black uppercase text-white/75">{t('Passing Marks')}</p><p className="text-2xl font-black">{selectedSubject.passing_marks}/{selectedSubject.total_marks}</p></div>
+              </div>
+              <div className="overflow-hidden rounded-lg border">
+                <Table>
+                  <TableHeader><TableRow><TableHead>{t('Group')}</TableHead><TableHead>{t('Teacher')}</TableHead><TableHead>{t('Level')}</TableHead></TableRow></TableHeader>
+                  <TableBody>
+                    {selectedSubject.assignments.length ? selectedSubject.assignments.map((assignment: any) => {
+                      const cls = classes.find((item) => Number(item.class_id || item.id) === Number(assignment.class_id));
+                      return <TableRow key={assignment.class_id}><TableCell className="font-semibold">{cls?.class_name || `#${assignment.class_id}`}</TableCell><TableCell>{teacherLabelMap.get(Number(assignment.teacher_id || cls?.teacher_id || 0)) || t('Unassigned')}</TableCell><TableCell>{cls?.level ?? '-'}</TableCell></TableRow>;
+                    }) : <TableRow><TableCell colSpan={3} className="py-8 text-center text-muted-foreground">{t('No groups assigned')}</TableCell></TableRow>}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-w-lg">

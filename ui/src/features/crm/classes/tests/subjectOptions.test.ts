@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildAssignableSubjectOptions, getClassSubjectLabel, hasPersistedClassSubject } from '../subjectOptions';
+import { buildAssignableSubjectOptions, buildClassSubjectAssignment, getClassSubjectLabel, hasPersistedClassSubject } from '../subjectOptions';
 
 describe('buildAssignableSubjectOptions', () => {
   it('includes subjects even when they are already assigned to a group', () => {
@@ -33,5 +33,22 @@ describe('getClassSubjectLabel', () => {
 
   it('uses a clear fallback when no subject is assigned', () => {
     expect(getClassSubjectLabel({})).toBe('No subject assigned');
+  });
+});
+
+describe('buildClassSubjectAssignment', () => {
+  it('creates a reusable subject assignment for the selected group', () => {
+    expect(buildClassSubjectAssignment(
+      { center_id: 1, subject_name: 'English', subject_code: 'ENG', total_marks: 100, passing_marks: 40 },
+      { class_id: 48, center_id: 1, teacher_id: 21 },
+    )).toEqual({
+      center_id: 1,
+      class_id: 48,
+      subject_name: 'English',
+      subject_code: 'ENG',
+      teacher_id: 21,
+      total_marks: 100,
+      passing_marks: 40,
+    });
   });
 });
