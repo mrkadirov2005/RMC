@@ -195,7 +195,7 @@ CREATE UNIQUE INDEX uniq_student_coin_source
 CREATE TABLE subjects (
     subject_id SERIAL PRIMARY KEY,
     center_id INT NOT NULL,
-    class_id INT NOT NULL,
+    class_id INT,
     subject_name VARCHAR(100) NOT NULL,
     subject_code VARCHAR(50),
     teacher_id INT,
