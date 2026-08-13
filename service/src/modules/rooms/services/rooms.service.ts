@@ -44,7 +44,9 @@ const createRoom = async (data: any) => {
   if (timeWindow.error) return { error: timeWindow.error };
   const conflict = await roomsRepository.findConflict(center_id, room_number, day, timeWindow.start, timeWindow.end);
   if (conflict) return { error: 'room_unavailable' as const, conflict };
-  return roomsRepository.insert([center_id, room_number, class_id || null, day, timeWindow.start, timeWindow.end]);
+  const row = await roomsRepository.insert([center_id, room_number, class_id || null, day, timeWindow.start, timeWindow.end]);
+  if (class_id) await roomsRepository.setClassRoomNumber(Number(class_id), Number(center_id), room_number);
+  return row;
 };
 
 const updateRoom = async (id: number, data: any, centerId: number) => {
@@ -53,7 +55,9 @@ const updateRoom = async (id: number, data: any, centerId: number) => {
   if (timeWindow.error) return { error: timeWindow.error };
   const conflict = await roomsRepository.findConflict(centerId, room_number, day, timeWindow.start, timeWindow.end, Number(id));
   if (conflict) return { error: 'room_unavailable' as const, conflict };
-  return roomsRepository.update(id, [room_number, class_id || null, day, timeWindow.start, timeWindow.end], centerId);
+  const row = await roomsRepository.update(id, [room_number, class_id || null, day, timeWindow.start, timeWindow.end], centerId);
+  if (row && class_id) await roomsRepository.setClassRoomNumber(Number(class_id), Number(centerId), room_number);
+  return row;
 };
 
 const deleteRoom = async (id: number, centerId: number) => {

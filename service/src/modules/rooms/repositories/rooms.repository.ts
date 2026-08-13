@@ -126,7 +126,14 @@ const findConflict = (centerId: number, roomNumber: string, day: string, startTi
     .then((rows: any[]) => rows[0] || null);
 };
 
-module.exports = { findAll, findById, insert, update, remove, findByClassId, findConflict };
+const setClassRoomNumber = (classId: number, centerId: number, roomNumber: string) =>
+  db.update(classes)
+    .set({ roomNumber, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(eq(classes.classId, classId), eq(classes.centerId, centerId)))
+    .returning({ classId: classes.classId, roomNumber: classes.roomNumber })
+    .then((rows: any[]) => rows[0] || null);
+
+module.exports = { findAll, findById, insert, update, remove, findByClassId, findConflict, setClassRoomNumber };
 
 
 export {};

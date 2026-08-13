@@ -1,5 +1,5 @@
 jest.mock('../../repositories/rooms.repository', () => ({
-  findAll: jest.fn(), findById: jest.fn(), findConflict: jest.fn(), insert: jest.fn(), update: jest.fn(), remove: jest.fn(),
+  findAll: jest.fn(), findById: jest.fn(), findConflict: jest.fn(), insert: jest.fn(), update: jest.fn(), remove: jest.fn(), setClassRoomNumber: jest.fn(),
 }));
 
 const repository = require('../../repositories/rooms.repository');
@@ -27,9 +27,11 @@ describe('rooms service', () => {
 
   test('defaults room duration to one hour and inserts an available window', async () => {
     repository.findConflict.mockResolvedValue(null);
+    repository.insert.mockResolvedValue({ room_id: 1, class_id: 7 });
     await service.createRoom({ center_id: 2, room_number: 'A', class_id: 7, day: 'Monday', time: '09:15' });
     expect(repository.findConflict).toHaveBeenCalledWith(2, 'A', 'Monday', '09:15', '10:15');
     expect(repository.insert).toHaveBeenCalledWith([2, 'A', 7, 'Monday', '09:15', '10:15']);
+    expect(repository.setClassRoomNumber).toHaveBeenCalledWith(7, 2, 'A');
   });
 
   test('returns the conflicting room without inserting', async () => {
@@ -45,5 +47,12 @@ describe('rooms service', () => {
     await service.updateRoom(8, { room_number: 'A', day: 'Monday', time: '09:00', end_time: '10:00' }, 2);
     expect(repository.findConflict).toHaveBeenCalledWith(2, 'A', 'Monday', '09:00', '10:00', 8);
     expect(repository.update).toHaveBeenCalledWith(8, ['A', null, 'Monday', '09:00', '10:00'], 2);
+  });
+
+  test('saves an updated room assignment into the classes room_number field', async () => {
+    repository.findConflict.mockResolvedValue(null);
+    repository.update.mockResolvedValue({ room_id: 8, class_id: 7 });
+    await service.updateRoom(8, { room_number: 'Room 2', class_id: 7, day: 'Friday', time: '10:00', end_time: '11:00' }, 2);
+    expect(repository.setClassRoomNumber).toHaveBeenCalledWith(7, 2, 'Room 2');
   });
 });
