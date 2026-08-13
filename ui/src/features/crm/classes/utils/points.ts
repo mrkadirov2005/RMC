@@ -1,9 +1,9 @@
 export const getPointTone = (points: number | null) => {
-  if (points === null) return { label: 'Missing', className: 'bg-rose-50 text-rose-800 border-rose-200', icon: '!' };
-  if (points === 0) return { label: 'Zero', className: 'bg-slate-50 text-slate-700 border-slate-200', icon: '0' };
-  if (points < 50) return { label: 'Low', className: 'bg-amber-50 text-amber-800 border-amber-200', icon: '-' };
-  if (points < 80) return { label: 'Good', className: 'bg-sky-50 text-sky-800 border-sky-200', icon: '+' };
-  return { label: 'Strong', className: 'bg-emerald-50 text-emerald-800 border-emerald-200', icon: '✓' };
+  if (points === null) return { label: 'Missing', className: 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-700', icon: '!' };
+  if (points === 0) return { label: 'Zero', className: 'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-600', icon: '0' };
+  if (points < 50) return { label: 'Low', className: 'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-700', icon: '-' };
+  if (points < 80) return { label: 'Good', className: 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-700', icon: '+' };
+  return { label: 'Strong', className: 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-700', icon: '✓' };
 };
 
 export type LessonPointRecord = {

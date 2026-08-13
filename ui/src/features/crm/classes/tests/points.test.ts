@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCombinedLessonPoints } from '../utils/points';
+import { getCombinedLessonPoints, getPointTone } from '../utils/points';
 
 describe('getCombinedLessonPoints', () => {
   it('adds attendance, homework, activity, and manual points', () => {
@@ -19,5 +19,12 @@ describe('getCombinedLessonPoints', () => {
     expect(getCombinedLessonPoints({})).toBeNull();
     expect(getCombinedLessonPoints(null)).toBeNull();
     expect(getCombinedLessonPoints({ points_score: 0 })).toBe(0);
+  });
+});
+
+describe('getPointTone', () => {
+  it('provides dark-mode contrast for missing and recorded scores', () => {
+    expect(getPointTone(null).className).toContain('dark:text-rose-300');
+    expect(getPointTone(100).className).toContain('dark:text-emerald-300');
   });
 });

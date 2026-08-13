@@ -90,6 +90,20 @@ tbody[data-list-body='true'] > tr {
   border-bottom: 1px solid #cbd5e1;
 }
 
+.dark tbody[data-list-body='true'] > tr:nth-child(odd),
+.dark [data-alternating-list='true'] > [data-list-row='true']:nth-child(odd) {
+  background-color: #111827 !important;
+}
+
+.dark tbody[data-list-body='true'] > tr:nth-child(even),
+.dark [data-alternating-list='true'] > [data-list-row='true']:nth-child(even) {
+  background-color: #1e293b !important;
+}
+
+.dark tbody[data-list-body='true'] > tr {
+  border-bottom-color: #334155;
+}
+
 @layer base {
   * {
     border-color: hsl(var(--border));
@@ -174,6 +188,16 @@ tbody[data-list-body='true'] > tr {
     background: var(--owner-tertiary-card, #eff6ff) !important;
     border-color: color-mix(in srgb, var(--owner-primary-card, #2563eb) 25%, white) !important;
     color: var(--owner-tertiary-text, #111827) !important;
+  }
+  .dark [data-class-detail-header='true'] {
+    background: hsl(var(--card)) !important;
+    border-color: hsl(var(--border)) !important;
+    color: hsl(var(--card-foreground)) !important;
+  }
+  .dark [data-class-detail-schedule='true'] {
+    background: hsl(var(--muted)) !important;
+    color: hsl(var(--foreground)) !important;
+    border: 1px solid hsl(var(--border));
   }
   .animate-fade-in {
     animation: fade-in 0.5s ease-out both;

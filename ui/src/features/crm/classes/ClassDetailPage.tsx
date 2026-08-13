@@ -16,7 +16,7 @@ import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
 import { ClassMonthlyPointsView } from './components/ClassMonthlyPointsView';
-import { CLASS_OVERVIEW_FIELDS, DEFAULT_CLASS_DETAIL_TAB } from './classDetailOverview';
+import { CLASS_DETAIL_TAB_THEME_CLASS, CLASS_OVERVIEW_FIELDS, DEFAULT_CLASS_DETAIL_TAB } from './classDetailOverview';
 import { getListRowBackground } from '../settings/listAppearance';
 import { useClassDetailData } from './hooks/useClassDetailData';
 import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
@@ -169,7 +169,7 @@ const ClassDetailPage = () => {
 
   return (
     <div className="owner-palette-scope min-h-full space-y-4 bg-slate-50 p-4 dark:bg-background">
-      <div className="owner-tertiary-card rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-border dark:bg-card">
+      <div data-class-detail-header="true" className="owner-tertiary-card rounded-lg border border-slate-200 bg-white p-3 shadow-sm dark:border-border dark:bg-card">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex min-w-0 items-center gap-3">
             <Button
@@ -182,7 +182,7 @@ const ClassDetailPage = () => {
               Back
             </Button>
               <h1 className="truncate text-xl font-bold text-slate-950 dark:text-card-foreground">{className}</h1>
-                <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
+                <span data-class-detail-schedule="true" className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
           </div>
           <Button
             onClick={() => setLessonPickerOpen(true)}
@@ -241,12 +241,12 @@ const ClassDetailPage = () => {
 
       <Tabs defaultValue={DEFAULT_CLASS_DETAIL_TAB} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
-          <TabsTrigger value="overview" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Overview</TabsTrigger>
-          <TabsTrigger value="students" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white">Students</TabsTrigger>
-          <TabsTrigger value="subjects" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white">Subjects</TabsTrigger>
-          <TabsTrigger value="points" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white">Points</TabsTrigger>
-          <TabsTrigger value="tests" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white">Tests</TabsTrigger>
-          <TabsTrigger value="sessions" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white">Sessions</TabsTrigger>
+          <TabsTrigger value="overview" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Overview</TabsTrigger>
+          <TabsTrigger value="students" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Students</TabsTrigger>
+          <TabsTrigger value="subjects" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Subjects</TabsTrigger>
+          <TabsTrigger value="points" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Points</TabsTrigger>
+          <TabsTrigger value="tests" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Tests</TabsTrigger>
+          <TabsTrigger value="sessions" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Sessions</TabsTrigger>
         </TabsList>
 
         <div className="p-3">
@@ -255,10 +255,11 @@ const ClassDetailPage = () => {
               <div className="border-b bg-slate-50 px-3 py-2 dark:bg-muted/40">
                 <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">General information</h2>
               </div>
-              <dl className="divide-y divide-slate-200 text-sm dark:divide-border">
+              <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
                 {overviewItems.map((item, index) => (
                   <div
                     key={item.label}
+                    data-list-row="true"
                     className="grid min-h-9 grid-cols-[120px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[170px_minmax(0,1fr)]"
                     style={{ backgroundColor: getListRowBackground(index) }}
                   >
@@ -285,17 +286,17 @@ const ClassDetailPage = () => {
                 ) : studentRows.map((student, index) => {
                   const isTransferred = String(student.status || '').toLowerCase() === 'transferred';
                   return (
-                  <TableRow key={student.student_id || student.id} className={isTransferred ? 'bg-amber-50/60 text-muted-foreground dark:bg-amber-950/10' : 'hover:bg-sky-50/60'}>
+                  <TableRow key={student.student_id || student.id} className={isTransferred ? 'text-muted-foreground dark:text-slate-300' : 'text-slate-950 hover:bg-sky-50/60 dark:text-slate-100 dark:hover:bg-slate-700'}>
                     <TableCell className="py-2 font-semibold">
                       <div className="flex items-center gap-2">
-                        <div className={"text-black"}>
+                        <div className="text-slate-950 dark:text-slate-100">
                           {index+1}
                         </div>
                         <span>{student.first_name} {student.last_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={isTransferred ? 'bg-amber-500 text-black hover:bg-amber-500' : 'bg-emerald-600 text-black hover:bg-emerald-600'}>
+                      <Badge className={isTransferred ? 'bg-amber-500 text-black hover:bg-amber-500 dark:bg-amber-600 dark:text-white dark:hover:bg-amber-600' : 'bg-emerald-600 text-black hover:bg-emerald-600 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-700'}>
                         {isTransferred ? 'Transferred' : student.status || '-'}
                       </Badge>
                     </TableCell>

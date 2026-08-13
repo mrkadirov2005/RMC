@@ -47,50 +47,50 @@ export const ClassMonthlyPointsView = ({
   monthlyPointsBySessionStudent,
 }: ClassMonthlyPointsViewProps) => (
   <div className="space-y-3">
-    <div className="flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/60 p-3 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/60 p-3 dark:border-violet-900/60 dark:bg-violet-950/25 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white">
           <PencilLine className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-sm font-bold text-slate-950">Monthly points</p>
+          <p className="text-sm font-bold text-slate-950 dark:text-slate-100">Monthly points</p>
           <p className="text-xs text-muted-foreground">
             {monthLabel(pointsMonth || getMonthKey())} lessons from {scheduleDays.length ? scheduleDays.join(', ') : 'class settings'}
           </p>
         </div>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" className="h-9 w-9 bg-white" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), -1))}>
+        <Button variant="outline" size="icon" className="h-9 w-9 bg-white dark:bg-slate-900 dark:text-slate-100" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), -1))}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
         <Input
           type="month"
           value={pointsMonth}
           onChange={(event) => setPointsMonth(event.target.value)}
-          className="h-9 w-[160px] border-violet-200 bg-white text-sm font-semibold"
+          className="h-9 w-[160px] border-violet-200 bg-white text-sm font-semibold dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:[color-scheme:dark]"
         />
-        <Button variant="outline" size="icon" className="h-9 w-9 bg-white" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), 1))}>
+        <Button variant="outline" size="icon" className="h-9 w-9 bg-white dark:bg-slate-900 dark:text-slate-100" onClick={() => setPointsMonth((month) => shiftMonth(month || getMonthKey(), 1))}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
     </div>
 
     <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <p className="text-[11px] font-semibold text-muted-foreground">Lesson days</p>
-        <p className="text-base font-black text-slate-950">{monthlyLessonDays.length}</p>
+        <p className="text-base font-black text-slate-950 dark:text-slate-100">{monthlyLessonDays.length}</p>
       </div>
-      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <p className="text-[11px] font-semibold text-muted-foreground">Filled</p>
-        <p className="text-base font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
+        <p className="text-base font-black text-emerald-700 dark:text-emerald-400">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
       </div>
-      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <p className="text-[11px] font-semibold text-muted-foreground">Missing</p>
-        <p className="text-base font-black text-rose-700">{monthlyPointStats.missing}</p>
+        <p className="text-base font-black text-rose-700 dark:text-rose-400">{monthlyPointStats.missing}</p>
       </div>
-      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+      <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <p className="text-[11px] font-semibold text-muted-foreground">Average</p>
-        <p className="text-base font-black text-violet-700">{monthlyPointStats.average}</p>
+        <p className="text-base font-black text-violet-700 dark:text-violet-400">{monthlyPointStats.average}</p>
       </div>
     </div>
 
@@ -103,13 +103,13 @@ export const ClassMonthlyPointsView = ({
         No scheduled lesson days found for this month.
       </div>
     ) : (
-      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
         <Table className="text-xs">
-          <TableHeader className="bg-slate-50/95">
+          <TableHeader className="bg-slate-50/95 dark:bg-slate-900">
             <TableRow>
-              <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] bg-slate-50 px-2 text-[11px] font-bold uppercase tracking-wide">Student</TableHead>
+              <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] bg-slate-50 px-2 text-[11px] font-bold uppercase tracking-wide dark:bg-slate-900 dark:text-slate-300">Student</TableHead>
               {monthlyLessonDays.map((day) => (
-                <TableHead key={day.dateKey} className="h-9 min-w-[70px] px-1 text-center">
+                <TableHead key={day.dateKey} className="h-9 min-w-[70px] px-1 text-center dark:text-slate-300">
                   <div className="flex items-center justify-center gap-1 leading-none">
                     <span className="text-xs font-black">{day.day}</span>
                     <span className="text-[9px] font-bold uppercase text-muted-foreground">{day.dayName.slice(0, 2)}</span>
@@ -117,7 +117,7 @@ export const ClassMonthlyPointsView = ({
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide">Total</TableHead>
+              <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide dark:text-slate-300">Total</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -131,9 +131,9 @@ export const ClassMonthlyPointsView = ({
               let studentFilled = 0;
               return (
                 <TableRow key={studentId || index} className="group h-9">
-                  <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold group-hover:bg-violet-50/40">
+                  <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold text-slate-950 group-hover:bg-violet-50/40 dark:text-slate-100 dark:group-hover:bg-slate-700">
                     <div className="flex min-w-0 items-center gap-1.5">
-                      <div className={"text-black"}>
+                      <div className="text-slate-950 dark:text-slate-100">
                        {index+1}
                       </div>
                       <span className="max-w-[128px] truncate text-[11px]">{student.last_name} {student.first_name} </span>
@@ -158,7 +158,7 @@ export const ClassMonthlyPointsView = ({
                     );
                   })}
                   <TableCell className="px-1 py-1 text-center">
-                    <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-violet-100 px-1.5 text-[11px] font-black text-violet-800">
+                    <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-violet-100 px-1.5 text-[11px] font-black text-violet-800 dark:bg-violet-950/70 dark:text-violet-300">
                       {studentFilled ? studentTotal : '-'}
                     </span>
                   </TableCell>
