@@ -141,14 +141,13 @@ const StudentsPage = () => {
       throw error;
     }
   };
-  const handleBulkDeleteStudents = async (ids: number[]) => {
+  const handleBulkDeleteStudents = async (ids: number[], reasonId: number) => {
     if (ids.length === 0) return;
-    if (!window.confirm(`Delete ${ids.length} selected student${ids.length === 1 ? '' : 's'}?`)) return;
 
     let failed = 0;
     for (const id of ids) {
       try {
-        await studentsApi.deleteStudent(id);
+        await studentsApi.deleteStudent(id, reasonId);
       } catch {
         failed += 1;
       }
@@ -160,7 +159,7 @@ const StudentsPage = () => {
       showToast.success(`Deleted ${ids.length} student${ids.length === 1 ? '' : 's'}.`);
     }
   };
-  const handleTransferStudent = async (student: Student, targetClassId: number) => {
+  const handleTransferStudent = async (student: Student, targetClassId: number, reasonId: number) => {
     const id = student.student_id || student.id;
     if (!id) {
       showToast.error('Student ID is missing.');
@@ -168,7 +167,7 @@ const StudentsPage = () => {
     }
 
     try {
-      await studentsApi.transferStudent(id, targetClassId);
+      await studentsApi.transferStudent(id, targetClassId, reasonId);
       showToast.success('Student transferred successfully.');
       await refreshStudents();
     } catch (error: any) {

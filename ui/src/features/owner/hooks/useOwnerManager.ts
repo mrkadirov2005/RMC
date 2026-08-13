@@ -104,6 +104,7 @@ export const useOwnerManager = () => {
   });
   const [overviewLoading, setOverviewLoading] = useState(false);
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
+  const [pendingStudentDelete, setPendingStudentDelete] = useState<{ id: number; hard: boolean } | null>(null);
 
   const needsCenterScope = activeTab === 'superusers' || activeTab === 'students';
 
@@ -484,8 +485,12 @@ export const useOwnerManager = () => {
   }, [activeTab, dispatch, editingId, fetchData, fetchOverview, formData]);
 
 // Memoizes the handle delete callback.
-  const handleDelete = useCallback(async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this record?')) return;
+  const handleDelete = useCallback(async (id: number, studentReasonId?: number) => {
+    if (activeTab === 'students' && !studentReasonId) {
+      setPendingStudentDelete({ id, hard: false });
+      return;
+    }
+    if (activeTab !== 'students' && !window.confirm('Are you sure you want to delete this record?')) return;
 
     dispatch(setOwnerManagerLoading(true));
     try {
@@ -503,7 +508,7 @@ export const useOwnerManager = () => {
           await ownerManagerApi.teachers.delete(id);
           break;
         case 'students':
-          await ownerManagerApi.students.delete(id);
+          await ownerManagerApi.students.delete(id, Number(studentReasonId));
           break;
       }
       showToast.success('Record deleted successfully.');
@@ -518,12 +523,16 @@ export const useOwnerManager = () => {
   }, [activeTab, dispatch, fetchData, fetchOverview]);
 
 // Memoizes the handle hard delete callback.
-  const handleHardDelete = useCallback(async (id: number) => {
+  const handleHardDelete = useCallback(async (id: number, studentReasonId?: number) => {
     if (!canHardDelete) {
       showToast.error('Permanent delete is restricted to owner muzaffar.');
       return;
     }
-    if (!window.confirm('Permanently delete this record? This cannot be undone.')) return;
+    if (activeTab === 'students' && !studentReasonId) {
+      setPendingStudentDelete({ id, hard: true });
+      return;
+    }
+    if (activeTab !== 'students' && !window.confirm('Permanently delete this record? This cannot be undone.')) return;
 
     dispatch(setOwnerManagerLoading(true));
     try {
@@ -533,7 +542,7 @@ export const useOwnerManager = () => {
           await ownerManagerApi.teachers.purge(id);
           break;
         case 'students':
-          await ownerManagerApi.students.delete(id);
+          await ownerManagerApi.students.delete(id, Number(studentReasonId));
           await ownerManagerApi.students.purge(id);
           break;
         default:
@@ -550,6 +559,15 @@ export const useOwnerManager = () => {
       dispatch(setOwnerManagerLoading(false));
     }
   }, [activeTab, canHardDelete, dispatch, fetchData, fetchOverview]);
+
+// Memoizes the confirm student delete callback.
+  const confirmStudentDelete = useCallback(async (reasonId: number) => {
+    if (!pendingStudentDelete) return;
+    const { id, hard } = pendingStudentDelete;
+    setPendingStudentDelete(null);
+    if (hard) await handleHardDelete(id, reasonId);
+    else await handleDelete(id, reasonId);
+  }, [handleDelete, handleHardDelete, pendingStudentDelete]);
 
 // Memoizes the handle reset password callback.
   const handleResetPassword = useCallback(async (item: any) => {
@@ -652,6 +670,9 @@ export const useOwnerManager = () => {
     handleSubmit,
     handleDelete,
     handleHardDelete,
+    pendingStudentDelete,
+    setPendingStudentDelete,
+    confirmStudentDelete,
     handleEdit,
     handleResetPassword,
     handlePermissionToggle,

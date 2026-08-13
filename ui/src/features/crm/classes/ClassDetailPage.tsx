@@ -23,6 +23,7 @@ import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
 import { toDateKey } from './utils/date';
 import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 import { studentsApi } from '../students/api/studentsApi';
+import { DeleteStudentDialog } from '../students/components/DeleteStudentDialog';
 import { getClassStudentId, removeClassStudentById } from './classStudentActions';
 
 type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
@@ -46,6 +47,7 @@ const ClassDetailPage = () => {
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
   const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null);
+  const [deleteStudentTarget, setDeleteStudentTarget] = useState<(typeof students)[number] | null>(null);
 
   const schedule = useMemo(() => parseSchedule(classData?.section), [classData?.section]);
   const className = classData?.class_name || 'Class';
@@ -112,18 +114,16 @@ const ClassDetailPage = () => {
     navigate(`/students/${studentId}/edit`);
   };
 
-  const handleDeleteStudent = async (student: (typeof students)[number]) => {
-    const studentId = getClassStudentId(student);
+  const handleDeleteStudent = async (reasonId: number) => {
+    const studentId = deleteStudentTarget ? getClassStudentId(deleteStudentTarget) : 0;
     if (!studentId) {
       showToast.error('Student ID is missing.');
       return;
     }
-    const studentName = [student.first_name, student.last_name].filter(Boolean).join(' ') || 'this student';
-    if (!window.confirm(`Delete ${studentName}?`)) return;
 
     setDeletingStudentId(studentId);
     try {
-      await studentsApi.deleteStudent(studentId);
+      await studentsApi.deleteStudent(studentId, reasonId);
       setStudents((current) => removeClassStudentById(current, studentId));
       showToast.success('Student deleted successfully.');
     } catch (deleteError: any) {
@@ -271,6 +271,13 @@ const ClassDetailPage = () => {
         </DialogContent>
       </Dialog>
 
+      <DeleteStudentDialog
+        open={deleteStudentTarget != null}
+        title="Delete student"
+        description={`Pick why ${[deleteStudentTarget?.first_name, deleteStudentTarget?.last_name].filter(Boolean).join(' ') || 'this student'} is being removed.`}
+        onOpenChange={(open) => (!open ? setDeleteStudentTarget(null) : undefined)}
+        onConfirm={handleDeleteStudent}
+      />
 
       <Tabs defaultValue={DEFAULT_CLASS_DETAIL_TAB} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
@@ -353,7 +360,7 @@ const ClassDetailPage = () => {
                           variant="outline"
                           size="sm"
                           className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40"
-                          onClick={() => handleDeleteStudent(student)}
+                          onClick={() => setDeleteStudentTarget(student)}
                           disabled={deletingStudentId === getClassStudentId(student)}
                           aria-label={`Delete ${student.first_name || ''} ${student.last_name || ''}`.trim()}
                         >

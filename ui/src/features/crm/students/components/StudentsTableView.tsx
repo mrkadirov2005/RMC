@@ -18,6 +18,8 @@ import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
 import { formatGroupLabel } from '@/shared/groupLabel';
 import { getStatusVariant, isTransferredStudentStatus } from '../status';
+import { ActionReasonPicker, isReasonReady, resolveReasonId } from './ActionReasonPicker';
+import { DeleteStudentDialog } from './DeleteStudentDialog';
 
 type TeacherOption = {
   id?: string | number;
@@ -31,9 +33,9 @@ interface Props {
   hasActiveFilters: boolean;
   onView: (id: number) => void;
   onEdit: (student: Student) => void;
-  onDelete: (id: number) => void;
-  onTransfer?: (student: Student, targetClassId: number) => Promise<void> | void;
-  onBulkDelete?: (ids: number[]) => Promise<void> | void;
+  onDelete: (id: number, reasonId: number) => void;
+  onTransfer?: (student: Student, targetClassId: number, reasonId: number) => Promise<void> | void;
+  onBulkDelete?: (ids: number[], reasonId: number) => Promise<void> | void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
   onCoinsUpdated?: () => void;
   classOptions?: Class[];
@@ -126,7 +128,10 @@ export const StudentsTableView = ({
   const [bulkTransferOpen, setBulkTransferOpen] = useState(false);
   const [targetTeacherId, setTargetTeacherId] = useState('');
   const [targetClassId, setTargetClassId] = useState('');
+  const [transferReasonId, setTransferReasonId] = useState('');
+  const [transferCustomReason, setTransferCustomReason] = useState('');
   const [transferring, setTransferring] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ ids: number[]; bulk: boolean } | null>(null);
 
   const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
   const getClassTeacherId = (student: Student) => {
@@ -143,11 +148,21 @@ export const StudentsTableView = ({
     toggleAllVisible,
     clear: clearSelection,
   } = useListSelection(students, getStudentId);
-  const deleteSelected = async () => {
+  const deleteSelected = () => {
     const ids = Array.from(selectedIds);
     if (ids.length === 0 || !onBulkDelete) return;
-    await onBulkDelete(ids);
-    clearSelection();
+    setDeleteTarget({ ids, bulk: true });
+  };
+
+  const confirmDelete = async (reasonId: number) => {
+    if (!deleteTarget) return;
+    if (deleteTarget.bulk) {
+      await onBulkDelete?.(deleteTarget.ids, reasonId);
+      clearSelection();
+    } else {
+      await onDelete(deleteTarget.ids[0], reasonId);
+    }
+    setDeleteTarget(null);
   };
 
 // Opens coins.
@@ -156,44 +171,49 @@ export const StudentsTableView = ({
     setCoinDialogOpen(true);
   };
 
-  const openTransfer = (student: Student) => {
-    setTransferStudent(student);
+  const resetTransfer = () => {
     setTargetTeacherId('');
     setTargetClassId('');
+    setTransferReasonId('');
+    setTransferCustomReason('');
+  };
+
+  const openTransfer = (student: Student) => {
+    setTransferStudent(student);
+    resetTransfer();
   };
 
   const openBulkTransfer = () => {
     if (selectedIds.size === 0) return;
     setTransferStudent(null);
     setBulkTransferOpen(true);
-    setTargetTeacherId('');
-    setTargetClassId('');
+    resetTransfer();
   };
 
   const closeTransfer = () => {
     if (transferring) return;
     setTransferStudent(null);
     setBulkTransferOpen(false);
-    setTargetTeacherId('');
-    setTargetClassId('');
+    resetTransfer();
   };
 
   const submitTransfer = async () => {
     const nextClassId = Number(targetClassId);
     if ((!transferStudent && !bulkTransferOpen) || !nextClassId || !onTransfer) return;
+    if (!isReasonReady(transferReasonId, transferCustomReason)) return;
     setTransferring(true);
     try {
+      const reasonId = await resolveReasonId('transfer', transferReasonId, transferCustomReason);
       if (bulkTransferOpen) {
         const selectedStudents = students.filter((student) => selectedIds.has(getStudentId(student)));
-        for (const student of selectedStudents) await onTransfer(student, nextClassId);
+        for (const student of selectedStudents) await onTransfer(student, nextClassId, reasonId);
         clearSelection();
       } else if (transferStudent) {
-        await onTransfer(transferStudent, nextClassId);
+        await onTransfer(transferStudent, nextClassId, reasonId);
       }
       setTransferStudent(null);
       setBulkTransferOpen(false);
-      setTargetTeacherId('');
-      setTargetClassId('');
+      resetTransfer();
     } finally {
       setTransferring(false);
     }
@@ -289,7 +309,7 @@ export const StudentsTableView = ({
             Transfer
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem className="text-rose-600 focus:text-rose-700" onClick={() => onDelete(student.student_id || student.id || 0)}>
+        <DropdownMenuItem className="text-rose-600 focus:text-rose-700" onClick={() => setDeleteTarget({ ids: [student.student_id || student.id || 0], bulk: false })}>
           <Trash2 className={actionIconClass} />
           Delete
         </DropdownMenuItem>
@@ -370,18 +390,34 @@ export const StudentsTableView = ({
                 </SelectContent>
               </Select>
             </div>
+            <ActionReasonPicker
+              reasonType="transfer"
+              open={transferStudent != null || bulkTransferOpen}
+              value={transferReasonId}
+              customValue={transferCustomReason}
+              onChange={setTransferReasonId}
+              onCustomChange={setTransferCustomReason}
+              disabled={transferring}
+            />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeTransfer} disabled={transferring}>
               Cancel
             </Button>
-            <Button type="button" onClick={submitTransfer} disabled={transferring || !targetClassId}>
+            <Button type="button" onClick={submitTransfer} disabled={transferring || !targetClassId || !isReasonReady(transferReasonId, transferCustomReason)}>
               <ArrowRightLeft className="mr-2 h-4 w-4" />
               {transferring ? 'Transferring...' : 'Transfer'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <DeleteStudentDialog
+        open={deleteTarget != null}
+        title={deleteTarget?.bulk ? `Delete ${deleteTarget.ids.length} students` : 'Delete student'}
+        description={deleteTarget?.bulk ? 'Pick why these students are being removed. This applies to every selected student.' : 'Pick why this student is being removed.'}
+        onOpenChange={(open) => (!open ? setDeleteTarget(null) : undefined)}
+        onConfirm={confirmDelete}
+      />
     </>
   );
 

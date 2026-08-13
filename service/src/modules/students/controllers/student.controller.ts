@@ -17,6 +17,24 @@ const createAcquisitionSource = async (req: any, res: any) => {
   } catch (error: any) { res.status(500).json({ error: 'Failed to create acquisition source', details: error.message }); }
 };
 
+const getActionReasons = async (req: any, res: any) => {
+  try {
+    const reasonType = String(req.query?.type || '').trim();
+    if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: 'type must be transfer or delete' });
+    res.json(await studentService.listActionReasons(reasonType));
+  } catch (error: any) { res.status(500).json({ error: 'Failed to fetch action reasons', details: error.message }); }
+};
+
+const createActionReason = async (req: any, res: any) => {
+  try {
+    const reasonType = String(req.body?.reason_type || '').trim();
+    const name = String(req.body?.reason_name || '').trim();
+    if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: 'reason_type must be transfer or delete' });
+    if (!name) return res.status(400).json({ error: 'reason_name is required' });
+    res.status(201).json(await studentService.createActionReason(reasonType, name));
+  } catch (error: any) { res.status(500).json({ error: 'Failed to create action reason', details: error.message }); }
+};
+
 const getAllStudents = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -156,7 +174,7 @@ const deleteStudent = async (req: any, res: any) => {
     if (req.user?.userType === 'student') {
       return res.status(403).json({ error: 'Access denied.' });
     }
-    const row = await studentService.deleteStudent(Number(req.params.id), centerId ?? undefined, teacherId);
+    const row = await studentService.deleteStudent(Number(req.params.id), Number(req.body.reason_id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Student not found' });
     res.json({ message: 'Student deleted successfully', student: row });
   } catch (error: any) {
@@ -205,6 +223,7 @@ const transferStudent = async (req: any, res: any) => {
     const result = await studentService.transferStudent(
       Number(req.params.id),
       Number(req.body.target_class_id),
+      Number(req.body.reason_id),
       centerId ?? undefined,
       teacherId
     );
@@ -305,6 +324,8 @@ const changeStudentPassword = async (req: any, res: any) => {
 module.exports = {
   getAcquisitionSources,
   createAcquisitionSource,
+  getActionReasons,
+  createActionReason,
   getAllStudents,
   getStudentById,
   getDeletedStudents,

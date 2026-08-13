@@ -7,6 +7,7 @@ import { OwnerManagerTable } from './components/OwnerManagerTable';
 import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerOverviewPanel } from './components/OwnerOverviewPanel';
 import { OwnerWelcomeHero } from './components/OwnerWelcomeHero';
+import { DeleteStudentDialog } from '../crm/students/components/DeleteStudentDialog';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
@@ -49,6 +50,14 @@ const OwnerManager = memo(() => {
           onHardDelete={vm.handleHardDelete}
           onResetPassword={vm.handleResetPassword}
           canHardDelete={vm.canHardDelete}
+        />
+
+        <DeleteStudentDialog
+          open={vm.pendingStudentDelete != null}
+          title={vm.pendingStudentDelete?.hard ? 'Permanently delete student' : 'Delete student'}
+          description={vm.pendingStudentDelete?.hard ? 'Pick why this student is being removed. This cannot be undone.' : 'Pick why this student is being removed.'}
+          onOpenChange={(open) => (!open ? vm.setPendingStudentDelete(null) : undefined)}
+          onConfirm={vm.confirmStudentDelete}
         />
 
         {vm.activeTab !== 'statistics' && vm.activeTab !== 'finance' && (

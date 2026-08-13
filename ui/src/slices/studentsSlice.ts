@@ -167,9 +167,9 @@ export const updateStudent = createAsyncThunk(
 
 export const deleteStudent = createAsyncThunk(
   'students/delete',
-  async (id: number, { dispatch, rejectWithValue }) => {
+  async ({ id, reasonId }: { id: number; reasonId: number }, { dispatch, rejectWithValue }) => {
     try {
-      await studentAPI.delete(id);
+      await studentAPI.delete(id, reasonId);
       showToast.success('Student deleted successfully');
       dispatch(fetchStudentsForce());
       return true;

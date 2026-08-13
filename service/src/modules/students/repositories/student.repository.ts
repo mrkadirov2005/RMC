@@ -1,6 +1,6 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, ne, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
-const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, subjects, teachers } = require('../../../db/schema');
+const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, studentActionReasons, subjects, teachers } = require('../../../db/schema');
 
 const db = pool.db;
 
@@ -13,6 +13,19 @@ const listAcquisitionSources = () => db.select({
 const createAcquisitionSource = async (name: string) => {
   const code = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50) || `source_${Date.now()}`;
   const rows = await db.insert(studentAcquisitionSources).values({ sourceCode: code, sourceName: name.trim(), active: true }).onConflictDoUpdate({ target: studentAcquisitionSources.sourceCode, set: { sourceName: name.trim(), active: true } }).returning({ source_id: studentAcquisitionSources.sourceId, source_code: studentAcquisitionSources.sourceCode, source_name: studentAcquisitionSources.sourceName });
+  return rows[0];
+};
+
+const listActionReasons = (reasonType: string) => db.select({
+  reason_id: studentActionReasons.reasonId,
+  reason_type: studentActionReasons.reasonType,
+  reason_code: studentActionReasons.reasonCode,
+  reason_name: studentActionReasons.reasonName,
+}).from(studentActionReasons).where(and(eq(studentActionReasons.reasonType, reasonType), eq(studentActionReasons.active, true))).orderBy(asc(studentActionReasons.reasonName));
+
+const createActionReason = async (reasonType: string, name: string) => {
+  const code = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50) || `reason_${Date.now()}`;
+  const rows = await db.insert(studentActionReasons).values({ reasonType, reasonCode: code, reasonName: name.trim(), active: true }).onConflictDoUpdate({ target: [studentActionReasons.reasonType, studentActionReasons.reasonCode], set: { reasonName: name.trim(), active: true } }).returning({ reason_id: studentActionReasons.reasonId, reason_type: studentActionReasons.reasonType, reason_code: studentActionReasons.reasonCode, reason_name: studentActionReasons.reasonName });
   return rows[0];
 };
 
@@ -411,13 +424,13 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
   return rows[0] || null;
 };
 
-const remove = async (id: number, centerId?: number, teacherId?: number) => {
+const remove = async (id: number, reasonId: number, centerId?: number, teacherId?: number) => {
   const conditions = [eq(students.studentId, id), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId));
   const rows = await db
     .update(students)
-    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Removed', updatedAt: sql`CURRENT_TIMESTAMP` })
+    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Removed', deleteReasonId: reasonId, updatedAt: sql`CURRENT_TIMESTAMP` })
     .where(and(...conditions))
     .returning(studentSelection);
   return rows[0] || null;
@@ -431,7 +444,7 @@ const purge = async (id: number, centerId?: number, teacherId?: number) => {
   return rows[0] || null;
 };
 
-const transferToClass = async (id: number, targetClassId: number, centerId?: number, teacherId?: number) =>
+const transferToClass = async (id: number, targetClassId: number, reasonId: number, centerId?: number, teacherId?: number) =>
   db.transaction(async (tx: any) => {
     const sourceConditions = [eq(students.studentId, id), isNull(students.deletedAt), ne(students.status, 'Transferred')];
     if (centerId) sourceConditions.push(eq(students.centerId, centerId));
@@ -467,7 +480,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
 
     const transferredRows = await tx
       .update(students)
-      .set({ status: 'Transferred', deletedAt: null, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .set({ status: 'Transferred', deletedAt: null, transferReasonId: reasonId, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(students.studentId, id))
       .returning(studentSelection);
 
@@ -654,6 +667,8 @@ const updatePasswordHash = async (id: number, password_hash: string) => {
 module.exports = {
   listAcquisitionSources,
   createAcquisitionSource,
+  listActionReasons,
+  createActionReason,
   findAllWithClass,
   findPaginatedWithClass,
   findByIdWithClass,

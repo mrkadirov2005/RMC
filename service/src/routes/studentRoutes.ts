@@ -9,6 +9,7 @@ const {
   CredentialsDto,
   ClassIdParamDto,
   CreateStudentDto,
+  DeleteStudentDto,
   IdParamDto,
   PasswordChangeDto,
   SetPasswordDto,
@@ -38,6 +39,8 @@ const {
 router_student.get('/', requireAuth, validateQuery(StudentListQueryDto), studentController.getAllStudents);
 router_student.get('/acquisition-sources', requireAuth, studentController.getAcquisitionSources);
 router_student.post('/acquisition-sources', requireAuth, requireRole('superuser'), studentController.createAcquisitionSource);
+router_student.get('/action-reasons', requireAuth, studentController.getActionReasons);
+router_student.post('/action-reasons', requireAuth, requireRole('superuser'), studentController.createActionReason);
 router_student.get('/deleted', requireAuth, requireMuzaffarHardDelete, studentController.getDeletedStudents);
 router_student.get('/class/:classId', requireAuth, validateParams(ClassIdParamDto), studentController.getClassStudentsWithTransfers);
 
@@ -125,7 +128,7 @@ router_student.put('/:id', requireAuth, validateParams(IdParamDto), validateBody
  *       404:
  *         description: Student not found
  */
-router_student.delete('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), studentController.deleteStudent);
+router_student.delete('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(DeleteStudentDto), studentController.deleteStudent);
 router_student.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, validateParams(IdParamDto), studentController.purgeStudent);
 router_student.post('/:id/transfer', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(TransferStudentDto), studentController.transferStudent);
 

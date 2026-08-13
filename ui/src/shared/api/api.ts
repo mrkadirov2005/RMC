@@ -204,6 +204,9 @@ apiClient.interceptors.response.use(
 export const studentAPI = {
   getAcquisitionSources: () => apiClient.get('/students/acquisition-sources'),
   createAcquisitionSource: (source_name: string) => apiClient.post('/students/acquisition-sources', { source_name }),
+  getActionReasons: (type: 'transfer' | 'delete') => apiClient.get('/students/action-reasons', { params: { type } }),
+  createActionReason: (reason_type: 'transfer' | 'delete', reason_name: string) =>
+    apiClient.post('/students/action-reasons', { reason_type, reason_name }),
   getAll: (params?: object, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students', {
       params,
@@ -218,8 +221,9 @@ export const studentAPI = {
     }),
   create: (data: any) => apiClient.post('/students', data),
   update: (id: number, data: any) => apiClient.put(`/students/${id}`, data),
-  transfer: (id: number, targetClassId: number) => apiClient.post(`/students/${id}/transfer`, { target_class_id: targetClassId }),
-  delete: (id: number) => apiClient.delete(`/students/${id}`),
+  transfer: (id: number, targetClassId: number, reasonId: number) =>
+    apiClient.post(`/students/${id}/transfer`, { target_class_id: targetClassId, reason_id: reasonId }),
+  delete: (id: number, reasonId: number) => apiClient.delete(`/students/${id}`, { data: { reason_id: reasonId } }),
   purge: (id: number) => apiClient.delete(`/students/${id}/purge`),
   setPassword: (id: number, data: { username: string; password: string }) =>
     apiClient.post(`/students/${id}/set-password`, data),

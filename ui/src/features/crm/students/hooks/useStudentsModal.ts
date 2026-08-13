@@ -53,16 +53,14 @@ export const useStudentsModal = (selectedClass: Class | null, refreshStudents?: 
     }
   };
 // Handles delete.
-  const handleDelete = async (id: number) => { 
-    if (window.confirm('Are you sure you want to delete this student?')) {
-      try {
-        await studentAPI.delete(id);
-        showToast.success('Student deleted successfully!');
-        refreshStudents?.();
-      } catch (error) {
-        showToast.error(handleApiError(error) || 'Error deleting student');
-      }
-    } 
+  const handleDelete = async (id: number, reasonId: number) => {
+    try {
+      await studentAPI.delete(id, reasonId);
+      showToast.success('Student deleted successfully!');
+      refreshStudents?.();
+    } catch (error) {
+      showToast.error(handleApiError(error) || 'Error deleting student');
+    }
   };
   return { isModalOpen, editingId, formData, setFormData, saving, handleOpenModal, handleCloseModal, handleSubmit, handleDelete };
 };

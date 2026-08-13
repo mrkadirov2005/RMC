@@ -314,6 +314,18 @@ class TransferStudentDto {
   @IsInt()
   @Min(1)
   target_class_id!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  reason_id!: number;
+}
+
+class DeleteStudentDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  reason_id!: number;
 }
 
 class StudentCoinTransactionDto {
@@ -336,6 +348,7 @@ module.exports = {
   CreateStudentDto,
   UpdateStudentDto,
   TransferStudentDto,
+  DeleteStudentDto,
   StudentCoinTransactionDto,
 };
 

@@ -95,14 +95,14 @@ const updateStudent = async (id: number, body: any, centerId?: number, teacherId
   return student;
 };
 
-const deleteStudent = (id: number, centerId?: number, teacherId?: number) =>
-  studentRepository.remove(id, centerId, teacherId);
+const deleteStudent = (id: number, reasonId: number, centerId?: number, teacherId?: number) =>
+  studentRepository.remove(id, reasonId, centerId, teacherId);
 
 const purgeStudent = (id: number, centerId?: number, teacherId?: number) =>
   studentRepository.purge(id, centerId, teacherId);
 
-const transferStudent = (id: number, targetClassId: number, centerId?: number, teacherId?: number) =>
-  studentRepository.transferToClass(id, targetClassId, centerId, teacherId);
+const transferStudent = (id: number, targetClassId: number, reasonId: number, centerId?: number, teacherId?: number) =>
+  studentRepository.transferToClass(id, targetClassId, reasonId, centerId, teacherId);
 
 const authenticate = async (username: string, password: string) => {
   const student = await studentRepository.findByUsername(username);
@@ -128,6 +128,8 @@ const changePassword = async (id: number, old_password: string, new_password: st
 module.exports = {
   listAcquisitionSources: () => studentRepository.listAcquisitionSources(),
   createAcquisitionSource: (name: string) => studentRepository.createAcquisitionSource(name),
+  listActionReasons: (reasonType: string) => studentRepository.listActionReasons(reasonType),
+  createActionReason: (reasonType: string, name: string) => studentRepository.createActionReason(reasonType, name),
   listStudents,
   listStudentsPaginated,
   getStudent,
