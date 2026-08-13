@@ -46,11 +46,17 @@ const getDatabaseTableRows = async (req: any, res: any) => {
     }));
   } catch (error: any) { res.status(error.statusCode || 500).json({ error: error.message || 'Failed to load table rows.' }); }
 };
+const createDatabaseTableRow = async (req: any, res: any) => { try { res.status(201).json(await systemService.createDatabaseTableRow(String(req.params.table || ''), req.body?.values)); } catch (error: any) { res.status(error.statusCode || 500).json({ error: error.message }); } };
+const updateDatabaseTableRow = async (req: any, res: any) => { try { res.json(await systemService.updateDatabaseTableRow(String(req.params.table || ''), req.body?.key, req.body?.values)); } catch (error: any) { res.status(error.statusCode || 500).json({ error: error.message }); } };
+const deleteDatabaseTableRow = async (req: any, res: any) => { try { res.json(await systemService.deleteDatabaseTableRow(String(req.params.table || ''), req.body?.key)); } catch (error: any) { res.status(error.statusCode || 500).json({ error: error.message }); } };
 
 module.exports = {
   getStats,
   getDatabaseTables,
   getDatabaseTableRows,
+  createDatabaseTableRow,
+  updateDatabaseTableRow,
+  deleteDatabaseTableRow,
   redeployServer,
   resetStudents: resetTable('students'),
   resetTeachers: resetTable('teachers'),

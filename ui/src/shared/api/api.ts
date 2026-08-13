@@ -529,6 +529,9 @@ export const systemAPI = {
   getDatabaseTables: () => apiClient.get('/system/database/tables'),
   getDatabaseTableRows: (table: string, params?: { limit?: number; offset?: number; q?: string }) =>
     apiClient.get(`/system/database/tables/${encodeURIComponent(table)}/rows`, { params }),
+  createDatabaseTableRow: (table: string, values: Record<string, unknown>) => apiClient.post(`/system/database/tables/${encodeURIComponent(table)}/rows`, { values }),
+  updateDatabaseTableRow: (table: string, key: Record<string, unknown>, values: Record<string, unknown>) => apiClient.patch(`/system/database/tables/${encodeURIComponent(table)}/rows`, { key, values }),
+  deleteDatabaseTableRow: (table: string, key: Record<string, unknown>) => apiClient.delete(`/system/database/tables/${encodeURIComponent(table)}/rows`, { data: { key } }),
   redeploy: (password: string) => apiClient.post('/system/redeploy', { password }),
   resetStudents: (confirmation: string) => apiClient.post('/system/dev/reset-students', { confirmation }),
   resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),

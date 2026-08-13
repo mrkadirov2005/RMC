@@ -33,10 +33,28 @@ describe('system service safety', () => {
   test('redacts sensitive columns and clamps pagination', async () => {
     query
       .mockResolvedValueOnce({ rowCount: 1, rows: [{ '?column?': 1 }] })
-      .mockResolvedValueOnce({ rows: [{ column_name: 'username' }, { column_name: 'password_hash' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ '?column?': 1 }] })
+      .mockResolvedValueOnce({ rows: [{ column_name: 'username', is_identity: 'NO', is_generated: 'NEVER' }, { column_name: 'password_hash', is_identity: 'NO', is_generated: 'NEVER' }] })
+      .mockResolvedValueOnce({ rows: [{ column_name: 'student_id' }] })
       .mockResolvedValueOnce({ rows: [{ count: 1 }] })
       .mockResolvedValueOnce({ rows: [{ username: 'a', password_hash: 'secret' }] });
     const result = await service.getDatabaseTableRows('students', { limit: 1000, offset: -5, query: 'a' });
     expect(result).toMatchObject({ limit: 100, offset: 0, rows: [{ username: 'a', password_hash: '[REDACTED]' }] });
+  });
+  test('updates rows with parameterized values and a verified primary key', async () => {
+    query
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{}] })
+      .mockResolvedValueOnce({ rows: [{ column_name: 'student_id', is_identity: 'YES', is_generated: 'NEVER' }, { column_name: 'first_name', is_identity: 'NO', is_generated: 'NEVER' }] })
+      .mockResolvedValueOnce({ rows: [{ column_name: 'student_id' }] })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ student_id: 7, first_name: 'Ali' }] });
+    await expect(service.updateDatabaseTableRow('students', { student_id: 7 }, { first_name: 'Ali' })).resolves.toEqual({ student_id: 7, first_name: 'Ali' });
+    expect(query.mock.calls[3]).toEqual([expect.stringContaining('UPDATE "students" SET "first_name" = $1 WHERE "student_id" = $2'), ['Ali', 7]]);
+  });
+  test('rejects attempts to write protected columns', async () => {
+    query
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{}] })
+      .mockResolvedValueOnce({ rows: [{ column_name: 'student_id', is_identity: 'YES', is_generated: 'NEVER' }, { column_name: 'password_hash', is_identity: 'NO', is_generated: 'NEVER' }] })
+      .mockResolvedValueOnce({ rows: [{ column_name: 'student_id' }] });
+    await expect(service.updateDatabaseTableRow('students', { student_id: 7 }, { password_hash: 'unsafe' })).rejects.toThrow('protected');
   });
 });

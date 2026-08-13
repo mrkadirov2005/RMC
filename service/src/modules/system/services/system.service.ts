@@ -193,17 +193,68 @@ const assertPublicTable = async (tableName: string) => {
   }
 };
 
+const getStudioTableMetadata = async (tableName: string) => {
+  await assertPublicTable(tableName);
+  const [columnsResult, keysResult] = await Promise.all([
+    pool.query(`SELECT column_name, data_type, is_nullable, column_default, is_identity, is_generated
+      FROM information_schema.columns WHERE table_schema='public' AND table_name=$1 ORDER BY ordinal_position`, [tableName]),
+    pool.query(`SELECT kcu.column_name FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu ON kcu.constraint_name=tc.constraint_name AND kcu.table_schema=tc.table_schema
+      WHERE tc.table_schema='public' AND tc.table_name=$1 AND tc.constraint_type='PRIMARY KEY' ORDER BY kcu.ordinal_position`, [tableName]),
+  ]);
+  const primaryKey = keysResult.rows.map((row: any) => row.column_name);
+  const editableColumns = columnsResult.rows.filter((column: any) =>
+    !SENSITIVE_COLUMN.test(column.column_name) && column.is_identity !== 'YES' && column.is_generated === 'NEVER'
+  ).map((column: any) => column.column_name);
+  return { columns: columnsResult.rows, primaryKey, editableColumns, editable: primaryKey.length > 0 };
+};
+
+const assertColumnValues = (values: any, allowed: string[]) => {
+  if (!values || typeof values !== 'object' || Array.isArray(values)) throw Object.assign(new Error('values must be an object.'), { statusCode: 400 });
+  const entries = Object.entries(values).filter(([column]) => allowed.includes(column));
+  if (!entries.length || entries.length !== Object.keys(values).length) throw Object.assign(new Error('Payload contains protected or unknown columns.'), { statusCode: 400 });
+  return entries;
+};
+
+const keyWhere = (key: any, primaryKey: string[], startIndex: number) => {
+  if (!key || primaryKey.some(column => key[column] === undefined)) throw Object.assign(new Error('Complete primary key is required.'), { statusCode: 400 });
+  return { clause: primaryKey.map((column, index) => `"${column}" = $${startIndex + index}`).join(' AND '), values: primaryKey.map(column => key[column]) };
+};
+const redactStudioRow = (row: Record<string, unknown>) => Object.fromEntries(Object.entries(row).map(([key, value]) => [key, SENSITIVE_COLUMN.test(key) && value != null ? '[REDACTED]' : value]));
+
+const createDatabaseTableRow = async (tableName: string, values: any) => {
+  const metadata = await getStudioTableMetadata(tableName);
+  const entries = assertColumnValues(values, metadata.editableColumns);
+  const columns = entries.map(([column]) => `"${column}"`).join(', ');
+  const result = await pool.query(`INSERT INTO "${tableName}" (${columns}) VALUES (${entries.map((_, index) => `$${index + 1}`).join(', ')}) RETURNING *`, entries.map(([, value]) => value));
+  return redactStudioRow(result.rows[0]);
+};
+
+const updateDatabaseTableRow = async (tableName: string, key: any, values: any) => {
+  const metadata = await getStudioTableMetadata(tableName);
+  if (!metadata.editable) throw Object.assign(new Error('This table has no primary key and cannot be edited safely.'), { statusCode: 409 });
+  const entries = assertColumnValues(values, metadata.editableColumns.filter((column: string) => !metadata.primaryKey.includes(column)));
+  const where = keyWhere(key, metadata.primaryKey, entries.length + 1);
+  const result = await pool.query(`UPDATE "${tableName}" SET ${entries.map(([column], index) => `"${column}" = $${index + 1}`).join(', ')} WHERE ${where.clause} RETURNING *`, [...entries.map(([, value]) => value), ...where.values]);
+  if (!result.rowCount) throw Object.assign(new Error('Row not found.'), { statusCode: 404 });
+  return redactStudioRow(result.rows[0]);
+};
+
+const deleteDatabaseTableRow = async (tableName: string, key: any) => {
+  const metadata = await getStudioTableMetadata(tableName);
+  if (!metadata.editable) throw Object.assign(new Error('This table has no primary key and cannot be deleted safely.'), { statusCode: 409 });
+  const where = keyWhere(key, metadata.primaryKey, 1);
+  const result = await pool.query(`DELETE FROM "${tableName}" WHERE ${where.clause} RETURNING *`, where.values);
+  if (!result.rowCount) throw Object.assign(new Error('Row not found.'), { statusCode: 404 });
+  return redactStudioRow(result.rows[0]);
+};
+
 const getDatabaseTableRows = async (tableName: string, options: { limit?: number; offset?: number; query?: string }) => {
   await assertPublicTable(tableName);
   const limit = Math.min(100, Math.max(1, Number(options.limit) || 25));
   const offset = Math.max(0, Number(options.offset) || 0);
-  const columnsResult = await pool.query(`
-    SELECT column_name, data_type, is_nullable, column_default
-    FROM information_schema.columns
-    WHERE table_schema = 'public' AND table_name = $1
-    ORDER BY ordinal_position
-  `, [tableName]);
-  const columns = columnsResult.rows;
+  const metadata = await getStudioTableMetadata(tableName);
+  const columns = metadata.columns;
   const searchable = columns.filter((column: any) => !SENSITIVE_COLUMN.test(column.column_name));
   const query = String(options.query || '').trim();
   const where = query && searchable.length
@@ -215,10 +266,8 @@ const getDatabaseTableRows = async (tableName: string, options: { limit?: number
     `SELECT * FROM "${tableName}"${where} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
     [...params, limit, offset]
   );
-  const rows = rowsResult.rows.map((row: Record<string, unknown>) => Object.fromEntries(
-    Object.entries(row).map(([key, value]) => [key, SENSITIVE_COLUMN.test(key) && value != null ? '[REDACTED]' : value])
-  ));
-  return { table: tableName, columns, rows, total: Number(countResult.rows[0]?.count || 0), limit, offset };
+  const rows = rowsResult.rows.map(redactStudioRow);
+  return { table: tableName, columns, rows, total: Number(countResult.rows[0]?.count || 0), limit, offset, primary_key: metadata.primaryKey, editable_columns: metadata.editableColumns, editable: metadata.editable };
 };
 
 module.exports = {
@@ -229,6 +278,9 @@ module.exports = {
   getStats,
   getDatabaseTables,
   getDatabaseTableRows,
+  createDatabaseTableRow,
+  updateDatabaseTableRow,
+  deleteDatabaseTableRow,
   RESET_CONFIRMATION,
 };
 
