@@ -39,6 +39,9 @@ describe('calendar service', () => {
 
   test('expands each date and lets a dated session replace its recurring class occurrence', async () => {
     repository.datedSessions.mockResolvedValue([session()]);
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'B1', room_name: 'Room 1', section: JSON.stringify({ days: ['Monday', 'Tuesday'], time: '09:00', endTime: '10:00' }) },
+    ]);
     roomInsights.getSchedule
       .mockResolvedValueOnce([planned({ schedule_date: '2026-08-10' })])
       .mockResolvedValueOnce([planned({ assignment_id: 10, schedule_date: '2026-08-11' })]);
@@ -47,7 +50,7 @@ describe('calendar service', () => {
 
     expect(rows).toHaveLength(2);
     expect(rows).toEqual(expect.arrayContaining([
-      expect.objectContaining({ event_id: 'planned-10-2026-08-11', source: 'recurring', status: 'planned' }),
+      expect.objectContaining({ event_id: 'planned-class-3-2026-08-11', source: 'recurring', status: 'planned' }),
       expect.objectContaining({ event_id: 'session-12', source: 'session', status: 'ready', attendance: { present: 0, absent: 0, unmarked: 2 } }),
     ]));
     expect(repository.datedSessions).toHaveBeenCalledWith(2, '2026-08-10', '2026-08-11', {});
@@ -83,6 +86,9 @@ describe('calendar service', () => {
       session({ session_id: 2, class_id: 8, attendance_marked: 2, present: 2 }),
     ]);
     roomInsights.getSchedule.mockResolvedValue([planned({ class_id: 10 })]);
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 10, class_name: 'Planned', room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '11:00', endTime: '12:00' }) },
+    ]);
     await expect(service.summary(2, { from: '2026-08-10', to: '2026-08-10' })).resolves.toEqual({
       total: 3, planned: 1, ready: 1, in_progress: 0, conducted: 1, attendance_missing: 1,
     });
@@ -115,12 +121,26 @@ describe('calendar service', () => {
   test('does not duplicate a class-section fallback already projected by Rooms', async () => {
     repository.datedSessions.mockResolvedValue([]);
     repository.recurringDefinitions.mockResolvedValue([
-      { class_id: 3, class_name: 'B1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
+      { class_id: 3, class_name: 'B1', room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
     ]);
     roomInsights.getSchedule.mockResolvedValue([planned()]);
     const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-10' });
     expect(rows).toHaveLength(1);
-    expect(rows[0].event_id).toBe('planned-9-2026-08-10');
+    expect(rows[0].event_id).toBe('planned-class-3-2026-08-10');
+  });
+
+  test('ignores stale recurring room weekdays and follows classes.section only', async () => {
+    repository.datedSessions.mockResolvedValue([]);
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'B1 Intro', room_name: 'Room 1', section: JSON.stringify({ days: ['Monday', 'Wednesday', 'Friday'], time: '09:00', endTime: '10:00' }) },
+    ]);
+    roomInsights.getSchedule
+      .mockResolvedValueOnce([planned({ schedule_date: '2026-08-10', day: 'Monday' })])
+      .mockResolvedValueOnce([planned({ schedule_date: '2026-08-11', day: 'Tuesday' })]);
+
+    const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-11' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toEqual(expect.objectContaining({ date: '2026-08-10', class_id: 3, start_time: '09:00' }));
   });
 
   test('excludes deleted, unknown, inactive, and maintenance rooms from calendar events', async () => {

@@ -96,6 +96,10 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
 
   const parsedDefinitions = definitions.map(parseDefinition).filter(Boolean);
   schedules.forEach(({ date, rows }: any) => {
+    // A group's recurring timetable is canonical in classes.section. Legacy
+    // recurring rows in rooms may contain days that are no longer selected.
+    // Keep only dated bookings here; class definitions are projected below.
+    rows.splice(0, rows.length, ...rows.filter((row: any) => row.source === 'booking'));
     const weekday = normalizeDay(new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }));
     parsedDefinitions.forEach((definition: any) => {
       if (!definition.days.includes(weekday)) return;
