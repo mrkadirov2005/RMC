@@ -1,3 +1,5 @@
+import type { QuestionType, TestType } from '@/features/crm/tests/questionTypes';
+
 // Auth Types
 export interface AuthUser {
   id: number;
@@ -162,6 +164,127 @@ export interface Subject {
   teacher_id: number;
   total_marks: number;
   passing_marks: number;
+}
+
+// Test Types
+export type SubmissionStatus = 'not_started' | 'in_progress' | 'submitted' | 'graded' | 'reviewed';
+
+export interface ReadingPassage {
+  passage_id: number;
+  center_id: number;
+  test_id: number;
+  title: string;
+  content: string;
+  word_count?: number | null;
+  difficulty_level?: string | null;
+  passage_order?: number | null;
+  audio_url?: string | null;
+  image_url?: string | null;
+}
+
+export interface TestQuestion {
+  question_id: number;
+  center_id: number;
+  test_id: number;
+  passage_id?: number | null;
+  question_text: string;
+  question_type: QuestionType;
+  marks: number;
+  negative_marks?: number | null;
+  question_order?: number | null;
+  options?: string[] | null;
+  correct_answer?: any;
+  explanation?: string | null;
+  image_url?: string | null;
+  is_required?: boolean | null;
+  word_limit?: number | null;
+  rubric?: string | null;
+}
+
+export interface Test {
+  test_id: number;
+  center_id: number;
+  subject_id?: number | null;
+  test_name: string;
+  test_type: TestType;
+  description?: string | null;
+  instructions?: string | null;
+  total_marks: number;
+  passing_marks: number;
+  duration_minutes: number;
+  assignment_type?: string | null;
+  is_timed?: boolean | null;
+  shuffle_questions?: boolean | null;
+  show_results_immediately?: boolean | null;
+  allow_retake?: boolean | null;
+  max_retakes?: number | null;
+  created_by?: number | null;
+  created_by_type?: string | null;
+  is_active?: boolean | null;
+  is_private?: boolean | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  questions?: TestQuestion[];
+  passages?: ReadingPassage[];
+}
+
+export interface TestAnswer {
+  answer_id: number;
+  center_id: number;
+  submission_id: number;
+  question_id: number;
+  question_text: string;
+  question_type: QuestionType;
+  marks: number;
+  negative_marks?: number | null;
+  question_order?: number | null;
+  options?: string[] | null;
+  correct_answer?: any;
+  explanation?: string | null;
+  word_limit?: number | null;
+  passage_id?: number | null;
+  rubric?: string | null;
+  student_answer?: any;
+  is_correct?: boolean | null;
+  marks_obtained?: number | null;
+  feedback?: string | null;
+  graded?: boolean | null;
+  graded_at?: string | null;
+  graded_by?: number | null;
+  graded_by_type?: string | null;
+}
+
+export interface TestSubmission {
+  submission_id: number;
+  center_id: number;
+  test_id: number;
+  student_id: number;
+  test_name: string;
+  test_type: TestType;
+  total_marks: number;
+  passing_marks: number;
+  first_name: string;
+  last_name: string;
+  enrollment_number?: string | null;
+  started_at?: string | null;
+  submitted_at?: string | null;
+  time_taken_seconds?: number | null;
+  total_score?: number | null;
+  obtained_marks?: number | null;
+  score?: number | null;
+  percentage?: number | null;
+  status: SubmissionStatus;
+  is_passed?: boolean | null;
+  feedback?: string | null;
+  graded_by?: number | null;
+  graded_by_type?: string | null;
+  graded_at?: string | null;
+  attempt_number?: number | null;
+  pending_manual_count?: number;
+  is_fully_graded?: boolean;
+  answers: TestAnswer[];
 }
 
 // RBAC Types

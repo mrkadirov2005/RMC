@@ -26,6 +26,12 @@ import { createTest } from '../../../slices/testsSlice';
 import { selectCenterOptions, selectSubjectOptions } from '../../../store/selectors';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
+import { QUESTION_TYPES, TEST_TYPES, getQuestionTypeMeta } from './questionTypes';
+import { formatTestType } from './testVisuals';
+
+const authorableQuestionTypes = QUESTION_TYPES.filter(
+  (type) => type !== 'reading_passage' && type !== 'matching'
+);
 
 interface Question {
   id: string;
@@ -36,6 +42,7 @@ interface Question {
   correct_answer?: any;
   explanation?: string;
   word_limit?: number;
+  rubric?: string;
 }
 
 interface Passage {
@@ -85,17 +92,6 @@ const CreateTestPage = () => {
 
   const steps = ['Basic Info', 'Add Questions', 'Settings', 'Review'];
 
-  const testTypes = [
-    { value: 'multiple_choice', label: 'Multiple Choice' },
-    { value: 'essay', label: 'Essay' },
-    { value: 'short_answer', label: 'Short Answer' },
-    { value: 'true_false', label: 'True/False' },
-    { value: 'form_filling', label: 'Form Filling' },
-    { value: 'reading_passage', label: 'Reading Passage' },
-    { value: 'writing', label: 'Writing' },
-    { value: 'matching', label: 'Matching' },
-  ];
-
 // Runs side effects for this component.
   useEffect(() => {
     dispatch(fetchSubjects());
@@ -136,7 +132,9 @@ const CreateTestPage = () => {
     const newQuestion: Question = {
       id: Date.now().toString(),
       question_text: '',
-      question_type: testData.test_type === 'reading_passage' ? 'multiple_choice' : testData.test_type,
+      question_type: (authorableQuestionTypes as readonly string[]).includes(testData.test_type)
+        ? testData.test_type
+        : 'multiple_choice',
       marks: 1,
       options: testData.test_type === 'multiple_choice' || testData.test_type === 'true_false' ? ['', '', '', ''] : undefined,
     };
@@ -221,6 +219,7 @@ const CreateTestPage = () => {
         correct_answer: q.correct_answer,
         explanation: q.explanation,
         word_limit: q.word_limit,
+        rubric: q.rubric,
         is_required: true,
       }));
 
@@ -272,9 +271,9 @@ const CreateTestPage = () => {
             onChange={(e) => setTestData({ ...testData, test_type: e.target.value })}
             className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            {testTypes.map((type) => (
-              <option key={type.value} value={type.value}>
-                {type.label}
+            {TEST_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {getQuestionTypeMeta(type).label}
               </option>
             ))}
           </select>
@@ -474,9 +473,9 @@ const CreateTestPage = () => {
                     onChange={(e) => updateQuestion(question.id, { question_type: e.target.value })}
                     className="mt-1 w-full h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   >
-                    {testTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.label}
+                    {authorableQuestionTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {getQuestionTypeMeta(type).label}
                       </option>
                     ))}
                   </select>
@@ -544,16 +543,28 @@ const CreateTestPage = () => {
                 </div>
               )}
 
-              {/* Word limit for essay/writing */}
-              {(question.question_type === 'essay' || question.question_type === 'writing') && (
-                <div className="md:w-1/2">
-                  <Label>Word Limit (optional)</Label>
-                  <Input
-                    type="number"
-                    value={question.word_limit || ''}
-                    onChange={(e) => updateQuestion(question.id, { word_limit: parseInt(e.target.value) || undefined })}
-                    className="mt-1"
-                  />
+              {/* Word limit and rubric for essay/writing */}
+              {getQuestionTypeMeta(question.question_type).supportsWordLimit && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Word Limit (optional)</Label>
+                    <Input
+                      type="number"
+                      value={question.word_limit || ''}
+                      onChange={(e) => updateQuestion(question.id, { word_limit: parseInt(e.target.value) || undefined })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label>Grading Rubric (optional)</Label>
+                    <Textarea
+                      value={question.rubric || ''}
+                      onChange={(e) => updateQuestion(question.id, { rubric: e.target.value })}
+                      rows={3}
+                      placeholder="Notes for the grader..."
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
               )}
 
@@ -695,7 +706,7 @@ const CreateTestPage = () => {
             <h3 className="text-lg font-semibold mb-3">Test Information</h3>
             <div className="flex flex-col gap-2 text-sm">
               <p><strong>Name:</strong> {testData.test_name}</p>
-              <p><strong>Type:</strong> {testTypes.find(t => t.value === testData.test_type)?.label}</p>
+              <p><strong>Type:</strong> {formatTestType(testData.test_type)}</p>
               <p><strong>Duration:</strong> {testData.duration_minutes} minutes</p>
               <p><strong>Total Marks:</strong> {calculateTotalMarks()}</p>
               <p><strong>Passing Marks:</strong> {testData.passing_marks || Math.ceil(calculateTotalMarks() * 0.6)}</p>

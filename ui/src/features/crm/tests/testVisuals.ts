@@ -1,6 +1,8 @@
 import { cn } from '@/lib/utils';
+import { getQuestionTypeMeta } from './questionTypes';
+import type { QuestionType } from './questionTypes';
 
-export const testTypeThemes: Record<string, { badge: string; panel: string; dot: string }> = {
+export const testTypeThemes: Record<QuestionType, { badge: string; panel: string; dot: string }> = {
   multiple_choice: {
     badge: 'bg-indigo-500 text-white',
     panel: 'border-indigo-200 bg-gradient-to-br from-indigo-50 to-sky-50',
@@ -43,11 +45,10 @@ export const testTypeThemes: Record<string, { badge: string; panel: string; dot:
   },
 };
 
-export const formatTestType = (type?: string) =>
-  type?.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()) || '';
+export const formatTestType = (type?: string) => getQuestionTypeMeta(type).label;
 
 export const getTestTypeTheme = (type?: string) =>
-  testTypeThemes[type || ''] || {
+  testTypeThemes[type as QuestionType] || {
     badge: 'bg-slate-500 text-white',
     panel: 'border-slate-200 bg-gradient-to-br from-slate-50 to-zinc-50',
     dot: 'bg-slate-500',

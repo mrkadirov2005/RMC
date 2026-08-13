@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SectionPanel } from '@/components/common/SectionPanel';
+import { formatTestType } from '@/features/crm/tests/testVisuals';
 import type { Assignment, AttendanceStats, ClassInfo, Grade, Payment, ScheduleItem, StudentProfile, Subject, Teacher, Test } from '../types';
 import { StudentPaymentHistory } from './StudentPaymentHistory';
 import { StudentSnapshotCards } from './StudentSnapshotCards';
@@ -155,7 +156,7 @@ const TodayCard = ({ icon: Icon, tone, title, badge, children }: any) => {
 const UpcomingLists = ({ upcomingTests, assignmentsDue, t, formatDate, formatStatusLabel, onTests }: any) => (
   <div className="grid grid-cols-1 gap-4 animate-fade-in animation-delay-400 md:grid-cols-2">
     <ListCard title={t('Upcoming Tests')} empty={t('No tests scheduled soon.')} action={<Button variant="outline" size="sm" onClick={onTests}>{t('View all')}</Button>}>
-      {upcomingTests.map((test: Test) => <ListRow key={test.test_id} title={test.test_name} meta={`${test.test_type?.replace(/_/g, ' ')} - ${test.total_marks || 0} ${t('marks')}`} side={formatDate(test.due_date)} />)}
+      {upcomingTests.map((test: Test) => <ListRow key={test.test_id} title={test.test_name} meta={`${formatTestType(test.test_type)} - ${test.total_marks || 0} ${t('marks')}`} side={formatDate(test.due_date)} />)}
     </ListCard>
     <ListCard title={t('Assignments Due Soon')} empty={t('No assignments due this week.')} action={<Badge variant="outline">{assignmentsDue.length} {t('due')}</Badge>}>
       {assignmentsDue.map((assignment: Assignment) => <ListRow key={assignment.assignment_id || assignment.id} title={assignment.assignment_title || assignment.title || t('Assignment')} meta={`${t('Status')}: ${formatStatusLabel(assignment.status)}`} side={formatDate(assignment.due_date)} />)}

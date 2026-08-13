@@ -3,13 +3,14 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { testAPI } from '../shared/api/api';
 import type { RootState } from '../store';
+import type { Test, TestSubmission } from '../types';
 
 const CACHE_TTL = 60 * 1000; // 60 seconds
 
 interface TestState {
-  items: any[];
-  assignedItems: any[];
-  submissionDetails: any | null;
+  items: Test[];
+  assignedItems: Test[];
+  submissionDetails: TestSubmission | null;
   loading: boolean;
   assignedLoading: boolean;
   submissionDetailsLoading: boolean;

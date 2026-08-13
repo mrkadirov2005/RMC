@@ -654,6 +654,7 @@ const testQuestions = pgTable('test_questions', {
   imageUrl: varchar('image_url', { length: 500 }),
   isRequired: boolean('is_required'),
   wordLimit: integer('word_limit'),
+  rubric: text('rubric'),
   createdAt: timestamp('created_at'),
 });
 
@@ -701,6 +702,8 @@ const testAnswers = pgTable('test_answers', {
   feedback: text('feedback'),
   graded: boolean('graded'),
   gradedAt: timestamp('graded_at'),
+  gradedBy: integer('graded_by'),
+  gradedByType: varchar('graded_by_type', { length: 20 }),
 });
 
 const testResultsSummary = pgTable('test_results_summary', {

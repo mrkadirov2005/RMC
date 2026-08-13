@@ -13,12 +13,13 @@ const {
 
 const db = pool.db;
 
-const normalizeJson = (val: any, fallback: any = null) => {
+const normalizeJson = (val: any, fallback: any = null, context = 'test.repository') => {
   if (val === null || val === undefined) return fallback;
   if (typeof val === 'string') {
     try {
       return JSON.parse(val);
     } catch {
+      console.warn(`[${context}] failed to parse JSON value, keeping raw string:`, val.slice(0, 200));
       return val;
     }
   }
@@ -69,6 +70,7 @@ const questionSelection = {
   image_url: testQuestions.imageUrl,
   is_required: testQuestions.isRequired,
   word_limit: testQuestions.wordLimit,
+  rubric: testQuestions.rubric,
   created_at: testQuestions.createdAt,
 };
 
@@ -110,7 +112,7 @@ const submissionSelection = {
   updated_at: testSubmissions.updatedAt,
 };
 
-const answerSelection = {
+const answerRowSelection = {
   answer_id: testAnswers.answerId,
   center_id: testAnswers.centerId,
   submission_id: testAnswers.submissionId,
@@ -121,6 +123,23 @@ const answerSelection = {
   feedback: testAnswers.feedback,
   graded: testAnswers.graded,
   graded_at: testAnswers.gradedAt,
+  graded_by: testAnswers.gradedBy,
+  graded_by_type: testAnswers.gradedByType,
+};
+
+const answerSelection = {
+  ...answerRowSelection,
+  question_text: testQuestions.questionText,
+  question_type: testQuestions.questionType,
+  marks: testQuestions.marks,
+  negative_marks: testQuestions.negativeMarks,
+  question_order: testQuestions.questionOrder,
+  options: testQuestions.options,
+  correct_answer: testQuestions.correctAnswer,
+  explanation: testQuestions.explanation,
+  word_limit: testQuestions.wordLimit,
+  passage_id: testQuestions.passageId,
+  rubric: testQuestions.rubric,
 };
 
 const resultSelection = {
@@ -273,13 +292,14 @@ const insertQuestion = async (params: any[], runner: any = db) => {
       imageUrl: params[11],
       isRequired: params[12],
       wordLimit: params[13] == null ? null : Number(params[13]),
+      rubric: params[14],
     })
     .returning(questionSelection);
   return rows[0];
 };
 
 const updateQuestion = async (params: any[], questionId: number, centerId?: number) => {
-  const keys = ['testId', 'passageId', 'questionText', 'questionType', 'marks', 'negativeMarks', 'questionOrder', 'options', 'correctAnswer', 'explanation', 'imageUrl', 'isRequired', 'wordLimit'];
+  const keys = ['testId', 'passageId', 'questionText', 'questionType', 'marks', 'negativeMarks', 'questionOrder', 'options', 'correctAnswer', 'explanation', 'imageUrl', 'isRequired', 'wordLimit', 'rubric'];
   const setData: any = {};
   keys.forEach((key, idx) => {
     if (params[idx] !== undefined && params[idx] !== null) setData[key] = ['options', 'correctAnswer'].includes(key) ? normalizeJson(params[idx]) : params[idx];
@@ -353,6 +373,13 @@ const findSubmissionsByStudent = async (studentId: number, centerId?: number) =>
   return db.select(submissionSelection).from(testSubmissions).where(and(...conditions)).orderBy(desc(testSubmissions.createdAt));
 };
 
+const countSubmissionsByStudent = async (testId: number, studentId: number, centerId?: number) => {
+  const conditions = [eq(testSubmissions.testId, Number(testId)), eq(testSubmissions.studentId, Number(studentId))];
+  if (centerId) conditions.push(eq(testSubmissions.centerId, Number(centerId)));
+  const rows = await db.select({ total: sql`COUNT(*)` }).from(testSubmissions).where(and(...conditions));
+  return Number(rows[0]?.total || 0);
+};
+
 const insertSubmission = async (params: any[]) => {
   const rows = await db
     .insert(testSubmissions)
@@ -395,7 +422,19 @@ const updateSubmission = async (params: any[], submissionId: number, centerId?: 
 const findAnswersBySubmission = async (submissionId: number, centerId?: number) => {
   const conditions = [eq(testAnswers.submissionId, Number(submissionId))];
   if (centerId) conditions.push(eq(testAnswers.centerId, Number(centerId)));
-  return db.select(answerSelection).from(testAnswers).where(and(...conditions)).orderBy(testAnswers.answerId);
+  return db
+    .select(answerSelection)
+    .from(testAnswers)
+    .innerJoin(testQuestions, eq(testQuestions.questionId, testAnswers.questionId))
+    .where(and(...conditions))
+    .orderBy(testQuestions.questionOrder, testAnswers.answerId);
+};
+
+const findAnswerByQuestion = async (submissionId: number, questionId: number, centerId?: number) => {
+  const conditions = [eq(testAnswers.submissionId, Number(submissionId)), eq(testAnswers.questionId, Number(questionId))];
+  if (centerId) conditions.push(eq(testAnswers.centerId, Number(centerId)));
+  const rows = await db.select(answerRowSelection).from(testAnswers).where(and(...conditions));
+  return rows[0] || null;
 };
 
 const deleteAnswersBySubmission = async (submissionId: number, centerId?: number) => {
@@ -418,8 +457,20 @@ const insertAnswer = async (params: any[]) => {
       graded: params[7],
       gradedAt: params[8],
     })
-    .returning(answerSelection);
+    .returning(answerRowSelection);
   return rows[0];
+};
+
+const updateAnswer = async (params: any[], answerId: number, centerId?: number) => {
+  const keys = ['isCorrect', 'marksObtained', 'feedback', 'graded', 'gradedAt', 'gradedBy', 'gradedByType'];
+  const setData: any = {};
+  keys.forEach((key, idx) => {
+    if (params[idx] !== undefined && params[idx] !== null) setData[key] = params[idx];
+  });
+  const conditions = [eq(testAnswers.answerId, Number(answerId))];
+  if (centerId) conditions.push(eq(testAnswers.centerId, Number(centerId)));
+  const rows = await db.update(testAnswers).set(setData).where(and(...conditions)).returning(answerRowSelection);
+  return rows[0] || null;
 };
 
 const findResultsByTest = async (testId: number, centerId?: number) => {
@@ -604,11 +655,14 @@ module.exports = {
   findSubmissionById,
   findSubmissionsByTest,
   findSubmissionsByStudent,
+  countSubmissionsByStudent,
   insertSubmission,
   updateSubmission,
   findAnswersBySubmission,
+  findAnswerByQuestion,
   deleteAnswersBySubmission,
   insertAnswer,
+  updateAnswer,
   findResultsByTest,
   findResultsByStudent,
   findResultByStudent,

@@ -72,6 +72,7 @@ import {
   testStatCardClass,
   testSurfaceClass,
 } from './testVisuals';
+import { TEST_TYPES } from './questionTypes';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
 interface Test {
@@ -137,14 +138,7 @@ const TestsPage = () => {
 
   const testTypes = [
     { value: 'all', label: 'All Types' },
-    { value: 'multiple_choice', label: 'Multiple Choice' },
-    { value: 'essay', label: 'Essay' },
-    { value: 'short_answer', label: 'Short Answer' },
-    { value: 'true_false', label: 'True/False' },
-    { value: 'form_filling', label: 'Form Filling' },
-    { value: 'reading_passage', label: 'Reading Passage' },
-    { value: 'writing', label: 'Writing' },
-    { value: 'matching', label: 'Matching' },
+    ...TEST_TYPES.map((type) => ({ value: type as string, label: formatTestType(type) })),
   ];
 
   if (loading) {

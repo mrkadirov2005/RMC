@@ -27,6 +27,33 @@ import {
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { testAPI } from './api';
+import { countWords } from './answerFormat';
+import { formatTestType } from './testVisuals';
+
+const isAnswered = (value: any) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value.text === 'string') return value.text.trim() !== '';
+  if (value.matches) return Object.keys(value.matches).length > 0;
+  return value.index !== undefined || value.value !== undefined;
+};
+
+const hasInputRenderer = (question: any) => {
+  switch (question.question_type) {
+    case 'multiple_choice':
+    case 'true_false':
+    case 'short_answer':
+    case 'form_filling':
+    case 'essay':
+    case 'writing':
+      return true;
+    case 'matching':
+      return Boolean(question.matching_pairs);
+    case 'reading_passage':
+      return Boolean(question.passage);
+    default:
+      return false;
+  }
+};
 
 // Renders the take test page screen.
 const TakeTestPage = () => {
@@ -42,6 +69,7 @@ const TakeTestPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+  const [startedAt, setStartedAt] = useState<string | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [timeUpDialogOpen, setTimeUpDialogOpen] = useState(false);
 
@@ -75,16 +103,18 @@ const TakeTestPage = () => {
     try {
       setLoading(true);
 
-      // First try to get test ID from localStorage, then from submission details
+      // Fetch submission details for the test id and the real start time
       let testId = localStorage.getItem(`submission_${submissionId}_test`);
+      let submissionStartedAt: string | null = null;
 
-      if (!testId) {
-        // Fetch submission details to get test_id
-        try {
-          const submissionRes = await testAPI.getSubmissionDetails(Number(submissionId));
-          testId = String(submissionRes.data.test_id);
-        } catch (subErr) {
-          console.error('Could not fetch submission details:', subErr);
+      try {
+        const submissionRes = await testAPI.getSubmissionDetails(Number(submissionId));
+        testId = String(submissionRes.data.test_id);
+        submissionStartedAt = submissionRes.data.started_at || null;
+        setStartedAt(submissionStartedAt);
+      } catch (subErr) {
+        console.error('Could not fetch submission details:', subErr);
+        if (!testId) {
           throw new Error('Test information not found. Please go back and start the test again.');
         }
       }
@@ -103,9 +133,13 @@ const TakeTestPage = () => {
         setError('This test has no questions. Please contact the administrator.');
       }
 
-      // Calculate remaining time
+      // Calculate remaining time from when the submission actually started
       if (testRes.data.is_timed) {
-        setTimeRemaining(testRes.data.duration_minutes * 60);
+        const durationSeconds = Number(testRes.data.duration_minutes || 0) * 60;
+        const elapsed = submissionStartedAt
+          ? Math.floor((Date.now() - new Date(submissionStartedAt).getTime()) / 1000)
+          : 0;
+        setTimeRemaining(Math.max(0, durationSeconds - Math.max(0, elapsed)));
       }
     } catch (err: any) {
       console.error('Error loading submission:', err);
@@ -136,8 +170,32 @@ const TakeTestPage = () => {
     });
   };
 
+  const overLimitQuestions = questions.filter(
+    (q) => q.word_limit > 0 && countWords(answers[q.question_id]?.text) > q.word_limit
+  );
+
+  const missingRequiredQuestions = questions.filter(
+    (q) => q.is_required && !isAnswered(answers[q.question_id])
+  );
+
 // Handles submit.
   const handleSubmit = async (force: boolean = false) => {
+    if (overLimitQuestions.length > 0) {
+      setConfirmDialogOpen(false);
+      setError(
+        `Question ${questions.indexOf(overLimitQuestions[0]) + 1} exceeds its word limit of ${overLimitQuestions[0].word_limit} words.`
+      );
+      return;
+    }
+
+    if (missingRequiredQuestions.length > 0) {
+      setConfirmDialogOpen(false);
+      setError(
+        `Question ${questions.indexOf(missingRequiredQuestions[0]) + 1} is required and has no answer.`
+      );
+      return;
+    }
+
     if (!force) {
       setConfirmDialogOpen(true);
       return;
@@ -154,7 +212,11 @@ const TakeTestPage = () => {
         formattedAnswers[q.question_id] = answers[q.question_id] || null;
       });
 
-      await testAPI.submitTest(Number(submissionId), formattedAnswers);
+      const timeTakenSeconds = startedAt
+        ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000))
+        : null;
+
+      await testAPI.submitTest(Number(submissionId), formattedAnswers, timeTakenSeconds);
 
       // Navigate to results or confirmation
       navigate('/tests', {
@@ -185,6 +247,7 @@ const TakeTestPage = () => {
   const currentQuestion = questions[currentIndex];
   const answeredCount = Object.keys(answers).length;
   const progress = questions.length > 0 ? (answeredCount / questions.length) * 100 : 0;
+  const currentWordCount = currentQuestion ? countWords(answers[currentQuestion.question_id]?.text) : 0;
 
   if (loading) {
     return (
@@ -296,7 +359,7 @@ const TakeTestPage = () => {
                 <div className="flex items-center gap-2 mb-2">
                   <Badge variant="secondary">{currentQuestion.marks} marks</Badge>
                   <Badge variant="outline">
-                    {currentQuestion.question_type?.replace(/_/g, ' ')}
+                    {formatTestType(currentQuestion.question_type)}
                   </Badge>
                 </div>
                 <h3 className="text-lg font-semibold">{currentQuestion.question_text}</h3>
@@ -415,8 +478,19 @@ const TakeTestPage = () => {
                   }
                   rows={10}
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  {(answers[currentQuestion.question_id]?.text || '').length} characters
+                <p
+                  className={cn(
+                    'text-sm mt-1',
+                    currentQuestion.word_limit > 0 && currentWordCount > currentQuestion.word_limit
+                      ? 'text-red-600'
+                      : currentQuestion.word_limit > 0 && currentWordCount >= currentQuestion.word_limit * 0.9
+                        ? 'text-amber-600'
+                        : 'text-gray-500'
+                  )}
+                >
+                  {currentQuestion.word_limit > 0
+                    ? `${currentWordCount} / ${currentQuestion.word_limit} words`
+                    : `${currentWordCount} words`}
                 </p>
               </div>
             )}
@@ -471,6 +545,17 @@ const TakeTestPage = () => {
                 />
               </div>
             )}
+
+            {!hasInputRenderer(currentQuestion) && (
+              <Textarea
+                placeholder="Type your answer here..."
+                value={answers[currentQuestion.question_id]?.text || ''}
+                onChange={(e) =>
+                  handleAnswerChange(currentQuestion.question_id, { text: e.target.value })
+                }
+                rows={6}
+              />
+            )}
           </CardContent>
         </Card>
       )}
@@ -492,7 +577,7 @@ const TakeTestPage = () => {
             variant="default"
             className="bg-green-600 hover:bg-green-700"
             onClick={() => handleSubmit(false)}
-            disabled={submitting}
+            disabled={submitting || overLimitQuestions.length > 0}
           >
             Submit Test
             <Send className="ml-2 h-4 w-4" />

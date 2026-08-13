@@ -149,7 +149,7 @@ const TestDetailPage = () => {
   }
 
   const isTeacherOrAdmin = user?.userType === 'superuser' || user?.userType === 'teacher';
-  const canTakeTest = test.is_active;
+  const canTakeTest = test.is_active && user?.userType === 'student';
 
   return (
     <div className="space-y-6 p-6">

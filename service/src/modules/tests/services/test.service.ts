@@ -2,6 +2,7 @@ const testRepository = require('../repositories/test.repository');
 const pool = require('../../../db/pool');
 const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
 const studentService = require('../../students/services/student.service');
+const { getQuestionTypeMeta, gradeObjectiveAnswer, isAutoGradable } = require('../questionTypes');
 
 const toBool = (value: any) => {
   if (value === undefined || value === null || value === '') return undefined;
@@ -11,13 +12,14 @@ const toBool = (value: any) => {
   return ['true', '1', 'yes', 'on'].includes(normalized);
 };
 
-const normalizeJson = (value: any, fallback: any = null) => {
+const normalizeJson = (value: any, fallback: any = null, context = 'test.service') => {
   if (value === undefined) return fallback;
   if (value === null) return null;
   if (typeof value === 'string') {
     try {
       return JSON.parse(value);
     } catch {
+      console.warn(`[${context}] failed to parse JSON value, keeping raw string:`, value.slice(0, 200));
       return value;
     }
   }
@@ -303,12 +305,21 @@ const startTest = async (testId: number, body: any, reqMeta: any = {}, centerId?
   if (!test) return null;
   const visible = await canViewTest(test, user, centerId ?? Number(test.center_id));
   if (!visible) return null;
-  const studentId = body.student_id ?? reqMeta.studentId ?? null;
+  const studentId = user?.userType === 'student'
+    ? Number(user.id)
+    : reqMeta.studentId ?? body.student_id ?? null;
   if (!studentId) return { error: 'validation' as const };
   if (centerId) {
     const ok = await studentInCenter(studentId, Number(test.center_id));
     if (!ok) return { error: 'invalid_center' as const };
   }
+
+  const attempts = await testRepository.countSubmissionsByStudent(Number(test.test_id), studentId, Number(test.center_id));
+  const maxRetakes = Number(test.max_retakes ?? 1);
+  if (attempts > 0 && (!toBool(test.allow_retake) || attempts >= maxRetakes)) {
+    return { error: 'max_retakes' as const };
+  }
+
   return testRepository.insertSubmission([
     Number(test.center_id),
     testId,

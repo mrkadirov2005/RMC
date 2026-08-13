@@ -40,6 +40,7 @@ import {
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
 import { testAPI } from '../api';
+import { formatTestType, getTestTypeBadgeClass } from '@/features/crm/tests/testVisuals';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
@@ -208,26 +209,6 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
     }
   };
 
-// Returns test type color.
-  const getTestTypeColor = (type: string) => {
-    const colors: { [key: string]: string } = {
-      multiple_choice: 'bg-indigo-500',
-      essay: 'bg-rose-500',
-      short_answer: 'bg-blue-400',
-      true_false: 'bg-emerald-500',
-      form_filling: 'bg-pink-500',
-      reading_passage: 'bg-purple-500',
-      writing: 'bg-pink-500',
-      matching: 'bg-teal-500',
-    };
-    return colors[type] || 'bg-muted-foreground';
-  };
-
-// Formats test type.
-  const formatTestType = (type: string) => {
-    return type.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
-  };
-
 // Returns status badge class.
   const getStatusBadgeClass = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -315,7 +296,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
               <CardContent className="pt-5">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex gap-1.5 flex-wrap">
-                    <span className={cn('text-xs px-2 py-0.5 rounded-full text-white font-medium', getTestTypeColor(test.test_type))}>
+                    <span className={getTestTypeBadgeClass(test.test_type)}>
                       {formatTestType(test.test_type)}
                     </span>
                     {test.subject_name && (

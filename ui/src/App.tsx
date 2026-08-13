@@ -845,7 +845,7 @@ function AppContent() {
         <Route
           path="/tests/submissions/:submissionId"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.MANAGE_TESTS}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher', 'student']}>
 
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>

@@ -30,49 +30,16 @@ import {
   selectSubmissionDetailsItem,
   selectSubmissionDetailsLoading,
 } from '../../../store/selectors';
-
-interface Answer {
-  answer_id: number;
-  question_id: number;
-  question_text: string;
-  question_type: string;
-  marks: number;
-  options?: string[];
-  correct_answer?: any;
-  student_answer?: any;
-  is_correct?: boolean;
-  marks_awarded?: number;
-  feedback?: string;
-  explanation?: string;
-}
-
-interface Submission {
-  submission_id: number;
-  test_id: number;
-  test_name: string;
-  test_type: string;
-  student_id: number;
-  first_name: string;
-  last_name: string;
-  enrollment_number?: string;
-  status: string;
-  score?: number;
-  total_marks: number;
-  passing_marks: number;
-  started_at?: string;
-  submitted_at?: string;
-  graded_at?: string;
-  graded_by?: number;
-  attempt_number?: number;
-  answers: Answer[];
-}
+import type { TestSubmission } from '@/types';
+import { formatCorrectAnswer, formatStudentAnswer } from './answerFormat';
+import { formatTestType } from './testVisuals';
 
 // Renders the view submission page screen.
 const ViewSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const submission = useAppSelector(selectSubmissionDetailsItem) as Submission | null;
+  const submission = useAppSelector(selectSubmissionDetailsItem) as TestSubmission | null;
   const loading = useAppSelector(selectSubmissionDetailsLoading);
   const error = useAppSelector(selectSubmissionDetailsError);
 
@@ -83,59 +50,6 @@ const ViewSubmissionPage = () => {
     }
     dispatch(fetchSubmissionDetails(Number(submissionId)));
   }, [dispatch, submissionId]);
-
-// Formats answer.
-  const formatAnswer = (answer: Answer) => {
-    const studentAnswer = answer.student_answer;
-    if (!studentAnswer) return <em className="text-gray-400">No answer provided</em>;
-
-    switch (answer.question_type) {
-      case 'multiple_choice':
-        if (studentAnswer.index !== undefined && answer.options) {
-          return answer.options[studentAnswer.index] || 'Invalid selection';
-        }
-        return JSON.stringify(studentAnswer);
-      case 'true_false':
-        return studentAnswer.value ? 'True' : 'False';
-      case 'short_answer':
-      case 'essay':
-      case 'writing':
-      case 'form_filling':
-        return studentAnswer.text || '';
-      case 'matching':
-        if (studentAnswer.matches) {
-          return Object.entries(studentAnswer.matches).map(([key, val]) => (
-            <div key={key}>Match {Number(key) + 1}: {String(val)}</div>
-          ));
-        }
-        return JSON.stringify(studentAnswer);
-      default:
-        return JSON.stringify(studentAnswer);
-    }
-  };
-
-// Formats correct answer.
-  const formatCorrectAnswer = (answer: Answer) => {
-    const correct = answer.correct_answer;
-    if (!correct) return <em>Not specified</em>;
-
-    switch (answer.question_type) {
-      case 'multiple_choice':
-        if (correct.index !== undefined && answer.options) {
-          return answer.options[correct.index] || 'Invalid';
-        }
-        if (correct.indexes && answer.options) {
-          return correct.indexes.map((i: number) => answer.options![i]).join(', ');
-        }
-        return JSON.stringify(correct);
-      case 'true_false':
-        return correct.value ? 'True' : 'False';
-      case 'short_answer':
-        return correct.text || correct.keywords?.join(', ') || JSON.stringify(correct);
-      default:
-        return JSON.stringify(correct);
-    }
-  };
 
 // Returns status badge class.
   const getStatusBadgeClass = (status: string) => {
@@ -175,6 +89,7 @@ const ViewSubmissionPage = () => {
 
 // Handles is passing.
   const isPassing = (submission.score || 0) >= (submission.passing_marks || 0);
+  const pendingManualCount = Number(submission.pending_manual_count ?? 0);
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
@@ -241,7 +156,11 @@ const ViewSubmissionPage = () => {
                 </span>
                 <span className="text-lg text-gray-500">/ {submission.total_marks}</span>
               </div>
-              {submission.status === 'graded' && (
+              {pendingManualCount > 0 ? (
+                <Badge className="mt-1 bg-amber-100 text-amber-800 hover:bg-amber-100">
+                  Pending grading ({pendingManualCount})
+                </Badge>
+              ) : submission.status === 'graded' ? (
                 <Badge
                   className={cn(
                     'mt-1',
@@ -252,7 +171,7 @@ const ViewSubmissionPage = () => {
                 >
                   {isPassing ? 'Passed' : 'Failed'}
                 </Badge>
-              )}
+              ) : null}
             </div>
             <div>
               <p className="text-sm font-medium text-gray-500 mb-1">Status</p>
@@ -307,7 +226,7 @@ const ViewSubmissionPage = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {answer.question_type?.replace(/_/g, ' ')}
+                        {formatTestType(answer.question_type)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
@@ -320,7 +239,7 @@ const ViewSubmissionPage = () => {
                       )}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
-                      {answer.marks_awarded ?? '-'} / {answer.marks}
+                      {answer.marks_obtained ?? '-'} / {answer.marks}
                     </TableCell>
                   </TableRow>
                 ))}
@@ -348,7 +267,7 @@ const ViewSubmissionPage = () => {
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-sm text-gray-500">Question {index + 1}</span>
                     <Badge variant="outline">
-                      {answer.question_type?.replace(/_/g, ' ')}
+                      {formatTestType(answer.question_type)}
                     </Badge>
                     {answer.is_correct === true && (
                       <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
@@ -367,12 +286,12 @@ const ViewSubmissionPage = () => {
                   <span
                     className={cn(
                       'text-2xl font-bold',
-                      answer.marks_awarded === answer.marks
+                      answer.marks_obtained === answer.marks
                         ? 'text-green-600'
                         : 'text-gray-900'
                     )}
                   >
-                    {answer.marks_awarded ?? '-'}
+                    {answer.marks_obtained ?? '-'}
                   </span>
                   <p className="text-sm text-gray-500">/ {answer.marks} marks</p>
                 </div>
@@ -384,7 +303,7 @@ const ViewSubmissionPage = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-2">Student's Answer</p>
                   <div className="p-4 bg-gray-100 rounded-lg min-h-[60px] whitespace-pre-wrap">
-                    {formatAnswer(answer)}
+                    {formatStudentAnswer(answer, answer.student_answer)}
                   </div>
                 </div>
 

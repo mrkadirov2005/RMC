@@ -18,46 +18,17 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { cn } from '@/lib/utils';
 import { testAPI } from './api';
-
-interface Answer {
-  answer_id: number;
-  question_id: number;
-  question_text: string;
-  question_type: string;
-  marks: number;
-  options?: string[];
-  correct_answer?: any;
-  student_answer?: any;
-  is_correct?: boolean;
-  marks_awarded?: number;
-  feedback?: string;
-  explanation?: string;
-}
-
-interface Submission {
-  submission_id: number;
-  test_id: number;
-  test_name: string;
-  test_type: string;
-  student_id: number;
-  first_name: string;
-  last_name: string;
-  enrollment_number?: string;
-  status: string;
-  score?: number;
-  total_marks: number;
-  passing_marks: number;
-  started_at?: string;
-  submitted_at?: string;
-  answers: Answer[];
-}
+import type { TestAnswer, TestSubmission } from '@/types';
+import { countWords, formatCorrectAnswer, formatStudentAnswer } from './answerFormat';
+import { getQuestionTypeMeta } from './questionTypes';
+import { formatTestType } from './testVisuals';
 
 // Renders the grade submission page screen.
 const GradeSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
 
-  const [submission, setSubmission] = useState<Submission | null>(null);
+  const [submission, setSubmission] = useState<TestSubmission | null>(null);
   const [grades, setGrades] = useState<{ [key: number]: { marks: number; feedback: string } }>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -77,9 +48,9 @@ const GradeSubmissionPage = () => {
 
       // Initialize grades from existing data
       const initialGrades: { [key: number]: { marks: number; feedback: string } } = {};
-      response.data.answers?.forEach((answer: Answer) => {
+      response.data.answers?.forEach((answer: TestAnswer) => {
         initialGrades[answer.question_id] = {
-          marks: answer.marks_awarded ?? (answer.is_correct ? answer.marks : 0),
+          marks: Number(answer.marks_obtained ?? (answer.is_correct ? answer.marks : 0)),
           feedback: answer.feedback || '',
         };
       });
@@ -104,12 +75,12 @@ const GradeSubmissionPage = () => {
   };
 
 // Handles quick grade.
-  const handleQuickGrade = (questionId: number, marks: number, _maxMarks: number) => {
+  const handleQuickGrade = (questionId: number, marks: number) => {
     setGrades((prev) => ({
       ...prev,
       [questionId]: {
         ...prev[questionId],
-        marks: marks === prev[questionId]?.marks ? 0 : marks,
+        marks,
       },
     }));
   };
@@ -147,59 +118,6 @@ const GradeSubmissionPage = () => {
       setError(err.response?.data?.error || 'Failed to save grades');
     } finally {
       setSaving(false);
-    }
-  };
-
-// Formats answer.
-  const formatAnswer = (answer: Answer) => {
-    const studentAnswer = answer.student_answer;
-    if (!studentAnswer) return <em>No answer provided</em>;
-
-    switch (answer.question_type) {
-      case 'multiple_choice':
-        if (studentAnswer.index !== undefined && answer.options) {
-          return answer.options[studentAnswer.index] || 'Invalid selection';
-        }
-        return JSON.stringify(studentAnswer);
-      case 'true_false':
-        return studentAnswer.value ? 'True' : 'False';
-      case 'short_answer':
-      case 'essay':
-      case 'writing':
-      case 'form_filling':
-        return studentAnswer.text || '';
-      case 'matching':
-        if (studentAnswer.matches) {
-          return Object.entries(studentAnswer.matches).map(([key, val]) => (
-            <div key={key}>Match {Number(key) + 1}: {String(val)}</div>
-          ));
-        }
-        return JSON.stringify(studentAnswer);
-      default:
-        return JSON.stringify(studentAnswer);
-    }
-  };
-
-// Formats correct answer.
-  const formatCorrectAnswer = (answer: Answer) => {
-    const correct = answer.correct_answer;
-    if (!correct) return <em>Not specified</em>;
-
-    switch (answer.question_type) {
-      case 'multiple_choice':
-        if (correct.index !== undefined && answer.options) {
-          return answer.options[correct.index] || 'Invalid';
-        }
-        if (correct.indexes && answer.options) {
-          return correct.indexes.map((i: number) => answer.options![i]).join(', ');
-        }
-        return JSON.stringify(correct);
-      case 'true_false':
-        return correct.value ? 'True' : 'False';
-      case 'short_answer':
-        return correct.text || correct.keywords?.join(', ') || JSON.stringify(correct);
-      default:
-        return JSON.stringify(correct);
     }
   };
 
@@ -324,17 +242,33 @@ const GradeSubmissionPage = () => {
           </CardContent>
         </Card>
       ) : (
-        submission.answers?.map((answer, index) => (
+        submission.answers?.map((answer, index) => {
+          const meta = getQuestionTypeMeta(answer.question_type);
+          return (
           <Card key={answer.question_id} className="mb-4">
             <CardContent className="pt-6">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <p className="text-sm text-gray-500">
-                    Question {index + 1} • {answer.question_type?.replace(/_/g, ' ')}
+                    Question {index + 1} • {formatTestType(answer.question_type)}
                   </p>
                   <h3 className="text-lg font-semibold mt-1">{answer.question_text}</h3>
                 </div>
-                <Badge variant="outline">{answer.marks} marks</Badge>
+                <div className="flex items-center gap-2">
+                  {!meta.manualGraded && (
+                    <Badge
+                      className={cn(
+                        answer.is_correct
+                          ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                          : 'bg-red-100 text-red-800 hover:bg-red-100'
+                      )}
+                    >
+                      {answer.is_correct ? <Check className="mr-1 h-3 w-3" /> : <X className="mr-1 h-3 w-3" />}
+                      Auto-graded
+                    </Badge>
+                  )}
+                  <Badge variant="outline">{answer.marks} marks</Badge>
+                </div>
               </div>
 
               <hr className="my-4" />
@@ -344,15 +278,25 @@ const GradeSubmissionPage = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-2">Student's Answer</p>
                   <div className="p-4 bg-gray-100 rounded-lg min-h-[80px] whitespace-pre-wrap">
-                    {formatAnswer(answer)}
+                    {formatStudentAnswer(answer, answer.student_answer)}
                   </div>
+                  {meta.supportsWordLimit && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      {countWords(answer.student_answer?.text)} words
+                      {answer.word_limit ? ` (limit ${answer.word_limit})` : ''}
+                    </p>
+                  )}
                 </div>
 
-                {/* Correct Answer */}
+                {/* Correct Answer or Rubric */}
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">Correct Answer</p>
+                  <p className="text-sm font-medium text-gray-500 mb-2">
+                    {meta.supportsWordLimit ? 'Grading Rubric' : 'Correct Answer'}
+                  </p>
                   <div className="p-4 bg-green-50 rounded-lg min-h-[80px] whitespace-pre-wrap">
-                    {formatCorrectAnswer(answer)}
+                    {meta.supportsWordLimit
+                      ? answer.rubric || <em className="text-gray-400">No rubric provided</em>
+                      : formatCorrectAnswer(answer)}
                   </div>
                   {answer.explanation && (
                     <p className="text-sm text-gray-500 mt-2">
@@ -364,6 +308,7 @@ const GradeSubmissionPage = () => {
 
               {/* Grading Section */}
               <hr className="my-4" />
+              {meta.manualGraded ? (
               <div className="flex gap-6 items-start flex-wrap">
                 {/* Quick Grade Buttons */}
                 <div>
@@ -376,7 +321,7 @@ const GradeSubmissionPage = () => {
                         grades[answer.question_id]?.marks === 0 &&
                           'bg-red-600 hover:bg-red-700 text-white'
                       )}
-                      onClick={() => handleQuickGrade(answer.question_id, 0, answer.marks)}
+                      onClick={() => handleQuickGrade(answer.question_id, 0)}
                     >
                       <X className="mr-1 h-3 w-3" />
                       0
@@ -393,13 +338,7 @@ const GradeSubmissionPage = () => {
                           grades[answer.question_id]?.marks === Math.floor(answer.marks / 2) &&
                             'bg-amber-500 hover:bg-amber-600 text-white'
                         )}
-                        onClick={() =>
-                          handleQuickGrade(
-                            answer.question_id,
-                            Math.floor(answer.marks / 2),
-                            answer.marks
-                          )
-                        }
+                        onClick={() => handleQuickGrade(answer.question_id, Math.floor(answer.marks / 2))}
                       >
                         {Math.floor(answer.marks / 2)}
                       </Button>
@@ -413,7 +352,7 @@ const GradeSubmissionPage = () => {
                         grades[answer.question_id]?.marks === answer.marks &&
                           'bg-green-600 hover:bg-green-700 text-white'
                       )}
-                      onClick={() => handleQuickGrade(answer.question_id, answer.marks, answer.marks)}
+                      onClick={() => handleQuickGrade(answer.question_id, answer.marks)}
                     >
                       <Check className="mr-1 h-3 w-3" />
                       {answer.marks}
@@ -427,13 +366,14 @@ const GradeSubmissionPage = () => {
                   <Input
                     type="number"
                     value={grades[answer.question_id]?.marks ?? 0}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const value = Number(e.target.value);
                       handleGradeChange(
                         answer.question_id,
                         'marks',
-                        Math.min(Number(e.target.value), answer.marks)
-                      )
-                    }
+                        Number.isFinite(value) ? Math.max(0, Math.min(value, answer.marks)) : 0
+                      );
+                    }}
                     min={0}
                     max={answer.marks}
                     step={0.5}
@@ -454,9 +394,15 @@ const GradeSubmissionPage = () => {
                   />
                 </div>
               </div>
+              ) : (
+                <p className="text-sm text-gray-500">
+                  Auto-graded: {grades[answer.question_id]?.marks ?? 0} / {answer.marks} marks
+                </p>
+              )}
             </CardContent>
           </Card>
-        ))
+          );
+        })
       )}
 
       {/* Floating Save Button */}

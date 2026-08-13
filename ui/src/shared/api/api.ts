@@ -418,7 +418,8 @@ export const testAPI = {
   // Submissions
   startTest: (testId: number, studentId: number, userType?: string) => 
     apiClient.post(`/tests/${testId}/start`, { student_id: studentId, user_type: userType }),
-  submitTest: (submissionId: number, answers: any) => apiClient.post(`/tests/submissions/${submissionId}/submit`, { answers }),
+  submitTest: (submissionId: number, answers: any, timeTakenSeconds?: number | null) =>
+    apiClient.post(`/tests/submissions/${submissionId}/submit`, { answers, time_taken_seconds: timeTakenSeconds }),
   gradeSubmission: (submissionId: number, data: any) => apiClient.post(`/tests/submissions/${submissionId}/grade`, data),
   getSubmissionsByTest: (testId: number) => apiClient.get(`/tests/${testId}/submissions`),
   getSubmissionsByStudent: (studentId: number) => apiClient.get(`/tests/student/${studentId}/submissions`),
