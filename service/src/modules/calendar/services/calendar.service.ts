@@ -34,6 +34,7 @@ const normalizeDay = (value: unknown) => {
   };
   return aliases[day.slice(0, 3)] || day;
 };
+const roomKey = (value: unknown) => String(value ?? '').trim().toLowerCase();
 const addMinutes = (time: string, minutes: number) => {
   const [hours, minute] = time.split(':').map(Number);
   if (!Number.isInteger(hours) || !Number.isInteger(minute)) return '';
@@ -70,7 +71,7 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
     date.setUTCDate(date.getUTCDate() + index);
     return date.toISOString().slice(0, 10);
   });
-  const [sessions, schedules, definitions] = await Promise.all([
+  const [sessions, schedules, definitions, physicalRooms] = await Promise.all([
     repository.datedSessions(centerId, from, to, scope),
     Promise.all(dates.map(async (date) => ({
       date,
@@ -82,7 +83,16 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
       }),
     }))),
     repository.recurringDefinitions ? repository.recurringDefinitions(centerId, scope) : Promise.resolve([]),
+    roomInsights.getPhysicalRooms(centerId),
   ]);
+  const availableRooms = new Map(physicalRooms
+    .filter((room: any) => String(room.status || 'active').toLowerCase() === 'active')
+    .map((room: any) => [roomKey(room.name || room.room_name), room]));
+  const resolveAvailableRoom = (row: any) => {
+    const byId = physicalRooms.find((room: any) => Number(room.room_id) === Number(row.room_id || row.physical_room_id));
+    const room = byId || availableRooms.get(roomKey(row.room_name));
+    return room && String(room.status || 'active').toLowerCase() === 'active' ? room : null;
+  };
 
   const parsedDefinitions = definitions.map(parseDefinition).filter(Boolean);
   schedules.forEach(({ date, rows }: any) => {
@@ -116,7 +126,10 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
     && (!subjectId || Number(row.subject_id) === subjectId)
     && (!roomId || Number(row.room_id) === roomId)
   ));
-  const normalizedSessions = visibleSessions.map((row: any) => ({
+  const normalizedSessions = visibleSessions.map((row: any) => {
+    const room = resolveAvailableRoom(row);
+    if (!room) return null;
+    return ({
     event_id: `session-${row.session_id}`,
     session_id: row.session_id,
     source: 'session',
@@ -132,22 +145,26 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
     teacher_name: row.teacher_name,
     subject_id: row.subject_id,
     subject_name: row.subject_name,
-    room_id: row.room_id,
-    room_name: row.room_name,
+    room_id: Number(room.room_id),
+    room_name: room.name || room.room_name,
     student_count: row.student_count,
     attendance: {
       present: row.present,
       absent: row.absent,
       unmarked: Math.max(0, row.student_count - row.attendance_marked),
     },
-  }));
+    });
+  }).filter(Boolean);
 
   const planned = schedules.flatMap(({ date, rows }: any) => rows
     .filter((row: any) => !scope.classIds || scope.classIds.includes(Number(row.class_id)))
     .filter((row: any) => !classId || Number(row.class_id) === classId)
     .filter((row: any) => !normalizedSessions.some((session: any) =>
       session.date === date && Number(session.class_id) === Number(row.class_id) && overlaps(session, row)))
-    .map((row: any) => ({
+    .map((row: any) => {
+      const room = resolveAvailableRoom(row);
+      if (!room) return null;
+      return ({
       event_id: `${row.source === 'booking' ? 'booking' : 'planned'}-${row.assignment_id}-${date}`,
       source: row.source === 'booking' ? 'booking' : 'recurring',
       status: 'planned',
@@ -160,9 +177,10 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
       teacher_name: row.teacher_name,
       subject_id: row.subject_id,
       subject_name: row.subject_name,
-      room_id: row.physical_room_id,
-      room_name: row.room_name,
-    })));
+      room_id: Number(room.room_id),
+      room_name: room.name || room.room_name,
+      });
+    }).filter(Boolean));
 
   const rows = [...planned, ...normalizedSessions]
     .filter((event: any) => !status || event.status === status)

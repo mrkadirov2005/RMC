@@ -6,3 +6,9 @@ export const buildRoomNumberOptions = (rooms: Array<{ name?: unknown; room_name?
   const numberIn = (value: string) => Number(value.match(/\d+/)?.[0] || Number.MAX_SAFE_INTEGER);
   return [...values].sort((a, b) => numberIn(a) - numberIn(b) || a.localeCompare(b, undefined, { numeric: true }));
 };
+
+export const mergeRoomInventories = (
+  physicalRooms: Array<{ name?: unknown; room_name?: unknown; room_number?: unknown }>,
+  roomAssignments: Array<{ name?: unknown; room_name?: unknown; room_number?: unknown }>,
+  currentRoom?: unknown
+) => buildRoomNumberOptions([...physicalRooms, ...roomAssignments], currentRoom);

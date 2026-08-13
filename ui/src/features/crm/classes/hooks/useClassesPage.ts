@@ -111,6 +111,8 @@ export const useClassesPage = () => {
 
 // Handles open modal.
   const handleOpenModal = (cls?: Class) => {
+    dispatch(fetchRoomsForce());
+    void loadPhysicalRooms();
     if (cls) {
       setEditingId(cls.class_id || cls.id || null);
       setFormData(cls);

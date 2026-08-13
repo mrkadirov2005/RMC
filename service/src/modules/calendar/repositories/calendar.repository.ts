@@ -88,7 +88,9 @@ const resources = async (centerId: number, scope: CalendarScope) => {
       AND ($3::int[] IS NULL OR class_id = ANY($3::int[]))
     UNION ALL
     SELECT 'room', pr.physical_room_id::text, pr.name FROM physical_rooms pr
-    WHERE pr.center_id = $1 AND (
+    WHERE pr.center_id = $1 AND lower(COALESCE(pr.status, 'active')) = 'active'
+      AND EXISTS (SELECT 1 FROM rooms existing_room WHERE existing_room.physical_room_id = pr.physical_room_id)
+      AND (
       ($2::int IS NULL AND $3::int[] IS NULL) OR EXISTS (
         SELECT 1 FROM rooms r JOIN classes c ON c.class_id = r.class_id AND c.center_id = r.center_id
         WHERE r.physical_room_id = pr.physical_room_id AND r.center_id = $1

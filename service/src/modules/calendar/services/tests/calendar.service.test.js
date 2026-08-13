@@ -3,7 +3,7 @@ jest.mock('../../repositories/calendar.repository', () => ({
   resources: jest.fn(),
   recurringDefinitions: jest.fn(),
 }));
-jest.mock('../../../rooms/services/room-insights.service', () => ({ getSchedule: jest.fn() }));
+jest.mock('../../../rooms/services/room-insights.service', () => ({ getSchedule: jest.fn(), getPhysicalRooms: jest.fn() }));
 
 const repository = require('../../repositories/calendar.repository');
 const roomInsights = require('../../../rooms/services/room-insights.service');
@@ -25,6 +25,7 @@ describe('calendar service', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     repository.recurringDefinitions.mockResolvedValue([]);
+    roomInsights.getPhysicalRooms.mockResolvedValue([{ room_id: 6, name: 'Room 1', status: 'active' }]);
   });
 
   test.each([
@@ -103,7 +104,7 @@ describe('calendar service', () => {
     repository.datedSessions.mockResolvedValue([]);
     repository.recurringDefinitions.mockResolvedValue([
       { class_id: 20, class_name: 'Broken', section: '{bad json' },
-      { class_id: 21, class_name: 'Fallback', section: JSON.stringify({ days: ['Mon'], time: '13:00', endTime: '14:00' }), teacher_id: 4 },
+      { class_id: 21, class_name: 'Fallback', room_name: 'Room 1', section: JSON.stringify({ days: ['Mon'], time: '13:00', endTime: '14:00' }), teacher_id: 4 },
     ]);
     roomInsights.getSchedule.mockResolvedValue([]);
     await expect(service.events(2, { from: '2026-08-10', to: '2026-08-10' })).resolves.toEqual([
@@ -120,5 +121,24 @@ describe('calendar service', () => {
     const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-10' });
     expect(rows).toHaveLength(1);
     expect(rows[0].event_id).toBe('planned-9-2026-08-10');
+  });
+
+  test('excludes deleted, unknown, inactive, and maintenance rooms from calendar events', async () => {
+    repository.datedSessions.mockResolvedValue([
+      session({ session_id: 1, room_id: 6, room_name: 'Room 1' }),
+      session({ session_id: 2, room_id: 34, room_name: '34' }),
+    ]);
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 20, class_name: 'Legacy 403', room_name: '403', section: JSON.stringify({ days: ['Monday'], time: '11:00', endTime: '12:00' }) },
+    ]);
+    roomInsights.getSchedule.mockResolvedValue([planned({ assignment_id: 22, physical_room_id: 8, room_name: 'Maintenance' })]);
+    roomInsights.getPhysicalRooms.mockResolvedValue([
+      { room_id: 6, name: 'Room 1', status: 'active' },
+      { room_id: 8, name: 'Maintenance', status: 'maintenance' },
+    ]);
+
+    const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-10' });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toEqual(expect.objectContaining({ event_id: 'session-1', room_id: 6, room_name: 'Room 1' }));
   });
 });
