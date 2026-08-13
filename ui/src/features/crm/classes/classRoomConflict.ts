@@ -14,8 +14,9 @@ export const findClassRoomConflict = ({ classes, assignments, room, days, start,
     const id = Number(item.class_id || item.id || 0);
     if ((editingId && id === editingId) || !sameRoom(item.room_number, room)) continue;
     const schedule = parseSchedule(item.section);
+    const scheduleEnd = schedule.endTime || schedule.time;
     const day = days.find((value) => schedule.days.includes(value));
-    if (day && overlaps(start, end, schedule.time, schedule.endTime)) return { day, start: schedule.time, end: schedule.endTime, group: item.class_name || `Group #${id}` };
+    if (day && overlaps(start, end, schedule.time, scheduleEnd)) return { day, start: schedule.time, end: scheduleEnd, group: item.class_name || `Group #${id}` };
   }
   for (const item of assignments) {
     if ((editingId && Number(item.class_id) === editingId) || !sameRoom(item.room_number, room)) continue;
