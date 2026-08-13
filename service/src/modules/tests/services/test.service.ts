@@ -435,7 +435,7 @@ const submitTest = async (submissionId: number, body: any, centerId?: number) =>
   const answerMap = new Map(scoped.map((answer: any) => [Number(answer.question_id), answer]));
 
   for (const question of testQuestions) {
-    const answer = answerMap.get(Number(question.question_id));
+    const answer: any = answerMap.get(Number(question.question_id));
     const studentAnswer = normalizeJson(answer?.student_answer, null);
     const text = String(studentAnswer?.text ?? '');
     const wordLimit = Number(question.word_limit || 0);

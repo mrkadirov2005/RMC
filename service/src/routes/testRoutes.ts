@@ -5,7 +5,16 @@ const router_test = express_test.Router();
 const testController = require('../modules/tests/controllers/test.controller');
 const { requireAuth, requireRole } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
-const { CreateTestDto } = require('../dtos/request.dto');
+const {
+  AddQuestionDto,
+  AssignTestDto,
+  CreateTestDto,
+  GradeSubmissionDto,
+  StartTestDto,
+  SubmitTestDto,
+  UpdateQuestionDto,
+  UpdateTestDto,
+} = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -130,7 +139,7 @@ router_test.post('/', requireAuth, requireRole('superuser', 'teacher'), validate
  *       200:
  *         description: Test updated successfully
  */
-router_test.put('/:id', requireAuth, requireRole('superuser', 'teacher'), testController.updateTest);
+router_test.put('/:id', requireAuth, requireRole('superuser', 'teacher'), validateBody(UpdateTestDto), testController.updateTest);
 
 /**
  * @swagger
@@ -170,7 +179,7 @@ router_test.delete('/:id', requireAuth, requireRole('superuser', 'teacher'), tes
  *       201:
  *         description: Question added successfully
  */
-router_test.post('/:testId/questions', requireAuth, requireRole('superuser', 'teacher'), testController.addQuestion);
+router_test.post('/:testId/questions', requireAuth, requireRole('superuser', 'teacher'), validateBody(AddQuestionDto), testController.addQuestion);
 
 /**
  * @swagger
@@ -188,7 +197,7 @@ router_test.post('/:testId/questions', requireAuth, requireRole('superuser', 'te
  *       200:
  *         description: Question updated successfully
  */
-router_test.put('/questions/:questionId', requireAuth, requireRole('superuser', 'teacher'), testController.updateQuestion);
+router_test.put('/questions/:questionId', requireAuth, requireRole('superuser', 'teacher'), validateBody(UpdateQuestionDto), testController.updateQuestion);
 
 /**
  * @swagger
@@ -286,7 +295,7 @@ router_test.delete('/passages/:passageId', requireAuth, requireRole('superuser',
  *       201:
  *         description: Test started successfully
  */
-router_test.post('/:testId/start', requireAuth, testController.startTest);
+router_test.post('/:testId/start', requireAuth, validateBody(StartTestDto), testController.startTest);
 
 /**
  * @swagger
@@ -304,7 +313,7 @@ router_test.post('/:testId/start', requireAuth, testController.startTest);
  *       200:
  *         description: Test submitted successfully
  */
-router_test.post('/submissions/:submissionId/submit', requireAuth, testController.submitTest);
+router_test.post('/submissions/:submissionId/submit', requireAuth, validateBody(SubmitTestDto), testController.submitTest);
 
 /**
  * @swagger
@@ -322,7 +331,7 @@ router_test.post('/submissions/:submissionId/submit', requireAuth, testControlle
  *       200:
  *         description: Submission graded successfully
  */
-router_test.post('/submissions/:submissionId/grade', requireAuth, requireRole('superuser', 'teacher'), testController.gradeSubmission);
+router_test.post('/submissions/:submissionId/grade', requireAuth, requireRole('superuser', 'teacher'), validateBody(GradeSubmissionDto), testController.gradeSubmission);
 
 /**
  * @swagger
@@ -438,7 +447,7 @@ router_test.get('/student/:studentId/results', requireAuth, testController.getSt
  *       201:
  *         description: Test assigned successfully
  */
-router_test.post('/:testId/assign', requireAuth, requireRole('superuser', 'teacher'), testController.assignTest);
+router_test.post('/:testId/assign', requireAuth, requireRole('superuser', 'teacher'), validateBody(AssignTestDto), testController.assignTest);
 
 /**
  * @swagger
