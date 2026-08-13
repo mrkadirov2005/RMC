@@ -71,11 +71,11 @@ export default function TeacherClassesStudentsTab({
 }
 
 const StudentList = ({ students }: { students: any[] }) => (
-  <div className="flex flex-col gap-1.5">
+  <div className="flex flex-col ">
     {students.map((student, index) => (
       <div
         key={student.student_id || student.id}
-        className="flex items-center gap-2 rounded-lg border border-slate-200 p-2 shadow-sm dark:border-border"
+        className="flex items-center gap-2 border border-slate-200 shadow-sm dark:border-border"
         style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}
       >
         <span className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500">{index + 1}</span>

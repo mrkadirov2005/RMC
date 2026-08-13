@@ -211,6 +211,10 @@ const update = (id: number, fields: any[], centerId?: number) => {
   if (fields[5] != null) setData.salaryPercentage = fields[5];
   if (fields[6] != null) setData.status = fields[6];
   if (fields[7] != null) setData.roles = parseJson(fields[7]);
+  if (fields[8] != null) setData.dateOfBirth = fields[8];
+  if (fields[9] != null) setData.gender = fields[9];
+  if (fields[10] != null) setData.qualification = fields[10];
+  if (fields[11] != null) setData.specialization = fields[11];
   return db
     .update(teachers)
     .set(setData)

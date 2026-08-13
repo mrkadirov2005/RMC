@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS } from '../studentOverview';
+import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, getNextStudentAccountStatus, splitStudentOverviewRows, STUDENT_ACCOUNT_STATUSES, STUDENT_OVERVIEW_EDIT_FIELDS } from '../studentOverview';
 
 describe('student overview rows', () => {
   it('lists all available profile, enrollment, family, school, and account data', () => {
@@ -39,5 +39,12 @@ describe('student overview rows', () => {
     expect(buildStudentOverviewUpdate({ ...draft, first_name: ' Ali ' })).toMatchObject({ first_name: 'Ali' });
     expect(STUDENT_OVERVIEW_EDIT_FIELDS.Group).toBeUndefined();
     expect(STUDENT_OVERVIEW_EDIT_FIELDS.Teacher).toBeUndefined();
+  });
+
+  it('only exposes supported account statuses and toggles active/inactive safely', () => {
+    expect(STUDENT_ACCOUNT_STATUSES).toEqual(['Active', 'Inactive', 'Suspended']);
+    expect(getNextStudentAccountStatus('Active')).toBe('Inactive');
+    expect(getNextStudentAccountStatus('Inactive')).toBe('Active');
+    expect(getNextStudentAccountStatus('Suspended')).toBe('Active');
   });
 });

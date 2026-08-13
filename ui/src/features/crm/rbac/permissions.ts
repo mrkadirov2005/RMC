@@ -18,6 +18,7 @@ export const ROLE_PERMISSIONS = {
     PERMISSION_CODES.VIEW_REPORTS,
   ],
   student: [
+    PERMISSION_CODES.VIEW_CALENDAR,
     'VIEW_OWN_GRADES',
     'VIEW_OWN_ATTENDANCE',
     'VIEW_OWN_ASSIGNMENTS',
@@ -28,6 +29,11 @@ export const ROLE_PERMISSIONS = {
 
 // Permission descriptions for UI
 export const PERMISSION_DESCRIPTIONS = {
+  [PERMISSION_CODES.VIEW_DASHBOARD]: 'Open the dashboard page',
+  [PERMISSION_CODES.VIEW_TELEGRAM_LEADS]: 'Open and manage Telegram leads',
+  [PERMISSION_CODES.VIEW_ARCHIVE]: 'Open archived records',
+  [PERMISSION_CODES.VIEW_RETENTION]: 'Open retention and intake reports',
+  [PERMISSION_CODES.VIEW_CALENDAR]: 'Open the calendar and schedule',
   [PERMISSION_CODES.CRUD_STUDENT]: 'Create, read, update, and delete student records',
   [PERMISSION_CODES.CRUD_TEACHER]: 'Create, read, update, and delete teacher records',
   [PERMISSION_CODES.CRUD_CLASS]: 'Create, read, update, and delete class records',
@@ -52,7 +58,7 @@ export const PERMISSION_DESCRIPTIONS = {
 
 // Route permissions mapping
 export const ROUTE_PERMISSIONS = {
-  '/dashboard': null, // Accessible by all authenticated users
+  '/dashboard': PERMISSION_CODES.VIEW_DASHBOARD,
   '/students': PERMISSION_CODES.CRUD_STUDENT,
   '/teachers': PERMISSION_CODES.CRUD_TEACHER,
   '/classes': PERMISSION_CODES.CRUD_CLASS,
@@ -65,6 +71,10 @@ export const ROUTE_PERMISSIONS = {
   '/centers': PERMISSION_CODES.CRUD_CENTER,
   '/settings': PERMISSION_CODES.MANAGE_USERS,
   '/tests': PERMISSION_CODES.MANAGE_TESTS,
+  '/telegram-registrations': PERMISSION_CODES.VIEW_TELEGRAM_LEADS,
+  '/archive': PERMISSION_CODES.VIEW_ARCHIVE,
+  '/retention': PERMISSION_CODES.VIEW_RETENTION,
+  '/calendar': PERMISSION_CODES.VIEW_CALENDAR,
   '/reports': PERMISSION_CODES.VIEW_REPORTS,
   '/users': PERMISSION_CODES.MANAGE_USERS,
   '/teacher-portal': null, // Teacher specific route

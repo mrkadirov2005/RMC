@@ -92,6 +92,11 @@ class UpdateTeacherDto {
   @IsString()
   phone?: string;
 
+  @IsOptional() @IsDateString() date_of_birth?: string;
+  @IsOptional() @IsString() gender?: string;
+  @IsOptional() @IsString() qualification?: string;
+  @IsOptional() @IsString() specialization?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsNumber()

@@ -9,7 +9,7 @@ import {
   Shield,
   Users,
 } from 'lucide-react';
-import { PERMISSION_CODES } from '../../types';
+import { ADMIN_PAGE_ACCESS } from '../crm/rbac/adminPageAccess';
 import type {
   OwnerManagerFieldDef,
   OwnerManagerMeta,
@@ -64,21 +64,7 @@ export const OWNER_MANAGER_STATUS_OPTIONS: Record<OwnerManagerTabType, string[]>
   statistics: ['Active'],
 };
 
-export const OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS = [
-  { code: PERMISSION_CODES.CRUD_STUDENT, label: 'Students' },
-  { code: PERMISSION_CODES.CRUD_TEACHER, label: 'Teachers' },
-  { code: PERMISSION_CODES.CRUD_CLASS, label: 'Classes' },
-  { code: PERMISSION_CODES.CRUD_ROOM, label: 'Rooms' },
-  { code: PERMISSION_CODES.CRUD_PAYMENT, label: 'Payments' },
-  { code: PERMISSION_CODES.VIEW_FINANCE, label: 'Finance' },
-  { code: PERMISSION_CODES.CRUD_GRADE, label: 'Grades' },
-  { code: PERMISSION_CODES.CRUD_ATTENDANCE, label: 'Attendance' },
-  { code: PERMISSION_CODES.CRUD_ASSIGNMENT, label: 'Assignments' },
-  { code: PERMISSION_CODES.CRUD_SUBJECT, label: 'Subjects' },
-  { code: PERMISSION_CODES.CRUD_DEBT, label: 'Debts' },
-  { code: PERMISSION_CODES.MANAGE_TESTS, label: 'Tests' },
-  { code: PERMISSION_CODES.MANAGE_USERS, label: 'Settings' },
-];
+export const OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS = ADMIN_PAGE_ACCESS.map(({ permission, label }) => ({ code: permission, label }));
 
 export const OWNER_MANAGER_FIELDS: Record<OwnerManagerTabType, OwnerManagerFieldDef[]> = {
   centers: [

@@ -143,7 +143,7 @@ class CreateStudentDto {
   gender?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['Active', 'Inactive', 'Suspended'])
   status?: string;
 
   @IsOptional()
@@ -247,7 +247,7 @@ class UpdateStudentDto {
   gender?: string;
 
   @IsOptional()
-  @IsString()
+  @IsIn(['Active', 'Inactive', 'Suspended'])
   status?: string;
 
   @IsOptional()

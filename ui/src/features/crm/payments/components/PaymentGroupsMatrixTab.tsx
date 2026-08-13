@@ -389,8 +389,8 @@ export const PaymentGroupsMatrixTab = () => {
                         <TableCell className="sticky left-44 z-10 bg-white py-1.5 dark:bg-card">
                           <span
                             className={cn(
-                              'inline-flex min-w-16 justify-center rounded-full px-2 py-0.5 text-[11px] font-black text-white shadow-sm',
-                              active ? 'bg-emerald-500 shadow-emerald-200' : 'bg-orange-400 shadow-orange-200'
+                              'inline-flex min-w-16 justify-center rounded-full px-2 py-0.5 text-[11px] font-black shadow-sm',
+                              active ? 'bg-emerald-500 text-black shadow-emerald-200' : 'bg-orange-400 text-red-800 shadow-orange-200'
                             )}
                           >
                             {active ? 'Aktiv' : 'Passive'}

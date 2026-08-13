@@ -96,11 +96,11 @@ const createTeacher = async (body: any) => {
 };
 
 const updateTeacher = (id: number, body: any, centerId?: number) => {
-  const { first_name, last_name, username, email, phone, status, roles } = body;
+  const { first_name, last_name, username, email, phone, date_of_birth, gender, qualification, specialization, status, roles } = body;
   const salaryPercentage = body.salary_percentage == null ? null : normalizeSalaryPercentage(body.salary_percentage);
   return teacherRepository.update(
     id,
-    [first_name, last_name, username, email, phone, salaryPercentage, status, roles ? JSON.stringify(roles) : null],
+    [first_name, last_name, username, email, phone, salaryPercentage, status, roles ? JSON.stringify(roles) : null, date_of_birth, gender, qualification, specialization],
     centerId
   );
 };

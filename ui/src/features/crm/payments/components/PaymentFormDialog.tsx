@@ -598,52 +598,11 @@ export const PaymentFormDialog = ({
                 required
                 placeholder="Select status"
               />
-              <div className="space-y-2">
-                <Label htmlFor="currency" className={formLabelClassName}>Currency</Label>
-                <Input
-                  id="currency"
-                  value={formData.currency || 'UZS'}
-                  readOnly
-                />
-              </div>
             </div>
           </section>
 
           <section className={sectionClass}>
-            <div className="mb-3 flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
-                <ReceiptText className="h-4 w-4" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Receipt and notes</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Use stable references so records stay easy to search and audit.
-                </p>
-              </div>
-            </div>
             <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="receipt_number" className={formLabelClassName}>Receipt number</Label>
-                <Input
-                  id="receipt_number"
-                  required
-                  value={formData.receipt_number || ''}
-                  onChange={(event) => setPaymentField(setFormData, { receipt_number: event.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="transaction_reference" className={formLabelClassName}>Transaction reference</Label>
-                <Input
-                  id="transaction_reference"
-                  value={formData.transaction_reference || formData.reference_number || ''}
-                  onChange={(event) =>
-                    setPaymentField(setFormData, {
-                      transaction_reference: event.target.value,
-                      reference_number: event.target.value,
-                    })
-                  }
-                />
-              </div>
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="notes" className={formLabelClassName}>Notes</Label>
                 <Textarea

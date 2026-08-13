@@ -234,13 +234,7 @@ export const useTeacherDetailPage = () => {
   const getStudentsByClass = (classId: number | undefined) =>
     classId ? classStudentsByClassId.get(Number(classId)) || [] : [];
 
-  const handleOpenGradeModal = () => {
-    setSelectedClassId(null);
-    setSelectedSubjectId(null);
-    setSelectedTerm('Q1');
-    setGradeEntries([]);
-    setIsGradeModalOpen(true);
-  };
+ 
 
   const handleCloseGradeModal = () => {
     setIsGradeModalOpen(false);
@@ -437,7 +431,6 @@ export const useTeacherDetailPage = () => {
     teacherStudents,
     studentClassGroups,
     handleRefreshAll,
-    handleOpenGradeModal,
     handleCloseGradeModal,
     handleClassSelect,
     handlePercentageChange,

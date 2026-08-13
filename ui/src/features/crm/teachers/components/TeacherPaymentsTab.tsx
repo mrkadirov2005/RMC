@@ -126,8 +126,8 @@ const PaymentGroup = ({
               <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">No students</TableCell>
             </TableRow>
           ) : (
-            students.map((student) => (
-              <PaymentStudentRow key={student.student_id || student.id} student={student} payments={payments} selectedPaymentMonth={selectedPaymentMonth} />
+            students.map((student, index) => (
+              <PaymentStudentRow key={student.student_id || student.id} index = {index} student={student} payments={payments} selectedPaymentMonth={selectedPaymentMonth} />
             ))
           )}
         </TableBody>
@@ -137,10 +137,12 @@ const PaymentGroup = ({
 );
 
 const PaymentStudentRow = ({
+  index,
   student,
   payments,
   selectedPaymentMonth,
 }: {
+  index: number;
   student: any;
   payments: any[];
   selectedPaymentMonth: string;
@@ -158,8 +160,8 @@ const PaymentStudentRow = ({
     <TableRow className="hover:bg-muted/50 transition-colors border-b-border">
       <TableCell className="py-2 pl-3 font-medium">
         <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold text-white shadow-sm">
-            {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold shadow-sm">
+           {index+1}
           </div>
           <div>
             <p>{student.first_name} {student.last_name}</p>
@@ -170,11 +172,11 @@ const PaymentStudentRow = ({
       <TableCell className="hidden py-2 text-muted-foreground sm:table-cell">{student.enrollment_number}</TableCell>
       <TableCell className="py-2 pr-3 text-right">
         {hasPaid ? (
-          <Badge className="border-0 bg-emerald-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-emerald-600">
+          <Badge color='red'  className = "text-black">
             Paid
           </Badge>
         ) : (
-          <Badge className="border-0 bg-rose-600 px-2 py-1 text-[11px] font-semibold text-white shadow-sm hover:bg-rose-600">
+          <Badge  className = "text-red-800">
             Unpaid
           </Badge>
         )}

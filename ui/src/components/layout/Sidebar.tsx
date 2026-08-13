@@ -203,15 +203,15 @@ const Sidebar = memo(() => {
   const isExpanded = isMobile || isOpen;
 
   const menuItems: MenuItem[] = [
-    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'], hideFromOwner: true },
+    { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'], permission: 'VIEW_DASHBOARD', hideFromOwner: true },
     { label: 'My Portal', path: '/teacher-portal', iconName: 'PortalTeacher', roles: ['teacher'] },
     { label: 'My Portal', path: '/student-portal', iconName: 'PortalStudent', roles: ['student'] },
     { label: 'My Tests', path: '/my-tests', iconName: 'MdQuiz', roles: ['student'] },
     { label: 'Students', path: '/students', iconName: 'Students', roles: ['superuser'], permission: 'CRUD_STUDENT' },
-    { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'CRUD_STUDENT' },
-    { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'] },
+    { label: 'Telegram Leads', path: '/telegram-registrations', iconName: 'Telegram', roles: ['superuser'], permission: 'VIEW_TELEGRAM_LEADS' },
+    { label: 'Archive', path: '/archive', iconName: 'Archive', roles: ['superuser'], permission: 'VIEW_ARCHIVE' },
     {
-      label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'],
+      label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'], permission: 'VIEW_RETENTION',
       children: [
         { label: 'Retention', path: '/retention?view=retention', iconName: 'Retention' },
         { label: 'Intake', path: '/retention?view=intake', iconName: 'Students' },
@@ -220,7 +220,7 @@ const Sidebar = memo(() => {
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
-    { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'] },
+    { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'], permission: 'VIEW_CALENDAR' },
 
 
     // Settings removed from sidebar — accessible via gear icon in header

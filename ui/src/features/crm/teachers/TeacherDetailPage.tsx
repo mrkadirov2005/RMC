@@ -1,10 +1,9 @@
 // Page component for the teachers screen in the crm feature.
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import { AssignmentSectionTeacher } from './components/AssignmentSectionTeacher';
 import {
   ArrowLeft,
-  Plus,
   User,
   BookOpen,
   ClipboardList,
@@ -18,7 +17,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { generateTempPassword } from '@/utils/password';
-import { TeacherProfileSummary } from './components/TeacherProfileSummary';
 import {
   TeacherAccountPasswordCard,
   TeacherPaymentPasswordDialog,
@@ -80,21 +78,19 @@ const TeacherDetailPage = () => {
     teacherStudents,
     studentClassGroups,
     handleRefreshAll,
-    handleOpenGradeModal,
     handleCloseGradeModal,
     handleClassSelect,
     handlePercentageChange,
     handleSaveGrades,
-    handleResetPassword,
     handleSetPassword,
     handleCopyTempPassword,
     handleSetPaymentPassword,
     handleCopyPaymentPassword,
     toggleClassExpanded,
-    getInitials,
-    getStatusClasses,
     getGradeBadgeClasses,
   } = useTeacherDetailPage();
+
+  const [isPasswordUpdate, setIsPasswordUpdate] = useState(false);
 
   if (loading) {
     return (
@@ -134,15 +130,10 @@ const TeacherDetailPage = () => {
           <Button
             size="sm"
             className="h-8 rounded-lg bg-cyan-600 px-2.5 text-xs text-white shadow-sm hover:bg-cyan-700"
-            onClick={handleResetPassword}
+            onClick={() => setIsPasswordUpdate((prev) => !prev)}
             disabled={resettingPassword}
           >
-            {resettingPassword ? (
-              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-            ) : (
-              <KeyRound className="mr-1.5 h-3.5 w-3.5" />
-            )}
-            Reset Password
+            Update Password
           </Button>
           <Button
             size="sm"
@@ -155,14 +146,7 @@ const TeacherDetailPage = () => {
             <KeyRound className="mr-1.5 h-3.5 w-3.5" />
             Set Payment Password
           </Button>
-          <Button
-            size="sm"
-            className="h-8 rounded-lg bg-fuchsia-600 px-2.5 text-xs text-white shadow-sm hover:bg-fuchsia-700"
-            onClick={handleOpenGradeModal}
-          >
-            <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Add Grades
-          </Button>
+
         </div>
       </div>
 
@@ -172,20 +156,17 @@ const TeacherDetailPage = () => {
         </Alert>
       )}
 
-      <TeacherProfileSummary
-        teacher={teacher}
-        classesCount={classes.length}
-        studentsCount={teacherStudents.length}
-        getInitials={getInitials}
-        getStatusClasses={getStatusClasses}
-      />
 
-      <TeacherAccountPasswordCard
+      {isPasswordUpdate && (
+         <TeacherAccountPasswordCard
         newPassword={newPassword}
         setNewPassword={setNewPassword}
         settingPassword={settingPassword}
         onSetPassword={handleSetPassword}
       />
+      )}
+
+
 
       <TeacherPaymentPasswordDialog
         open={paymentPasswordOpen}
@@ -227,7 +208,7 @@ const TeacherDetailPage = () => {
           <div className="p-3">
             <Suspense fallback={<TabLoadingState />}>
               <TabsContent value="info">
-                <TeacherInfoTab teacher={teacher} />
+                <TeacherInfoTab teacher={teacher} onRefresh={handleRefreshAll} />
               </TabsContent>
 
               <TabsContent value="classes">

@@ -36,6 +36,7 @@ import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { paymentMethodOptions, paymentStatusOptions } from '../../../../utils/dropdownOptions';
 import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
+import { GROUP_PAYMENT_TABLE_CLASS } from '../paymentListLayout';
 
 const paymentSurfaceClass =
   'overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm';
@@ -186,10 +187,11 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           </CardContent>
         </Card>
 
-        <div className={cn(paymentSurfaceClass, 'overflow-x-auto rounded-lg px-4 [&_th]:h-9 [&_th]:px-3 [&_td]:px-3 [&_td]:py-1.5')}>
-          <Table className="mx-auto min-w-[720px] max-w-4xl table-auto text-sm">
+        <div className={cn(paymentSurfaceClass, 'w-full overflow-x-auto rounded-lg [&_th]:h-9 [&_th]:px-4 [&_td]:px-4 [&_td]:py-1.5')}>
+          <Table className={GROUP_PAYMENT_TABLE_CLASS}>
             <TableHeader>
               <TableRow>
+                <TableHead>No</TableHead>
                 <TableHead>Student</TableHead>
                 <TableHead className="text-center">Payments</TableHead>
                 <TableHead>Payment date</TableHead>
@@ -199,11 +201,12 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
             </TableHeader>
             <TableBody>
               {state.loading ? (
-                <TableRow><TableCell colSpan={5} className="py-8 text-center">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="py-8  text-center">Loading...</TableCell></TableRow>
               ) : groupStudentRows.length === 0 ? (
-                <TableRow><TableCell colSpan={5} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
-              ) : groupStudentRows.map((row) => (
+                <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
+              ) : groupStudentRows.map((row, index) => (
                 <TableRow key={row.studentId}>
+                  <TableCell>{index + 1}</TableCell>
                   <TableCell>
                     <p className="truncate font-semibold leading-tight">{row.name}</p>
                     <p className="truncate text-[11px] leading-tight text-muted-foreground">{row.student.phone || `ID ${row.studentId}`}</p>

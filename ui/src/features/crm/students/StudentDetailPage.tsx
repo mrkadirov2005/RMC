@@ -16,6 +16,8 @@ import {
   Save,
   Trash2,
   User,
+  UserCheck,
+  UserX,
   X,
 } from 'lucide-react';
 import { studentAPI, classAPI, teacherAPI } from './api';
@@ -38,7 +40,7 @@ import { fetchPaymentsForce } from '../../../slices/paymentsSlice';
 import { fetchAssignmentsForce } from '../../../slices/assignmentsSlice';
 import { fetchGradesForce } from '../../../slices/gradesSlice';
 import { getListRowBackground } from '../settings/listAppearance';
-import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
+import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, getNextStudentAccountStatus, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
 
 interface Class {
   class_id?: number;
@@ -167,6 +169,7 @@ const StudentDetailPage = () => {
   const [isEditingOverview, setIsEditingOverview] = useState(false);
   const [overviewDraft, setOverviewDraft] = useState<StudentOverviewDraft | null>(null);
   const [savingOverview, setSavingOverview] = useState(false);
+  const [changingStatus, setChangingStatus] = useState(false);
 
   // for hiding the password field
   const [isUpdatePassword, setIsUpdatePassword] = useState(false);
@@ -387,6 +390,21 @@ const StudentDetailPage = () => {
     }
   };
 
+  const toggleStudentStatus = async () => {
+    if (!studentId || !student) return;
+    const nextStatus = getNextStudentAccountStatus(student.status);
+    setChangingStatus(true);
+    try {
+      await studentAPI.update(Number(studentId), { status: nextStatus });
+      await loadStudentDetails();
+      showToast.success(`Student account is now ${nextStatus.toLowerCase()}.`);
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error) || 'Failed to change student status.');
+    } finally {
+      setChangingStatus(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -452,7 +470,19 @@ const StudentDetailPage = () => {
       <Card className="owner-tertiary-card overflow-hidden rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center lg:justify-between">
               <h1 className="truncate text-base font-bold text-slate-950 dark:text-foreground">{studentFullName}</h1>
-        <Button onClick={()=>setIsUpdatePassword((prev)=>!prev)}> update student password</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant={String(student.status).toLowerCase() === 'active' ? 'destructive' : 'default'}
+              className={String(student.status).toLowerCase() === 'active' ? 'h-8 text-xs' : 'h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700'}
+              onClick={toggleStudentStatus}
+              disabled={changingStatus}
+            >
+              {changingStatus ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : String(student.status).toLowerCase() === 'active' ? <UserX className="mr-1.5 h-3.5 w-3.5" /> : <UserCheck className="mr-1.5 h-3.5 w-3.5" />}
+              {changingStatus ? 'Updating...' : String(student.status).toLowerCase() === 'active' ? 'Set inactive' : 'Set active'}
+            </Button>
+            <Button size="sm" className="h-8 text-xs" onClick={()=>setIsUpdatePassword((prev)=>!prev)}>Update student password</Button>
+          </div>
 
         </CardContent>
       </Card>

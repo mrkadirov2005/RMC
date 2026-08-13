@@ -1,64 +1,32 @@
-import { BadgeCheck, Calendar, GraduationCap, Mail, Phone, User, Wallet } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
+import { Loader2, PencilLine, Save, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { getListRowBackground } from '../../settings/listAppearance';
+import { teacherAPI } from '../requests';
+import { showToast } from '@/utils/toast';
+import { getErrorMessage } from '@/utils/errorMessage';
+import { buildTeacherOverviewColumns, buildTeacherOverviewUpdate, createTeacherOverviewDraft, TEACHER_OVERVIEW_FIELDS, type TeacherOverviewDraft } from '../teacherOverview';
 
-interface TeacherInfoTabProps {
-  teacher: any;
+export default function TeacherInfoTab({ teacher, onRefresh }: { teacher: any; onRefresh: () => void }) {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [draft, setDraft] = useState<TeacherOverviewDraft | null>(null);
+  const columns = buildTeacherOverviewColumns(teacher);
+  const start = () => { setDraft(createTeacherOverviewDraft(teacher)); setEditing(true); };
+  const cancel = () => { setDraft(null); setEditing(false); };
+  const save = async () => {
+    if (!draft || !teacher?.teacher_id && !teacher?.id) return;
+    if (!draft.first_name.trim() || !draft.last_name.trim()) return showToast.error('First name and last name are required.');
+    setSaving(true);
+    try {
+      await teacherAPI.update(Number(teacher.teacher_id || teacher.id), buildTeacherOverviewUpdate(draft));
+      onRefresh(); cancel(); showToast.success('Teacher information updated successfully.');
+    } catch (error) { showToast.error(getErrorMessage(error) || 'Failed to update teacher information.'); }
+    finally { setSaving(false); }
+  };
+  return <div className="space-y-3">
+    <div className="flex justify-end gap-2">{editing ? <><Button size="sm" variant="outline" onClick={cancel} disabled={saving}><X className="mr-1 h-4 w-4" />Cancel</Button><Button size="sm" onClick={save} disabled={saving} className="bg-emerald-600 text-white hover:bg-emerald-700">{saving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}Save changes</Button></> : <Button size="sm" onClick={start} className="bg-indigo-600 text-white hover:bg-indigo-700"><PencilLine className="mr-1 h-4 w-4" />Edit information</Button>}</div>
+    <div className="grid gap-3 lg:grid-cols-2 lg:items-start">{[{ title: 'Main information', rows: columns.main }, { title: 'Contact & professional information', rows: columns.professional }].map((section) => <section key={section.title} className="overflow-hidden rounded-md border dark:border-border"><h2 className="border-b bg-slate-50 px-3 py-2 text-sm font-bold dark:bg-muted/40">{section.title}</h2><dl data-alternating-list="true" className="divide-y text-sm dark:divide-border">{section.rows.map((item, index) => { const field = TEACHER_OVERVIEW_FIELDS[item.label]; return <div key={item.label} data-list-row="true" className="grid min-h-9 grid-cols-[125px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[165px_minmax(0,1fr)]" style={{ backgroundColor: getListRowBackground(index) }}><dt className="font-medium text-muted-foreground">{item.label}</dt><dd className="min-w-0 font-semibold">{editing && draft && field ? <Input aria-label={item.label} type={field === 'date_of_birth' ? 'date' : field === 'salary_percentage' ? 'number' : 'text'} min={field === 'salary_percentage' ? 0 : undefined} max={field === 'salary_percentage' ? 100 : undefined} value={draft[field]} onChange={(event) => setDraft({ ...draft, [field]: event.target.value })} className="h-8 bg-white text-xs dark:bg-slate-900" /> : item.value}</dd></div>; })}</dl></section>)}</div>
+  </div>;
 }
-
-export default function TeacherInfoTab({ teacher }: TeacherInfoTabProps) {
-  return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-      <Card className="h-full rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-        <CardHeader className="p-3 pb-1">
-          <CardTitle className="text-sm text-indigo-700 dark:text-indigo-300">Contact Information</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 p-3 pt-1">
-          <InfoRow Icon={User} tone="bg-fuchsia-600" label="Username" value={teacher.username || '-'} />
-          <InfoRow Icon={Mail} tone="bg-cyan-600" label="Email" value={teacher.email || '-'} breakAll />
-          <InfoRow Icon={Phone} tone="bg-emerald-600" label="Phone" value={teacher.phone || '-'} />
-          <InfoRow
-            Icon={Calendar}
-            tone="bg-amber-500"
-            label="Date of Birth"
-            value={teacher.date_of_birth ? new Date(teacher.date_of_birth).toLocaleDateString() : 'N/A'}
-          />
-        </CardContent>
-      </Card>
-      <Card className="h-full rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
-        <CardHeader className="p-3 pb-1">
-          <CardTitle className="text-sm text-emerald-700 dark:text-emerald-300">Professional Details</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-2 p-3 pt-1">
-          <InfoRow Icon={BadgeCheck} tone="bg-amber-500" label="Employee ID" value={teacher.employee_id || '-'} />
-          <InfoRow Icon={GraduationCap} tone="bg-violet-600" label="Qualification" value={teacher.qualification || '-'} />
-          <InfoRow Icon={GraduationCap} tone="bg-rose-600" label="Specialization" value={teacher.specialization || '-'} />
-          <InfoRow Icon={Wallet} tone="bg-fuchsia-600" label="Teacher Share" value={`${Number(teacher.salary_percentage ?? 50)}%`} />
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-const InfoRow = ({
-  Icon,
-  tone,
-  label,
-  value,
-  breakAll = false,
-}: {
-  Icon: any;
-  tone: string;
-  label: string;
-  value: string;
-  breakAll?: boolean;
-}) => (
-  <div className="flex min-h-[46px] items-center gap-2 rounded-lg border border-slate-200 bg-white p-2 shadow-sm dark:border-border dark:bg-background/70">
-    <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-white ${tone}`}>
-      <Icon className="h-3.5 w-3.5" />
-    </div>
-    <div className="min-w-0">
-      <p className="text-[10px] font-semibold uppercase text-muted-foreground">{label}</p>
-      <p className={`${breakAll ? 'break-all' : 'truncate'} text-xs font-semibold`}>{value}</p>
-    </div>
-  </div>
-);

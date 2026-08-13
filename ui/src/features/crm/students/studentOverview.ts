@@ -26,6 +26,11 @@ export type StudentOverviewEditField =
 
 export type StudentOverviewDraft = Record<StudentOverviewEditField, string>;
 
+export const STUDENT_ACCOUNT_STATUSES = ['Active', 'Inactive', 'Suspended'] as const;
+
+export const getNextStudentAccountStatus = (status?: string) =>
+  String(status || '').toLowerCase() === 'active' ? 'Inactive' : 'Active';
+
 export const STUDENT_OVERVIEW_EDIT_FIELDS: Record<string, StudentOverviewEditField> = {
   'First name': 'first_name', 'Last name': 'last_name', Status: 'status', Username: 'username',
   'Enrollment number': 'enrollment_number', Email: 'email', Phone: 'phone', 'Date of birth': 'date_of_birth',
