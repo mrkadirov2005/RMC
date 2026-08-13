@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BadgePercent, ChevronLeft, ChevronRight, CreditCard, FileText, Loader2, ReceiptText, Search, UserRound, Wallet } from 'lucide-react';
+import { BadgePercent, ChevronLeft, ChevronRight, CreditCard, FileText, Loader2, Search, UserRound, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
