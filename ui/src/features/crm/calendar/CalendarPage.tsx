@@ -21,7 +21,8 @@ const VIEW_KEY = 'rmc-calendar-view';
 const validView = (value: string | null): value is CalendarView => ['day', 'week', 'month', 'agenda'].includes(value || '');
 const initialState = () => {
   const params = new URLSearchParams(window.location.search);
-  const stored = localStorage.getItem(VIEW_KEY);
+  let stored: string | null = null;
+  try { stored = window.localStorage.getItem(VIEW_KEY); } catch { stored = null; }
   const view = validView(params.get('view')) ? params.get('view') as CalendarView : validView(stored) ? stored : 'week';
   const parsedDate = new Date(`${params.get('date') || localDateKey(new Date())}T12:00:00`);
   return {
@@ -59,7 +60,7 @@ const CalendarPage = () => {
   useEffect(() => { if (!isStudent) { dispatch(fetchClasses()); dispatch(fetchStudents()); } }, [dispatch, isStudent]);
 
   useEffect(() => {
-    localStorage.setItem(VIEW_KEY, view);
+    try { window.localStorage.setItem(VIEW_KEY, view); } catch { /* Storage can be unavailable in restricted browsers. */ }
     const params = new URLSearchParams(); params.set('view', view); params.set('date', localDateKey(anchor));
     const mappings: Array<[keyof CalendarFilters, string]> = [['query', 'q'], ['teacherId', 'teacher'], ['classId', 'group'], ['subjectId', 'subject'], ['roomId', 'room'], ['status', 'status']];
     mappings.forEach(([key, name]) => filters[key] && params.set(name, filters[key]));

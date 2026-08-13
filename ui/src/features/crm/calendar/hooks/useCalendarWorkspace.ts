@@ -7,6 +7,20 @@ const rows = (response: any) => {
   return Array.isArray(data) ? data : [];
 };
 
+export const normalizeCalendarEvents = (values: any[]): CalendarEvent[] => values
+  .map((event) => ({
+    ...event,
+    event_id: String(event?.event_id || ''),
+    source: ['recurring', 'booking', 'session'].includes(String(event?.source)) ? event.source : 'recurring',
+    status: ['planned', 'ready', 'in_progress', 'conducted'].includes(String(event?.status)) ? event.status : 'planned',
+    date: String(event?.date || ''),
+    start_time: String(event?.start_time || '').slice(0, 8),
+    end_time: String(event?.end_time || event?.start_time || '').slice(0, 8),
+    class_id: Number(event?.class_id || 0),
+    class_name: String(event?.class_name || 'Unnamed group'),
+  }))
+  .filter((event) => event.event_id && event.date && event.start_time && event.class_id > 0) as CalendarEvent[];
+
 export const useCalendarWorkspace = (anchor: Date, view: CalendarView, filters: CalendarFilters) => {
   const range = useMemo(() => viewRange(anchor, view), [anchor, view]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
@@ -28,7 +42,7 @@ export const useCalendarWorkspace = (anchor: Date, view: CalendarView, filters: 
           calendarAPI.getEvents(params), calendarAPI.getSummary(params), calendarAPI.getResources(), calendarAPI.getConflicts(params),
         ]);
         if (!active) return;
-        setEvents(rows(eventResponse));
+        setEvents(normalizeCalendarEvents(rows(eventResponse)));
         setSummary(summaryResponse?.data?.data ?? summaryResponse?.data ?? summaryResponse ?? {});
         setResources(rows(resourceResponse));
         setConflicts(rows(conflictResponse));
