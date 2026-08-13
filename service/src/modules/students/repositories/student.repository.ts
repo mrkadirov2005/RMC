@@ -121,7 +121,7 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
 const effectiveTeacherExpr = sql`COALESCE(${classes.teacherId}, ${students.teacherId})`;
 
 const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
-  const conditions: any[] = [isNull(students.deletedAt)];
+  const conditions: any[] = [isNull(students.deletedAt), or(isNull(students.status), ne(students.status, 'Transferred'))];
   if (centerId) conditions.push(eq(students.centerId, centerId));
 
   if (teacherId) {
@@ -433,7 +433,7 @@ const purge = async (id: number, centerId?: number, teacherId?: number) => {
 
 const transferToClass = async (id: number, targetClassId: number, centerId?: number, teacherId?: number) =>
   db.transaction(async (tx: any) => {
-    const sourceConditions = [eq(students.studentId, id), isNull(students.deletedAt)];
+    const sourceConditions = [eq(students.studentId, id), isNull(students.deletedAt), ne(students.status, 'Transferred')];
     if (centerId) sourceConditions.push(eq(students.centerId, centerId));
     if (teacherId) sourceConditions.push(eq(students.teacherId, teacherId));
 
@@ -467,7 +467,7 @@ const transferToClass = async (id: number, targetClassId: number, centerId?: num
 
     const transferredRows = await tx
       .update(students)
-      .set({ status: 'Transferred', deletedAt: sql`CURRENT_TIMESTAMP`, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .set({ status: 'Transferred', deletedAt: null, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(students.studentId, id))
       .returning(studentSelection);
 
@@ -620,7 +620,7 @@ const findByUsername = async (username: string) => {
       is_frozen: students.isFrozen,
     })
     .from(students)
-    .where(and(eq(students.username, username), isNull(students.deletedAt)));
+    .where(and(eq(students.username, username), isNull(students.deletedAt), ne(students.status, 'Transferred')));
   return rows[0] || null;
 };
 

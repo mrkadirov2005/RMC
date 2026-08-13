@@ -80,10 +80,25 @@ const rooms = pgTable('rooms', {
   roomId: serial('room_id').primaryKey(),
   centerId: integer('center_id').notNull(),
   roomNumber: varchar('room_number', { length: 50 }).notNull(),
+  physicalRoomId: integer('physical_room_id'),
   classId: integer('class_id'),
   day: varchar('day', { length: 20 }),
   time: time('time'),
   endTime: time('end_time'),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
+});
+
+const physicalRooms = pgTable('physical_rooms', {
+  physicalRoomId: serial('physical_room_id').primaryKey(),
+  centerId: integer('center_id').notNull(),
+  name: varchar('name', { length: 50 }).notNull(),
+  capacity: integer('capacity'),
+  location: varchar('location', { length: 255 }),
+  status: varchar('status', { length: 30 }).notNull(),
+  features: jsonb('features'),
+  operatingStartTime: time('operating_start_time').notNull(),
+  operatingEndTime: time('operating_end_time').notNull(),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 });
@@ -715,6 +730,7 @@ module.exports = {
   teacherPaymentCredentials,
   centers,
   rooms,
+  physicalRooms,
   classes,
   teachers,
   students,

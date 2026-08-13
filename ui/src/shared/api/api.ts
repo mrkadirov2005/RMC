@@ -484,10 +484,15 @@ export const ownerAPI = {
 
 export const roomAPI = {
   getAll: (params?: { center_id?: number }) => apiClient.get('/rooms', { params }),
+  getPhysical: (params?: Record<string, unknown>) => apiClient.get('/rooms/physical', { params }),
   getById: (id: number) => apiClient.get(`/rooms/${id}`),
   create: (data: any) => apiClient.post('/rooms', data),
   update: (id: number, data: any) => apiClient.put(`/rooms/${id}`, data),
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/rooms/${id}`, { params }),
+  getOverview: (params?: Record<string, unknown>) => apiClient.get('/rooms/overview', { params }),
+  getAvailability: (params?: Record<string, unknown>) => apiClient.get('/rooms/availability', { params }),
+  getSchedule: (params?: Record<string, unknown>) => apiClient.get('/rooms/schedule', { params }),
+  getUtilization: (params?: Record<string, unknown>) => apiClient.get('/rooms/reports/utilization', { params }),
 };
 
 export const roomSlotAPI = {

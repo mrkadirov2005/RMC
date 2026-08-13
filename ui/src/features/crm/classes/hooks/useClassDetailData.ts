@@ -120,6 +120,7 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
   return {
     classData,
     students,
+    setStudents,
     subjects,
     sessions,
     setSessions,

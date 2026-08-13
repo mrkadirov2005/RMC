@@ -157,14 +157,21 @@ describe('actor and student center isolation with PostgreSQL', () => {
     const studentId = (await pool.query(`SELECT student_id FROM students WHERE enrollment_number = 'A-EXISTING' AND deleted_at IS NULL`)).rows[0].student_id;
     const response = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classA2 });
     expect(response.status).toBe(201);
-    const rows = (await pool.query(`SELECT class_id, previous_class_id, deleted_at FROM students WHERE enrollment_number = 'A-EXISTING' ORDER BY student_id`)).rows;
-    expect(rows.filter((row) => row.deleted_at == null)).toHaveLength(1);
-    expect(rows.find((row) => row.deleted_at == null)).toMatchObject({ class_id: classA2, previous_class_id: classA1 });
-    expect(rows.some((row) => row.deleted_at != null && row.class_id === classA1)).toBe(true);
+    const rows = (await pool.query(`SELECT class_id, previous_class_id, status, deleted_at FROM students WHERE enrollment_number = 'A-EXISTING' ORDER BY student_id`)).rows;
+    expect(rows.filter((row) => row.status === 'Active' && row.deleted_at == null)).toHaveLength(1);
+    expect(rows.find((row) => row.status === 'Active')).toMatchObject({ class_id: classA2, previous_class_id: classA1, deleted_at: null });
+    expect(rows).toContainEqual(expect.objectContaining({ class_id: classA1, status: 'Transferred', deleted_at: null }));
+
+    const oldGroup = await request(server).get(`/api/students/class/${classA1}`).set('Authorization', `Bearer ${adminToken}`);
+    const newGroup = await request(server).get(`/api/students/class/${classA2}`).set('Authorization', `Bearer ${adminToken}`);
+    expect(oldGroup.status).toBe(200);
+    expect(newGroup.status).toBe(200);
+    expect(oldGroup.body).toContainEqual(expect.objectContaining({ class_id: classA1, status: 'Transferred' }));
+    expect(newGroup.body).toContainEqual(expect.objectContaining({ class_id: classA2, status: 'Active', previous_class_id: classA1 }));
   });
 
   test('soft delete hides an active student and archive restore returns it', async () => {
-    const activeId = (await pool.query(`SELECT student_id FROM students WHERE enrollment_number = 'A-EXISTING' AND deleted_at IS NULL`)).rows[0].student_id;
+    const activeId = (await pool.query(`SELECT student_id FROM students WHERE enrollment_number = 'A-EXISTING' AND deleted_at IS NULL AND status = 'Active'`)).rows[0].student_id;
     const deleted = await request(server).delete(`/api/students/${activeId}`).set('Authorization', `Bearer ${adminToken}`);
     expect(deleted.status).toBe(200);
     const hidden = await request(server).get(`/api/students/${activeId}`).set('Authorization', `Bearer ${adminToken}`);

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CalendarCheck, CheckCircle2, Coins, FileQuestion, Loader2, PencilLine, PlayCircle, Star } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, CheckCircle2, Coins, FileQuestion, Loader2, Pencil, PencilLine, PlayCircle, Star, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,8 @@ import { useClassDetailData } from './hooks/useClassDetailData';
 import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
 import { toDateKey } from './utils/date';
 import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
+import { studentsApi } from '../students/api/studentsApi';
+import { getClassStudentId, removeClassStudentById } from './classStudentActions';
 
 type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
 
@@ -39,10 +41,11 @@ const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const authUser = useAppSelector((state) => state.auth.user);
-  const { classData, students, subjects, sessions, setSessions, assignedTests, loading, error } = useClassDetailData(classId, authUser);
+  const { classData, students, setStudents, subjects, sessions, setSessions, assignedTests, loading, error } = useClassDetailData(classId, authUser);
   const [startingLesson, setStartingLesson] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
+  const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null);
 
   const schedule = useMemo(() => parseSchedule(classData?.section), [classData?.section]);
   const className = classData?.class_name || 'Class';
@@ -98,6 +101,36 @@ const ClassDetailPage = () => {
       if (checked) return Array.from(new Set([...current, action]));
       return current.filter((item) => item !== action);
     });
+  };
+
+  const handleEditStudent = (student: (typeof students)[number]) => {
+    const studentId = getClassStudentId(student);
+    if (!studentId) {
+      showToast.error('Student ID is missing.');
+      return;
+    }
+    navigate(`/students/${studentId}/edit`);
+  };
+
+  const handleDeleteStudent = async (student: (typeof students)[number]) => {
+    const studentId = getClassStudentId(student);
+    if (!studentId) {
+      showToast.error('Student ID is missing.');
+      return;
+    }
+    const studentName = [student.first_name, student.last_name].filter(Boolean).join(' ') || 'this student';
+    if (!window.confirm(`Delete ${studentName}?`)) return;
+
+    setDeletingStudentId(studentId);
+    try {
+      await studentsApi.deleteStudent(studentId);
+      setStudents((current) => removeClassStudentById(current, studentId));
+      showToast.success('Student deleted successfully.');
+    } catch (deleteError: any) {
+      showToast.error(deleteError?.response?.data?.error || deleteError?.response?.data?.details || 'Failed to delete student.');
+    } finally {
+      setDeletingStudentId(null);
+    }
   };
 
   const handleStartLesson = async () => {
@@ -278,11 +311,12 @@ const ClassDetailPage = () => {
                   <TableHead>Student</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {studentRows.length === 0 ? (
-                  <TableRow><TableCell colSpan={3} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
                 ) : studentRows.map((student, index) => {
                   const isTransferred = String(student.status || '').toLowerCase() === 'transferred';
                   return (
@@ -301,6 +335,33 @@ const ClassDetailPage = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>{student.phone || '-'}</TableCell>
+                    <TableCell className="py-2 text-right">
+                      <div className="inline-flex items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs"
+                          onClick={() => handleEditStudent(student)}
+                          aria-label={`Edit ${student.first_name || ''} ${student.last_name || ''}`.trim()}
+                        >
+                          <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                          Edit
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 px-2 text-xs text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40"
+                          onClick={() => handleDeleteStudent(student)}
+                          disabled={deletingStudentId === getClassStudentId(student)}
+                          aria-label={`Delete ${student.first_name || ''} ${student.last_name || ''}`.trim()}
+                        >
+                          {deletingStudentId === getClassStudentId(student) ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
                   </TableRow>
                   );
                 })}

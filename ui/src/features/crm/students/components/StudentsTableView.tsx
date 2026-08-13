@@ -17,6 +17,7 @@ import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
 import { formatGroupLabel } from '@/shared/groupLabel';
+import { getStatusVariant, isTransferredStudentStatus } from '../status';
 
 type TeacherOption = {
   id?: string | number;
@@ -219,6 +220,16 @@ export const StudentsTableView = ({
   const getSchoolClass = (student: Student) => student.school_class || '-';
   const getPhone = (student: Student) => student.phone || student.parent_phone || '-';
   const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none';
+  const renderTransferredChip = (student: Student) => {
+    if (!isTransferredStudentStatus(student.status)) return null;
+
+    return (
+      <span className={`${chipClass} border ${getStatusVariant(student.status)}`}>
+        <ArrowRightLeft className="h-3 w-3" />
+        Transferred
+      </span>
+    );
+  };
   const formatMoney = (value: unknown) => {
     const amount = Number(value || 0);
     if (!Number.isFinite(amount) || amount <= 0) return '';
@@ -449,6 +460,7 @@ export const StudentsTableView = ({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-semibold">{student.first_name} {student.last_name}</p>
                         <div className="mt-1 flex flex-wrap gap-1">
+                          {renderTransferredChip(student)}
                           {!hideTeacherGroup && <span className={`${chipClass} bg-cyan-100 text-cyan-800`}><BookOpen className="h-3 w-3" />{getGroupName(student)}</span>}
                           {!hideTeacherGroup && <span className={`${chipClass} bg-violet-100 text-violet-800`}><UserCheck className="h-3 w-3" />{getTeacherName(student)}</span>}
                           <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
@@ -468,6 +480,7 @@ export const StudentsTableView = ({
                         {student.first_name} {student.last_name}
                       </h3>
                       <div className={cn('mt-2 flex flex-wrap gap-1', viewMode === 'cards' && 'text-slate-950')}>
+                        {renderTransferredChip(student)}
                         {!hideTeacherGroup && <span className={`${chipClass} bg-cyan-100 text-cyan-800`}><BookOpen className="h-3 w-3" />{getGroupName(student)}</span>}
                         {!hideTeacherGroup && <span className={`${chipClass} bg-violet-100 text-violet-800`}><UserCheck className="h-3 w-3" />{getTeacherName(student)}</span>}
                         <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
@@ -575,13 +588,16 @@ export const StudentsTableView = ({
                   {getPaginatedRowNumber(index + startIndex)}
                 </TableCell>
                 <TableCell className="px-2 py-2 font-medium">
-                  <button
-                    type="button"
-                    className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
-                    onClick={() => onView(student.student_id || student.id || 0)}
-                  >
-                    {student.first_name} {student.last_name}
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-left font-semibold text-slate-950 hover:text-sky-700 dark:text-card-foreground dark:hover:text-primary"
+                      onClick={() => onView(student.student_id || student.id || 0)}
+                    >
+                      {student.first_name} {student.last_name}
+                    </button>
+                    {renderTransferredChip(student)}
+                  </div>
                 </TableCell>
                 {!hideTeacherGroup && (
                   <TableCell className="px-2 py-2">
