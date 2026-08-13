@@ -127,19 +127,6 @@ const TelegramRegistrationsPage = () => {
     setPage(1);
   }, [search, status]);
 
-  const counts = useMemo(() => {
-    return rows.reduce(
-      (acc, row) => {
-        const key = String(row.status || 'Pending').toLowerCase();
-        if (key === 'imported') acc.imported += 1;
-        else if (key === 'rejected') acc.rejected += 1;
-        else acc.pending += 1;
-        return acc;
-      },
-      { pending: 0, imported: 0, rejected: 0 }
-    );
-  }, [rows]);
-
   const openAssignDialog = (id: number) => {
     setAssignDialogId(id);
     setAssignClassId('');
