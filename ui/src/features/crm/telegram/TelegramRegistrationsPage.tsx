@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CheckCircle, Loader2, MessageCircle, RefreshCcw, Search, UserPlus, XCircle } from 'lucide-react';
+import { Loader2, MessageCircle, RefreshCcw, Search, UserPlus} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/common/PageHeader';
-import { MetricCard } from '@/components/common/MetricCard';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { telegramRegistrationAPI, classAPI, teacherAPI } from './api';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -198,13 +197,6 @@ const TelegramRegistrationsPage = () => {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label={t('Visible')} value={rows.length.toLocaleString()} detail={t('Current status filter')} icon={MessageCircle} tone="neutral" />
-        <MetricCard label={t('Pending')} value={counts.pending.toLocaleString()} detail={t('Waiting for action')} icon={UserPlus} tone="amber" />
-        <MetricCard label={t('Imported')} value={counts.imported.toLocaleString()} detail={t('Moved into students')} icon={CheckCircle} tone="green" />
-        <MetricCard label={t('Rejected')} value={counts.rejected.toLocaleString()} detail={t('Declined requests')} icon={XCircle} tone="neutral" />
-      </div>
 
       <Card className="border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="space-y-4 p-4">

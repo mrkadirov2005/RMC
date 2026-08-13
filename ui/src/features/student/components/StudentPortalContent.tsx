@@ -1,10 +1,8 @@
-import { AlertTriangle, CalendarDays, CheckCircle, ClipboardList, Coins, FileQuestion, UserRound } from 'lucide-react';
+import { CalendarDays, ClipboardList, FileQuestion, UserRound } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MetricCard } from '@/components/common/MetricCard';
 import { SectionPanel } from '@/components/common/SectionPanel';
-import { formatMoney } from '@/utils/helpers';
 import type { Assignment, AttendanceStats, ClassInfo, Grade, Payment, ScheduleItem, StudentProfile, Subject, Teacher, Test } from '../types';
 import { StudentPaymentHistory } from './StudentPaymentHistory';
 import { StudentSnapshotCards } from './StudentSnapshotCards';
@@ -131,15 +129,7 @@ export const StudentPortalContent = ({
       </SectionPanel>
 
       {error && <Card className="border-red-200 bg-red-50"><CardContent className="py-4 text-sm text-red-700">{getErrorMessage(error)}</CardContent></Card>}
-
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        <MetricCard className="animate-slide-up animation-delay-200" label={t('Active Tests')} value={activeTests} detail={t('Ready to take')} icon={FileQuestion} tone="blue" onClick={onTests} />
-        <MetricCard className="animate-slide-up animation-delay-300" label={t('Attendance Rate')} value={`${attendanceStats.rate}%`} detail={`${attendanceStats.present}/${attendanceStats.total} ${t('present')}`} icon={CalendarDays} tone="green" />
-        <MetricCard className="animate-slide-up animation-delay-400" label={t('Average Grade')} value={`${averageGrade}%`} detail={t('Across posted grades')} icon={CheckCircle} tone="purple" />
-        <MetricCard className="animate-slide-up animation-delay-500" label={t('Outstanding Debt')} value={formatMoney(outstandingDebt)} detail={t('Remaining balance')} icon={AlertTriangle} tone={outstandingDebt > 0 ? 'red' : 'green'} />
-        <MetricCard className="animate-slide-up animation-delay-600" label={t('Coins')} value={Number(student?.coins || 0).toLocaleString()} detail={t('Current balance')} icon={Coins} tone="amber" />
-      </div>
-
+      
       <StudentSnapshotCards student={student} teacher={teacher} classInfo={classInfo} subjects={subjects} t={t} />
       <UpcomingLists upcomingTests={upcomingTests} assignmentsDue={assignmentsDue} t={t} formatDate={formatDate} formatStatusLabel={formatStatusLabel} onTests={onTests} />
       <RecentGrades grades={recentGrades} total={recentGrades.length} t={t} />

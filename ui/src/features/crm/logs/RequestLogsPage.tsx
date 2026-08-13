@@ -13,7 +13,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { PageHeader } from '@/components/common/PageHeader';
-import { MetricCard } from '@/components/common/MetricCard';
 import { SectionPanel } from '@/components/common/SectionPanel';
 
 type LogKind = 'owner' | 'superuser' | 'teacher' | 'student';
@@ -229,39 +228,6 @@ const RequestLogsPage = () => {
         description="Inspect request activity, users, results, latency, and access traces."
         icon={Activity}
       />
-
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          label="Logs loaded"
-          value={items.length.toLocaleString()}
-          detail={`${total.toLocaleString()} total`}
-          icon={Database}
-          tone="blue"
-        />
-        <MetricCard
-          label="Successful"
-          value={successfulRows.toLocaleString()}
-          detail={`${failedRows.toLocaleString()} failed`}
-          icon={ShieldCheck}
-          tone="green"
-        />
-        <MetricCard
-          label="Avg duration"
-          value={`${avgDuration} ms`}
-          detail="Current page"
-          icon={Clock}
-          tone="amber"
-        />
-        <MetricCard
-          label="Users"
-          value={uniqueUsers.toLocaleString()}
-          detail={KINDS.find((item) => item.key === kind)?.label || 'Current scope'}
-          icon={Activity}
-          tone="neutral"
-          onClick={() => setUsersDialogOpen(true)}
-        />
-      </div>
-
       <Dialog open={usersDialogOpen} onOpenChange={setUsersDialogOpen}>
         <DialogContent className="max-h-[86vh] max-w-4xl overflow-hidden p-0">
           <DialogHeader className="border-b px-6 py-5">

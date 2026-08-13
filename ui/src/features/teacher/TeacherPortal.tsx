@@ -17,7 +17,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/common/PageHeader';
-import { MetricCard } from '@/components/common/MetricCard';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import {
   DropdownMenu,
@@ -235,15 +234,7 @@ const TeacherPortal = () => {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         {statsCards.map((stat, index) => (
           <div key={stat.title} className="relative">
-            <MetricCard
-              className={`animate-slide-up animation-delay-${(index + 1) * 100}`}
-              label={stat.title}
-              value={loading ? '...' : stat.value}
-              detail={stat.detail}
-              icon={stat.icon}
-              tone={stat.tone}
-              onClick={() => dispatch(setTeacherPortalTabValue(stat.tab))}
-            />
+            
             {loading && index === 0 && (
               <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
             )}

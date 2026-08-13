@@ -7,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PageHeader } from '@/components/common/PageHeader';
-import { MetricCard } from '@/components/common/MetricCard';
 import { PaginationBar, defaultPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 import { archiveAPI } from './api';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -245,19 +244,7 @@ const ArchivePage = () => {
         </Alert>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <MetricCard label={t('Total archived')} value={totalArchived.toLocaleString()} detail={t('All record types')} icon={Archive} tone="neutral" />
-        {cards.map((card) => (
-          <MetricCard
-            key={card.label}
-            label={card.label}
-            value={Number(card.value).toLocaleString()}
-            detail={card.detail}
-            icon={card.icon}
-            tone={card.tone}
-          />
-        ))}
-      </div>
+     
 
       <Card className="overflow-hidden border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card [&_table]:text-xs [&_th]:text-xs [&_td]:py-2">
         <CardContent className="p-0">
