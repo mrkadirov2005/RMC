@@ -58,9 +58,10 @@ interface Props {
   initials: (name: string) => string;
   onTeacherSelect: (teacherId: number) => void;
   onChartModeChange: (mode: ChartMode) => void;
+  onPaidCardClick?: () => void;
 }
 
-export const FinanceStatsView = ({ selectedMonth, paymentStats, totalCollected, expectedMonthlyTotal }: Props) => (
+export const FinanceStatsView = ({ selectedMonth, paymentStats, totalCollected, expectedMonthlyTotal, onPaidCardClick }: Props) => (
   <div className="rounded-md border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
     <div className="mb-4 text-center">
       <p className="text-lg font-black text-slate-950 dark:text-white">Umumiy oylik to'lov statistikasi</p>
@@ -81,13 +82,18 @@ export const FinanceStatsView = ({ selectedMonth, paymentStats, totalCollected, 
         />
       </div>
       <div className="space-y-3">
-        <div className="rounded-lg border border-slate-200 p-4">
+        <button
+          type="button"
+          onClick={onPaidCardClick}
+          disabled={!onPaidCardClick}
+          className="w-full rounded-lg border border-slate-200 p-4 text-left transition hover:border-emerald-300 hover:bg-emerald-50 disabled:cursor-default disabled:hover:border-slate-200 disabled:hover:bg-transparent"
+        >
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-sm font-bold text-slate-700"><span className="h-3 w-3 rounded-full bg-emerald-500" />To'lov qilgan</span>
             <span className="text-lg font-black text-emerald-700">{paymentStats.paidStudents} · {paymentStats.paidPercent}%</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">Oylik kutilgan to'lovini to'liq bajargan o'quvchilar.</p>
-        </div>
+          <p className="mt-1 text-xs text-slate-500">Oylik kutilgan to'lovini to'liq bajargan o'quvchilar. Sana boyicha korish uchun bosing.</p>
+        </button>
         <div className="rounded-lg border border-slate-200 p-4">
           <div className="flex items-center justify-between gap-3">
             <span className="flex items-center gap-2 text-sm font-bold text-slate-700"><span className="h-3 w-3 rounded-full bg-amber-500" />To'lov qilmagan</span>

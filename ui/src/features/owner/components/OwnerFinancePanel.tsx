@@ -19,6 +19,7 @@ import {
 import type { OwnerManagerStatisticsCollections } from '../types';
 import { FinanceStatsView } from './finance/FinanceStatsView';
 import { FinanceTeachersView } from './finance/FinanceTeachersView';
+import { PaymentDateDetailsModal } from './finance/PaymentDateDetailsModal';
 
 interface Props {
   collections: OwnerManagerStatisticsCollections;
@@ -93,6 +94,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [chartMode, setChartMode] = useState<'pie' | 'bar' | 'line'>('pie');
   const [searchTerm, setSearchTerm] = useState('');
+  const [paidDateModalOpen, setPaidDateModalOpen] = useState(false);
 
   const paymentStats = useMemo(
     () => buildOwnerPaymentMonthStats(collections.students, collections.payments, selectedMonth),
@@ -324,8 +326,15 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             setChartMode('pie');
           }}
           onChartModeChange={setChartMode}
+          onPaidCardClick={() => setPaidDateModalOpen(true)}
         />
       )}
+
+      <PaymentDateDetailsModal
+        open={paidDateModalOpen}
+        onOpenChange={setPaidDateModalOpen}
+        collections={collections}
+      />
 
       {financeView === 'teachers' && (
         <FinanceTeachersView
