@@ -143,6 +143,34 @@ describe('calendar service', () => {
     expect(rows[0]).toEqual(expect.objectContaining({ date: '2026-08-10', class_id: 3, start_time: '09:00' }));
   });
 
+  test('hides unstarted generated sessions that no longer match the current class schedule', async () => {
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'B1 Intro', room_name: 'Room 1', section: JSON.stringify({ days: ['Monday', 'Wednesday', 'Friday'], time: '09:00', endTime: '10:00' }) },
+    ]);
+    repository.datedSessions.mockResolvedValue([
+      session({ session_id: 1, date: '2026-08-10', start_time: '09:00', end_time: '10:00' }),
+      session({ session_id: 2, date: '2026-08-11', start_time: '09:00', end_time: '10:00' }),
+      session({ session_id: 3, date: '2026-08-10', start_time: '18:00', end_time: '20:00' }),
+    ]);
+    roomInsights.getSchedule.mockResolvedValue([]);
+
+    const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-11' });
+    expect(rows.map(row => row.event_id)).toEqual(['session-1']);
+  });
+
+  test('retains an attended session for audit even when the class schedule later changes', async () => {
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'B1 Intro', room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
+    ]);
+    repository.datedSessions.mockResolvedValue([
+      session({ session_id: 4, date: '2026-08-11', attendance_marked: 1, present: 1 }),
+    ]);
+    roomInsights.getSchedule.mockResolvedValue([]);
+    await expect(service.events(2, { from: '2026-08-11', to: '2026-08-11' })).resolves.toEqual([
+      expect.objectContaining({ event_id: 'session-4', status: 'in_progress' }),
+    ]);
+  });
+
   test('excludes deleted, unknown, inactive, and maintenance rooms from calendar events', async () => {
     repository.datedSessions.mockResolvedValue([
       session({ session_id: 1, room_id: 6, room_name: 'Room 1' }),

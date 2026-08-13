@@ -95,6 +95,7 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
   };
 
   const parsedDefinitions = definitions.map(parseDefinition).filter(Boolean);
+  const definitionByClass = new Map(parsedDefinitions.map((definition: any) => [Number(definition.class_id), definition]));
   schedules.forEach(({ date, rows }: any) => {
     // A group's recurring timetable is canonical in classes.section. Legacy
     // recurring rows in rooms may contain days that are no longer selected.
@@ -124,12 +125,21 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
     });
   });
 
-  const visibleSessions = sessions.filter((row: any) => (
-    (!teacherId || Number(row.teacher_id) === teacherId)
+  const visibleSessions = sessions.filter((row: any) => {
+    const definition: any = definitionByClass.get(Number(row.class_id));
+    const weekday = normalizeDay(new Date(`${row.date}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }));
+    const stillScheduled = !definition || (
+      definition.days.includes(weekday)
+      && cleanTime(row.start_time) === cleanTime(definition.start_time)
+      && cleanTime(row.end_time) === cleanTime(definition.end_time)
+    );
+    const hasRecordedActivity = Number(row.attendance_marked || 0) > 0;
+    return (stillScheduled || hasRecordedActivity)
+    && (!teacherId || Number(row.teacher_id) === teacherId)
     && (!classId || Number(row.class_id) === classId)
     && (!subjectId || Number(row.subject_id) === subjectId)
     && (!roomId || Number(row.room_id) === roomId)
-  ));
+  });
   const normalizedSessions = visibleSessions.map((row: any) => {
     const room = resolveAvailableRoom(row);
     if (!room) return null;
