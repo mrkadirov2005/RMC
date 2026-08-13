@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, testAPI } from '@/shared/api/api';
+import { classAPI, roomAPI, roomSlotAPI, studentAPI, subjectAPI, teacherAPI, testAPI } from '@/shared/api/api';
 import { resolveClassSubjects } from '../classSubjects';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { unwrapRows } from '../utils/api';
+import { getTeacherDisplayName } from '../utils/teacher';
 
 export type ClassDetailClass = {
   class_id?: number;
@@ -67,17 +68,21 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
       try {
         const targetClassId = Number(classId);
         const centerId = getResolvedCenterId(authUser) || undefined;
-        const [classResponse, studentsResponse, subjectsResponse, sessionsResponse, testsResponse, roomsResponse, bookingResponse] = await Promise.all([
-          classAPI.getById(targetClassId),
+        const classResponse = await classAPI.getById(targetClassId);
+        const nextClass = classResponse?.data ?? classResponse;
+        const teacherId = Number(nextClass?.teacher_id || 0);
+        const shouldLoadTeacher = teacherId > 0 && !String(nextClass?.teacher_name || '').trim();
+        const [studentsResponse, subjectsResponse, sessionsResponse, testsResponse, roomsResponse, bookingResponse, teacherResponse] = await Promise.all([
           studentAPI.getByClassWithTransfers(targetClassId).catch(() => ({ data: [] })),
           subjectAPI.getByClass(targetClassId).catch(() => ({ data: [] })),
           classAPI.getSessions(targetClassId).catch(() => ({ data: [] })),
           testAPI.getAssignedTests('class', targetClassId).catch(() => ({ data: [] })),
           roomAPI.getAll(centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
           roomSlotAPI.getBookingsByClass(targetClassId, centerId ? { center_id: centerId } : undefined).catch(() => ({ data: [] })),
+          shouldLoadTeacher ? teacherAPI.getById(teacherId).catch(() => null) : Promise.resolve(null),
         ]);
         if (cancelled) return;
-        const nextClass = classResponse?.data ?? classResponse;
+        const resolvedTeacherName = String(nextClass?.teacher_name || '').trim() || getTeacherDisplayName(teacherResponse);
         const roomNumbers = new Set<string>();
         String(nextClass?.room_number || '').split(',').map((room: string) => room.trim()).filter(Boolean).forEach((room) => roomNumbers.add(room));
         const roomAssignments = Array.isArray(nextClass?.room_assignments) ? nextClass.room_assignments : [];
@@ -91,7 +96,11 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
           .map((booking: any) => String(booking.room_number || '').trim())
           .filter(Boolean)
           .forEach((room: string) => roomNumbers.add(room));
-        setClassData({ ...nextClass, room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number });
+        setClassData({
+          ...nextClass,
+          teacher_name: resolvedTeacherName || undefined,
+          room_number: Array.from(roomNumbers).join(', ') || nextClass?.room_number,
+        });
         setStudents(unwrapRows(studentsResponse));
         setSubjects(resolveClassSubjects(nextClass, subjectsResponse));
         setSessions(unwrapRows(sessionsResponse));

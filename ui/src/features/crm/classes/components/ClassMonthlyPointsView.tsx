@@ -130,13 +130,13 @@ export const ClassMonthlyPointsView = ({
               let studentTotal = 0;
               let studentFilled = 0;
               return (
-                <TableRow key={studentId || index} className="group h-9 hover:bg-violet-50/40">
-                  <TableCell className="sticky left-0 z-10 bg-white px-2 py-1 font-semibold group-hover:bg-violet-50/40">
+                <TableRow key={studentId || index} className="group h-9">
+                  <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold group-hover:bg-violet-50/40">
                     <div className="flex min-w-0 items-center gap-1.5">
-                      <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[9px] font-bold text-white shadow-sm`}>
-                        {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                      <div className={"text-black"}>
+                       {index+1}
                       </div>
-                      <span className="max-w-[128px] truncate text-[11px]">{student.first_name} {student.last_name}</span>
+                      <span className="max-w-[128px] truncate text-[11px]">{student.last_name} {student.first_name} </span>
                     </div>
                   </TableCell>
                   {monthlyLessonDays.map((day) => {

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookOpen, CalendarCheck, CalendarDays, CheckCircle2, Clock, Coins, DollarSign, FileQuestion, Loader2, MapPin, PencilLine, PlayCircle, Star, Users } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, CheckCircle2, Coins, FileQuestion, Loader2, PencilLine, PlayCircle, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,8 @@ import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
 import { useAppSelector } from '../hooks';
 import { ClassMonthlyPointsView } from './components/ClassMonthlyPointsView';
+import { CLASS_OVERVIEW_FIELDS, DEFAULT_CLASS_DETAIL_TAB } from './classDetailOverview';
+import { getListRowBackground } from '../settings/listAppearance';
 import { useClassDetailData } from './hooks/useClassDetailData';
 import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
 import { toDateKey } from './utils/date';
@@ -49,11 +51,23 @@ const ClassDetailPage = () => {
   const capacity = Number(classData?.capacity || 0);
   const fillRate = capacity > 0 ? Math.min(100, Math.round((activeStudents / capacity) * 100)) : 0;
   const todayKey = toDateKey(new Date());
-  const teacherName = classData?.teacher_name || 'No teacher assigned';
   const scheduleRange = schedule.time ? `${schedule.time}${schedule.endTime ? ` - ${schedule.endTime}` : ''}` : '';
   const scheduleText = [schedule.days.join(', '), scheduleRange].filter(Boolean).join(' / ') || 'No schedule';
   const scheduleDurationMinutes = useMemo(() => getScheduleDurationMinutes(schedule), [schedule]);
   const studentRows = students.filter((student) => !student.deleted_at);
+  const teacherName = classData?.teacher_name || 'No teacher assigned';
+  const overviewItems = [
+    { label: CLASS_OVERVIEW_FIELDS[0], value: teacherName },
+    { label: CLASS_OVERVIEW_FIELDS[1], value: schedule.days.join(', ') || 'Not scheduled' },
+    { label: CLASS_OVERVIEW_FIELDS[2], value: scheduleRange || 'Not scheduled' },
+    { label: CLASS_OVERVIEW_FIELDS[3], value: `${activeStudents} active · ${studentRows.length} total · ${transferredStudents} transferred` },
+    { label: CLASS_OVERVIEW_FIELDS[4], value: capacity ? `${activeStudents} of ${capacity} (${fillRate}% occupied)` : 'Not specified' },
+    { label: CLASS_OVERVIEW_FIELDS[5], value: classData?.room_number || 'Not specified' },
+    { label: CLASS_OVERVIEW_FIELDS[6], value: subjects.length === 1 ? '1 subject' : `${subjects.length} subjects` },
+    { label: CLASS_OVERVIEW_FIELDS[7], value: `${formatMoney(classData?.payment_amount)} · ${classData?.payment_frequency || 'Monthly'}` },
+    { label: CLASS_OVERVIEW_FIELDS[8], value: classData?.level ? `Level ${classData.level}` : 'Not specified' },
+    { label: CLASS_OVERVIEW_FIELDS[9], value: classData?.class_code || 'Not specified' },
+  ];
   const {
     pointsMonth,
     setPointsMonth,
@@ -70,12 +84,6 @@ const ClassDetailPage = () => {
     todayKey,
   });
   // const recentSessions = sessions.slice(0, 80);
-  const statTiles = [
-    { label: 'Active students', value: activeStudents, detail: `${transferredStudents} transferred`, icon: Users, color: 'bg-blue-600' },
-    { label: 'Capacity', value: capacity || '-', detail: `${fillRate}% used`, icon: BookOpen, color: 'bg-emerald-600' },
-    { label: 'Room', value: classData?.room_number || 'Not specified', detail: 'Classroom', icon: MapPin, color: 'bg-amber-500' },
-    { label: 'Tuition', value: formatMoney(classData?.payment_amount), detail: classData?.payment_frequency || 'Monthly', icon: DollarSign, color: 'bg-fuchsia-600' },
-  ];
 
   const openSessionWorkflow = (session: any, actions: LessonAction[] = defaultLessonActions, tab?: LessonAction) => {
     const nextSessionId = Number(session.session_id || session.id);
@@ -173,17 +181,8 @@ const ClassDetailPage = () => {
               <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
               Back
             </Button>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white shadow-sm">
-              <BookOpen className="h-5 w-5" />
-            </div>
-            <div className="min-w-0">
               <h1 className="truncate text-xl font-bold text-slate-950 dark:text-card-foreground">{className}</h1>
-              <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] font-semibold">
-                <span className="owner-secondary-tag rounded-md bg-violet-600 px-2 py-1 text-white">{teacherName}</span>
-                {classData.level ? <span className="owner-secondary-tag rounded-md bg-blue-600 px-2 py-1 text-white">Level {classData.level}</span> : null}
                 <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
-              </div>
-            </div>
           </div>
           <Button
             onClick={() => setLessonPickerOpen(true)}
@@ -239,30 +238,11 @@ const ClassDetailPage = () => {
         </DialogContent>
       </Dialog>
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        {statTiles.map((tile) => {
-          const Icon = tile.icon;
-          return (
-            <div key={tile.label} className={`${tile.color} owner-primary-card rounded-lg p-3 text-white shadow-sm`}>
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase text-white/75">{tile.label}</p>
-                  <p className="mt-0.5 truncate text-lg font-bold">{tile.value}</p>
-                  <p className="truncate text-[11px] text-white/80">{tile.detail}</p>
-                </div>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/20">
-                  <Icon className="h-4 w-4" />
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
 
-      <Tabs defaultValue="students" className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+      <Tabs defaultValue={DEFAULT_CLASS_DETAIL_TAB} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
-          <TabsTrigger value="students" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white">Students</TabsTrigger>
           <TabsTrigger value="overview" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Overview</TabsTrigger>
+          <TabsTrigger value="students" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white">Students</TabsTrigger>
           <TabsTrigger value="subjects" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white">Subjects</TabsTrigger>
           <TabsTrigger value="points" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white">Points</TabsTrigger>
           <TabsTrigger value="tests" className="h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white">Tests</TabsTrigger>
@@ -270,34 +250,24 @@ const ClassDetailPage = () => {
         </TabsList>
 
         <div className="p-3">
-          <TabsContent value="overview" className="mt-0 grid gap-4 lg:grid-cols-2">
-            <Card className="border-slate-200 shadow-sm">
-              <CardContent className="space-y-3 p-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-600 text-white"><CalendarDays className="h-4 w-4" /></div>
-                  <p className="text-sm font-bold">Schedule</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {schedule.days.length > 0 ? schedule.days.map((day) => <span key={day} className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white">{day}</span>) : <span className="text-sm text-muted-foreground">No days set</span>}
-                </div>
-                <p className="flex items-center gap-2 text-sm font-semibold">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  {scheduleRange || 'No time set'}
-                </p>
-              </CardContent>
-            </Card>
-            <Card className="border-slate-200 shadow-sm">
-              <CardContent className="p-3">
-                <div className="mb-3 flex items-center gap-2">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white"><Users className="h-4 w-4" /></div>
-                  <p className="text-sm font-bold">Capacity health</p>
-                </div>
-                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-                  <div className="h-full rounded-full bg-blue-600" style={{ width: `${fillRate}%` }} />
-                </div>
-                <p className="mt-3 text-sm text-muted-foreground">{fillRate}% of class capacity is currently used.</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="overview" className="mt-0">
+            <div className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
+              <div className="border-b bg-slate-50 px-3 py-2 dark:bg-muted/40">
+                <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">General information</h2>
+              </div>
+              <dl className="divide-y divide-slate-200 text-sm dark:divide-border">
+                {overviewItems.map((item, index) => (
+                  <div
+                    key={item.label}
+                    className="grid min-h-9 grid-cols-[120px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[170px_minmax(0,1fr)]"
+                    style={{ backgroundColor: getListRowBackground(index) }}
+                  >
+                    <dt className="font-medium text-muted-foreground">{item.label}</dt>
+                    <dd className="min-w-0 break-words font-semibold text-slate-950 dark:text-card-foreground">{item.value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
           </TabsContent>
 
           <TabsContent value="students" className="mt-0">
@@ -318,14 +288,14 @@ const ClassDetailPage = () => {
                   <TableRow key={student.student_id || student.id} className={isTransferred ? 'bg-amber-50/60 text-muted-foreground dark:bg-amber-950/10' : 'hover:bg-sky-50/60'}>
                     <TableCell className="py-2 font-semibold">
                       <div className="flex items-center gap-2">
-                        <div className={`${index % 4 === 0 ? 'bg-blue-600' : index % 4 === 1 ? 'bg-emerald-600' : index % 4 === 2 ? 'bg-amber-500' : 'bg-fuchsia-600'} flex h-7 w-7 items-center justify-center rounded-md text-xs font-bold text-white`}>
-                          {student.first_name?.charAt(0)}{student.last_name?.charAt(0)}
+                        <div className={"text-black"}>
+                          {index+1}
                         </div>
                         <span>{student.first_name} {student.last_name}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={isTransferred ? 'bg-amber-500 text-white hover:bg-amber-500' : 'bg-emerald-600 text-white hover:bg-emerald-600'}>
+                      <Badge className={isTransferred ? 'bg-amber-500 text-black hover:bg-amber-500' : 'bg-emerald-600 text-black hover:bg-emerald-600'}>
                         {isTransferred ? 'Transferred' : student.status || '-'}
                       </Badge>
                     </TableCell>

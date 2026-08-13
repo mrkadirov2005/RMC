@@ -4,6 +4,9 @@ export const LIST_ROW_ALTERNATE_KEY = 'list_row_alternate_color';
 export const DEFAULT_LIST_ROW_PRIMARY = '#ffffff';
 export const DEFAULT_LIST_ROW_ALTERNATE = '#f1f5f9';
 
+export const getListRowBackground = (index: number) =>
+  `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})`;
+
 export const readListRowColors = () => {
   try {
     return {
