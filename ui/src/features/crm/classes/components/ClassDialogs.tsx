@@ -37,6 +37,7 @@ interface ClassDialogsProps {
   teacherOptions: any[];
   subjectOptions: any[];
   roomOptions: string[];
+  roomConflict: { day: string; start: string; end: string; group: string } | null;
   selectedDays: string[];
   scheduleTime: string;
   scheduleEndTime: string;
@@ -72,6 +73,7 @@ export const ClassDialogs = ({
   teacherOptions,
   subjectOptions,
   roomOptions,
+  roomConflict,
   selectedDays,
   scheduleTime,
   scheduleEndTime,
@@ -166,6 +168,7 @@ export const ClassDialogs = ({
                     </SelectContent>
                   </Select>
                   {roomOptions.length === 0 && <p className="text-[10px] text-amber-700">{t('Create a room first, then return to this form.')}</p>}
+                  {roomConflict && <p role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1.5 text-[10px] font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/30 dark:text-rose-200">{t('This room is already booked by')} {roomConflict.group} — {roomConflict.day}, {roomConflict.start}–{roomConflict.end}.</p>}
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="start_date" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Start Date')}</Label>
@@ -284,7 +287,7 @@ export const ClassDialogs = ({
 
           <DialogFooter className="sticky bottom-0 border-t border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur dark:border-border dark:bg-card/95">
             <Button type="button" variant="outline" onClick={handleCloseModal} className="h-8 rounded-md px-3 text-xs">{t('Cancel')}</Button>
-            <Button type="submit" disabled={loading} className="h-8 rounded-md bg-gradient-to-r from-sky-600 via-indigo-600 to-fuchsia-600 px-4 text-xs font-bold text-white shadow-lg shadow-indigo-500/25 hover:from-sky-700 hover:via-indigo-700 hover:to-fuchsia-700">
+            <Button type="submit" disabled={loading || Boolean(roomConflict)} className="h-8 rounded-md bg-gradient-to-r from-sky-600 via-indigo-600 to-fuchsia-600 px-4 text-xs font-bold text-white shadow-lg shadow-indigo-500/25 hover:from-sky-700 hover:via-indigo-700 hover:to-fuchsia-700">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Save')}
             </Button>
           </DialogFooter>

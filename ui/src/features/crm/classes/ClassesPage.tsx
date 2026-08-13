@@ -41,6 +41,8 @@ const ClassesPage = () => {
   const {
     state,
     rooms,
+    physicalRooms,
+    roomConflict,
     isModalOpen,
     editingId,
     formData,
@@ -74,8 +76,8 @@ const ClassesPage = () => {
   } = useClassesPage();
   const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
   const roomOptions = useMemo(
-    () => buildRoomNumberOptions(rooms, formData.room_number),
-    [formData.room_number, rooms]
+    () => buildRoomNumberOptions(physicalRooms, formData.room_number),
+    [formData.room_number, physicalRooms]
   );
   const studentsByClassId = useMemo(() => {
     const map = new Map<number, Student[]>();
@@ -378,6 +380,7 @@ const ClassesPage = () => {
         teacherOptions={teacherOptions}
         subjectOptions={subjectOptions}
         roomOptions={roomOptions}
+        roomConflict={roomConflict}
         selectedDays={selectedDays}
         scheduleTime={scheduleTime}
         scheduleEndTime={scheduleEndTime}

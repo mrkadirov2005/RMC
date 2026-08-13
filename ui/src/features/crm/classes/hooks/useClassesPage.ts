@@ -1,7 +1,7 @@
 // React hooks for the crm feature.
 
-import { useEffect, useState } from 'react';
-import { classAPI, dataAPI, subjectAPI } from '../../../../shared/api/api';
+import { useEffect, useMemo, useState } from 'react';
+import { classAPI, dataAPI, roomAPI, subjectAPI } from '../../../../shared/api/api';
 import { frequencyOptions } from '../../../../utils/dropdownOptions';
 import { handleApiError, showToast } from '../../../../utils/toast';
 import { useAppSelector } from '../../hooks';
@@ -16,6 +16,7 @@ import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import type { Class } from '../types';
 import { parseSchedule, weekDays } from '../queries';
 import { buildAssignableSubjectOptions, buildClassSubjectAssignment, hasPersistedClassSubject } from '../subjectOptions';
+import { findClassRoomConflict } from '../classRoomConflict';
 
 interface AttendanceRecord {
   attendance_id?: number;
@@ -65,6 +66,18 @@ export const useClassesPage = () => {
   const [deleteAttendance, setDeleteAttendance] = useState<AttendanceRecord[]>([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
+  const [physicalRooms, setPhysicalRooms] = useState<any[]>([]);
+  const roomConflict = useMemo(() => findClassRoomConflict({ classes: items, assignments: rooms, room: formData.room_number, days: selectedDays, start: scheduleTime, end: scheduleEndTime, editingId }), [editingId, formData.room_number, items, rooms, scheduleEndTime, scheduleTime, selectedDays]);
+
+  const loadPhysicalRooms = async () => {
+    try {
+      const response = await roomAPI.getPhysical();
+      const data = (response as any)?.data?.data ?? (response as any)?.data ?? response;
+      setPhysicalRooms(Array.isArray(data) ? data : []);
+    } catch {
+      setPhysicalRooms([]);
+    }
+  };
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -72,6 +85,7 @@ export const useClassesPage = () => {
     dispatch(fetchRooms());
     dispatch(fetchTeachers());
     dispatch(fetchSubjects());
+    void loadPhysicalRooms();
     if (isOwner) {
       dispatch(fetchCenters());
     }
@@ -86,6 +100,7 @@ export const useClassesPage = () => {
       dispatch(fetchRoomsForce());
       dispatch(fetchTeachers());
       dispatch(fetchSubjectsForce());
+      void loadPhysicalRooms();
       if (isOwner) {
         dispatch(fetchCenters());
       }
@@ -133,6 +148,10 @@ export const useClassesPage = () => {
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (roomConflict) {
+      showToast.error(`Room ${formData.room_number} is already booked by ${roomConflict.group} on ${roomConflict.day}, ${roomConflict.start}–${roomConflict.end}.`);
+      return;
+    }
     const dataToSubmit = {
       ...formData,
       section: JSON.stringify({ days: selectedDays, time: scheduleTime, endTime: scheduleEndTime }),
@@ -310,6 +329,8 @@ export const useClassesPage = () => {
   return {
     state,
     rooms,
+    physicalRooms,
+    roomConflict,
     isModalOpen,
     editingId,
     formData,
