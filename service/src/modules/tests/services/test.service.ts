@@ -190,6 +190,7 @@ const createTest = async (body: any) => {
           q.image_url || null,
           toBool(q.is_required) ?? true,
           q.word_limit ? Number(q.word_limit) : null,
+          q.rubric || null,
         ], db);
         savedQuestions.push(savedQ);
       }
@@ -249,6 +250,7 @@ const addQuestion = async (testId: number, body: any, centerId?: number) => {
     body.image_url || null,
     body.is_required !== undefined ? toBool(body.is_required) : true,
     body.word_limit ?? null,
+    body.rubric ?? null,
   ]);
   return question;
 };
@@ -267,6 +269,7 @@ const updateQuestion = async (questionId: number, body: any, centerId?: number) 
   body.image_url ?? null,
   body.is_required !== undefined ? toBool(body.is_required) : null,
   body.word_limit ?? null,
+  body.rubric ?? null,
 ], questionId, centerId);
 
 const deleteQuestion = async (questionId: number, centerId?: number) => testRepository.deleteQuestion(questionId, centerId);
@@ -643,6 +646,7 @@ module.exports = {
   deletePassage,
   startTest,
   submitTest,
+  autoGradeSubmission,
   gradeSubmission,
   getSubmissionsByTest,
   getSubmissionDetails,

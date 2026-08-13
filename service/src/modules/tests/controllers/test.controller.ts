@@ -193,6 +193,9 @@ const startTest = async (req: any, res: any) => {
     if (row?.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
     }
+    if (row?.error === 'max_retakes') {
+      return res.status(409).json({ error: 'No attempts remaining for this test.' });
+    }
     if (!row) return res.status(404).json({ error: 'Test not found' });
     res.status(201).json({ message: 'Test started', submission: row });
   } catch (error: any) {
@@ -205,9 +208,27 @@ const submitTest = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
+    const submission = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
+    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    if (req.user?.userType === 'student') {
+      if (Number(submission.student_id) !== Number(req.user?.id)) {
+        return res.status(403).json({ error: 'Access denied.' });
+      }
+    } else if (req.user?.userType === 'teacher') {
+      const ok = await studentBelongsToTeacher(submission.student_id, req.user?.id);
+      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+    } else if (req.user?.userType !== 'superuser') {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
     const row = await testService.submitTest(Number(req.params.submissionId), req.body, centerId ?? req.body.center_id);
     if (row?.error === 'invalid_center') {
       return res.status(400).json({ error: 'Submission contains records from another center.' });
+    }
+    if (row?.error === 'word_limit') {
+      return res.status(400).json({ error: 'Answer exceeds the word limit.', question_id: row.question_id });
+    }
+    if (row?.error === 'required') {
+      return res.status(400).json({ error: 'A required question has no answer.', question_id: row.question_id });
     }
     if (!row) return res.status(404).json({ error: 'Submission not found' });
     res.json({ message: 'Test submitted', submission: row });
@@ -221,9 +242,18 @@ const gradeSubmission = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
+    if (req.user?.userType === 'teacher') {
+      const submission = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
+      if (!submission) return res.status(404).json({ error: 'Submission not found' });
+      const ok = await studentBelongsToTeacher(submission.student_id, req.user?.id);
+      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+    }
     const row = await testService.gradeSubmission(Number(req.params.submissionId), req.body, centerId ?? req.body.center_id);
     if (row?.error === 'invalid_center') {
       return res.status(400).json({ error: 'Submission contains records from another center.' });
+    }
+    if (row?.error === 'invalid_question') {
+      return res.status(400).json({ error: 'Grade refers to a question outside this submission.', question_id: row.question_id });
     }
     if (!row) return res.status(404).json({ error: 'Submission not found' });
     res.json({ message: 'Submission graded', submission: row });
