@@ -93,4 +93,40 @@ describe('students repository', () => {
     expect(chain.where).toHaveBeenCalled();
     expect(result).toEqual({ student_id: 1, username: 'ali' });
   });
+
+  it('persists and returns parent and profile fields during student updates', async () => {
+    const returning = jest.fn().mockResolvedValue([{
+      student_id: 4,
+      parent_name: 'Vali Valiyev',
+      parent_phone: '998901234567',
+      date_of_birth: '2010-01-02',
+      gender: 'Male',
+      enrollment_number: 'ST-004',
+    }]);
+    const chain = {
+      set: jest.fn(),
+      where: jest.fn(),
+      returning,
+    };
+    chain.set.mockReturnValue(chain);
+    chain.where.mockReturnValue(chain);
+    mockDb.update.mockReturnValue(chain);
+
+    const result = await studentRepository.update(4, {
+      parent_name: 'Vali Valiyev',
+      parent_phone: '998901234567',
+      date_of_birth: '2010-01-02',
+      gender: 'Male',
+      enrollment_number: 'ST-004',
+    }, 2);
+
+    expect(chain.set).toHaveBeenCalledWith(expect.objectContaining({
+      parentName: 'Vali Valiyev',
+      parentPhone: '998901234567',
+      dateOfBirth: '2010-01-02',
+      gender: 'Male',
+      enrollmentNumber: 'ST-004',
+    }));
+    expect(result).toMatchObject({ parent_name: 'Vali Valiyev', parent_phone: '998901234567' });
+  });
 });

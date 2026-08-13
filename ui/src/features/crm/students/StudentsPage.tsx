@@ -231,7 +231,7 @@ const StudentsPage = () => {
               </div>
             ) : <div className="min-w-0 leading-none">
               <p className="max-w-[150px] truncate text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {t('Total Students')}
+                {/* {t('Total Students')} */}
               </p>
               <p className="mt-1 text-sm font-bold text-slate-950 dark:text-white">
                 {total.toLocaleString()} {t('Students').toLowerCase()}

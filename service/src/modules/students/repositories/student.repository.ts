@@ -383,11 +383,16 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
 
   const setData: any = { updatedAt: sql`CURRENT_TIMESTAMP` };
   const mapping: Record<string, string> = {
+    enrollment_number: 'enrollmentNumber',
     first_name: 'firstName',
     last_name: 'lastName',
     username: 'username',
     email: 'email',
     phone: 'phone',
+    date_of_birth: 'dateOfBirth',
+    parent_name: 'parentName',
+    parent_phone: 'parentPhone',
+    gender: 'gender',
     status: 'status',
     class_id: 'classId',
     teacher_id: 'teacherId',

@@ -208,6 +208,10 @@ class CreateStudentDto {
 class UpdateStudentDto {
   @IsOptional()
   @IsString()
+  enrollment_number?: string;
+
+  @IsOptional()
+  @IsString()
   first_name?: string;
 
   @IsOptional()
@@ -225,6 +229,22 @@ class UpdateStudentDto {
   @IsOptional()
   @IsString()
   phone?: string;
+
+  @IsOptional()
+  @IsDateString()
+  date_of_birth?: string;
+
+  @IsOptional()
+  @IsString()
+  parent_name?: string;
+
+  @IsOptional()
+  @IsString()
+  parent_phone?: string;
+
+  @IsOptional()
+  @IsString()
+  gender?: string;
 
   @IsOptional()
   @IsString()

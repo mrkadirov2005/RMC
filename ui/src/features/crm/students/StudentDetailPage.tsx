@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
-  BookOpen,
   CalendarCheck,
   ClipboardList,
   Coins,
@@ -12,20 +11,17 @@ import {
   GraduationCap,
   KeyRound,
   Loader2,
-  Mail,
-  Phone,
+  PencilLine,
   Receipt,
-  School,
+  Save,
   Trash2,
   User,
+  X,
 } from 'lucide-react';
 import { studentAPI, classAPI, teacherAPI } from './api';
-import { StudentInfoSection } from './components/StudentInfoSection';
-import { StatisticsSection } from './components/StatisticsSection';
 import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab } from './tabs';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,7 +37,8 @@ import { fetchAttendanceForce } from '../../../slices/attendanceSlice';
 import { fetchPaymentsForce } from '../../../slices/paymentsSlice';
 import { fetchAssignmentsForce } from '../../../slices/assignmentsSlice';
 import { fetchGradesForce } from '../../../slices/gradesSlice';
-import { cn } from '@/lib/utils';
+import { getListRowBackground } from '../settings/listAppearance';
+import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
 
 interface Class {
   class_id?: number;
@@ -69,6 +66,10 @@ interface Student {
   teacher_id?: number;
   coins?: number;
   username?: string;
+  school_name?: string | null;
+  school_class?: string | null;
+  created_at?: string;
+  createdAt?: string;
 }
 
 interface Teacher {
@@ -124,21 +125,21 @@ interface CoinTransaction {
   created_at?: string;
 }
 
-const getInitials = (firstName?: string, lastName?: string) =>
-  `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase() || 'ST';
+// const getInitials = (firstName?: string, lastName?: string) =>
+//   `${firstName?.charAt(0) || ''}${lastName?.charAt(0) || ''}`.toUpperCase() || 'ST';
 
-const getStatusClasses = (status?: string) => {
-  switch (status?.toLowerCase()) {
-    case 'active':
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-    case 'inactive':
-      return 'border-rose-200 bg-rose-50 text-rose-700';
-    case 'suspended':
-      return 'border-amber-200 bg-amber-50 text-amber-700';
-    default:
-      return 'border-slate-200 bg-slate-50 text-slate-700';
-  }
-};
+// const getStatusClasses = (status?: string) => {
+//   switch (status?.toLowerCase()) {
+//     case 'active':
+//       return 'border-emerald-200 bg-emerald-50 text-emerald-700';
+//     case 'inactive':
+//       return 'border-rose-200 bg-rose-50 text-rose-700';
+//     case 'suspended':
+//       return 'border-amber-200 bg-amber-50 text-amber-700';
+//     default:
+//       return 'border-slate-200 bg-slate-50 text-slate-700';
+//   }
+// };
 
 // Renders the student detail page screen.
 const StudentDetailPage = () => {
@@ -163,7 +164,12 @@ const StudentDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isEditingOverview, setIsEditingOverview] = useState(false);
+  const [overviewDraft, setOverviewDraft] = useState<StudentOverviewDraft | null>(null);
+  const [savingOverview, setSavingOverview] = useState(false);
 
+  // for hiding the password field
+  const [isUpdatePassword, setIsUpdatePassword] = useState(false);
 // Runs side effects for this component.
   useEffect(() => {
     loadStudentDetails();
@@ -350,6 +356,37 @@ const StudentDetailPage = () => {
     }
   };
 
+  const startOverviewEdit = () => {
+    if (!student) return;
+    setOverviewDraft(createStudentOverviewDraft(student));
+    setIsEditingOverview(true);
+  };
+
+  const cancelOverviewEdit = () => {
+    setOverviewDraft(null);
+    setIsEditingOverview(false);
+  };
+
+  const saveOverview = async () => {
+    if (!studentId || !overviewDraft) return;
+    if (!overviewDraft.first_name.trim() || !overviewDraft.last_name.trim()) {
+      showToast.error('First name and last name are required.');
+      return;
+    }
+    setSavingOverview(true);
+    try {
+      await studentAPI.update(Number(studentId), buildStudentOverviewUpdate(overviewDraft));
+      await loadStudentDetails();
+      setOverviewDraft(null);
+      setIsEditingOverview(false);
+      showToast.success('Student information updated successfully.');
+    } catch (error: unknown) {
+      showToast.error(getErrorMessage(error) || 'Failed to update student information.');
+    } finally {
+      setSavingOverview(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[60vh]">
@@ -366,33 +403,11 @@ const StudentDetailPage = () => {
     );
   }
 
-  const attendanceStats = {
-    total: attendance.length,
-    present: attendance.filter((a) => a.status === 'Present').length,
-    absent: attendance.filter((a) => a.status === 'Absent').length,
-    late: attendance.filter((a) => a.status === 'Late').length,
-  };
-
-  const paymentStats = {
-    total: payments.length,
-    completed: payments.filter((p) => p.payment_status === 'Completed').length,
-    pending: payments.filter((p) => p.payment_status === 'Pending').length,
-    totalAmount: payments.reduce((sum, p) => sum + (Number(p.amount) || 0), 0),
-  };
-
-  const assignmentStats = {
-    total: assignments.length,
-    submitted: assignments.filter((a) => a.status === 'Submitted').length,
-    pending: assignments.filter((a) => a.status === 'Pending').length,
-  };
-
-  const gradeAverage =
-    grades.length > 0
-      ? (grades.reduce((sum, g) => sum + (Number(g.percentage) || 0), 0) / grades.length).toFixed(2)
-      : 'N/A';
   const studentFullName = `${student.first_name || ''} ${student.last_name || ''}`.trim() || 'Student';
   const teacherName = teacherData ? [teacherData.first_name, teacherData.last_name].filter(Boolean).join(' ').trim() : '';
   const groupName = classData?.class_name || '';
+  const overviewRows = buildStudentOverviewRows({ student, groupName, teacherName, coinBalance });
+  const overviewColumns = splitStudentOverviewRows(overviewRows);
   const tabItems = [
     { value: 'overview', label: 'Overview', icon: User },
     { value: 'attendance', label: 'Attendance', icon: CalendarCheck },
@@ -436,103 +451,20 @@ const StudentDetailPage = () => {
 
       <Card className="owner-tertiary-card overflow-hidden rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="flex flex-col gap-2 p-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-sky-600 text-sm font-bold text-white">
-              {getInitials(student.first_name, student.last_name)}
-            </div>
-            <div className="min-w-0">
               <h1 className="truncate text-base font-bold text-slate-950 dark:text-foreground">{studentFullName}</h1>
-              <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-muted-foreground">
-                {student.username && <span className="owner-secondary-tag rounded-md bg-fuchsia-100 px-2 py-0.5 text-fuchsia-800 dark:bg-muted dark:text-muted-foreground">Username: {student.username}</span>}
-                {groupName && <span className="owner-secondary-tag rounded-md bg-sky-100 px-2 py-0.5 text-sky-800 dark:bg-muted dark:text-muted-foreground">Group: {groupName}</span>}
-                {teacherName && <span className="owner-secondary-tag rounded-md bg-emerald-100 px-2 py-0.5 text-emerald-800 dark:bg-muted dark:text-muted-foreground">Teacher: {teacherName}</span>}
-              </div>
-            </div>
-          </div>
-          {student.status && (
-            <Badge variant="outline" className={cn('w-fit border text-[11px] font-semibold', getStatusClasses(student.status))}>
-              {student.status}
-            </Badge>
-          )}
+        <Button onClick={()=>setIsUpdatePassword((prev)=>!prev)}> update student password</Button>
+
         </CardContent>
       </Card>
 
+
       {activeTab === 'overview' && (
         <>
-          <Card className="owner-primary-card overflow-hidden rounded-lg border-0 bg-sky-600 text-white shadow-sm dark:border dark:border-border dark:bg-slate-950">
-            <CardContent className="relative p-0">
-              <div className="relative flex flex-col gap-3 p-3 md:flex-row md:items-center md:justify-between">
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-white/30 bg-white/20 text-xl font-bold shadow-inner">
-                    {getInitials(student.first_name, student.last_name)}
-                  </div>
-                  <div className="min-w-0 space-y-2">
-                    <div>
-                      <p className="text-xs font-semibold text-white/70">Student Profile</p>
-                      <h1 className="break-words text-xl font-bold tracking-normal text-white md:text-2xl">
-                        {studentFullName}
-                      </h1>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge variant="outline" className={cn('border text-[11px] font-semibold', getStatusClasses(student.status))}>
-                        {student.status || 'Unknown'}
-                      </Badge>
-                      {student.username && <span className="owner-secondary-tag inline-flex items-center gap-1 rounded-lg bg-fuchsia-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
-                        <User className="h-3 w-3" />
-                        Username: {student.username}
-                      </span>}
-                      {groupName && <span className="owner-secondary-tag inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
-                        <BookOpen className="h-3 w-3" />
-                        Group: {groupName}
-                      </span>}
-                      {teacherName && <span className="owner-secondary-tag inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2 py-1 text-[11px] font-semibold text-white shadow-sm">
-                        <School className="h-3 w-3" />
-                        Teacher: {teacherName}
-                      </span>}
-                    </div>
-                  </div>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2 md:w-[330px]">
-                  {student.email && <div className="owner-secondary-tag rounded-lg border border-white/25 bg-fuchsia-500 p-2.5 shadow-sm">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
-                      <Mail className="h-3.5 w-3.5" />
-                      Email
-                    </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-white">{student.email}</p>
-                  </div>}
-                  {student.phone && <div className="owner-secondary-tag rounded-lg border border-white/25 bg-emerald-500 p-2.5 shadow-sm">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
-                      <Phone className="h-3.5 w-3.5" />
-                      Phone
-                    </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-white">{student.phone}</p>
-                  </div>}
-                  {student.parent_name && <div className="owner-secondary-tag rounded-lg border border-white/25 bg-cyan-500 p-2.5 shadow-sm">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
-                      <User className="h-3.5 w-3.5" />
-                      Parent
-                    </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-white">{student.parent_name}</p>
-                  </div>}
-                  <div className="owner-secondary-tag rounded-lg border border-white/25 bg-amber-500 p-2.5 shadow-sm">
-                    <div className="flex items-center gap-1.5 text-[11px] font-semibold text-white/70">
-                      <Coins className="h-3.5 w-3.5" />
-                      Coins
-                    </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-white">{coinBalance.toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <StudentInfoSection student={student} />
-
-          <Card className="owner-tertiary-card rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+         {isUpdatePassword && <Card className="owner-tertiary-card rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
             <CardHeader className="p-3 pb-1">
               <CardTitle className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
                 <KeyRound className="h-4 w-4" />
-                Account Password
+                {/* Account Password */}
               </CardTitle>
             </CardHeader>
             <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
@@ -556,14 +488,9 @@ const StudentDetailPage = () => {
                 Update Password
               </Button>
             </CardContent>
-          </Card>
+          </Card>}
 
-          <StatisticsSection
-            attendanceStats={attendanceStats}
-            paymentStats={paymentStats}
-            assignmentStats={assignmentStats}
-            gradeAverage={gradeAverage}
-          />
+
         </>
       )}
 
@@ -589,7 +516,60 @@ const StudentDetailPage = () => {
 
           <div className="p-3">
             {activeTab === 'overview' && (
-              <div className="text-sm text-muted-foreground">Choose a menu above to manage attendance, payments, assignments, grades, or coins.</div>
+              <div className="space-y-3">
+                <div className="flex justify-end gap-2">
+                  {isEditingOverview ? (
+                    <>
+                      <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={cancelOverviewEdit} disabled={savingOverview}>
+                        <X className="mr-1.5 h-3.5 w-3.5" /> Cancel
+                      </Button>
+                      <Button type="button" size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={saveOverview} disabled={savingOverview}>
+                        {savingOverview ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
+                        {savingOverview ? 'Saving...' : 'Save changes'}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button type="button" size="sm" className="h-8 bg-sky-600 text-xs text-white hover:bg-sky-700" onClick={startOverviewEdit}>
+                      <PencilLine className="mr-1.5 h-3.5 w-3.5" /> Edit information
+                    </Button>
+                  )}
+                </div>
+                <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+                  {[
+                    { title: 'Main information', rows: overviewColumns.main },
+                    { title: 'Contact & additional information', rows: overviewColumns.additional },
+                  ].map((section) => (
+                  <section key={section.title} className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
+                    <div className="border-b bg-slate-50 px-3 py-2 dark:border-border dark:bg-muted/40">
+                      <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">{section.title}</h2>
+                    </div>
+                    <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
+                      {section.rows.map((item, index) => (
+                        <div
+                          key={item.label}
+                          data-list-row="true"
+                          className="grid min-h-9 grid-cols-[125px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[170px_minmax(0,1fr)]"
+                          style={{ backgroundColor: getListRowBackground(index) }}
+                        >
+                          <dt className="font-medium text-muted-foreground">{item.label}</dt>
+                          <dd className="min-w-0 break-words font-semibold text-slate-950 dark:text-card-foreground">
+                            {isEditingOverview && overviewDraft && STUDENT_OVERVIEW_EDIT_FIELDS[item.label] ? (
+                              <Input
+                                type={STUDENT_OVERVIEW_EDIT_FIELDS[item.label] === 'date_of_birth' ? 'date' : 'text'}
+                                value={overviewDraft[STUDENT_OVERVIEW_EDIT_FIELDS[item.label]]}
+                                onChange={(event) => setOverviewDraft((current) => current ? ({ ...current, [STUDENT_OVERVIEW_EDIT_FIELDS[item.label]]: event.target.value }) : current)}
+                                className="h-8 bg-white text-xs dark:bg-slate-900"
+                                aria-label={item.label}
+                              />
+                            ) : item.value}
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </section>
+                  ))}
+                </div>
+              </div>
             )}
 
             {activeTab === 'attendance' && (
