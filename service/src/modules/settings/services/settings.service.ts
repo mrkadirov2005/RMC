@@ -77,8 +77,18 @@ const saveOwnerPalette = (value: unknown, centerId?: number) =>
   settingsRepository.saveSetting(OWNER_PALETTE_KEY, normalizeOwnerPalette(value), centerId);
 
 const normalizeVisualOverrides = (items: unknown) => Array.isArray(items)
-  ? items.filter((item: any) => typeof item?.key === 'string' && item.key.length <= 300 && /^#[0-9a-f]{6}$/i.test(String(item?.color)))
-      .map((item: any) => ({ key: item.key, color: String(item.color).toLowerCase() })).slice(0, 500)
+  ? items.filter((item: any) => typeof item?.key === 'string' && item.key.length <= 300)
+      .map((item: any) => {
+        const normalized: any = { key: item.key };
+        if (/^#[0-9a-f]{6}$/i.test(String(item.color))) normalized.color = String(item.color).toLowerCase();
+        if (/^#[0-9a-f]{6}$/i.test(String(item.textColor))) normalized.textColor = String(item.textColor).toLowerCase();
+        const fontSize = Number(item.fontSize);
+        if (Number.isFinite(fontSize) && fontSize >= 8 && fontSize <= 72) normalized.fontSize = Math.round(fontSize);
+        if (['400', '500', '600', '700'].includes(String(item.fontWeight))) normalized.fontWeight = String(item.fontWeight);
+        if (['normal', 'italic'].includes(String(item.fontStyle))) normalized.fontStyle = String(item.fontStyle);
+        if (['none', 'underline'].includes(String(item.textDecoration))) normalized.textDecoration = String(item.textDecoration);
+        return normalized;
+      }).filter((item: any) => Object.keys(item).length > 1).slice(0, 500)
   : [];
 const getVisualOverrides = async (centerId?: number) => normalizeVisualOverrides(await settingsRepository.getSetting(VISUAL_OVERRIDES_KEY, centerId));
 const saveVisualOverrides = (items: unknown, centerId?: number) => settingsRepository.saveSetting(VISUAL_OVERRIDES_KEY, normalizeVisualOverrides(items), centerId);

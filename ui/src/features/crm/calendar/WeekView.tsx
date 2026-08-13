@@ -8,6 +8,8 @@ import type { ClassItem, CalendarDay, SessionItem } from './types';
 import {
   getConfiguredLessonDurationMinutes,
   getTimeSlots,
+  isWithinScheduleRange,
+  normalizeRoomKey,
   normalizeWeekdayName,
   parseTimeToMinutes,
   toLocalDateKey,
@@ -48,11 +50,12 @@ const SHEET_DAY_GROUPS = [
   { label: 'Dush chor juma', days: ['Monday', 'Wednesday', 'Friday'] },
   { label: 'Sesh pay shanba', days: ['Tuesday', 'Thursday', 'Saturday'] },
 ];
-const ROOM_BANDS = [
+const FALLBACK_ROOM_BANDS = [
   ['1 xona', '2 xona', '3 xona', '4 xona', '5 xona'],
   ['6 xona', '7 xona', '8 xona', '9 xona', '10 xona'],
 ];
-const SHEET_MIN_WIDTH = TIME_COLUMN_WIDTH + SHEET_ROOM_WIDTH * ROOM_BANDS[0].length;
+const ROOMS_PER_BAND = 5;
+const SHEET_MIN_WIDTH = TIME_COLUMN_WIDTH + SHEET_ROOM_WIDTH * ROOMS_PER_BAND;
 const CLASS_COLORS = [
   'bg-blue-600 text-white hover:bg-blue-700',
   'bg-emerald-600 text-white hover:bg-emerald-700',
@@ -107,6 +110,21 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
   const fallbackDurationMinutes = getConfiguredLessonDurationMinutes();
   const configuredTimeSlots = getTimeSlots();
+  const roomBands = useMemo(() => {
+    const roomNumbers = Array.from(new Set(
+      schedule
+        .map((item) => String(item.room_number || '').trim())
+        .filter(Boolean)
+    )).sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
+
+    if (roomNumbers.length === 0) return FALLBACK_ROOM_BANDS;
+
+    const bands: string[][] = [];
+    for (let index = 0; index < roomNumbers.length; index += ROOMS_PER_BAND) {
+      bands.push(roomNumbers.slice(index, index + ROOMS_PER_BAND));
+    }
+    return bands;
+  }, [schedule]);
 
 // Memoizes the day sessions by date derived value.
   const daySessionsByDate = useMemo(() => {
@@ -146,7 +164,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
   const getGroupRows = (days: string[], bandRooms: string[]) => {
     const boundaries = new Set<number>();
     schedule
-      .filter((item) => days.includes(normalizeWeekdayName(item.day)) && bandRooms.includes(String(item.room_number)))
+      .filter((item) => {
+        const itemDayName = normalizeWeekdayName(item.day);
+        const calendarDay = weekDays.find((day) => day.dayName === itemDayName);
+        return days.includes(itemDayName)
+          && bandRooms.some((room) => normalizeRoomKey(room) === normalizeRoomKey(item.room_number))
+          && Boolean(calendarDay)
+          && isWithinScheduleRange(item, calendarDay!.isoDate);
+      })
       .forEach((item) => {
         boundaries.add(parseTimeToMinutes(String(item.time || '').substring(0, 5)));
         boundaries.add(getPlannedEndMinutes(item));
@@ -167,7 +192,14 @@ export const WeekView: React.FC<WeekViewProps> = ({
 
   const getScheduleForCell = (days: string[], room: string, start: number, end: number) =>
     schedule.find((item) => {
-      if (!days.includes(normalizeWeekdayName(item.day)) || String(item.room_number) !== room) return false;
+      const itemDayName = normalizeWeekdayName(item.day);
+      const calendarDay = weekDays.find((day) => day.dayName === itemDayName);
+      if (
+        !days.includes(itemDayName)
+        || normalizeRoomKey(item.room_number) !== normalizeRoomKey(room)
+        || !calendarDay
+        || !isWithinScheduleRange(item, calendarDay.isoDate)
+      ) return false;
       const itemStart = parseTimeToMinutes(String(item.time || '').substring(0, 5));
       const itemEnd = getPlannedEndMinutes(item);
       return itemStart < end && itemEnd > start;
@@ -223,7 +255,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
           <div className="w-full" style={{ minWidth: SHEET_MIN_WIDTH }}>
             {SHEET_DAY_GROUPS.map((group) => (
               <div key={group.label} className="border-b-4 border-yellow-300 last:border-b-0">
-                {ROOM_BANDS.map((bandRooms, bandIndex) => {
+                {roomBands.map((bandRooms, bandIndex) => {
                   const rows = getGroupRows(group.days, bandRooms);
                   const template = `${TIME_COLUMN_WIDTH}px repeat(${bandRooms.length}, minmax(${SHEET_ROOM_WIDTH}px, 1fr))`;
                   return (

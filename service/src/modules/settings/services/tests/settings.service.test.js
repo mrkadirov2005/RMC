@@ -33,8 +33,13 @@ describe('settings service', () => {
     expect(repository.saveSetting).toHaveBeenCalledWith('owner_panel_palette', { id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' }, 3);
     expect(service.normalizeOwnerPalette('unknown')).toMatchObject({ id: 'ocean' });
   });
-  test('keeps only safe exact-card color overrides', () => {
-    expect(service.normalizeVisualOverrides([{ key: '/students/1|card|profile', color: '#AABBCC' }, { key: 'bad', color: 'red' }]))
-      .toEqual([{ key: '/students/1|card|profile', color: '#aabbcc' }]);
+  test('keeps only safe exact-card color and typography overrides', () => {
+    expect(service.normalizeVisualOverrides([
+      { key: '/students/1|card|profile', color: '#AABBCC', textColor: '#112233', fontSize: 18.4, fontWeight: '700', fontStyle: 'italic', textDecoration: 'underline' },
+      { key: 'bad', color: 'red', textColor: 'white', fontSize: 100, fontWeight: '900' },
+    ])).toEqual([{
+      key: '/students/1|card|profile', color: '#aabbcc', textColor: '#112233', fontSize: 18,
+      fontWeight: '700', fontStyle: 'italic', textDecoration: 'underline',
+    }]);
   });
 });

@@ -12,6 +12,14 @@ export type OwnerPaletteId = typeof ownerPalettePresets[number]['id'];
 export type OwnerPalette = { id: string; name?: string; primary: string; secondary: string; tertiary: string };
 export const DEFAULT_OWNER_PALETTE: OwnerPaletteId = 'ocean';
 
+export const getReadableTextColor = (hexColor: string) => {
+  const hex = String(hexColor || '').replace('#', '');
+  if (!/^[0-9a-f]{6}$/i.test(hex)) return '#ffffff';
+  const [red, green, blue] = [0, 2, 4].map((offset) => parseInt(hex.slice(offset, offset + 2), 16));
+  const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+  return luminance > 0.62 ? '#111827' : '#ffffff';
+};
+
 export const getOwnerPalette = (value?: string | Partial<OwnerPalette> | null): OwnerPalette => {
   const id = typeof value === 'string' ? value : value?.id;
   const preset = ownerPalettePresets.find((palette) => palette.id === id) || ownerPalettePresets[0];
@@ -36,6 +44,9 @@ export const applyOwnerPalette = (value: string | Partial<OwnerPalette>) => {
   document.documentElement.style.setProperty('--owner-primary-card', palette.primary);
   document.documentElement.style.setProperty('--owner-secondary-tag', palette.secondary);
   document.documentElement.style.setProperty('--owner-tertiary-card', palette.tertiary);
+  document.documentElement.style.setProperty('--owner-primary-text', getReadableTextColor(palette.primary));
+  document.documentElement.style.setProperty('--owner-secondary-text', getReadableTextColor(palette.secondary));
+  document.documentElement.style.setProperty('--owner-tertiary-text', getReadableTextColor(palette.tertiary));
   return palette;
 };
 

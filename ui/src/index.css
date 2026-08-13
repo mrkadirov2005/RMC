@@ -164,15 +164,16 @@ tbody[data-list-body='true'] > tr {
   .owner-primary-card {
     background: var(--owner-primary-card, #2563eb) !important;
     border-color: color-mix(in srgb, var(--owner-primary-card, #2563eb) 70%, white) !important;
-    color: white !important;
+    color: var(--owner-primary-text, white) !important;
   }
   .owner-secondary-tag {
     background: var(--owner-secondary-tag, #0891b2) !important;
-    color: white !important;
+    color: var(--owner-secondary-text, white) !important;
   }
   .owner-tertiary-card {
     background: var(--owner-tertiary-card, #eff6ff) !important;
     border-color: color-mix(in srgb, var(--owner-primary-card, #2563eb) 25%, white) !important;
+    color: var(--owner-tertiary-text, #111827) !important;
   }
   .animate-fade-in {
     animation: fade-in 0.5s ease-out both;

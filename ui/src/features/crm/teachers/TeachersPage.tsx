@@ -1,12 +1,11 @@
 // Page component for the teachers screen in the crm feature.
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, GraduationCap, User, X, Loader2, Search, Users, Award, ShieldCheck, Upload, Download, MoreHorizontal } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, User, X, Loader2, Search, Upload, Download, MoreHorizontal } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle, type ViewMode } from '@/components/common/ViewModeToggle';
-import { MetricCard } from '@/components/common/MetricCard';
 import { PageToolbar } from '@/components/common/PageToolbar';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -123,41 +122,8 @@ const TeachersPage = () => {
   useEffect(() => {
     setPage(1);
   }, [debouncedSearchTerm, viewMode]);
-  const activeTeachers = visibleTeachers.filter((teacher) => String(teacher.status || '').toLowerCase() === 'active').length;
-  const specializations = new Set(
-    visibleTeachers.map((teacher) => String(teacher.specialization || '').trim()).filter(Boolean)
-  ).size;
-  const qualifiedTeachers = visibleTeachers.filter((teacher) => String(teacher.qualification || '').trim()).length;
-  const summaryCards = [
-    {
-      label: 'Teachers shown',
-      value: totalTeachers.toLocaleString(),
-      detail: `${activeTeachers.toLocaleString()} active`,
-      icon: Users,
-      tone: 'blue' as const,
-    },
-    {
-      label: 'Specializations',
-      value: specializations.toLocaleString(),
-      detail: 'Across current view',
-      icon: GraduationCap,
-      tone: 'green' as const,
-    },
-    {
-      label: 'Qualified',
-      value: qualifiedTeachers.toLocaleString(),
-      detail: 'With qualification',
-      icon: Award,
-      tone: 'amber' as const,
-    },
-    {
-      label: 'Status health',
-      value: visibleTeachers.length > 0 ? `${Math.round((activeTeachers / visibleTeachers.length) * 100)}%` : '0%',
-      detail: 'Current page active ratio',
-      icon: ShieldCheck,
-      tone: 'neutral' as const,
-    },
-  ];
+  
+   
   const renderTeacherActions = (teacher: Teacher) => (
     <div className="flex flex-wrap justify-end gap-1.5">
       <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs text-slate-700" onClick={() => navigate(getTeacherProfilePath(teacher))}>
@@ -238,19 +204,6 @@ const TeachersPage = () => {
 
   return (
     <div className="space-y-4 owner-palette-scope">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {summaryCards.map((card) => (
-          <MetricCard
-            key={card.label}
-            label={card.label}
-            value={card.value}
-            detail={card.detail}
-            icon={card.icon}
-            tone={card.tone}
-            className="owner-primary-card"
-          />
-        ))}
-      </div>
 
       {state.error && (
         <Alert variant="destructive" className="mb-6">

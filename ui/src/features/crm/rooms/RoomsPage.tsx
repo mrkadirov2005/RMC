@@ -1,7 +1,7 @@
 // Page component for the rooms screen in the crm feature.
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Plus, Pencil, Trash2, Loader2, Building2, CalendarDays, DoorOpen, Clock, Upload, Download, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Building2, DoorOpen, Upload, Download, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -32,11 +32,13 @@ import {
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchRooms, fetchRoomsForce } from '../../../slices/roomsSlice';
 import { fetchClasses } from '../../../slices/classesSlice';
+import { fetchTeachers } from '../../../slices/teachersSlice';
 import { showToast } from '@/utils/toast';
-import { selectRoomsPageUi } from '../../../store/selectors';
+import { selectRoomsPageUi, selectTeacherOptions } from '../../../store/selectors';
 import { exportCsvEntity, importCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { cn } from '@/lib/utils';
+import { buildAssignedClassGroups, buildRoomGroups, filterClassesByTeacher, normalizeRoomAssignments } from './roomModel';
 
 const weekDays = [
   'Monday',
@@ -53,6 +55,7 @@ const RoomsPage = () => {
   const dispatch = useAppDispatch();
   const rooms = useAppSelector(state => state.rooms.items);
   const classes = useAppSelector(state => state.classes.items);
+  const teacherOptions = useAppSelector(selectTeacherOptions);
   const roomsUi = useAppSelector(selectRoomsPageUi);
   const { isModalOpen, editingId, submitting } = roomsUi;
   const loading = useAppSelector(state => state.rooms.loading || state.classes.loading || submitting);
@@ -66,33 +69,17 @@ const RoomsPage = () => {
   });
   const [isImporting, setIsImporting] = useState(false);
   const [selectedRoomNumber, setSelectedRoomNumber] = useState<string>('');
+  const [dialogMode, setDialogMode] = useState<'room' | 'assignment'>('room');
+  const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const { t } = useLanguage();
 
-  const roomGroups = useMemo(() => {
-    const map = new Map<string, any[]>();
-    rooms.forEach((room: any) => {
-      const roomNumber = String(room.room_number || '').trim();
-      if (!roomNumber) return;
-      const list = map.get(roomNumber) || [];
-      list.push(room);
-      map.set(roomNumber, list);
-    });
-
-    return Array.from(map.entries())
-      .map(([roomNumber, assignments]) => {
-        const classIds = new Set(assignments.map((room) => Number(room.class_id || 0)).filter(Boolean));
-        const days = new Set(assignments.map((room) => String(room.day || '').trim()).filter(Boolean));
-        return {
-          roomNumber,
-          assignments: assignments.sort((a, b) => `${a.day || ''}${a.time || ''}`.localeCompare(`${b.day || ''}${b.time || ''}`)),
-          classCount: classIds.size,
-          assignmentCount: assignments.length,
-          dayCount: days.size,
-        };
-      })
-      .sort((a, b) => a.roomNumber.localeCompare(b.roomNumber, undefined, { numeric: true }));
-  }, [rooms]);
+  const normalizedRooms = useMemo(() => normalizeRoomAssignments(rooms), [rooms]);
+  const roomGroups = useMemo(() => buildRoomGroups(normalizedRooms), [normalizedRooms]);
+  const teacherClasses = useMemo(
+    () => filterClassesByTeacher(classes, selectedTeacherId),
+    [classes, selectedTeacherId],
+  );
 
   const selectedRoom = useMemo(
     () => roomGroups.find((room) => room.roomNumber === selectedRoomNumber) || roomGroups[0] || null,
@@ -101,18 +88,7 @@ const RoomsPage = () => {
 
   const selectedRoomClasses = useMemo(() => {
     if (!selectedRoom) return [];
-    const map = new Map<number | string, { id: number | string; name: string; assignments: any[] }>();
-    selectedRoom.assignments.forEach((assignment: any) => {
-      const id = assignment.class_id || assignment.class_name || `unassigned-${assignment.room_id}`;
-      const existing = map.get(id) || {
-        id,
-        name: assignment.class_name || 'Unassigned',
-        assignments: [] as any[],
-      };
-      existing.assignments.push(assignment);
-      map.set(id, existing);
-    });
-    return Array.from(map.values());
+    return buildAssignedClassGroups(selectedRoom.assignments);
   }, [selectedRoom]);
 
 // Runs side effects for this component.
@@ -122,65 +98,26 @@ const RoomsPage = () => {
     }
   }, [roomGroups, selectedRoomNumber]);
 
-  const summaryCards = useMemo(() => {
-    const uniqueRooms = new Set(rooms.map((room: any) => String(room.room_number || '').trim()).filter(Boolean)).size;
-    const assignedRooms = rooms.filter((room: any) => room.class_id || room.class_name).length;
-    const activeDays = new Set(rooms.map((room: any) => String(room.day || '').trim()).filter(Boolean)).size;
-    const scheduledTimes = new Set(rooms.map((room: any) => String(room.time || '').substring(0, 5)).filter(Boolean)).size;
-
-    return [
-      {
-        label: 'Assignments',
-        value: rooms.length.toLocaleString(),
-        detail: `${assignedRooms.toLocaleString()} assigned`,
-        icon: Building2,
-        shell: 'from-indigo-50 via-white to-sky-50 border-indigo-100',
-        iconShell: 'from-indigo-500 to-sky-500',
-        text: 'text-indigo-950',
-      },
-      {
-        label: 'Rooms',
-        value: uniqueRooms.toLocaleString(),
-        detail: 'Physical spaces',
-        icon: DoorOpen,
-        shell: 'from-emerald-50 via-white to-teal-50 border-emerald-100',
-        iconShell: 'from-emerald-500 to-teal-500',
-        text: 'text-emerald-950',
-      },
-      {
-        label: 'Active days',
-        value: activeDays.toLocaleString(),
-        detail: 'Weekly schedule',
-        icon: CalendarDays,
-        shell: 'from-amber-50 via-white to-orange-50 border-amber-100',
-        iconShell: 'from-amber-500 to-orange-500',
-        text: 'text-amber-950',
-      },
-      {
-        label: 'Time slots',
-        value: scheduledTimes.toLocaleString(),
-        detail: 'Unique starts',
-        icon: Clock,
-        shell: 'from-cyan-50 via-white to-fuchsia-50 border-cyan-100',
-        iconShell: 'from-cyan-500 to-fuchsia-500',
-        text: 'text-slate-950',
-      },
-    ];
-  }, [rooms]);
 
 // Runs side effects for this component.
   useEffect(() => {
     dispatch(fetchRooms());
     dispatch(fetchClasses());
+    dispatch(fetchTeachers());
   }, [dispatch]);
 
 // Handles open modal.
-  const handleOpenModal = (room?: any) => {
+  const handleOpenModal = (room?: any, mode: 'room' | 'assignment' = room?.class_id ? 'assignment' : 'room') => {
+    setDialogMode(mode);
+    const currentClass = room?.class_id
+      ? classes.find((item) => Number(item.class_id || item.id) === Number(room.class_id))
+      : null;
+    setSelectedTeacherId(currentClass?.teacher_id ? String(currentClass.teacher_id) : '');
     if (room) {
       dispatch(setRoomsPageEditingId(room.room_id || null));
       setFormData({
         room_number: room.room_number || '',
-        class_id: room.class_id ? String(room.class_id) : 'none',
+        class_id: room.class_id ? String(room.class_id) : mode === 'assignment' ? '' : 'none',
         day: room.day || 'Monday',
         time: room.time?.substring(0, 5) || '09:00',
         end_time: room.end_time?.substring(0, 5) || '10:00',
@@ -188,8 +125,8 @@ const RoomsPage = () => {
     } else {
       dispatch(setRoomsPageEditingId(null));
       setFormData({
-        room_number: '',
-        class_id: 'none',
+        room_number: mode === 'assignment' ? selectedRoom?.roomNumber || '' : '',
+        class_id: mode === 'assignment' ? '' : 'none',
         day: 'Monday',
         time: '09:00',
         end_time: '10:00',
@@ -202,11 +139,20 @@ const RoomsPage = () => {
   const handleCloseModal = () => {
     dispatch(setRoomsPageModalOpen(false));
     dispatch(setRoomsPageEditingId(null));
+    setSelectedTeacherId('');
   };
 
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingId && dialogMode === 'room' && roomGroups.some((room) => room.roomNumber.toLowerCase() === formData.room_number.trim().toLowerCase())) {
+      showToast.error('A room with this name already exists');
+      return;
+    }
+    if (dialogMode === 'assignment' && (!selectedTeacherId || !formData.class_id)) {
+      showToast.error('Choose a teacher and group');
+      return;
+    }
     dispatch(setRoomsPageSubmitting(true));
     try {
       const payload = {
@@ -219,7 +165,7 @@ const RoomsPage = () => {
         showToast.success('Room updated successfully');
       } else {
         await roomAPI.create(payload);
-        showToast.success('Room created successfully');
+        showToast.success(dialogMode === 'room' ? 'Room created successfully' : 'Class assigned to room');
       }
       handleCloseModal();
       dispatch(fetchRoomsForce());
@@ -235,15 +181,42 @@ const RoomsPage = () => {
     }
   };
 
+  const handleDeleteRoom = async () => {
+    if (!selectedRoom) return;
+    if (!window.confirm(`Delete room ${selectedRoom.roomNumber} and all ${selectedRoom.assignmentCount} assignment(s)?`)) return;
+    dispatch(setRoomsPageSubmitting(true));
+    try {
+      await Promise.all(selectedRoom.allRows.map((row: any) => roomAPI.delete(row.room_id)));
+      setSelectedRoomNumber('');
+      showToast.success('Room deleted successfully');
+      await dispatch(fetchRoomsForce());
+    } catch {
+      showToast.error('Failed to delete room');
+    } finally {
+      dispatch(setRoomsPageSubmitting(false));
+    }
+  };
+
 // Handles delete.
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this room assignment?')) return;
     dispatch(setRoomsPageSubmitting(true));
     try {
+      const deletedRow = normalizedRooms.find((room) => Number(room.room_id) === Number(id));
       await roomAPI.delete(id);
+      const roomRows = normalizedRooms.filter((room) => room.room_number === deletedRow?.room_number);
+      if (deletedRow?.class_id && roomRows.length === 1) {
+        await roomAPI.create({
+          room_number: deletedRow.room_number,
+          class_id: null,
+          day: 'Monday',
+          time: '09:00',
+          end_time: '10:00',
+        });
+      }
       showToast.success('Room assignment deleted');
       dispatch(fetchRoomsForce());
-    } catch (err: any) {
+    } catch {
       showToast.error('Failed to delete room');
     } finally {
       dispatch(setRoomsPageSubmitting(false));
@@ -294,15 +267,23 @@ const RoomsPage = () => {
             <h3 className="text-lg font-black text-slate-950 dark:text-card-foreground">Registered classes</h3>
             <p className="text-xs text-muted-foreground">Compact schedule list for this room.</p>
           </div>
-          <Button size="sm" variant="outline" onClick={() => handleOpenModal({ room_number: selectedRoom?.roomNumber, day: 'Monday', time: '09:00', end_time: '10:00' })}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add here
-          </Button>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => handleOpenModal({ room_number: selectedRoom?.roomNumber }, 'assignment')}>
+              <Plus className="mr-2 h-4 w-4" />Assign class
+            </Button>
+            <Button size="sm" variant="destructive" onClick={handleDeleteRoom}>
+              <Trash2 className="mr-2 h-4 w-4" />Delete room
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="space-y-2">
-        {selectedRoomClasses.map((group, index) => (
+        {selectedRoomClasses.length === 0 ? (
+          <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+            No classes assigned yet. Use “Assign class” to add the first schedule.
+          </div>
+        ) : selectedRoomClasses.map((group, index) => (
           <div key={group.id} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
             <div className="flex items-center justify-between gap-2 border-b bg-slate-50 px-3 py-2 dark:bg-muted/20">
               <div className="flex min-w-0 items-center gap-2">
@@ -363,7 +344,6 @@ const RoomsPage = () => {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Room Management</h1>
-              <p className="mt-1 text-sm text-muted-foreground">Manage class assignments to physical rooms and schedule slots.</p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -395,29 +375,9 @@ const RoomsPage = () => {
             </Button>
             <Button onClick={() => handleOpenModal()} className="bg-gradient-to-br from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 font-semibold shadow-lg shadow-indigo-900/10 dark:shadow-none">
               <Plus className="mr-2 h-4 w-4" />
-              Add Room Assignment
+              Create Room
             </Button>
           </div>
-        </div>
-
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {summaryCards.map((card) => {
-            const Icon = card.icon;
-            return (
-              <div key={card.label} className={`rounded-lg border bg-gradient-to-br ${card.shell} p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none`}>
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">{card.label}</p>
-                    <p className={`mt-1 text-2xl font-bold ${card.text} dark:text-card-foreground`}>{card.value}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{card.detail}</p>
-                  </div>
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br ${card.iconShell} text-white shadow-md shadow-slate-900/10 dark:shadow-none`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
 
@@ -515,7 +475,7 @@ const RoomsPage = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Room Assignment' : 'Add New Room Assignment'}</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Room Assignment' : dialogMode === 'room' ? 'Create Room' : 'Assign Class to Room'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -525,31 +485,57 @@ const RoomsPage = () => {
                 required
                 placeholder="e.g. Room 101"
                 value={formData.room_number}
+                disabled={dialogMode === 'assignment' && !editingId}
                 onChange={(e) => setFormData({ ...formData, room_number: e.target.value })}
               />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="class_id">Assigned Class</Label>
+
+            {dialogMode === 'assignment' && <div className="space-y-2">
+              <Label htmlFor="teacher_id">Teacher *</Label>
+              <Select
+                value={selectedTeacherId}
+                onValueChange={(value) => {
+                  setSelectedTeacherId(value);
+                  setFormData({ ...formData, class_id: '' });
+                }}
+              >
+                <SelectTrigger id="teacher_id">
+                  <SelectValue placeholder="Choose a teacher first" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teacherOptions.map((teacher) => (
+                    <SelectItem key={teacher.id} value={String(teacher.value)}>
+                      {teacher.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>}
+
+            {dialogMode === 'assignment' && <div className="space-y-2">
+              <Label htmlFor="class_id">Group *</Label>
               <Select
                 value={formData.class_id}
                 onValueChange={(val) => setFormData({ ...formData, class_id: val })}
+                disabled={!selectedTeacherId}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a class" />
+                <SelectTrigger id="class_id">
+                  <SelectValue placeholder={selectedTeacherId ? 'Choose a group' : 'Choose a teacher first'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Unassigned</SelectItem>
-                  {classes.map((cls) => (
+                  {teacherClasses.map((cls) => (
                     <SelectItem key={cls.class_id || cls.id} value={String(cls.class_id || cls.id)}>
                       {formatGroupLabel(cls)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+              {selectedTeacherId && teacherClasses.length === 0 && (
+                <p className="text-xs text-muted-foreground">This teacher has no groups.</p>
+              )}
+            </div>}
 
-            <div className="grid gap-3 md:grid-cols-3">
+            {dialogMode === 'assignment' && <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-2">
                 <Label htmlFor="day">Day *</Label>
                 <Select
@@ -591,7 +577,7 @@ const RoomsPage = () => {
                   Availability is checked for the whole time range.
                 </p>
               </div>
-            </div>
+            </div>}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>

@@ -1023,7 +1023,6 @@ const translations: Record<string, string> = {
   'Failed to permanently delete record.': "Yozuvni butunlay o'chirib bo'lmadi.",
   Refresh: 'Yangilash',
   'Manage instructors, specializations, access, and profile details in one place.': "O'qituvchilarni, mutaxassisliklarni, kirishni va profil ma'lumotlarini bir joyda boshqaring.",
-  'Teachers shown': "Ko'rinayotgan o'qituvchilar",
   'Open teacher actions': "O'qituvchi amallarini ochish",
   'Add Teacher': "O'qituvchi qo'shish",
   'Status Health': "Holat ko'rsatkichi",

@@ -88,6 +88,19 @@ export const normalizeWeekdayName = (value: unknown) => {
   return WEEKDAY_ALIASES[key] || String(value || '').trim();
 };
 
+// Treat the room labels used by the sheet ("1 xona") and API values such as
+// "1-xona", "1_xona", and "Room 1" as the same room. Keep arbitrary room
+// identifiers (for example "403") intact.
+export const normalizeRoomKey = (value: unknown) => {
+  const normalized = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\s+/g, ' ');
+  const numberedRoom = normalized.match(/^(?:room\s*)?(\d+)\s*(?:xona)?$/);
+  return numberedRoom ? numberedRoom[1] : normalized;
+};
+
 export const isWithinScheduleRange = (item: any, isoDate: string) => {
   const startDate = item.start_date ? String(item.start_date).split('T')[0] : '';
   const endDate = item.end_date ? String(item.end_date).split('T')[0] : '';

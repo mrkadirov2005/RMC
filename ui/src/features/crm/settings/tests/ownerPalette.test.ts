@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getOwnerPalette, ownerPalettePresets } from '../ownerPalette';
+import { getOwnerPalette, getReadableTextColor, ownerPalettePresets } from '../ownerPalette';
 
 describe('owner panel palette', () => {
   it('provides one source for all three semantic color levels', () => {
@@ -25,5 +25,17 @@ describe('owner panel palette', () => {
 
   it('accepts safe custom colors and keeps a custom identity', () => {
     expect(getOwnerPalette({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' })).toMatchObject({ id: 'custom', primary: '#112233', secondary: '#445566', tertiary: '#fefefe' });
+  });
+});
+
+describe('palette text contrast', () => {
+  it('uses dark text on light custom colors', () => {
+    expect(getReadableTextColor('#ffffff')).toBe('#111827');
+    expect(getReadableTextColor('#eaf3ff')).toBe('#111827');
+  });
+
+  it('uses white text on dark colors', () => {
+    expect(getReadableTextColor('#0066ff')).toBe('#ffffff');
+    expect(getReadableTextColor('#111827')).toBe('#ffffff');
   });
 });
