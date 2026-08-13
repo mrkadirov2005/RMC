@@ -250,6 +250,9 @@ const moveRecurring = async (centerId: number, classId: number, body: any, scope
   const room = rooms.find((item: any) => roomKey(item.name) === roomKey(roomName) && String(item.status || 'active').toLowerCase() === 'active');
   if (!room) throw Object.assign(new Error('The destination room is not active or does not exist.'), { status: 409 });
   const definitions = (await repository.recurringDefinitions(centerId, {})).map(parseDefinition).filter(Boolean);
+  const current = definitions.find((item: any) => Number(item.class_id) === classId);
+  if (!current) throw Object.assign(new Error('Group schedule not found.'), { status: 404 });
+  if (scope.teacherId && Number(current.teacher_id) !== Number(scope.teacherId)) throw Object.assign(new Error('Access denied'), { status: 403 });
   const conflict = definitions.find((item: any) => Number(item.class_id) !== classId
     && roomKey(item.room_name) === roomKey(room.name)
     && item.days.some((day: string) => days.map(normalizeDay).includes(day))

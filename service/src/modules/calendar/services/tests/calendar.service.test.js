@@ -2,6 +2,7 @@ jest.mock('../../repositories/calendar.repository', () => ({
   datedSessions: jest.fn(),
   resources: jest.fn(),
   recurringDefinitions: jest.fn(),
+  updateRecurringSchedule: jest.fn(),
 }));
 jest.mock('../../../rooms/services/room-insights.service', () => ({ getSchedule: jest.fn(), getPhysicalRooms: jest.fn() }));
 
@@ -188,5 +189,26 @@ describe('calendar service', () => {
     const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-10' });
     expect(rows).toHaveLength(1);
     expect(rows[0]).toEqual(expect.objectContaining({ event_id: 'session-1', room_id: 6, room_name: 'Room 1' }));
+  });
+
+  test('moves a complete recurring schedule to a free active room and weekday pattern', async () => {
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'B1', teacher_id: 4, room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
+      { class_id: 8, class_name: 'A2', teacher_id: 5, room_name: 'Room 2', section: JSON.stringify({ days: ['Monday'], time: '11:00', endTime: '12:00' }) },
+    ]);
+    roomInsights.getPhysicalRooms.mockResolvedValue([{ room_id: 7, name: 'Room 2', status: 'active' }]);
+    repository.updateRecurringSchedule.mockResolvedValue({ class_id: 3, room_number: 'Room 2' });
+    await service.moveRecurring(2, 3, { room_name: 'Room 2', pattern: 'tts', start_time: '09:00', end_time: '10:00' }, { teacherId: 4 });
+    expect(repository.updateRecurringSchedule).toHaveBeenCalledWith(2, 3, JSON.stringify({ days: ['Tuesday', 'Thursday', 'Saturday'], time: '09:00', endTime: '10:00' }), 'Room 2');
+  });
+
+  test('rejects a recurring move when the destination room overlaps another group', async () => {
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'B1', teacher_id: 4, room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
+      { class_id: 8, class_name: 'A2', teacher_id: 5, room_name: 'Room 2', section: JSON.stringify({ days: ['Tuesday'], time: '09:30', endTime: '10:30' }) },
+    ]);
+    roomInsights.getPhysicalRooms.mockResolvedValue([{ room_id: 7, name: 'Room 2', status: 'active' }]);
+    await expect(service.moveRecurring(2, 3, { room_name: 'Room 2', pattern: 'tts', start_time: '09:00', end_time: '10:00' }, { teacherId: 4 })).rejects.toMatchObject({ status: 409 });
+    expect(repository.updateRecurringSchedule).not.toHaveBeenCalled();
   });
 });

@@ -3,10 +3,10 @@ import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Loader2 } from 'luci
 import { Card } from '@/components/ui/card';
 import SessionModal from '@/features/crm/classes/SessionModal';
 import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
-import { fetchClasses } from '@/slices/classesSlice';
+import { fetchClasses, fetchClassesForce } from '@/slices/classesSlice';
 import { fetchStudents } from '@/slices/studentsSlice';
 import { showToast } from '@/utils/toast';
-import { classAPI } from './api';
+import { calendarAPI, classAPI } from './api';
 import { EMPTY_FILTERS, localDateKey, type CalendarEvent, type CalendarFilters, type CalendarView } from './calendarWorkspace';
 import { CalendarEventDrawer } from './components/CalendarEventDrawer';
 import { CalendarWorkspaceFilters } from './components/CalendarWorkspaceFilters';
@@ -114,12 +114,23 @@ const CalendarPage = () => {
     catch { showToast.error('Failed to delete session.'); }
   };
 
+  const moveRecurring = async (event: CalendarEvent, room: string, pattern: string) => {
+    if (!canManage || event.source !== 'recurring') return;
+    try {
+      await calendarAPI.moveRecurring(event.class_id, { room_name: room, pattern, start_time: event.start_time.slice(0, 5), end_time: event.end_time.slice(0, 5) });
+      await dispatch(fetchClassesForce());
+      workspace.refresh();
+      showToast.success(`${event.class_name} moved to ${room}.`);
+    } catch (error: any) { showToast.error(error?.response?.data?.error || 'Could not move this lesson.'); }
+  };
+
   const counts = useMemo(() => ({
     total: workspace.events.length,
     conducted: workspace.events.filter(event => event.status === 'conducted').length,
     pending: workspace.events.filter(event => ['planned', 'ready', 'in_progress'].includes(event.status)).length,
     attendance: workspace.events.filter(event => (event.attendance?.unmarked || 0) > 0).length,
   }), [workspace.events]);
+  const calendarRooms = useMemo(() => workspace.resources.filter(resource => resource.type === 'room').map(resource => resource.name), [workspace.resources]);
 
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4 sm:px-5">
     <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">Calendar</h1><p className="text-xs text-muted-foreground">Lessons, rooms, teachers and attendance in one schedule.</p></div></header>
@@ -133,7 +144,7 @@ const CalendarPage = () => {
       {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{workspace.error}</div>}
       {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label="Loading calendar" className="h-7 w-7 animate-spin text-primary" /></div> : <>
         {view === 'day' && <DayCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} />}
-        {view === 'week' && <WeekCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} />}
+        {view === 'week' && <WeekCalendarView anchor={anchor} events={workspace.events} rooms={calendarRooms} onSelect={setSelectedEvent} onMove={moveRecurring} canMove={canManage} />}
         {view === 'month' && <MonthCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} onDay={date => { setAnchor(date); setView('day'); }} />}
         {view === 'agenda' && <AgendaCalendarView events={workspace.events} onSelect={setSelectedEvent} />}
       </>}
