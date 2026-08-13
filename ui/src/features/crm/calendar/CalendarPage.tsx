@@ -114,10 +114,10 @@ const CalendarPage = () => {
     catch { showToast.error('Failed to delete session.'); }
   };
 
-  const moveRecurring = async (event: CalendarEvent, room: string, pattern: string) => {
+  const moveRecurring = async (event: CalendarEvent, room: string, pattern: string, start: string, end: string) => {
     if (!canManage || event.source !== 'recurring') return;
     try {
-      await calendarAPI.moveRecurring(event.class_id, { room_name: room, pattern, start_time: event.start_time.slice(0, 5), end_time: event.end_time.slice(0, 5) });
+      await calendarAPI.moveRecurring(event.class_id, { room_name: room, pattern, start_time: start, end_time: end });
       await dispatch(fetchClassesForce());
       workspace.refresh();
       showToast.success(`${event.class_name} moved to ${room}.`);

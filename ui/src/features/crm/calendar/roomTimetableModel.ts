@@ -38,3 +38,12 @@ export const buildPatternRows = (events: CalendarEvent[], roomNames: string[]) =
     byRoom: new Map(roomNames.map(room => [room, eventsByRoom.get(room)?.[index]])),
   }));
 };
+
+export const buildTimeGridRows = (events: CalendarEvent[], roomNames: string[], slots: Array<{ start: string; end: string }>) =>
+  slots.map((slot, index) => ({
+    ...slot,
+    index,
+    byRoom: new Map(roomNames.map(room => [room, events.find(event =>
+      event.room_name === room && event.start_time.slice(0, 5) >= slot.start && event.start_time.slice(0, 5) < slot.end
+    )])),
+  }));

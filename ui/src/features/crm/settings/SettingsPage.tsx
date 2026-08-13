@@ -22,6 +22,7 @@ import {
   CALENDAR_DAY_END_HOUR_KEY,
   CALENDAR_DAY_START_HOUR_KEY,
   CALENDAR_DEFAULT_VIEW_KEY,
+  CALENDAR_SLOT_DURATION_KEY,
 } from '../calendar/utils';
 import {
   applyListRowColors,
@@ -79,7 +80,8 @@ const SettingsPage = () => {
   const [overrideDuration, setOverrideDuration] = useState<number | ''>('');
   const [calendarDefaultView, setCalendarDefaultView] = useState<'month' | 'week'>('month');
   const [calendarStartHour, setCalendarStartHour] = useState(8);
-  const [calendarEndHour, setCalendarEndHour] = useState(18);
+  const [calendarEndHour, setCalendarEndHour] = useState(22);
+  const [calendarSlotDuration, setCalendarSlotDuration] = useState(120);
   const [lessonScoring, setLessonScoring] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
   const [primaryRowColor, setPrimaryRowColor] = useState(DEFAULT_LIST_ROW_PRIMARY);
   const [alternateRowColor, setAlternateRowColor] = useState(DEFAULT_LIST_ROW_ALTERNATE);
@@ -91,7 +93,8 @@ const SettingsPage = () => {
     setOverrideDuration(overrideValue > 0 ? overrideValue : '');
     setCalendarDefaultView(readStoredView());
     setCalendarStartHour(readStoredHour(CALENDAR_DAY_START_HOUR_KEY, 8));
-    setCalendarEndHour(readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 18));
+    setCalendarEndHour(readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 22));
+    setCalendarSlotDuration(readStoredNumber(CALENDAR_SLOT_DURATION_KEY, 120));
     const rowColors = readListRowColors();
     setPrimaryRowColor(rowColors.primary);
     setAlternateRowColor(rowColors.alternate);
@@ -132,6 +135,10 @@ const SettingsPage = () => {
       showToast.error('Calendar start hour must be before end hour.');
       return;
     }
+    if (!Number.isFinite(calendarSlotDuration) || calendarSlotDuration < 15 || calendarSlotDuration > 480) {
+      showToast.error('Calendar slot duration must be between 15 and 480 minutes.');
+      return;
+    }
 
     localStorage.setItem(DEFAULT_DURATION_KEY, String(defaultDuration));
     if (overrideDuration && Number(overrideDuration) > 0) {
@@ -142,6 +149,7 @@ const SettingsPage = () => {
     localStorage.setItem(CALENDAR_DEFAULT_VIEW_KEY, calendarDefaultView);
     localStorage.setItem(CALENDAR_DAY_START_HOUR_KEY, String(calendarStartHour));
     localStorage.setItem(CALENDAR_DAY_END_HOUR_KEY, String(calendarEndHour));
+    localStorage.setItem(CALENDAR_SLOT_DURATION_KEY, String(calendarSlotDuration));
     localStorage.setItem(LIST_ROW_PRIMARY_KEY, primaryRowColor);
     localStorage.setItem(LIST_ROW_ALTERNATE_KEY, alternateRowColor);
     applyListRowColors(primaryRowColor, alternateRowColor);
@@ -167,9 +175,11 @@ const SettingsPage = () => {
     localStorage.removeItem(CALENDAR_DEFAULT_VIEW_KEY);
     localStorage.removeItem(CALENDAR_DAY_START_HOUR_KEY);
     localStorage.removeItem(CALENDAR_DAY_END_HOUR_KEY);
+    localStorage.removeItem(CALENDAR_SLOT_DURATION_KEY);
     setCalendarDefaultView('month');
     setCalendarStartHour(8);
-    setCalendarEndHour(18);
+    setCalendarEndHour(22);
+    setCalendarSlotDuration(120);
     showToast.success('Calendar preferences reset.');
   };
 
@@ -179,6 +189,7 @@ const SettingsPage = () => {
     localStorage.removeItem(CALENDAR_DEFAULT_VIEW_KEY);
     localStorage.removeItem(CALENDAR_DAY_START_HOUR_KEY);
     localStorage.removeItem(CALENDAR_DAY_END_HOUR_KEY);
+    localStorage.removeItem(CALENDAR_SLOT_DURATION_KEY);
     localStorage.removeItem(LIST_ROW_PRIMARY_KEY);
     localStorage.removeItem(LIST_ROW_ALTERNATE_KEY);
     saveOwnerPalette(DEFAULT_OWNER_PALETTE);
@@ -188,7 +199,8 @@ const SettingsPage = () => {
     setOverrideDuration('');
     setCalendarDefaultView('month');
     setCalendarStartHour(8);
-    setCalendarEndHour(18);
+    setCalendarEndHour(22);
+    setCalendarSlotDuration(120);
     setPrimaryRowColor(DEFAULT_LIST_ROW_PRIMARY);
     setAlternateRowColor(DEFAULT_LIST_ROW_ALTERNATE);
     setOwnerPalette(getOwnerPalette(DEFAULT_OWNER_PALETTE));
@@ -427,6 +439,11 @@ const SettingsPage = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="calendarSlotDuration">Week timetable slot duration (minutes)</Label>
+              <Input id="calendarSlotDuration" type="number" min={15} max={480} step={15} value={calendarSlotDuration} onChange={(event) => setCalendarSlotDuration(Number(event.target.value))} />
+              <p className="text-xs text-muted-foreground">Controls every occupied and free row in the room timetable. Default: 120 minutes.</p>
             </div>
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-4 w-4" />

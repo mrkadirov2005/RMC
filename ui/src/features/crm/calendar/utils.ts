@@ -178,10 +178,13 @@ const OVERRIDE_DURATION_KEY = 'lesson_duration_override';
 export const CALENDAR_DEFAULT_VIEW_KEY = 'calendar_default_view';
 export const CALENDAR_DAY_START_HOUR_KEY = 'calendar_day_start_hour';
 export const CALENDAR_DAY_END_HOUR_KEY = 'calendar_day_end_hour';
+export const CALENDAR_SLOT_DURATION_KEY = 'calendar_slot_duration_minutes';
 
 const readStoredHour = (key: string, fallback: number) => {
   try {
-    const value = Number(localStorage.getItem(key));
+    const raw = localStorage.getItem(key);
+    if (raw == null || raw === '') return fallback;
+    const value = Number(raw);
     return Number.isFinite(value) && value >= 0 && value <= 23 ? value : fallback;
   } catch {
     return fallback;
@@ -216,4 +219,18 @@ export const getConfiguredLessonDurationMinutes = (): number => {
   } catch {
     return fallback;
   }
+};
+
+export const getCalendarTimetableSlots = () => {
+  const start = readStoredHour(CALENDAR_DAY_START_HOUR_KEY, 8) * 60;
+  const end = Math.max(start + 1, readStoredHour(CALENDAR_DAY_END_HOUR_KEY, 22) * 60);
+  let duration = 120;
+  try {
+    const stored = Number(localStorage.getItem(CALENDAR_SLOT_DURATION_KEY));
+    if (Number.isFinite(stored) && stored >= 15 && stored <= 480) duration = stored;
+  } catch { /* use defaults */ }
+  const format = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+  const slots = [];
+  for (let cursor = start; cursor < end; cursor += duration) slots.push({ start: format(cursor), end: format(Math.min(cursor + duration, end)) });
+  return slots;
 };

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPatternRows, groupRoomBands, patternForEvent } from '../roomTimetableModel';
+import { buildPatternRows, buildTimeGridRows, groupRoomBands, patternForEvent } from '../roomTimetableModel';
 import type { CalendarEvent } from '../calendarWorkspace';
 
 const lesson = (changes: Partial<CalendarEvent>): CalendarEvent => ({
@@ -34,5 +34,15 @@ describe('room timetable sheet model', () => {
     expect(rows).toHaveLength(1);
     expect(rows[0].byRoom.get('1 xona')).toBe(monday);
     expect(rows[0].byRoom.get('2 xona')).toBe(later);
+  });
+
+  it('builds every configured time row even when rooms are free', () => {
+    const rows = buildTimeGridRows([lesson({ start_time: '10:00', end_time: '12:00' })], ['1 xona', '2 xona'], [
+      { start: '08:00', end: '10:00' }, { start: '10:00', end: '12:00' }, { start: '12:00', end: '14:00' },
+    ]);
+    expect(rows).toHaveLength(3);
+    expect(rows[0].byRoom.get('1 xona')).toBeUndefined();
+    expect(rows[1].byRoom.get('1 xona')?.class_name).toBe('A1 Movers');
+    expect(rows[2].byRoom.get('2 xona')).toBeUndefined();
   });
 });
