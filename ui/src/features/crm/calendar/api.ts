@@ -1,1 +1,1 @@
-export { classAPI, portalAPI } from '@/shared/api/api';
+export { calendarAPI, classAPI, portalAPI } from '@/shared/api/api';

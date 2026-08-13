@@ -500,6 +500,13 @@ export const roomSlotAPI = {
     apiClient.get(`/room-slots/bookings/class/${classId}`, { params }),
 };
 
+export const calendarAPI = {
+  getEvents: (params: Record<string, unknown>) => apiClient.get('/calendar/events', { params }),
+  getSummary: (params: Record<string, unknown>) => apiClient.get('/calendar/summary', { params }),
+  getResources: () => apiClient.get('/calendar/resources'),
+  getConflicts: (params: Record<string, unknown>) => apiClient.get('/calendar/conflicts', { params }),
+};
+
 export type TranslationRow = {
   id: string;
   english: string;

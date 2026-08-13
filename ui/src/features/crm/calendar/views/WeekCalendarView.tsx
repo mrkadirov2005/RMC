@@ -1,0 +1,7 @@
+import { addDays, localDateKey, startOfWeek, type CalendarEvent } from '../calendarWorkspace';
+import { CalendarEventButton } from '../components/CalendarEventButton';
+
+export const WeekCalendarView = ({ anchor, events, onSelect }: { anchor: Date; events: CalendarEvent[]; onSelect: (event: CalendarEvent) => void }) => {
+  const days = Array.from({ length: 7 }, (_, index) => addDays(startOfWeek(anchor), index));
+  return <div className="overflow-x-auto"><div role="grid" aria-label="Weekly lesson calendar" className="grid min-w-[900px] grid-cols-7 divide-x">{days.map(day => { const key = localDateKey(day); const rows = events.filter(event => event.date === key).sort((a, b) => a.start_time.localeCompare(b.start_time)); const today = key === localDateKey(new Date()); return <section role="gridcell" key={key} aria-label={day.toLocaleDateString()} className="min-h-[430px] bg-white dark:bg-card"><header className={`sticky top-0 z-10 border-b px-2 py-2 text-center ${today ? 'bg-primary text-primary-foreground' : 'bg-slate-50 dark:bg-muted/40'}`}><div className="text-[11px] font-semibold uppercase">{day.toLocaleDateString(undefined, { weekday: 'short' })}</div><div className="text-lg font-bold">{day.getDate()}</div></header><div className="space-y-2 p-2">{rows.map(event => <CalendarEventButton key={event.event_id} event={event} onSelect={onSelect} />)}</div></section>; })}</div></div>;
+};

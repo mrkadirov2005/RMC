@@ -1,604 +1,145 @@
-// Page component for the calendar screen in the crm feature.
-
-import { useMemo, useState, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
-
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { classAPI, portalAPI } from './api';
-import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
-import { fetchStudents, fetchStudentsForce } from '@/slices/studentsSlice';
-import { fetchGrades, fetchGradesForce } from '@/slices/gradesSlice';
-import { fetchRooms, fetchRoomsForce } from '@/slices/roomsSlice';
-import { fetchTeachers, fetchTeachersForce } from '@/slices/teachersSlice';
-import { showToast } from '@/utils/toast';
-import ClassDetailModal from '@/features/crm/classes/ClassDetailModal';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Loader2 } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import SessionModal from '@/features/crm/classes/SessionModal';
-import { CalendarHeader } from './CalendarHeader';
-import { MonthView } from './MonthView';
-import { WeekView } from './WeekView';
-import { DayModal } from './DayModal';
-import { DetailsModal } from './DetailsModal';
-import { useCalendarData } from './hooks/useCalendarData';
-import { buildCalendarDays, getConfiguredLessonDurationMinutes, normalizeWeekdayName, toLocalDateKey } from './utils';
-import type { ClassItem, AttendanceItem, GradeItem, SessionItem, StudentItem } from './types';
-import { RoomFilter } from './components/RoomFilter';
-import { CalendarPageHeader } from './components/CalendarPageHeader';
+import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
+import { fetchClasses } from '@/slices/classesSlice';
+import { fetchStudents } from '@/slices/studentsSlice';
+import { showToast } from '@/utils/toast';
+import { classAPI } from './api';
+import { EMPTY_FILTERS, localDateKey, type CalendarEvent, type CalendarFilters, type CalendarView } from './calendarWorkspace';
+import { CalendarEventDrawer } from './components/CalendarEventDrawer';
+import { CalendarWorkspaceFilters } from './components/CalendarWorkspaceFilters';
+import { CalendarWorkspaceToolbar } from './components/CalendarWorkspaceToolbar';
+import { useCalendarWorkspace } from './hooks/useCalendarWorkspace';
+import { AgendaCalendarView } from './views/AgendaCalendarView';
+import { DayCalendarView } from './views/DayCalendarView';
+import { MonthCalendarView } from './views/MonthCalendarView';
+import { WeekCalendarView } from './views/WeekCalendarView';
 
+const VIEW_KEY = 'rmc-calendar-view';
+const validView = (value: string | null): value is CalendarView => ['day', 'week', 'month', 'agenda'].includes(value || '');
+const initialState = () => {
+  const params = new URLSearchParams(window.location.search);
+  const stored = localStorage.getItem(VIEW_KEY);
+  const view = validView(params.get('view')) ? params.get('view') as CalendarView : validView(stored) ? stored : 'week';
+  const parsedDate = new Date(`${params.get('date') || localDateKey(new Date())}T12:00:00`);
+  return {
+    view,
+    anchor: Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate,
+    filters: {
+      query: params.get('q') || '', teacherId: params.get('teacher') || '', classId: params.get('group') || '',
+      subjectId: params.get('subject') || '', roomId: params.get('room') || '', status: params.get('status') || '',
+    } as CalendarFilters,
+  };
+};
 
+const minutesBetween = (start: string, end: string) => {
+  const [startHour, startMinute] = start.split(':').map(Number); const [endHour, endMinute] = end.split(':').map(Number);
+  const value = endHour * 60 + endMinute - (startHour * 60 + startMinute);
+  return Number.isFinite(value) && value > 0 ? value : 60;
+};
 
-// Renders the calendar page screen.
 const CalendarPage = () => {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
-  const allAttendance = useAppSelector((state) => state.attendance.items) as AttendanceItem[];
-  const allGrades = useAppSelector((state) => state.grades.items) as GradeItem[];
-  const allStudents = useAppSelector((state) => state.students.items) as StudentItem[];
-  const allTeachers = useAppSelector((state) => state.teachers.items) as any[];
-  const rooms = useAppSelector((state) => state.rooms.items) as any[];
-  const [loading, setLoading] = useState(true);
-
-  // Calendar navigation state
-  const today = new Date();
-  const [displayMonth, setDisplayMonth] = useState(today.getMonth());
-  const [displayYear, setDisplayYear] = useState(today.getFullYear());
-  const [calendarView, setCalendarView] = useState<'month' | 'week'>('week');
-  const [weekStartDate, setWeekStartDate] = useState(() => {
-    const d = new Date(today);
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-    return d;
-  });
-
-  // Modal states
-  const [classModalOpen, setClassModalOpen] = useState(false);
-  const [dayModalOpen, setDayModalOpen] = useState(false);
-  const [sessionModalOpen, setSessionModalOpen] = useState(false);
-  const [detailsOpen, setDetailsOpen] = useState(false);
-  const [detailsLoading, setDetailsLoading] = useState(false);
-
-  // Selected items
-  const [selectedClass, setSelectedClass] = useState<ClassItem | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>('');
-  const [selectedDay, setSelectedDay] = useState('');
-  const [sessionModalClass, setSessionModalClass] = useState<any>(null);
-  const [sessionModalId, setSessionModalId] = useState<number | null>(null);
-  const [sessionModalDate, setSessionModalDate] = useState<string>('');
-  const [selectedDayEvents, setSelectedDayEvents] = useState<Array<{ cls: ClassItem; session?: SessionItem }>>([]);
-  const [schedule, setSchedule] = useState<any[]>([]);
-
-
-  // Data states
-  const [classes, setClasses] = useState<ClassItem[]>([]);
-  const [sessions, setSessions] = useState<SessionItem[]>([]);
-  const [attendanceByKey, setAttendanceByKey] = useState<Map<string, { present: number; absent: number }>>(new Map());
-  const [attendanceBySession, setAttendanceBySession] = useState<Map<number, { present: number; absent: number }>>(new Map());
-  const [studentAttendanceByDate, setStudentAttendanceByDate] = useState<Map<string, string>>(new Map());
-  const [studentAttendanceBySession, setStudentAttendanceBySession] = useState<Map<number, string>>(new Map());
-
-  // Lesson details
-  const [lessonAttendance, setLessonAttendance] = useState<AttendanceItem[]>([]);
-  const [lessonGrades, setLessonGrades] = useState<GradeItem[]>([]);
-  const [lessonStudents, setLessonStudents] = useState<StudentItem[]>([]);
-  const [selectedRoom, setSelectedRoom] = useState<string>('all');
-
-
-  // Use custom hook for data loading
-  useCalendarData({
-    user,
-    setClasses,
-    setLoading,
-    setSessions,
-    setAttendanceByKey,
-    setAttendanceBySession,
-    setStudentAttendanceByDate,
-    setStudentAttendanceBySession,
-  });
-
-// Runs side effects for this component.
-  useEffect(() => {
-    dispatch(fetchRooms());
-    if (user?.userType !== 'student') {
-      dispatch(fetchStudents());
-      dispatch(fetchGrades());
-      dispatch(fetchTeachers());
-    }
-  }, [dispatch, user?.userType]);
-
-// Runs side effects for this component.
-  useEffect(() => {
-// Handles active center changed.
-    const handleActiveCenterChanged = () => {
-      dispatch(fetchRoomsForce());
-      if (user?.userType !== 'student') {
-        dispatch(fetchStudentsForce());
-        dispatch(fetchGradesForce());
-        dispatch(fetchTeachersForce());
-      }
-    };
-    window.addEventListener('active-center-changed', handleActiveCenterChanged);
-    return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
-  }, [dispatch, user?.userType]);
-
-  // Load schedule for student or teacher
-  useEffect(() => {
-// Loads schedule.
-    const loadSchedule = async () => {
-      if (user?.userType === 'student') {
-        try {
-          const res = await portalAPI.getSchedule();
-          setSchedule(Array.isArray(res) ? res : res.data || []);
-        } catch (error) {
-          console.error('Failed to load schedule:', error);
-        }
-      } else {
-        const teacherId = Number(user?.id);
-        const teacherClassIds = new Set(
-          classes.map((cls) => Number(cls.class_id || cls.id)).filter((id) => Number.isFinite(id) && id > 0)
-        );
-        const roomSchedule = rooms
-          .filter(r => {
-            if (!r.day || !r.time) return false;
-            if (user?.userType === 'teacher') {
-              const classId = Number(r.class_id);
-              if (teacherClassIds.size > 0 && classId > 0) {
-                return teacherClassIds.has(classId);
-              }
-              return Number(r.teacher_id) === teacherId;
-            }
-            return true;
-          })
-          .map(r => ({
-            day: normalizeWeekdayName(r.day),
-            time: r.time,
-            end_time: r.end_time,
-            room_number: r.room_number,
-            class_id: r.class_id,
-            class_name: r.class_name,
-            teacher_id: r.teacher_id,
-            start_date: r.start_date,
-            end_date: r.end_date,
-          }));
-        const roomsByClass = new Map<number, string[]>();
-        rooms.forEach((room) => {
-          const classId = Number(room.class_id);
-          const roomNumber = String(room.room_number || '').trim();
-          if (!classId || !roomNumber) return;
-          if (!roomsByClass.has(classId)) roomsByClass.set(classId, []);
-          const values = roomsByClass.get(classId)!;
-          if (!values.includes(roomNumber)) values.push(roomNumber);
-        });
-        const classSchedule = classes.flatMap((cls) => {
-          let parsed: any = null;
-          try {
-            parsed = cls.section ? JSON.parse(String(cls.section)) : null;
-          } catch {
-            parsed = null;
-          }
-          const days = Array.isArray(parsed?.days) ? parsed.days : [];
-          const classId = Number(cls.class_id || cls.id);
-          const roomNumbers = String(cls.room_number || '')
-            .split(',')
-            .map((room) => room.trim())
-            .filter(Boolean);
-          const fallbackRooms = roomNumbers.length > 0 ? roomNumbers : roomsByClass.get(classId) || [''];
-          return days.flatMap((day: unknown) => fallbackRooms.map((roomNumber) => ({
-            day: normalizeWeekdayName(day),
-            time: parsed?.time || '09:00',
-            end_time: parsed?.endTime || parsed?.end_time || '',
-            room_number: roomNumber,
-            class_id: classId,
-            class_name: cls.class_name,
-            teacher_id: cls.teacher_id,
-            start_date: cls.start_date,
-            end_date: cls.end_date,
-          })));
-        });
-        const merged = new Map<string, any>();
-        [...classSchedule, ...roomSchedule].forEach((item) => {
-          const key = [
-            item.class_id,
-            normalizeWeekdayName(item.day),
-            String(item.time || '').substring(0, 5),
-            String(item.room_number || ''),
-          ].join('|');
-          merged.set(key, { ...item, day: normalizeWeekdayName(item.day) });
-        });
-        setSchedule(Array.from(merged.values()));
-      }
-    };
-    loadSchedule();
-  }, [user, rooms, classes]);
-
-  const visibleSchedule = useMemo(() => {
-    if (selectedRoom === 'all') return schedule;
-    return schedule.filter((item) => String(item.room_number) === selectedRoom);
-  }, [schedule, selectedRoom]);
-
-
-
-  // Filtered rooms list for dropdown
-  const uniqueRoomNumbers = useMemo(() => {
-    const numbers = new Set<string>();
-    rooms.forEach(r => {
-      if (r.room_number) numbers.add(r.room_number);
-    });
-    return Array.from(numbers).sort();
-  }, [rooms]);
-
-  // Map of Class ID to assigned room number from the rooms schedule
-  const classToRoomMap = useMemo(() => {
-    const map = new Map<number, Set<string>>();
-    rooms.forEach(r => {
-      const classId = Number(r.class_id);
-      if (classId && r.room_number) {
-        if (!map.has(classId)) map.set(classId, new Set());
-        map.get(classId)?.add(r.room_number);
-      }
-    });
-    return map;
-  }, [rooms]);
-
-  // Filtered sessions and classes
-  const filteredSessions = useMemo(() => {
-    if (selectedRoom === 'all') return sessions;
-    return sessions.filter(s => {
-      const assignedRooms = classToRoomMap.get(Number(s.class_id));
-      return assignedRooms?.has(selectedRoom);
-    });
-  }, [sessions, selectedRoom, classToRoomMap]);
-
-
-  // Calendar calculations
-  const calendarDays = useMemo(
-    () => buildCalendarDays(displayYear, displayMonth),
-    [displayYear, displayMonth]
-  );
-
-// Memoizes the weeks derived value.
-  const weeks = useMemo(() => {
-    const rows: any[][] = [];
-    for (let i = 0; i < calendarDays.length; i += 7) {
-      rows.push(calendarDays.slice(i, i + 7));
-    }
-    return rows;
-  }, [calendarDays]);
-
-// Returns week days.
-  const getWeekDays = () => {
-    const weekDaysData: any[] = [];
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(weekStartDate);
-      date.setDate(date.getDate() + i);
-      weekDaysData.push({
-        date: date.getDate(),
-        isCurrentMonth: date.getMonth() === displayMonth,
-        dayName: normalizeWeekdayName(date.toLocaleDateString('en-US', { weekday: 'long' })),
-        isoDate: toLocalDateKey(date),
-      });
-    }
-    return weekDaysData;
-  };
-
-// Memoizes the events by date derived value.
-  const eventsByDate = useMemo(() => {
-    const map = new Map<string, Array<{ cls: ClassItem; session?: SessionItem }>>();
-    const classById = new Map<number, ClassItem>();
-    classes.forEach((cls) => {
-      const classId = Number(cls.class_id || cls.id);
-      if (classId) classById.set(classId, cls);
-    });
-
-    sessions.forEach((session) => {
-      const cls = classById.get(Number(session.class_id));
-      if (!cls) return;
-      
-      // Filter by room if selected
-      if (selectedRoom !== 'all') {
-        const assignedRooms = classToRoomMap.get(Number(session.class_id));
-        if (!assignedRooms?.has(selectedRoom)) return;
-      }
-
-      const dateKey = toLocalDateKey(session.session_date);
-      const existing = map.get(dateKey) || [];
-      existing.push({ cls, session });
-      map.set(dateKey, existing);
-    });
-
-    return map;
-  }, [classes, sessions, selectedRoom, classToRoomMap]);
-
-
-  // User type checks
-  const isSuperuser = user?.userType === 'superuser';
+  const { user } = useAppSelector(state => state.auth);
+  const classes = useAppSelector(state => state.classes.items);
+  const [state] = useState(initialState);
+  const [anchor, setAnchor] = useState(state.anchor);
+  const [view, setView] = useState<CalendarView>(state.view);
+  const [filters, setFilters] = useState<CalendarFilters>(state.filters);
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [sessionData, setSessionData] = useState<{ classData: any; id: number; date: string } | null>(null);
+  const workspace = useCalendarWorkspace(anchor, view, filters);
+  const classMap = useMemo(() => new Map(classes.map(item => [Number(item.class_id || item.id), item])), [classes]);
   const isStudent = user?.userType === 'student';
-  const canViewDetails = isSuperuser || user?.userType === 'teacher' || isStudent;
+  const canManage = user?.userType === 'superuser' || user?.userType === 'teacher';
+  const canDelete = user?.userType === 'superuser';
 
-  // Handlers
-  const getDurationFromRange = (startTime: string, endTime?: string) => {
-    if (!endTime) return getConfiguredLessonDurationMinutes();
-    const [startHoursRaw, startMinutesRaw] = startTime.split(':');
-    const [endHoursRaw, endMinutesRaw] = endTime.split(':');
-    const startHours = Number(startHoursRaw);
-    const startMinutes = Number(startMinutesRaw);
-    const endHours = Number(endHoursRaw);
-    const endMinutes = Number(endMinutesRaw);
-    if (![startHours, startMinutes, endHours, endMinutes].every(Number.isFinite)) return getConfiguredLessonDurationMinutes();
-    const duration = endHours * 60 + endMinutes - (startHours * 60 + startMinutes);
-    return duration > 0 ? duration : getConfiguredLessonDurationMinutes();
+  useEffect(() => { if (!isStudent) { dispatch(fetchClasses()); dispatch(fetchStudents()); } }, [dispatch, isStudent]);
+
+  useEffect(() => {
+    localStorage.setItem(VIEW_KEY, view);
+    const params = new URLSearchParams(); params.set('view', view); params.set('date', localDateKey(anchor));
+    const mappings: Array<[keyof CalendarFilters, string]> = [['query', 'q'], ['teacherId', 'teacher'], ['classId', 'group'], ['subjectId', 'subject'], ['roomId', 'room'], ['status', 'status']];
+    mappings.forEach(([key, name]) => filters[key] && params.set(name, filters[key]));
+    window.history.replaceState(null, '', `${window.location.pathname}?${params}${window.location.hash}`);
+  }, [anchor, filters, view]);
+
+  const move = useCallback((direction: number) => setAnchor(current => {
+    const next = new Date(current);
+    if (view === 'month') next.setMonth(next.getMonth() + direction);
+    else next.setDate(next.getDate() + direction * (view === 'week' ? 7 : view === 'agenda' ? 30 : 1));
+    return next;
+  }), [view]);
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement || event.target instanceof HTMLSelectElement) return;
+      const key = event.key.toLowerCase();
+      if (key === 't') setAnchor(new Date());
+      if (key === 'arrowleft') move(-1);
+      if (key === 'arrowright') move(1);
+      const keyboardView = ({ d: 'day', w: 'week', m: 'month', a: 'agenda' } as Record<string, CalendarView>)[key];
+      if (keyboardView) setView(keyboardView);
+    };
+    window.addEventListener('keydown', onKeyDown); return () => window.removeEventListener('keydown', onKeyDown);
+  }, [move]);
+
+  const resolveClass = async (event: CalendarEvent) => {
+    const cached = classMap.get(Number(event.class_id)); if (cached) return cached;
+    const response = await classAPI.getById(event.class_id); return response?.data?.data ?? response?.data;
   };
 
-  const handleStartLesson = async (classId: number, date: string, time: string, endTime?: string) => {
+  const openSession = async (event: CalendarEvent) => {
+    if (!event.session_id) return;
+    try { setSessionData({ classData: await resolveClass(event), id: event.session_id, date: event.date }); setSelectedEvent(null); }
+    catch { showToast.error('Failed to open lesson.'); }
+  };
+
+  const startLesson = async (event: CalendarEvent) => {
     try {
-      const cls = classes.find(c => Number(c.class_id || c.id) === classId);
-      if (!cls) return;
-      const durationMinutes = getDurationFromRange(time, endTime);
-
-      const res = await classAPI.createSession(classId, {
-        session_date: date,
-        start_time: time,
-        duration_minutes: durationMinutes,
-        teacher_id: user?.id ? Number(user.id) : Number(cls.teacher_id)
-      });
-      
-      const newSession = res.data;
-      if (newSession?.session_id) {
-        setSessions(prev => [...prev, newSession]);
-        handleOpenSessionModal(cls, newSession.session_id, date);
-        setDayModalOpen(false);
-      }
-    } catch (error) {
-      console.error('Failed to start lesson:', error);
-      showToast.error('Failed to start lesson');
-    }
+      const classData = await resolveClass(event);
+      const response = await classAPI.createSession(event.class_id, { session_date: event.date, start_time: event.start_time, duration_minutes: minutesBetween(event.start_time, event.end_time), teacher_id: event.teacher_id || (user?.id ? Number(user.id) : undefined) });
+      const session = response?.data?.data ?? response?.data;
+      if (!session?.session_id) throw new Error('Missing session');
+      setSelectedEvent(null); setSessionData({ classData, id: session.session_id, date: event.date }); workspace.refresh();
+    } catch { showToast.error('Failed to start lesson.'); }
   };
 
-// Handles delete session.
-  const handleDeleteSession = async (classId: number, sessionId: number) => {
-
-    if (!window.confirm('Delete this session?')) return;
-    try {
-      await classAPI.deleteSessionById(classId, sessionId);
-      setSessions((prev) => prev.filter((s) => Number(s.session_id) !== sessionId));
-      setAttendanceBySession((prev) => {
-        const next = new Map(prev);
-        next.delete(sessionId);
-        return next;
-      });
-      setStudentAttendanceBySession((prev) => {
-        const next = new Map(prev);
-        next.delete(sessionId);
-        return next;
-      });
-      showToast.success('Session deleted.');
-    } catch (error) {
-      console.error('Failed to delete session:', error);
-      showToast.error('Failed to delete session');
-    }
+  const deleteSession = async (event: CalendarEvent) => {
+    if (!event.session_id || !window.confirm('Delete this session?')) return;
+    try { await classAPI.deleteSessionById(event.class_id, event.session_id); setSelectedEvent(null); workspace.refresh(); showToast.success('Session deleted.'); }
+    catch { showToast.error('Failed to delete session.'); }
   };
 
-// Handles prev month.
-  const handlePrevMonth = () => {
-    setDisplayMonth((prev) => (prev === 0 ? 11 : prev - 1));
-    setDisplayYear((prev) => (displayMonth === 0 ? prev - 1 : prev));
-  };
+  const counts = useMemo(() => ({
+    total: workspace.events.length,
+    conducted: workspace.events.filter(event => event.status === 'conducted').length,
+    pending: workspace.events.filter(event => ['planned', 'ready', 'in_progress'].includes(event.status)).length,
+    attendance: workspace.events.filter(event => (event.attendance?.unmarked || 0) > 0).length,
+  }), [workspace.events]);
 
-// Handles next month.
-  const handleNextMonth = () => {
-    setDisplayMonth((prev) => (prev === 11 ? 0 : prev + 1));
-    setDisplayYear((prev) => (displayMonth === 11 ? prev + 1 : prev));
-  };
-
-// Handles prev week.
-  const handlePrevWeek = () => {
-    const newDate = new Date(weekStartDate);
-    newDate.setDate(newDate.getDate() - 7);
-    setWeekStartDate(newDate);
-    setDisplayMonth(newDate.getMonth());
-    setDisplayYear(newDate.getFullYear());
-  };
-
-// Handles next week.
-  const handleNextWeek = () => {
-    const newDate = new Date(weekStartDate);
-    newDate.setDate(newDate.getDate() + 7);
-    setWeekStartDate(newDate);
-    setDisplayMonth(newDate.getMonth());
-    setDisplayYear(newDate.getFullYear());
-  };
-
-// Handles open day.
-  const handleOpenDay = (isoDate: string) => {
-    const events = eventsByDate.get(isoDate) || [];
-    setSelectedDay(isoDate);
-    setSelectedDayEvents(events);
-    setDayModalOpen(true);
-  };
-
-// Handles open session modal.
-  const handleOpenSessionModal = (cls: ClassItem, sid: number, date: string) => {
-    setSessionModalClass(cls);
-    setSessionModalId(sid);
-    setSessionModalDate(date);
-    setSessionModalOpen(true);
-  };
-
-// Handles open details.
-  const handleOpenDetails = (cls: ClassItem, isoDate: string) => {
-    if (!canViewDetails) return;
-    setSelectedClass(cls);
-    setSelectedDate(isoDate);
-    setDetailsOpen(true);
-    setDetailsLoading(true);
-    try {
-      const classId = Number(cls.class_id || cls.id);
-      const sessionIdsForDate = sessions
-        .filter((session) => Number(session.class_id) === classId && toLocalDateKey(session.session_date) === isoDate)
-        .map((session) => Number(session.session_id));
-
-      const filteredAttendance = allAttendance.filter((a: AttendanceItem) => {
-        if (Number(a.class_id) !== classId) return false;
-        if (sessionIdsForDate.length > 0 && a.session_id) {
-          return sessionIdsForDate.includes(Number(a.session_id));
-        }
-        return toLocalDateKey(a.attendance_date) === isoDate;
-      });
-      const filteredGrades = allGrades.filter((g: GradeItem) => {
-        if (Number(g.class_id) !== classId) return false;
-        if (sessionIdsForDate.length > 0 && g.session_id) {
-          return sessionIdsForDate.includes(Number(g.session_id));
-        }
-        const gradeDate = g.created_at ? toLocalDateKey(g.created_at) : toLocalDateKey(new Date());
-        return gradeDate === isoDate;
-      });
-      const filteredStudents = allStudents.filter((s: StudentItem) => Number(s.class_id) === classId);
-
-      setLessonAttendance(filteredAttendance);
-      setLessonGrades(filteredGrades);
-      setLessonStudents(filteredStudents);
-    } catch (error) {
-      console.error('Failed to load lesson details:', error);
-      setLessonAttendance([]);
-      setLessonGrades([]);
-      setLessonStudents([]);
-    } finally {
-      setDetailsLoading(false);
-    }
-  };
-
-  return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <CalendarPageHeader today={today} />
-
-      <RoomFilter
-        selectedRoom={selectedRoom}
-        setSelectedRoom={setSelectedRoom}
-        uniqueRoomNumbers={uniqueRoomNumbers}
-      />
-
-
-      {loading ? (
-
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-          <CardHeader className="bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
-            <CalendarHeader
-              calendarView={calendarView}
-              displayMonth={displayMonth}
-              displayYear={displayYear}
-              weekStartDate={weekStartDate}
-              onViewChange={setCalendarView}
-              onPrevMonth={handlePrevMonth}
-              onNextMonth={handleNextMonth}
-              onPrevWeek={handlePrevWeek}
-              onNextWeek={handleNextWeek}
-            />
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {calendarView === 'month' ? (
-              <MonthView
-                weeks={weeks}
-                eventsByDate={eventsByDate}
-                attendanceByKey={attendanceByKey}
-                attendanceBySession={attendanceBySession}
-                studentAttendanceByDate={studentAttendanceByDate}
-                studentAttendanceBySession={studentAttendanceBySession}
-                today={today}
-                displayMonth={displayMonth}
-                displayYear={displayYear}
-                isSuperuser={isSuperuser}
-                isStudent={isStudent || false}
-                canViewDetails={canViewDetails}
-                schedule={visibleSchedule}
-                onOpenDay={handleOpenDay}
-                onDeleteSession={handleDeleteSession}
-              />
-
-            ) : (
-              <WeekView
-                weekDays={getWeekDays()}
-                sessions={filteredSessions}
-                classes={classes}
-                students={allStudents}
-                teachers={allTeachers}
-                today={today}
-                displayMonth={displayMonth}
-                displayYear={displayYear}
-                isSuperuser={isSuperuser}
-                schedule={visibleSchedule}
-                onOpenSessionModal={handleOpenSessionModal}
-              />
-
-            )}
-
-
-            <div className="mt-4 flex flex-wrap gap-4 rounded-lg border border-slate-200 bg-slate-50/70 p-3 text-xs text-muted-foreground dark:border-border dark:bg-transparent">
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-3 w-3 rounded border border-amber-400/80 bg-amber-50/60" />
-                Today
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="inline-block h-3 w-3 rounded border border-cyan-300 bg-cyan-50" />
-                Class day
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <DayModal
-        open={dayModalOpen}
-        selectedDay={selectedDay}
-        selectedDayEvents={selectedDayEvents}
-        attendanceByKey={attendanceByKey}
-        attendanceBySession={attendanceBySession}
-        isSuperuser={isSuperuser}
-        isStudent={isStudent || false}
-        canViewDetails={canViewDetails}
-        onOpenSessionModal={handleOpenSessionModal}
-        onDeleteSession={handleDeleteSession}
-        onOpenDetails={handleOpenDetails}
-        onOpenChange={setDayModalOpen}
-        onStartLesson={handleStartLesson}
-        classes={classes}
-        schedule={visibleSchedule}
-      />
-
-
-
-      <DetailsModal
-        open={detailsOpen}
-        loading={detailsLoading}
-        selectedClass={selectedClass}
-        selectedDate={selectedDate}
-        lessonAttendance={lessonAttendance}
-        lessonGrades={lessonGrades}
-        lessonStudents={lessonStudents}
-        isStudent={isStudent || false}
-        user={user}
-        onOpenChange={setDetailsOpen}
-      />
-
-      <ClassDetailModal
-        open={classModalOpen}
-        classData={selectedClass as any}
-        onClose={() => setClassModalOpen(false)}
-      />
-
-      <SessionModal
-        open={sessionModalOpen}
-        classData={sessionModalClass}
-        sessionId={sessionModalId}
-        selectedDate={sessionModalDate}
-        onClose={() => {
-          setSessionModalOpen(false);
-          window.location.reload();
-        }}
-      />
-    </div>
-  );
+  return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4 sm:px-5">
+    <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">Calendar</h1><p className="text-xs text-muted-foreground">Lessons, rooms, teachers and attendance in one schedule.</p></div></header>
+    <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
+      <CalendarWorkspaceToolbar anchor={anchor} view={view} onView={setView} onMove={move} onToday={() => setAnchor(new Date())} onDate={setAnchor} />
+      <CalendarWorkspaceFilters filters={filters} resources={workspace.resources} onChange={setFilters} onClear={() => setFilters(EMPTY_FILTERS)} />
+      <div className="grid grid-cols-2 border-b sm:grid-cols-4">{([
+        ['Lessons', counts.total, CalendarDays], ['Conducted', counts.conducted, CheckCircle2], ['Pending', counts.pending, Clock3], ['Attendance missing', counts.attendance, AlertTriangle],
+      ] as const).map(([label, value, Icon]) => <div key={label} className="flex items-center gap-2 border-r px-3 py-2 last:border-r-0"><Icon className="h-4 w-4 text-muted-foreground" /><div><div className="text-lg font-bold leading-none">{value}</div><div className="mt-1 text-[11px] text-muted-foreground">{label}</div></div></div>)}</div>
+      {workspace.conflicts.length > 0 && <div className="flex items-center gap-2 border-b bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-200"><AlertTriangle className="h-4 w-4" />{workspace.conflicts.length} scheduling conflict{workspace.conflicts.length === 1 ? '' : 's'} need attention.</div>}
+      {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{workspace.error}</div>}
+      {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label="Loading calendar" className="h-7 w-7 animate-spin text-primary" /></div> : <>
+        {view === 'day' && <DayCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} />}
+        {view === 'week' && <WeekCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} />}
+        {view === 'month' && <MonthCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} onDay={date => { setAnchor(date); setView('day'); }} />}
+        {view === 'agenda' && <AgendaCalendarView events={workspace.events} onSelect={setSelectedEvent} />}
+      </>}
+    </Card>
+    <CalendarEventDrawer event={selectedEvent} canManage={canManage} canDelete={canDelete} onClose={() => setSelectedEvent(null)} onStart={startLesson} onOpen={openSession} onDelete={deleteSession} />
+    <SessionModal open={Boolean(sessionData)} classData={sessionData?.classData} sessionId={sessionData?.id || null} selectedDate={sessionData?.date} onClose={() => { setSessionData(null); workspace.refresh(); }} />
+  </div>;
 };
 
 export default CalendarPage;

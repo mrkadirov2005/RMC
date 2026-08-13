@@ -168,7 +168,7 @@ export const useCalendarData = ({
     return () => {
       cancelled = true;
     };
-  }, [classIdsKey, setSessions, user]);
+  }, [classIds, classIdsKey, setSessions, user]);
 
   // Load attendance
   useEffect(() => {

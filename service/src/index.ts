@@ -52,6 +52,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const portalRoutes = require('./routes/portalRoutes');
   const roomsRoutes = require('./routes/roomsRoutes');
   const roomSlotsRoutes = require('./routes/roomSlotsRoutes');
+  const calendarRoutes = require('./routes/calendarRoutes');
   const requestLogRoutes = require('./routes/requestLogRoutes');
   const translationRoutes = require('./routes/translationRoutes');
   const systemRoutes = require('./routes/systemRoutes');
@@ -129,6 +130,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/portal', requireAuth, requireRole('student'), portalRoutes);
   app.use('/api/rooms', requireAuth, requireRole('superuser', 'teacher'), roomsRoutes);
   app.use('/api/room-slots', requireAuth, requireRole('superuser', 'teacher'), roomSlotsRoutes);
+  app.use('/api/calendar', requireAuth, requireRole('superuser', 'teacher', 'student'), calendarRoutes);
   // Request logs (MongoDB): only superuser.
   app.use('/api/request-logs', requireAuth, requireRole('superuser'), requestLogRoutes);
   app.use('/api/system', systemRoutes);

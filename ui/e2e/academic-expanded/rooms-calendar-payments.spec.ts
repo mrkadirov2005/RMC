@@ -45,12 +45,37 @@ unsupported('WF-098 Admin cancels a booking', 'The current UI has no booking ent
 
 test('WF-099 User changes Calendar from month to week and sees week dates', async ({ page }) => {
   await openAsAdmin(page, '/calendar');
-  await page.getByRole('tab', { name: 'Week' }).click();
-  await expect(page.getByRole('tab', { name: 'Week' })).toHaveAttribute('data-state', 'active');
-  await expect(page.getByText(/students/i).first()).toBeVisible();
+  await page.getByTestId('calendar-view-day').click();
+  await expect(page.getByTestId('calendar-view-day')).toHaveAttribute('aria-pressed', 'true');
+  await page.getByTestId('calendar-view-week').click();
+  await expect(page.getByRole('grid', { name: 'Weekly lesson calendar' })).toBeVisible();
+  await page.getByTestId('calendar-view-month').click();
+  await expect(page.getByRole('grid', { name: 'Monthly lesson calendar' })).toBeVisible();
+  await page.getByTestId('calendar-view-agenda').click();
+  await expect(page.getByRole('table', { name: 'Calendar agenda' })).toBeVisible();
+  await page.getByTestId('calendar-today').click();
+  await expect(page.getByTestId('calendar-date-picker')).toHaveValue(new Date().toISOString().slice(0, 10));
 });
 
-unsupported('WF-100 User opens a calendar event and sees lesson details', 'The seed does not guarantee an event on the currently displayed calendar range.');
+test('WF-100 User filters and opens a calendar event to see lesson details', async ({ page }) => {
+  const today = new Date().toISOString().slice(0, 10);
+  await page.route('**/api/calendar/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/events')) return route.fulfill({ json: [{ event_id: 'e2e-event', source: 'session', status: 'ready', date: today, start_time: '09:00', end_time: '10:00', class_id: 1, class_name: 'E2E Calendar Group', teacher_name: 'E2E Teacher', subject_name: 'English', room_name: 'Room 101', attendance: { present: 1, absent: 0, unmarked: 1 } }] });
+    if (path.endsWith('/summary')) return route.fulfill({ json: { total: 1, planned: 0, ready: 1, in_progress: 0, conducted: 0, attendance_missing: 1 } });
+    return route.fulfill({ json: [] });
+  });
+  await openAsAdmin(page, '/calendar');
+  await page.getByTestId('calendar-filter-search').fill('E2E Calendar');
+  await page.getByTestId('calendar-view-agenda').click();
+  await page.getByRole('row', { name: /E2E Calendar Group/ }).click();
+  const drawer = page.getByTestId('calendar-event-drawer');
+  await expect(drawer).toBeVisible();
+  await expect(drawer).toContainText('E2E Calendar Group');
+  await expect(drawer).toContainText('1 present · 0 absent · 1 unmarked');
+  await page.keyboard.press('Escape');
+  await expect(drawer).toBeHidden();
+});
 
 test('WF-101 Admin opens Payments and sees the payment list', async ({ page }) => {
   await openAsAdmin(page, '/payments');

@@ -44,32 +44,40 @@ for (const item of [
 
 test('WF-261 User switches Calendar to Month view', async ({ page }) => {
   await openAsAdmin(page, '/calendar');
-  await page.getByRole('tab', { name: 'Month' }).click();
-  await expect(page.getByRole('tab', { name: 'Month' })).toHaveAttribute('data-state', 'active');
+  await page.getByTestId('calendar-view-month').click();
+  await expect(page.getByTestId('calendar-view-month')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('grid', { name: 'Monthly lesson calendar' })).toBeVisible();
 });
 
 test('WF-262 User switches Calendar to Week view', async ({ page }) => {
   await openAsAdmin(page, '/calendar');
-  await page.getByRole('tab', { name: 'Week' }).click();
-  await expect(page.getByRole('tab', { name: 'Week' })).toHaveAttribute('data-state', 'active');
+  await page.getByTestId('calendar-view-week').click();
+  await expect(page.getByTestId('calendar-view-week')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('grid', { name: 'Weekly lesson calendar' })).toBeVisible();
 });
 
 test('WF-263 User opens a calendar day and sees daily sessions', async ({ page }) => {
   await openAsAdmin(page, '/calendar');
-  await page.getByRole('tab', { name: 'Month' }).click();
-  const currentDay = page.locator('button').filter({ has: page.locator('div.h-7') }).first();
-  await currentDay.click();
-  await expect(page.getByRole('dialog')).toBeVisible();
+  await page.getByTestId('calendar-view-day').click();
+  await expect(page.getByTestId('calendar-view-day')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByLabel(/^Lessons for /)).toBeVisible();
 });
 
 test('WF-264 User closes calendar details and returns to the selected date', async ({ page }) => {
+  const today = new Date().toISOString().slice(0, 10);
+  await page.route('**/api/calendar/**', async route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/events')) return route.fulfill({ json: [{ event_id: 'close-event', source: 'session', status: 'ready', date: today, start_time: '09:00', end_time: '10:00', class_id: 1, class_name: 'Close Drawer Group' }] });
+    if (path.endsWith('/summary')) return route.fulfill({ json: { total: 1, planned: 0, ready: 1, in_progress: 0, conducted: 0, attendance_missing: 0 } });
+    return route.fulfill({ json: [] });
+  });
   await openAsAdmin(page, '/calendar');
-  const currentDay = page.locator('button').filter({ has: page.locator('div.h-7') }).first();
-  await currentDay.click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog).toBeVisible();
+  await page.getByTestId('calendar-view-agenda').click();
+  await page.getByRole('row', { name: /Close Drawer Group/ }).click();
+  const drawer = page.getByTestId('calendar-event-drawer');
+  await expect(drawer).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(dialog).toBeHidden();
+  await expect(drawer).toBeHidden();
   await expect(page).toHaveURL(/#\/calendar/);
 });
 
