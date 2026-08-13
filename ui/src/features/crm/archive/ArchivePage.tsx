@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Archive, BookOpen, CalendarDays, CreditCard, GraduationCap, Loader2, RefreshCcw, RotateCcw, Trash2, Users } from 'lucide-react';
+import { Archive,  CalendarDays, Loader2, RefreshCcw, RotateCcw, Trash2} from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -171,11 +171,6 @@ const ArchivePage = () => {
       )}
     </div>
   );
-
-  const totalArchived = useMemo(
-    () => Object.values(archive.counts || {}).reduce((sum, value) => sum + Number(value || 0), 0),
-    [archive.counts]
-  );
   const paginatedArchive = useMemo(
     () => ({
       students: paginateItems(archive.students, pages.students, pageSizes.students),
@@ -208,13 +203,6 @@ const ArchivePage = () => {
       />
     </div>
   );
-
-  const cards = [
-    { label: t('Students'), value: archive.counts.students || 0, detail: t('Soft-deleted profiles'), icon: Users, tone: 'blue' as const },
-    { label: t('Teachers'), value: archive.counts.teachers || 0, detail: t('Archived staff'), icon: GraduationCap, tone: 'green' as const },
-    { label: t('Classes'), value: archive.counts.classes || 0, detail: t('Archived groups'), icon: BookOpen, tone: 'amber' as const },
-    { label: t('Payments'), value: archive.counts.payments || 0, detail: t('Archived payments'), icon: CreditCard, tone: 'neutral' as const },
-  ];
 
   if (loading) {
     return (

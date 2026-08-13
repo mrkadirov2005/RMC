@@ -1,7 +1,7 @@
 // Page component for viewing MongoDB-backed request logs.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, ChevronLeft, ChevronRight, Clock, Database, Filter, Search, ShieldCheck, X } from 'lucide-react';
+import { Activity, ChevronLeft, ChevronRight, Database, Filter, Search, X } from 'lucide-react';
 import { requestLogsAPI } from './api';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -133,12 +133,6 @@ const RequestLogsPage = () => {
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const start = total === 0 ? 0 : (page - 1) * limit + 1;
   const end = Math.min(total, page * limit);
-  const successfulRows = items.filter((row) => getResult(row).label === 'OK').length;
-  const failedRows = items.filter((row) => getResult(row).label === 'FAILED').length;
-  const avgDuration = items.length
-    ? Math.round(items.reduce((sum, row) => sum + (Number(row.durationMs) || 0), 0) / items.length)
-    : 0;
-  const uniqueUsers = new Set(items.map((row) => String(row.username || '').trim()).filter(Boolean)).size;
   const loggedUsers = useMemo(() => {
     const users = new Map<string, {
       username: string;
