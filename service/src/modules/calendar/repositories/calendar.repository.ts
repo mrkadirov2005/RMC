@@ -133,5 +133,12 @@ const recurringDefinitions = async (centerId: number, scope: CalendarScope) => {
   return result.rows;
 };
 
-module.exports = { datedSessions, resources, studentClassIds, recurringDefinitions };
+const updateRecurringSchedule = async (centerId: number, classId: number, section: string, roomNumber: string) => {
+  const result = await pool.query(`UPDATE classes SET section=$3, room_number=$4, updated_at=CURRENT_TIMESTAMP
+    WHERE center_id=$1 AND class_id=$2 AND deleted_at IS NULL RETURNING class_id, class_name, section, room_number`,
+  [centerId, classId, section, roomNumber]);
+  return result.rows[0] || null;
+};
+
+module.exports = { datedSessions, resources, studentClassIds, recurringDefinitions, updateRecurringSchedule };
 export {};

@@ -506,6 +506,7 @@ export const calendarAPI = {
   getSummary: (params: Record<string, unknown>) => apiClient.get('/calendar/summary', { params }),
   getResources: () => apiClient.get('/calendar/resources'),
   getConflicts: (params: Record<string, unknown>) => apiClient.get('/calendar/conflicts', { params }),
+  moveRecurring: (classId: number, data: { room_name: string; pattern: string; start_time: string; end_time: string }) => apiClient.patch(`/calendar/recurring/${classId}/move`, data),
 };
 
 export type TranslationRow = {

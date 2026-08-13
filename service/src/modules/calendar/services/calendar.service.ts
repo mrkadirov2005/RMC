@@ -232,10 +232,39 @@ const conflicts = async (centerId: number, query: CalendarQuery, scope: Calendar
   return found;
 };
 
+const patternDays: Record<string, string[]> = {
+  mwf: ['Monday', 'Wednesday', 'Friday'],
+  tts: ['Tuesday', 'Thursday', 'Saturday'],
+  sun: ['Sunday'],
+};
+const moveRecurring = async (centerId: number, classId: number, body: any, scope: CalendarScope = {}) => {
+  if (!Number.isInteger(classId) || classId <= 0) throw bad('class id must be a positive integer');
+  if (scope.classIds && !scope.classIds.includes(classId)) throw Object.assign(new Error('Access denied'), { status: 403 });
+  const days = patternDays[String(body.pattern || '')];
+  if (!days) throw bad('pattern must be mwf, tts, or sun');
+  const roomName = String(body.room_name || '').trim();
+  const start = String(body.start_time || '').slice(0, 5);
+  const end = String(body.end_time || '').slice(0, 5);
+  if (!roomName || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end) || end <= start) throw bad('valid room_name, start_time, and end_time are required');
+  const rooms = await roomInsights.getPhysicalRooms(centerId);
+  const room = rooms.find((item: any) => roomKey(item.name) === roomKey(roomName) && String(item.status || 'active').toLowerCase() === 'active');
+  if (!room) throw Object.assign(new Error('The destination room is not active or does not exist.'), { status: 409 });
+  const definitions = (await repository.recurringDefinitions(centerId, {})).map(parseDefinition).filter(Boolean);
+  const conflict = definitions.find((item: any) => Number(item.class_id) !== classId
+    && roomKey(item.room_name) === roomKey(room.name)
+    && item.days.some((day: string) => days.map(normalizeDay).includes(day))
+    && cleanTime(start) < cleanTime(item.end_time) && cleanTime(end) > cleanTime(item.start_time));
+  if (conflict) throw Object.assign(new Error(`${room.name} is already booked by ${conflict.class_name} at ${conflict.start_time}–${conflict.end_time}.`), { status: 409 });
+  const row = await repository.updateRecurringSchedule(centerId, classId, JSON.stringify({ days, time: start, endTime: end }), room.name);
+  if (!row) throw Object.assign(new Error('Group not found.'), { status: 404 });
+  return row;
+};
+
 module.exports = {
   events,
   summary,
   conflicts,
+  moveRecurring,
   resources: (centerId: number, _query: CalendarQuery, scope: CalendarScope = {}) => repository.resources(centerId, scope),
   studentClassIds: repository.studentClassIds,
 };

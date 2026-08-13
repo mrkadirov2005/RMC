@@ -14,7 +14,7 @@ const run = (operation: any) => async (req: any, res: any) => {
     const { centerId } = getScopedCenterId(req);
     if (!requireCenterId(res, centerId)) return;
     const scope = await scopeFor(req, centerId);
-    res.json(await operation(centerId, req.query, scope));
+    res.json(await operation(centerId, req.query, scope, req));
   } catch (error: any) {
     console.error('Calendar request failed:', error);
     res.status(error.status || 500).json({ error: error.status ? error.message : 'Unable to load calendar data.' });
@@ -26,5 +26,6 @@ module.exports = {
   summary: run(service.summary),
   resources: run(service.resources),
   conflicts: run(service.conflicts),
+  moveRecurring: run((centerId: number, _query: any, scope: any, req?: any) => service.moveRecurring(centerId, Number(req?.params?.classId), req?.body, scope)),
 };
 export {};
