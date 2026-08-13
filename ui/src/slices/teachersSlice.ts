@@ -48,6 +48,7 @@ interface TeachersState {
   error: string | null;
   lastFetched: number | null;
   meta: TeachersMeta;
+  activeListRequestId: string | null;
 }
 
 const initialState: TeachersState = {
@@ -56,6 +57,7 @@ const initialState: TeachersState = {
   error: null,
   lastFetched: null,
   meta: { total: 0, page: 1, limit: 20 },
+  activeListRequestId: null,
 };
 
 const CACHE_TTL_MS = 60_000;
@@ -198,9 +200,11 @@ const teachersSlice = createSlice({
   extraReducers: (builder) => {
     // fetchTeachers
     builder
-      .addCase(fetchTeachers.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchTeachers.fulfilled, (state, action: PayloadAction<{ items: Teacher[]; meta: TeachersMeta } | null>) => {
+      .addCase(fetchTeachers.pending, (state, action) => { state.loading = true; state.error = null; state.activeListRequestId = action.meta.requestId; })
+      .addCase(fetchTeachers.fulfilled, (state, action) => {
+        if (state.activeListRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.activeListRequestId = null;
         if (action.payload !== null) {
           state.items = action.payload.items;
           state.meta = action.payload.meta;
@@ -208,21 +212,27 @@ const teachersSlice = createSlice({
         }
       })
       .addCase(fetchTeachers.rejected, (state, action) => {
+        if (state.activeListRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.activeListRequestId = null;
         state.error = action.payload as string;
       });
 
     // fetchTeachersForce
     builder
-      .addCase(fetchTeachersForce.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchTeachersForce.fulfilled, (state, action: PayloadAction<{ items: Teacher[]; meta: TeachersMeta }>) => {
+      .addCase(fetchTeachersForce.pending, (state, action) => { state.loading = true; state.error = null; state.activeListRequestId = action.meta.requestId; })
+      .addCase(fetchTeachersForce.fulfilled, (state, action) => {
+        if (state.activeListRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.activeListRequestId = null;
         state.items = action.payload.items;
         state.meta = action.payload.meta;
         state.lastFetched = Date.now();
       })
       .addCase(fetchTeachersForce.rejected, (state, action) => {
+        if (state.activeListRequestId !== action.meta.requestId) return;
         state.loading = false;
+        state.activeListRequestId = null;
         state.error = action.payload as string;
       });
 

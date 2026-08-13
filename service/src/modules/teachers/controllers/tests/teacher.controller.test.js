@@ -46,6 +46,19 @@ describe('teachers controller', () => {
     console.error.mockRestore();
   });
 
+  it('forwards trimmed teacher searches with pagination and center scope', async () => {
+    const req = { query: { q: '  Ali  ', page: '2', limit: '24' } };
+    const res = createResponse();
+    teacherService.listTeachersPaginated.mockResolvedValue({ data: [], total: 0, page: 2, limit: 24 });
+
+    await teacherController.getAllTeachers(req, res);
+
+    expect(teacherService.listTeachersPaginated).toHaveBeenCalledWith(
+      { q: 'Ali', status: undefined, page: 2, limit: 24 },
+      6
+    );
+  });
+
   it('creates teachers using scoped center id', async () => {
     const req = { body: { first_name: 'Ali', center_id: 99 } };
     const res = createResponse();

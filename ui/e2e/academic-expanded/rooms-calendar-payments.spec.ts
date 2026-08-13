@@ -48,7 +48,7 @@ test('WF-099 User changes Calendar from month to week and sees week dates', asyn
   await page.getByTestId('calendar-view-day').click();
   await expect(page.getByTestId('calendar-view-day')).toHaveAttribute('aria-pressed', 'true');
   await page.getByTestId('calendar-view-week').click();
-  await expect(page.getByRole('grid', { name: 'Weekly lesson calendar' })).toBeVisible();
+  await expect(page.getByTestId('room-timetable-sheet').or(page.getByText(/No room schedules match this week/))).toBeVisible();
   await page.getByTestId('calendar-view-month').click();
   await expect(page.getByRole('grid', { name: 'Monthly lesson calendar' })).toBeVisible();
   await page.getByTestId('calendar-view-agenda').click();

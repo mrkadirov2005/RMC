@@ -36,6 +36,7 @@ interface ClassDialogsProps {
   centerOptions: any[];
   teacherOptions: any[];
   subjectOptions: any[];
+  roomOptions: string[];
   selectedDays: string[];
   scheduleTime: string;
   scheduleEndTime: string;
@@ -70,6 +71,7 @@ export const ClassDialogs = ({
   centerOptions,
   teacherOptions,
   subjectOptions,
+  roomOptions,
   selectedDays,
   scheduleTime,
   scheduleEndTime,
@@ -155,7 +157,15 @@ export const ClassDialogs = ({
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="room_number" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Room Number')} *</Label>
-                  <Input id="room_number" required value={formData.room_number || ''} onChange={(e) => setFormData({ ...formData, room_number: e.target.value })} className="h-8 border-amber-100 bg-amber-50/60 text-xs font-semibold shadow-sm focus-visible:ring-amber-500 dark:border-input dark:bg-background" />
+                  <Select required value={formData.room_number || ''} onValueChange={(value) => setFormData({ ...formData, room_number: value })}>
+                    <SelectTrigger id="room_number" aria-label={t('Room Number')} className="h-8 border-amber-100 bg-amber-50/60 text-xs font-semibold shadow-sm focus:ring-amber-500 dark:border-input dark:bg-background">
+                      <SelectValue placeholder={t('Select Room')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roomOptions.map((room) => <SelectItem key={room} value={room}>{room}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  {roomOptions.length === 0 && <p className="text-[10px] text-amber-700">{t('Create a room first, then return to this form.')}</p>}
                 </div>
                 <div className="space-y-1">
                   <Label htmlFor="start_date" className="text-[10px] font-bold uppercase text-slate-600 dark:text-muted-foreground">{t('Start Date')}</Label>

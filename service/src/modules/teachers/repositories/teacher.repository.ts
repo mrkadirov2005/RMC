@@ -92,6 +92,7 @@ const buildListConditions = (filters: Record<string, any> = {}, centerId?: numbe
     const pattern = `%${search}%`;
     conditions.push(
       or(
+        ilike(sql`CAST(${teachers.teacherId} AS TEXT)`, pattern),
         ilike(teachers.firstName, pattern),
         ilike(teachers.lastName, pattern),
         ilike(sql`CONCAT_WS(' ', ${teachers.firstName}, ${teachers.lastName})`, pattern),

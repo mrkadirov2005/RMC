@@ -14,6 +14,7 @@ import { exportCsvEntity } from '@/shared/dataCsv';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { paginateItems } from '@/components/common/PaginationBar';
 import type { Student } from '@/slices/studentsSlice';
+import { buildRoomNumberOptions } from './classFormOptions';
 
 const readStudentList = (response: unknown): Student[] => {
   const data = (response as any)?.data ?? response;
@@ -72,6 +73,10 @@ const ClassesPage = () => {
     isOwner,
   } = useClassesPage();
   const getClassId = (cls: any) => Number(cls.class_id || cls.id || 0);
+  const roomOptions = useMemo(
+    () => buildRoomNumberOptions(rooms, formData.room_number),
+    [formData.room_number, rooms]
+  );
   const studentsByClassId = useMemo(() => {
     const map = new Map<number, Student[]>();
     for (const student of classStudents) {
@@ -372,6 +377,7 @@ const ClassesPage = () => {
         centerOptions={centerOptions}
         teacherOptions={teacherOptions}
         subjectOptions={subjectOptions}
+        roomOptions={roomOptions}
         selectedDays={selectedDays}
         scheduleTime={scheduleTime}
         scheduleEndTime={scheduleEndTime}

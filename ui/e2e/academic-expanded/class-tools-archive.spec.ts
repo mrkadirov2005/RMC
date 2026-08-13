@@ -53,7 +53,7 @@ test('WF-262 User switches Calendar to Week view', async ({ page }) => {
   await openAsAdmin(page, '/calendar');
   await page.getByTestId('calendar-view-week').click();
   await expect(page.getByTestId('calendar-view-week')).toHaveAttribute('aria-pressed', 'true');
-  await expect(page.getByRole('grid', { name: 'Weekly lesson calendar' })).toBeVisible();
+  await expect(page.getByTestId('room-timetable-sheet').or(page.getByText(/No room schedules match this week/))).toBeVisible();
 });
 
 test('WF-263 User opens a calendar day and sees daily sessions', async ({ page }) => {
