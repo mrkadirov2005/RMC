@@ -4,18 +4,13 @@ import { useEffect, useMemo } from 'react';
 import {
   ArrowLeft,
   Plus,
-  DollarSign,
   Loader2,
   Wallet,
-  ReceiptText,
-  TrendingUp,
-  ShieldCheck,
   Upload,
   Download,
 } from 'lucide-react';
 import { ViewModeToggle } from '@/components/common/ViewModeToggle';
 import { PageHeader } from '@/components/common/PageHeader';
-import { MetricCard } from '@/components/common/MetricCard';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { formatMoney } from '@/utils/helpers';
@@ -48,7 +43,6 @@ const PaymentsPage = () => {
     isLoadingOptions,
     classes,
     students,
-    overallPaymentStats,
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
