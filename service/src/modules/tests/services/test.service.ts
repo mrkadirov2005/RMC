@@ -342,6 +342,72 @@ const startTest = async (testId: number, body: any, reqMeta: any = {}, centerId?
   ]);
 };
 
+const hasAnswerValue = (value: any) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value !== 'object') return String(value).trim() !== '';
+  if (typeof value.text === 'string') return value.text.trim() !== '';
+  if (value.matches) return Object.keys(value.matches).length > 0;
+  return value.index !== undefined || value.value !== undefined;
+};
+
+const finalizeSubmissionScore = async (submissionId: number, existing: any, status: string, extra: any = {}) => {
+  const scopedCenterId = Number(existing.center_id);
+  const [test, questions, answers] = await Promise.all([
+    testRepository.findById(Number(existing.test_id), scopedCenterId),
+    testRepository.findQuestionsByTest(Number(existing.test_id), scopedCenterId),
+    testRepository.findAnswersBySubmission(submissionId, scopedCenterId),
+  ]);
+
+  const totalMarks = questions.reduce((sum: number, q: any) => sum + Number(q.marks ?? 0), 0);
+  const obtainedMarks = answers.reduce((sum: number, a: any) => sum + Number(a.marks_obtained ?? 0), 0);
+  const percentage = totalMarks > 0 ? Number(((obtainedMarks / totalMarks) * 100).toFixed(2)) : null;
+  const passingMarks = Number(test?.passing_marks ?? 0);
+  const passed = passingMarks > 0
+    ? obtainedMarks >= passingMarks
+    : percentage !== null ? percentage >= 50 : null;
+
+  const submission = await testRepository.updateSubmission([
+    extra.submitted_at ?? existing.submitted_at ?? null,
+    extra.time_taken_seconds ?? existing.time_taken_seconds ?? null,
+    null,
+    totalMarks,
+    obtainedMarks,
+    percentage,
+    status,
+    passed,
+    extra.feedback ?? existing.feedback ?? null,
+    extra.graded_by ?? null,
+    extra.graded_by_type ?? null,
+    extra.graded_at ?? null,
+    existing.attempt_number ?? 1,
+    existing.ip_address ?? null,
+  ], submissionId, scopedCenterId);
+
+  return { submission, totalMarks, obtainedMarks, percentage, passed };
+};
+
+const autoGradeSubmission = async (submissionId: number, centerId?: number) => {
+  const answers = await testRepository.findAnswersBySubmission(submissionId, centerId);
+  let pendingManual = 0;
+  for (const answer of answers) {
+    if (!isAutoGradable(answer.question_type)) {
+      pendingManual += 1;
+      continue;
+    }
+    const { is_correct, marks_obtained } = gradeObjectiveAnswer(answer, answer.student_answer);
+    await testRepository.updateAnswer([
+      is_correct,
+      marks_obtained,
+      null,
+      true,
+      new Date(),
+      null,
+      'system',
+    ], answer.answer_id, centerId);
+  }
+  return pendingManual;
+};
+
 const submitTest = async (submissionId: number, body: any, centerId?: number) => {
   const existing = await testRepository.findSubmissionById(submissionId, centerId);
   if (!existing) return null;
@@ -355,11 +421,27 @@ const submitTest = async (submissionId: number, body: any, centerId?: number) =>
       : [];
   const submissionData = normalizeJson(body.submission_data, existing.submission_data || {});
 
-  const questions = answers.length > 0
-    ? await testRepository.getQuestionsByIds(answers.map((answer: any) => answer.question_id), Number(existing.center_id))
-    : [];
-  if (answers.length > 0 && questions.length !== new Set(answers.map((answer: any) => answer.question_id)).size) {
+  const testQuestions = await testRepository.findQuestionsByTest(Number(existing.test_id), Number(existing.center_id));
+  const questionMap = new Map(testQuestions.map((q: any) => [Number(q.question_id), q]));
+
+  const scoped = answers.filter((answer: any) => questionMap.has(Number(answer.question_id)));
+  if (scoped.length !== answers.length) {
     return { error: 'invalid_center' as const };
+  }
+
+  const answerMap = new Map(scoped.map((answer: any) => [Number(answer.question_id), answer]));
+
+  for (const question of testQuestions) {
+    const answer = answerMap.get(Number(question.question_id));
+    const studentAnswer = normalizeJson(answer?.student_answer, null);
+    const text = String(studentAnswer?.text ?? '');
+    const wordLimit = Number(question.word_limit || 0);
+    if (wordLimit > 0 && text.trim().split(/\s+/).filter(Boolean).length > wordLimit) {
+      return { error: 'word_limit' as const, question_id: Number(question.question_id) };
+    }
+    if (question.is_required && !hasAnswerValue(studentAnswer)) {
+      return { error: 'required' as const, question_id: Number(question.question_id) };
+    }
   }
 
   const updated = await testRepository.updateSubmission([
@@ -369,74 +451,82 @@ const submitTest = async (submissionId: number, body: any, centerId?: number) =>
     body.total_score ?? existing.total_score ?? null,
     body.obtained_marks ?? existing.obtained_marks ?? null,
     body.percentage ?? existing.percentage ?? null,
-    body.status || 'submitted',
-    body.is_passed ?? existing.is_passed ?? null,
-    body.feedback ?? existing.feedback ?? null,
-    body.graded_by ?? null,
-    body.graded_by_type ?? null,
-    body.graded_at ?? null,
-    body.attempt_number ?? existing.attempt_number ?? 1,
-    body.ip_address ?? existing.ip_address ?? null,
+    'submitted',
+    existing.is_passed ?? null,
+    existing.feedback ?? null,
+    null,
+    null,
+    null,
+    existing.attempt_number ?? 1,
+    existing.ip_address ?? null,
   ], submissionId, Number(existing.center_id));
 
   await testRepository.deleteAnswersBySubmission(submissionId, Number(existing.center_id));
-  for (const answer of answers) {
+  for (const answer of scoped) {
     await testRepository.insertAnswer([
       Number(existing.center_id),
       submissionId,
       answer.question_id,
       normalizeJson(answer.student_answer, null),
-      answer.is_correct ?? null,
-      answer.marks_obtained ?? 0,
-      answer.feedback ?? null,
-      answer.graded ?? false,
-      answer.graded_at ?? null,
+      null,
+      0,
+      null,
+      false,
+      null,
     ]);
   }
 
-  return updated;
+  const pendingManual = await autoGradeSubmission(submissionId, Number(existing.center_id));
+  const result = await finalizeSubmissionScore(
+    submissionId,
+    { ...existing, ...updated },
+    pendingManual === 0 ? 'graded' : 'submitted'
+  );
+  return result.submission;
 };
 
 const gradeSubmission = async (submissionId: number, body: any, centerId?: number) => {
   const existing = await testRepository.findSubmissionById(submissionId, centerId);
   if (!existing) return null;
 
-  const answers = await testRepository.findAnswersBySubmission(submissionId, Number(existing.center_id));
-  const questionIds = answers.map((a: any) => a.question_id);
-  const questions = await testRepository.getQuestionsByIds(questionIds, Number(existing.center_id));
-  const questionMap = new Map(questions.map((q: any) => [q.question_id, q]));
+  const scopedCenterId = Number(existing.center_id);
+  const answers = await testRepository.findAnswersBySubmission(submissionId, scopedCenterId);
+  const answerMap = new Map(answers.map((a: any) => [Number(a.question_id), a]));
 
-  let totalMarks = 0;
-  let obtainedMarks = 0;
-
-  for (const answer of answers) {
-    const question: any = questionMap.get(answer.question_id);
-    const questionMarks = Number(question?.marks ?? 0);
-    totalMarks += questionMarks;
-    obtainedMarks += Number(answer.marks_obtained ?? 0);
+  const grades = Array.isArray(body.answer_grades) ? body.answer_grades : [];
+  for (const grade of grades) {
+    const answer: any = answerMap.get(Number(grade.question_id));
+    if (!answer) return { error: 'invalid_question' as const, question_id: Number(grade.question_id) };
+    const questionMarks = Number(answer.marks ?? 0);
+    const raw = Number(grade.marks_obtained ?? 0);
+    const marks = Number.isFinite(raw) ? Math.max(0, Math.min(raw, questionMarks)) : 0;
+    await testRepository.updateAnswer([
+      isAutoGradable(answer.question_type) ? marks === questionMarks : null,
+      marks,
+      grade.feedback ?? null,
+      true,
+      new Date(),
+      body.graded_by ?? null,
+      body.graded_by_type ?? null,
+    ], answer.answer_id, scopedCenterId);
   }
 
-  const percentage = totalMarks > 0 ? Number(((obtainedMarks / totalMarks) * 100).toFixed(2)) : null;
-  const passed = percentage !== null && body.is_passed !== undefined ? toBool(body.is_passed) : (percentage !== null ? percentage >= 50 : null);
+  const refreshed = await testRepository.findAnswersBySubmission(submissionId, scopedCenterId);
+  const fullyGraded = refreshed.length > 0 && refreshed.every((a: any) => Boolean(a.graded));
 
-  const updated = await testRepository.updateSubmission([
-    body.submitted_at ?? existing.submitted_at ?? null,
-    body.time_taken_seconds ?? existing.time_taken_seconds ?? null,
-    body.submission_data !== undefined ? normalizeJson(body.submission_data, existing.submission_data || {}) : null,
-    body.total_score ?? totalMarks,
-    body.obtained_marks ?? obtainedMarks,
-    body.percentage ?? percentage,
-    'graded',
-    passed,
-    body.feedback ?? existing.feedback ?? null,
-    body.graded_by ?? null,
-    body.graded_by_type ?? null,
-    body.graded_at ?? new Date(),
-    body.attempt_number ?? existing.attempt_number ?? 1,
-    body.ip_address ?? existing.ip_address ?? null,
-  ], submissionId, Number(existing.center_id));
+  const { submission: updated, percentage, passed } = await finalizeSubmissionScore(
+    submissionId,
+    existing,
+    fullyGraded ? 'graded' : 'submitted',
+    {
+      feedback: body.feedback,
+      graded_by: body.graded_by,
+      graded_by_type: body.graded_by_type,
+      graded_at: new Date(),
+    }
+  );
 
-  const summary = await testRepository.findResultByStudent(existing.test_id, existing.student_id, Number(existing.center_id));
+  const summary = await testRepository.findResultByStudent(existing.test_id, existing.student_id, scopedCenterId);
   const bestScoreCandidate = percentage === null ? summary?.best_score ?? null : Number(percentage);
   const bestScore =
     summary?.best_score === undefined || summary?.best_score === null
@@ -468,8 +558,31 @@ const gradeSubmission = async (submissionId: number, body: any, centerId?: numbe
 const getSubmissionDetails = async (submissionId: number, centerId?: number) => {
   const submission = await testRepository.findSubmissionById(submissionId, centerId);
   if (!submission) return null;
-  const answers = await testRepository.findAnswersBySubmission(submissionId, Number(submission.center_id));
-  return { ...submission, answers };
+  const scopedCenterId = Number(submission.center_id);
+  const [answers, test, student] = await Promise.all([
+    testRepository.findAnswersBySubmission(submissionId, scopedCenterId),
+    testRepository.findById(Number(submission.test_id), scopedCenterId),
+    studentService.getStudent(Number(submission.student_id), scopedCenterId),
+  ]);
+
+  const pendingManualCount = answers.filter(
+    (answer: any) => getQuestionTypeMeta(answer.question_type).manualGraded && !answer.graded
+  ).length;
+
+  return {
+    ...submission,
+    test_name: test?.test_name ?? null,
+    test_type: test?.test_type ?? null,
+    total_marks: submission.total_score ?? test?.total_marks ?? null,
+    passing_marks: test?.passing_marks ?? null,
+    first_name: student?.first_name ?? null,
+    last_name: student?.last_name ?? null,
+    enrollment_number: student?.enrollment_number ?? null,
+    score: submission.obtained_marks,
+    pending_manual_count: pendingManualCount,
+    is_fully_graded: answers.length > 0 && answers.every((answer: any) => Boolean(answer.graded)),
+    answers,
+  };
 };
 
 const getSubmissionsByTest = async (testId: number, centerId?: number) => testRepository.findSubmissionsByTest(testId, centerId);
