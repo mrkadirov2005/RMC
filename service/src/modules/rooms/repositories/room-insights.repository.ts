@@ -69,7 +69,9 @@ const physicalRooms = async (centerId: number) => (await pool.query(`
     pr.features, pr.operating_start_time::text, pr.operating_end_time::text,
     array_remove(array_agg(r.room_id ORDER BY r.room_id), NULL) AS assignment_ids
   FROM physical_rooms pr LEFT JOIN rooms r ON r.physical_room_id = pr.physical_room_id
-  WHERE pr.center_id = $1 GROUP BY pr.physical_room_id ORDER BY pr.name
+  WHERE pr.center_id = $1
+    AND EXISTS (SELECT 1 FROM rooms existing_room WHERE existing_room.physical_room_id = pr.physical_room_id)
+  GROUP BY pr.physical_room_id ORDER BY pr.name
 `, [centerId])).rows;
 
 const updatePhysicalRoom = async (roomId: number, centerId: number, data: any) => {
@@ -84,6 +86,16 @@ const updatePhysicalRoom = async (roomId: number, centerId: number, data: any) =
   `, [roomId, centerId, data.name || null, data.capacity ?? null, data.location ?? null,
     data.status || null, data.features == null ? null : JSON.stringify(data.features),
     data.operating_start_time || null, data.operating_end_time || null]);
+  return result.rows[0] || null;
+};
+
+const deletePhysicalRoom = async (roomId: number, centerId: number) => {
+  const result = await pool.query(`
+    DELETE FROM physical_rooms pr
+    WHERE pr.physical_room_id = $1 AND pr.center_id = $2
+      AND NOT EXISTS (SELECT 1 FROM rooms r WHERE r.physical_room_id = pr.physical_room_id)
+    RETURNING pr.physical_room_id AS room_id, pr.name
+  `, [roomId, centerId]);
   return result.rows[0] || null;
 };
 
@@ -103,6 +115,7 @@ const availability = async (centerId: number, date: string, start: string, end: 
           AND lower(COALESCE(rb.booking_status, 'confirmed')) <> 'cancelled'
       )) AS available
     FROM physical_rooms pr WHERE pr.center_id = $1
+      AND EXISTS (SELECT 1 FROM rooms existing_room WHERE existing_room.physical_room_id = pr.physical_room_id)
     ORDER BY available DESC, pr.name
   `, [centerId, date, start, end])).rows;
 
@@ -129,8 +142,10 @@ const utilization = async (centerId: number, from: string, to: string) =>
       (extract(epoch FROM (pr.operating_end_time-pr.operating_start_time))/60 * (($3::date-$2::date)+1))::int AS available_minutes,
       round(100*(COALESCE(recurring.booked,0)+COALESCE(booked.booked,0))/NULLIF(extract(epoch FROM (pr.operating_end_time-pr.operating_start_time))/60*(($3::date-$2::date)+1),0),1) AS utilization_percent
     FROM physical_rooms pr LEFT JOIN recurring USING(physical_room_id) LEFT JOIN booked USING(physical_room_id)
-    WHERE pr.center_id=$1 ORDER BY utilization_percent DESC NULLS LAST, pr.name
+    WHERE pr.center_id=$1
+      AND EXISTS (SELECT 1 FROM rooms existing_room WHERE existing_room.physical_room_id = pr.physical_room_id)
+    ORDER BY utilization_percent DESC NULLS LAST, pr.name
   `, [centerId, from, to])).rows;
 
-module.exports = { schedule, physicalRooms, updatePhysicalRoom, availability, utilization };
+module.exports = { schedule, physicalRooms, updatePhysicalRoom, deletePhysicalRoom, availability, utilization };
 export {};

@@ -76,8 +76,13 @@ const updatePhysicalRoom = (id: number, centerId: number, data: any) => {
   return repository.updatePhysicalRoom(id, centerId, data);
 };
 
+const deletePhysicalRoom = (id: number, centerId: number) => {
+  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('room id must be a positive integer'), { status: 400 });
+  return repository.deletePhysicalRoom(id, centerId);
+};
+
 module.exports = {
-  getPhysicalRooms: repository.physicalRooms, updatePhysicalRoom, getOverview, getAvailability, getSchedule,
+  getPhysicalRooms: repository.physicalRooms, updatePhysicalRoom, deletePhysicalRoom, getOverview, getAvailability, getSchedule,
   getByTeacher: (centerId: number, query: any) => groupSchedule(centerId, query, 'teacher'),
   getBySubject: (centerId: number, query: any) => groupSchedule(centerId, query, 'subject'), getReport,
 };

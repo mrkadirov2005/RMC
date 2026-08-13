@@ -14,6 +14,7 @@ const handle = (operation: (req: any) => Promise<any>) => async (req: any, res: 
 module.exports = {
   physicalRooms: handle(req => service.getPhysicalRooms(centerId(req))),
   updatePhysicalRoom: handle(req => service.updatePhysicalRoom(Number(req.params.id), centerId(req), req.body)),
+  deletePhysicalRoom: handle(req => service.deletePhysicalRoom(Number(req.params.id), centerId(req))),
   overview: handle(req => service.getOverview(centerId(req), req.query)),
   availability: handle(req => service.getAvailability(centerId(req), req.query)),
   schedule: handle(req => service.getSchedule(centerId(req), req.query)),

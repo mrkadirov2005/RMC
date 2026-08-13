@@ -99,7 +99,16 @@ const RoomsPage = () => {
   const deleteRoom = async () => {
     const room = roomGroups.find((item) => item.roomNumber === selectedRoom); if (!room || !window.confirm(`Delete room ${room.roomNumber} and all assignments?`)) return;
     dispatch(setRoomsPageSubmitting(true));
-    try { await Promise.all(room.allRows.map((row) => roomAPI.delete(row.room_id))); setSelectedRoom(''); showToast.success('Room deleted'); await dispatch(fetchRoomsForce()); }
+    try {
+      const physicalResponse = await roomAPI.getPhysical();
+      const physicalRows = (physicalResponse as any)?.data?.data ?? (physicalResponse as any)?.data ?? physicalResponse;
+      const physicalRoom = (Array.isArray(physicalRows) ? physicalRows : []).find((item: any) =>
+        String(item.name || '').trim().toLowerCase() === room.roomNumber.trim().toLowerCase()
+      );
+      await Promise.all(room.allRows.map((row) => roomAPI.delete(row.room_id)));
+      if (physicalRoom?.room_id) await roomAPI.deletePhysical(Number(physicalRoom.room_id));
+      setSelectedRoom(''); showToast.success('Room deleted'); await dispatch(fetchRoomsForce());
+    }
     catch { showToast.error('Failed to delete room'); } finally { dispatch(setRoomsPageSubmitting(false)); }
   };
   const importRooms = async (file?: File) => { setImporting(true); const imported = await importCsvEntity('rooms', 'Rooms', file); if (imported) await dispatch(fetchRoomsForce()); setImporting(false); if (fileRef.current) fileRef.current.value = ''; };

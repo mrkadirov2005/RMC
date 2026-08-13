@@ -485,6 +485,7 @@ export const ownerAPI = {
 export const roomAPI = {
   getAll: (params?: { center_id?: number }) => apiClient.get('/rooms', { params }),
   getPhysical: (params?: Record<string, unknown>) => apiClient.get('/rooms/physical', { params }),
+  deletePhysical: (id: number) => apiClient.delete(`/rooms/physical/${id}`),
   getById: (id: number) => apiClient.get(`/rooms/${id}`),
   create: (data: any) => apiClient.post('/rooms', data),
   update: (id: number, data: any) => apiClient.put(`/rooms/${id}`, data),

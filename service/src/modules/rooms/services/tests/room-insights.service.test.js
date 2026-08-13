@@ -4,6 +4,7 @@ jest.mock('../../repositories/room-insights.repository', () => ({
   availability: jest.fn(),
   utilization: jest.fn(),
   updatePhysicalRoom: jest.fn(),
+  deletePhysicalRoom: jest.fn(),
 }));
 
 const repository = require('../../repositories/room-insights.repository');
@@ -87,5 +88,16 @@ describe('room insights service', () => {
     expect(() => service.updatePhysicalRoom(1, 4, { features: 'projector' })).toThrow('features must be an array');
     expect(() => service.updatePhysicalRoom(1, 4, { status: 'booked' })).toThrow('status must be active, inactive, or maintenance');
     expect(repository.updatePhysicalRoom).not.toHaveBeenCalled();
+  });
+
+  test('deletes the center-scoped physical room after its assignments are removed', async () => {
+    repository.deletePhysicalRoom.mockResolvedValue({ room_id: 7, name: 'Room 7' });
+    await expect(service.deletePhysicalRoom(7, 4)).resolves.toEqual({ room_id: 7, name: 'Room 7' });
+    expect(repository.deletePhysicalRoom).toHaveBeenCalledWith(7, 4);
+  });
+
+  test('rejects an invalid physical room id before deletion', () => {
+    expect(() => service.deletePhysicalRoom(0, 4)).toThrow('room id must be a positive integer');
+    expect(repository.deletePhysicalRoom).not.toHaveBeenCalled();
   });
 });

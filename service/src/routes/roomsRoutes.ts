@@ -7,6 +7,7 @@ const { requireAuth } = require('../middleware/auth');
 router.get('/', requireAuth, roomsController.getAllRooms);
 router.get('/physical', requireAuth, insightsController.physicalRooms);
 router.patch('/physical/:id', requireAuth, insightsController.updatePhysicalRoom);
+router.delete('/physical/:id', requireAuth, insightsController.deletePhysicalRoom);
 router.get('/overview', requireAuth, insightsController.overview);
 router.get('/availability', requireAuth, insightsController.availability);
 router.get('/schedule', requireAuth, insightsController.schedule);
