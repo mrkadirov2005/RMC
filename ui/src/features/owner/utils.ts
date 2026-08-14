@@ -1,6 +1,7 @@
 // Shared utility helpers.
 
 import type {
+  OwnerManagerDailyIncomeRow,
   OwnerManagerFormData,
   OwnerManagerPaymentMonthStats,
   OwnerManagerStatisticsCenterBreakdown,
@@ -17,6 +18,21 @@ export const normalizePermissions = (value: unknown): string[] => {
       .map(([permission]) => permission);
   }
   return [];
+};
+
+// Reads a center id from an API row. The centers endpoint returns Drizzle's
+// camelCase keys (centerId), so snake_case alone yields NaN.
+export const getCenterOptionId = (center: any): number | null => {
+  const parsed = Number(center?.center_id ?? center?.centerId ?? center?.id);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+};
+
+// Reads a center display name, falling back to the id when unnamed.
+export const getCenterOptionName = (center: any): string => {
+  const name = String(center?.center_name ?? center?.centerName ?? center?.name ?? '').trim();
+  if (name) return name;
+  const id = getCenterOptionId(center);
+  return id ? `Center ${id}` : 'Center';
 };
 
 // Returns owner manager row id.
@@ -180,6 +196,46 @@ export const buildOwnerPaymentMonthStats = (
     paidPercent,
     unpaidPercent: Math.max(100 - paidPercent, 0),
   };
+};
+
+// Builds one income row per calendar day that received at least one paid payment in the selected month.
+export const buildOwnerDailyIncomeRows = (
+  payments: any[],
+  selectedMonth: string
+): OwnerManagerDailyIncomeRow[] => {
+  const buckets = new Map<string, { dateLabel: string; paymentCount: number; students: Set<number>; total: number }>();
+
+  payments.forEach((payment) => {
+    if (!isCompletedPayment(payment)) return;
+    if (getOwnerPaymentMonthKey(payment) !== selectedMonth) return;
+
+    const raw = getOwnerPaymentDateValue(payment);
+    if (!raw) return;
+    const date = new Date(String(raw));
+    if (Number.isNaN(date.getTime())) return;
+
+    const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    let bucket = buckets.get(dateKey);
+    if (!bucket) {
+      bucket = { dateLabel: date.toLocaleDateString(), paymentCount: 0, students: new Set<number>(), total: 0 };
+      buckets.set(dateKey, bucket);
+    }
+
+    bucket.paymentCount += 1;
+    bucket.total += getOwnerPaymentAmount(payment);
+    const studentId = Number(payment?.student_id || 0);
+    if (studentId) bucket.students.add(studentId);
+  });
+
+  return Array.from(buckets.entries())
+    .map(([dateKey, bucket]) => ({
+      dateKey,
+      dateLabel: bucket.dateLabel,
+      paymentCount: bucket.paymentCount,
+      studentCount: bucket.students.size,
+      total: bucket.total,
+    }))
+    .sort((a, b) => (a.dateKey < b.dateKey ? 1 : a.dateKey > b.dateKey ? -1 : 0));
 };
 
 // Builds teacher earnings rows for the selected month.

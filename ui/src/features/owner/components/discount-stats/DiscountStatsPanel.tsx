@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
-import { BadgePercent, CalendarDays, Layers3, List, WalletCards } from 'lucide-react';
+import {  List} from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PieChart } from '@/shared/components/PieChart';
@@ -188,12 +187,6 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={<BadgePercent className="h-5 w-5" />} label="Discount records" value={stats.records.length.toLocaleString()} tone="from-blue-600 to-cyan-600" />
-        <MetricCard icon={<WalletCards className="h-5 w-5" />} label="Serial total" value={formatMoney(stats.serialTotal)} tone="from-indigo-600 to-blue-700" />
-        <MetricCard icon={<Layers3 className="h-5 w-5" />} label="One-month total" value={formatMoney(stats.monthlyTotal)} tone="from-emerald-600 to-teal-600" />
-        <MetricCard icon={<CalendarDays className="h-5 w-5" />} label="Final payable" value={formatMoney(stats.finalTotal)} tone="from-amber-500 to-orange-600" />
-      </div>
 
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -271,13 +264,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
   );
 };
 
-const MetricCard = ({ icon, label, value, tone }: { icon: ReactNode; label: string; value: string; tone: string }) => (
-  <div className={`rounded-lg bg-gradient-to-br ${tone} p-4 text-white shadow-lg`}>
-    <div className="mb-3 flex h-10 w-10 items-center justify-center rounded bg-white/20">{icon}</div>
-    <p className="text-[10px] font-black uppercase text-white/75">{label}</p>
-    <p className="text-xl font-black leading-tight">{value}</p>
-  </div>
-);
+
 
 const DiscountStudentsDialog = ({
   open,

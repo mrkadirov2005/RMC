@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import {
   BarChart3,
+  CalendarDays,
   DollarSign,
   TrendingUp,
   Users,
@@ -11,12 +12,15 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
 import {
+  buildOwnerDailyIncomeRows,
   buildOwnerPaymentMonthStats,
   buildOwnerTeacherEarnings,
   getOwnerPaymentAmount,
   getOwnerPaymentMonthKey,
 } from '../utils';
 import type { OwnerManagerStatisticsCollections } from '../types';
+import { FinanceDailyView } from './finance/FinanceDailyView';
+import type { DailyIncomeRow } from './finance/FinanceDailyView';
 import { FinanceStatsView } from './finance/FinanceStatsView';
 import { FinanceTeachersView } from './finance/FinanceTeachersView';
 import { PaymentDateDetailsModal } from './finance/PaymentDateDetailsModal';
@@ -88,7 +92,7 @@ const buildTeacherGroups = (
 
 export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
-  const [financeView, setFinanceView] = useState<'statistics' | 'teachers'>('statistics');
+  const [financeView, setFinanceView] = useState<'statistics' | 'teachers' | 'daily'>('statistics');
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
   const [selectedStatsTeacherId, setSelectedStatsTeacherId] = useState<number | null>(null);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
@@ -119,6 +123,14 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
       ),
     [collections.payments, selectedMonth]
   );
+
+  const dailyRows = useMemo<DailyIncomeRow[]>(
+    () => buildOwnerDailyIncomeRows(collections.payments, selectedMonth),
+    [collections.payments, selectedMonth]
+  );
+
+  const dailyTotalIncome = dailyRows.reduce((sum, row) => sum + row.total, 0);
+  const dailyPaymentCount = dailyRows.reduce((sum, row) => sum + row.paymentCount, 0);
 
   const totalCollected = monthPayments.reduce((sum, payment) => sum + getOwnerPaymentAmount(payment), 0);
   const totalSalary = Math.round((totalCollected * salaryPercent) / 100);
@@ -294,6 +306,23 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
               <Users className="mr-1.5 h-3.5 w-3.5" />
               O'qituvchilar
             </button>
+            <button
+              type="button"
+              onClick={() => {
+                setFinanceView('daily');
+                setSelectedTeacherId(null);
+                setSelectedGroupId(null);
+              }}
+              className={cn(
+                'inline-flex h-8 items-center rounded-md border px-3 text-xs font-black transition',
+                financeView === 'daily'
+                  ? 'border-emerald-500 bg-emerald-600 text-white'
+                  : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:bg-emerald-50'
+              )}
+            >
+              <CalendarDays className="mr-1.5 h-3.5 w-3.5" />
+              Kunlik
+            </button>
           </div>
         </div>
       </div>
@@ -354,6 +383,16 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
             setSelectedGroupId(null);
           }}
           onGroupToggle={(groupId) => setSelectedGroupId(selectedGroupId === groupId ? null : groupId)}
+        />
+      )}
+
+      {financeView === 'daily' && (
+        <FinanceDailyView
+          selectedMonth={selectedMonth}
+          rows={dailyRows}
+          monthTotal={dailyTotalIncome}
+          totalPaymentCount={dailyPaymentCount}
+          daysWithIncome={dailyRows.length}
         />
       )}
     </div>

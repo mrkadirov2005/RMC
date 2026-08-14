@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS, OWNER_MANAGER_FIELDS, OWNER_MANAGER_STATUS_OPTIONS } from '../constants';
+import { getCenterOptionId, getCenterOptionName } from '../utils';
 import { PERMISSION_DESCRIPTIONS } from '../../crm/rbac/permissions';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import type { OwnerManagerFormData, OwnerManagerMeta, OwnerManagerTabType } from '../types';
@@ -72,10 +73,11 @@ export const OwnerManagerDialog = ({
         >
           <option value="">{centerOptions.length ? t('Select a branch') : t('No branches available')}</option>
           {centerOptions.map((center: any) => {
-            const centerId = Number(center.center_id || center.id);
+            const centerId = getCenterOptionId(center);
+            if (!centerId) return null;
             return (
               <option key={centerId} value={centerId}>
-                {center.center_name || center.name || `Center ${centerId}`}
+                {getCenterOptionName(center)}
               </option>
             );
           })}

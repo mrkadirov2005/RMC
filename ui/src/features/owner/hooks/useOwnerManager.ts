@@ -19,7 +19,7 @@ import {
 import { selectOwnerManagerUi } from '../selectors';
 import { OWNER_MANAGER_TAB_META } from '../constants';
 import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, OwnerOverviewCollections } from '../types';
-import { buildOwnerStudentStatistics, createInitialFormState, getOwnerManagerRowId, normalizePermissions, summarizeOwnerAttendance } from '../utils';
+import { buildOwnerStudentStatistics, createInitialFormState, getCenterOptionId, getCenterOptionName, getOwnerManagerRowId, normalizePermissions, summarizeOwnerAttendance } from '../utils';
 import { ownerManagerApi } from '../api';
 
 // Builds columns.
@@ -112,9 +112,9 @@ export const useOwnerManager = () => {
   const centerLookup = useMemo(() => {
     const map = new Map<number, string>();
     centerOptions.forEach((center: any) => {
-      const centerId = Number(center.center_id || center.id);
+      const centerId = getCenterOptionId(center);
       if (!centerId) return;
-      map.set(centerId, center.center_name || center.name || `Center ${centerId}`);
+      map.set(centerId, getCenterOptionName(center));
     });
     return map;
   }, [centerOptions]);
@@ -295,7 +295,7 @@ export const useOwnerManager = () => {
 
       setOverviewCollections({
         centers: toRows(centersRes).filter(
-          (center: any) => Number(center.center_id || center.id) === Number(activeCenterId),
+          (center: any) => getCenterOptionId(center) === Number(activeCenterId),
         ),
         owners: toRows(ownersRes),
         superusers: toRows(superusersRes).filter(
@@ -322,13 +322,13 @@ export const useOwnerManager = () => {
       dispatch(setOwnerManagerCenterOptions(centers));
 
       const hasValidActiveCenter = activeCenterId
-        ? centers.some((center: any) => Number(center.center_id || center.id) === Number(activeCenterId))
+        ? centers.some((center: any) => getCenterOptionId(center) === Number(activeCenterId))
         : false;
 
       if (!hasValidActiveCenter && centers.length > 0) {
-        const firstId = centers[0].center_id || centers[0].id;
+        const firstId = getCenterOptionId(centers[0]);
         if (firstId) {
-          dispatch(setOwnerManagerActiveCenterId(Number(firstId)));
+          dispatch(setOwnerManagerActiveCenterId(firstId));
         }
       }
     } catch {
@@ -422,6 +422,13 @@ export const useOwnerManager = () => {
         activeTab === 'superusers'
           ? {
               ...formData,
+              // The branch select drives this, but the API scopes on center_id.
+              ...(() => {
+                const branchId = Number(formData.branch_id ?? activeCenterId);
+                return Number.isFinite(branchId) && branchId > 0
+                  ? { branch_id: branchId, center_id: branchId }
+                  : {};
+              })(),
               role: String(formData.role || 'admin').toLowerCase(),
               permissions: normalizePermissions(formData.permissions),
             }
@@ -482,7 +489,7 @@ export const useOwnerManager = () => {
     } finally {
       dispatch(setOwnerManagerLoading(false));
     }
-  }, [activeTab, dispatch, editingId, fetchData, fetchOverview, formData]);
+  }, [activeCenterId, activeTab, dispatch, editingId, fetchData, fetchOverview, formData]);
 
 // Memoizes the handle delete callback.
   const handleDelete = useCallback(async (id: number, studentReasonId?: number) => {

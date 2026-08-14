@@ -84,3 +84,11 @@ export interface OwnerManagerTeacherEarningRow {
   paymentCount: number;
   earnedAmount: number;
 }
+
+export interface OwnerManagerDailyIncomeRow {
+  dateKey: string;
+  dateLabel: string;
+  paymentCount: number;
+  studentCount: number;
+  total: number;
+}
