@@ -12,6 +12,8 @@ import {
   Bell,
   Clock,
   Loader2,
+  ClipboardCopy,
+  ClipboardCheck,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -34,9 +36,8 @@ import { useAppSelector } from '../crm/hooks';
 import { useNavigate } from 'react-router-dom';
 import TeacherClassesTab from './components/TeacherClassesTab';
 import TeacherAttendanceTab from './components/TeacherAttendanceTab';
-import TeacherGradesTab from './components/TeacherGradesTab';
 import TeacherAssignmentsTab from './components/TeacherAssignmentsTab';
-import TeacherPortalTopBar from './components/TeacherPortalTopBar';
+import TeacherTasksTab from './components/TeacherTasksTab';
 import { useAppDispatch } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { setTeacherPortalTabValue } from '../../slices/pagesUiSlice';
@@ -45,10 +46,13 @@ import { fetchStudents } from '../../slices/studentsSlice';
 import { fetchClasses } from '../../slices/classesSlice';
 import { fetchAttendance } from '../../slices/attendanceSlice';
 import { fetchAssignments } from '../../slices/assignmentsSlice';
+import { fetchGrades } from '../../slices/gradesSlice';
+import { fetchPayments } from '../../slices/paymentsSlice';
 import { selectTeacherPortalUi } from '../../store/selectors';
 import { useLanguage } from '../../i18n/LanguageContext';
 import TestsPage from '../crm/tests/TestsPage';
 import CalendarPage from '../crm/calendar/CalendarPage';
+import OverallStatisticsTab from './components/OverallStatisticsTab';
 
 interface TeacherStats {
   totalStudents: number;
@@ -75,13 +79,17 @@ const TeacherPortal = () => {
   const classesData = useAppSelector(state => state.classes.items);
   const attendanceData = useAppSelector(state => state.attendance.items);
   const assignmentsData = useAppSelector(state => state.assignments.items);
+  const gradesData = useAppSelector(state => state.grades.items);
+  const paymentsData = useAppSelector(state => state.payments.items);
   
   const loading = useAppSelector(state => 
     state.tests.loading || 
     state.students.loading || 
     state.classes.loading || 
     state.attendance.loading || 
-    state.assignments.loading
+    state.assignments.loading ||
+    state.grades.loading ||
+    state.payments.loading
   );
 // Memoizes the load stats callback.
   const loadStats = useCallback(() => {
@@ -91,6 +99,8 @@ const TeacherPortal = () => {
     dispatch(fetchClasses(scopedParams));
     dispatch(fetchAttendance());
     dispatch(fetchAssignments());
+    dispatch(fetchGrades());
+    dispatch(fetchPayments());
   }, [dispatch, user?.id]);
 
 // Runs side effects for this component.
@@ -160,9 +170,6 @@ const TeacherPortal = () => {
       case 'assignment':
         navigate('/assignments');
         break;
-      case 'grade':
-        dispatch(setTeacherPortalTabValue('grades'));
-        break;
       default:
         break;
     }
@@ -172,25 +179,31 @@ const TeacherPortal = () => {
     { title: t('My Students'), value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: t('Assigned to you'), tab: 'classes' },
     { title: t('My Classes'), value: stats.totalClasses, icon: GraduationCap, tone: 'green' as const, detail: `${stats.upcomingClasses} ${t('active')}`, tab: 'classes' },
     { title: t('Active Tests'), value: stats.pendingTests, icon: FileQuestion, tone: 'amber' as const, detail: t('Open test work'), tab: 'tests' },
-    { title: t('Pending Grading'), value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? t('Needs attention') : t('Nothing pending'), tab: 'grades' },
+    { title: t('Pending Grading'), value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? t('Needs attention') : t('Nothing pending'), tab: 'tests' },
     { title: t("Today's Attendance"), value: stats.todayAttendance, icon: CalendarDays, tone: 'neutral' as const, detail: t('Records today'), tab: 'attendance' },
     { title: t('Assignments'), value: stats.pendingAssignments, icon: ClipboardList, tone: 'amber' as const, detail: stats.pendingAssignments > 0 ? t('To review') : t('Clear'), tab: 'assignments' },
   ];
 
   const tabs = [
+     // here I am adding a tab called Overall, which should have overal statistics like 
+    // 1. student count,
+    //  2.attendance rate 
+    // 3.how much did this teacher students get points
+    // 4. in a locked modal, (password which is updated by teacher itself) to show how much of teacher students did pay like with pie chart
+
+    { value: 'overall', label: t('Overall'), icon: <ClipboardCopy className = " h-4 w-4" /> },
     { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
     { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'calendar', label: t('Calendar'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
-    { value: 'grades', label: t('Grades'), icon: <Star className="h-4 w-4" /> },
     { value: 'assignments', label: t('Assignments'), icon: <ClipboardList className="h-4 w-4" /> },
-  ];
+    { value: 'tasks', label: t('Tasks'), icon: <ClipboardCheck className="h-4 w-4" /> },
+     ];
 
   return (
     <div className="relative space-y-6">
-      <TeacherPortalTopBar teacherName={user?.first_name} />
-
       <PageHeader
+        user = {user}
         className="animate-slide-up"
         variant="hero"
         heroGradient="from-indigo-800 via-blue-700 to-sky-600"
@@ -244,24 +257,6 @@ const TeacherPortal = () => {
 
       <SectionPanel
         className="animate-slide-up animation-delay-500"
-        title={t('Teaching Workspace')}
-        description={t('Switch between the daily tools you use most.')}
-        actions={
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={() => handleQuickAction('test')}>
-              <FileQuestion className="mr-2 h-4 w-4" />
-              {t('Create Test')}
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={() => handleQuickAction('attendance')}>
-              <CalendarDays className="mr-2 h-4 w-4" />
-              {t('Attendance')}
-            </Button>
-            <Button type="button" size="sm" onClick={() => handleQuickAction('assignment')}>
-              <Plus className="mr-2 h-4 w-4" />
-              {t('Assignment')}
-            </Button>
-          </div>
-        }
         contentClassName="p-0"
       >
         <Tabs value={tabValue} onValueChange={(value) => dispatch(setTeacherPortalTabValue(value))}>
@@ -284,6 +279,16 @@ const TeacherPortal = () => {
             <TabsContent value="classes">
               <TeacherClassesTab teacherId={user?.id} onRefresh={loadStats} />
             </TabsContent>
+            <TabsContent value="overall">
+              <OverallStatisticsTab
+                teacherId={user?.id}
+                classes={classesData}
+                students={studentsData}
+                attendance={attendanceData}
+                grades={gradesData}
+                payments={paymentsData}
+              />
+            </TabsContent>
             <TabsContent value="tests">
               <div className="-m-4">
                 <TestsPage />
@@ -297,11 +302,11 @@ const TeacherPortal = () => {
             <TabsContent value="attendance">
               <TeacherAttendanceTab teacherId={user?.id} onRefresh={loadStats} />
             </TabsContent>
-            <TabsContent value="grades">
-              <TeacherGradesTab teacherId={user?.id} onRefresh={loadStats} />
-            </TabsContent>
             <TabsContent value="assignments">
               <TeacherAssignmentsTab teacherId={user?.id} onRefresh={loadStats} />
+            </TabsContent>
+            <TabsContent value="tasks">
+              <TeacherTasksTab teacherId={user?.id} />
             </TabsContent>
           </div>
         </Tabs>
@@ -329,10 +334,6 @@ const TeacherPortal = () => {
           <DropdownMenuItem onClick={() => handleQuickAction('assignment')}>
             <ClipboardList className="h-4 w-4 mr-2" />
             {t('Create Assignment')}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleQuickAction('grade')}>
-            <Star className="h-4 w-4 mr-2" />
-            {t('Enter Grades')}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

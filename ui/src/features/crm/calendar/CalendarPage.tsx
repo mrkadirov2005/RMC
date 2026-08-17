@@ -54,7 +54,8 @@ const CalendarPage = () => {
   const workspace = useCalendarWorkspace(anchor, view, filters);
   const classMap = useMemo(() => new Map(classes.map(item => [Number(item.class_id || item.id), item])), [classes]);
   const isStudent = user?.userType === 'student';
-  const canManage = user?.userType === 'superuser' || user?.userType === 'teacher';
+  // Only superusers may manage calendar items (teachers are view-only)
+  const canManage = user?.userType === 'superuser';
   const canDelete = user?.userType === 'superuser';
 
   useEffect(() => { if (!isStudent) { dispatch(fetchClasses()); dispatch(fetchStudents()); } }, [dispatch, isStudent]);

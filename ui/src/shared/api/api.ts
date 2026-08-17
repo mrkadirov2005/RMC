@@ -382,6 +382,15 @@ export const assignmentAPI = {
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/assignments/${id}`, { params }),
 };
 
+export const teacherTaskAPI = {
+  getAll: (params?: { center_id?: number; teacher_id?: number; page?: number; limit?: number }) =>
+    apiClient.get('/teacher-tasks', { params }),
+  getById: (id: number) => apiClient.get(`/teacher-tasks/${id}`),
+  create: (data: any) => apiClient.post('/teacher-tasks', data),
+  update: (id: number, data: any) => apiClient.put(`/teacher-tasks/${id}`, data),
+  delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/teacher-tasks/${id}`, { params }),
+};
+
 export const debtAPI = {
   getAll: () => apiClient.get('/debts'),
   getById: (id: number) => apiClient.get(`/debts/${id}`),

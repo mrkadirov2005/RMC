@@ -3,10 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  BookOpen,
   CalendarCheck,
   CheckCircle2,
-  Clock,
   Coins,
   GraduationCap,
   Loader2,
@@ -14,12 +12,12 @@ import {
   PlayCircle,
   Search,
   Star,
-  Users,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -186,7 +184,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
       const payload = response.data || [];
       const scopedClasses = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
       setClasses(scopedClasses);
-      setSelectedClassId((current) => current ?? (Number(scopedClasses[0]?.class_id || 0) || null));
+      // Do not auto-open the first class — show list of groups instead.
+      setSelectedClassId(null);
     } catch (error) {
       console.error('Error loading classes:', error);
     } finally {
@@ -402,12 +401,6 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
     <Card className="border-slate-200/80 shadow-sm">
       <CardContent className="space-y-4 p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">{t('My Classes')}</h3>
-            <p className="text-sm text-muted-foreground">
-              {t('Open one of your classes to see students and start a lesson.')}
-            </p>
-          </div>
           <div className="relative w-full max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -419,66 +412,45 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           </div>
         </div>
 
-        <div
-          className="grid gap-4"
-          style={{
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 420px))',
-            justifyContent: 'start',
-          }}
-        >
-          {filteredClasses.map((classItem) => {
-            const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
-            return (
-              <button
-                key={classItem.class_id}
-                type="button"
-                onClick={() => setSelectedClassId(Number(classItem.class_id))}
-                className="group rounded-xl border border-slate-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md dark:border-border dark:bg-card"
-              >
-                <div className="flex h-full flex-col gap-4 p-4">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div className="rounded-xl bg-gradient-to-br from-indigo-500/15 to-sky-500/10 p-2.5 text-indigo-600 transition-colors group-hover:from-indigo-500/20 group-hover:to-sky-500/15">
-                        <GraduationCap className="h-5 w-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <h4 className="line-clamp-2 text-base font-semibold text-slate-950 dark:text-foreground">
-                          {classItem.class_name}
-                        </h4>
-                        <p className="mt-1 truncate text-[11px] uppercase tracking-[0.22em] text-muted-foreground">
-                          {classItem.class_code || t('No code')}
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className="shrink-0" variant={getStatusVariant(classItem.status) as any}>
-                      {t(classItem.status || 'Active')}
-                    </Badge>
-                  </div>
-
-                  <div className="grid gap-2 rounded-lg bg-slate-50/80 p-3 text-sm text-muted-foreground dark:bg-muted/30">
-                    <div className="flex items-center gap-2 font-medium text-slate-700 dark:text-muted-foreground">
-                      <Users className="h-4 w-4" />
-                      <span>{classItem.student_count || 0} {t('Students')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      <span className="line-clamp-2">{scheduleText}</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto flex items-center justify-between gap-3 pt-1">
-                    <span className="truncate text-xs font-medium text-muted-foreground">
-                      {classItem.room_number || t('No room')}
-                    </span>
-                    <span className="inline-flex shrink-0 items-center rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2 text-sm font-semibold text-indigo-700 shadow-sm transition-colors group-hover:border-indigo-200 group-hover:bg-indigo-100 dark:border-white/10 dark:bg-muted dark:text-foreground">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      {t('Open class')}
-                    </span>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
+        <div className="rounded-xl border border-slate-200/80 bg-white overflow-auto w-full" style={{ maxHeight: '60vh' }}>
+          <Table className="w-full">
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="w-12 px-3 py-2 text-sm">№</TableHead>
+                <TableHead className="px-3 py-2 text-sm">Class name</TableHead>
+                <TableHead className="px-3 py-2 text-sm">Students</TableHead>
+                <TableHead className="px-3 py-2 text-sm">Schedule</TableHead>
+                <TableHead className="px-3 py-2 text-sm">Room</TableHead>
+                <TableHead className="px-3 py-2 text-sm">Status</TableHead>
+                <TableHead className="px-3 py-2 text-sm" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredClasses.map((classItem, idx) => {
+                const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
+                return (
+                  <TableRow key={classItem.class_id} className="hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedClassId(Number(classItem.class_id))}>
+                    <TableCell className="px-3 py-2 text-sm text-slate-700">{idx + 1}</TableCell>
+                    <TableCell className="px-3 py-2">
+                      <div className="font-semibold text-slate-900 text-sm">{classItem.class_name}</div>
+                      <div className="text-xs text-slate-500">{classItem.description || ''}</div>
+                    </TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-slate-700">{classItem.student_count || 0}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-slate-700">{scheduleText}</TableCell>
+                    <TableCell className="px-3 py-2 text-sm text-slate-700">{classItem.room_number || t('No room')}</TableCell>
+                    <TableCell className="px-3 py-2">
+                      <Badge variant={getStatusVariant(classItem.status) as any} className="text-sm">{t(classItem.status || 'Active')}</Badge>
+                    </TableCell>
+                    <TableCell className="px-3 py-2 text-black text-right">
+                      <Button variant = "default" size="sm"  className = "text-black" onClick={(e) => { e.stopPropagation(); setSelectedClassId(Number(classItem.class_id)); }}>
+                        {t('Open')}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       </CardContent>
     </Card>

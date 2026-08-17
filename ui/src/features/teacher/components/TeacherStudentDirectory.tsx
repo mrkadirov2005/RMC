@@ -55,6 +55,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { studentAPI, gradeAPI, attendanceAPI, testAPI } from '../api';
+import { getCombinedLessonPoints, getPointTone } from '../../crm/classes/utils/points';
 import { useNavigate } from 'react-router-dom';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import { useLanguage } from '../../../i18n/LanguageContext';
@@ -108,6 +109,11 @@ interface TeacherStudentDirectoryProps {
   loading?: boolean;
   emptyMessage?: string;
   defaultClassName?: string;
+  isViewDetails?: boolean;
+  monthlyLessonDates?: string[];
+  attendanceMap?: Map<string, any>;
+  monthlyPointsBySessionStudent?: Map<string, any>;
+  monthlySessionsByDate?: Map<string, any>;
 }
 
 export default function TeacherStudentDirectory({
@@ -115,7 +121,12 @@ export default function TeacherStudentDirectory({
   title,
   loading = false,
   emptyMessage,
+  isViewDetails = false,
   defaultClassName,
+  monthlyLessonDates = [],
+  attendanceMap = new Map(),
+  monthlyPointsBySessionStudent = new Map(),
+  monthlySessionsByDate = new Map(),
 }: TeacherStudentDirectoryProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -408,139 +419,190 @@ export default function TeacherStudentDirectory({
           <p className="text-muted-foreground">{emptyMessage || t('No students found')}</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-lg border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead>{t('Student')}</TableHead>
-                <TableHead>{t('Class')}</TableHead>
-                <TableHead>{t('Payment Status')}</TableHead>
-                <TableHead>{t('Contact')}</TableHead>
-                <TableHead>{t('Status')}</TableHead>
-                <TableHead className="text-right">{t('Actions')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredStudents.map((student) => {
-                const studentId = Number(student.student_id || student.id || 0);
-                return (
-                  <TableRow
-                    key={studentId}
-                    className="cursor-pointer hover:bg-muted/30"
-                    onClick={() => handleViewDetails(student)}
-                  >
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500 text-sm font-semibold text-white">
-                          {student.first_name?.[0]}
-                          {student.last_name?.[0]}
-                        </div>
-                        <div>
-                          <p className="font-semibold">
-                            {student.first_name} {student.last_name}
-                          </p>
-                          {student.email && <p className="text-xs text-muted-foreground">{student.email}</p>}
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{student.class_name || t('Unassigned')}</Badge>
-                    </TableCell>
-                    <TableCell>{renderPaymentChip(student)}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        {student.email && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  className="rounded-md p-1.5 text-primary hover:bg-muted"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    window.location.href = `mailto:${student.email}`;
-                                  }}
-                                >
-                                  <Mail className="h-4 w-4" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>{student.email}</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                        {student.phone && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button
-                                  className="rounded-md p-1.5 text-primary hover:bg-muted"
-                                  onClick={(event) => {
-                                    event.stopPropagation();
-                                    window.location.href = `tel:${student.phone}`;
-                                  }}
-                                >
-                                  <Phone className="h-4 w-4" />
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent>{student.phone}</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusVariant(student.status) as any}>
-                        {t(student.status || 'Active')}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button
-                            className="rounded-md p-1.5 hover:bg-muted"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewDetails(student)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            {t('View Details')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSelectedStudent(student);
-                              setCoinBalance(Number(student.coins || 0));
-                              setCoinTransactions([]);
-                              setCoinDialogOpen(true);
-                            }}
-                          >
-                            <Coins className="mr-2 h-4 w-4" />
-                            {t('Update Coins')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/student/${studentId}`)}>
-                            <Eye className="mr-2 h-4 w-4" />
-                            {t('Full Profile')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleViewDetails(student, 'grades')}>
-                            <Star className="mr-2 h-4 w-4" />
-                            {t('View Grades')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleViewDetails(student, 'attendance')}>
-                            <CalendarDays className="mr-2 h-4 w-4" />
-                            {t('View Attendance')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleViewDetails(student, 'tests')}>
-                            <FileQuestion className="mr-2 h-4 w-4" />
-                            {t('View Test Results')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+        <div className="overflow-x-auto rounded-lg border ">
+          <Table className="text-xs">
+            {monthlyLessonDates && monthlyLessonDates.length > 0 ? (
+              <>
+                <TableHeader className="bg-slate-50/95">
+                  <TableRow>
+                    <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] px-2 text-[11px] font-bold uppercase tracking-wide">{t('Student')}</TableHead>
+                    {monthlyLessonDates.map((d) => {
+                      const date = new Date(d);
+                      const day = date.getDate();
+                      const dayName = date.toLocaleDateString(undefined, { weekday: 'short' });
+                      return (
+                        <TableHead key={d} className="h-9 min-w-[70px] px-1 text-center">
+                          <div className="flex items-center justify-center gap-1 leading-none">
+                            <span className="text-xs font-black">{day}</span>
+                            <span className="text-[9px] font-bold uppercase text-muted-foreground">{dayName}</span>
+                          </div>
+                        </TableHead>
+                      );
+                    })}
+                    <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide">Total</TableHead>
                   </TableRow>
-                );
-              })}
-            </TableBody>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.length === 0 ? (
+                    <TableRow><TableCell colSpan={monthlyLessonDates.length + 2} className="py-10 text-center text-muted-foreground">{t('No students enrolled.')}</TableCell></TableRow>
+                  ) : (
+                    filteredStudents.map((student, index) => {
+                      const studentId = Number(student.student_id || student.id || 0);
+                      let studentTotalPoints = 0;
+                      let studentAttendanceCount = 0;
+                      return (
+                        <TableRow key={studentId || index} className="group h-9">
+                          <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold">
+                            <div className="flex min-w-0 items-center gap-1.5">
+                              <div>{index + 1}</div>
+                              <span className="max-w-[180px] truncate text-[11px]">{student.last_name} {student.first_name}</span>
+                            </div>
+                          </TableCell>
+                          {monthlyLessonDates.map((d) => {
+                            // prefer session-grade based combined points
+                            const session = monthlySessionsByDate.get(d);
+                            const sessionId = Number(session?.session_id || session?.id || 0) || 0;
+                            let rec: any = null;
+                            let content: string | number = '-';
+                            let isFilled = false;
+                            let combined: number | null = null;
+                            if (sessionId) {
+                              const grade = monthlyPointsBySessionStudent.get(`${sessionId}:${studentId}`);
+                              combined = getCombinedLessonPoints(grade as any);
+                              if (combined !== null && combined !== undefined) {
+                                rec = grade;
+                              }
+                            }
+                            // fallback to attendance record for this date
+                            if (combined === null) {
+                              const attRec = attendanceMap.get(`${d}:${studentId}`);
+                              if (attRec) {
+                                rec = attRec;
+                                const status = String(attRec.status || '').toLowerCase();
+                                if (['present', 'on_time', 'attended', 'paid'].includes(status)) {
+                                  // show tick if no numeric grade available
+                                  content = '✓';
+                                  isFilled = true;
+                                  studentAttendanceCount += 1;
+                                }
+                              }
+                            }
+                            if (combined !== null && combined !== undefined) {
+                              content = combined;
+                              isFilled = true;
+                              studentTotalPoints += Number(combined) || 0;
+                              studentAttendanceCount += 1;
+                            }
+                            const tone = getPointTone(typeof content === 'number' ? Number(content) : (isFilled ? 1 : null));
+                            const toneClass = tone.className || 'border-rose-200 text-rose-700';
+
+                            return (
+                              <TableCell key={`${studentId}-${d}`} className="px-1 py-1 text-center">
+                                <span className={`inline-flex h-6 min-w-[46px] items-center justify-center gap-1 rounded-md border px-1.5 text-[10px] font-black ${toneClass}`} title={rec ? JSON.stringify(rec) : ''}>
+                                  {content}
+                                </span>
+                              </TableCell>
+                            );
+                          })}
+                          <TableCell className="px-1 py-1 text-center">
+                            <span className="inline-flex h-6 min-w-[46px] items-center justify-center rounded-md bg-violet-100 px-1.5 text-[11px] font-black text-violet-800">
+                              {studentTotalPoints > 0 ? studentTotalPoints : (studentAttendanceCount > 0 ? studentAttendanceCount : '-')}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </>
+            ) : (
+              <>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 w-full">
+                    <TableHead>{t('Student')}</TableHead>
+                  {isViewDetails &&  <TableHead>{t('Contact')}</TableHead>}
+                    <TableHead>{t('Status')}</TableHead>
+                    <TableHead className="text-right">{t('Actions')}</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredStudents.map((student, index) => {
+                    const studentId = Number(student.student_id || student.id || 0);
+                    return (
+                      <TableRow
+                        key={studentId}
+                        className="cursor-pointer hover:bg-muted/30"
+                        onClick={() => handleViewDetails(student)}
+                      >
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                           <div>
+                            {index+1}
+                           </div>
+                            <div>
+                              <p className="font-semibold">
+                                {student.first_name} {student.last_name}
+                              </p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        {isViewDetails && <TableCell>{renderPaymentChip(student)}</TableCell>}
+                        <TableCell>
+                          <Badge className={`${student.status == 'active'?"text-black bg-green-300":"text-red-950 bg-red-200"}`} variant={getStatusVariant(student.status) as any}>
+                            {t(student.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                className="rounded-md p-1.5 hover:bg-muted"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleViewDetails(student)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                {t('View Details')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedStudent(student);
+                                  setCoinBalance(Number(student.coins || 0));
+                                  setCoinTransactions([]);
+                                  setCoinDialogOpen(true);
+                                }}
+                              >
+                                <Coins className="mr-2 h-4 w-4" />
+                                {t('Update Coins')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => navigate(`/student/${studentId}`)}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                {t('Full Profile')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewDetails(student, 'grades')}>
+                                <Star className="mr-2 h-4 w-4" />
+                                {t('View Grades')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewDetails(student, 'attendance')}>
+                                <CalendarDays className="mr-2 h-4 w-4" />
+                                {t('View Attendance')}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleViewDetails(student, 'tests')}>
+                                <FileQuestion className="mr-2 h-4 w-4" />
+                                {t('View Test Results')}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </>
+            )}
           </Table>
         </div>
       )}

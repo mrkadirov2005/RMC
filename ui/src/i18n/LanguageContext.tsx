@@ -941,6 +941,7 @@ const translations: Record<string, string> = {
   'Students total': "Jami o'quvchilar",
   'Paid vs Unpaid Students': "To'lagan va to'lamagan o'quvchilar",
   'Student count for': "O'quvchilar soni, oy:",
+  'Student count': "O'quvchilar soni",
   'Loading payment statistics...': "To'lov statistikasi yuklanmoqda...",
   'Loading teacher earnings...': "O'qituvchi daromadlari yuklanmoqda...",
   'No teachers found yet.': "Hali o'qituvchilar topilmadi.",

@@ -40,6 +40,18 @@ const savedFilters = pgTable('saved_filters', {
   updatedAt: timestamp('updated_at'),
 });
 
+const teacherTasks = pgTable('teacher_tasks', {
+  taskId: serial('task_id').primaryKey(),
+  centerId: integer('center_id'),
+  teacherId: integer('teacher_id').notNull(),
+  createdBy: integer('created_by'),
+  taskTitle: varchar('task_title', { length: 255 }).notNull(),
+  taskDefinition: text('task_definition'),
+  deadline: timestamp('deadline'),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
+});
+
 const notifications = pgTable('notifications', {
   notificationId: serial('notification_id').primaryKey(),
   centerId: integer('center_id'),
@@ -737,6 +749,7 @@ module.exports = {
   appSettings,
   translations,
   savedFilters,
+  teacherTasks,
   notifications,
   teacherPaymentCredentials,
   centers,

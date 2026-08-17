@@ -3,7 +3,6 @@
 import type { ReactNode } from 'react';
 import { memo, Suspense, useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import { useAppSelector } from '../../features/crm/hooks';
 import { TranslationEditMode } from './TranslationEditMode';
@@ -32,12 +31,12 @@ interface LayoutProps {
 const Layout = memo(({ children }: LayoutProps) => {
   const [sidebarOpen, setSidebarOpen] = useState(getInitialOpen);
   const [isMobile, setIsMobile] = useState(false);
-  const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
   const isOwner = user?.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner';
   const isStudent = user?.userType === 'student';
-  const isTeacherPortal = user?.userType === 'teacher' && location.pathname === '/teacher-portal';
-  const hideSidebar = isStudent || isTeacherPortal;
+  // Hide sidebar for students and for all teachers (teacher UI is simplified)
+  const isTeacher = user?.userType === 'teacher';
+  const hideSidebar = isStudent || isTeacher;
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);

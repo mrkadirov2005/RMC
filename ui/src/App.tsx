@@ -37,6 +37,7 @@ const RetentionPage = lazy(() => import('./features/crm/retention/RetentionPage'
 const TelegramRegistrationsPage = lazy(() => import('./features/crm/telegram/TelegramRegistrationsPage'));
 const TeacherFinanceDetailPage = lazy(() => import('./features/crm/finance/TeacherFinanceDetailPage'));
 const AssignmentsPage = lazy(() => import('./features/crm/assignments/AssignmentsPage'));
+const TeacherTasksPage = lazy(() => import('./features/crm/teacherTasks/TeacherTasksPage'));
 const SubjectsPage = lazy(() => import('./features/crm/subjects/SubjectsPage'));
 const TestsPage = lazy(() => import('./features/crm/tests/TestsPage'));
 const CalendarPage = lazy(() => import('./features/crm/calendar/CalendarPage'));
@@ -704,6 +705,19 @@ function AppContent() {
                 <Suspense fallback={<LoadingSpinner />}>
 
                   <AssignmentsPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teacher-tasks"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']} requiredPermission={PERMISSION_CODES.CRUD_TEACHER_TASK}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TeacherTasksPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

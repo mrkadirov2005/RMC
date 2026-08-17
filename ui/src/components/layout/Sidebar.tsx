@@ -9,7 +9,7 @@ import {
   LogOut, Sun, Moon, Menu, X, User, CalendarDays, Settings as SettingsIcon,
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
-  School, BadgeAlert, Server,
+  School, BadgeAlert, Server, ClipboardCheck,
   TrendingDown, BadgePercent, ChevronDown, GripVertical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -53,6 +53,7 @@ const iconMap: Record<string, ElementType> = {
   Server,
   Attendance: UserCheck,
   Assignments: ListTodo,
+  TeacherTasks: ClipboardCheck,
   Subjects: BookMarked,
   Debts: BadgeAlert,
   Owner: Crown,
@@ -80,6 +81,7 @@ const iconToneMap: Record<string, string> = {
   MdBarChart: 'from-lime-500 to-green-600 shadow-lime-500/25',
   Attendance: 'from-green-500 to-emerald-700 shadow-green-500/25',
   Assignments: 'from-rose-500 to-pink-600 shadow-rose-500/25',
+  TeacherTasks: 'from-violet-500 to-purple-700 shadow-violet-500/25',
   Subjects: 'from-yellow-500 to-amber-600 shadow-yellow-500/25',
   Debts: 'from-red-600 to-rose-700 shadow-red-500/25',
   Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
@@ -227,6 +229,7 @@ const Sidebar = memo(() => {
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
+    { label: 'Teacher Tasks', path: '/teacher-tasks', iconName: 'TeacherTasks', roles: ['superuser'], permission: 'CRUD_TEACHER_TASK' },
     { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
     { label: 'Debts', path: '/debts', iconName: 'Debts', roles: ['superuser'], permission: 'CRUD_DEBT' },
     {

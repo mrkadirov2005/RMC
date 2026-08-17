@@ -1,57 +1,31 @@
 // Tab component for the teacher feature.
 
-import { useState, useEffect } from 'react';
-import {
-  CalendarDays,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Save,
-  Loader2,
-} from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getErrorMessage } from '@/utils/errorMessage';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { cn } from '@/lib/utils';
+import { Card, CardContent } from '@/components/ui/card';
+import { PieChart } from '@/shared/components/PieChart';
+// group details rendered inline (no dialog)
+// Cards grid used for group student details (no table)
+
 import { classAPI, studentAPI, attendanceAPI } from '../api';
+import { useAppSelector } from '../../crm/hooks';
+import { useMonthlyClassPoints } from '../../crm/classes/hooks/useMonthlyClassPoints';
+import { getMonthKey, shiftMonth } from '../../crm/classes/utils/date';
+import TeacherStudentDirectory from './TeacherStudentDirectory';
 import { useLanguage } from '../../../i18n/LanguageContext';
 
 interface ClassInfo {
   class_id: number;
   class_name: string;
   student_count?: number;
+  section?: string;
 }
 
-interface Student {
-  student_id: number;
-  first_name: string;
-  last_name: string;
-  enrollment_number: string;
-}
+ 
 
-interface AttendanceRecord {
-  student_id: number;
-  status: 'Present' | 'Absent' | 'Late' | 'Half Day';
-  notes?: string;
-}
 
 interface TeacherAttendanceTabProps {
   teacherId?: number;
@@ -62,30 +36,59 @@ interface TeacherAttendanceTabProps {
 const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProps) => {
   const { t } = useLanguage();
   const [classes, setClasses] = useState<ClassInfo[]>([]);
-  const [selectedClass, setSelectedClass] = useState<number | ''>('');
-  const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
-  const [studentsLoading, setStudentsLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [attendanceDate, setAttendanceDate] = useState(new Date().toISOString().split('T')[0]);
-  const [attendance, setAttendance] = useState<Map<number, AttendanceRecord>>(new Map());
-  const [showSaveDialog, setShowSaveDialog] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [existingAttendance, setExistingAttendance] = useState<any[]>([]);
+  const [groupsData, setGroupsData] = useState<Array<{ id: number; label: string; value: number; color?: string }>>([]);
+  const [selectedGroup, setSelectedGroup] = useState<{ id: number; label: string } | null>(null);
+  const [groupStudents, setGroupStudents] = useState<Array<{ student_id: number; first_name?: string; last_name?: string; attendancePercent?: number; attendedCount?: number; totalCount?: number }>>([]);
+  const [groupsLoading, setGroupsLoading] = useState(false);
+  const [attendanceMap, setAttendanceMap] = useState<Map<string, any>>(new Map());
+  const [selectedClassSessions, setSelectedClassSessions] = useState<any[]>([]);
+  const [selectedClassSchedule, setSelectedClassSchedule] = useState<{ days: string[]; time: string }>({ days: [], time: '' });
+  const [selectedClassStudents, setSelectedClassStudents] = useState<any[]>([]);
 
 // Runs side effects for this component.
   useEffect(() => {
     loadClasses();
   }, [teacherId]);
 
+  const { user } = useAppSelector((state: any) => state.auth);
+
+  const todayKey = new Date().toISOString().split('T')[0];
+  const {
+    pointsMonth,
+    setPointsMonth,
+    monthlyLessonDays,
+    monthlyPointsBySessionStudent,
+    monthlyPointStats,
+  } = useMonthlyClassPoints({
+    authUser: user,
+    centerId: undefined,
+    schedule: selectedClassSchedule,
+    sessions: selectedClassSessions,
+    students: selectedClassStudents,
+    todayKey,
+  });
+
+  const monthlyLessonDates = useMemo(
+    () => (monthlyLessonDays || []).map((d: any) => d.dateKey).filter(Boolean),
+    [monthlyLessonDays]
+  );
+  const monthlyLessonDaysCount = monthlyLessonDates.length;
+  const monthlySessionsByDate = useMemo(() => {
+    const map = new Map<string, any>();
+    (monthlyLessonDays || []).forEach((d: any) => {
+      if (d.session) map.set(d.dateKey, d.session);
+    });
+    return map;
+  }, [monthlyLessonDays]);
+
 // Runs side effects for this component.
   useEffect(() => {
-    if (selectedClass) {
-      loadClassStudents();
-      loadExistingAttendance();
+    // after classes load, compute group attendance summaries
+    if (classes.length > 0) {
+      void loadAttendanceSummaries();
     }
-  }, [selectedClass, attendanceDate]);
+  }, [classes]);
 
 // Loads classes.
   const loadClasses = async () => {
@@ -104,131 +107,130 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
   };
 
 // Loads class students.
-  const loadClassStudents = async () => {
+  // Load students for a class and compute their attendance percent
+  const loadStudentsForGroup = async (classId: number, date?: string, month?: string) => {
     try {
-      setStudentsLoading(true);
-      const response = await studentAPI.getAll(
-        selectedClass ? { class_id: Number(selectedClass), page: 1, limit: 100 } : { page: 1, limit: 100 }
-      );
+      setGroupsLoading(true);
+      const fetchLimit = 100;
+      const response = await studentAPI.getAll({ class_id: Number(classId), page: 1, limit: fetchLimit });
       const payload = response.data || [];
       const classStudents = Array.isArray(payload) ? payload : Array.isArray(payload.data) ? payload.data : [];
-      setStudents(classStudents);
 
-      const initialAttendance = new Map<number, AttendanceRecord>();
-      classStudents.forEach((student: Student) => {
-        initialAttendance.set(student.student_id, {
-          student_id: student.student_id,
-          status: 'Present',
-        });
+      // fetch attendance for class
+      const attRes = await attendanceAPI.getByClass(classId).catch(() => ({ data: [] }));
+      let records = attRes.data || [];
+      if (month) {
+        const monthKey = month;
+        records = (records || []).filter((r: any) => String(r.attendance_date || '').startsWith(monthKey));
+      } else if (date) {
+        records = (records || []).filter((r: any) => String(r.attendance_date || '').startsWith(date));
+      }
+
+      const studentMap = new Map<number, { student_id: number; first_name?: string; last_name?: string; attendancePercent?: number }>();
+      classStudents.forEach((s: any) => studentMap.set(Number(s.student_id || s.id), { student_id: Number(s.student_id || s.id), first_name: s.first_name, last_name: s.last_name, attendancePercent: 0 }));
+
+      const byStudent = new Map<number, { present: number; total: number }>();
+      (records || []).forEach((r: any) => {
+        const sid = Number(r.student_id || r.studentId || 0);
+        if (!byStudent.has(sid)) byStudent.set(sid, { present: 0, total: 0 });
+        const cur = byStudent.get(sid)!;
+        const status = String(r.status || '').toLowerCase();
+        if (['present', 'on_time', 'attended', 'paid'].includes(status)) cur.present += 1;
+        cur.total += 1;
       });
-      setAttendance(initialAttendance);
-    } catch (error) {
-      console.error('Error loading students:', error);
+
+      const studentsWithPercent: typeof groupStudents = Array.from(studentMap.values()).map((s) => {
+        const stats = byStudent.get(s.student_id) || { present: 0, total: 0 };
+        const percent = stats.total > 0 ? Math.round((stats.present / stats.total) * 100) : 0;
+        return { ...s, attendancePercent: percent, attendedCount: stats.present, totalCount: stats.total };
+      });
+
+      setGroupStudents(studentsWithPercent);
+
+      // build attendance map keyed by `${date}:${studentId}` (fallback for days without a session-based grade)
+      const map = new Map<string, any>();
+      (records || []).forEach((r: any) => {
+        const d = String(r.attendance_date || '').slice(0, 10);
+        const sid = Number(r.student_id || r.studentId || 0);
+        if (d && sid) map.set(`${d}:${sid}`, r);
+      });
+      setAttendanceMap(map);
+
+      // fetch sessions/schedule/students for the class so useMonthlyClassPoints can compute the points grid
+      try {
+        const sessionsResp = await classAPI.getSessions(classId).catch(() => ({ data: [] }));
+        const sessions = sessionsResp?.data || [];
+        setSelectedClassSessions(Array.isArray(sessions) ? sessions : []);
+
+        const cls = classes.find((c: any) => Number(c.class_id || c.id || 0) === Number(classId));
+        const parseSection = (section?: string) => {
+          if (!section) return { days: [], time: '' };
+          try {
+            const parsed = JSON.parse(section);
+            return { days: Array.isArray(parsed?.days) ? parsed.days.map((d: any) => String(d)) : [], time: String(parsed?.time ?? '') };
+          } catch {
+            return { days: [], time: '' };
+          }
+        };
+        setSelectedClassSchedule(parseSection(cls?.section));
+        setSelectedClassStudents(classStudents || []);
+      } catch (err) {
+        console.error('Failed to load sessions/students for class:', err);
+        setSelectedClassSessions([]);
+        setSelectedClassStudents([]);
+        setSelectedClassSchedule({ days: [], time: '' });
+      }
+    } catch (err) {
+      console.error('Failed to load group students:', err);
+      setGroupStudents([]);
     } finally {
-      setStudentsLoading(false);
+      setGroupsLoading(false);
     }
   };
 
 // Loads existing attendance.
-  const loadExistingAttendance = async () => {
+  const loadAttendanceSummaries = async () => {
     try {
-      if (!selectedClass) return;
-      const response = await attendanceAPI.getByClass(selectedClass);
-// Handles existing.
-      const existing = (response.data || []).filter(
-        (a: any) => a.attendance_date?.split('T')[0] === attendanceDate
-      );
-      setExistingAttendance(existing);
-
-      const updatedAttendance = new Map(attendance);
-      existing.forEach((record: any) => {
-        updatedAttendance.set(record.student_id, {
-          student_id: record.student_id,
-          status: record.status,
-          notes: record.notes,
-        });
-      });
-      setAttendance(updatedAttendance);
-    } catch (error) {
-      console.error('Error loading existing attendance:', error);
-    }
-  };
-
-// Handles status change.
-  const handleStatusChange = (studentId: number, status: 'Present' | 'Absent' | 'Late' | 'Half Day') => {
-    const current = attendance.get(studentId) || { student_id: studentId, status: 'Present' };
-    const updated = new Map(attendance);
-    updated.set(studentId, { ...current, status });
-    setAttendance(updated);
-  };
-
-// Handles notes change.
-  const handleNotesChange = (studentId: number, notes: string) => {
-    const current = attendance.get(studentId) || { student_id: studentId, status: 'Present' };
-    const updated = new Map(attendance);
-    updated.set(studentId, { ...current, notes });
-    setAttendance(updated);
-  };
-
-// Handles mark all present.
-  const markAllPresent = () => {
-    const updated = new Map<number, AttendanceRecord>();
-    students.forEach((student) => {
-      updated.set(student.student_id, {
-        student_id: student.student_id,
-        status: 'Present',
-      });
-    });
-    setAttendance(updated);
-  };
-
-// Handles mark all absent.
-  const markAllAbsent = () => {
-    const updated = new Map<number, AttendanceRecord>();
-    students.forEach((student) => {
-      updated.set(student.student_id, {
-        student_id: student.student_id,
-        status: 'Absent',
-      });
-    });
-    setAttendance(updated);
-  };
-
-// Handles save attendance.
-  const handleSaveAttendance = async () => {
-    try {
-      setSaving(true);
-      setError(null);
-
-      const records = Array.from(attendance.values()).map((record) => ({
-        student_id: record.student_id,
-        class_id: selectedClass,
-        attendance_date: attendanceDate,
-        status: record.status,
-        remarks: record.notes,
-        teacher_id: teacherId,
-      }));
-
-      for (const record of records) {
-        await attendanceAPI.create(record);
+      setGroupsLoading(true);
+      const items = classes;
+      if (!Array.isArray(items) || items.length === 0) {
+        setGroupsData([]);
+        return;
       }
 
-      setSuccess(`${t('Attendance saved successfully for')} ${records.length} ${t('students')}`);
-      setShowSaveDialog(false);
-      onRefresh?.();
-    } catch (err: any) {
-      setError(t('Failed to save attendance. Please try again.'));
-      console.error('Error saving attendance:', err);
+      const results = await Promise.all(items.map(async (cls: any, index: number) => {
+        const id = Number(cls.class_id || cls.id || 0);
+        const studentsResp = await studentAPI.getAll({ class_id: id, page: 1, limit: 1 }).catch(() => ({ data: [] }));
+        const attResp = await attendanceAPI.getByClass(id).catch(() => ({ data: [] }));
+        const studentsCount = Array.isArray(studentsResp.data) ? studentsResp.data.length : (Array.isArray(studentsResp) ? studentsResp.length : 0);
+        const records = attResp.data || [];
+        const present = (records || []).filter((r: any) => ['present', 'on_time', 'attended', 'paid'].includes(String(r.status || '').toLowerCase())).length;
+        const total = (records || []).length || Math.max(studentsCount, 1);
+        const percent = total > 0 ? Math.round((present / total) * 100) : 0;
+        return { id, label: cls.class_name || `Group ${index + 1}`, value: percent, color: undefined };
+      }));
+
+      const filtered = results.filter((r) => Number.isFinite(r.value));
+      setGroupsData(filtered);
+      // notify parent if it requested a refresh callback
+      if (typeof onRefresh === 'function') {
+        try { onRefresh(); } catch {}
+      }
+    } catch (err) {
+      console.error('Failed to load attendance summaries:', err);
+      setGroupsData([]);
     } finally {
-      setSaving(false);
+      setGroupsLoading(false);
     }
   };
 
-  const attendanceStats = {
-    present: Array.from(attendance.values()).filter((a) => a.status === 'Present').length,
-    absent: Array.from(attendance.values()).filter((a) => a.status === 'Absent').length,
-    late: Array.from(attendance.values()).filter((a) => a.status === 'Late').length,
-    halfDay: Array.from(attendance.values()).filter((a) => a.status === 'Half Day').length,
+  const [rotating, setRotating] = useState(true);
+
+  const [groupDate, setGroupDate] = useState<string>(new Date().toISOString().split('T')[0]);
+
+  const openGroup = async (group: { id: number; label: string }) => {
+    setSelectedGroup(group);
+    await loadStudentsForGroup(group.id, undefined, pointsMonth);
   };
 
   if (loading) {
@@ -239,245 +241,229 @@ const TeacherAttendanceTab = ({ teacherId, onRefresh }: TeacherAttendanceTabProp
     );
   }
 
+  const palette = ['#6366F1', '#EF4444', '#10B981', '#F59E0B', '#3B82F6', '#8B5CF6'];
+  const pieData = groupsData.map((g, idx) => ({ label: g.label, value: g.value, color: g.color || palette[idx % palette.length] }));
+
   return (
     <div>
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6 flex-wrap gap-3">
-        <h3 className="text-lg font-semibold">{t('Take Attendance')}</h3>
-        <div className="flex gap-3 items-center">
-          <div>
-            <Label htmlFor="att-date" className="text-xs text-muted-foreground">{t('Date')}</Label>
-            <Input
-              id="att-date"
-              type="date"
-              value={attendanceDate}
-              onChange={(e) => setAttendanceDate(e.target.value)}
-              className="w-40"
-            />
-          </div>
-          <div>
-            <Label htmlFor="att-class" className="text-xs text-muted-foreground">{t('Select Class')}</Label>
-            <select
-              id="att-class"
-              value={selectedClass}
-              onChange={(e) => setSelectedClass(e.target.value ? Number(e.target.value) : '')}
-              className="flex h-9 w-[200px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="">-- {t('Select')} --</option>
-              {classes.map((cls) => (
-                <option key={cls.class_id} value={cls.class_id}>
-                  {cls.class_name}
-                </option>
-              ))}
-            </select>
-          </div>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-lg font-semibold">{t('Attendance Overview')}</h3>
+        <div>
+          <Button size="sm" onClick={() => setRotating((r) => !r)}>
+            {rotating ? t('Pause Rotation') : t('Start Rotation')}
+          </Button>
         </div>
       </div>
 
-      {error && (
-        <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
-          <button onClick={() => setError(null)} className="absolute top-2 right-2 text-sm">✕</button>
-        </Alert>
+      {!selectedGroup && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card>
+          <CardContent className="flex items-center justify-center py-6">
+            {groupsLoading ? (
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+            ) : pieData.length === 0 ? (
+              <div className="text-sm text-muted-foreground">{t('No groups to display')}</div>
+            ) : (
+              <div style={{ width: 300, height: 300, position: 'relative' }}>
+                <div
+                    style={{
+                    position: 'absolute',
+                    left: 20,
+                    top: 20,
+                    width: 260,
+                    height: 260,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transformOrigin: '50% 50%',
+                    animation: rotating ? 'spin 8s linear infinite' : undefined,
+                  }}
+                >
+                  <div style={{ position: 'relative', width: 260, height: 260 }}>
+                    <PieChart data={pieData} size={260} strokeWidth={42} />
+
+                    {/* Labels inside rotating container so they rotate with the wheel */}
+                    {(() => {
+                      const size = 260;
+                      const stroke = 42;
+                      const radius = Math.max(size / 2 - stroke / 2, 0);
+                      const total = pieData.reduce((s, x) => s + Math.max(0, x.value), 0) || 1;
+                      let offset = 0;
+                      return pieData.map((slice, idx) => {
+                        const half = (slice.value / total) * Math.PI * 2 / 2;
+                        const angle = offset / total * Math.PI * 2 - Math.PI / 2 + half;
+                        offset += slice.value;
+                        const cx = size / 2; // center x inside rotating container
+                        const cy = size / 2; // center y
+                        const labelRadius = radius + 24;
+                        const x = cx + Math.cos(angle) * labelRadius;
+                        const y = cy + Math.sin(angle) * labelRadius;
+                        const left = x - 40; // approximate label width/2
+                        const top = y - 12;
+                        return (
+                          <button
+                            key={slice.label}
+                            onClick={() => void openGroup(groupsData[idx])}
+                            style={{
+                              position: 'absolute',
+                              left,
+                              top,
+                              width: 80,
+                              textAlign: 'center',
+                              padding: '2px 4px',
+                              fontSize: 12,
+                              borderRadius: 6,
+                              background: 'rgba(255,255,255,0.9)',
+                              border: '1px solid rgba(0,0,0,0.06)',
+                              cursor: 'pointer',
+                            }}
+                          >
+                            {slice.label}
+                          </button>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
+                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <div>
+          <div className="space-y-2">
+            {groupsData.map((g, idx) => (
+              <div key={g.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3">
+                  <div style={{ width: 12, height: 12, background: g.color || palette[idx % palette.length], borderRadius: 3 }} />
+                  <div>
+                    <div className="font-medium text-sm">{g.label}</div>
+                    <div className="text-xs text-muted-foreground">{g.value}%</div>
+                  </div>
+                </div>
+                <div>
+                  <Button size="sm" onClick={() => void openGroup(g)}>{t('View')}</Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
       )}
 
-      {success && (
-        <Alert className="mb-4 border-green-300 bg-green-50 text-green-800">
-          <AlertDescription>{success}</AlertDescription>
-          <button onClick={() => setSuccess(null)} className="absolute top-2 right-2 text-sm">✕</button>
-        </Alert>
+      {selectedGroup && (
+        <div className="mt-6 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="text-lg font-semibold">{selectedGroup.label} — {t('Attendance')}</div>
+            <div>
+              <Button size="sm" onClick={() => setSelectedGroup(null)}>{t('Back')}</Button>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-1">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+                  <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Lesson days')}</p>
+                    <p className="text-base font-black text-slate-950">{monthlyLessonDaysCount}</p>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Filled')}</p>
+                    <p className="text-base font-black text-emerald-700">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Missing')}</p>
+                    <p className="text-base font-black text-rose-700">{monthlyPointStats.missing}</p>
+                  </div>
+                  <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm">
+                    <p className="text-[11px] font-semibold text-muted-foreground">{t('Average')}</p>
+                    <p className="text-base font-black text-violet-700">{monthlyPointStats.average}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-2 sm:mt-0 sm:ml-4 flex items-center gap-2">
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => { setPointsMonth((m) => shiftMonth(m || getMonthKey(), -1)); if (selectedGroup) void loadStudentsForGroup(selectedGroup.id, undefined, shiftMonth(pointsMonth, -1)); }}>
+                  ◀
+                </Button>
+                <Input
+                  type="month"
+                  value={pointsMonth}
+                  onChange={async (e) => { const val = e.target.value; setPointsMonth(val); if (selectedGroup) await loadStudentsForGroup(selectedGroup.id, undefined, val); }}
+                  className="h-9 w-[160px]"
+                />
+                <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => { setPointsMonth((m) => shiftMonth(m || getMonthKey(), 1)); if (selectedGroup) void loadStudentsForGroup(selectedGroup.id, undefined, shiftMonth(pointsMonth, 1)); }}>
+                  ▶
+                </Button>
+              </div>
+            </div>
+
+            {groupsLoading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+              </div>
+            ) : (
+              <div>
+                {/* Top stats row: three small cards + date picker */}
+                <div className="flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
+                    <div className="flex items-center justify-between rounded-md border bg-white px-3 py-3 shadow-sm">
+                      <div>
+                        <p className="text-[11px] font-semibold text-muted-foreground">{t('Attendance Rate')}</p>
+                        <p className="text-base font-black text-slate-950">{
+                          (() => {
+                            const total = groupStudents.reduce((s, x) => s + (x.totalCount || 0), 0);
+                            const attended = groupStudents.reduce((s, x) => s + (x.attendedCount || 0), 0);
+                            return total > 0 ? `${Math.round((attended / total) * 100)}%` : '-';
+                          })()
+                        }</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border bg-white px-3 py-3 shadow-sm">
+                      <div>
+                        <p className="text-[11px] font-semibold text-muted-foreground">{t('Attended')}</p>
+                        <p className="text-base font-black text-emerald-700">{groupStudents.reduce((s, x) => s + (x.attendedCount || 0), 0)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between rounded-md border bg-white px-3 py-3 shadow-sm">
+                      <div>
+                        <p className="text-[11px] font-semibold text-muted-foreground">{t('Unattended')}</p>
+                        <p className="text-base font-black text-rose-700">{Math.max(0, groupStudents.reduce((s, x) => s + (x.totalCount || 0) - (x.attendedCount || 0), 0))}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-2 sm:mt-0 sm:ml-4">
+                    <Label className="text-xs text-muted-foreground">{t('Date')}</Label>
+                    <Input type="date" value={groupDate} onChange={async (e) => { const val = e.target.value; setGroupDate(val); if (selectedGroup) await loadStudentsForGroup(selectedGroup.id, val); }} className="w-40" />
+                  </div>
+                </div>
+
+                {/* Global student list component */}
+                <TeacherStudentDirectory
+                  students={groupStudents.map((s) => ({
+                    student_id: s.student_id,
+                    first_name: s.first_name || '',
+                    last_name: s.last_name || '',
+                    enrollment_number: '',
+                    status: 'active',
+                  }))}
+                  title={selectedGroup ? `${selectedGroup.label} — ${t('Students')}` : t('Students')}
+                  loading={groupsLoading}
+                  emptyMessage={t('No students found')}
+                  monthlyLessonDates={monthlyLessonDates}
+                  attendanceMap={attendanceMap}
+                  monthlyPointsBySessionStudent={monthlyPointsBySessionStudent}
+                  monthlySessionsByDate={monthlySessionsByDate}
+                />
+              </div>
+            )}
+          </div>
+        </div>
       )}
-
-      {!selectedClass ? (
-        <div className="text-center py-16 bg-muted/50 rounded-lg border-2 border-dashed border-border">
-          <CalendarDays className="h-14 w-14 text-muted-foreground mx-auto mb-3" />
-          <h3 className="text-lg font-semibold text-muted-foreground">{t('Select a class to take attendance')}</h3>
-          <p className="text-sm text-muted-foreground">{t('Choose a class from the dropdown above')}</p>
-        </div>
-      ) : studentsLoading ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
-        </div>
-      ) : students.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-muted-foreground">{t('No students in this class')}</p>
-        </div>
-      ) : (
-        <>
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-            <Card className="bg-green-50/50 text-center">
-              <CardContent className="py-3">
-                <p className="text-3xl font-bold text-green-600">{attendanceStats.present}</p>
-                <p className="text-xs text-muted-foreground">{t('Present')}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-red-50/50 text-center">
-              <CardContent className="py-3">
-                <p className="text-3xl font-bold text-red-500">{attendanceStats.absent}</p>
-                <p className="text-xs text-muted-foreground">{t('Absent')}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-amber-50/50 text-center">
-              <CardContent className="py-3">
-                <p className="text-3xl font-bold text-amber-500">{attendanceStats.late}</p>
-                <p className="text-xs text-muted-foreground">{t('Late')}</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-blue-50/50 text-center">
-              <CardContent className="py-3">
-                <p className="text-3xl font-bold text-blue-500">{attendanceStats.halfDay}</p>
-                <p className="text-xs text-muted-foreground">{t('Half Day')}</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="flex gap-3 mb-4 flex-wrap">
-            <Button variant="outline" className="border-green-400 text-green-600 hover:bg-green-50" onClick={markAllPresent}>
-              <CheckCircle className="h-4 w-4 mr-2" />
-              {t('Mark All Present')}
-            </Button>
-            <Button variant="outline" className="border-red-400 text-red-600 hover:bg-red-50" onClick={markAllAbsent}>
-              <XCircle className="h-4 w-4 mr-2" />
-              {t('Mark All Absent')}
-            </Button>
-            <div className="flex-1" />
-            <Button
-              onClick={() => setShowSaveDialog(true)}
-              className=""
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {t('Save Attendance')}
-            </Button>
-          </div>
-
-          {existingAttendance.length > 0 && (
-            <Alert className="mb-4 border-blue-300 bg-blue-50 text-blue-800">
-              <AlertDescription>
-                {t('Attendance already recorded for this date. Saving will update the records.')}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Attendance Table */}
-          <div className="border rounded-md overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50">
-                  <TableHead className="w-12">#</TableHead>
-                  <TableHead>{t('Student')}</TableHead>
-                  <TableHead>{t('Enrollment #')}</TableHead>
-                  <TableHead className="w-[300px]">{t('Status')}</TableHead>
-                  <TableHead>{t('Notes')}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {students.map((student, index) => {
-                  const record = attendance.get(student.student_id);
-                  return (
-                    <TableRow key={student.student_id} className="hover:bg-muted/50">
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-medium">
-                            {student.first_name?.[0]}{student.last_name?.[0]}
-                          </div>
-                          <span className="font-medium text-sm">
-                            {student.first_name} {student.last_name}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <span className="font-mono text-sm">{student.enrollment_number}</span>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-1">
-                          {(['Present', 'Absent', 'Late', 'Half Day'] as const).map((status) => (
-                            <button
-                              key={status}
-                              onClick={() => handleStatusChange(student.student_id, status)}
-                              className={cn(
-                                'px-2 py-1 text-xs rounded border transition-colors',
-                                record?.status === status
-                                  ? status === 'Present'
-                                    ? 'bg-green-500 text-white border-green-500'
-                                    : status === 'Absent'
-                                    ? 'bg-red-500 text-white border-red-500'
-                                    : status === 'Late'
-                                    ? 'bg-amber-500 text-white border-amber-500'
-                                    : 'bg-blue-500 text-white border-blue-500'
-                                  : 'bg-card text-muted-foreground border-border hover:bg-muted'
-                              )}
-                            >
-                              {status === 'Present' && <CheckCircle className="h-3 w-3 inline mr-1" />}
-                              {status === 'Absent' && <XCircle className="h-3 w-3 inline mr-1" />}
-                              {status === 'Late' && <Clock className="h-3 w-3 inline mr-1" />}
-                              {status === 'Half Day' ? 'HD' : status.charAt(0)}
-                            </button>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Input
-                          placeholder={t('Add notes...')}
-                          value={record?.notes || ''}
-                          onChange={(e) => handleNotesChange(student.student_id, e.target.value)}
-                          className="w-48 h-8 text-sm"
-                        />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      )}
-
-      {/* Save Confirmation Dialog */}
-      <Dialog open={showSaveDialog} onOpenChange={setShowSaveDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('Save Attendance')}</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground mb-3">
-            {t('You are about to save attendance for')} <strong>{students.length}</strong> {t('students on')}{' '}
-            <strong>{new Date(attendanceDate).toLocaleDateString()}</strong>.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <span className="inline-flex items-center gap-1 text-xs border border-green-400 text-green-600 rounded-full px-2.5 py-1">
-              <CheckCircle className="h-3 w-3" /> {attendanceStats.present} {t('Present')}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xs border border-red-400 text-red-600 rounded-full px-2.5 py-1">
-              <XCircle className="h-3 w-3" /> {attendanceStats.absent} {t('Absent')}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xs border border-amber-400 text-amber-600 rounded-full px-2.5 py-1">
-              <Clock className="h-3 w-3" /> {attendanceStats.late} {t('Late')}
-            </span>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowSaveDialog(false)}>{t('Cancel')}</Button>
-            <Button
-              onClick={handleSaveAttendance}
-              disabled={saving}
-              className=""
-            >
-              {saving ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {t('Saving...')}
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4 mr-2" />
-                  {t('Save Attendance')}
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
