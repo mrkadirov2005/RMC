@@ -116,7 +116,7 @@ const CalendarPage = () => {
   };
 
   const moveRecurring = async (event: CalendarEvent, room: string, pattern: string, start: string, end: string) => {
-    if (!canManage || event.source !== 'recurring') return;
+    if (!canManage || event.status === 'conducted' || event.status === 'in_progress') return;
     try {
       await calendarAPI.moveRecurring(event.class_id, { room_name: room, pattern, start_time: start, end_time: end });
       await dispatch(fetchClassesForce());
