@@ -13,6 +13,14 @@ const {
 
 const db = pool.db;
 
+const toDateOrNull = (value: any) => {
+  if (value === undefined) return undefined;
+  if (value === null || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const normalizeJson = (val: any, fallback: any = null, context = 'test.repository') => {
   if (val === null || val === undefined) return fallback;
   if (typeof val === 'string') {
@@ -387,8 +395,8 @@ const insertSubmission = async (params: any[]) => {
       centerId: params[0],
       testId: params[1],
       studentId: params[2],
-      startedAt: params[3],
-      submittedAt: params[4],
+      startedAt: toDateOrNull(params[3]),
+      submittedAt: toDateOrNull(params[4]),
       timeTakenSeconds: params[5],
       submissionData: normalizeJson(params[6], {}),
       totalScore: params[7],
@@ -399,7 +407,7 @@ const insertSubmission = async (params: any[]) => {
       feedback: params[12],
       gradedBy: params[13],
       gradedByType: params[14],
-      gradedAt: params[15],
+      gradedAt: toDateOrNull(params[15]),
       attemptNumber: params[16],
       ipAddress: params[17],
     })
@@ -455,7 +463,7 @@ const insertAnswer = async (params: any[]) => {
       marksObtained: params[5],
       feedback: params[6],
       graded: params[7],
-      gradedAt: params[8],
+      gradedAt: toDateOrNull(params[8]),
     })
     .returning(answerRowSelection);
   return rows[0];
@@ -465,7 +473,9 @@ const updateAnswer = async (params: any[], answerId: number, centerId?: number) 
   const keys = ['isCorrect', 'marksObtained', 'feedback', 'graded', 'gradedAt', 'gradedBy', 'gradedByType'];
   const setData: any = {};
   keys.forEach((key, idx) => {
-    if (params[idx] !== undefined && params[idx] !== null) setData[key] = params[idx];
+    if (params[idx] !== undefined && params[idx] !== null) {
+      setData[key] = key === 'gradedAt' ? toDateOrNull(params[idx]) : params[idx];
+    }
   });
   const conditions = [eq(testAnswers.answerId, Number(answerId))];
   if (centerId) conditions.push(eq(testAnswers.centerId, Number(centerId)));
@@ -516,8 +526,8 @@ const upsertResult = async (params: any[]) => {
     bestScore: params[3],
     averageScore: params[4],
     totalAttempts: params[5],
-    lastAttemptAt: params[6],
-    firstPassedAt: params[7],
+    lastAttemptAt: toDateOrNull(params[6]),
+    firstPassedAt: toDateOrNull(params[7]),
     isCompleted: params[8],
     certificateIssued: params[9],
   };

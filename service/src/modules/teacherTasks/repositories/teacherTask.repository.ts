@@ -38,6 +38,12 @@ const scopedConditions = (options: TeacherTaskListOptions = {}) => {
   return conditions;
 };
 
+const toDateOrNull = (value: any) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const getAll = (options: TeacherTaskListOptions = {}) => {
   const conditions = scopedConditions(options);
   let query = db.select(selection).from(teacherTasks);
@@ -66,7 +72,7 @@ const create = async (payload: any) => {
       createdBy: payload.created_by ?? null,
       taskTitle: payload.task_title,
       taskDefinition: payload.task_definition ?? null,
-      deadline: payload.deadline ?? null,
+      deadline: toDateOrNull(payload.deadline),
       status: 'pending',
       statusNote: null,
       createdAt: sql`CURRENT_TIMESTAMP`,
