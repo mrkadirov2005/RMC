@@ -1,6 +1,5 @@
-import { useState } from 'react';
-import { List, Loader2, PieChart as PieChartIcon, BarChart3, Search } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Loader2, Search } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { PaginationBar } from '@/components/common/PaginationBar';
@@ -23,15 +22,12 @@ import type { SalaryOverviewRow } from './types';
 
 type SalaryTab = 'total' | 'monthly' | 'list';
 
-const TAB_CONFIG: Array<{ key: SalaryTab; label: string; icon: typeof PieChartIcon }> = [
-  { key: 'total', label: 'Total', icon: PieChartIcon },
-  { key: 'monthly', label: 'Monthly', icon: BarChart3 },
-  { key: 'list', label: 'List', icon: List },
-];
+const isSalaryTab = (value: string | null): value is SalaryTab => value === 'total' || value === 'monthly' || value === 'list';
 
 const SalaryPage = () => {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<SalaryTab>('total');
+  const [searchParams] = useSearchParams();
+  const activeTab: SalaryTab = isSalaryTab(searchParams.get('view')) ? (searchParams.get('view') as SalaryTab) : 'total';
   const {
     year,
     month,
@@ -59,9 +55,8 @@ const SalaryPage = () => {
   return (
     <div className="space-y-4">
       <PageHeader
-        title="Teacher Salaries"
-        description="Track monthly teacher salary payments alongside how many of their students paid tuition."
-        icon={PieChartIcon}
+        title=""
+        compact
         actions={
           <Input
             type="month"
@@ -71,24 +66,6 @@ const SalaryPage = () => {
           />
         }
       />
-
-      <div className="flex gap-1.5 rounded-lg border bg-muted/40 p-1.5">
-        {TAB_CONFIG.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setActiveTab(key)}
-            className={
-              activeTab === key
-                ? 'flex flex-1 items-center justify-center gap-1.5 rounded-md bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 px-3 py-2 text-xs font-bold text-white shadow-md shadow-emerald-500/25 transition'
-                : 'flex flex-1 items-center justify-center gap-1.5 rounded-md px-3 py-2 text-xs font-bold text-muted-foreground transition hover:bg-muted'
-            }
-          >
-            <Icon className="h-3.5 w-3.5" />
-            {label}
-          </button>
-        ))}
-      </div>
 
       {activeTab === 'total' && (
         <SectionPanel>

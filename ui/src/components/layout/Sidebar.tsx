@@ -130,6 +130,7 @@ const Sidebar = memo(() => {
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
   const [reportsExpanded, setReportsExpanded] = useState(() => location.pathname === '/owner/reports');
   const [retentionExpanded, setRetentionExpanded] = useState(() => location.pathname === '/retention');
+  const [salaryExpanded, setSalaryExpanded] = useState(() => location.pathname === '/salary');
   const [sidebarOrder, setSidebarOrder] = useState<string[]>([]);
   const [draggedPath, setDraggedPath] = useState<string | null>(null);
   const rawCenterOptions = useAppSelector(selectCenterOptions);
@@ -230,7 +231,14 @@ const Sidebar = memo(() => {
     // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
-    { label: 'Salary', path: '/salary', iconName: 'Salary', roles: ['superuser'], permission: 'MANAGE_SALARY' },
+    {
+      label: 'Salary', path: '/salary', iconName: 'Salary', roles: ['superuser'], permission: 'MANAGE_SALARY',
+      children: [
+        { label: 'Total', path: '/salary?view=total', iconName: 'Salary' },
+        { label: 'Monthly', path: '/salary?view=monthly', iconName: 'Salary' },
+        { label: 'List', path: '/salary?view=list', iconName: 'Salary' },
+      ],
+    },
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
     { label: 'Teacher Tasks', path: '/teacher-tasks', iconName: 'TeacherTasks', roles: ['superuser'], permission: 'CRUD_TEACHER_TASK' },
     { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
@@ -399,6 +407,8 @@ const Sidebar = memo(() => {
               const isActive = location.pathname === item.path;
               const isReportsItem = item.path === '/owner/reports';
               const isRetentionItem = item.path === '/retention';
+              const isSalaryItem = item.path === '/salary';
+              const isGroupExpanded = (isReportsItem && reportsExpanded) || (isRetentionItem && retentionExpanded) || (isSalaryItem && salaryExpanded);
               const iconTone = iconToneMap[item.iconName] || 'from-slate-500 to-slate-700 shadow-slate-500/20';
               return (
                 <div
@@ -417,6 +427,7 @@ const Sidebar = memo(() => {
                         if (item.children?.length && isExpanded) {
                           if (isReportsItem) setReportsExpanded((current) => !current);
                           if (isRetentionItem) setRetentionExpanded((current) => !current);
+                          if (isSalaryItem) setSalaryExpanded((current) => !current);
                         } else {
                           handleNavigation(item.children?.[0]?.path || item.path);
                         }
@@ -447,7 +458,7 @@ const Sidebar = memo(() => {
                       {isExpanded && <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">{itemIndex + 1}</span>}
                       {isExpanded && <GripVertical className="h-3.5 w-3.5 cursor-grab text-muted-foreground active:cursor-grabbing" />}
                       {isExpanded && item.children?.length ? (
-                        <ChevronDown className={cn('h-4 w-4 transition-transform', reportsExpanded && 'rotate-180')} />
+                        <ChevronDown className={cn('h-4 w-4 transition-transform', isGroupExpanded && 'rotate-180')} />
                       ) : null}
                     </button>
                   </TooltipTrigger>
@@ -455,7 +466,7 @@ const Sidebar = memo(() => {
                     {t(item.label)}
                   </TooltipContent>
                 </Tooltip>
-                {isExpanded && item.children?.length && ((isReportsItem && reportsExpanded) || (isRetentionItem && retentionExpanded)) ? (
+                {isExpanded && item.children?.length && isGroupExpanded ? (
                   <div className="ml-5 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
                     {item.children?.map((child) => {
                       const ChildIcon = iconMap[child.iconName] || BarChart3;

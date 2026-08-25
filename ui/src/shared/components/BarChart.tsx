@@ -10,16 +10,18 @@ interface BarChartProps {
   data: BarDatum[];
   height?: number;
   barSize?: number;
+  /** When false, render the (flat/zero) bar axis instead of the "No data" placeholder even if every value is 0. */
+  showEmptyState?: boolean;
 }
 
 const clampPositive = (value: number) => (Number.isFinite(value) && value > 0 ? value : 0);
 
-export const BarChart = memo(({ data, height = 180, barSize = 28 }: BarChartProps) => {
+export const BarChart = memo(({ data, height = 180, barSize = 28, showEmptyState = true }: BarChartProps) => {
   const normalized = useMemo(() => data.map((bar) => ({ ...bar, value: clampPositive(bar.value) })), [data]);
   const max = useMemo(() => Math.max(1, ...normalized.map((bar) => bar.value)), [normalized]);
   const hasData = normalized.some((bar) => bar.value > 0);
 
-  if (!hasData) {
+  if (!hasData && showEmptyState) {
     return (
       <div
         className="flex items-center justify-center rounded-2xl border border-white/10 bg-slate-950/40 text-sm text-white/55"

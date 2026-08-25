@@ -77,7 +77,7 @@ export const SalaryMonthlyTab = () => {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <BarChart data={barData} height={200} barSize={40} />
+          <BarChart data={barData} height={200} barSize={40} showEmptyState={false} />
         )}
       </div>
 
