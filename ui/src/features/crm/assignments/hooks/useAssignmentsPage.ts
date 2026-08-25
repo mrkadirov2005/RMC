@@ -12,7 +12,8 @@ import {
   updateAssignment,
 } from '../../../../slices/assignmentsSlice';
 import { fetchClasses } from '../../../../slices/classesSlice';
-import { selectClassOptions } from '../../../../store/selectors';
+import { fetchTeachers } from '../../../../slices/teachersSlice';
+import { selectClassOptions, selectTeacherOptions } from '../../../../store/selectors';
 import type {
   Assignment,
   AssignmentFolderSelection,
@@ -41,12 +42,14 @@ export const useAssignmentsPage = () => {
   const classes = classItems;
   const classOptions = useAppSelector(selectClassOptions);
   const isLoadingOptions = useAppSelector((state) => state.classes.loading);
+  const teacherOptions = useAppSelector(selectTeacherOptions);
 
   const [activeTab, setActiveTab] = useState<AssignmentTabType>('classes');
   const [selectedFolder, setSelectedFolder] = useState<AssignmentFolderSelection | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Assignment>>({ status: 'Pending' });
+  const [selectedTeacherId, setSelectedTeacherId] = useState<number | ''>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -56,6 +59,7 @@ export const useAssignmentsPage = () => {
   useEffect(() => {
     dispatch(fetchAssignments());
     dispatch(fetchClasses());
+    dispatch(fetchTeachers());
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -65,6 +69,7 @@ export const useAssignmentsPage = () => {
     const handleActiveCenterChanged = () => {
       dispatch(fetchAssignmentsForce());
       dispatch(fetchClasses());
+      dispatch(fetchTeachers());
     };
     window.addEventListener('active-center-changed', handleActiveCenterChanged);
     return () => window.removeEventListener('active-center-changed', handleActiveCenterChanged);
@@ -75,9 +80,15 @@ export const useAssignmentsPage = () => {
     if (assignment) {
       setEditingId(assignment.assignment_id || assignment.id || null);
       setFormData(assignment);
+      const assignmentClass = classes.find(
+        (c) => Number(c.class_id || c.id) === Number(assignment.class_id)
+      );
+      const classTeacherId = Number((assignmentClass as any)?.teacher_id) || '';
+      setSelectedTeacherId(classTeacherId || '');
     } else {
       setEditingId(null);
       setFormData({ status: 'Pending' });
+      setSelectedTeacherId('');
     }
     setIsModalOpen(true);
   };
@@ -87,7 +98,33 @@ export const useAssignmentsPage = () => {
     setIsModalOpen(false);
     setEditingId(null);
     setFormData({ status: 'Pending' });
+    setSelectedTeacherId('');
   };
+
+// Handles the teacher filter used to narrow the class dropdown.
+  const handleTeacherFilterChange = (value: string) => {
+    const nextTeacherId = value ? Number(value) : '';
+    setSelectedTeacherId(nextTeacherId);
+    if (!nextTeacherId) return;
+    const currentClass = classes.find((c) => Number(c.class_id || c.id) === Number(formData.class_id));
+    if (currentClass && Number((currentClass as any)?.teacher_id) !== Number(nextTeacherId)) {
+      setFormData((prev) => ({ ...prev, class_id: undefined }));
+    }
+  };
+
+// Memoizes the teacher-filtered class options.
+  const filteredClassOptions = useMemo(() => {
+    const list = selectedTeacherId
+      ? classes.filter((c) => Number((c as any)?.teacher_id) === Number(selectedTeacherId))
+      : classes;
+    return list
+      .map((c) => {
+        const id = Number(c.class_id || c.id);
+        if (!id) return null;
+        return { id, value: id, label: c.class_name || `Class ${id}` };
+      })
+      .filter((option): option is { id: number; value: number; label: string } => option !== null);
+  }, [classes, selectedTeacherId]);
 
 // Handles submit.
   const handleSubmit = async (e: React.FormEvent) => {
@@ -169,6 +206,10 @@ export const useAssignmentsPage = () => {
     formData,
     setFormData,
     classOptions,
+    filteredClassOptions,
+    teacherOptions,
+    selectedTeacherId,
+    handleTeacherFilterChange,
     isLoadingOptions,
     loadingData: classesLoading,
     searchTerm,

@@ -1,7 +1,6 @@
-// Read-only monthly salary history for the logged-in teacher.
+// Read-only monthly salary history table (the "Details" view) for the logged-in teacher.
 
-import { useEffect, useMemo } from 'react';
-import { Loader2, Wallet } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -11,36 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAppDispatch, useAppSelector } from '../../crm/hooks';
-import { fetchMySalaryDetail, selectMySalaryDetail, selectMySalaryDetailLoading } from '@/slices/salariesSlice';
 import { formatSalaryPeriod } from '../../crm/salary/model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
+import type { SalaryTeacherDetail } from '../../crm/salary/types';
 
 interface TeacherSalaryTabProps {
-  teacherId?: number | string;
+  detail: SalaryTeacherDetail | null;
+  loading: boolean;
 }
 
-const TeacherSalaryTab = ({ teacherId }: TeacherSalaryTabProps) => {
-  const dispatch = useAppDispatch();
-  const detail = useAppSelector(selectMySalaryDetail);
-  const loading = useAppSelector(selectMySalaryDetailLoading);
-
-  useEffect(() => {
-    if (!teacherId) return;
-    dispatch(fetchMySalaryDetail({ months: 12 }));
-  }, [dispatch, teacherId]);
-
-  const summary = useMemo(() => {
-    const history = detail?.history || [];
-    const paidEntries = history.filter((entry) => entry.salary?.is_paid);
-    const totalReceived = paidEntries.reduce((sum, entry) => sum + (Number(entry.salary?.amount) || 0), 0);
-    return {
-      monthsPaid: paidEntries.length,
-      monthsTracked: history.length,
-      totalReceived,
-    };
-  }, [detail]);
-
+const TeacherSalaryTab = ({ detail, loading }: TeacherSalaryTabProps) => {
   if (loading && !detail) {
     return (
       <div className="flex justify-center py-10">
@@ -58,54 +37,35 @@ const TeacherSalaryTab = ({ teacherId }: TeacherSalaryTabProps) => {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-        <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">Months Paid</p>
-          <p className="text-base font-black text-emerald-600">{summary.monthsPaid}/{summary.monthsTracked}</p>
-        </div>
-        <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">Total Received</p>
-          <p className="text-base font-black text-primary">{formatMoney(summary.totalReceived)}</p>
-        </div>
-        <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
-            <Wallet className="h-3.5 w-3.5" /> Tracked
-          </p>
-          <p className="text-base font-black">{summary.monthsTracked} mo</p>
-        </div>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Month</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Notes</TableHead>
+    <div className="overflow-x-auto rounded-lg border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Month</TableHead>
+            <TableHead>Amount</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Notes</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {detail.history.map((entry) => (
+            <TableRow key={`${entry.salary_year}-${entry.salary_month}`}>
+              <TableCell className="font-medium">{formatSalaryPeriod(entry.salary_year, entry.salary_month)}</TableCell>
+              <TableCell>{entry.salary ? formatMoney(entry.salary.amount) : '—'}</TableCell>
+              <TableCell>
+                {entry.salary?.is_paid ? (
+                  <Badge variant="success">Paid</Badge>
+                ) : (
+                  <Badge variant="warning">Not yet paid</Badge>
+                )}
+              </TableCell>
+              <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
+                {entry.salary?.notes || '—'}
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {detail.history.map((entry) => (
-              <TableRow key={`${entry.salary_year}-${entry.salary_month}`}>
-                <TableCell className="font-medium">{formatSalaryPeriod(entry.salary_year, entry.salary_month)}</TableCell>
-                <TableCell>{entry.salary ? formatMoney(entry.salary.amount) : '—'}</TableCell>
-                <TableCell>
-                  {entry.salary?.is_paid ? (
-                    <Badge variant="success">Paid</Badge>
-                  ) : (
-                    <Badge variant="warning">Not yet paid</Badge>
-                  )}
-                </TableCell>
-                <TableCell className="max-w-xs truncate text-xs text-muted-foreground">
-                  {entry.salary?.notes || '—'}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 };

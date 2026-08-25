@@ -83,7 +83,10 @@ const AssignmentsPage = () => {
     editingId,
     formData,
     setFormData,
-    classOptions,
+    filteredClassOptions,
+    teacherOptions,
+    selectedTeacherId,
+    handleTeacherFilterChange,
     isLoadingOptions,
     loadingData,
     searchTerm,
@@ -620,16 +623,27 @@ const AssignmentsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <SelectField
+                label="Teacher (filters the class list below)"
+                name="teacher_id"
+                value={selectedTeacherId || ''}
+                onChange={handleTeacherFilterChange}
+                options={teacherOptions}
+                isLoading={isLoadingOptions}
+                placeholder="All teachers"
+              />
+              <SelectField
                 label="Class (Optional - leave empty for personal task)"
                 name="class_id"
                 value={formData.class_id || ''}
                 onChange={(value) =>
                   setFormData({ ...formData, class_id: value ? Number(value) : undefined })
                 }
-                options={classOptions}
+                options={filteredClassOptions}
                 isLoading={isLoadingOptions}
                 placeholder="Select a class or leave empty"
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Due Date *</Label>
                 <Input
@@ -639,8 +653,6 @@ const AssignmentsPage = () => {
                   onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
                 />
               </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Submission Date *</Label>
                 <Input
@@ -650,6 +662,8 @@ const AssignmentsPage = () => {
                   onChange={(e) => setFormData({ ...formData, submission_date: e.target.value })}
                 />
               </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Status *</Label>
                 <select
@@ -663,15 +677,15 @@ const AssignmentsPage = () => {
                   ))}
                 </select>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Grade</Label>
-              <Input
-                type="number"
-                step="0.1"
-                value={formData.grade || ''}
-                onChange={(e) => setFormData({ ...formData, grade: e.target.value ? Number(e.target.value) : undefined })}
-              />
+              <div className="space-y-2">
+                <Label>Grade</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  value={formData.grade || ''}
+                  onChange={(e) => setFormData({ ...formData, grade: e.target.value ? Number(e.target.value) : undefined })}
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>

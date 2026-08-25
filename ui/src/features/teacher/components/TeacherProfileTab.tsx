@@ -1,8 +1,11 @@
 // Teacher's own profile: read-only personal info + their salary history.
 
 import { useEffect, useState } from 'react';
-import { Loader2, Mail, Phone, IdCard, UserRound, Wallet } from 'lucide-react';
+import { ArrowLeft, Loader2, Mail, Phone, IdCard, UserRound, Wallet } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { teacherAPI } from '@/shared/api/api';
+import { useMySalaryDetail } from '../hooks/useMySalaryDetail';
+import TeacherSalaryStatsView from './TeacherSalaryStatsView';
 import TeacherSalaryTab from './TeacherSalaryTab';
 
 interface TeacherProfileTabProps {
@@ -22,6 +25,8 @@ interface TeacherProfile {
 const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [salaryView, setSalaryView] = useState<'stats' | 'details'>('stats');
+  const { detail: salaryDetail, loading: salaryLoading } = useMySalaryDetail(teacherId);
 
   useEffect(() => {
     if (!teacherId) return;
@@ -82,11 +87,27 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
       </div>
 
       <div>
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
-          <Wallet className="h-4 w-4 text-emerald-600" />
-          My Salary
-        </h3>
-        <TeacherSalaryTab teacherId={teacherId} />
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="flex items-center gap-2 text-sm font-bold">
+            <Wallet className="h-4 w-4 text-emerald-600" />
+            My Salary
+          </h3>
+          {salaryView === 'details' && (
+            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setSalaryView('stats')}>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Statistics
+            </Button>
+          )}
+        </div>
+        {salaryView === 'stats' ? (
+          <TeacherSalaryStatsView
+            detail={salaryDetail}
+            loading={salaryLoading}
+            onViewDetails={() => setSalaryView('details')}
+          />
+        ) : (
+          <TeacherSalaryTab detail={salaryDetail} loading={salaryLoading} />
+        )}
       </div>
     </div>
   );
