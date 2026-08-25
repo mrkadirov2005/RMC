@@ -7,6 +7,7 @@ import { showToast } from '../utils/toast';
 import type { RootState } from '../store';
 import type {
   MarkSalaryPaidPayload,
+  SalaryMonthlySummaryEntry,
   SalaryOverviewRow,
   SalaryTeacherDetail,
   UpdateSalaryPayload,
@@ -22,6 +23,9 @@ interface SalariesState {
   teacherDetailLoading: boolean;
   teacherDetailError: string | null;
   markPaidLoading: boolean;
+  monthlySummary: SalaryMonthlySummaryEntry[];
+  monthlySummaryLoading: boolean;
+  monthlySummaryError: string | null;
 }
 
 const initialState: SalariesState = {
@@ -34,6 +38,9 @@ const initialState: SalariesState = {
   teacherDetailLoading: false,
   teacherDetailError: null,
   markPaidLoading: false,
+  monthlySummary: [],
+  monthlySummaryLoading: false,
+  monthlySummaryError: null,
 };
 
 export const fetchSalaryOverview = createAsyncThunk(
@@ -65,6 +72,19 @@ export const fetchTeacherSalaryDetail = createAsyncThunk(
       return data as SalaryTeacherDetail;
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.error ?? 'Failed to fetch teacher salary detail');
+    }
+  }
+);
+
+export const fetchSalaryMonthlySummary = createAsyncThunk(
+  'salaries/fetchMonthlySummary',
+  async (params: { months?: number; center_id?: number } | undefined, { rejectWithValue }) => {
+    try {
+      const res = await salaryAPI.getMonthlySummary(params);
+      const data = (res as any).data ?? res;
+      return Array.isArray(data?.months) ? data.months : [];
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.error ?? 'Failed to fetch monthly salary summary');
     }
   }
 );
@@ -153,6 +173,20 @@ const salariesSlice = createSlice({
       });
 
     builder
+      .addCase(fetchSalaryMonthlySummary.pending, (state) => {
+        state.monthlySummaryLoading = true;
+        state.monthlySummaryError = null;
+      })
+      .addCase(fetchSalaryMonthlySummary.fulfilled, (state, action: PayloadAction<SalaryMonthlySummaryEntry[]>) => {
+        state.monthlySummaryLoading = false;
+        state.monthlySummary = action.payload;
+      })
+      .addCase(fetchSalaryMonthlySummary.rejected, (state, action) => {
+        state.monthlySummaryLoading = false;
+        state.monthlySummaryError = action.payload as string;
+      });
+
+    builder
       .addCase(markSalaryPaid.pending, (state) => { state.markPaidLoading = true; })
       .addCase(markSalaryPaid.rejected, (state) => { state.markPaidLoading = false; })
       .addCase(markSalaryPaid.fulfilled, (state) => { state.markPaidLoading = false; });
@@ -176,3 +210,5 @@ export const selectSalaryOverviewPeriod = (state: RootState) => ({
 export const selectSalaryTeacherDetail = (state: RootState) => state.salaries.teacherDetail;
 export const selectSalaryTeacherDetailLoading = (state: RootState) => state.salaries.teacherDetailLoading;
 export const selectSalaryMarkPaidLoading = (state: RootState) => state.salaries.markPaidLoading;
+export const selectSalaryMonthlySummary = (state: RootState) => state.salaries.monthlySummary;
+export const selectSalaryMonthlySummaryLoading = (state: RootState) => state.salaries.monthlySummaryLoading;

@@ -107,11 +107,17 @@ const updateSalaryRecord = async (payload: {
   return salaryRepository.updateRecord(payload.id, patch, payload.centerId);
 };
 
+const getMonthlySummary = async ({ centerId, months = 6 }: { centerId?: number; months?: number }) => {
+  const summary = await salaryRepository.monthlySummary({ centerId, months });
+  return { months: summary };
+};
+
 module.exports = {
   getOverview,
   getTeacherDetail,
   markPaid,
   updateSalaryRecord,
+  getMonthlySummary,
 };
 
 export {};

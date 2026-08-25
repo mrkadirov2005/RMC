@@ -64,6 +64,13 @@ export interface MarkSalaryPaidPayload {
   notes?: string;
 }
 
+export interface SalaryMonthlySummaryEntry {
+  year: number;
+  month: number;
+  total_amount: number | string;
+  paid_count: number;
+}
+
 export interface UpdateSalaryPayload {
   id: number;
   data: {

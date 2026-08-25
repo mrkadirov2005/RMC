@@ -404,6 +404,8 @@ export const salaryAPI = {
     apiClient.post('/salaries/mark-paid', data),
   update: (id: number, data: { amount?: number; is_paid?: boolean; payment_method?: string; notes?: string }) =>
     apiClient.patch(`/salaries/${id}`, data),
+  getMonthlySummary: (params?: { months?: number; center_id?: number }) =>
+    apiClient.get('/salaries/monthly-summary', { params }),
 };
 
 export const debtAPI = {

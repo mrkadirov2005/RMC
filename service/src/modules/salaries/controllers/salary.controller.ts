@@ -120,11 +120,31 @@ const updatePatch = async (req: any, res: any) => {
   }
 };
 
+const getMonthlySummary = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    const requestedMonths = Number(req.query.months || 6);
+    const months = Number.isFinite(requestedMonths) ? Math.min(Math.max(requestedMonths, 1), 24) : 6;
+    const result = await salaryService.getMonthlySummary({ centerId: centerId ?? undefined, months });
+    res.json(result);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch salary monthly summary', details: error.message || String(error) });
+  }
+};
+
 module.exports = {
   getOverview,
   getTeacherDetail,
   markPaid,
   updatePatch,
+  getMonthlySummary,
 };
 
 export {};

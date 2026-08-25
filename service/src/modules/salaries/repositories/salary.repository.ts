@@ -281,6 +281,43 @@ const listHistoryForTeacher = async (teacherId: number, centerId: number | undef
   return history;
 };
 
+// Trailing-N-months totals of paid salary amount + paid-teacher count, oldest first.
+const monthlySummary = async ({ centerId, months }: { centerId?: number; months: number }) => {
+  const now = new Date();
+  const periods: Array<{ year: number; month: number }> = [];
+  for (let i = months - 1; i >= 0; i -= 1) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    periods.push({ year: d.getFullYear(), month: d.getMonth() + 1 });
+  }
+  const earliestYear = periods[0]?.year ?? now.getFullYear();
+
+  const conditions: any[] = [eq(teacherSalaries.isPaid, true), sql`${teacherSalaries.salaryYear} >= ${earliestYear}`];
+  if (centerId) conditions.push(eq(teacherSalaries.centerId, centerId));
+
+  const rows = await db
+    .select({
+      salary_year: teacherSalaries.salaryYear,
+      salary_month: teacherSalaries.salaryMonth,
+      total_amount: sql`COALESCE(SUM(${teacherSalaries.amount}), 0)`,
+      paid_count: sql`COUNT(*)::int`,
+    })
+    .from(teacherSalaries)
+    .where(and(...conditions))
+    .groupBy(teacherSalaries.salaryYear, teacherSalaries.salaryMonth);
+
+  const byPeriod = new Map(rows.map((row: any) => [`${row.salary_year}-${row.salary_month}`, row]));
+
+  return periods.map((period) => {
+    const row: any = byPeriod.get(`${period.year}-${period.month}`);
+    return {
+      year: period.year,
+      month: period.month,
+      total_amount: row ? Number(row.total_amount) || 0 : 0,
+      paid_count: row ? Number(row.paid_count) || 0 : 0,
+    };
+  });
+};
+
 module.exports = {
   findRecord,
   findById,
@@ -288,6 +325,7 @@ module.exports = {
   updateRecord,
   listTeacherOverview,
   listHistoryForTeacher,
+  monthlySummary,
 };
 
 export {};

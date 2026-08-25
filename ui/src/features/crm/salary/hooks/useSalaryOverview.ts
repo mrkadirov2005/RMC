@@ -55,7 +55,11 @@ export const useSalaryOverview = () => {
     const avgPaidPercent = teacherCount
       ? Math.round(overview.reduce((sum, row) => sum + (row.student_stats?.paid_percent ?? 0), 0) / teacherCount)
       : 0;
-    return { teacherCount, paidCount, unpaidCount, avgPaidPercent };
+    const totalPaidAmount = overview.reduce(
+      (sum, row) => (row.salary?.is_paid ? sum + (Number(row.salary.amount) || 0) : sum),
+      0
+    );
+    return { teacherCount, paidCount, unpaidCount, avgPaidPercent, totalPaidAmount };
   }, [overview]);
 
   return {

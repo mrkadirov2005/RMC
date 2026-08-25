@@ -155,7 +155,11 @@ export const MarkSalaryPaidDialog = ({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={submitting || !isValid}>
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting || !isValid}
+            className="gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
+          >
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark as Paid'}
           </Button>
         </DialogFooter>

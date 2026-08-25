@@ -70,7 +70,7 @@ const SalaryTeacherDetailPage = () => {
         icon={Wallet}
         primaryAction={
           <Button
-            className="gap-2"
+            className="gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
             onClick={() => {
               const currentEntry = detail?.history.find(
                 (entry) => entry.salary_year === currentPeriod.year && entry.salary_month === currentPeriod.month
