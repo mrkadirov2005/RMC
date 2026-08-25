@@ -6,7 +6,7 @@ describe('branch admin page access catalog', () => {
   it('matches the current non-owner admin sidebar pages', () => {
     expect(ADMIN_PAGE_ACCESS.map((page) => page.label)).toEqual([
       'Dashboard', 'Students', 'Telegram Leads', 'Archive', 'Retention', 'Teachers', 'Classes',
-      'Rooms', 'Calendar', 'Tests', 'Payments', 'Assignments', 'Subjects', 'Debts',
+      'Rooms', 'Calendar', 'Tests', 'Payments', 'Salary', 'Assignments', 'Subjects', 'Debts',
     ]);
   });
 

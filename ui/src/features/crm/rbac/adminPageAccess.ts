@@ -12,6 +12,7 @@ export const ADMIN_PAGE_ACCESS = [
   { label: 'Calendar', path: '/calendar', permission: PERMISSION_CODES.VIEW_CALENDAR },
   { label: 'Tests', path: '/tests', permission: PERMISSION_CODES.MANAGE_TESTS },
   { label: 'Payments', path: '/payments', permission: PERMISSION_CODES.CRUD_PAYMENT },
+  { label: 'Salary', path: '/salary', permission: PERMISSION_CODES.MANAGE_SALARY },
   { label: 'Assignments', path: '/assignments', permission: PERMISSION_CODES.CRUD_ASSIGNMENT },
   { label: 'Subjects', path: '/subjects', permission: PERMISSION_CODES.CRUD_SUBJECT },
   { label: 'Debts', path: '/debts', permission: PERMISSION_CODES.CRUD_DEBT },

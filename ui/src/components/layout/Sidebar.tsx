@@ -10,7 +10,7 @@ import {
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
   School, BadgeAlert, Server, ClipboardCheck,
-  TrendingDown, BadgePercent, ChevronDown, GripVertical,
+  TrendingDown, BadgePercent, ChevronDown, GripVertical, Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -56,6 +56,7 @@ const iconMap: Record<string, ElementType> = {
   TeacherTasks: ClipboardCheck,
   Subjects: BookMarked,
   Debts: BadgeAlert,
+  Salary: Wallet,
   Owner: Crown,
   Centers: School,
   Reports: BarChart3,
@@ -84,6 +85,7 @@ const iconToneMap: Record<string, string> = {
   TeacherTasks: 'from-violet-500 to-purple-700 shadow-violet-500/25',
   Subjects: 'from-yellow-500 to-amber-600 shadow-yellow-500/25',
   Debts: 'from-red-600 to-rose-700 shadow-red-500/25',
+  Salary: 'from-teal-600 to-cyan-700 shadow-teal-500/25',
   Owner: 'from-fuchsia-600 to-indigo-700 shadow-fuchsia-500/25',
   Centers: 'from-cyan-600 to-teal-700 shadow-cyan-500/25',
   Reports: 'from-slate-800 to-slate-950 shadow-slate-500/25',
@@ -228,6 +230,7 @@ const Sidebar = memo(() => {
     // Settings removed from sidebar — accessible via gear icon in header
     { label: 'Tests', path: '/tests', iconName: 'MdQuiz', roles: ['superuser'], permission: 'MANAGE_TESTS' },
     { label: 'Payments', path: '/payments', iconName: 'MdPayment', roles: ['superuser', 'teacher'], permission: 'CRUD_PAYMENT' },
+    { label: 'Salary', path: '/salary', iconName: 'Salary', roles: ['superuser'], permission: 'MANAGE_SALARY' },
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
     { label: 'Teacher Tasks', path: '/teacher-tasks', iconName: 'TeacherTasks', roles: ['superuser'], permission: 'CRUD_TEACHER_TASK' },
     { label: 'Subjects', path: '/subjects', iconName: 'Subjects', roles: ['superuser'], permission: 'CRUD_SUBJECT' },
