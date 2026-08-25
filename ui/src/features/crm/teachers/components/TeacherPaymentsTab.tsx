@@ -116,8 +116,6 @@ const PaymentGroup = ({
         <TableHeader className="bg-muted/30">
           <TableRow className="border-b-border">
             <TableHead className="h-8 pl-3 font-semibold text-foreground">Student</TableHead>
-            <TableHead className="hidden h-8 font-semibold text-foreground sm:table-cell">Enrollment #</TableHead>
-            <TableHead className="h-8 pr-3 text-right font-semibold text-foreground">Payment Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -159,19 +157,11 @@ const PaymentStudentRow = ({
   return (
     <TableRow className="hover:bg-muted/50 transition-colors border-b-border">
       <TableCell className="py-2 pl-3 font-medium">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-xs font-bold shadow-sm">
-           {index+1}
-          </div>
+        <div className="flex items-center justify-between w-3/5 gap-2">
+         <p>   {index+1} {student.first_name} {student.last_name}</p>
+
           <div>
-            <p>{student.first_name} {student.last_name}</p>
-            <p className="text-xs text-muted-foreground font-normal sm:hidden">{student.enrollment_number}</p>
-          </div>
-        </div>
-      </TableCell>
-      <TableCell className="hidden py-2 text-muted-foreground sm:table-cell">{student.enrollment_number}</TableCell>
-      <TableCell className="py-2 pr-3 text-right">
-        {hasPaid ? (
+              {hasPaid ? (
           <Badge color='red'  className = "text-black">
             Paid
           </Badge>
@@ -180,7 +170,10 @@ const PaymentStudentRow = ({
             Unpaid
           </Badge>
         )}
+          </div>
+        </div>
       </TableCell>
+      
     </TableRow>
   );
 };

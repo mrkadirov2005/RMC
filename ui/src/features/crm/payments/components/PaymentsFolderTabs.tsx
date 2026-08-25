@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Folder,
   Search,
@@ -12,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
@@ -26,6 +28,9 @@ import { SimplePaginationBar } from '@/components/common/SimplePaginationBar';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAppSelector } from '../../hooks';
+import { fetchSalaryOverview, selectSalaryOverview, selectSalaryOverviewLoading } from '@/slices/salariesSlice';
+import { formatStudentPaidShare, teacherFullName } from '../../salary/model/salaryModel';
 import type { UsePaymentsPageReturn } from '../hooks/usePaymentsPage';
 import { PaymentGroupsMatrixTab } from './PaymentGroupsMatrixTab';
 import { PaymentListView } from './PaymentListView';
@@ -50,6 +55,9 @@ interface PaymentsFolderTabsProps {
 
 export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+  const salaryOverview = useAppSelector(selectSalaryOverview);
+  const salaryOverviewLoading = useAppSelector(selectSalaryOverviewLoading);
   const {
     dispatch,
     setPaymentsSearchTerm,
@@ -78,7 +86,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     getTeacherPaymentStats,
     // statistics tab
     overallPaymentStats,
-    filteredTeacherOverallStats,
     // pagination
     setFolderPage,
     folderPageSize,
@@ -92,6 +99,12 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
       dispatch(setPaymentsActiveTab('classes'));
     }
   }, [activeTab, dispatch, setPaymentsActiveTab]);
+
+  useEffect(() => {
+    if (activeTab === 'statistics' && !isTeacher) {
+      dispatch(fetchSalaryOverview());
+    }
+  }, [activeTab, isTeacher, dispatch]);
 
   const getTeacherName = (teacherId?: number | null) => {
     const teacher = teachers.find((item) => Number(item.teacher_id || item.id) === Number(teacherId));
@@ -460,52 +473,56 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
 
             {!isTeacher && (
               <div className={cn(paymentSurfaceClass, 'rounded-lg [&_table]:text-xs [&_th]:text-xs [&_td]:py-2')}>
+                <div className="flex items-center justify-between gap-3 border-b p-3">
+                  <p className="text-sm font-semibold">{t('Teacher Salaries (last month)')}</p>
+                  <Button variant="link" size="sm" className="h-auto p-0" onClick={() => navigate('/salary')}>
+                    {t('View full Salary report')} →
+                  </Button>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>Teacher</TableHead>
-                      <TableHead>Students</TableHead>
-                      <TableHead>Worked</TableHead>
-                      <TableHead>Paid</TableHead>
-                      <TableHead>Unpaid</TableHead>
-                      <TableHead>Paid Students</TableHead>
-                      <TableHead>Unpaid Students</TableHead>
+                      <TableHead>Last-Month Salary</TableHead>
+                      <TableHead>Paid?</TableHead>
+                      <TableHead>Students Paid</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {loadingData ? (
+                    {salaryOverviewLoading ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={4} className="text-center py-8">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
                           <p className="text-muted-foreground">Loading statistics...</p>
                         </TableCell>
                       </TableRow>
-                    ) : filteredTeacherOverallStats.length === 0 ? (
+                    ) : salaryOverview.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          {searchTerm ? 'No teachers match your search' : 'No teachers found'}
+                        <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          No teachers found
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredTeacherOverallStats.map(({ teacher, teacherId, stats }) => (
+                      salaryOverview.map((row) => (
                         <TableRow
-                          key={teacherId}
+                          key={row.teacher_id}
                           className="cursor-pointer hover:bg-muted/40"
-                          onClick={() =>
-                            handleFolderClick('teacher', teacherId, `${teacher.first_name} ${teacher.last_name}`)
-                          }
+                          onClick={() => navigate(`/salary/${row.teacher_id}`)}
                         >
                           <TableCell>
-                            <div>
-                              <p className="font-semibold">{teacher.first_name} {teacher.last_name}</p>
-                            </div>
+                            <p className="font-semibold">{teacherFullName(row)}</p>
                           </TableCell>
-                          <TableCell>{stats.totalStudents}</TableCell>
-                          <TableCell className="font-semibold">{formatMoney(stats.totalWorked)}</TableCell>
-                          <TableCell className="font-medium text-emerald-700">{formatMoney(stats.paidAmount)}</TableCell>
-                          <TableCell className="font-medium text-rose-700">{formatMoney(stats.unpaidAmount)}</TableCell>
-                          <TableCell>{stats.paidStudents}</TableCell>
-                          <TableCell>{stats.unpaidStudents}</TableCell>
+                          <TableCell className="font-semibold">
+                            {row.salary ? formatMoney(row.salary.amount) : '—'}
+                          </TableCell>
+                          <TableCell>
+                            {row.salary?.is_paid ? (
+                              <Badge variant="success">Paid</Badge>
+                            ) : (
+                              <Badge variant="warning">Unpaid</Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{formatStudentPaidShare(row.student_stats)}</TableCell>
                         </TableRow>
                       ))
                     )}

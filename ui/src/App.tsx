@@ -31,6 +31,8 @@ const SessionWorkflowPage = lazy(() => import('./features/crm/classes/SessionWor
 const CentersPage = lazy(() => import('./features/crm/centers/CentersPage'));
 const DebtsPage = lazy(() => import('./features/crm/debts/DebtsPage'));
 const FinancePage = lazy(() => import('./features/crm/finance/FinancePage'));
+const SalaryPage = lazy(() => import('./features/crm/salary/SalaryPage'));
+const SalaryTeacherDetailPage = lazy(() => import('./features/crm/salary/SalaryTeacherDetailPage'));
 const RoomsPage = lazy(() => import('./features/crm/rooms/RoomsPage'));
 const ArchivePage = lazy(() => import('./features/crm/archive/ArchivePage'));
 const RetentionPage = lazy(() => import('./features/crm/retention/RetentionPage'));
@@ -550,6 +552,32 @@ function AppContent() {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherFinanceDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/salary"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.MANAGE_SALARY}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <SalaryPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/salary/:teacherId"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.MANAGE_SALARY}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <SalaryTeacherDetailPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

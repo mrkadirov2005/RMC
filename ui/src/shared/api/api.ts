@@ -383,12 +383,27 @@ export const assignmentAPI = {
 };
 
 export const teacherTaskAPI = {
-  getAll: (params?: { center_id?: number; teacher_id?: number; page?: number; limit?: number }) =>
+  getAll: (params?: { center_id?: number; teacher_id?: number; admin_id?: number; page?: number; limit?: number }) =>
     apiClient.get('/teacher-tasks', { params }),
   getById: (id: number) => apiClient.get(`/teacher-tasks/${id}`),
   create: (data: any) => apiClient.post('/teacher-tasks', data),
   update: (id: number, data: any) => apiClient.put(`/teacher-tasks/${id}`, data),
   delete: (id: number, params?: { center_id?: number }) => apiClient.delete(`/teacher-tasks/${id}`, { params }),
+  getStats: (params?: { center_id?: number; teacher_id?: number; admin_id?: number }) =>
+    apiClient.get('/teacher-tasks/stats', { params }),
+  updateStatus: (id: number, data: { action: 'accept' | 'reject' | 'done'; reason?: string; note?: string }) =>
+    apiClient.patch(`/teacher-tasks/${id}/status`, data),
+};
+
+export const salaryAPI = {
+  getOverview: (params?: { year?: number; month?: number; center_id?: number }) =>
+    apiClient.get('/salaries', { params }),
+  getTeacherDetail: (teacherId: number, params?: { months?: number; center_id?: number }) =>
+    apiClient.get(`/salaries/teacher/${teacherId}`, { params }),
+  markPaid: (data: { teacher_id: number; salary_year: number; salary_month: number; amount: number; payment_method?: string; notes?: string }) =>
+    apiClient.post('/salaries/mark-paid', data),
+  update: (id: number, data: { amount?: number; is_paid?: boolean; payment_method?: string; notes?: string }) =>
+    apiClient.patch(`/salaries/${id}`, data),
 };
 
 export const debtAPI = {

@@ -11,10 +11,10 @@ interface StudentPaymentHistoryProps {
 }
 
 export const StudentPaymentHistory = ({ months, payments, language, t }: StudentPaymentHistoryProps) => (
-  <Card className="overflow-hidden border-0 bg-gradient-to-br from-[#3b0f25] via-[#9f1239] to-[#f97316] text-white shadow-lg shadow-orange-200/45 animate-fade-in animation-delay-400">
-    <CardHeader className="border-b border-white/12 pb-4">
-      <CardTitle className="flex items-center gap-2 text-base text-white">
-        <div className="rounded-md bg-amber-300 p-2 text-[#3b0f25]">
+  <Card className="animate-fade-in animation-delay-400">
+    <CardHeader className="border-b pb-4">
+      <CardTitle className="flex items-center gap-2 text-base text-foreground">
+        <div className="rounded-md bg-teal-600/10 p-2 text-teal-700 dark:bg-teal-400/15 dark:text-teal-300">
           <Wallet className="h-5 w-5" />
         </div>
         {t('Payment History')}
@@ -56,22 +56,22 @@ const PaymentMonth = ({
     <div
       className={cn(
         'flex flex-col items-center justify-center rounded-lg border p-4 transition-colors',
-        hasPaid ? 'border-emerald-200/35 bg-emerald-300/18' : 'border-amber-200/35 bg-white/14'
+        hasPaid ? 'border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/10' : 'border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/10'
       )}
     >
-      <span className="text-xs font-bold uppercase tracking-widest text-white/70">{monthName} '{yearName}</span>
+      <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{monthName} '{yearName}</span>
       <div className="mb-2 mt-3">
         {hasPaid ? (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-300 text-[#064e3b]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--success))] text-white">
             <CheckCircle className="h-5 w-5" />
           </div>
         ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-300 text-[#4a2100]">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(var(--warning))] text-white">
             <AlertTriangle className="h-5 w-5" />
           </div>
         )}
       </div>
-      <span className={cn('text-xs font-bold', hasPaid ? 'text-emerald-100' : 'text-amber-100')}>
+      <span className={cn('text-xs font-bold', hasPaid ? 'text-[hsl(var(--success))]' : 'text-[hsl(var(--warning))]')}>
         {hasPaid ? t('Settled') : t('Unpaid')}
       </span>
     </div>

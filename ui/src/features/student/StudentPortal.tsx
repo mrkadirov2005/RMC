@@ -149,7 +149,7 @@ const StudentPortal = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(120deg,rgba(251,113,133,0.22)_0%,transparent_28%),linear-gradient(240deg,rgba(234,179,8,0.2)_0%,transparent_26%),linear-gradient(135deg,#fff7ed_0%,#fdf2f8_28%,#ecfeff_62%,#f7fee7_100%)] dark:bg-[linear-gradient(135deg,#101018_0%,#18112a_45%,#09251f_100%)]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/50 to-amber-50/40 dark:from-slate-950 dark:via-slate-950 dark:to-slate-900">
       <StudentTopHeader initials={initials} studentName={studentName} t={t} onHome={goHome} onTests={goTests} onCalendar={goCalendar} onProfile={() => setProfileOpen(true)} onLogout={handleLogout} />
       <StudentProfileDialog
         open={profileOpen}
