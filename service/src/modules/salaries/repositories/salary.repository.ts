@@ -179,6 +179,7 @@ const studentStatsByTeacher = async ({
       teacher_id: sql`COALESCE(${classes.teacherId}, ${students.teacherId})`,
       total_students: sql`COUNT(DISTINCT ${students.studentId})::int`,
       paid_students: sql`COUNT(DISTINCT CASE WHEN ${payments.paymentId} IS NOT NULL THEN ${students.studentId} END)::int`,
+      collected_amount: sql`COALESCE(SUM(${payments.amount}), 0)`,
     })
     .from(students)
     .leftJoin(classes, and(eq(classes.classId, students.classId), isNull(classes.deletedAt)))
@@ -195,10 +196,10 @@ const studentStatsByTeacher = async ({
     .where(and(...conditions))
     .groupBy(sql`COALESCE(${classes.teacherId}, ${students.teacherId})`);
 
-  return rows as Array<{ teacher_id: number | null; total_students: number; paid_students: number }>;
+  return rows as Array<{ teacher_id: number | null; total_students: number; paid_students: number; collected_amount: string | number }>;
 };
 
-const toStudentStats = (row?: { total_students: number; paid_students: number } | null) => {
+const toStudentStats = (row?: { total_students: number; paid_students: number; collected_amount?: string | number } | null) => {
   const totalStudents = Number(row?.total_students) || 0;
   const paidStudents = Number(row?.paid_students) || 0;
   const unpaidStudents = Math.max(totalStudents - paidStudents, 0);
@@ -210,6 +211,7 @@ const toStudentStats = (row?: { total_students: number; paid_students: number } 
     unpaid_students: unpaidStudents,
     paid_percent: paidPercent,
     unpaid_percent: unpaidPercent,
+    collected_amount: Number(row?.collected_amount) || 0,
   };
 };
 

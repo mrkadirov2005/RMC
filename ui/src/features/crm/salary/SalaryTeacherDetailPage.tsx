@@ -17,7 +17,16 @@ import { useSalaryTeacherDetail } from './hooks/useSalaryTeacherDetail';
 import { MarkSalaryPaidDialog } from './components/MarkSalaryPaidDialog';
 import { formatSalaryPeriod, formatStudentPaidShare, resolvePreviousMonth, teacherFullName } from './model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
-import type { SalaryHistoryEntry } from './types';
+import type { SalaryHistoryEntry, SalaryStudentStats } from './types';
+
+const EMPTY_STATS: SalaryStudentStats = {
+  total_students: 0,
+  paid_students: 0,
+  unpaid_students: 0,
+  paid_percent: 0,
+  unpaid_percent: 0,
+  collected_amount: 0,
+};
 
 const SalaryTeacherDetailPage = () => {
   const navigate = useNavigate();
@@ -25,7 +34,14 @@ const SalaryTeacherDetailPage = () => {
   const teacherId = Number(teacherIdParam);
   const { detail, loading } = useSalaryTeacherDetail(teacherId);
 
-  const [dialogPeriod, setDialogPeriod] = useState<{ year: number; month: number; amount?: number | string | null; paymentMethod?: string | null; notes?: string | null } | null>(null);
+  const [dialogPeriod, setDialogPeriod] = useState<{
+    year: number;
+    month: number;
+    amount?: number | string | null;
+    paymentMethod?: string | null;
+    notes?: string | null;
+    studentStats: SalaryStudentStats;
+  } | null>(null);
 
   const currentPeriod = useMemo(() => resolvePreviousMonth(), []);
   const teacherName = detail ? teacherFullName(detail.teacher) : '';
@@ -37,6 +53,7 @@ const SalaryTeacherDetailPage = () => {
       amount: entry.salary?.amount,
       paymentMethod: entry.salary?.payment_method,
       notes: entry.salary?.notes,
+      studentStats: entry.student_stats,
     });
   };
 
@@ -54,12 +71,19 @@ const SalaryTeacherDetailPage = () => {
         primaryAction={
           <Button
             className="gap-2"
-            onClick={() => openMarkPaidFor({
-              salary_year: currentPeriod.year,
-              salary_month: currentPeriod.month,
-              salary: null,
-              student_stats: { total_students: 0, paid_students: 0, unpaid_students: 0, paid_percent: 0, unpaid_percent: 0 },
-            })}
+            onClick={() => {
+              const currentEntry = detail?.history.find(
+                (entry) => entry.salary_year === currentPeriod.year && entry.salary_month === currentPeriod.month
+              );
+              openMarkPaidFor(
+                currentEntry || {
+                  salary_year: currentPeriod.year,
+                  salary_month: currentPeriod.month,
+                  salary: null,
+                  student_stats: EMPTY_STATS,
+                }
+              );
+            }}
           >
             Mark {formatSalaryPeriod(currentPeriod.year, currentPeriod.month)} as Paid
           </Button>
@@ -129,6 +153,7 @@ const SalaryTeacherDetailPage = () => {
           teacherName={teacherName || `Teacher #${teacherId}`}
           salaryYear={dialogPeriod.year}
           salaryMonth={dialogPeriod.month}
+          studentStats={dialogPeriod.studentStats}
           existingAmount={dialogPeriod.amount}
           existingPaymentMethod={dialogPeriod.paymentMethod}
           existingNotes={dialogPeriod.notes}

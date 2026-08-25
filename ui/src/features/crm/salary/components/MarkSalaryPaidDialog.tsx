@@ -21,6 +21,8 @@ import {
 import { useAppDispatch, useAppSelector } from '../../hooks';
 import { markSalaryPaid, selectSalaryMarkPaidLoading } from '@/slices/salariesSlice';
 import { formatSalaryPeriod } from '../model/salaryModel';
+import { formatMoney } from '@/utils/helpers';
+import type { SalaryStudentStats } from '../types';
 
 const PAYMENT_METHODS = ['Cash', 'Bank Transfer', 'Card', 'Other'];
 
@@ -31,6 +33,7 @@ interface MarkSalaryPaidDialogProps {
   teacherName: string;
   salaryYear: number;
   salaryMonth: number;
+  studentStats: SalaryStudentStats;
   existingAmount?: number | string | null;
   existingPaymentMethod?: string | null;
   existingNotes?: string | null;
@@ -43,6 +46,7 @@ export const MarkSalaryPaidDialog = ({
   teacherName,
   salaryYear,
   salaryMonth,
+  studentStats,
   existingAmount,
   existingPaymentMethod,
   existingNotes,
@@ -56,10 +60,11 @@ export const MarkSalaryPaidDialog = ({
 
   useEffect(() => {
     if (!open) return;
-    setAmount(existingAmount != null ? String(existingAmount) : '');
+    const defaultAmount = existingAmount != null ? existingAmount : studentStats.collected_amount;
+    setAmount(defaultAmount != null ? String(defaultAmount) : '');
     setPaymentMethod(existingPaymentMethod || 'Cash');
     setNotes(existingNotes || '');
-  }, [open, existingAmount, existingPaymentMethod, existingNotes]);
+  }, [open, existingAmount, existingPaymentMethod, existingNotes, studentStats.collected_amount]);
 
   const parsedAmount = Number(amount);
   const isValid = amount.trim() !== '' && Number.isFinite(parsedAmount) && parsedAmount >= 0;
@@ -91,8 +96,28 @@ export const MarkSalaryPaidDialog = ({
           <p className="text-sm text-muted-foreground">
             {teacherName} — {formatSalaryPeriod(salaryYear, salaryMonth)}
           </p>
+
+          <div className="grid grid-cols-2 gap-1.5 rounded-md border bg-muted/30 p-2.5 text-xs sm:grid-cols-4">
+            <div>
+              <p className="text-muted-foreground">Students Paid</p>
+              <p className="font-bold text-emerald-600">{studentStats.paid_students}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Students Unpaid</p>
+              <p className="font-bold text-rose-600">{studentStats.unpaid_students}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Paid %</p>
+              <p className="font-bold text-primary">{studentStats.paid_percent}%</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Collected</p>
+              <p className="font-bold">{formatMoney(studentStats.collected_amount)}</p>
+            </div>
+          </div>
+
           <div className="space-y-1">
-            <Label>Amount</Label>
+            <Label>Total Amount</Label>
             <Input
               type="number"
               min="0"
@@ -101,6 +126,9 @@ export const MarkSalaryPaidDialog = ({
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 500"
             />
+            <p className="text-[11px] text-muted-foreground">
+              Pre-filled from the amount collected this month — edit to set the actual salary.
+            </p>
           </div>
           <div className="space-y-1">
             <Label>Payment Method</Label>

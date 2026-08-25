@@ -25,6 +25,7 @@ export interface SalaryStudentStats {
   unpaid_students: number;
   paid_percent: number;
   unpaid_percent: number;
+  collected_amount: number;
 }
 
 export interface SalaryOverviewRow {
