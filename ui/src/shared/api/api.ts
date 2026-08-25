@@ -287,6 +287,7 @@ export const teacherAPI = {
     apiClient.post(`/teachers/${id}/set-password`, data),
   setPaymentPassword: (id: number, data: { password: string }) =>
     apiClient.post(`/teachers/${id}/payment-password`, data),
+  getMyProfile: () => apiClient.get('/teachers/me'),
 };
 
 export const classAPI = {
@@ -406,6 +407,8 @@ export const salaryAPI = {
     apiClient.patch(`/salaries/${id}`, data),
   getMonthlySummary: (params?: { months?: number; center_id?: number }) =>
     apiClient.get('/salaries/monthly-summary', { params }),
+  getMine: (params?: { months?: number }) =>
+    apiClient.get('/salaries/me', { params }),
 };
 
 export const debtAPI = {

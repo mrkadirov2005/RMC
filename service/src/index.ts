@@ -103,7 +103,7 @@ async function createApp(options: CreateAppOptions = {}) {
 
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);
-  app.use('/api/teachers', requireAuth, requireRole('superuser'), teacherRoutes);
+  app.use('/api/teachers', requireAuth, requireRole('superuser', 'teacher'), teacherRoutes);
   app.use('/api/classes', requireAuth, requireRole('superuser', 'teacher', 'student'), classRoutes);
   app.use('/api/centers', requireAuth, requireRole('superuser'), centerRoutes);
   app.use('/api/payments', requireAuth, paymentRoutes);
@@ -112,7 +112,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/attendance', requireAuth, requireRole('superuser', 'teacher'), attendanceRoutes);
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);
-  app.use('/api/salaries', requireAuth, requireRole('superuser'), salaryRoutes);
+  app.use('/api/salaries', requireAuth, requireRole('superuser', 'teacher'), salaryRoutes);
   app.use('/api/subjects', requireAuth, requireRole('superuser', 'teacher'), subjectRoutes);
   app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
   app.use('/api/owners', requireAuth, requireOwner, ownerRoutes);

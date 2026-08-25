@@ -14,6 +14,7 @@ import {
   Loader2,
   ClipboardCopy,
   ClipboardCheck,
+  UserRound,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -53,6 +54,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import TestsPage from '../crm/tests/TestsPage';
 import CalendarPage from '../crm/calendar/CalendarPage';
 import OverallStatisticsTab from './components/OverallStatisticsTab';
+import TeacherProfileTab from './components/TeacherProfileTab';
 
 interface TeacherStats {
   totalStudents: number;
@@ -198,6 +200,7 @@ const TeacherPortal = () => {
     { value: 'attendance', label: t('Attendance'), icon: <CalendarDays className="h-4 w-4" /> },
     { value: 'assignments', label: t('Assignments'), icon: <ClipboardList className="h-4 w-4" /> },
     { value: 'tasks', label: t('Tasks'), icon: <ClipboardCheck className="h-4 w-4" /> },
+    { value: 'profile', label: t('Profile'), icon: <UserRound className="h-4 w-4" /> },
      ];
 
   return (
@@ -307,6 +310,9 @@ const TeacherPortal = () => {
             </TabsContent>
             <TabsContent value="tasks">
               <TeacherTasksTab teacherId={user?.id} />
+            </TabsContent>
+            <TabsContent value="profile">
+              <TeacherProfileTab teacherId={user?.id} />
             </TabsContent>
           </div>
         </Tabs>

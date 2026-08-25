@@ -51,6 +51,26 @@ const getTeacherDetail = async (req: any, res: any) => {
   }
 };
 
+const getMyDetail = async (req: any, res: any) => {
+  try {
+    const teacherId = Number(req.user?.id);
+    if (!teacherId) {
+      return res.status(400).json({ error: 'Unable to resolve teacher id.' });
+    }
+    const { centerId } = getScopedCenterId(req);
+    const requestedMonths = Number(req.query.months || 6);
+    const months = Number.isFinite(requestedMonths) ? Math.min(Math.max(requestedMonths, 1), 24) : 6;
+    const detail = await salaryService.getTeacherDetail({ teacherId, centerId: centerId ?? undefined, months });
+    if (!detail) {
+      return res.status(404).json({ error: 'Salary profile not found.' });
+    }
+    res.json(detail);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch salary detail', details: error.message || String(error) });
+  }
+};
+
 const markPaid = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -142,6 +162,7 @@ const getMonthlySummary = async (req: any, res: any) => {
 module.exports = {
   getOverview,
   getTeacherDetail,
+  getMyDetail,
   markPaid,
   updatePatch,
   getMonthlySummary,

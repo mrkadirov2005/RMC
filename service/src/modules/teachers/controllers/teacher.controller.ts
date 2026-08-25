@@ -23,6 +23,33 @@ const parseTeacherListQuery = (query: Record<string, unknown>) => ({
   limit: Math.min(100, toPositiveInt(query.limit) || 20),
 });
 
+const getMyProfile = async (req: any, res: any) => {
+  try {
+    const teacherId = Number(req.user?.id);
+    if (!teacherId) {
+      return res.status(400).json({ error: 'Unable to resolve teacher id.' });
+    }
+    const { centerId } = getScopedCenterId(req);
+    const teacher = await teacherService.getTeacher(teacherId, centerId ?? undefined);
+    if (!teacher) {
+      return res.status(404).json({ error: 'Teacher not found.' });
+    }
+    res.json({
+      teacher_id: teacher.teacher_id,
+      employee_id: teacher.employee_id,
+      first_name: teacher.first_name,
+      last_name: teacher.last_name,
+      email: teacher.email,
+      phone: teacher.phone,
+      status: teacher.status,
+      center_id: teacher.center_id,
+    });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch profile', details: error.message || String(error) });
+  }
+};
+
 const getAllTeachers = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
@@ -258,6 +285,9 @@ const setTeacherPassword = async (req: any, res: any) => {
 
 const changeTeacherPassword = async (req: any, res: any) => {
   try {
+    if (req.user?.userType === 'teacher' && Number(req.user.id) !== Number(req.params.id)) {
+      return res.status(403).json({ error: 'You can only change your own password.' });
+    }
     const { old_password, new_password } = req.body;
     const out = await teacherService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
@@ -272,6 +302,7 @@ const changeTeacherPassword = async (req: any, res: any) => {
 };
 
 module.exports = {
+  getMyProfile,
   getAllTeachers,
   getTeacherById,
   createTeacher,

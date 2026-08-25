@@ -32,7 +32,16 @@ const {
  *               items:
  *                 $ref: '#/components/schemas/Teacher'
  */
-router_teacher.get('/', requireAuth, teacherController.getAllTeachers);
+router_teacher.get('/', requireAuth, requireRole('superuser'), teacherController.getAllTeachers);
+
+/**
+ * @swagger
+ * /teachers/me:
+ *   get:
+ *     summary: Get the logged-in teacher's own profile
+ *     tags: [Teachers]
+ */
+router_teacher.get('/me', requireAuth, requireRole('teacher'), teacherController.getMyProfile);
 
 /**
  * @swagger
@@ -56,7 +65,7 @@ router_teacher.get('/', requireAuth, teacherController.getAllTeachers);
  *       404:
  *         description: Teacher not found
  */
-router_teacher.get('/:id', requireAuth, validateParams(IdParamDto), teacherController.getTeacherById);
+router_teacher.get('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), teacherController.getTeacherById);
 
 /**
  * @swagger
@@ -76,7 +85,7 @@ router_teacher.get('/:id', requireAuth, validateParams(IdParamDto), teacherContr
  *       400:
  *         description: Invalid input
  */
-router_teacher.post('/', requireAuth, validateBody(CreateTeacherDto), teacherController.createTeacher);
+router_teacher.post('/', requireAuth, requireRole('superuser'), validateBody(CreateTeacherDto), teacherController.createTeacher);
 
 /**
  * @swagger
@@ -102,7 +111,7 @@ router_teacher.post('/', requireAuth, validateBody(CreateTeacherDto), teacherCon
  *       404:
  *         description: Teacher not found
  */
-router_teacher.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateTeacherDto), teacherController.updateTeacher);
+router_teacher.put('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(UpdateTeacherDto), teacherController.updateTeacher);
 
 /**
  * @swagger

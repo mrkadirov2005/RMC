@@ -26,6 +26,9 @@ interface SalariesState {
   monthlySummary: SalaryMonthlySummaryEntry[];
   monthlySummaryLoading: boolean;
   monthlySummaryError: string | null;
+  myDetail: SalaryTeacherDetail | null;
+  myDetailLoading: boolean;
+  myDetailError: string | null;
 }
 
 const initialState: SalariesState = {
@@ -41,6 +44,9 @@ const initialState: SalariesState = {
   monthlySummary: [],
   monthlySummaryLoading: false,
   monthlySummaryError: null,
+  myDetail: null,
+  myDetailLoading: false,
+  myDetailError: null,
 };
 
 export const fetchSalaryOverview = createAsyncThunk(
@@ -85,6 +91,19 @@ export const fetchSalaryMonthlySummary = createAsyncThunk(
       return Array.isArray(data?.months) ? data.months : [];
     } catch (err: any) {
       return rejectWithValue(err?.response?.data?.error ?? 'Failed to fetch monthly salary summary');
+    }
+  }
+);
+
+export const fetchMySalaryDetail = createAsyncThunk(
+  'salaries/fetchMine',
+  async (params: { months?: number } | undefined, { rejectWithValue }) => {
+    try {
+      const res = await salaryAPI.getMine(params);
+      const data = (res as any).data ?? res;
+      return data as SalaryTeacherDetail;
+    } catch (err: any) {
+      return rejectWithValue(err?.response?.data?.error ?? 'Failed to fetch your salary detail');
     }
   }
 );
@@ -187,6 +206,20 @@ const salariesSlice = createSlice({
       });
 
     builder
+      .addCase(fetchMySalaryDetail.pending, (state) => {
+        state.myDetailLoading = true;
+        state.myDetailError = null;
+      })
+      .addCase(fetchMySalaryDetail.fulfilled, (state, action: PayloadAction<SalaryTeacherDetail>) => {
+        state.myDetailLoading = false;
+        state.myDetail = action.payload;
+      })
+      .addCase(fetchMySalaryDetail.rejected, (state, action) => {
+        state.myDetailLoading = false;
+        state.myDetailError = action.payload as string;
+      });
+
+    builder
       .addCase(markSalaryPaid.pending, (state) => { state.markPaidLoading = true; })
       .addCase(markSalaryPaid.rejected, (state) => { state.markPaidLoading = false; })
       .addCase(markSalaryPaid.fulfilled, (state) => { state.markPaidLoading = false; });
@@ -212,3 +245,5 @@ export const selectSalaryTeacherDetailLoading = (state: RootState) => state.sala
 export const selectSalaryMarkPaidLoading = (state: RootState) => state.salaries.markPaidLoading;
 export const selectSalaryMonthlySummary = (state: RootState) => state.salaries.monthlySummary;
 export const selectSalaryMonthlySummaryLoading = (state: RootState) => state.salaries.monthlySummaryLoading;
+export const selectMySalaryDetail = (state: RootState) => state.salaries.myDetail;
+export const selectMySalaryDetailLoading = (state: RootState) => state.salaries.myDetailLoading;
