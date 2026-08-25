@@ -58,6 +58,12 @@ const getById = async (id: number, centerId?: number, teacherId?: number) => {
   return rows[0] || null;
 };
 
+const toDateOrNull = (value: any) => {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const create = async (payload: any) => {
   const rows = await db
     .insert(assignments)
@@ -67,8 +73,8 @@ const create = async (payload: any) => {
       assignmentTitle: payload.assignment_title,
       title: payload.title ?? payload.assignment_title,
       description: payload.description,
-      dueDate: payload.due_date,
-      submissionDate: payload.submission_date,
+      dueDate: toDateOrNull(payload.due_date),
+      submissionDate: toDateOrNull(payload.submission_date),
       status: payload.status || 'Pending',
       grade: payload.grade,
       studentId: payload.student_id,
