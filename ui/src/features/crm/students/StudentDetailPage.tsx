@@ -40,6 +40,7 @@ import { fetchPaymentsForce } from '../../../slices/paymentsSlice';
 import { fetchAssignmentsForce } from '../../../slices/assignmentsSlice';
 import { fetchGradesForce } from '../../../slices/gradesSlice';
 import { getListRowBackground } from '../settings/listAppearance';
+import { StudentOverviewCards } from './components/StudentOverviewCards';
 import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, getNextStudentAccountStatus, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
 
 interface Class {
@@ -564,41 +565,50 @@ const StudentDetailPage = () => {
                     </Button>
                   )}
                 </div>
-                <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
-                  {[
-                    { title: 'Main information', rows: overviewColumns.main },
-                    { title: 'Contact & additional information', rows: overviewColumns.additional },
-                  ].map((section) => (
-                  <section key={section.title} className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
-                    <div className="border-b bg-slate-50 px-3 py-2 dark:border-border dark:bg-muted/40">
-                      <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">{section.title}</h2>
-                    </div>
-                    <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
-                      {section.rows.map((item, index) => (
-                        <div
-                          key={item.label}
-                          data-list-row="true"
-                          className="grid min-h-9 grid-cols-[125px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[170px_minmax(0,1fr)]"
-                          style={{ backgroundColor: getListRowBackground(index) }}
-                        >
-                          <dt className="font-medium text-muted-foreground">{item.label}</dt>
-                          <dd className="min-w-0 break-words font-semibold text-slate-950 dark:text-card-foreground">
-                            {isEditingOverview && overviewDraft && STUDENT_OVERVIEW_EDIT_FIELDS[item.label] ? (
-                              <Input
-                                type={STUDENT_OVERVIEW_EDIT_FIELDS[item.label] === 'date_of_birth' ? 'date' : 'text'}
-                                value={overviewDraft[STUDENT_OVERVIEW_EDIT_FIELDS[item.label]]}
-                                onChange={(event) => setOverviewDraft((current) => current ? ({ ...current, [STUDENT_OVERVIEW_EDIT_FIELDS[item.label]]: event.target.value }) : current)}
-                                className="h-8 bg-white text-xs dark:bg-slate-900"
-                                aria-label={item.label}
-                              />
-                            ) : item.value}
-                          </dd>
-                        </div>
-                      ))}
-                    </dl>
-                  </section>
-                  ))}
-                </div>
+                {!isEditingOverview ? (
+                  <StudentOverviewCards
+                    student={student}
+                    groupName={groupName}
+                    teacherName={teacherName}
+                    coinBalance={coinBalance}
+                  />
+                ) : (
+                  <div className="grid gap-3 lg:grid-cols-2 lg:items-start">
+                    {[
+                      { title: 'Main information', rows: overviewColumns.main },
+                      { title: 'Contact & additional information', rows: overviewColumns.additional },
+                    ].map((section) => (
+                    <section key={section.title} className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
+                      <div className="border-b bg-slate-50 px-3 py-2 dark:border-border dark:bg-muted/40">
+                        <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">{section.title}</h2>
+                      </div>
+                      <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
+                        {section.rows.map((item, index) => (
+                          <div
+                            key={item.label}
+                            data-list-row="true"
+                            className="grid min-h-9 grid-cols-[125px_minmax(0,1fr)] items-center gap-3 px-3 py-2 sm:grid-cols-[170px_minmax(0,1fr)]"
+                            style={{ backgroundColor: getListRowBackground(index) }}
+                          >
+                            <dt className="font-medium text-muted-foreground">{item.label}</dt>
+                            <dd className="min-w-0 break-words font-semibold text-slate-950 dark:text-card-foreground">
+                              {overviewDraft && STUDENT_OVERVIEW_EDIT_FIELDS[item.label] ? (
+                                <Input
+                                  type={STUDENT_OVERVIEW_EDIT_FIELDS[item.label] === 'date_of_birth' ? 'date' : 'text'}
+                                  value={overviewDraft[STUDENT_OVERVIEW_EDIT_FIELDS[item.label]]}
+                                  onChange={(event) => setOverviewDraft((current) => current ? ({ ...current, [STUDENT_OVERVIEW_EDIT_FIELDS[item.label]]: event.target.value }) : current)}
+                                  className="h-8 bg-white text-xs dark:bg-slate-900"
+                                  aria-label={item.label}
+                                />
+                              ) : item.value}
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </section>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

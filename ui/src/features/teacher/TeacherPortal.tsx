@@ -15,6 +15,7 @@ import {
   ClipboardCopy,
   ClipboardCheck,
   UserRound,
+  LogOut,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -49,6 +50,7 @@ import { fetchAttendance } from '../../slices/attendanceSlice';
 import { fetchAssignments } from '../../slices/assignmentsSlice';
 import { fetchGrades } from '../../slices/gradesSlice';
 import { fetchPayments } from '../../slices/paymentsSlice';
+import { logout } from '../../slices/authSlice';
 import { selectTeacherPortalUi } from '../../store/selectors';
 import { useLanguage } from '../../i18n/LanguageContext';
 import TestsPage from '../crm/tests/TestsPage';
@@ -230,7 +232,7 @@ const TeacherPortal = () => {
                     <Bell className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('Notifications')}</TooltipContent>
+                <TooltipContent side="bottom" sideOffset={8}>{t('Notifications')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <TooltipProvider>
@@ -240,9 +242,22 @@ const TeacherPortal = () => {
                     <Clock className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
-                <TooltipContent>{t('Schedule')}</TooltipContent>
+                <TooltipContent side="bottom" sideOffset={8}>{t('Schedule')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <Button
+              type="button"
+              variant="outline"
+              aria-label={t('Logout')}
+              onClick={() => {
+                dispatch(logout());
+                navigate('/login/teacher', { replace: true });
+              }}
+              className="border-white/30 bg-white/10 text-white hover:bg-red-500/80 hover:text-white"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              {t('Logout')}
+            </Button>
           </>
         }
       />
