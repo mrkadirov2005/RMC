@@ -36,6 +36,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const assignmentRoutes = require('./routes/assignmentRoutes');
   const teacherTaskRoutes = require('./routes/teacherTaskRoutes');
   const salaryRoutes = require('./routes/salaryRoutes');
+  const kpiRoutes = require('./routes/kpiRoutes');
   const subjectRoutes = require('./routes/subjectRoutes');
   const superuserRoutes = require('./routes/superuserRoutes');
   const ownerRoutes = require('./routes/ownerRoutes');
@@ -113,6 +114,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/assignments', requireAuth, requireRole('superuser', 'teacher'), assignmentRoutes);
   app.use('/api/teacher-tasks', requireAuth, requireRole('superuser', 'teacher'), teacherTaskRoutes);
   app.use('/api/salaries', requireAuth, requireRole('superuser', 'teacher'), salaryRoutes);
+  app.use('/api/kpis', requireAuth, requireRole('superuser'), kpiRoutes);
   app.use('/api/subjects', requireAuth, requireRole('superuser', 'teacher'), subjectRoutes);
   app.use('/api/superusers', requireAuth, requireRole('superuser'), superuserRoutes);
   app.use('/api/owners', requireAuth, requireOwner, ownerRoutes);

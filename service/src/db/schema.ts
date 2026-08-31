@@ -75,6 +75,26 @@ const teacherSalaries = pgTable('teacher_salaries', {
   updatedAt: timestamp('updated_at'),
 });
 
+const teacherKpis = pgTable('teacher_kpis', {
+  kpiId: serial('kpi_id').primaryKey(),
+  centerId: integer('center_id'),
+  teacherId: integer('teacher_id').notNull(),
+  kpiYear: integer('kpi_year').notNull(),
+  kpiMonth: integer('kpi_month').notNull(),
+  studentScore: numeric('student_score').notNull(),
+  retentionScore: numeric('retention_score').notNull(),
+  contributionScore: numeric('contribution_score').notNull(),
+  teachingQualityScore: numeric('teaching_quality_score').notNull(),
+  finalScore: numeric('final_score').notNull(),
+  notes: text('notes'),
+  markedById: integer('marked_by_id'),
+  markedByUserType: varchar('marked_by_user_type', { length: 20 }),
+  markedByRole: varchar('marked_by_role', { length: 50 }),
+  markedByName: varchar('marked_by_name', { length: 200 }),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
+});
+
 const notifications = pgTable('notifications', {
   notificationId: serial('notification_id').primaryKey(),
   centerId: integer('center_id'),
@@ -774,6 +794,7 @@ module.exports = {
   savedFilters,
   teacherTasks,
   teacherSalaries,
+  teacherKpis,
   notifications,
   teacherPaymentCredentials,
   centers,

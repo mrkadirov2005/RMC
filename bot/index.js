@@ -29,12 +29,14 @@ const MAIN_KEYBOARD = {
 const AUTH_KEYBOARD = {
   keyboard: [
     [{ text: '📚 Darslar' }, { text: '🕘 Oxirgi dars' }],
-    [{ text: "🏆 O'rin" }, { text: "💳 To'lovlar" }],
-    [{ text: '📊 Natijalar' }],
+    [{ text: '📝 Vazifalar' }, { text: "🏆 O'rin" }],
+    [{ text: "💳 To'lovlar" }, { text: '📊 Natijalar' }],
     [{ text: '🚪 Chiqish' }],
   ],
   resize_keyboard: true,
 };
+
+const TASKS_PAGE_SIZE = 5;
 
 const RESULTS_PAGE_SIZE = 5;
 
@@ -532,6 +534,27 @@ async function getLastSessionDetails(studentId, classId) {
   };
 }
 
+async function getStudentTasks(studentId, classId) {
+  const result = await pool.query(
+    `SELECT
+       assignment_id,
+       assignment_title,
+       title,
+       description,
+       due_date,
+       status,
+       grade,
+       class_id
+     FROM assignments
+     WHERE deleted_at IS NULL
+       AND (student_id = $1 OR class_id = $2)
+     ORDER BY due_date DESC NULLS LAST, assignment_id DESC
+     LIMIT $3`,
+    [studentId, classId, TASKS_PAGE_SIZE]
+  );
+  return result.rows;
+}
+
 function classKeyboard(classes) {
   return {
     inline_keyboard: classes.map((row) => [
@@ -619,6 +642,31 @@ function lastSessionText(details) {
 
   lines.push('', `🪙 <b>Coins</b>: ${coins ? `${coins.delta} (${coins.reason || 'lesson'})` : '-'}`);
   return lines.join('\n');
+}
+
+function taskStatusText(status) {
+  if (status === 'Graded') return '✅ Baholangan';
+  if (status === 'Submitted') return '📤 Topshirilgan';
+  return '⏳ Bajarilmagan';
+}
+
+function tasksText(tasks) {
+  if (!tasks.length) return ['📝 <b>Vazifalar</b>', '', "Hozircha vazifa topilmadi."].join('\n');
+  const rows = tasks.map((task, index) => {
+    const number = index + 1;
+    const title = task.assignment_title || task.title || 'Vazifa';
+    const isDone = task.status === 'Submitted' || task.status === 'Graded';
+    const lines = [
+      `${number}. 📘 <b>${title}</b>`,
+      `📅 Muddat: ${formatDate(task.due_date)}`,
+      `${isDone ? '✅' : '⏳'} Holat: ${taskStatusText(task.status)}`,
+    ];
+    if (task.status === 'Graded' && task.grade != null) {
+      lines.push(`🎯 Baho: ${moneyOrNumber(task.grade)}`);
+    }
+    return lines.join('\n');
+  });
+  return [`📝 <b>Vazifalar</b>`, `(Oxirgi ${tasks.length} ta)`, '', ...rows].join('\n\n');
 }
 
 function rankSummaryText(title, row) {
@@ -822,6 +870,29 @@ async function showLastSession(chatId) {
   await sendMessage(chatId, lastSessionText(details), { reply_markup: AUTH_KEYBOARD });
 }
 
+async function showTasks(chatId) {
+  const session = sessions.get(chatId);
+  if (!session) {
+    await sendMessage(chatId, '🔐 Avval Kirish tugmasi orqali tizimga kiring.', { reply_markup: MAIN_KEYBOARD });
+    return;
+  }
+
+  let classId = session.selectedClassId;
+  let studentId = session.selectedStudentId || session.student_id;
+
+  if (!classId) {
+    const classes = await getStudentClasses(session);
+    const latest = classes[0];
+    if (latest) {
+      classId = latest.class_id;
+      studentId = latest.student_id;
+    }
+  }
+
+  const tasks = await getStudentTasks(studentId, classId || null);
+  await sendMessage(chatId, tasksText(tasks), { reply_markup: AUTH_KEYBOARD });
+}
+
 async function showRankMenu(chatId) {
   const session = sessions.get(chatId);
   if (!session) {
@@ -926,6 +997,11 @@ async function handleMessage(message) {
 
   if (text === 'Oxirgi dars' || text === '🕘 Oxirgi dars') {
     await showLastSession(chatId);
+    return;
+  }
+
+  if (text === 'Vazifalar' || text === '📝 Vazifalar') {
+    await showTasks(chatId);
     return;
   }
 

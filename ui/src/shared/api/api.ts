@@ -411,6 +411,15 @@ export const salaryAPI = {
     apiClient.get('/salaries/me', { params }),
 };
 
+export const kpiAPI = {
+  getOverview: (params?: { year?: number; month?: number; center_id?: number }) =>
+    apiClient.get('/kpis', { params }),
+  getTeacherDetail: (teacherId: number, params?: { center_id?: number }) =>
+    apiClient.get(`/kpis/teacher/${teacherId}`, { params }),
+  upsert: (data: { teacher_id: number; kpi_year: number; kpi_month: number; contribution_score: number; teaching_quality_score: number; notes?: string }) =>
+    apiClient.post('/kpis', data),
+};
+
 export const debtAPI = {
   getAll: () => apiClient.get('/debts'),
   getById: (id: number) => apiClient.get(`/debts/${id}`),

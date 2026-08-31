@@ -23,6 +23,7 @@ const StudentFormPage = lazy(() => import('./features/crm/students/StudentFormPa
 const StudentDetailPage = lazy(() => import('./features/crm/students/StudentDetailPage'));
 const TeachersPage = lazy(() => import('./features/crm/teachers/TeachersPage'));
 const TeacherDetailPage = lazy(() => import('./features/crm/teachers/TeacherDetailPage'));
+const TeacherKpiDetailPage = lazy(() => import('./features/crm/teachers/kpi/TeacherKpiDetailPage'));
 const PaymentsPage = lazy(() => import('./features/crm/payments/PaymentsPage'));
 const PaymentFormPage = lazy(() => import('./features/crm/payments/PaymentFormPage'));
 const ClassesPage = lazy(() => import('./features/crm/classes/ClassesPage'));
@@ -474,6 +475,19 @@ function AppContent() {
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <TeacherDetailPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/teachers/:teacherId/kpi"
+          element={
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_TEACHER}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <TeacherKpiDetailPage />
                 </Suspense>
               </Layout>
             </ProtectedRoute>

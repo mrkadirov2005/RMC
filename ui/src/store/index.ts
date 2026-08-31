@@ -17,6 +17,7 @@ import assignmentsReducer from '../slices/assignmentsSlice';
 import teacherTasksReducer from '../slices/teacherTasksSlice';
 import debtsReducer from '../slices/debtsSlice';
 import salariesReducer from '../slices/salariesSlice';
+import kpisReducer from '../slices/kpisSlice';
 import centersReducer from '../slices/centersSlice';
 import testsReducer from '../slices/testsSlice';
 import roomsReducer from '../slices/roomsSlice';
@@ -48,6 +49,7 @@ export const store = configureStore({
     teacherTasks: teacherTasksReducer,
     debts: debtsReducer,
     salaries: salariesReducer,
+    kpis: kpisReducer,
     centers: centersReducer,
     tests: testsReducer,
     rooms: roomsReducer,

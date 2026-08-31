@@ -22,3 +22,4 @@ Required:
 - `Darslar` lists the groups/classes connected to that student account.
 - Choosing a class shows performance for that student in that class.
 - `Oxirgi dars` shows the latest session details, scores, attendance, and coins for the selected class.
+- `Vazifalar` shows the last 5 assignments visible to the student (class-wide assignments for the selected class plus any personal assignments), each with its status (Pending/Submitted/Graded) and the grade if it has been graded.
