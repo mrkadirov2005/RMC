@@ -106,7 +106,7 @@ export const useOwnerManager = () => {
   const [crossCounts, setCrossCounts] = useState({ students: 0, teachers: 0, classes: 0 });
   const [pendingStudentDelete, setPendingStudentDelete] = useState<{ id: number; hard: boolean } | null>(null);
 
-  const needsCenterScope = activeTab === 'superusers' || activeTab === 'students';
+  const needsCenterScope = activeTab === 'superusers' || activeTab === 'students' || activeTab === 'statistics';
 
 // Memoizes the center lookup derived value.
   const centerLookup = useMemo(() => {
@@ -123,7 +123,7 @@ export const useOwnerManager = () => {
 // Memoizes the columns derived value.
   const columns = useMemo(() => buildColumns(activeTab), [activeTab]);
   const activeCenterLabel =
-    activeTab === 'statistics' || activeTab === 'finance' || activeTab === 'teachers'
+    activeTab === 'finance' || activeTab === 'teachers'
       ? 'All centers'
       : activeCenterId
         ? centerLookup.get(Number(activeCenterId)) || `Center ${activeCenterId}`
@@ -175,7 +175,36 @@ export const useOwnerManager = () => {
         return;
       }
 
-      if (activeTab === 'statistics' || activeTab === 'finance') {
+      // "Statistics" is where the owner checks numbers for whichever branch they just picked -
+      // it needs to follow the active center like the rest of the page. "Finance" intentionally
+      // stays a cross-branch rollup (an owner reconciling totals across all their branches), so
+      // it keeps using the *AcrossCenters fetches unscoped by the branch switcher.
+      if (activeTab === 'statistics') {
+        if (!activeCenterId) {
+          setStatisticsCollections({ students: [], teachers: [], classes: [], payments: [], discounts: [], deletedStudents: [] });
+          dispatch(setOwnerManagerData([]));
+          return;
+        }
+        const [studentsRes, teachersRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
+          ownerManagerApi.students.getAll(),
+          ownerManagerApi.teachers.getAll(),
+          ownerManagerApi.classes.getAll(),
+          ownerManagerApi.payments.getAll(),
+          canHardDelete ? ownerManagerApi.students.getDeleted() : Promise.resolve({ data: [] }),
+        ]);
+
+        const students = Array.isArray(studentsRes) ? studentsRes : studentsRes.data || [];
+        const teachers = Array.isArray(teachersRes) ? teachersRes : teachersRes.data || [];
+        const classes = Array.isArray(classesRes) ? classesRes : classesRes.data || [];
+        const payments = Array.isArray(paymentsRes) ? paymentsRes : paymentsRes.data || [];
+        const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
+
+        setStatisticsCollections({ students, teachers, classes, payments, discounts: [], deletedStudents });
+        dispatch(setOwnerManagerData(students));
+        return;
+      }
+
+      if (activeTab === 'finance') {
         const [studentsRes, teachersRes, classesRes, paymentsRes, deletedStudentsRes] = await Promise.all([
           ownerManagerApi.students.getAllAcrossCenters(),
           ownerManagerApi.teachers.getAllAcrossCenters(),
@@ -191,7 +220,7 @@ export const useOwnerManager = () => {
         const deletedStudents = Array.isArray(deletedStudentsRes) ? deletedStudentsRes : deletedStudentsRes.data || [];
 
         setStatisticsCollections({ students, teachers, classes, payments, discounts: [], deletedStudents });
-        dispatch(setOwnerManagerData(activeTab === 'finance' ? teachers : students));
+        dispatch(setOwnerManagerData(teachers));
         return;
       }
 

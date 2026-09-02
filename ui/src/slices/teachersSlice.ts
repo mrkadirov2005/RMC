@@ -47,6 +47,12 @@ interface TeachersState {
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  // True only when `items`/`meta` came from an unparameterized fetch (the full roster) - see
+  // the matching flag in studentsSlice.ts for why a size-based "looks complete" heuristic isn't
+  // safe here: a scoped, paginated/searched fetch (e.g. the Teachers page's own search+page
+  // params) can look "complete" by that heuristic too, and would otherwise get reused as if it
+  // were the full list by a page that actually wants everyone.
+  lastFetchWasFull: boolean;
   meta: TeachersMeta;
   activeListRequestId: string | null;
 }
@@ -56,6 +62,7 @@ const initialState: TeachersState = {
   loading: false,
   error: null,
   lastFetched: null,
+  lastFetchWasFull: false,
   meta: { total: 0, page: 1, limit: 20 },
   activeListRequestId: null,
 };
@@ -68,8 +75,8 @@ export const fetchTeachers = createAsyncThunk(
   'teachers/fetchAll',
   async (params: TeacherListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
-    const { lastFetched } = state.teachers;
-    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) {
+    const { lastFetched, lastFetchWasFull } = state.teachers;
+    if (!params && lastFetched && lastFetchWasFull && Date.now() - lastFetched < CACHE_TTL_MS) {
       return null; // use cached data
     }
     try {
@@ -209,6 +216,7 @@ const teachersSlice = createSlice({
           state.items = action.payload.items;
           state.meta = action.payload.meta;
           state.lastFetched = Date.now();
+          state.lastFetchWasFull = !action.meta.arg;
         }
       })
       .addCase(fetchTeachers.rejected, (state, action) => {
@@ -228,6 +236,7 @@ const teachersSlice = createSlice({
         state.items = action.payload.items;
         state.meta = action.payload.meta;
         state.lastFetched = Date.now();
+        state.lastFetchWasFull = !action.meta.arg;
       })
       .addCase(fetchTeachersForce.rejected, (state, action) => {
         if (state.activeListRequestId !== action.meta.requestId) return;

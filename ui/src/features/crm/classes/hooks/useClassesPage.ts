@@ -30,7 +30,7 @@ interface AttendanceRecord {
 }
 
 // Provides classes page.
-export const useClassesPage = () => {
+export const useClassesPage = (onSaved?: () => void) => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 // Handles is owner.
@@ -190,6 +190,7 @@ export const useClassesPage = () => {
         dispatch(fetchSubjectsForce()),
       ]);
       handleCloseModal();
+      onSaved?.();
     } catch (error) {
       showToast.error(handleApiError(error) || 'Error saving class');
     }

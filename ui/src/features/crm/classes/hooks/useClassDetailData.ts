@@ -26,6 +26,7 @@ export type ClassDetailStudent = {
   student_id?: number;
   id?: number;
   class_id?: number;
+  previous_class_id?: number | null;
   first_name?: string;
   last_name?: string;
   enrollment_number?: string;
@@ -58,6 +59,8 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
   const [assignedTests, setAssignedTests] = useState<AssignedTestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reloadToken, setReloadToken] = useState(0);
+  const refetch = () => setReloadToken((token) => token + 1);
 
   useEffect(() => {
     let cancelled = false;
@@ -115,10 +118,11 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
     return () => {
       cancelled = true;
     };
-  }, [authUser, classId]);
+  }, [authUser, classId, reloadToken]);
 
   return {
     classData,
+    setClassData,
     students,
     setStudents,
     subjects,
@@ -127,5 +131,6 @@ export const useClassDetailData = (classId: string | undefined, authUser: any) =
     assignedTests,
     loading,
     error,
+    refetch,
   };
 };

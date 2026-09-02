@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CalendarCheck, CheckCircle2, Coins, FileQuestion, Loader2, Pencil, PencilLine, PlayCircle, Star, Trash2 } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, CheckCircle2, Coins, FileQuestion, Loader2, Pencil, PencilLine, PlayCircle, Star, Trash2, UserCog } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,14 +14,19 @@ import { classAPI } from './api';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppSelector } from '../hooks';
 import { ClassMonthlyPointsView } from './components/ClassMonthlyPointsView';
+import { ClassDialogs } from './components/ClassDialogs';
 import { CLASS_DETAIL_TAB_THEME_CLASS, CLASS_OVERVIEW_FIELDS, DEFAULT_CLASS_DETAIL_TAB } from './classDetailOverview';
 import { getListRowBackground } from '../settings/listAppearance';
 import { useClassDetailData } from './hooks/useClassDetailData';
+import { useClassesPage } from './hooks/useClassesPage';
 import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
 import { toDateKey } from './utils/date';
 import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
+import { mergeRoomInventories } from './classFormOptions';
+import { isIncomingTransfer, isTransferredStudentStatus, INCOMING_TRANSFER_VARIANT } from '../students/status';
 import { studentsApi } from '../students/api/studentsApi';
 import { DeleteStudentDialog } from '../students/components/DeleteStudentDialog';
 import { getClassStudentId, removeClassStudentById } from './classStudentActions';
@@ -29,6 +34,19 @@ import { getClassStudentId, removeClassStudentById } from './classStudentActions
 type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
 
 const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
+
+// Overview rows that get an inline "Edit"/"Assign" button opening the full class editor.
+// "Students" and "Capacity" are computed from actual enrollment, not raw editable fields.
+const EDITABLE_OVERVIEW_FIELDS = new Set([
+  'Teacher',
+  'Lesson days',
+  'Lesson time',
+  'Room',
+  'Subjects',
+  'Tuition',
+  'Level',
+  'Group code',
+]);
 
 const lessonActionOptions: Array<{ id: LessonAction; label: string; detail: string; icon: typeof CalendarCheck }> = [
   { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
@@ -42,7 +60,13 @@ const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
   const authUser = useAppSelector((state) => state.auth.user);
-  const { classData, students, setStudents, subjects, sessions, setSessions, assignedTests, loading, error } = useClassDetailData(classId, authUser);
+  const { classData, students, setStudents, subjects, sessions, setSessions, assignedTests, loading, error, refetch } = useClassDetailData(classId, authUser);
+  const { t } = useLanguage();
+  const classesPage = useClassesPage(refetch);
+  const roomOptions = useMemo(
+    () => mergeRoomInventories(classesPage.physicalRooms, classesPage.rooms, classesPage.formData.room_number),
+    [classesPage.physicalRooms, classesPage.rooms, classesPage.formData.room_number]
+  );
   const [startingLesson, setStartingLesson] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
@@ -178,6 +202,10 @@ const ClassDetailPage = () => {
     }
   };
 
+  const handleOpenClassEditor = () => {
+    if (classData) classesPage.handleOpenModal(classData as any);
+  };
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -279,6 +307,37 @@ const ClassDetailPage = () => {
         onConfirm={handleDeleteStudent}
       />
 
+      <ClassDialogs
+        t={t}
+        isModalOpen={classesPage.isModalOpen}
+        editingId={classesPage.editingId}
+        formData={classesPage.formData}
+        setFormData={classesPage.setFormData}
+        centerOptions={classesPage.centerOptions}
+        teacherOptions={classesPage.teacherOptions}
+        subjectOptions={classesPage.subjectOptions}
+        roomOptions={roomOptions}
+        roomConflict={classesPage.roomConflict}
+        selectedDays={classesPage.selectedDays}
+        scheduleTime={classesPage.scheduleTime}
+        scheduleEndTime={classesPage.scheduleEndTime}
+        setScheduleTime={classesPage.setScheduleTime}
+        setScheduleEndTime={classesPage.setScheduleEndTime}
+        handleDayChange={classesPage.handleDayChange}
+        weekDays={classesPage.weekDays}
+        handleCloseModal={classesPage.handleCloseModal}
+        handleSubmit={classesPage.handleSubmit}
+        frequencyOptions={classesPage.frequencyOptions}
+        isOwner={classesPage.isOwner}
+        loading={classesPage.state.loading}
+        deleteModalOpen={false}
+        deleteTarget={null}
+        deleteAttendance={[]}
+        deleteLoading={false}
+        handleCloseDeleteModal={() => {}}
+        handleForceDelete={() => {}}
+      />
+
       <Tabs defaultValue={DEFAULT_CLASS_DETAIL_TAB} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
           <TabsTrigger value="overview" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Overview</TabsTrigger>
@@ -292,8 +351,18 @@ const ClassDetailPage = () => {
         <div className="p-3">
           <TabsContent value="overview" className="mt-0">
             <div className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
-              <div className="border-b bg-slate-50 px-3 py-2 dark:bg-muted/40">
+              <div className="flex items-center justify-between border-b bg-slate-50 px-3 py-2 dark:bg-muted/40">
                 <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">General information</h2>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="h-7 gap-1 px-2 text-xs font-semibold"
+                  onClick={handleOpenClassEditor}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit details
+                </Button>
               </div>
               <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
                 {overviewItems.map((item, index) => (
@@ -304,7 +373,21 @@ const ClassDetailPage = () => {
                     style={{ backgroundColor: getListRowBackground(index) }}
                   >
                     <dt className="font-medium text-muted-foreground">{item.label}</dt>
-                    <dd className="min-w-0 break-words font-semibold text-slate-950 dark:text-card-foreground">{item.value}</dd>
+                    <dd className="flex min-w-0 flex-wrap items-center gap-2 break-words font-semibold text-slate-950 dark:text-card-foreground">
+                      <span className="min-w-0 break-words">{item.value}</span>
+                      {EDITABLE_OVERVIEW_FIELDS.has(item.label) && (
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="h-7 gap-1 px-2 text-xs font-semibold"
+                          onClick={handleOpenClassEditor}
+                        >
+                          {item.label === 'Teacher' ? <UserCog className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
+                          {item.label === 'Teacher' ? (classData?.teacher_id ? 'Change' : 'Assign') : 'Edit'}
+                        </Button>
+                      )}
+                    </dd>
                   </div>
                 ))}
               </dl>
@@ -325,9 +408,19 @@ const ClassDetailPage = () => {
                 {studentRows.length === 0 ? (
                   <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
                 ) : studentRows.map((student, index) => {
-                  const isTransferred = String(student.status || '').toLowerCase() === 'transferred';
+                  const isTransferred = isTransferredStudentStatus(student.status);
+                  const isIncoming = !isTransferred && isIncomingTransfer(student);
                   return (
-                  <TableRow key={student.student_id || student.id} className={isTransferred ? 'text-muted-foreground dark:text-slate-300' : 'text-slate-950 hover:bg-sky-50/60 dark:text-slate-100 dark:hover:bg-slate-700'}>
+                  <TableRow
+                    key={student.student_id || student.id}
+                    className={
+                      isTransferred
+                        ? 'bg-rose-50/70 text-muted-foreground dark:bg-rose-950/20 dark:text-slate-300'
+                        : isIncoming
+                          ? 'bg-emerald-50/70 text-slate-950 dark:bg-emerald-950/20 dark:text-slate-100'
+                          : 'text-slate-950 hover:bg-sky-50/60 dark:text-slate-100 dark:hover:bg-slate-700'
+                    }
+                  >
                     <TableCell className="py-2 font-semibold">
                       <div className="flex items-center gap-2">
                         <div className="text-slate-950 dark:text-slate-100">
@@ -337,8 +430,14 @@ const ClassDetailPage = () => {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge className={isTransferred ? 'bg-amber-500 text-black hover:bg-amber-500 dark:bg-amber-600 dark:text-white dark:hover:bg-amber-600' : 'bg-emerald-600 text-black hover:bg-emerald-600 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-700'}>
-                        {isTransferred ? 'Transferred' : student.status || '-'}
+                      <Badge className={
+                        isTransferred
+                          ? 'bg-rose-500 text-black hover:bg-rose-500 dark:bg-rose-600 dark:text-white dark:hover:bg-rose-600'
+                          : isIncoming
+                            ? `${INCOMING_TRANSFER_VARIANT} hover:bg-emerald-100 dark:hover:bg-emerald-950/60`
+                            : 'bg-emerald-600 text-black hover:bg-emerald-600 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-700'
+                      }>
+                        {isTransferred ? 'Transferred' : isIncoming ? 'New (Transferred)' : student.status || '-'}
                       </Badge>
                     </TableCell>
                     <TableCell>{student.phone || '-'}</TableCell>

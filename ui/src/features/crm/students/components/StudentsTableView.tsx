@@ -17,7 +17,7 @@ import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
 import { formatGroupLabel } from '@/shared/groupLabel';
-import { getStatusVariant, isTransferredStudentStatus } from '../status';
+import { getStatusVariant, isTransferredStudentStatus, isIncomingTransfer, INCOMING_TRANSFER_VARIANT } from '../status';
 import { ActionReasonPicker, isReasonReady, resolveReasonId } from './ActionReasonPicker';
 import { DeleteStudentDialog } from './DeleteStudentDialog';
 
@@ -240,15 +240,29 @@ export const StudentsTableView = ({
   const getSchoolClass = (student: Student) => student.school_class || '-';
   const getPhone = (student: Student) => student.phone || student.parent_phone || '-';
   const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none';
+  const getTransferRowClass = (student: Student) => {
+    if (isTransferredStudentStatus(student.status)) return 'bg-rose-50/70 dark:bg-rose-950/20';
+    if (isIncomingTransfer(student)) return 'bg-emerald-50/70 dark:bg-emerald-950/20';
+    return '';
+  };
   const renderTransferredChip = (student: Student) => {
-    if (!isTransferredStudentStatus(student.status)) return null;
-
-    return (
-      <span className={`${chipClass} border ${getStatusVariant(student.status)}`}>
-        <ArrowRightLeft className="h-3 w-3" />
-        Transferred
-      </span>
-    );
+    if (isTransferredStudentStatus(student.status)) {
+      return (
+        <span className={`${chipClass} border ${getStatusVariant(student.status)}`} title="Transferred out of this group">
+          <ArrowRightLeft className="h-3 w-3" />
+          Transferred
+        </span>
+      );
+    }
+    if (isIncomingTransfer(student)) {
+      return (
+        <span className={`${chipClass} border ${INCOMING_TRANSFER_VARIANT}`} title="Transferred into this group">
+          <ArrowRightLeft className="h-3 w-3" />
+          New (Transferred)
+        </span>
+      );
+    }
+    return null;
   };
   const formatMoney = (value: unknown) => {
     const amount = Number(value || 0);
@@ -457,6 +471,7 @@ export const StudentsTableView = ({
                 key={student.student_id || student.id}
                 className={cn(
                   'relative overflow-hidden border-slate-200/80 bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-border dark:bg-card dark:hover:translate-y-0',
+                  viewMode !== 'cards' && getTransferRowClass(student),
                   viewMode === 'cards' && [
                     'border-0 text-white',
                     index % 4 === 0 && 'bg-sky-600',
@@ -610,7 +625,10 @@ export const StudentsTableView = ({
             </TableRow>
           ) : (
             students.map((student, index) => (
-              <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
+              <TableRow
+                key={student.student_id || student.id}
+                className={cn('hover:bg-sky-50/60 dark:hover:bg-muted/50', getTransferRowClass(student))}
+              >
                 <TableCell className="px-2 py-2">
                   <input
                     type="checkbox"

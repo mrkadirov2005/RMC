@@ -1,7 +1,0 @@
-{
-  "students": 505,
-  "teachers": 26,
-  "classes": 26,
-  "sample_payments": 379,
-  "output_dir": "docs/batching/one_group_import_bundle"
-}

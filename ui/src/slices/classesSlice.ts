@@ -1,7 +1,6 @@
 // Source file for classesSlice.
 
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
 import { classAPI } from '../shared/api/api';
 import { handleApiError, showToast } from '../utils/toast';
 import type { RootState } from '../store';
@@ -42,6 +41,10 @@ interface ClassesState {
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  // True only when `items`/`meta` came from an unparameterized fetch (the full roster) - see
+  // the matching flag in studentsSlice.ts: a scoped fetch (e.g. a teacher portal's own
+  // `{ teacher_id }` fetch) shouldn't get reused as if it were everyone's classes.
+  lastFetchWasFull: boolean;
   meta: ClassesMeta;
 }
 
@@ -50,6 +53,7 @@ const initialState: ClassesState = {
   loading: false,
   error: null,
   lastFetched: null,
+  lastFetchWasFull: false,
   meta: { total: 0, page: 1, limit: 20 },
 };
 
@@ -59,8 +63,8 @@ export const fetchClasses = createAsyncThunk(
   'classes/fetchAll',
   async (params: ClassListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
-    const { lastFetched } = state.classes;
-    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS) return null;
+    const { lastFetched, lastFetchWasFull } = state.classes;
+    if (!params && lastFetched && lastFetchWasFull && Date.now() - lastFetched < CACHE_TTL_MS) return null;
     try {
       const res = await classAPI.getAll(params);
 // Handles data.
@@ -162,16 +166,25 @@ const classesSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchClasses.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchClasses.fulfilled, (state, action: PayloadAction<{ items: Class[]; meta: ClassesMeta } | null>) => {
+      .addCase(fetchClasses.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.payload !== null) { state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now(); }
+        if (action.payload !== null) {
+          state.items = action.payload.items;
+          state.meta = action.payload.meta;
+          state.lastFetched = Date.now();
+          state.lastFetchWasFull = !action.meta.arg;
+        }
       })
       .addCase(fetchClasses.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 
     builder
       .addCase(fetchClassesForce.pending, (state) => { state.loading = true; state.error = null; })
-      .addCase(fetchClassesForce.fulfilled, (state, action: PayloadAction<{ items: Class[]; meta: ClassesMeta }>) => {
-        state.loading = false; state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now();
+      .addCase(fetchClassesForce.fulfilled, (state, action) => {
+        state.loading = false;
+        state.items = action.payload.items;
+        state.meta = action.payload.meta;
+        state.lastFetched = Date.now();
+        state.lastFetchWasFull = !action.meta.arg;
       })
       .addCase(fetchClassesForce.rejected, (state, action) => { state.loading = false; state.error = action.payload as string; });
 

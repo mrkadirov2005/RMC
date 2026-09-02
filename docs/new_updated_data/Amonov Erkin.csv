@@ -1,0 +1,67 @@
+enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_name,teacher_employee_id,class_name,school_name,school_class
+STU-NEW-00084,Amina,Gʻafforqulova,amina@temurbekschool.local,+998952381036,2010-01-01,Unknown Parent,+998971234567,Male,Active,amina,012345678,Amonov Erkin,TCH-004,A2 flyers,154,8
+STU-NEW-00085,Muqaddas,Ikromova,muqaddas@temurbekschool.local,+998991219650,2010-01-01,Unknown Parent,+998971234567,Male,Active,muqaddas,012345678,Amonov Erkin,TCH-004,A2 flyers,71,9
+STU-NEW-00086,Farrux,Isomov,farrux@temurbekschool.local,+998941816655,2010-01-01,Unknown Parent,+998971234567,Male,Active,farrux,012345678,Amonov Erkin,TCH-004,A2 flyers,Unknown School,10
+STU-NEW-00087,Azizbek,Joʻramurodov,azizbek2@temurbekschool.local,+998945721232,2010-01-01,Unknown Parent,+998971234567,Male,Active,azizbek2,012345678,Amonov Erkin,TCH-004,A2 flyers,48,8
+STU-NEW-00088,Zayniddin,Joʻraqulov,zayniddin@temurbekschool.local,+998972888990,2010-01-01,Unknown Parent,+998971234567,Male,Active,zayniddin,012345678,Amonov Erkin,TCH-004,A2 flyers,83,8
+STU-NEW-00089,Jasurbek,Maqsatov,jasurbek@temurbekschool.local,+998993802950,2010-01-01,Unknown Parent,+998971234567,Male,Active,jasurbek,012345678,Amonov Erkin,TCH-004,A2 flyers,48,7
+STU-NEW-00090,Dilnura,Rajabboyeva,dilnura3@temurbekschool.local,+998943485955,2010-01-01,Unknown Parent,+998971234567,Male,Active,dilnura3,012345678,Amonov Erkin,TCH-004,A2 flyers,36,3
+STU-NEW-00091,Samirjon,Raxmonberdiyev,samirjon@temurbekschool.local,+998990268413,2010-01-01,Unknown Parent,+998971234567,Male,Active,samirjon,012345678,Amonov Erkin,TCH-004,A2 flyers,48,7
+STU-NEW-00092,Shoxrux,Valiyev,shoxrux@temurbekschool.local,+998992868776,2010-01-01,Unknown Parent,+998971234567,Male,Active,shoxrux,012345678,Amonov Erkin,TCH-004,A2 flyers,48,9
+STU-NEW-00093,Aminjon,Sharopov,aminjon@temurbekschool.local,+998882880337,2010-01-01,Unknown Parent,+998971234567,Male,Active,aminjon,012345678,Amonov Erkin,TCH-004,A2 flyers,1,7
+STU-NEW-00094,Farzoda,Qurbonboyeva,farzoda@temurbekschool.local,+998990268413,2010-01-01,Unknown Parent,+998971234567,Male,Active,farzoda,012345678,Amonov Erkin,TCH-004,A2 flyers,48,7
+STU-NEW-00095,Nilufar,Sadullayeva,nilufar@temurbekschool.local,+998992868776,2010-01-01,Unknown Parent,+998971234567,Male,Active,nilufar,012345678,Amonov Erkin,TCH-004,A2 flyers,48,9
+STU-NEW-00096,Zuxra,Namozova,zuxra@temurbekschool.local,+998882880337,2010-01-01,Unknown Parent,+998971234567,Male,Active,zuxra,012345678,Amonov Erkin,TCH-004,A2 flyers,1,7
+STU-NEW-00097,Sunbula,Yusupova,sunbula@temurbekschool.local,+998952484820,2010-01-01,Unknown Parent,+998971234567,Male,Active,sunbula,012345678,Amonov Erkin,TCH-004,A2 flyers,7,7
+STU-NEW-00098,Muhammadumar,Azamov,muhammadumar@temurbekschool.local,+998949457212,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhammadumar,012345678,Amonov Erkin,TCH-004,A2 flyers,6,4
+STU-NEW-00099,Abdulquddus,Azamov,abdulquddus@temurbekschool.local,+998949457212,2010-01-01,Unknown Parent,+998971234567,Male,Active,abdulquddus,012345678,Amonov Erkin,TCH-004,A2 flyers,6,4
+STU-NEW-00100,Ulug`bek,Olimov,ulugbek2@temurbekschool.local,+998932760732,2010-01-01,Unknown Parent,+998971234567,Male,Active,ulugbek2,012345678,Amonov Erkin,TCH-004,A2 flyers,36,4
+STU-NEW-00101,Mubina,Maxmatqulova,mubina@temurbekschool.local,+998979177741,2010-01-01,Unknown Parent,+998971234567,Male,Active,mubina,012345678,Amonov Erkin,TCH-004,A2 flyers,2,8
+STU-NEW-00102,Sa'dullo,Nematov,sadullo@temurbekschool.local,+998915229933,2010-01-01,Unknown Parent,+998971234567,Male,Active,sadullo,012345678,Amonov Erkin,TCH-004,A2 flyers,1,6
+STU-NEW-00103,Farangiz,Rajabboyeva,farangiz@temurbekschool.local,+998930646774,2010-01-01,Unknown Parent,+998971234567,Male,Active,farangiz,012345678,Amonov Erkin,TCH-004,A2 flyers,125,9
+STU-NEW-00104,Rahmonali,Abdujalilov,rahmonali@temurbekschool.local,+998912997784,2010-01-01,Unknown Parent,+998971234567,Male,Active,rahmonali,012345678,Amonov Erkin,TCH-004,A2 Plus new,97,7
+STU-NEW-00105,Abubakir,Raxmonov,abubakir@temurbekschool.local,+998977715376,2010-01-01,Unknown Parent,+998971234567,Male,Active,abubakir,012345678,Amonov Erkin,TCH-004,A2 Plus new,1,3
+STU-NEW-00106,Abdulloh,Asatullayev,abdulloh2@temurbekschool.local,+998979278918,2010-01-01,Unknown Parent,+998971234567,Male,Active,abdulloh2,012345678,Amonov Erkin,TCH-004,A2 Plus new,85,4
+STU-NEW-00107,Firdavs,Botirov,firdavs@temurbekschool.local,+998973961425,2010-01-01,Unknown Parent,+998971234567,Male,Active,firdavs,012345678,Amonov Erkin,TCH-004,A2 Plus new,34,7
+STU-NEW-00108,Shuhrat,Nozimov,shuhrat@temurbekschool.local,+998942674442,2010-01-01,Unknown Parent,+998971234567,Male,Active,shuhrat,012345678,Amonov Erkin,TCH-004,A2 Plus new,55,6
+STU-NEW-00109,Dilmurod,Orziyev,dilmurod@temurbekschool.local,+998942822255,2010-01-01,Unknown Parent,+998971234567,Male,Active,dilmurod,012345678,Amonov Erkin,TCH-004,A2 Plus new,70,6
+STU-NEW-00110,Abubakr,Sultonov,abubakr@temurbekschool.local,+998979191777,2010-01-01,Unknown Parent,+998971234567,Male,Active,abubakr,012345678,Amonov Erkin,TCH-004,A2 Plus new,86,6
+STU-NEW-00111,Muhsinbek,Tuyoqboyev,muhsinbek@temurbekschool.local,+998997439080,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhsinbek,012345678,Amonov Erkin,TCH-004,A2 Plus new,137,7
+STU-NEW-00112,Sanjarbek,Abdurahmonov,sanjarbek@temurbekschool.local,+998888932400,2010-01-01,Unknown Parent,+998971234567,Male,Active,sanjarbek,012345678,Amonov Erkin,TCH-004,A2 Plus new,6,5
+STU-NEW-00113,Muhammadsodiq,Kamolov,muhammadsodiq@temurbekschool.local,+998975320002,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhammadsodiq,012345678,Amonov Erkin,TCH-004,A2 Plus new,136,5
+STU-NEW-00114,Dilshodbek,Olimboyev,dilshodbek@temurbekschool.local,+998939957875,2010-01-01,Unknown Parent,+998971234567,Male,Active,dilshodbek,012345678,Amonov Erkin,TCH-004,A2 Plus new,136,4
+STU-NEW-00115,Muhammadozod,Murodillayev,muhammadozod@temurbekschool.local,+998334720070,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhammadozod,012345678,Amonov Erkin,TCH-004,A2 Plus new,97,7
+STU-NEW-00116,Shohjahon,Do'stmurodov,shohjahon@temurbekschool.local,+998979274265,2010-01-01,Unknown Parent,+998971234567,Male,Active,shohjahon,012345678,Amonov Erkin,TCH-004,A2 Plus new,142,9
+STU-NEW-00117,Moxigul,Unknown,moxigul@temurbekschool.local,+998939959161,2010-01-01,Unknown Parent,+998971234567,Male,Active,moxigul,012345678,Amonov Erkin,TCH-004,A2 Plus new,97,8
+STU-NEW-00118,Firdavs,Ismatov,firdavs2@temurbekschool.local,+998884087675,2010-01-01,Unknown Parent,+998971234567,Male,Active,firdavs2,012345678,Amonov Erkin,TCH-004,A2 Plus new,82,11
+STU-NEW-00119,Usmon,Bahodirov,usmon@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,usmon,012345678,Amonov Erkin,TCH-004,A2 Plus new,Unknown School,10
+STU-NEW-00120,Billura,O'tamova,billura@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,billura,012345678,Amonov Erkin,TCH-004,A2 Plus new,Unknown School,10
+STU-NEW-00121,Albina,Tolibova,albina@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,albina,012345678,Amonov Erkin,TCH-004,A2 Plus new,Unknown School,10
+STU-NEW-00122,Malika,Norimova,malika@temurbekschool.local,+998991431284,2010-01-01,Unknown Parent,+998971234567,Male,Active,malika,012345678,Amonov Erkin,TCH-004,starter,71,9
+STU-NEW-00123,Dilnura,Rajabboyeva,dilnura4@temurbekschool.local,+998943485955,2010-01-01,Unknown Parent,+998971234567,Male,Active,dilnura4,012345678,Amonov Erkin,TCH-004,starter,36,3
+STU-NEW-00124,Qurbonnazar,Xojiyev,qurbonnazar@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,qurbonnazar,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00125,Jafarbek,Mamatov,jafarbek@temurbekschool.local,+998979272237,2010-01-01,Unknown Parent,+998971234567,Male,Active,jafarbek,012345678,Amonov Erkin,TCH-004,starter,137,10
+STU-NEW-00126,Gʻolib,Azizqulov,golib@temurbekschool.local,+998992020237,2010-01-01,Unknown Parent,+998971234567,Male,Active,golib,012345678,Amonov Erkin,TCH-004,starter,48,9
+STU-NEW-00127,Sardor,Ismoilov,sardor2@temurbekschool.local,+998333690508,2010-01-01,Unknown Parent,+998971234567,Male,Active,sardor2,012345678,Amonov Erkin,TCH-004,starter,48,10
+STU-NEW-00128,Janona,Rustamova,janona@temurbekschool.local,+998979433955,2010-01-01,Unknown Parent,+998971234567,Male,Active,janona,012345678,Amonov Erkin,TCH-004,starter,48,9
+STU-NEW-00129,Jasurbek,Maqsatov,jasurbek2@temurbekschool.local,+998993802950,2010-01-01,Unknown Parent,+998971234567,Male,Active,jasurbek2,012345678,Amonov Erkin,TCH-004,starter,48,7
+STU-NEW-00130,Samirjon 15gacha,Raxmonberdiyev,samirjon15gacha@temurbekschool.local,+998990268413,2010-01-01,Unknown Parent,+998971234567,Male,Active,samirjon15gacha,012345678,Amonov Erkin,TCH-004,starter,48,7
+STU-NEW-00131,Azizbek,Joʻramurodov,azizbek3@temurbekschool.local,+998945721232,2010-01-01,Unknown Parent,+998971234567,Male,Active,azizbek3,012345678,Amonov Erkin,TCH-004,starter,48,8
+STU-NEW-00132,Shoxrux,Valiyev,shoxrux2@temurbekschool.local,+998992868776,2010-01-01,Unknown Parent,+998971234567,Male,Active,shoxrux2,012345678,Amonov Erkin,TCH-004,starter,48,9
+STU-NEW-00133,Shohjahon,Do'stmurodov,shohjahon2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,shohjahon2,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00134,Jahongir,Jonibekov,jahongir2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,jahongir2,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00135,Amina,Gʻafforqulova,amina2@temurbekschool.local,+998952381036,2010-01-01,Unknown Parent,+998971234567,Male,Active,amina2,012345678,Amonov Erkin,TCH-004,starter,154,8
+STU-NEW-00136,Muqaddas,Ikromova,muqaddas2@temurbekschool.local,+998991219650,2010-01-01,Unknown Parent,+998971234567,Male,Active,muqaddas2,012345678,Amonov Erkin,TCH-004,starter,71,9
+STU-NEW-00137,Farrux,Isomov,farrux2@temurbekschool.local,+998941816655,2010-01-01,Unknown Parent,+998971234567,Male,Active,farrux2,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00138,Sevinch,Axtamova,sevinch@temurbekschool.local,+998936313443,2010-01-01,Unknown Parent,+998971234567,Male,Active,sevinch,012345678,Amonov Erkin,TCH-004,starter,Kurs,2
+STU-NEW-00139,Jahongir,Oʻlmasov,jahongir3@temurbekschool.local,+998991202920,2010-01-01,Unknown Parent,+998971234567,Male,Active,jahongir3,012345678,Amonov Erkin,TCH-004,starter,1,7
+STU-NEW-00140,Aminjon,Sharopov,aminjon2@temurbekschool.local,+998882880337,2010-01-01,Unknown Parent,+998971234567,Male,Active,aminjon2,012345678,Amonov Erkin,TCH-004,starter,1,7
+STU-NEW-00141,Maqsud,Xurramov,maqsud@temurbekschool.local,+998996770548,2010-01-01,Unknown Parent,+998971234567,Male,Active,maqsud,012345678,Amonov Erkin,TCH-004,starter,48,7
+STU-NEW-00142,Alisher,Najmiyev,alisher@temurbekschool.local,+998973941113,2010-01-01,Unknown Parent,+998971234567,Male,Active,alisher,012345678,Amonov Erkin,TCH-004,starter,89,6
+STU-NEW-00143,Joʻrabek,Fazliddinov,jorabek@temurbekschool.local,+998889132322,2010-01-01,Unknown Parent,+998971234567,Male,Active,jorabek,012345678,Amonov Erkin,TCH-004,starter,89,7
+STU-NEW-00144,Asilbek,Abdullayev,asilbek3@temurbekschool.local,+998981800727,2010-01-01,Unknown Parent,+998971234567,Male,Active,asilbek3,012345678,Amonov Erkin,TCH-004,starter,121,6
+STU-NEW-00145,Sardor,Islomov,sardor3@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,sardor3,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00146,Toxir,Abdusamiyev,toxir@temurbekschool.local,+998938126414,2010-01-01,Unknown Parent,+998971234567,Male,Active,toxir,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00147,Zayniddin,Joʻraqulova,zayniddin2@temurbekschool.local,+998972888990,2010-01-01,Unknown Parent,+998971234567,Male,Active,zayniddin2,012345678,Amonov Erkin,TCH-004,starter,83,8
+STU-NEW-00148,Begzod,Shukurov,begzod@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,begzod,012345678,Amonov Erkin,TCH-004,starter,Unknown School,10
+STU-NEW-00149,Abdurahim,Burxonov,abdurahim@temurbekschool.local,+998917008807,2010-01-01,Unknown Parent,+998971234567,Male,Active,abdurahim,012345678,Amonov Erkin,TCH-004,starter,136,9

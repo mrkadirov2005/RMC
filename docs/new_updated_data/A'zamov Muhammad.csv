@@ -1,0 +1,39 @@
+enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_name,teacher_employee_id,class_name,school_name,school_class
+STU-NEW-00024,Hojiakbar,Karimov,hojiakbar@temurbekschool.local,+998917044393,2010-01-01,Unknown Parent,+998971234567,Male,Active,hojiakbar,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,136,7
+STU-NEW-00025,Ulug`bek,Amrillayev,ulugbek@temurbekschool.local,+998930869772,2010-01-01,Unknown Parent,+998971234567,Male,Active,ulugbek,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,14,8
+STU-NEW-00026,Behruz,Abduqodirov,behruz2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,behruz2,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,82,9
+STU-NEW-00027,Sardor,G`ofurov,sardor@temurbekschool.local,+998994022675,2010-01-01,Unknown Parent,+998971234567,Male,Active,sardor,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,38,10
+STU-NEW-00028,Bahodir,Akbarov,bahodir@temurbekschool.local,+998880083832,2010-01-01,Unknown Parent,+998971234567,Male,Active,bahodir,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,74,9
+STU-NEW-00029,Intizor,Samehjonova,intizor@temurbekschool.local,+998915457725,2010-01-01,Unknown Parent,+998971234567,Male,Active,intizor,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,86,7
+STU-NEW-00030,Islom,Xudoyberdiyev,islom@temurbekschool.local,+998886145884,2010-01-01,Unknown Parent,+998971234567,Male,Active,islom,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,3,8
+STU-NEW-00031,Bunyodbek,Nuriddinov,bunyodbek@temurbekschool.local,+998970353504,2010-01-01,Unknown Parent,+998971234567,Male,Active,bunyodbek,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,6,8
+STU-NEW-00032,Asilbek,Nishonov,asilbek2@temurbekschool.local,+998992214849,2010-01-01,Unknown Parent,+998971234567,Male,Active,asilbek2,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,122,9
+STU-NEW-00033,Abzalbek,Mahmudov,abzalbek@temurbekschool.local,+998934084770,2010-01-01,Unknown Parent,+998971234567,Male,Active,abzalbek,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,7,7
+STU-NEW-00034,Abbos,G'ulomov,abbos@temurbekschool.local,+998949443308,2010-01-01,Unknown Parent,+998971234567,Male,Active,abbos,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,156,10
+STU-NEW-00035,Mustafo,Ne'matov,mustafo@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,mustafo,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,Unknown School,10
+STU-NEW-00036,Baxtiyor,Qo'ysinov,baxtiyor@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,baxtiyor,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,Unknown School,10
+STU-NEW-00037,Adhamjon,Hamroqulov,adhamjon@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,adhamjon,012345678,A'zamov Muhammad,TCH-002,Flyers by A'zamov 15:00,Unknown School,10
+STU-NEW-00038,Doniyor,To'xtayev,doniyor@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,doniyor,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00039,Shukrullo,Usmonov,shukrullo@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,shukrullo,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00040,Madina,Samehjonova,madina2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,madina2,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00041,Yashnarbek,Yarashev,yashnarbek@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,yashnarbek,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00042,Bahodir,Nazarov,bahodir2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,bahodir2,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00043,Akobir,Abdullayev,akobir@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,akobir,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00044,Mehroj,Muhammadaliyev,mehroj@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,mehroj,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00045,Mirkomil,Komilov,mirkomil@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,mirkomil,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00046,Ozodbek,Akbarov,ozodbek2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,ozodbek2,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00047,Nigina,Jo'rayeva,nigina@temurbekschool.local,+998335291611,2010-01-01,Unknown Parent,+998971234567,Male,Active,nigina,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,71,10
+STU-NEW-00048,Shahrizoda,Akbarova,shahrizoda@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,shahrizoda,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00049,Jahongir,Marupov,jahongir@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,jahongir,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00050,Jonibek,Bayonov,jonibek@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,jonibek,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00051,Abdug'affor,Amriyev,abdugaffor@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,abdugaffor,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00052,Hasan,Sa'dullayev,hasan@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,hasan,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00053,Bahruz,Islomov,bahruz@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,bahruz,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00054,Muhammad,Rahimov,muhammad@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhammad,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00055,Shohnur,Rajabov,shohnur@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,shohnur,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00056,Hasan,Nurillayev,hasan2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,hasan2,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00057,Kumush,Ahmadova,kumush@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,kumush,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00058,Abduvakil,Rahimov,abduvakil@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,abduvakil,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00059,Og'abek,Ashrapov,ogabek2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,ogabek2,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00060,Doniyor,Toxirov,doniyor2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,doniyor2,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10
+STU-NEW-00061,Hanifa,Norimova,hanifa@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,hanifa,012345678,A'zamov Muhammad,TCH-002,Starter 13:30,Unknown School,10

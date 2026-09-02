@@ -56,6 +56,12 @@ interface StudentsState {
   loading: boolean;
   error: string | null;
   lastFetched: number | null;
+  // True only when `items`/`meta` came from an unparameterized fetch (the full roster).
+  // A scoped fetch (e.g. `{ teacher_id }` from a teacher's detail page) can satisfy the old
+  // `total <= items.length` heuristic just as easily as a genuinely full list would, which let
+  // a page asking for the full roster silently reuse another page's small scoped subset as if
+  // it were everyone - this flag tracks the real provenance instead of guessing from size.
+  lastFetchWasFull: boolean;
   meta: StudentsMeta;
   currentRequestKey: string | null;
 }
@@ -65,14 +71,12 @@ const initialState: StudentsState = {
   loading: false,
   error: null,
   lastFetched: null,
+  lastFetchWasFull: false,
   meta: { total: 0, page: 1, limit: 20 },
   currentRequestKey: null,
 };
 
 const CACHE_TTL_MS = 60_000;
-
-const hasFullStudentList = (state: StudentsState) =>
-  state.items.length > 0 && state.meta.total <= state.items.length;
 
 const studentParamsKey = (params?: StudentListParams) => {
   if (!params) return 'all';
@@ -88,8 +92,8 @@ export const fetchStudents = createAsyncThunk(
   'students/fetchAll',
   async (params: StudentListParams | undefined = undefined, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
-    const { lastFetched } = state.students;
-    if (!params && lastFetched && Date.now() - lastFetched < CACHE_TTL_MS && hasFullStudentList(state.students)) return null;
+    const { lastFetched, lastFetchWasFull } = state.students;
+    if (!params && lastFetched && lastFetchWasFull && Date.now() - lastFetched < CACHE_TTL_MS) return null;
     try {
       const res = await studentAPI.getAll(params);
 // Handles data.
@@ -208,6 +212,7 @@ const studentsSlice = createSlice({
           state.items = action.payload.items;
           state.meta = action.payload.meta;
           state.lastFetched = Date.now();
+          state.lastFetchWasFull = !action.meta.arg;
         }
       })
       .addCase(fetchStudents.rejected, (state, action) => {
@@ -224,7 +229,11 @@ const studentsSlice = createSlice({
       })
       .addCase(fetchStudentsForce.fulfilled, (state, action) => {
         if (state.currentRequestKey !== studentParamsKey(action.meta.arg)) return;
-        state.loading = false; state.items = action.payload.items; state.meta = action.payload.meta; state.lastFetched = Date.now();
+        state.loading = false;
+        state.items = action.payload.items;
+        state.meta = action.payload.meta;
+        state.lastFetched = Date.now();
+        state.lastFetchWasFull = !action.meta.arg;
       })
       .addCase(fetchStudentsForce.rejected, (state, action) => {
         if (state.currentRequestKey !== studentParamsKey(action.meta.arg)) return;

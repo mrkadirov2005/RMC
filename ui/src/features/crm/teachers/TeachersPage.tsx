@@ -1,7 +1,7 @@
 // Page component for the teachers screen in the crm feature.
 
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { Plus, Pencil, Trash2, Eye, User, X, Loader2, Search, Upload, Download, MoreHorizontal, Target, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, Eye, User, X, Loader2, Search, Upload, Download, MoreHorizontal, Target, Users, LineChart } from 'lucide-react';
 import { useTeachersPage } from './hooks/useTeachersPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,6 +38,7 @@ import { teachersApi } from './api/teachersApi';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
 const TeachersKpiTab = lazy(() => import('./kpi/TeachersKpiTab'));
+const OwnerTeacherStatisticsTab = lazy(() => import('./statistics/OwnerTeacherStatisticsTab'));
 
 const buildTeacherUsername = (value: string) => {
   const cleaned = value
@@ -70,7 +71,7 @@ const getTeacherSubtitle = (teacher: Teacher) => {
 
 // Renders the teachers page screen.
 const TeachersPage = () => {
-  const [pageTab, setPageTab] = useState<'teachers' | 'kpi'>('teachers');
+  const [pageTab, setPageTab] = useState<'teachers' | 'kpi' | 'statistics'>('teachers');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
@@ -209,7 +210,7 @@ const TeachersPage = () => {
   return (
     <div className="space-y-4 owner-palette-scope">
 
-      <Tabs value={pageTab} onValueChange={(value) => setPageTab(value as 'teachers' | 'kpi')}>
+      <Tabs value={pageTab} onValueChange={(value) => setPageTab(value as 'teachers' | 'kpi' | 'statistics')}>
         <TabsList className="h-auto gap-1 rounded-lg bg-slate-100 p-1 dark:bg-muted/40">
           <TabsTrigger value="teachers" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
             <Users className="h-3.5 w-3.5" />
@@ -219,12 +220,20 @@ const TeachersPage = () => {
             <Target className="h-3.5 w-3.5" />
             KPI
           </TabsTrigger>
+          <TabsTrigger value="statistics" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
+            <LineChart className="h-3.5 w-3.5" />
+            Statistics
+          </TabsTrigger>
         </TabsList>
       </Tabs>
 
       {pageTab === 'kpi' ? (
         <Suspense fallback={<div className="flex justify-center py-16"><Loader2 className="w-10 h-10 animate-spin text-indigo-500" /></div>}>
           <TeachersKpiTab />
+        </Suspense>
+      ) : pageTab === 'statistics' ? (
+        <Suspense fallback={<div className="flex justify-center py-16"><Loader2 className="w-10 h-10 animate-spin text-indigo-500" /></div>}>
+          <OwnerTeacherStatisticsTab />
         </Suspense>
       ) : (
         <>

@@ -1,6 +1,6 @@
 // Portal component for the teacher feature.
 
-import { useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useCallback, useMemo, useState } from 'react';
 import {
   Users,
   ClipboardList,
@@ -15,6 +15,7 @@ import {
   ClipboardCopy,
   ClipboardCheck,
   UserRound,
+  RotateCcw,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +56,31 @@ import TestsPage from '../crm/tests/TestsPage';
 import CalendarPage from '../crm/calendar/CalendarPage';
 import OverallStatisticsTab from './components/OverallStatisticsTab';
 import TeacherProfileTab from './components/TeacherProfileTab';
+import TeacherStatisticsTab from './statistics/TeacherStatisticsTab';
+
+// Tab order is a per-browser preference only - it's never sent to the server, just like the
+// sidebar's drag-to-reorder, except this one stays local instead of syncing through settingsAPI.
+const TAB_ORDER_STORAGE_KEY = 'teacher_portal_tab_order';
+
+const getStoredTabOrder = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(TAB_ORDER_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.map(String) : [];
+  } catch {
+    return [];
+  }
+};
+
+const storeTabOrder = (order: string[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(TAB_ORDER_STORAGE_KEY, JSON.stringify(order));
+  } catch {
+    // ignore storage failures (e.g. private browsing quota)
+  }
+};
 
 interface TeacherStats {
   totalStudents: number;
@@ -75,6 +101,8 @@ const TeacherPortal = () => {
   const { t } = useLanguage();
   const teacherPortalUi = useAppSelector(selectTeacherPortalUi);
   const { tabValue } = teacherPortalUi;
+  const [tabOrder, setTabOrder] = useState<string[]>(getStoredTabOrder);
+  const [draggedTabValue, setDraggedTabValue] = useState<string | null>(null);
 
   const testsData = useAppSelector(state => state.tests.items);
   const studentsData = useAppSelector(state => state.students.items);
@@ -194,6 +222,7 @@ const TeacherPortal = () => {
     // 4. in a locked modal, (password which is updated by teacher itself) to show how much of teacher students did pay like with pie chart
 
     { value: 'overall', label: t('Overall'), icon: <ClipboardCopy className = " h-4 w-4" /> },
+    { value: 'statistics', label: t('Statistics'), icon: <Star className="h-4 w-4" /> },
     { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
     { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'calendar', label: t('Calendar'), icon: <CalendarDays className="h-4 w-4" /> },
@@ -202,6 +231,35 @@ const TeacherPortal = () => {
     { value: 'tasks', label: t('Tasks'), icon: <ClipboardCheck className="h-4 w-4" /> },
     { value: 'profile', label: t('Profile'), icon: <UserRound className="h-4 w-4" /> },
      ];
+
+  const orderIndex = new Map(tabOrder.map((value, index) => [value, index]));
+  const orderedTabs = tabs.slice().sort((a, b) => {
+    const aIndex = orderIndex.get(a.value) ?? tabs.findIndex((tab) => tab.value === a.value) + tabOrder.length;
+    const bIndex = orderIndex.get(b.value) ?? tabs.findIndex((tab) => tab.value === b.value) + tabOrder.length;
+    return aIndex - bIndex;
+  });
+  const hasCustomTabOrder = tabOrder.length > 0;
+
+  const reorderTabs = (targetValue: string) => {
+    if (!draggedTabValue || draggedTabValue === targetValue) return;
+    const completeOrder = [
+      ...tabOrder.filter((value) => tabs.some((tab) => tab.value === value)),
+      ...tabs.map((tab) => tab.value).filter((value) => !tabOrder.includes(value)),
+    ];
+    const fromIndex = completeOrder.indexOf(draggedTabValue);
+    const targetIndex = completeOrder.indexOf(targetValue);
+    if (fromIndex < 0 || targetIndex < 0) return;
+    completeOrder.splice(fromIndex, 1);
+    completeOrder.splice(targetIndex, 0, draggedTabValue);
+    setTabOrder(completeOrder);
+    storeTabOrder(completeOrder);
+    setDraggedTabValue(null);
+  };
+
+  const resetTabOrder = () => {
+    setTabOrder([]);
+    storeTabOrder([]);
+  };
 
   return (
     <div className="relative space-y-6">
@@ -263,19 +321,39 @@ const TeacherPortal = () => {
         contentClassName="p-0"
       >
         <Tabs value={tabValue} onValueChange={(value) => dispatch(setTeacherPortalTabValue(value))}>
-          <div className="overflow-x-auto border-b px-4">
-            <TabsList className="h-auto gap-0 bg-transparent p-0">
-              {tabs.map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="gap-2 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-                >
-                  {tab.icon}
-                  {tab.label}
-                </TabsTrigger>
-              ))}
-            </TabsList>
+          <div className="flex items-center justify-between gap-2 border-b px-4">
+            <div className="overflow-x-auto">
+              <TabsList className="h-auto gap-0 bg-transparent p-0">
+                {orderedTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    draggable
+                    onDragStart={() => setDraggedTabValue(tab.value)}
+                    onDragEnd={() => setDraggedTabValue(null)}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={() => reorderTabs(tab.value)}
+                    title={t('Drag to reorder tabs (saved on this device only)')}
+                    className={`cursor-grab gap-2 rounded-none border-b-2 border-transparent px-4 py-3 text-sm font-semibold active:cursor-grabbing data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none ${draggedTabValue === tab.value ? 'opacity-50' : ''}`}
+                  >
+                    {tab.icon}
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
+            {hasCustomTabOrder && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 shrink-0 gap-1 px-2 text-xs text-muted-foreground"
+                onClick={resetTabOrder}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {t('Reset order')}
+              </Button>
+            )}
           </div>
 
           <div className="p-4">
@@ -290,6 +368,13 @@ const TeacherPortal = () => {
                 attendance={attendanceData}
                 grades={gradesData}
                 payments={paymentsData}
+              />
+            </TabsContent>
+            <TabsContent value="statistics">
+              <TeacherStatisticsTab
+                teacherId={user?.id ? Number(user.id) : undefined}
+                classes={classesData}
+                students={studentsData}
               />
             </TabsContent>
             <TabsContent value="tests">

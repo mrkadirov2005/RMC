@@ -18,6 +18,7 @@ export interface Student {
   class_teacher_id?: number;
   effective_teacher_id?: number;
   class_id?: number;
+  previous_class_id?: number | null;
   school_name?: string | null;
   school_class?: string | null;
   class_name?: string | null;

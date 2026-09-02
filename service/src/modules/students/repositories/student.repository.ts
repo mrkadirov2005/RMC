@@ -134,7 +134,17 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
 const effectiveTeacherExpr = sql`COALESCE(${classes.teacherId}, ${students.teacherId})`;
 
 const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
-  const conditions: any[] = [isNull(students.deletedAt), or(isNull(students.status), ne(students.status, 'Transferred'))];
+  const conditions: any[] = [isNull(students.deletedAt)];
+  // A transferred-out student keeps a row in their old class (status='Transferred', deletedAt
+  // stays null) so the old group's roster still shows them - marked as transferred - until an
+  // owner/superuser explicitly deletes it. That row is only hidden from the general (no class
+  // filter) student list; filtering by that specific class_id, or asking for status=Transferred
+  // explicitly, should surface it.
+  const hasSpecificClassFilter = filters.class_id != null && Number(filters.class_id) !== -1;
+  const wantsTransferredStatus = String(filters.status || '').trim().toLowerCase() === 'transferred';
+  if (!hasSpecificClassFilter && !wantsTransferredStatus) {
+    conditions.push(or(isNull(students.status), ne(students.status, 'Transferred')));
+  }
   if (centerId) conditions.push(eq(students.centerId, centerId));
 
   if (teacherId) {

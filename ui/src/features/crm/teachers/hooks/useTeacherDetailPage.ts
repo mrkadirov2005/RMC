@@ -176,9 +176,15 @@ export const useTeacherDetailPage = () => {
   useEffect(() => {
     let cancelled = false;
     setDetailStudentsLoading(true);
-    studentAPI.getAll({ teacher_id: Number(teacherId), page: 1, limit: 100 })
-      .then((response) => {
-        const rows = getRows<TeacherStudent>(response);
+    // Fetch this teacher's active roster and, separately, students transferred out of their
+    // classes - the latter are excluded from the plain list so a transferred student's old
+    // group doesn't lose them from view until an owner/superuser deletes them.
+    Promise.all([
+      studentAPI.getAll({ teacher_id: Number(teacherId), page: 1, limit: 100 }),
+      studentAPI.getAll({ teacher_id: Number(teacherId), status: 'Transferred', page: 1, limit: 100 }).catch(() => ({ data: [] })),
+    ])
+      .then(([activeResponse, transferredResponse]) => {
+        const rows = [...getRows<TeacherStudent>(activeResponse), ...getRows<TeacherStudent>(transferredResponse)];
         if (!cancelled) setDetailStudents(rows);
       })
       .catch((error) => {

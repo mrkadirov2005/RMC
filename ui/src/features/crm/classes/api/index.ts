@@ -1,1 +1,1 @@
-export { attendanceAPI, classAPI, gradeAPI, studentAPI, testAPI } from '@/shared/api/api';
+export { attendanceAPI, classAPI, gradeAPI, studentAPI, teacherAPI, testAPI } from '@/shared/api/api';

@@ -33,7 +33,7 @@ export const BarChart = memo(({ data, height = 180, barSize = 28, showEmptyState
   }
 
   return (
-    <div className="flex items-end gap-3 overflow-x-auto" style={{ height: height + 28 }}>
+    <div className="flex w-full items-end justify-between gap-3 overflow-x-auto" style={{ height: height + 28 }}>
       {normalized.map((bar, index) => {
         const barHeight = Math.round((bar.value / max) * height);
         return (

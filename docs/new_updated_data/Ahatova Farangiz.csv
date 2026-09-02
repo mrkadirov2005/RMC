@@ -1,0 +1,23 @@
+enrollment_number,first_name,last_name,email,phone,date_of_birth,parent_name,parent_phone,gender,status,username,password,teacher_name,teacher_employee_id,class_name,school_name,school_class
+STU-NEW-00062,Hosiyatoy,Ismatullayeva,hosiyatoy@temurbekschool.local,+998905024858,2010-01-01,Unknown Parent,+998971234567,Male,Active,hosiyatoy,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,121,4
+STU-NEW-00063,Samirali,Uzoqov,samirali@temurbekschool.local,+998933460037,2010-01-01,Unknown Parent,+998971234567,Male,Active,samirali,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,1,7
+STU-NEW-00064,Biloljon,Aslamov,biloljon@temurbekschool.local,+998885751000,2010-01-01,Unknown Parent,+998971234567,Male,Active,biloljon,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,1,5
+STU-NEW-00065,Kumush,Alisherova,kumush2@temurbekschool.local,+998904669952,2010-01-01,Unknown Parent,+998971234567,Male,Active,kumush2,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,55,5
+STU-NEW-00066,Najmiddin,Najmiyev,najmiddin@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,najmiddin,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00067,Abdulloh,Ergashev,abdulloh@temurbekschool.local,+998883991663,2010-01-01,Unknown Parent,+998971234567,Male,Active,abdulloh,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,82,3
+STU-NEW-00068,Fozil,Abdullayev,fozil@temurbekschool.local,+998888640099,2010-01-01,Unknown Parent,+998971234567,Male,Active,fozil,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,137,4
+STU-NEW-00069,Muhammadjon,Yusupov,muhammadjon@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhammadjon,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,7,3
+STU-NEW-00070,Amirbek,Mehrojov,amirbek@temurbekschool.local,+998902814700,2010-01-01,Unknown Parent,+998971234567,Male,Active,amirbek,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,2,3
+STU-NEW-00071,Abdushukur,No'monov,abdushukur@temurbekschool.local,+998981601604,2010-01-01,Unknown Parent,+998971234567,Male,Active,abdushukur,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,54,4
+STU-NEW-00072,Mironshox,Xurshedov,mironshox@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,mironshox,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00073,Alibek,Oltinboyev,alibek@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,alibek,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00074,Fazliddin,Salohiddinov,fazliddin@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,fazliddin,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00075,Abbos,Aminov,abbos2@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,abbos2,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,4 dars aprel qarz,10
+STU-NEW-00076,Muhammadislom,Nurillayev,muhammadislom@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,muhammadislom,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,4 dars aprel qarz
+STU-NEW-00077,Shohida,No'monova,shohida@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,shohida,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00078,Gulruh,O'ktamova,gulruh@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,gulruh,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00079,Maftuna,O'ktamova,maftuna@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,maftuna,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00080,Nuriyabonu,Fozilova,nuriyabonu@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,nuriyabonu,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00081,Zarina,Abdujalilova,zarina@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,zarina,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00082,Sharofiddin,Murodullayev,sharofiddin@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,sharofiddin,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10
+STU-NEW-00083,Yasmina,Erdanova,yasmina@temurbekschool.local,+998971234567,2010-01-01,Unknown Parent,+998971234567,Male,Active,yasmina,012345678,Ahatova Farangiz,TCH-003,Kids Farangiz,Unknown School,10

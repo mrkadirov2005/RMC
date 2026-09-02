@@ -1,6 +1,7 @@
 import { BookOpen, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { getStatusVariant, isIncomingTransfer, isTransferredStudentStatus, INCOMING_TRANSFER_VARIANT } from '../../students/status';
 
 interface TeacherClassesStudentsTabProps {
   studentClassGroups: Array<{
@@ -72,17 +73,35 @@ export default function TeacherClassesStudentsTab({
 
 const StudentList = ({ students }: { students: any[] }) => (
   <div className="flex flex-col ">
-    {students.map((student, index) => (
-      <div
-        key={student.student_id || student.id}
-        className="flex items-center gap-2 border border-slate-200 shadow-sm dark:border-border"
-        style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}
-      >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500">{index + 1}</span>
-        <span className="truncate text-xs font-semibold">
-          {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
-        </span>
-      </div>
-    ))}
+    {students.map((student, index) => {
+      const outgoing = isTransferredStudentStatus(student.status);
+      const incoming = !outgoing && isIncomingTransfer(student);
+      return (
+        <div
+          key={student.student_id || student.id}
+          className={cn(
+            'flex items-center gap-2 border border-slate-200 shadow-sm dark:border-border',
+            outgoing && 'bg-rose-50/70 dark:bg-rose-950/20',
+            incoming && 'bg-emerald-50/70 dark:bg-emerald-950/20'
+          )}
+          style={outgoing || incoming ? undefined : { backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}
+        >
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center text-xs font-bold tabular-nums text-slate-500">{index + 1}</span>
+          <span className="truncate text-xs font-semibold">
+            {[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}
+          </span>
+          {outgoing && (
+            <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${getStatusVariant(student.status)}`}>
+              Transferred
+            </span>
+          )}
+          {incoming && (
+            <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${INCOMING_TRANSFER_VARIANT}`}>
+              New (Transferred)
+            </span>
+          )}
+        </div>
+      );
+    })}
   </div>
 );
