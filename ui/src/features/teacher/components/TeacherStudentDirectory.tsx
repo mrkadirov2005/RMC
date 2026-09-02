@@ -51,6 +51,7 @@ import { getCombinedLessonPoints, getPointTone } from '../../crm/classes/utils/p
 import { useNavigate } from 'react-router-dom';
 import { StudentCoinsDialog } from '@/shared/components/StudentCoinsDialog';
 import { useLanguage } from '../../../i18n/LanguageContext';
+import { StudentOverviewCards } from '../../crm/students/components/StudentOverviewCards';
 
 export interface TeacherStudentItem {
   student_id?: number;
@@ -281,8 +282,12 @@ export default function TeacherStudentDirectory({
 
   const calculateAverageGrade = () => {
     if (studentDetails.grades.length === 0) return 0;
-    const total = studentDetails.grades.reduce((sum, grade) => sum + (grade.percentage || 0), 0);
-    return Math.round(total / studentDetails.grades.length);
+    const total = studentDetails.grades.reduce((sum, grade) => {
+      const pct = Number(grade.percentage);
+      return sum + (Number.isFinite(pct) ? pct : 0);
+    }, 0);
+    const avg = Math.round(total / studentDetails.grades.length);
+    return Number.isFinite(avg) ? avg : 0;
   };
 
   const formatMoney = (value: unknown) => {
@@ -606,7 +611,7 @@ export default function TeacherStudentDirectory({
       </div>
 
       <Dialog open={detailsDialog} onOpenChange={setDetailsDialog}>
-        <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        <DialogContent className="max-h-[85vh] max-w-4xl overflow-y-auto">
           <DialogHeader>
             <div className="flex min-w-0 items-center gap-3">
               <div className="flex h-14 w-14 items-center justify-center rounded-full bg-indigo-500 text-xl font-bold text-white">
@@ -667,47 +672,14 @@ export default function TeacherStudentDirectory({
                 </TabsList>
 
                 <TabsContent value="overview">
-                  <h4 className="mb-3 font-semibold">{t('Personal Information')}</h4>
-                  <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Email')}</p>
-                      <p className="break-all text-sm leading-5">{selectedStudent?.email || 'N/A'}</p>
+                  {selectedStudent && (
+                    <div className="mb-4">
+                      <StudentOverviewCards
+                        student={selectedStudent as any}
+                        groupName={selectedStudent.class_name}
+                      />
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Phone')}</p>
-                      <p className="break-words text-sm leading-5">{selectedStudent?.phone || 'N/A'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Date of Birth')}</p>
-                      <p className="break-words text-sm leading-5">
-                        {selectedStudent?.date_of_birth
-                          ? new Date(selectedStudent.date_of_birth).toLocaleDateString()
-                          : 'N/A'}
-                      </p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Gender')}</p>
-                      <p className="break-words text-sm leading-5">{selectedStudent?.gender || 'N/A'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Parent/Guardian')}</p>
-                      <p className="break-words text-sm leading-5">{selectedStudent?.parent_name || 'N/A'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Parent Phone')}</p>
-                      <p className="break-words text-sm leading-5">{selectedStudent?.parent_phone || 'N/A'}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Class')}</p>
-                      <p className="break-words text-sm leading-5">{selectedStudent?.class_name || t('Unassigned')}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs text-muted-foreground">{t('Status')}</p>
-                      <Badge variant={getStatusVariant(selectedStudent?.status || '') as any}>
-                        {t(selectedStudent?.status || 'Active')}
-                      </Badge>
-                    </div>
-                  </div>
+                  )}
 
                   <h4 className="mb-3 font-semibold">{t('Recent Activity')}</h4>
                   {studentDetails.grades.length === 0 && studentDetails.attendance.length === 0 ? (
