@@ -142,13 +142,8 @@ export const useOwnerManager = () => {
   const dataCount = data.length;
   const centerCount = centerOptions.length;
   const statistics = useMemo(() => buildOwnerStudentStatistics(data, centerLookup), [centerLookup, data]);
-  const canHardDelete = useMemo(() => {
-    const user = getStoredAuth().user;
-    return (
-      String(user?.username || '').toLowerCase() === 'muzaffar' &&
-      String(user?.role || '').toLowerCase() === 'owner'
-    );
-  }, []);
+  const canHardDelete = useMemo(() => Boolean(getStoredAuth().user?.can_hard_delete), []);
+  const isOwner = useMemo(() => String(getStoredAuth().user?.role || '').toLowerCase() === 'owner', []);
 
 // Memoizes the fetch data callback.
   const fetchData = useCallback(async () => {
@@ -561,7 +556,7 @@ export const useOwnerManager = () => {
 // Memoizes the handle hard delete callback.
   const handleHardDelete = useCallback(async (id: number, studentReasonId?: number) => {
     if (!canHardDelete) {
-      showToast.error('Permanent delete is restricted to owner muzaffar.');
+      showToast.error('You do not have permission to permanently delete records.');
       return;
     }
     if (activeTab === 'students' && !studentReasonId) {
@@ -698,6 +693,7 @@ export const useOwnerManager = () => {
     statistics,
     crossCounts,
     canHardDelete,
+    isOwner,
     selectedPermissions,
     formData,
     handleInputChange,

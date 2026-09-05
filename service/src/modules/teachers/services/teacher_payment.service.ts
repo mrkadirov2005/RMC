@@ -1,4 +1,4 @@
-const { hashPassword } = require('../../../shared/password');
+const { hashPassword, verifyPassword } = require('../../../shared/password');
 const teacherRepository = require('../repositories/teacher.repository');
 const paymentCredentialRepository = require('../repositories/teacher_payment.repository');
 
@@ -15,7 +15,11 @@ const authenticatePaymentAccess = async (username: string, password: string) => 
   const creds = await paymentCredentialRepository.findByTeacherId(teacher.teacher_id);
   if (!creds || !creds.is_active) return { kind: 'invalid' as const };
 
-  if (hashPassword(password) !== creds.password_hash) return { kind: 'invalid' as const };
+  const verification = verifyPassword(password, creds.password_hash);
+  if (!verification.valid) return { kind: 'invalid' as const };
+  if (verification.legacy) {
+    await paymentCredentialRepository.upsertPassword(teacher.teacher_id, hashPassword(password));
+  }
   await paymentCredentialRepository.markUsed(teacher.teacher_id);
   return { kind: 'ok' as const, teacher };
 };

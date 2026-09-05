@@ -1,4 +1,4 @@
-const { hashPassword } = require('../../../shared/password');
+const { hashPassword, verifyPassword } = require('../../../shared/password');
 const studentRepository = require('../repositories/student.repository');
 const studentCoinsRepository = require('../repositories/studentCoins.repository');
 const discountService = require('../../discounts/services/discount.service');
@@ -108,7 +108,11 @@ const authenticate = async (username: string, password: string) => {
   const student = await studentRepository.findByUsername(username);
   if (!student) return { kind: 'invalid' as const };
   if (student.status !== 'Active') return { kind: 'inactive' as const };
-  if (hashPassword(password) !== student.password_hash) return { kind: 'invalid' as const };
+  const verification = verifyPassword(password, student.password_hash);
+  if (!verification.valid) return { kind: 'invalid' as const };
+  if (verification.legacy) {
+    await studentRepository.updatePasswordHash(student.student_id, hashPassword(password));
+  }
   return { kind: 'ok' as const, student };
 };
 
@@ -120,7 +124,7 @@ const setPasswordByAdmin = (id: number, username: string, password: string, cent
 const changePassword = async (id: number, old_password: string, new_password: string) => {
   const existing = await studentRepository.findPasswordHashById(id);
   if (existing == null) return { ok: false as const, reason: 'not_found' as const };
-  if (hashPassword(old_password) !== existing) return { ok: false as const, reason: 'bad_old' as const };
+  if (!verifyPassword(old_password, existing).valid) return { ok: false as const, reason: 'bad_old' as const };
   await studentRepository.updatePasswordHash(id, hashPassword(new_password));
   return { ok: true as const };
 };

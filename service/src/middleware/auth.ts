@@ -38,6 +38,7 @@ interface JwtPayload {
   permissions?: string[];
   payment_access?: boolean;
   is_frozen?: boolean;
+  can_hard_delete?: boolean;
 }
 
 /**
@@ -150,14 +151,13 @@ function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
     return;
   }
 
-  const isOwner = req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner';
-  const isMuzaffar = String(req.user.username || '').toLowerCase() === 'muzaffar';
-  if (isOwner && isMuzaffar) {
+  const canHardDelete = req.user.userType === 'superuser' && req.user.can_hard_delete === true;
+  if (canHardDelete) {
     next();
     return;
   }
 
-  res.status(403).json({ error: 'Permanent delete is restricted to owner muzaffar.' });
+  res.status(403).json({ error: 'You do not have permission to permanently delete records.' });
 }
 
 /**

@@ -3,8 +3,8 @@ export {};
 const express_superuser = require('express');
 const router_superuser = express_superuser.Router();
 const superuserController = require('../modules/superusers/controllers/superuser.controller');
-const { validateBody } = require('../middleware/validation');
-const { CredentialsDto, PasswordChangeDto } = require('../dtos/request.dto');
+const { validateBody, validateParams } = require('../middleware/validation');
+const { CredentialsDto, PasswordChangeDto, CreateSuperuserDto, UpdateSuperuserDto, IdParamDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -46,7 +46,7 @@ router_superuser.get('/', superuserController.getAllSuperusers);
  *       404:
  *         description: Superuser not found
  */
-router_superuser.get('/:id', superuserController.getSuperuserById);
+router_superuser.get('/:id', validateParams(IdParamDto), superuserController.getSuperuserById);
 
 /**
  * @swagger
@@ -66,7 +66,7 @@ router_superuser.get('/:id', superuserController.getSuperuserById);
  *       400:
  *         description: Invalid input
  */
-router_superuser.post('/', superuserController.createSuperuser);
+router_superuser.post('/', validateBody(CreateSuperuserDto), superuserController.createSuperuser);
 
 /**
  * @swagger
@@ -92,7 +92,7 @@ router_superuser.post('/', superuserController.createSuperuser);
  *       404:
  *         description: Superuser not found
  */
-router_superuser.put('/:id', superuserController.updateSuperuser);
+router_superuser.put('/:id', validateParams(IdParamDto), validateBody(UpdateSuperuserDto), superuserController.updateSuperuser);
 
 /**
  * @swagger
@@ -112,7 +112,7 @@ router_superuser.put('/:id', superuserController.updateSuperuser);
  *       404:
  *         description: Superuser not found
  */
-router_superuser.delete('/:id', superuserController.deleteSuperuser);
+router_superuser.delete('/:id', validateParams(IdParamDto), superuserController.deleteSuperuser);
 
 /**
  * @swagger

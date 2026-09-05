@@ -1,4 +1,4 @@
-const { hashPassword } = require('../../../shared/password');
+const { hashPassword, verifyPassword } = require('../../../shared/password');
 const ownerRepository = require('../repositories/owner.repository');
 import type {
   CreateOwnerDto,
@@ -57,9 +57,13 @@ const authenticate = async (username: string, password: string) => {
   if (!owner) return { kind: 'invalid' as const };
   if (owner.is_locked) return { kind: 'locked' as const };
   if (owner.status !== 'Active') return { kind: 'inactive' as const };
-  if (hashPassword(password) !== owner.password_hash) {
+  const verification = verifyPassword(password, owner.password_hash);
+  if (!verification.valid) {
     await ownerRepository.incrementLoginAttempts(owner.owner_id);
     return { kind: 'invalid' as const };
+  }
+  if (verification.legacy) {
+    await ownerRepository.updatePasswordHash(owner.owner_id, hashPassword(password));
   }
   await ownerRepository.resetLoginSuccess(owner.owner_id);
   return { kind: 'ok' as const, owner };
@@ -68,7 +72,7 @@ const authenticate = async (username: string, password: string) => {
 const changePassword = async (id: number, old_password: string, new_password: string) => {
   const existing = await ownerRepository.findPasswordHash(id);
   if (existing === undefined) return { ok: false as const, reason: 'not_found' as const };
-  if (hashPassword(old_password) !== existing) return { ok: false as const, reason: 'bad_old' as const };
+  if (!verifyPassword(old_password, existing).valid) return { ok: false as const, reason: 'bad_old' as const };
   await ownerRepository.updatePasswordHash(id, hashPassword(new_password));
   return { ok: true as const };
 };

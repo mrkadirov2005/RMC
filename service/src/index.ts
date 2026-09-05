@@ -16,6 +16,8 @@ async function createApp(options: CreateAppOptions = {}) {
 
   const express = require('express');
   const cors = require('cors');
+  const helmet = require('helmet');
+  const rateLimit = require('express-rate-limit');
   const swaggerUI = require('swagger-ui-express');
   const swaggerDocs = require('./swagger/swagger');
   const { requireAuth, requireRole, requireOwner } = require('./middleware/auth');
@@ -67,7 +69,29 @@ async function createApp(options: CreateAppOptions = {}) {
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
 
-  app.use(cors());
+  app.use(helmet());
+
+  const resolveCorsOrigins = (environment = process.env.NODE_ENV, configuredOrigins = process.env.CORS_ALLOWED_ORIGINS) => {
+    const allowed = String(configuredOrigins || '')
+      .split(',')
+      .map((origin: string) => origin.trim())
+      .filter(Boolean);
+    if (allowed.length > 0) return allowed;
+    if (environment === 'production') {
+      throw new Error('CORS_ALLOWED_ORIGINS must be configured in production.');
+    }
+    return true;
+  };
+  app.use(cors({ origin: resolveCorsOrigins() }));
+
+  const authRateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many login attempts. Please try again in a minute.' },
+  });
+
   app.use(express.json({ limit: BODY_LIMIT }));
   app.use(express.urlencoded({ extended: true, limit: BODY_LIMIT }));
   // Request logging (MongoDB). Logs once per request on response finish/abort.
@@ -94,13 +118,13 @@ async function createApp(options: CreateAppOptions = {}) {
 
   // API Routes
   // Auth routes (public - no authentication required)
-  app.post('/api/students/auth/login', validateBody(CredentialsDto), require('./modules/students/controllers/student.controller').studentLogin);
-  app.post('/api/teachers/auth/login', validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherLogin);
-  app.post('/api/teachers/auth/payment-login', validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherPaymentLogin);
-  app.post('/api/superusers/auth/login', validateBody(CredentialsDto), require('./modules/superusers/controllers/superuser.controller').login);
-  app.post('/api/owners/auth/login', require('./modules/owners/controllers/owner.controller').login);
-  app.post('/api/owners/auth/register', require('./modules/owners/controllers/owner.controller').register);
-  app.post('/api/parents/auth/login', validateBody(CredentialsDto), require('./modules/parents').parentLogin);
+  app.post('/api/students/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/students/controllers/student.controller').studentLogin);
+  app.post('/api/teachers/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherLogin);
+  app.post('/api/teachers/auth/payment-login', authRateLimiter, validateBody(CredentialsDto), require('./modules/teachers/controllers/teacher.controller').teacherPaymentLogin);
+  app.post('/api/superusers/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/superusers/controllers/superuser.controller').login);
+  app.post('/api/owners/auth/login', authRateLimiter, require('./modules/owners/controllers/owner.controller').login);
+  app.post('/api/owners/auth/register', authRateLimiter, require('./modules/owners/controllers/owner.controller').register);
+  app.post('/api/parents/auth/login', authRateLimiter, validateBody(CredentialsDto), require('./modules/parents').parentLogin);
 
   // Protected routes - require authentication + role-based access
   app.use('/api/students', requireAuth, requireRole('superuser', 'teacher'), studentRoutes);

@@ -35,6 +35,9 @@ const createSuperuser = async (req: any, res: any) => {
     if (out.error === 'username_taken') {
       return res.status(400).json({ error: 'Username already exists' });
     }
+    if (out.error === 'forbidden_role') {
+      return res.status(403).json({ error: 'Only owners can assign the owner role.' });
+    }
     res.status(201).json((out as any).row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -46,9 +49,12 @@ const updateSuperuser = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
     const { centerId } = getScopedCenterId(req);
-    const row = await superuserService.updateSuperuser(requestedId, req.body, centerId);
-    if (!row) return res.status(404).json({ error: 'Superuser not found' });
-    res.json(row);
+    const out = await superuserService.updateSuperuser(requestedId, req.body, req.user, centerId);
+    if (out.error === 'forbidden_role') {
+      return res.status(403).json({ error: 'Only owners can assign the owner role.' });
+    }
+    if (!out.row) return res.status(404).json({ error: 'Superuser not found' });
+    res.json(out.row);
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to update superuser', details: error.message || String(error) });
@@ -59,9 +65,12 @@ const deleteSuperuser = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
     const { centerId } = getScopedCenterId(req);
-    const row = await superuserService.deleteSuperuser(requestedId, centerId);
-    if (!row) return res.status(404).json({ error: 'Superuser not found' });
-    res.json({ message: 'Superuser deleted successfully', superuser: row });
+    const out = await superuserService.deleteSuperuser(requestedId, req.user, centerId);
+    if (out.error === 'forbidden_role') {
+      return res.status(403).json({ error: 'Only owners can delete an owner account.' });
+    }
+    if (!out.row) return res.status(404).json({ error: 'Superuser not found' });
+    res.json({ message: 'Superuser deleted successfully', superuser: out.row });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: 'Failed to delete superuser', details: error.message || String(error) });
@@ -91,6 +100,7 @@ const login = async (req: any, res: any) => {
       permissions: superuser.permissions,
       branch_id: superuser.branch_id,
       center_id: superuser.center_id,
+      can_hard_delete: Boolean(superuser.can_hard_delete),
     });
     res.json({
       message: 'Login successful',
@@ -105,6 +115,7 @@ const login = async (req: any, res: any) => {
         first_name: superuser.first_name,
         last_name: superuser.last_name,
         role: superuser.role,
+        can_hard_delete: Boolean(superuser.can_hard_delete),
       },
     });
   } catch (error: any) {

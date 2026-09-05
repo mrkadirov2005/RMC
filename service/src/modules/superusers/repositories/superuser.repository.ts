@@ -127,6 +127,7 @@ const findByUsernameForLogin = async (username: string) => {
       password_hash: superusers.passwordHash,
       status: superusers.status,
       is_locked: superusers.isLocked,
+      can_hard_delete: superusers.canHardDelete,
     })
     .from(superusers)
     .where(eq(superusers.username, username))

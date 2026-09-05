@@ -21,6 +21,7 @@ interface OwnerManagerDialogProps {
   centerOptions: any[];
   formData: OwnerManagerFormData;
   selectedPermissions: string[];
+  isOwner: boolean;
   onInputChange: (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
   onPermissionToggle: (permission: string, enabled: boolean) => void;
   onSubmit: (e: FormEvent) => void;
@@ -37,14 +38,18 @@ export const OwnerManagerDialog = ({
   centerOptions,
   formData,
   selectedPermissions,
+  isOwner,
   onInputChange,
   onPermissionToggle,
   onSubmit,
   onClose,
 }: OwnerManagerDialogProps) => {
   const CurrentIcon = currentMeta.icon;
-  const fields = OWNER_MANAGER_FIELDS[activeTab];
   const isSuperuser = activeTab === 'superusers';
+  // Non-owner callers can only ever create/update 'admin' superusers (RMC-020 restricts
+  // owner-role assignment to owner callers), so hide the field rather than let them submit
+  // a value the backend will reject.
+  const fields = OWNER_MANAGER_FIELDS[activeTab].filter((field) => field.name !== 'role' || isOwner);
   const { t } = useLanguage();
   const entityLabels: Partial<Record<OwnerManagerTabType, string>> = {
     centers: 'Branch',

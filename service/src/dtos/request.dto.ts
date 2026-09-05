@@ -16,6 +16,7 @@ const notifications = require('./notifications.dto');
 const saved_filters = require('./saved-filters.dto');
 const tests = require('./tests.dto');
 const attendance = require('./attendance.dto');
+const superusers = require('./superusers.dto');
 
 module.exports = {
   ...common,
@@ -36,6 +37,7 @@ module.exports = {
   ...saved_filters,
   ...tests,
   ...attendance,
+  ...superusers,
 };
 
 export {};

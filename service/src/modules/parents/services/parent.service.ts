@@ -1,4 +1,4 @@
-const { hashPassword } = require('../../../shared/password');
+const { hashPassword, verifyPassword } = require('../../../shared/password');
 const parentRepository = require('../repositories/parent.repository');
 const { studentInCenter } = require('../../../shared/tenantDb');
 
@@ -36,7 +36,11 @@ const authenticate = async (username: string, password: string) => {
   const parent = await parentRepository.findByUsernameLogin(username);
   if (!parent) return { kind: 'invalid' as const };
   if (parent.status !== 'Active') return { kind: 'inactive' as const };
-  if (hashPassword(password) !== parent.password_hash) return { kind: 'invalid' as const };
+  const verification = verifyPassword(password, parent.password_hash);
+  if (!verification.valid) return { kind: 'invalid' as const };
+  if (verification.legacy) {
+    await parentRepository.updatePasswordHash(parent.parent_id, hashPassword(password));
+  }
   return { kind: 'ok' as const, parent };
 };
 

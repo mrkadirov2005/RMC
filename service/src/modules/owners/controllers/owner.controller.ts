@@ -19,6 +19,17 @@ const {
 
 type IdParams = { id: string };
 
+const DEVELOPMENT_OWNER_INVITE_KEY = 'owner-create-2026';
+const resolveOwnerInviteKey = (
+  environment = process.env.NODE_ENV,
+  configuredKey = process.env.OWNER_INVITE_KEY
+) => {
+  const configured = String(configuredKey || '').trim();
+  if (configured) return configured;
+  if (environment === 'production') return null;
+  return DEVELOPMENT_OWNER_INVITE_KEY;
+};
+
 const getAllOwners = async (_req: Request, res: Response) => {
   try {
     res.json(await ownerService.listOwners());
@@ -63,7 +74,10 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
       return res.status(400).json({ error: 'Validation failed', details: parseValidationError(validation.error) });
     }
 
-    const expectedKey = (process.env.OWNER_INVITE_KEY || 'owner-create-2026').trim();
+    const expectedKey = resolveOwnerInviteKey();
+    if (!expectedKey) {
+      return res.status(500).json({ error: 'Owner registration is not configured.' });
+    }
     if (String(validation.data.invite_key || '').trim() !== expectedKey) {
       return res.status(403).json({ error: 'Invalid keyword' });
     }
@@ -80,6 +94,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
       email: owner.email,
       userType: 'superuser',
       role: 'owner',
+      can_hard_delete: false,
     });
 
     res.status(201).json({
@@ -93,6 +108,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
         last_name: owner.last_name,
         role: 'owner',
         status: owner.status,
+        can_hard_delete: false,
       },
     });
   } catch (error: any) {
@@ -151,6 +167,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
       email: owner.email,
       userType: 'superuser',
       role: 'owner',
+      can_hard_delete: Boolean(owner.can_hard_delete),
     });
     res.json({
       message: 'Login successful',
@@ -163,6 +180,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
         last_name: owner.last_name,
         role: 'owner',
         status: owner.status,
+        can_hard_delete: Boolean(owner.can_hard_delete),
       },
     });
   } catch (error: any) {

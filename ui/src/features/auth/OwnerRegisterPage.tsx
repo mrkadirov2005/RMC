@@ -24,7 +24,9 @@ import { loginSuccess, setLoading, loginFailure } from '../../slices/authSlice';
 import { authAPI } from './api';
 import { handleApiError, showToast } from '../../utils/toast';
 
-const OWNER_INVITE_KEY = import.meta.env.VITE_OWNER_INVITE_KEY ?? 'owner-create-2026';
+// Required: registration is enabled only when this is set, matching the backend's
+// OWNER_INVITE_KEY (no shared hardcoded default anymore).
+const OWNER_INVITE_KEY = import.meta.env.VITE_OWNER_INVITE_KEY ?? '';
 const logoSrc = '/temurbek-school-logo.jpg';
 const inputClass =
   'h-12 rounded-md border-[#d8e4f1] bg-white pl-11 text-[#21116a] placeholder:text-slate-400 focus-visible:border-[#16a7e2] focus-visible:ring-[#16a7e2]/25';

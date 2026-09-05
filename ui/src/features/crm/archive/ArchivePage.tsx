@@ -76,7 +76,7 @@ const ArchivePage = () => {
     payments: 25,
     sessions: 25,
   });
-  const isOwner = (user?.role || '').toLowerCase() === 'owner' || (user?.username || '').toLowerCase() === 'muzaffar';
+  const canHardDelete = Boolean(user?.can_hard_delete);
 
   const loadArchive = () => {
     let cancelled = false;
@@ -157,7 +157,7 @@ const ArchivePage = () => {
         {actionKey === `${entity}:${id}:restore` ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
         {t('Restore')}
       </Button>
-      {isOwner && (
+      {canHardDelete && (
         <Button
           type="button"
           variant="destructive"

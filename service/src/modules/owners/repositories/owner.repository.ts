@@ -95,6 +95,7 @@ const findByUsernameForLogin = async (username: string) => {
       password_hash: owners.passwordHash,
       status: owners.status,
       is_locked: owners.isLocked,
+      can_hard_delete: owners.canHardDelete,
     })
     .from(owners)
     .where(eq(owners.username, username))
@@ -102,8 +103,16 @@ const findByUsernameForLogin = async (username: string) => {
   return rows[0] || null;
 };
 
+const LOGIN_ATTEMPTS_LOCK_THRESHOLD = 5;
+
 const incrementLoginAttempts = (id: number) =>
-  db.update(owners).set({ loginAttempts: sql`${owners.loginAttempts} + 1` }).where(eq(owners.ownerId, id));
+  db
+    .update(owners)
+    .set({
+      loginAttempts: sql`COALESCE(${owners.loginAttempts}, 0) + 1`,
+      isLocked: sql`CASE WHEN COALESCE(${owners.loginAttempts}, 0) + 1 >= ${LOGIN_ATTEMPTS_LOCK_THRESHOLD} THEN TRUE ELSE ${owners.isLocked} END`,
+    })
+    .where(eq(owners.ownerId, id));
 
 const resetLoginSuccess = (id: number) =>
   db.update(owners).set({ loginAttempts: 0, lastLogin: sql`CURRENT_TIMESTAMP` }).where(eq(owners.ownerId, id));

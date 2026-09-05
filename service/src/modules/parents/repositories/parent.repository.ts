@@ -208,6 +208,12 @@ const upsertParentStudent = async (params: any[]) => {
   return db.insert(parentStudents).values({ parentId, studentId, relationship, isPrimary });
 };
 
+const updatePasswordHash = (id: number, password_hash: string) =>
+  db
+    .update(parents)
+    .set({ passwordHash: password_hash, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(parents.parentId, id));
+
 const findByUsernameLogin = (username: string) =>
   db
     .select({
@@ -271,6 +277,7 @@ module.exports = {
   update,
   remove,
   upsertParentStudent,
+  updatePasswordHash,
   findByUsernameLogin,
   findStudentsForParent,
   findPaymentsForParent,

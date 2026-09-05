@@ -40,6 +40,11 @@ const validateInput =
       enableImplicitConversion: true,
     });
 
+    // whitelist:true + forbidNonWhitelisted:false means any field not declared on DtoClass
+    // is silently dropped here — the caller gets a 200 with no indication anything was stripped.
+    // Before adding or editing a DTO for a route the UI calls, grep the UI's api.ts/hook/form for
+    // every field it actually sends and make sure the DTO declares all of them; do not derive DTO
+    // fields from the database schema alone.
     const errors = await validate(instance, {
       whitelist: true,
       forbidNonWhitelisted: false,

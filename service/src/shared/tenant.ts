@@ -43,7 +43,9 @@ const getScopedCenterId = (req: any) => {
     return { centerId, isGlobal: centerId == null };
   }
 
-  const centerId = toCenterId(firstCenterScopeValue(req.user, req.headers));
+  // Non-global users are scoped strictly by their JWT payload — headers are client-supplied
+  // and must never be trusted for tenant scoping.
+  const centerId = toCenterId(firstCenterScopeValue(req.user));
   return { centerId, isGlobal: false };
 };
 

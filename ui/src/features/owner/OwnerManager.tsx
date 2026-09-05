@@ -70,6 +70,7 @@ const OwnerManager = memo(() => {
             centerOptions={vm.centerOptions}
             formData={vm.formData}
             selectedPermissions={vm.selectedPermissions}
+            isOwner={vm.isOwner}
             onInputChange={vm.handleInputChange}
             onPermissionToggle={vm.handlePermissionToggle}
             onSubmit={vm.handleSubmit}

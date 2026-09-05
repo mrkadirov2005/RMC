@@ -10,6 +10,7 @@ export interface AuthUser {
   role: string;
   roles?: string[]; // For teachers
   permissions?: string[]; // For superusers/admins
+  can_hard_delete?: boolean;
   userType: 'superuser' | 'teacher' | 'student';
   branch_id?: number;
   center_id: number;

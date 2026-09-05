@@ -1,4 +1,4 @@
-const { hashPassword } = require('../../../shared/password');
+const { hashPassword, verifyPassword } = require('../../../shared/password');
 const teacherRepository = require('../repositories/teacher.repository');
 
 const DEFAULT_TEACHER_PASSWORD = '012345678';
@@ -128,7 +128,11 @@ const authenticate = async (username: string, password: string) => {
   const teacher = await teacherRepository.findByUsername(username);
   if (!teacher) return { kind: 'invalid' as const };
   if (teacher.status !== 'Active') return { kind: 'inactive' as const };
-  if (hashPassword(password) !== teacher.password_hash) return { kind: 'invalid' as const };
+  const verification = verifyPassword(password, teacher.password_hash);
+  if (!verification.valid) return { kind: 'invalid' as const };
+  if (verification.legacy) {
+    await teacherRepository.updatePasswordHash(teacher.teacher_id, hashPassword(password));
+  }
   return { kind: 'ok' as const, teacher };
 };
 
@@ -139,7 +143,7 @@ const setPasswordByAdmin = (id: number, username: string, password: string, cent
 const changePassword = async (id: number, old_password: string, new_password: string) => {
   const existing = await teacherRepository.findPasswordHash(id);
   if (existing === undefined) return { ok: false as const, reason: 'not_found' as const };
-  if (hashPassword(old_password) !== existing) return { ok: false as const, reason: 'bad_old' as const };
+  if (!verifyPassword(old_password, existing).valid) return { ok: false as const, reason: 'bad_old' as const };
   await teacherRepository.updatePasswordHash(id, hashPassword(new_password));
   return { ok: true as const };
 };
