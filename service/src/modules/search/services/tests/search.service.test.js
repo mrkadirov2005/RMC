@@ -20,4 +20,30 @@ describe('search service', () => {
     expect(repository.searchPayments).toHaveBeenCalledWith('%R%', 100, 2);
     expect(repository.searchStudents).not.toHaveBeenCalled();
   });
+
+  // RMC-081: a teacher caller's student search must be scoped to their own assigned students
+  // (searchStudents receives teacherId), and that scoping must never leak into the other three
+  // entity searches -- searchTeachers/searchClasses/searchPayments's repository signatures don't
+  // even accept a teacherId argument, so this also proves it is architecturally impossible for a
+  // teacher's search to be broadened to another teacher's students via those entities.
+  test('scopes only the students search to the caller teacher, never teachers/classes/payments', async () => {
+    for (const fn of Object.values(repository)) fn.mockResolvedValue([]);
+
+    await service.runSearch('Ali', undefined, undefined, 5, 7);
+
+    expect(repository.searchStudents).toHaveBeenCalledWith('%Ali%', 20, 5, 7);
+    expect(repository.searchTeachers).toHaveBeenCalledWith('%Ali%', 20, 5);
+    expect(repository.searchClasses).toHaveBeenCalledWith('%Ali%', 20, 5);
+    expect(repository.searchPayments).toHaveBeenCalledWith('%Ali%', 20, 5);
+  });
+
+  // Confirms the flip side: a superuser/owner caller (no teacherId) searches every student in
+  // the center, not a teacher-restricted subset.
+  test('does not scope student results by teacher for superuser/owner callers', async () => {
+    repository.searchStudents.mockResolvedValue([{ student_id: 1 }, { student_id: 2 }]);
+
+    await service.runSearch('Ali', 'students', undefined, 5, undefined);
+
+    expect(repository.searchStudents).toHaveBeenCalledWith('%Ali%', 20, 5, undefined);
+  });
 });

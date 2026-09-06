@@ -51,4 +51,117 @@ describe('student portal controller', () => {
     expect(serviceMocks.grades.listByStudent).toHaveBeenCalledWith(1, 2);
     expect(serviceMocks.tests.getAssignedTests).toHaveBeenCalledWith('student', 1, 2);
   });
+
+  // RMC-080: every aggregated dashboard section must be keyed off req.user.id/req.user.center_id
+  // (the authenticated student's own token), never a client-supplied id. The controller code never
+  // reads params/query/body for a student id at all, so this test spoofs every plausible smuggling
+  // vector (params, query, body) alongside the real token and proves student B's id (999) never
+  // reaches any repository/service call.
+  test('getDashboardData ignores any client-supplied student id on every aggregated section and scopes all of them to the authenticated user', async () => {
+    serviceMocks.students.getStudent.mockResolvedValue({ student_id: 1, class_id: 3, teacher_id: 4 });
+    serviceMocks.attendance.byStudent.mockResolvedValue([{ attendance_id: 'own' }]);
+    serviceMocks.grades.listByStudent.mockResolvedValue([{ grade_id: 'own' }]);
+    serviceMocks.debts.listByStudent.mockResolvedValue([{ debt_id: 'own' }]);
+    serviceMocks.payments.listByStudent.mockResolvedValue([{ payment_id: 'own' }]);
+    serviceMocks.tests.getAssignedTests.mockResolvedValue([{ test_id: 'own' }]);
+    serviceMocks.assignments.getAllAssignments.mockResolvedValue([]);
+    serviceMocks.classes.getClass.mockResolvedValue({ class_id: 3 });
+    serviceMocks.subjects.listByClass.mockResolvedValue([]);
+    serviceMocks.teachers.getTeacher.mockResolvedValue({ teacher_id: 4 });
+    serviceMocks.rooms.findByClassId.mockResolvedValue([{ slot_id: 'own' }]);
+
+    const OTHER_STUDENT_ID = 999;
+    const spoofedReq = {
+      user: { id: 1, center_id: 2 },
+      params: { studentId: String(OTHER_STUDENT_ID), student_id: String(OTHER_STUDENT_ID) },
+      query: { studentId: String(OTHER_STUDENT_ID), student_id: String(OTHER_STUDENT_ID) },
+      body: { studentId: OTHER_STUDENT_ID, student_id: OTHER_STUDENT_ID },
+    };
+    const res = response();
+
+    await controller.getDashboardData(spoofedReq, res);
+
+    // student lookup and every section must key off the token's own id/center, not the spoofed one
+    expect(serviceMocks.students.getStudent).toHaveBeenCalledWith(1, 2);
+    expect(serviceMocks.attendance.byStudent).toHaveBeenCalledWith(1, 2);
+    expect(serviceMocks.grades.listByStudent).toHaveBeenCalledWith(1, 2);
+    expect(serviceMocks.debts.listByStudent).toHaveBeenCalledWith(1, 2);
+    expect(serviceMocks.payments.listByStudent).toHaveBeenCalledWith(1, 2);
+    expect(serviceMocks.tests.getAssignedTests).toHaveBeenCalledWith('student', 1, 2);
+    expect(serviceMocks.teachers.getTeacher).toHaveBeenCalledWith(4, 2);
+    expect(serviceMocks.rooms.findByClassId).toHaveBeenCalledWith(3, 2);
+
+    // the spoofed id must never leak into any downstream call
+    const allSectionCalls = [
+      ...serviceMocks.attendance.byStudent.mock.calls,
+      ...serviceMocks.grades.listByStudent.mock.calls,
+      ...serviceMocks.debts.listByStudent.mock.calls,
+      ...serviceMocks.payments.listByStudent.mock.calls,
+      ...serviceMocks.tests.getAssignedTests.mock.calls,
+      ...serviceMocks.rooms.findByClassId.mock.calls,
+    ];
+    for (const args of allSectionCalls) {
+      expect(args).not.toContain(OTHER_STUDENT_ID);
+      expect(args).not.toContain(String(OTHER_STUDENT_ID));
+    }
+    // and the response is built entirely from the authenticated user's own data
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
+      attendance: [{ attendance_id: 'own' }],
+      grades: [{ grade_id: 'own' }],
+      debts: [{ debt_id: 'own' }],
+      payments: [{ payment_id: 'own' }],
+      tests: [{ test_id: 'own' }],
+      schedule: [{ slot_id: 'own' }],
+    }));
+  });
+
+  test.each([
+    ['getMyAttendance', () => serviceMocks.attendance.byStudent, () => serviceMocks.attendance.byStudent.mockResolvedValue([])],
+    ['getMyGrades', () => serviceMocks.grades.listByStudent, () => serviceMocks.grades.listByStudent.mockResolvedValue([])],
+  ])('%s ignores a client-supplied student id and scopes to the authenticated user', async (method, getMock, arrange) => {
+    arrange();
+    const OTHER_STUDENT_ID = 999;
+    const spoofedReq = {
+      user: { id: 1, center_id: 2 },
+      params: { studentId: String(OTHER_STUDENT_ID) },
+      query: { student_id: String(OTHER_STUDENT_ID) },
+      body: { studentId: OTHER_STUDENT_ID },
+    };
+
+    await controller[method](spoofedReq, response());
+
+    expect(getMock()).toHaveBeenCalledWith(1, 2);
+  });
+
+  test('getMyTests ignores a client-supplied student id and scopes to the authenticated user', async () => {
+    serviceMocks.tests.getAssignedTests.mockResolvedValue([]);
+    const spoofedReq = {
+      user: { id: 1, center_id: 2 },
+      params: { studentId: '999' },
+      query: { student_id: '999' },
+      body: { studentId: 999 },
+    };
+
+    await controller.getMyTests(spoofedReq, response());
+
+    expect(serviceMocks.tests.getAssignedTests).toHaveBeenCalledWith('student', 1, 2);
+  });
+
+  test('getMySchedule ignores a client-supplied student id, looking up the class via the authenticated user only', async () => {
+    serviceMocks.students.getStudent.mockResolvedValue({ student_id: 1, class_id: 3 });
+    serviceMocks.rooms.findByClassId.mockResolvedValue([{ slot_id: 'own' }]);
+    const spoofedReq = {
+      user: { id: 1, center_id: 2 },
+      params: { studentId: '999' },
+      query: { student_id: '999' },
+      body: { studentId: 999 },
+    };
+
+    const res = response();
+    await controller.getMySchedule(spoofedReq, res);
+
+    expect(serviceMocks.students.getStudent).toHaveBeenCalledWith(1, 2);
+    expect(serviceMocks.rooms.findByClassId).toHaveBeenCalledWith(3, 2);
+    expect(res.json).toHaveBeenCalledWith([{ slot_id: 'own' }]);
+  });
 });
