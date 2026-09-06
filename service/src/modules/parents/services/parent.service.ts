@@ -7,10 +7,10 @@ const listParents = (centerId?: number) => parentRepository.findAllSafe(centerId
 const getParent = (id: number, centerId?: number) => parentRepository.findByIdSafe(id, centerId);
 
 const createParent = (body: any) => {
-  const { first_name, last_name, email, phone, username, password, status } = body;
+  const { first_name, last_name, email, phone, username, password, status, center_id } = body;
   const password_hash = hashPassword(password);
   return parentRepository
-    .insert([first_name, last_name, email || null, phone || null, username, password_hash, status || 'Active'])
+    .insert([first_name, last_name, email || null, phone || null, username, password_hash, status || 'Active', center_id ?? null])
     .then((row: any) => ({ row }));
 };
 

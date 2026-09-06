@@ -5,7 +5,7 @@ const router_grade = express_grade.Router();
 const gradeController = require('../modules/grades/controllers/grade.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody, validateParams } = require('../middleware/validation');
-const { BulkGradesDto, IdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
+const { BulkGradesDto, CreateGradeDto, UpdateGradeDto, IdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -67,7 +67,7 @@ router_grade.get('/:id', requireAuth, validateParams(IdParamDto), gradeControlle
  *       400:
  *         description: Invalid input
  */
-router_grade.post('/', requireAuth, gradeController.createGrade);
+router_grade.post('/', requireAuth, validateBody(CreateGradeDto), gradeController.createGrade);
 
 /**
  * @swagger
@@ -118,7 +118,7 @@ router_grade.post('/bulk', requireAuth, validateBody(BulkGradesDto), gradeContro
  *       404:
  *         description: Grade not found
  */
-router_grade.put('/:id', requireAuth, validateParams(IdParamDto), gradeController.updateGrade);
+router_grade.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateGradeDto), gradeController.updateGrade);
 
 /**
  * @swagger

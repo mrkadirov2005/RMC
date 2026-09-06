@@ -186,6 +186,9 @@ const upsertSessionScores = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Center scope required.' });
     }
     const out = await gradeService.upsertSessionScores(req.body, centerId ?? req.body.center_id);
+    if (out && out.error === 'session_id_required') {
+      return res.status(400).json({ error: 'session_id is required.' });
+    }
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);

@@ -5,7 +5,7 @@ const router_debt = express_debt.Router();
 const debtController = require('../modules/debts/controllers/debt.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody } = require('../middleware/validation');
-const { GenerateDebtsDto } = require('../dtos/request.dto');
+const { CreateDebtDto, UpdateDebtDto, GenerateDebtsDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -67,7 +67,7 @@ router_debt.get('/:id', requireAuth, debtController.getDebtById);
  *       400:
  *         description: Invalid input
  */
-router_debt.post('/', requireAuth, debtController.createDebt);
+router_debt.post('/', requireAuth, validateBody(CreateDebtDto), debtController.createDebt);
 
 /**
  * @swagger
@@ -93,7 +93,7 @@ router_debt.post('/', requireAuth, debtController.createDebt);
  *       404:
  *         description: Debt not found
  */
-router_debt.put('/:id', requireAuth, debtController.updateDebt);
+router_debt.put('/:id', requireAuth, validateBody(UpdateDebtDto), debtController.updateDebt);
 
 /**
  * @swagger

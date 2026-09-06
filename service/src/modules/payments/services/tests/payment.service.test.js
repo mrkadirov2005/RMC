@@ -16,9 +16,21 @@ jest.mock('../../../discounts/services/discount.service', () => ({
   update: jest.fn(),
 }));
 
+jest.mock('../../../debts/repositories/debt.repository', () => ({
+  findOpenDebtsForStudent: jest.fn(),
+  applyPayment: jest.fn(),
+}));
+
+jest.mock('../../../invoices/repositories/invoice.repository', () => ({
+  findOpenInvoiceForPeriod: jest.fn(),
+  updateStatus: jest.fn(),
+}));
+
 const paymentService = require('../payment.service');
 const paymentRepository = require('../../repositories/payment.repository');
 const discountService = require('../../../discounts/services/discount.service');
+const debtRepository = require('../../../debts/repositories/debt.repository');
+const invoiceRepository = require('../../../invoices/repositories/invoice.repository');
 
 describe('payments service', () => {
   beforeEach(() => {
@@ -27,6 +39,8 @@ describe('payments service', () => {
     paymentRepository.withTransaction.mockImplementation(async (callback) => callback({ query: jest.fn() }));
     discountService.getActiveByStudent.mockResolvedValue(null);
     discountService.getActiveSerialByStudent.mockResolvedValue(null);
+    debtRepository.findOpenDebtsForStudent.mockResolvedValue([]);
+    invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue(null);
   });
 
   it('applies explicit monthly discount before inserting payment', async () => {
@@ -54,7 +68,7 @@ describe('payments service', () => {
       250000,
       'UZS',
       'Cash',
-    ]));
+    ]), expect.anything());
     const payload = paymentRepository.insert.mock.calls[0][0];
     expect(payload.slice(11)).toEqual([
       null,

@@ -1,4 +1,4 @@
-const { and, asc, desc, eq, gte, isNull, lte, sql } = require('drizzle-orm');
+const { and, asc, desc, eq, gte, inArray, isNull, lte, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { debts, payments, students } = require('../../../db/schema');
 
@@ -81,7 +81,9 @@ const findByStudent = (studentId: number, centerId?: number, teacherId?: number)
 const remove = async (id: number, centerId?: number, teacherId?: number) => {
   const existing = await findById(id, centerId, teacherId);
   if (!existing) return null;
-  const rows = await db.delete(debts).where(eq(debts.debtId, id)).returning(debtSelection);
+  const conditions = [eq(debts.debtId, id)];
+  if (centerId) conditions.push(eq(debts.centerId, centerId));
+  const rows = await db.delete(debts).where(and(...conditions)).returning(debtSelection);
   return rows[0] || null;
 };
 
@@ -113,8 +115,8 @@ const findPaymentsForStudentInRange = (studentId: number, start: Date, end: Date
     .where(and(eq(payments.studentId, studentId), gte(payments.paymentDate, start.toISOString().slice(0, 10)), lte(payments.paymentDate, end.toISOString().slice(0, 10)), eq(payments.paymentStatus, 'Completed'), isNull(payments.deletedAt)))
     .orderBy(asc(payments.paymentDate));
 
-const findOpenDebtsForStudent = (studentId: number) =>
-  db
+const findOpenDebtsForStudent = (studentId: number, client: any = db) =>
+  client
     .select({
       debt_id: debts.debtId,
       debt_amount: debts.debtAmount,
@@ -126,6 +128,51 @@ const findOpenDebtsForStudent = (studentId: number) =>
     .from(debts)
     .where(and(eq(debts.studentId, studentId), sql`${debts.balance} > 0`))
     .orderBy(asc(debts.debtDate));
+
+const findPaymentsForStudentsInRange = (studentIds: number[], start: Date, end: Date) =>
+  db
+    .select({
+      student_id: payments.studentId,
+      payment_date: payments.paymentDate,
+      amount: payments.amount,
+      payment_status: payments.paymentStatus,
+      payment_type: payments.paymentType,
+    })
+    .from(payments)
+    .where(
+      and(
+        inArray(payments.studentId, studentIds),
+        gte(payments.paymentDate, start.toISOString().slice(0, 10)),
+        lte(payments.paymentDate, end.toISOString().slice(0, 10)),
+        eq(payments.paymentStatus, 'Completed'),
+        isNull(payments.deletedAt)
+      )
+    )
+    .orderBy(asc(payments.paymentDate));
+
+const findOpenDebtsForStudents = (studentIds: number[]) =>
+  db
+    .select({
+      debt_id: debts.debtId,
+      student_id: debts.studentId,
+      debt_amount: debts.debtAmount,
+      debt_date: debts.debtDate,
+      due_date: debts.dueDate,
+      amount_paid: debts.amountPaid,
+      balance: debts.balance,
+    })
+    .from(debts)
+    .where(and(inArray(debts.studentId, studentIds), sql`${debts.balance} > 0`))
+    .orderBy(asc(debts.debtDate));
+
+const applyPayment = async (debtId: number, amountPaid: number, balance: number, client: any = db) => {
+  const rows = await client
+    .update(debts)
+    .set({ amountPaid, balance, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(debts.debtId, debtId))
+    .returning(debtSelection);
+  return rows[0] || null;
+};
 
 const getStudentCenter = async (studentId: number) => {
   const rows = await db.select({ center_id: students.centerId }).from(students).where(and(eq(students.studentId, studentId), isNull(students.deletedAt))).limit(1);
@@ -167,7 +214,10 @@ module.exports = {
   remove,
   findActiveStudents,
   findPaymentsForStudentInRange,
+  findPaymentsForStudentsInRange,
   findOpenDebtsForStudent,
+  findOpenDebtsForStudents,
+  applyPayment,
   getStudentCenter,
   paymentMonthlySummary,
   debtAggregate,

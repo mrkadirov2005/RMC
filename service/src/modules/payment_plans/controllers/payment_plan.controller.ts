@@ -43,6 +43,9 @@ const createPlan = async (req: any, res: any) => {
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Student does not belong to this center.' });
     }
+    if (out.error === 'installment_sum_mismatch') {
+      return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
+    }
     const { plan } = out as { plan: any };
     await logAudit({
       user_type: req.user?.userType || 'system',
@@ -69,6 +72,9 @@ const updatePlan = async (req: any, res: any) => {
     }
     const row = await paymentPlanService.update(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Payment plan not found' });
+    if ((row as any).error === 'installment_sum_mismatch') {
+      return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
+    }
     res.json({ message: 'Payment plan updated', plan: row });
   } catch (error: any) {
     console.error('Database error:', error);

@@ -1,5 +1,7 @@
 const paymentRepository = require('../repositories/payment.repository');
 const discountService = require('../../discounts/services/discount.service');
+const debtRepository = require('../../debts/repositories/debt.repository');
+const invoiceRepository = require('../../invoices/repositories/invoice.repository');
 
 const listPayments = (options: {
   centerId?: number;
@@ -10,6 +12,52 @@ const listPayments = (options: {
 } = {}) => paymentRepository.findAll(options);
 
 const getPayment = (id: number, centerId?: number, teacherId?: number) => paymentRepository.findById(id, centerId, teacherId);
+
+const resolveAppliedDiscount = (
+  kind: 'monthly_discount' | 'serial_discount',
+  discountId: any,
+  discountType: string,
+  discountValue: number,
+  originalAmount: number
+) => {
+  const calculated = discountService.calculateDiscount(originalAmount, discountType, Number(discountValue));
+  return {
+    discount_id: discountId,
+    discount_kind: kind,
+    discount_value_type: discountType,
+    discount_value: Number(discountValue),
+    original_amount: calculated.originalAmount,
+    discount_amount: calculated.discountAmount,
+    final_amount: calculated.finalAmount,
+  };
+};
+
+const syncDebtAfterPayment = async (client: any, studentId: number, paidAmount: number) => {
+  if (!(paidAmount > 0)) return;
+  const openDebts = await debtRepository.findOpenDebtsForStudent(Number(studentId), client);
+  const debt = openDebts[0];
+  if (!debt) return;
+  const currentBalance = Number(debt.balance || 0);
+  const currentPaid = Number(debt.amount_paid || 0);
+  const newBalance = Math.max(0, currentBalance - paidAmount);
+  const newAmountPaid = currentPaid + paidAmount;
+  await debtRepository.applyPayment(debt.debt_id, newAmountPaid, newBalance, client);
+};
+
+const syncInvoiceAfterPayment = async (
+  client: any,
+  studentId: number,
+  centerId: number | undefined,
+  paymentDate: string,
+  paidAmount: number
+) => {
+  if (!(paidAmount > 0)) return;
+  const invoice = await invoiceRepository.findOpenInvoiceForPeriod(Number(studentId), centerId, paymentDate, client);
+  if (!invoice) return;
+  const total = Number(invoice.total || 0);
+  const nextStatus = paidAmount >= total ? 'Paid' : 'Partially Paid';
+  await invoiceRepository.updateStatus(invoice.invoice_id, nextStatus, client);
+};
 
 const createPayment = async (body: any, centerId?: number) => {
   const {
@@ -38,53 +86,35 @@ const createPayment = async (body: any, centerId?: number) => {
   let appliedDiscount: any = null;
 
   if (discount_kind === 'monthly_discount' && Number(discount_value || 0) > 0) {
-    const valueType = discount_value_type || 'fixed';
-    const calculated = discountService.calculateDiscount(originalAmount, valueType, Number(discount_value));
-    appliedDiscount = {
-      discount_id: discount_id || null,
-      discount_kind: 'monthly_discount',
-      discount_value_type: valueType,
-      discount_value: Number(discount_value),
-      original_amount: calculated.originalAmount,
-      discount_amount: calculated.discountAmount,
-      final_amount: calculated.finalAmount,
-    };
+    appliedDiscount = resolveAppliedDiscount(
+      'monthly_discount',
+      discount_id || null,
+      discount_value_type || 'fixed',
+      Number(discount_value),
+      originalAmount
+    );
   } else {
     const monthlyDiscount = await discountService.getActiveByStudent(Number(student_id), Number(scopedCenterId), 'monthly_discount');
     const serialDiscount = monthlyDiscount
       ? null
       : await discountService.getActiveSerialByStudent(Number(student_id), Number(scopedCenterId));
     if (monthlyDiscount) {
-      const calculated = discountService.calculateDiscount(
-        originalAmount,
+      appliedDiscount = resolveAppliedDiscount(
+        'monthly_discount',
+        monthlyDiscount.discount_id,
         monthlyDiscount.discount_type,
-        Number(monthlyDiscount.value)
+        Number(monthlyDiscount.value),
+        originalAmount
       );
-      appliedDiscount = {
-        discount_id: monthlyDiscount.discount_id,
-        discount_kind: 'monthly_discount',
-        discount_value_type: monthlyDiscount.discount_type,
-        discount_value: Number(monthlyDiscount.value),
-        original_amount: calculated.originalAmount,
-        discount_amount: calculated.discountAmount,
-        final_amount: calculated.finalAmount,
-      };
     }
     if (serialDiscount) {
-      const calculated = discountService.calculateDiscount(
-        originalAmount,
+      appliedDiscount = resolveAppliedDiscount(
+        'serial_discount',
+        serialDiscount.discount_id,
         serialDiscount.discount_type,
-        Number(serialDiscount.value)
+        Number(serialDiscount.value),
+        originalAmount
       );
-      appliedDiscount = {
-        discount_id: serialDiscount.discount_id,
-        discount_kind: 'serial_discount',
-        discount_value_type: serialDiscount.discount_type,
-        discount_value: Number(serialDiscount.value),
-        original_amount: calculated.originalAmount,
-        discount_amount: calculated.discountAmount,
-        final_amount: calculated.finalAmount,
-      };
     }
   }
 
@@ -116,15 +146,18 @@ const createPayment = async (body: any, centerId?: number) => {
     complete,
   ];
 
-  if (appliedDiscount?.discount_kind === 'monthly_discount' && appliedDiscount?.discount_id) {
-    return paymentRepository.withTransaction(async (client: any) => {
-      const createdPayment = await paymentRepository.insert(paymentPayload, client);
-      await discountService.update(appliedDiscount.discount_id, { active: false }, Number(scopedCenterId), client);
-      return createdPayment;
-    });
-  }
+  return paymentRepository.withTransaction(async (client: any) => {
+    const createdPayment = await paymentRepository.insert(paymentPayload, client);
 
-  return paymentRepository.insert(paymentPayload);
+    if (appliedDiscount?.discount_kind === 'monthly_discount' && appliedDiscount?.discount_id) {
+      await discountService.update(appliedDiscount.discount_id, { active: false }, Number(scopedCenterId), client);
+    }
+
+    await syncDebtAfterPayment(client, student_id, resolvedFinalAmount);
+    await syncInvoiceAfterPayment(client, student_id, scopedCenterId, paymentDate, resolvedFinalAmount);
+
+    return createdPayment;
+  });
 };
 
 const updatePayment = (id: number, body: any, centerId?: number, teacherId?: number) => {

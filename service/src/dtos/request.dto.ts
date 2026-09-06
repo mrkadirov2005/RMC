@@ -9,6 +9,7 @@ const refunds = require('./refunds.dto');
 const invoices = require('./invoices.dto');
 const payment_plans = require('./payment-plans.dto');
 const parents = require('./parents.dto');
+const centers = require('./centers.dto');
 const search = require('./search.dto');
 const grades = require('./grades.dto');
 const imports = require('./imports.dto');
@@ -30,6 +31,7 @@ module.exports = {
   ...invoices,
   ...payment_plans,
   ...parents,
+  ...centers,
   ...search,
   ...grades,
   ...imports,

@@ -87,6 +87,9 @@ const pushEntityToSheets = async (req: any, res: any) => {
     if (out.error === 'apps_script_failed') {
       return res.status(502).json({ error: 'Google Apps Script sync failed.', details: out.details });
     }
+    if (out.error === 'apps_script_timeout') {
+      return res.status(504).json({ error: 'Google Apps Script did not respond in time.', details: out.details });
+    }
     const { rows } = out as { rows: number; entity: string };
     await logAudit({
       user_type: req.user?.userType || 'system',
@@ -123,6 +126,9 @@ const pullEntityFromSheets = async (req: any, res: any) => {
     }
     if (out.error === 'apps_script_failed') {
       return res.status(502).json({ error: 'Google Apps Script import failed.', details: out.details });
+    }
+    if (out.error === 'apps_script_timeout') {
+      return res.status(504).json({ error: 'Google Apps Script did not respond in time.', details: out.details });
     }
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Google Sheet rows must belong to this center.' });

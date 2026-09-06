@@ -1,7 +1,9 @@
+const mockClient = { __tag: 'tx-client' };
+
 jest.mock('../../repositories/payment_plan.repository', () => ({
   findAllFiltered: jest.fn(), findPlanById: jest.fn(), findInstallments: jest.fn(), insertPlan: jest.fn(),
   insertInstallmentSimple: jest.fn(), updatePlan: jest.fn(), deleteInstallmentsByPlan: jest.fn(),
-  insertInstallment: jest.fn(), deletePlan: jest.fn(),
+  insertInstallment: jest.fn(), deletePlan: jest.fn(), withTransaction: jest.fn(),
 }));
 jest.mock('../../../../shared/tenantDb', () => ({ studentInCenter: jest.fn() }));
 
@@ -10,7 +12,10 @@ const { studentInCenter } = require('../../../../shared/tenantDb');
 const service = require('../payment_plan.service');
 
 describe('payment plan service', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    repository.withTransaction.mockImplementation((callback) => callback(mockClient));
+  });
 
   test('returns null for a missing plan and combines installments for an existing plan', async () => {
     repository.findPlanById.mockResolvedValueOnce(null);
@@ -32,14 +37,15 @@ describe('payment plan service', () => {
       student_id: 3, center_id: 99, name: 'Term', total_amount: 1000, start_date: '2026-08-01',
       installments: [{ due_date: '2026-08-15', amount: 500 }, { due_date: '2026-09-15', amount: 500 }],
     }, 2);
-    expect(repository.insertPlan).toHaveBeenCalledWith([3, 2, 'Term', 1000, 'UZS', '2026-08-01', null]);
+    expect(repository.insertPlan).toHaveBeenCalledWith([3, 2, 'Term', 1000, 'UZS', '2026-08-01', null], mockClient);
     expect(repository.insertInstallmentSimple).toHaveBeenCalledTimes(2);
   });
 
   test('replaces installments only after a successful scoped plan update', async () => {
+    repository.findPlanById.mockResolvedValue({ plan_id: 7, total_amount: 500 });
     repository.updatePlan.mockResolvedValue({ plan_id: 7 });
     await service.update(7, { installments: [{ due_date: '2026-09-15', amount: 500, status: 'Pending' }] }, 2);
-    expect(repository.deleteInstallmentsByPlan).toHaveBeenCalledWith(7);
-    expect(repository.insertInstallment).toHaveBeenCalledWith(7, '2026-09-15', 500, 'Pending');
+    expect(repository.deleteInstallmentsByPlan).toHaveBeenCalledWith(7, mockClient);
+    expect(repository.insertInstallment).toHaveBeenCalledWith(7, '2026-09-15', 500, 'Pending', mockClient);
   });
 });

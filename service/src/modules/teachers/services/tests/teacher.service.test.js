@@ -27,7 +27,7 @@ describe('teachers service', () => {
     jest.clearAllMocks();
   });
 
-  it('builds a unique username and hashes default password when creating teacher', async () => {
+  it('builds a unique username and hashes a random default password when creating teacher', async () => {
     teacherRepository.countByUsername
       .mockResolvedValueOnce(1)
       .mockResolvedValueOnce(0)
@@ -44,7 +44,7 @@ describe('teachers service', () => {
     expect(insertPayload[11]).toBe('Active');
     expect(insertPayload[12]).toBe('[]');
     expect(insertPayload[13]).toBe('ali2');
-    expect(insertPayload[14]).toBe(hashPassword('012345678'));
+    expect(insertPayload[14]).toMatch(/^\$2[aby]\$\d{2}\$/);
     expect(insertPayload[10]).toBe(100);
   });
 
@@ -76,13 +76,25 @@ describe('teachers service', () => {
     });
   });
 
-  it('unassigns dependencies before deleting teachers', async () => {
+  it('blocks deletion when dependencies exist and force is not set', async () => {
+    teacherRepository.findById.mockResolvedValue({ teacher_id: 9 });
+    teacherRepository.getDeleteDependencies.mockResolvedValue({ classes: 2 });
+    teacherRepository.hasDeleteDependencies.mockReturnValue(true);
+
+    const result = await teacherService.deleteTeacher(9, 1);
+
+    expect(teacherRepository.unassignDeleteDependencies).not.toHaveBeenCalled();
+    expect(teacherRepository.remove).not.toHaveBeenCalled();
+    expect(result).toEqual({ kind: 'blocked', dependencies: { classes: 2 } });
+  });
+
+  it('unassigns dependencies before deleting teachers when forced', async () => {
     teacherRepository.findById.mockResolvedValue({ teacher_id: 9 });
     teacherRepository.getDeleteDependencies.mockResolvedValue({ classes: 2 });
     teacherRepository.hasDeleteDependencies.mockReturnValue(true);
     teacherRepository.remove.mockResolvedValue({ teacher_id: 9, deleted_at: 'now' });
 
-    const result = await teacherService.deleteTeacher(9, 1);
+    const result = await teacherService.deleteTeacher(9, 1, { force: true });
 
     expect(teacherRepository.unassignDeleteDependencies).toHaveBeenCalledWith(9, 1);
     expect(result).toEqual({

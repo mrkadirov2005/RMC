@@ -57,8 +57,8 @@ const findById = async (id: number, centerId?: number, teacherId?: number) => {
   return rows[0] || null;
 };
 
-const insert = async (params: any[]) => {
-  const rows = await db
+const insert = async (params: any[], client: any = db) => {
+  const rows = await client
     .insert(grades)
     .values({
       studentId: params[0],

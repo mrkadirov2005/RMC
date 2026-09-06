@@ -48,8 +48,8 @@ const findPlanById = async (id: number, centerId?: number) => {
 const findInstallments = (planId: number) =>
   db.select(installmentSelection).from(paymentPlanInstallments).where(eq(paymentPlanInstallments.planId, planId)).orderBy(asc(paymentPlanInstallments.dueDate));
 
-const insertPlan = async (params: any[]) => {
-  const rows = await db
+const insertPlan = async (params: any[], client: any = db) => {
+  const rows = await client
     .insert(paymentPlans)
     .values({
       studentId: params[0],
@@ -64,16 +64,16 @@ const insertPlan = async (params: any[]) => {
   return rows[0];
 };
 
-const insertInstallment = (planId: number, due_date: any, amount: any, status?: string) =>
-  db.insert(paymentPlanInstallments).values({ planId, dueDate: due_date, amount, status: status || 'Pending' });
+const insertInstallment = (planId: number, due_date: any, amount: any, status?: string, client: any = db) =>
+  client.insert(paymentPlanInstallments).values({ planId, dueDate: due_date, amount, status: status || 'Pending' });
 
-const insertInstallmentSimple = (planId: number, due_date: any, amount: any) =>
-  db.insert(paymentPlanInstallments).values({ planId, dueDate: due_date, amount });
+const insertInstallmentSimple = (planId: number, due_date: any, amount: any, client: any = db) =>
+  client.insert(paymentPlanInstallments).values({ planId, dueDate: due_date, amount });
 
-const updatePlan = async (id: number, params: any[], centerId?: number) => {
+const updatePlan = async (id: number, params: any[], centerId?: number, client: any = db) => {
   const conditions = [eq(paymentPlans.planId, id)];
   if (centerId) conditions.push(eq(paymentPlans.centerId, centerId));
-  const rows = await db
+  const rows = await client
     .update(paymentPlans)
     .set({
       name: sql`COALESCE(${params[0] ?? null}, ${paymentPlans.name})`,
@@ -89,8 +89,8 @@ const updatePlan = async (id: number, params: any[], centerId?: number) => {
   return rows[0] || null;
 };
 
-const deleteInstallmentsByPlan = (planId: number) =>
-  db.delete(paymentPlanInstallments).where(eq(paymentPlanInstallments.planId, planId));
+const deleteInstallmentsByPlan = (planId: number, client: any = db) =>
+  client.delete(paymentPlanInstallments).where(eq(paymentPlanInstallments.planId, planId));
 
 const deletePlan = async (id: number, centerId?: number) => {
   const conditions = [eq(paymentPlans.planId, id)];
@@ -98,6 +98,8 @@ const deletePlan = async (id: number, centerId?: number) => {
   const rows = await db.delete(paymentPlans).where(and(...conditions)).returning(planSelection);
   return rows[0] || null;
 };
+
+const withTransaction = (callback: (tx: any) => Promise<any>) => db.transaction(callback);
 
 module.exports = {
   findAllFiltered,
@@ -109,6 +111,7 @@ module.exports = {
   updatePlan,
   deleteInstallmentsByPlan,
   deletePlan,
+  withTransaction,
 };
 
 export {};

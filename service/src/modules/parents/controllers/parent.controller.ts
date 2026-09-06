@@ -32,7 +32,14 @@ const getParentById = async (req: any, res: any) => {
 
 const createParent = async (req: any, res: any) => {
   try {
-    const out = await parentService.createParent(req.body);
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    const out = await parentService.createParent({ ...req.body, center_id: centerId });
     res.status(201).json({ message: 'Parent created', parent: (out as any).row });
   } catch (error: any) {
     console.error('Database error:', error);

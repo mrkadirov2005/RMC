@@ -31,6 +31,28 @@ class CreateParentDto {
   status?: string;
 }
 
+class UpdateParentDto {
+  @IsOptional()
+  @IsString()
+  first_name?: string;
+
+  @IsOptional()
+  @IsString()
+  last_name?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+}
+
 class AssignParentStudentDto {
   @Type(() => Number)
   @IsInt()
@@ -52,6 +74,7 @@ class AssignParentStudentDto {
 
 module.exports = {
   CreateParentDto,
+  UpdateParentDto,
   AssignParentStudentDto,
 };
 

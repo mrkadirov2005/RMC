@@ -43,9 +43,31 @@ const analyzeUnpaidMonths = async (center_id?: string, start_date?: string, end_
   }
 
   const analysisResults: any[] = [];
+  const studentIds = students.map((s: any) => s.student_id);
+
+  const [allPayments, allOpenDebts] = studentIds.length
+    ? await Promise.all([
+        debtRepository.findPaymentsForStudentsInRange(studentIds, startDate, endDate),
+        debtRepository.findOpenDebtsForStudents(studentIds),
+      ])
+    : [[], []];
+
+  const paymentsByStudent = new Map<number, any[]>();
+  allPayments.forEach((p: any) => {
+    const list = paymentsByStudent.get(p.student_id) || [];
+    list.push(p);
+    paymentsByStudent.set(p.student_id, list);
+  });
+
+  const debtsByStudent = new Map<number, any[]>();
+  allOpenDebts.forEach((d: any) => {
+    const list = debtsByStudent.get(d.student_id) || [];
+    list.push(d);
+    debtsByStudent.set(d.student_id, list);
+  });
 
   for (const student of students) {
-    const payments = await debtRepository.findPaymentsForStudentInRange(student.student_id, startDate, endDate);
+    const payments = paymentsByStudent.get(student.student_id) || [];
     const paidMonths = new Set<string>();
     payments.forEach((p: any) => {
       const date = new Date(p.payment_date);
@@ -53,7 +75,7 @@ const analyzeUnpaidMonths = async (center_id?: string, start_date?: string, end_
     });
 
     const unpaidMonths = monthsToCheck.filter((m) => !paidMonths.has(`${m.year}-${m.month}`));
-    const debtsResult = await debtRepository.findOpenDebtsForStudent(student.student_id);
+    const debtsResult = (debtsByStudent.get(student.student_id) || []).map(({ student_id, ...rest }: any) => rest);
     const totalDebt = debtsResult.reduce((sum: number, d: any) => sum + parseFloat(d.balance || 0), 0);
 
     if (unpaidMonths.length > 0 || totalDebt > 0) {

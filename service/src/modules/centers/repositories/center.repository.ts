@@ -13,7 +13,7 @@ const findById = async (id: number, centerId?: number) => {
   const rows = await db
     .select()
     .from(centers)
-    .where(eq(centers.centerId, centerId || id))
+    .where(eq(centers.centerId, centerId != null ? centerId : id))
     .limit(1);
   return rows[0] || null;
 };
@@ -127,13 +127,13 @@ const update = async (id: number, values: any[], centerId?: number) => {
       principalName: sql`COALESCE(${values[5] ?? null}, ${centers.principalName})`,
       updatedAt: sql`CURRENT_TIMESTAMP`,
     })
-    .where(eq(centers.centerId, centerId || id))
+    .where(eq(centers.centerId, centerId != null ? centerId : id))
     .returning();
   return rows[0] || null;
 };
 
 const remove = async (id: number, centerId?: number) => {
-  const rows = await db.delete(centers).where(eq(centers.centerId, centerId || id)).returning();
+  const rows = await db.delete(centers).where(eq(centers.centerId, centerId != null ? centerId : id)).returning();
   return rows[0] || null;
 };
 

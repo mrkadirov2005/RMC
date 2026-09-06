@@ -63,7 +63,7 @@ describe('grade service', () => {
   });
 
   test('requires a session for score upsert', async () => {
-    await expect(service.upsertSessionScores({ student_id: 1 }, 2)).resolves.toBeNull();
+    await expect(service.upsertSessionScores({ student_id: 1 }, 2)).resolves.toEqual({ error: 'session_id_required' });
     expect(repository.upsertSessionScores).not.toHaveBeenCalled();
   });
 });

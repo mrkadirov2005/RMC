@@ -13,12 +13,14 @@ const list = (query: { student_id?: string; center_id?: string; active?: string;
 
 const getById = (id: number, centerId?: number) => discountRepository.findById(id, centerId);
 
+const clampPercentValue = (value: number) => Math.min(100, Math.max(0, Number(value || 0)));
+
 const calculateDiscount = (originalAmount: number, valueType: string, value: number) => {
   const amount = Number(originalAmount || 0);
   const numericValue = Number(value || 0);
   const discountAmount =
     valueType === 'percent'
-      ? Math.min(amount, Math.max(0, (amount * Math.min(numericValue, 100)) / 100))
+      ? Math.min(amount, Math.max(0, (amount * clampPercentValue(numericValue)) / 100))
       : Math.min(amount, Math.max(0, numericValue));
   const finalAmount = Math.max(0, amount - discountAmount);
   return {
@@ -56,15 +58,16 @@ const create = async (body: any, centerId?: number) => {
   }
   const valueType = value_type || discount_type || 'fixed';
   const kind = discount_kind || 'serial_discount';
+  const storedValue = valueType === 'percent' ? clampPercentValue(Number(value || 0)) : value;
   const calculated =
-    original_price != null ? calculateDiscount(Number(original_price), valueType, Number(value || 0)) : null;
+    original_price != null ? calculateDiscount(Number(original_price), valueType, Number(storedValue || 0)) : null;
   return discountRepository
     .insert([
       student_id,
       scopedCenterId,
       valueType,
       kind,
-      value,
+      storedValue,
       original_price ?? null,
       final_price ?? calculated?.finalAmount ?? null,
       reason || null,
@@ -76,7 +79,7 @@ const create = async (body: any, centerId?: number) => {
     .then((row: any) => ({ row }));
 };
 
-const update = (id: number, body: any, centerId?: number, queryable?: any) => {
+const update = async (id: number, body: any, centerId?: number, queryable?: any) => {
   const {
     discount_type,
     discount_kind,
@@ -90,12 +93,21 @@ const update = (id: number, body: any, centerId?: number, queryable?: any) => {
     end_date,
     active,
   } = body;
+
+  let storedValue = value;
+  if (value !== undefined && value !== null) {
+    const effectiveType = value_type || discount_type || (await discountRepository.findById(id, centerId))?.discount_type;
+    if (effectiveType === 'percent') {
+      storedValue = clampPercentValue(Number(value));
+    }
+  }
+
   return discountRepository.update(
     id,
     [
       value_type || discount_type,
       discount_kind,
-      value,
+      storedValue,
       original_price,
       final_price,
       reason,

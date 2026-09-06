@@ -13,7 +13,7 @@ const listGrades = (centerId?: number, teacherId?: number, studentId?: number) =
 
 const getGrade = (id: number, centerId?: number, teacherId?: number) => gradeRepository.findById(id, centerId, teacherId);
 
-const createGrade = async (body: any, centerId?: number) => {
+const createGrade = async (body: any, centerId?: number, client: any = db) => {
   const {
     student_id,
     teacher_id,
@@ -52,8 +52,6 @@ const createGrade = async (body: any, centerId?: number) => {
     ? (finalMarks * 100) / totalMarks
     : null;
 
-  console.log('🔄 [Grade] Inserting grade...', { student_id, subject, marks_obtained, total_marks });
-  
   const row = await gradeRepository.insert([
     student_id,
     teacher_id,
@@ -71,42 +69,30 @@ const createGrade = async (body: any, centerId?: number) => {
     homework_score ?? 0,
     activity_score ?? 0,
     points_score ?? 0,
-  ]);
-
-  console.log('✅ [Grade] Grade inserted:', { gradeId: row?.grade_id, student_id: row?.student_id, marks_obtained: row?.marks_obtained, total_marks: row?.total_marks, percentage: row?.percentage });
+  ], client);
 
   // Add coins to student if grade was created successfully
   if (row && !row.error) {
-    console.log('💰 [Coins] Attempting to add coins...', { hasMarksObtained: row.marks_obtained !== null, hasTotalMarks: row.total_marks !== null });
     if (row.marks_obtained !== null && row.total_marks !== null) {
       try {
         const marksNum = Number(row.marks_obtained);
         const totalNum = Number(row.total_marks);
         const percentageNum = Number(row.percentage);
         const coinsToAdd = calculateCoins(marksNum, totalNum);
-        console.log(`💰 [Coins] Calculated: ${coinsToAdd} coins for ${marksNum}/${totalNum} (${percentageNum?.toFixed(1)}%)`);
-        
+
         if (coinsToAdd !== 0) {
-          console.log(`💳 [Coins] Calling addCoins with:`, { studentId: row.student_id, delta: coinsToAdd, reason: `Grade awarded: ${percentageNum?.toFixed(1)}% in ${row.subject}` });
-          const coinResult = await studentService.addCoins(
+          await studentService.addCoins(
             row.student_id,
             coinsToAdd,
             `Grade awarded: ${percentageNum?.toFixed(1)}% in ${row.subject}`,
             null,
             'system'
           );
-          console.log(`✅ [Coins] Added successfully:`, coinResult);
-        } else {
-          console.log(`⭕ [Coins] No coins to add (0 coins) for ${percentageNum?.toFixed(1)}%`);
         }
       } catch (coinError) {
-        console.error('❌ [Coins] Error adding coins for grade:', coinError);
+        // Swallow: grade creation already succeeded, coin award is best-effort.
       }
-    } else {
-      console.log('⚠️ [Coins] Skipping: marks_obtained or total_marks is null');
     }
-  } else {
-    console.log('❌ [Grade] Grade insertion failed or had error:', row);
   }
 
   return row;
@@ -131,13 +117,25 @@ const listBySession = (sessionId: number, centerId?: number, teacherId?: number)
 const deleteGrade = (id: number, centerId?: number, teacherId?: number) => gradeRepository.remove(id, centerId, teacherId);
 
 const createBulk = async (grades: any[], centerId?: number) => {
-  const results: any[] = [];
-  for (const g of grades) {
-    const row = await createGrade(g, centerId);
-    // Note: Coins are added in createGrade function, no need to add here
-    results.push(row);
+  try {
+    return await db.transaction(async (tx: any) => {
+      const results: any[] = [];
+      for (const g of grades) {
+        const row = await createGrade(g, centerId, tx);
+        // Note: Coins are added in createGrade function, no need to add here
+        if (row && row.error === 'invalid_center') {
+          throw Object.assign(new Error('invalid_center'), { code: 'invalid_center' });
+        }
+        results.push(row);
+      }
+      return results;
+    });
+  } catch (err: any) {
+    if (err?.code === 'invalid_center') {
+      return [{ error: 'invalid_center' as const }];
+    }
+    throw err;
   }
-  return results;
 };
 
 const upsertSessionScores = async (body: any, centerId?: number) => {
@@ -155,10 +153,8 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
     total_marks,
     subject,
   } = body;
-  if (!session_id) return null;
-  
-  console.log('🔄 [SessionScore] Upserting session scores...', { student_id, subject });
-  
+  if (!session_id) return { error: 'session_id_required' as const };
+
   const row = await gradeRepository.upsertSessionScores([
     student_id,
     teacher_id,
@@ -175,21 +171,15 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
     points_score ?? null,
   ]);
 
-  console.log('✅ [SessionScore] Session scores upserted:', { gradeId: row?.grade_id, student_id: row?.student_id, marks_obtained: row?.marks_obtained, total_marks: row?.total_marks, percentage: row?.percentage });
-
   // Add/update academic coins from the combined session score.
   if (row && !row.error && body.award_coins !== false) {
-    console.log('💰 [Coins-Session] Attempting to add coins...', { hasMarksObtained: row.marks_obtained !== null, hasTotalMarks: row.total_marks !== null });
     if (row.marks_obtained !== null && row.total_marks !== null) {
       try {
         const marksNum = Number(row.marks_obtained);
         const totalNum = Number(row.total_marks);
-        const percentageNum = Number(row.percentage);
         const coinsToAdd = calculateCoins(marksNum, totalNum);
-        console.log(`💰 [Coins-Session] Calculated: ${coinsToAdd} coins for ${marksNum}/${totalNum} (${percentageNum?.toFixed(1)}%)`);
-
         const reason = `Academic performance: ${marksNum}/${totalNum} in ${row.subject}`;
-        const coinResult = await studentService.upsertSourceCoins(
+        await studentService.upsertSourceCoins(
           row.student_id,
           coinsToAdd,
           reason,
@@ -199,15 +189,10 @@ const upsertSessionScores = async (body: any, centerId?: number) => {
           'teacher'
         );
         await gradeRepository.updateLessonCoins(row.grade_id, coinsToAdd, coinsToAdd, reason);
-        console.log(`✅ [Coins-Session] Upserted successfully:`, coinResult);
       } catch (coinError) {
-        console.error('❌ [Coins-Session] Error adding coins for session score:', coinError);
+        // Swallow: session score save already succeeded, coin award is best-effort.
       }
-    } else {
-      console.log('⚠️ [Coins-Session] Skipping: marks_obtained or total_marks is null');
     }
-  } else {
-    console.log('❌ [SessionScore] Session score upsert failed or had error:', row);
   }
 
   return row;

@@ -165,6 +165,7 @@ const insert = (params: any[]) =>
       username: params[4],
       passwordHash: params[5],
       status: params[6],
+      centerId: params[7],
     })
     .returning(parentSafeSelection)
     .then((rows: any[]) => rows[0]);

@@ -9,6 +9,7 @@ class CreateRefundDto {
 
   @Type(() => Number)
   @IsNumber()
+  @Min(0)
   amount!: number;
 }
 

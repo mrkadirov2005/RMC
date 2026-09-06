@@ -1,7 +1,8 @@
 jest.mock('../../repositories/debt.repository', () => ({
   findAll: jest.fn(), findById: jest.fn(), insert: jest.fn(), findAmounts: jest.fn(), updatePaid: jest.fn(),
   findByStudent: jest.fn(), remove: jest.fn(), findActiveStudents: jest.fn(), findPaymentsForStudentInRange: jest.fn(),
-  findOpenDebtsForStudent: jest.fn(), getStudentCenter: jest.fn(), paymentMonthlySummary: jest.fn(), debtAggregate: jest.fn(),
+  findPaymentsForStudentsInRange: jest.fn(), findOpenDebtsForStudent: jest.fn(), findOpenDebtsForStudents: jest.fn(),
+  applyPayment: jest.fn(), getStudentCenter: jest.fn(), paymentMonthlySummary: jest.fn(), debtAggregate: jest.fn(),
 }));
 
 const repository = require('../../repositories/debt.repository');
@@ -28,8 +29,8 @@ describe('debt service', () => {
 
   test('analyzes paid and unpaid months with existing debt totals', async () => {
     repository.findActiveStudents.mockResolvedValue([{ student_id: 1, first_name: 'A', last_name: 'B', enrollment_number: 'E1', center_id: 2 }]);
-    repository.findPaymentsForStudentInRange.mockResolvedValue([{ payment_date: '2026-01-10' }]);
-    repository.findOpenDebtsForStudent.mockResolvedValue([{ balance: '125.50' }]);
+    repository.findPaymentsForStudentsInRange.mockResolvedValue([{ student_id: 1, payment_date: '2026-01-10' }]);
+    repository.findOpenDebtsForStudents.mockResolvedValue([{ student_id: 1, balance: '125.50' }]);
     const result = await service.analyzeUnpaidMonths('2', '2026-01-01', '2026-03-31');
     expect(result.analysis_period.months_analyzed).toBe(3);
     expect(result.results[0]).toMatchObject({ unpaid_months_count: 2, total_payments: 1, total_debt_balance: 125.5 });

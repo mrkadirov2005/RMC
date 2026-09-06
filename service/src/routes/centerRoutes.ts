@@ -3,6 +3,8 @@ export {};
 const express_center = require('express');
 const router_center = express_center.Router();
 const centerController = require('../modules/centers/controllers/center.controller');
+const { validateBody } = require('../middleware/validation');
+const { CreateCenterDto, UpdateCenterDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -66,7 +68,7 @@ router_center.get('/:id', centerController.getCenterById);
  *       400:
  *         description: Invalid input
  */
-router_center.post('/', centerController.createCenter);
+router_center.post('/', validateBody(CreateCenterDto), centerController.createCenter);
 
 /**
  * @swagger
@@ -92,7 +94,7 @@ router_center.post('/', centerController.createCenter);
  *       404:
  *         description: Center not found
  */
-router_center.put('/:id', centerController.updateCenter);
+router_center.put('/:id', validateBody(UpdateCenterDto), centerController.updateCenter);
 
 /**
  * @swagger

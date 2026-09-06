@@ -1,14 +1,19 @@
+const mockClient = { __tag: 'tx-client' };
+
 jest.mock('../../repositories/invoice.repository', () => ({
-  countNumberLike: jest.fn(), findAllFiltered: jest.fn(), findById: jest.fn(), findItems: jest.fn(),
+  countNumberLike: jest.fn(), lockNumberPrefix: jest.fn(), findAllFiltered: jest.fn(), findById: jest.fn(), findItems: jest.fn(),
   insertInvoice: jest.fn(), insertItem: jest.fn(), deleteItemsByInvoice: jest.fn(),
-  updateInvoice: jest.fn(), deleteInvoice: jest.fn(),
+  updateInvoice: jest.fn(), deleteInvoice: jest.fn(), withTransaction: jest.fn(),
 }));
 
 const repository = require('../../repositories/invoice.repository');
 const service = require('../invoice.service');
 
 describe('invoice service', () => {
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => {
+    jest.clearAllMocks();
+    repository.withTransaction.mockImplementation((callback) => callback(mockClient));
+  });
 
   test('returns null for a missing scoped invoice and combines existing items', async () => {
     repository.findById.mockResolvedValueOnce(null);
@@ -25,9 +30,9 @@ describe('invoice service', () => {
       discount_total: 100, tax_total: 50,
       items: [{ description: 'A', quantity: 2, unit_price: 400 }, { description: 'B', unit_price: 300 }],
     }, 2);
-    expect(repository.insertInvoice).toHaveBeenCalledWith([3, 2, 'INV-1', '2026-08-08', null, 'Draft', 1100, 100, 50, 1050, null]);
-    expect(repository.insertItem).toHaveBeenNthCalledWith(1, 8, 'A', 2, 400, 800);
-    expect(repository.insertItem).toHaveBeenNthCalledWith(2, 8, 'B', 1, 300, 300);
+    expect(repository.insertInvoice).toHaveBeenCalledWith([3, 2, 'INV-1', '2026-08-08', null, 'Draft', 1100, 100, 50, 1050, null], mockClient);
+    expect(repository.insertItem).toHaveBeenNthCalledWith(1, 8, 'A', 2, 400, 800, mockClient);
+    expect(repository.insertItem).toHaveBeenNthCalledWith(2, 8, 'B', 1, 300, 300, mockClient);
   });
 
   test('generates a deterministic monthly sequence when number is omitted', async () => {
@@ -35,7 +40,8 @@ describe('invoice service', () => {
     repository.countNumberLike.mockResolvedValue(3);
     repository.insertInvoice.mockResolvedValue({ invoice_id: 1 });
     await service.createInvoice({ student_id: 3, issue_date: '2026-08-08' }, 2);
-    expect(repository.countNumberLike).toHaveBeenCalledWith('2-202608-%', 2);
+    expect(repository.lockNumberPrefix).toHaveBeenCalledWith('2-202608', mockClient);
+    expect(repository.countNumberLike).toHaveBeenCalledWith('2-202608-%', 2, mockClient);
     expect(repository.insertInvoice.mock.calls[0][0][2]).toBe('2-202608-0004');
     jest.useRealTimers();
   });
@@ -44,8 +50,8 @@ describe('invoice service', () => {
     repository.findById.mockResolvedValue({ subtotal: 500, total: 500, discount_total: 0, tax_total: 0 });
     repository.updateInvoice.mockResolvedValue({ invoice_id: 1 });
     await service.updateInvoice(1, { discount_total: 50, items: [{ description: 'X', quantity: 3, unit_price: 200 }] }, 2);
-    expect(repository.deleteItemsByInvoice).toHaveBeenCalledWith(1);
-    expect(repository.insertItem).toHaveBeenCalledWith(1, 'X', 3, 200, 600);
+    expect(repository.deleteItemsByInvoice).toHaveBeenCalledWith(1, mockClient);
+    expect(repository.insertItem).toHaveBeenCalledWith(1, 'X', 3, 200, 600, mockClient);
     expect(repository.updateInvoice.mock.calls[0][0].slice(5, 7)).toEqual([600, 550]);
   });
 });

@@ -239,16 +239,16 @@ const selectAllSubjects = (centerId?: number) => {
   return (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(subjects.subjectId));
 };
 
-const findTeacherIdByEmployeeId = async (employeeId?: string | null, centerId?: number) => {
+const findTeacherIdByEmployeeId = async (employeeId?: string | null, centerId?: number, client: any = db) => {
   const normalizedEmployeeId = normalizeClassText(employeeId);
   if (!normalizedEmployeeId) return null;
   const conditions = [ilike(sql`TRIM(${teachers.employeeId})`, normalizedEmployeeId), isNull(teachers.deletedAt)];
   if (centerId) conditions.push(eq(teachers.centerId, centerId));
-  const rows = await db.select({ teacher_id: teachers.teacherId }).from(teachers).where(and(...conditions)).orderBy(teachers.teacherId).limit(1);
+  const rows = await client.select({ teacher_id: teachers.teacherId }).from(teachers).where(and(...conditions)).orderBy(teachers.teacherId).limit(1);
   return rows[0]?.teacher_id || null;
 };
 
-const findClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number) => {
+const findClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number, client: any = db) => {
   const normalizedClassName = normalizeClassText(className);
   const normalizedClassCode = normalizeClassText(classCode);
   const matchConditions: any[] = [];
@@ -257,20 +257,20 @@ const findClassIdByNameOrCode = async (className?: string | null, classCode?: st
   if (!matchConditions.length) return null;
   const conditions = [or(...matchConditions), isNull(classes.deletedAt)];
   if (centerId) conditions.push(eq(classes.centerId, centerId));
-  const rows = await db.select({ class_id: classes.classId }).from(classes).where(and(...conditions)).orderBy(classes.classId).limit(1);
+  const rows = await client.select({ class_id: classes.classId }).from(classes).where(and(...conditions)).orderBy(classes.classId).limit(1);
   return rows[0]?.class_id || null;
 };
 
-const findStudentIdByEnrollmentNumber = async (enrollmentNumber?: string | null, centerId?: number) => {
+const findStudentIdByEnrollmentNumber = async (enrollmentNumber?: string | null, centerId?: number, client: any = db) => {
   const normalizedEnrollmentNumber = normalizeClassText(enrollmentNumber);
   if (!normalizedEnrollmentNumber) return null;
   const conditions = [ilike(sql`TRIM(${students.enrollmentNumber})`, normalizedEnrollmentNumber), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
-  const rows = await db.select({ student_id: students.studentId }).from(students).where(and(...conditions)).orderBy(students.studentId).limit(1);
+  const rows = await client.select({ student_id: students.studentId }).from(students).where(and(...conditions)).orderBy(students.studentId).limit(1);
   return rows[0]?.student_id || null;
 };
 
-const findStudentIdByNameAndClass = async (firstName?: string | null, lastName?: string | null, classId?: number | null, centerId?: number) => {
+const findStudentIdByNameAndClass = async (firstName?: string | null, lastName?: string | null, classId?: number | null, centerId?: number, client: any = db) => {
   const normalizedFirstName = normalizeClassText(firstName);
   const normalizedLastName = normalizeClassText(lastName);
   if (!normalizedFirstName || !normalizedLastName) return null;
@@ -281,12 +281,12 @@ const findStudentIdByNameAndClass = async (firstName?: string | null, lastName?:
   ];
   if (classId) conditions.push(eq(students.classId, classId));
   if (centerId) conditions.push(eq(students.centerId, centerId));
-  const rows = await db.select({ student_id: students.studentId }).from(students).where(and(...conditions)).orderBy(students.studentId).limit(1);
+  const rows = await client.select({ student_id: students.studentId }).from(students).where(and(...conditions)).orderBy(students.studentId).limit(1);
   return rows[0]?.student_id || null;
 };
 
-const findOrCreateClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number) => {
-  const existingClassId = await findClassIdByNameOrCode(className, classCode, centerId);
+const findOrCreateClassIdByNameOrCode = async (className?: string | null, classCode?: string | null, centerId?: number, client: any = db) => {
+  const existingClassId = await findClassIdByNameOrCode(className, classCode, centerId, client);
   if (existingClassId || !centerId) return existingClassId;
 
   const normalizedClassName = normalizeClassText(className) || normalizeClassText(classCode);
@@ -297,16 +297,16 @@ const findOrCreateClassIdByNameOrCode = async (className?: string | null, classC
   for (let index = 2; index <= 99; index += 1) candidates.push(`${baseCode}-${centerId}-${index}`);
 
   for (const candidate of candidates) {
-    const existing = await findClassIdByNameOrCode(null, candidate, centerId);
+    const existing = await findClassIdByNameOrCode(null, candidate, centerId, client);
     if (existing) continue;
-    const rows = await db
+    const rows = await client
       .insert(classes)
       .values({ centerId, className: normalizedClassName, classCode: candidate, paymentFrequency: 'Monthly' })
       .returning({ class_id: classes.classId });
     return rows[0]?.class_id || null;
   }
 
-  return findClassIdByNameOrCode(normalizedClassName, null, centerId);
+  return findClassIdByNameOrCode(normalizedClassName, null, centerId, client);
 };
 
 const studentValues = (params: any[], offset = 0) => ({
@@ -383,63 +383,63 @@ const paymentValues = (params: any[], offset = 0) => ({
   isComplete: params[offset + 18] ?? true,
 });
 
-const upsertById = async (table: any, idColumn: any, idKey: string, id: number | null, values: any) => {
+const upsertById = async (table: any, idColumn: any, idKey: string, id: number | null, values: any, client: any = db) => {
   if (id) {
-    const existing = await db.select({ id: idColumn }).from(table).where(eq(idColumn, id)).limit(1);
+    const existing = await client.select({ id: idColumn }).from(table).where(eq(idColumn, id)).limit(1);
     if (existing[0]) {
-      await db.update(table).set({ ...values, updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(idColumn, id));
+      await client.update(table).set({ ...values, updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(idColumn, id));
       return;
     }
-    await db.insert(table).values({ [idKey]: id, ...values });
+    await client.insert(table).values({ [idKey]: id, ...values });
     return;
   }
-  await db.insert(table).values(values);
+  await client.insert(table).values(values);
 };
 
-const insertStudent = async (params: any[]) => {
-  const existingId = await findStudentIdByEnrollmentNumber(params[1], params[0]);
-  if (existingId) return db.update(students).set({ ...studentValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(students.studentId, existingId));
-  return db.insert(students).values(studentValues(params));
+const insertStudent = async (params: any[], client: any = db) => {
+  const existingId = await findStudentIdByEnrollmentNumber(params[1], params[0], client);
+  if (existingId) return client.update(students).set({ ...studentValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(students.studentId, existingId));
+  return client.insert(students).values(studentValues(params));
 };
 
-const insertTeacher = async (params: any[]) => {
-  const existingId = await findTeacherIdByEmployeeId(params[1], params[0]);
-  if (existingId) return db.update(teachers).set({ ...teacherValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(teachers.teacherId, existingId));
-  return db.insert(teachers).values(teacherValues(params));
+const insertTeacher = async (params: any[], client: any = db) => {
+  const existingId = await findTeacherIdByEmployeeId(params[1], params[0], client);
+  if (existingId) return client.update(teachers).set({ ...teacherValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(teachers.teacherId, existingId));
+  return client.insert(teachers).values(teacherValues(params));
 };
 
-const upsertClassByCode = async (params: any[]) => {
-  const existingId = await findClassIdByNameOrCode(null, params[2], params[0]);
-  if (existingId) return db.update(classes).set({ ...classValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(classes.classId, existingId));
-  return db.insert(classes).values(classValues(params));
+const upsertClassByCode = async (params: any[], client: any = db) => {
+  const existingId = await findClassIdByNameOrCode(null, params[2], params[0], client);
+  if (existingId) return client.update(classes).set({ ...classValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(classes.classId, existingId));
+  return client.insert(classes).values(classValues(params));
 };
 
-const insertPayment = async (params: any[]) => {
+const insertPayment = async (params: any[], client: any = db) => {
   if (params[7]) {
-    const existing = await db
+    const existing = await client
       .select({ payment_id: payments.paymentId })
       .from(payments)
       .where(and(eq(payments.receiptNumber, params[7]), isNull(payments.deletedAt)))
       .limit(1);
-    if (existing[0]) return db.update(payments).set({ ...paymentValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(payments.paymentId, existing[0].payment_id));
+    if (existing[0]) return client.update(payments).set({ ...paymentValues(params), updatedAt: sql`CURRENT_TIMESTAMP` }).where(eq(payments.paymentId, existing[0].payment_id));
   }
-  return db.insert(payments).values(paymentValues(params));
+  return client.insert(payments).values(paymentValues(params));
 };
 
-const upsertSerialDiscount = async (params: any[]) => {
+const upsertSerialDiscount = async (params: any[], client: any = db) => {
   const [studentId, centerId, discountType, value, originalPrice, finalPrice, reason] = params;
-  const existing = await db
+  const existing = await client
     .select({ discount_id: discounts.discountId })
     .from(discounts)
     .where(and(eq(discounts.studentId, studentId), eq(discounts.discountKind, 'serial_discount'), eq(discounts.active, true)))
     .limit(1);
   if (existing[0]) {
-    return db
+    return client
       .update(discounts)
       .set({ centerId, discountType, value, originalPrice, finalPrice, reason, active: true, updatedAt: sql`CURRENT_TIMESTAMP` })
       .where(eq(discounts.discountId, existing[0].discount_id));
   }
-  return db.insert(discounts).values({
+  return client.insert(discounts).values({
     studentId,
     centerId,
     discountType,
@@ -453,11 +453,11 @@ const upsertSerialDiscount = async (params: any[]) => {
   });
 };
 
-const insertRoom = (params: any[]) =>
-  db.insert(rooms).values({ centerId: params[0], roomNumber: params[1], classId: params[2], day: params[3], time: params[4], endTime: params[5] });
+const insertRoom = (params: any[], client: any = db) =>
+  client.insert(rooms).values({ centerId: params[0], roomNumber: params[1], classId: params[2], day: params[3], time: params[4], endTime: params[5] });
 
-const insertAssignment = (params: any[]) =>
-  db.insert(assignments).values({
+const insertAssignment = (params: any[], client: any = db) =>
+  client.insert(assignments).values({
     centerId: params[0],
     classId: params[1],
     studentId: params[2],
@@ -470,9 +470,9 @@ const insertAssignment = (params: any[]) =>
     grade: params[9],
   });
 
-const insertSubject = async (params: any[]) => {
+const insertSubject = async (params: any[], client: any = db) => {
   const existing = params[3]
-    ? await db
+    ? await client
         .select({ subject_id: subjects.subjectId })
         .from(subjects)
         .where(and(eq(subjects.centerId, params[0]), eq(subjects.classId, params[1]), ilike(sql`TRIM(COALESCE(${subjects.subjectCode}, ''))`, normalizeClassText(params[3]))))
@@ -487,27 +487,27 @@ const insertSubject = async (params: any[]) => {
     totalMarks: params[5],
     passingMarks: params[6],
   };
-  if (existing[0]) return db.update(subjects).set(values).where(eq(subjects.subjectId, existing[0].subject_id));
-  return db.insert(subjects).values(values);
+  if (existing[0]) return client.update(subjects).set(values).where(eq(subjects.subjectId, existing[0].subject_id));
+  return client.insert(subjects).values(values);
 };
 
-const upsertStudent = (params: any[], hasStudentId: boolean) => {
-  if (!hasStudentId) return insertStudent(params);
-  return upsertById(students, students.studentId, 'studentId', params[0], studentValues(params, 1));
+const upsertStudent = (params: any[], hasStudentId: boolean, client: any = db) => {
+  if (!hasStudentId) return insertStudent(params, client);
+  return upsertById(students, students.studentId, 'studentId', params[0], studentValues(params, 1), client);
 };
 
-const upsertTeacher = (params: any[], hasTeacherId: boolean) => {
-  if (!hasTeacherId) return insertTeacher(params);
-  return upsertById(teachers, teachers.teacherId, 'teacherId', params[0], teacherValues(params, 1));
+const upsertTeacher = (params: any[], hasTeacherId: boolean, client: any = db) => {
+  if (!hasTeacherId) return insertTeacher(params, client);
+  return upsertById(teachers, teachers.teacherId, 'teacherId', params[0], teacherValues(params, 1), client);
 };
 
-const upsertPayment = (params: any[], hasPaymentId: boolean) => {
-  if (!hasPaymentId) return insertPayment(params);
-  return upsertById(payments, payments.paymentId, 'paymentId', params[0], paymentValues(params, 1));
+const upsertPayment = (params: any[], hasPaymentId: boolean, client: any = db) => {
+  if (!hasPaymentId) return insertPayment(params, client);
+  return upsertById(payments, payments.paymentId, 'paymentId', params[0], paymentValues(params, 1), client);
 };
 
-const upsertRoom = async (params: any[], hasRoomId: boolean) => {
-  if (!hasRoomId) return insertRoom(params);
+const upsertRoom = async (params: any[], hasRoomId: boolean, client: any = db) => {
+  if (!hasRoomId) return insertRoom(params, client);
   return upsertById(rooms, rooms.roomId, 'roomId', params[0], {
     centerId: params[1],
     roomNumber: params[2],
@@ -515,11 +515,11 @@ const upsertRoom = async (params: any[], hasRoomId: boolean) => {
     day: params[4],
     time: params[5],
     endTime: params[6],
-  });
+  }, client);
 };
 
-const upsertAssignment = (params: any[], hasAssignmentId: boolean) => {
-  if (!hasAssignmentId) return insertAssignment(params);
+const upsertAssignment = (params: any[], hasAssignmentId: boolean, client: any = db) => {
+  if (!hasAssignmentId) return insertAssignment(params, client);
   return upsertById(assignments, assignments.assignmentId, 'assignmentId', params[0], {
     centerId: params[1],
     classId: params[2],
@@ -531,11 +531,11 @@ const upsertAssignment = (params: any[], hasAssignmentId: boolean) => {
     submissionDate: params[8],
     status: params[9],
     grade: params[10],
-  });
+  }, client);
 };
 
-const upsertSubject = (params: any[], hasSubjectId: boolean) => {
-  if (!hasSubjectId) return insertSubject(params);
+const upsertSubject = (params: any[], hasSubjectId: boolean, client: any = db) => {
+  if (!hasSubjectId) return insertSubject(params, client);
   return upsertById(subjects, subjects.subjectId, 'subjectId', params[0], {
     centerId: params[1],
     classId: params[2],
@@ -544,11 +544,11 @@ const upsertSubject = (params: any[], hasSubjectId: boolean) => {
     teacherId: params[5],
     totalMarks: params[6],
     passingMarks: params[7],
-  });
+  }, client);
 };
 
-const syncSerialSequence = (table: string, idColumn: string) =>
-  db.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('${table}', '${idColumn}'), COALESCE((SELECT MAX(${idColumn}) FROM ${table}), 1), true)`));
+const syncSerialSequence = (table: string, idColumn: string, client: any = db) =>
+  client.execute(sql.raw(`SELECT setval(pg_get_serial_sequence('${table}', '${idColumn}'), COALESCE((SELECT MAX(${idColumn}) FROM ${table}), 1), true)`));
 
 module.exports = {
   selectAllStudents,
@@ -578,6 +578,7 @@ module.exports = {
   upsertAssignment,
   upsertSubject,
   syncSerialSequence,
+  withTransaction: (callback: (tx: any) => Promise<any>) => db.transaction(callback),
 };
 
 export {};

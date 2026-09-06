@@ -2,6 +2,7 @@ jest.mock('../../repositories/import_export.repository', () => ({
   selectAllStudents: jest.fn(), selectAllTeachers: jest.fn(), selectAllClasses: jest.fn(), selectAllPayments: jest.fn(),
   selectAllRooms: jest.fn(), selectAllAssignments: jest.fn(), selectAllSubjects: jest.fn(),
   insertStudent: jest.fn(), findOrCreateClassIdByNameOrCode: jest.fn(), findTeacherIdByEmployeeId: jest.fn(),
+  withTransaction: jest.fn((callback) => callback({})),
 }));
 jest.mock('../../../../shared/tenantDb', () => ({ studentInCenter: jest.fn() }));
 jest.mock('../../../../shared/password', () => ({ hashPassword: jest.fn((value) => `hash:${value}`) }));

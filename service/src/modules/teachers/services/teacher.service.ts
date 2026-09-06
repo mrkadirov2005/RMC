@@ -1,8 +1,10 @@
+const crypto = require('crypto');
 const { hashPassword, verifyPassword } = require('../../../shared/password');
 const teacherRepository = require('../repositories/teacher.repository');
 
-const DEFAULT_TEACHER_PASSWORD = '012345678';
 const PLATFORM_EMAIL_DOMAIN = 'teachers.platform.local';
+
+const generateDefaultPassword = () => crypto.randomBytes(12).toString('base64url');
 
 const buildUsername = (name: string) => {
   const cleaned = String(name || '')
@@ -65,7 +67,7 @@ const createTeacher = async (body: any) => {
     status: 'Active',
     roles: body?.roles || [],
     username: explicitUsername || defaultUsername,
-    password: body?.password || DEFAULT_TEACHER_PASSWORD,
+    password: body?.password || generateDefaultPassword(),
     salary_percentage: normalizeSalaryPercentage(body?.salary_percentage),
   };
   const shouldAutoResolveUsername = !explicitUsername || explicitUsername === defaultUsername;
@@ -110,7 +112,11 @@ const deleteTeacher = async (id: number, centerId?: number, options?: { force?: 
   if (!teacher) return { kind: 'not_found' as const };
 
   const dependencies = await teacherRepository.getDeleteDependencies(id, centerId);
-  if (teacherRepository.hasDeleteDependencies(dependencies)) {
+  const hasDependencies = teacherRepository.hasDeleteDependencies(dependencies);
+  if (hasDependencies && !options?.force) {
+    return { kind: 'blocked' as const, dependencies };
+  }
+  if (hasDependencies) {
     await teacherRepository.unassignDeleteDependencies(id, centerId);
   }
 

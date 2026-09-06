@@ -46,8 +46,8 @@ const insert = async (params: any[]) => {
   return rows[0];
 };
 
-const update = async (id: number, status: any, refunded_at: any) => {
-  const rows = await db
+const update = async (id: number, status: any, refunded_at: any, client: any = db) => {
+  const rows = await client
     .update(refunds)
     .set({
       status: sql`COALESCE(${status ?? null}, ${refunds.status})`,
@@ -59,8 +59,8 @@ const update = async (id: number, status: any, refunded_at: any) => {
   return rows[0] || null;
 };
 
-const updatePaymentRefunded = (paymentId: number) =>
-  db
+const updatePaymentRefunded = (paymentId: number, client: any = db) =>
+  client
     .update(payments)
     .set({ paymentStatus: 'Refunded', updatedAt: sql`CURRENT_TIMESTAMP` })
     .where(and(eq(payments.paymentId, paymentId), isNull(payments.deletedAt)));
@@ -70,6 +70,8 @@ const remove = async (id: number) => {
   return rows[0] || null;
 };
 
-module.exports = { findAllFiltered, findById, insert, update, updatePaymentRefunded, remove };
+const withTransaction = (callback: (tx: any) => Promise<any>) => db.transaction(callback);
+
+module.exports = { findAllFiltered, findById, insert, update, updatePaymentRefunded, remove, withTransaction };
 
 export {};

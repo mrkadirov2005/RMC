@@ -43,6 +43,12 @@ const createRefund = async (req: any, res: any) => {
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Payment does not belong to this center.' });
     }
+    if (out.error === 'payment_not_found') {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+    if (out.error === 'refund_exceeds_payment') {
+      return res.status(400).json({ error: 'Refund amount exceeds the original payment amount.' });
+    }
     const { row } = out as { row: any };
     await logAudit({
       user_type: req.user?.userType || 'system',
@@ -69,6 +75,9 @@ const updateRefund = async (req: any, res: any) => {
     }
     const row = await refundService.update(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Refund not found' });
+    if ((row as any).error === 'refund_exceeds_payment') {
+      return res.status(400).json({ error: 'Refund amount exceeds the original payment amount.' });
+    }
     res.json({ message: 'Refund updated', refund: row });
   } catch (error: any) {
     console.error('Database error:', error);
