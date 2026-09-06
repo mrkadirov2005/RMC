@@ -211,4 +211,61 @@ describe('calendar service', () => {
     await expect(service.moveRecurring(2, 3, { room_name: 'Room 2', pattern: 'tts', start_time: '09:00', end_time: '10:00' }, { teacherId: 4 })).rejects.toMatchObject({ status: 409 });
     expect(repository.updateRecurringSchedule).not.toHaveBeenCalled();
   });
+
+  describe('conflict-detection boundaries (RMC-078)', () => {
+    test('flags an overlapping start time as a conflict', async () => {
+      repository.datedSessions.mockResolvedValue([
+        session({ session_id: 1, room_id: 6, start_time: '09:00', end_time: '10:00' }),
+        session({ session_id: 2, room_id: 6, start_time: '09:30', end_time: '10:30' }), // starts before #1 ends
+      ]);
+      roomInsights.getSchedule.mockResolvedValue([]);
+      const found = await service.conflicts(2, { from: '2026-08-10', to: '2026-08-10' });
+      expect(found).toEqual([{ event_ids: ['session-1', 'session-2'], reasons: expect.arrayContaining(['room']) }]);
+    });
+
+    test('flags an overlapping end time as a conflict', async () => {
+      repository.datedSessions.mockResolvedValue([
+        session({ session_id: 1, room_id: 6, start_time: '08:30', end_time: '09:30' }),
+        session({ session_id: 2, room_id: 6, start_time: '09:00', end_time: '10:00' }), // #1 ends after #2 starts
+      ]);
+      roomInsights.getSchedule.mockResolvedValue([]);
+      const found = await service.conflicts(2, { from: '2026-08-10', to: '2026-08-10' });
+      expect(found).toEqual([{ event_ids: ['session-1', 'session-2'], reasons: expect.arrayContaining(['room']) }]);
+    });
+
+    test('does NOT flag exactly back-to-back (adjacent) times as a conflict: one session ending exactly when the next starts', async () => {
+      repository.datedSessions.mockResolvedValue([
+        session({ session_id: 1, room_id: 6, start_time: '09:00', end_time: '10:00' }),
+        session({ session_id: 2, room_id: 6, start_time: '10:00', end_time: '11:00' }), // starts exactly when #1 ends
+      ]);
+      roomInsights.getSchedule.mockResolvedValue([]);
+      const found = await service.conflicts(2, { from: '2026-08-10', to: '2026-08-10' });
+      expect(found).toEqual([]);
+    });
+
+    test('recurring move: allows scheduling back-to-back (adjacent) with an existing group in the same room', async () => {
+      repository.recurringDefinitions.mockResolvedValue([
+        { class_id: 3, class_name: 'B1', teacher_id: 4, room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
+        // Existing group in Room 2 occupies 08:00-09:00 on Tuesday/Thursday/Saturday.
+        { class_id: 8, class_name: 'A2', teacher_id: 5, room_name: 'Room 2', section: JSON.stringify({ days: ['Tuesday'], time: '08:00', endTime: '09:00' }) },
+      ]);
+      roomInsights.getPhysicalRooms.mockResolvedValue([{ room_id: 7, name: 'Room 2', status: 'active' }]);
+      repository.updateRecurringSchedule.mockResolvedValue({ class_id: 3, room_number: 'Room 2' });
+      // Moving class 3 to Room 2 starting exactly at 09:00 (immediately after the existing 08:00-09:00 booking) must not conflict.
+      await service.moveRecurring(2, 3, { room_name: 'Room 2', pattern: 'tts', start_time: '09:00', end_time: '10:00' }, { teacherId: 4 });
+      expect(repository.updateRecurringSchedule).toHaveBeenCalledWith(2, 3, JSON.stringify({ days: ['Tuesday', 'Thursday', 'Saturday'], time: '09:00', endTime: '10:00' }), 'Room 2');
+    });
+
+    test('recurring move: rejects an overlapping-start move into an occupied room', async () => {
+      repository.recurringDefinitions.mockResolvedValue([
+        { class_id: 3, class_name: 'B1', teacher_id: 4, room_name: 'Room 1', section: JSON.stringify({ days: ['Monday'], time: '09:00', endTime: '10:00' }) },
+        { class_id: 8, class_name: 'A2', teacher_id: 5, room_name: 'Room 2', section: JSON.stringify({ days: ['Tuesday'], time: '09:30', endTime: '10:30' }) },
+      ]);
+      roomInsights.getPhysicalRooms.mockResolvedValue([{ room_id: 7, name: 'Room 2', status: 'active' }]);
+      // New slot 09:00-10:00 overlaps the existing 09:30-10:30 booking's start.
+      await expect(service.moveRecurring(2, 3, { room_name: 'Room 2', pattern: 'tts', start_time: '09:00', end_time: '10:00' }, { teacherId: 4 }))
+        .rejects.toMatchObject({ status: 409 });
+      expect(repository.updateRecurringSchedule).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -56,6 +56,20 @@ describe('session service', () => {
       .resolves.toEqual({ error: 'not_found' });
   });
 
+  test('createSession and generateMonthlySessions return the identical structured error shape for a missing class (RMC-032)', async () => {
+    classes.findById.mockResolvedValue(null);
+
+    const createResult = await service.createSession({ classId: 404, sessionDate: '2026-09-07', startTime: '09:00', durationMinutes: 60 });
+    const generateResult = await service.generateMonthlySessions({ classId: 404, month: 9, year: 2026, durationMinutes: 60 });
+
+    expect(createResult).toEqual({ error: 'not_found' });
+    expect(generateResult).toEqual({ error: 'not_found' });
+    // Same shape: a plain object with only an `error` key, not a thrown Error.
+    expect(createResult).not.toBeInstanceOf(Error);
+    expect(generateResult).not.toBeInstanceOf(Error);
+    expect(Object.keys(createResult)).toEqual(Object.keys(generateResult));
+  });
+
   test('forwards scoped list and deletion operations', () => {
     service.listByClass(1, 2, 3); service.listByClasses([1, 2], 2, 3);
     service.deleteUpcomingSessions({ classId: 1, fromDate: '2026-01-01', toDate: '2026-02-01', centerId: 2, teacherId: 3 });
