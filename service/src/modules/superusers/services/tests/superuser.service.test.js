@@ -42,6 +42,101 @@ describe('superuser service', () => {
     expect(repository.remove).toHaveBeenCalledWith(1, 2);
   });
 
+  describe('owner-role privilege escalation matrix (RMC-020)', () => {
+    const admin = { userType: 'superuser', role: 'admin', id: 1 };
+    const owner = { userType: 'superuser', role: 'owner', id: 2 };
+
+    test('an admin cannot create a superuser with role owner', async () => {
+      repository.countByUsername.mockResolvedValue(0);
+      await expect(
+        service.createSuperuser({ center_id: 2, username: 'a', role: 'owner' }, admin)
+      ).resolves.toEqual({ error: 'forbidden_role' });
+      expect(repository.insert).not.toHaveBeenCalled();
+    });
+
+    test('an admin cannot create a superuser with role Owner regardless of casing', async () => {
+      repository.countByUsername.mockResolvedValue(0);
+      await expect(
+        service.createSuperuser({ center_id: 2, username: 'a', role: 'OWNER' }, admin)
+      ).resolves.toEqual({ error: 'forbidden_role' });
+      expect(repository.insert).not.toHaveBeenCalled();
+    });
+
+    test('an admin creating a non-owner role still succeeds', async () => {
+      repository.countByUsername.mockResolvedValue(0);
+      repository.insert.mockResolvedValue({ superuser_id: 3, center_id: 2, permissions: [] });
+      await expect(
+        service.createSuperuser({ center_id: 2, username: 'a', role: 'admin' }, admin)
+      ).resolves.toMatchObject({ row: expect.objectContaining({ superuser_id: 3 }) });
+      expect(repository.insert).toHaveBeenCalled();
+    });
+
+    test('an owner can create a superuser with role owner', async () => {
+      repository.countByUsername.mockResolvedValue(0);
+      repository.insert.mockResolvedValue({ superuser_id: 4, center_id: 2, permissions: [] });
+      await expect(
+        service.createSuperuser({ center_id: 2, username: 'b', role: 'owner' }, owner)
+      ).resolves.toMatchObject({ row: expect.objectContaining({ superuser_id: 4 }) });
+      expect(repository.insert).toHaveBeenCalled();
+    });
+
+    test('an admin cannot self-promote or promote another superuser to role owner via update', async () => {
+      await expect(
+        service.updateSuperuser(1, { role: 'owner' }, admin, 2)
+      ).resolves.toEqual({ error: 'forbidden_role' });
+      await expect(
+        service.updateSuperuser(9, { role: 'owner' }, admin, 2)
+      ).resolves.toEqual({ error: 'forbidden_role' });
+      expect(repository.update).not.toHaveBeenCalled();
+    });
+
+    test('an admin updating a non-owner role field still succeeds', async () => {
+      repository.update.mockResolvedValue({ superuser_id: 1, center_id: 2, permissions: [] });
+      await expect(
+        service.updateSuperuser(1, { role: 'admin', email: 'x@x.com' }, admin, 2)
+      ).resolves.toMatchObject({ row: expect.objectContaining({ superuser_id: 1 }) });
+      expect(repository.update).toHaveBeenCalled();
+    });
+
+    test('an owner can update a superuser to role owner', async () => {
+      repository.update.mockResolvedValue({ superuser_id: 1, center_id: 2, permissions: [] });
+      await expect(
+        service.updateSuperuser(1, { role: 'owner' }, owner, 2)
+      ).resolves.toMatchObject({ row: expect.objectContaining({ superuser_id: 1 }) });
+      expect(repository.update).toHaveBeenCalled();
+    });
+
+    test('an admin cannot delete a superuser whose current role is owner', async () => {
+      repository.findById.mockResolvedValue({ superuser_id: 5, role: 'owner' });
+      await expect(service.deleteSuperuser(5, admin, 2)).resolves.toEqual({ error: 'forbidden_role' });
+      expect(repository.remove).not.toHaveBeenCalled();
+    });
+
+    test('an admin can delete a superuser whose current role is not owner', async () => {
+      repository.findById.mockResolvedValue({ superuser_id: 6, role: 'admin' });
+      repository.remove.mockResolvedValue({ superuser_id: 6, center_id: 2, permissions: [] });
+      await expect(
+        service.deleteSuperuser(6, admin, 2)
+      ).resolves.toMatchObject({ row: expect.objectContaining({ superuser_id: 6 }) });
+      expect(repository.remove).toHaveBeenCalledWith(6, 2);
+    });
+
+    test('an owner can delete a superuser whose current role is owner', async () => {
+      repository.findById.mockResolvedValue({ superuser_id: 7, role: 'owner' });
+      repository.remove.mockResolvedValue({ superuser_id: 7, center_id: 2, permissions: [] });
+      await expect(
+        service.deleteSuperuser(7, owner, 2)
+      ).resolves.toMatchObject({ row: expect.objectContaining({ superuser_id: 7 }) });
+      expect(repository.remove).toHaveBeenCalledWith(7, 2);
+    });
+
+    test('deleting a target that does not exist is a no-op regardless of caller role', async () => {
+      repository.findById.mockResolvedValue(null);
+      await expect(service.deleteSuperuser(999, admin, 2)).resolves.toEqual({ row: null });
+      expect(repository.remove).not.toHaveBeenCalled();
+    });
+  });
+
   test('handles invalid, locked, inactive, wrong-password, and successful login', async () => {
     repository.findByUsernameForLogin
       .mockResolvedValueOnce(null)

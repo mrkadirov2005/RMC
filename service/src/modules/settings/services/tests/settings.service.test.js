@@ -26,6 +26,38 @@ describe('settings service', () => {
     await service.saveSidebarOrder('teacher', 4, ['/a', '/a', 'invalid', '/b']);
     expect(repository.saveSetting).toHaveBeenCalledWith('sidebar_order:teacher:4', ['/a', '/b']);
   });
+
+  // RMC-013 (confirmed correct, not a role gate): sidebar order is keyed per user via
+  // `sidebar_order:${userType}:${userId}`, so it isolates by both userType and userId. These
+  // tests prove two different users (and two different user types sharing the same numeric id)
+  // read and write entirely separate keys and can never see each other's saved order.
+  describe('sidebar order is isolated per user (RMC-013)', () => {
+    test('reads a different repository key for a different userId of the same userType', async () => {
+      repository.getSetting.mockResolvedValue(['/a']);
+      await service.getSidebarOrder('teacher', 4);
+      await service.getSidebarOrder('teacher', 9);
+      expect(repository.getSetting).toHaveBeenNthCalledWith(1, 'sidebar_order:teacher:4');
+      expect(repository.getSetting).toHaveBeenNthCalledWith(2, 'sidebar_order:teacher:9');
+    });
+
+    test('reads a different repository key for the same numeric id under a different userType', async () => {
+      repository.getSetting.mockResolvedValue(['/a']);
+      await service.getSidebarOrder('teacher', 4);
+      await service.getSidebarOrder('superuser', 4);
+      expect(repository.getSetting).toHaveBeenNthCalledWith(1, 'sidebar_order:teacher:4');
+      expect(repository.getSetting).toHaveBeenNthCalledWith(2, 'sidebar_order:superuser:4');
+    });
+
+    test('saving one user order never writes to another user key', async () => {
+      await service.saveSidebarOrder('teacher', 4, ['/dashboard']);
+      await service.saveSidebarOrder('teacher', 9, ['/reports']);
+      expect(repository.saveSetting).toHaveBeenNthCalledWith(1, 'sidebar_order:teacher:4', ['/dashboard']);
+      expect(repository.saveSetting).toHaveBeenNthCalledWith(2, 'sidebar_order:teacher:9', ['/reports']);
+      // Neither call touches the other user's key.
+      expect(repository.saveSetting).not.toHaveBeenCalledWith('sidebar_order:teacher:4', ['/reports']);
+      expect(repository.saveSetting).not.toHaveBeenCalledWith('sidebar_order:teacher:9', ['/dashboard']);
+    });
+  });
   test('loads and saves a normalized center-wide owner palette', async () => {
     repository.getSetting.mockResolvedValue('sunset');
     await expect(service.getOwnerPalette(3)).resolves.toMatchObject({ id: 'sunset', primary: '#ff5a00' });
