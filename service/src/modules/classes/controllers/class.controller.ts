@@ -90,7 +90,7 @@ const deleteClass = async (req: any, res: any) => {
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
-    const force = String(req.query.force || req.body?.force || '').toLowerCase() === 'true';
+    const force = String(req.query.force || '').toLowerCase() === 'true';
     const result = await classService.deleteClass(Number(req.params.id), centerId ?? undefined, { force });
 
     if (result?.error === 'has_attendance') {

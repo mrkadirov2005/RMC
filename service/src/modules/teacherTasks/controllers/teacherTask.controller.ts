@@ -93,6 +93,9 @@ const createTeacherTask = async (req: any, res: any) => {
     if (!req.body.task_title || !String(req.body.task_title).trim()) {
       return res.status(400).json({ error: 'task_title is required.' });
     }
+    if (!teacherTaskService.isValidDeadline(req.body.deadline)) {
+      return res.status(400).json({ error: 'deadline must be a valid date.' });
+    }
 
     let teacherId: number | undefined;
     let adminId: number | undefined;
@@ -149,6 +152,10 @@ const updateTeacherTask = async (req: any, res: any) => {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
     const effectiveCenterId = centerId ?? req.body.center_id;
+
+    if (!teacherTaskService.isValidDeadline(req.body.deadline)) {
+      return res.status(400).json({ error: 'deadline must be a valid date.' });
+    }
 
     const payload: any = {
       task_title: req.body.task_title,

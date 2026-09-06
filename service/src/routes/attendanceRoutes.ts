@@ -5,7 +5,7 @@ const router_att = express_att.Router();
 const attendanceController = require('../modules/attendance/controllers/attendance.controller');
 const { requireAuth } = require('../middleware/auth');
 const { validateBody, validateParams } = require('../middleware/validation');
-const { ClassIdParamDto, CreateAttendanceDto, IdParamDto, SessionIdParamDto, StudentIdParamDto } = require('../dtos/request.dto');
+const { ClassIdParamDto, CreateAttendanceDto, IdParamDto, SessionIdParamDto, StudentIdParamDto, UpdateAttendanceDto } = require('../dtos/request.dto');
 
 /**
  * @swagger
@@ -117,7 +117,7 @@ router_att.post('/', requireAuth, validateBody(CreateAttendanceDto), attendanceC
  *       404:
  *         description: Attendance record not found
  */
-router_att.put('/:id', requireAuth, validateParams(IdParamDto), attendanceController.updateAttendance);
+router_att.put('/:id', requireAuth, validateParams(IdParamDto), validateBody(UpdateAttendanceDto), attendanceController.updateAttendance);
 
 
 /**

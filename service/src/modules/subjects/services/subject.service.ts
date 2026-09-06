@@ -1,5 +1,5 @@
 const subjectRepository = require('../repositories/subject.repository');
-const { classInCenter } = require('../../../shared/tenantDb');
+const { classInCenter, classBelongsToTeacher } = require('../../../shared/tenantDb');
 
 const listSubjects = (centerId?: number, teacherId?: number) => subjectRepository.findAll(centerId, teacherId);
 
@@ -8,12 +8,16 @@ const getSubject = (id: number, centerId?: number, teacherId?: number) => subjec
 const listByClass = (classId: number, centerId?: number, teacherId?: number) =>
   subjectRepository.findByClass(classId, centerId, teacherId);
 
-const createSubject = async (body: any, centerId?: number) => {
+const createSubject = async (body: any, centerId?: number, teacherId?: number) => {
   const { class_id, subject_name, subject_code, teacher_id, total_marks, passing_marks } = body;
   const resolvedCenterId = centerId ?? body.center_id;
   if (resolvedCenterId && class_id) {
     const ok = await classInCenter(class_id, resolvedCenterId);
     if (!ok) return { error: 'invalid_center' as const };
+  }
+  if (teacherId && class_id) {
+    const owns = await classBelongsToTeacher(class_id, teacherId);
+    if (!owns) return { error: 'forbidden' as const };
   }
   if (class_id) {
     const existingSubjects = await subjectRepository.findByClass(class_id, resolvedCenterId);
@@ -46,6 +50,11 @@ const updateSubject = async (id: number, body: any, centerId?: number, teacherId
   if (centerId) {
     const ok = await classInCenter(class_id, centerId);
     if (!ok) return { error: 'invalid_center' as const };
+  }
+
+  if (teacherId) {
+    const owns = await classBelongsToTeacher(class_id, teacherId);
+    if (!owns) return { error: 'forbidden' as const };
   }
 
   const existingSubjects = await subjectRepository.findByClass(class_id, centerId, teacherId);

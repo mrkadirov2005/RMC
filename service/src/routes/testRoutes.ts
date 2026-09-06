@@ -10,6 +10,7 @@ const {
   AssignTestDto,
   CreateTestDto,
   GradeSubmissionDto,
+  PassageDto,
   StartTestDto,
   SubmitTestDto,
   UpdateQuestionDto,
@@ -237,7 +238,7 @@ router_test.delete('/questions/:questionId', requireAuth, requireRole('superuser
  *       201:
  *         description: Passage added successfully
  */
-router_test.post('/:testId/passages', requireAuth, requireRole('superuser', 'teacher'), testController.addPassage);
+router_test.post('/:testId/passages', requireAuth, requireRole('superuser', 'teacher'), validateBody(PassageDto), testController.addPassage);
 
 /**
  * @swagger
@@ -255,7 +256,7 @@ router_test.post('/:testId/passages', requireAuth, requireRole('superuser', 'tea
  *       200:
  *         description: Passage updated successfully
  */
-router_test.put('/passages/:passageId', requireAuth, requireRole('superuser', 'teacher'), testController.updatePassage);
+router_test.put('/passages/:passageId', requireAuth, requireRole('superuser', 'teacher'), validateBody(PassageDto), testController.updatePassage);
 
 /**
  * @swagger

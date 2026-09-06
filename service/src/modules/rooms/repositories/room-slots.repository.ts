@@ -128,7 +128,7 @@ const deleteSlot = (slotId: number, centerId: number) =>
     .then((rows: any[]) => rows[0] || null);
 
 // ROOM BOOKINGS QUERIES
-const findBookingsBySlot = (slotId: number) =>
+const findBookingsBySlot = (slotId: number, centerId: number) =>
   db
     .select({
       ...bookingSelection,
@@ -142,7 +142,7 @@ const findBookingsBySlot = (slotId: number) =>
     .innerJoin(roomSlots, eq(roomBookings.slotId, roomSlots.slotId))
     .innerJoin(rooms, eq(roomSlots.roomId, rooms.roomId))
     .innerJoin(classes, eq(roomBookings.classId, classes.classId))
-    .where(eq(roomBookings.slotId, slotId));
+    .where(and(eq(roomBookings.slotId, slotId), eq(roomBookings.centerId, centerId)));
 
 const findBookingsByClass = (classId: number, centerId: number) =>
   db

@@ -30,8 +30,20 @@ class CreateAttendanceDto {
   remarks?: string;
 }
 
+class UpdateAttendanceDto {
+  @IsOptional()
+  @IsString()
+  @IsIn(['Present', 'Absent', 'Late', 'Excused'])
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  remarks?: string;
+}
+
 module.exports = {
   CreateAttendanceDto,
+  UpdateAttendanceDto,
 };
 
 export {};

@@ -18,6 +18,10 @@ const saved_filters = require('./saved-filters.dto');
 const tests = require('./tests.dto');
 const attendance = require('./attendance.dto');
 const superusers = require('./superusers.dto');
+const assignments = require('./assignments.dto');
+const rooms = require('./rooms.dto');
+const telegram_registrations = require('./telegram_registrations.dto');
+const calendar = require('./calendar.dto');
 
 module.exports = {
   ...common,
@@ -40,6 +44,10 @@ module.exports = {
   ...tests,
   ...attendance,
   ...superusers,
+  ...assignments,
+  ...rooms,
+  ...telegram_registrations,
+  ...calendar,
 };
 
 export {};

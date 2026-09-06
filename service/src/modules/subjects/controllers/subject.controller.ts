@@ -61,15 +61,19 @@ const getSubjectsByClass = async (req: any, res: any) => {
 const createSubject = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
       return res.status(403).json({ error: 'Center scope required.' });
     }
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for superuser actions.' });
     }
-    const out = await subjectService.createSubject(req.body, centerId ?? req.body.center_id);
+    const out = await subjectService.createSubject(req.body, centerId ?? req.body.center_id, teacherId);
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Class does not belong to this center.' });
+    }
+    if (out && out.error === 'forbidden') {
+      return res.status(403).json({ error: 'Class does not belong to this teacher.' });
     }
     if (out && out.error === 'class_subject_exists') {
       return res.status(409).json({ message: 'This class already has an assigned subject.' });
@@ -94,6 +98,9 @@ const updateSubject = async (req: any, res: any) => {
     const row = await subjectService.updateSubject(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
     if (row && row.error === 'invalid_center') {
       return res.status(400).json({ error: 'Class does not belong to this center.' });
+    }
+    if (row && row.error === 'forbidden') {
+      return res.status(403).json({ error: 'Class does not belong to this teacher.' });
     }
     if (row && row.error === 'class_subject_exists') {
       return res.status(409).json({ message: 'This class already has an assigned subject.' });

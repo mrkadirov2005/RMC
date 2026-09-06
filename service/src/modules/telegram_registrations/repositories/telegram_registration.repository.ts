@@ -53,36 +53,7 @@ const studentSelection = {
   updated_at: students.updatedAt,
 };
 
-const ensureTable = () =>
-  db.execute(sql`
-    CREATE TABLE IF NOT EXISTS telegram_student_registrations (
-      registration_id SERIAL PRIMARY KEY,
-      telegram_user_id BIGINT NOT NULL,
-      telegram_chat_id BIGINT NOT NULL,
-      telegram_username VARCHAR(100),
-      first_name VARCHAR(100) NOT NULL,
-      last_name VARCHAR(100) NOT NULL,
-      phone VARCHAR(30),
-      date_of_birth DATE,
-      parent_name VARCHAR(200),
-      parent_phone VARCHAR(30),
-      gender VARCHAR(20),
-      username VARCHAR(100),
-      password_hash VARCHAR(255),
-      school_name VARCHAR(200),
-      school_class VARCHAR(50),
-      center_id INT,
-      class_label VARCHAR(100) NOT NULL DEFAULT 'Unassigned',
-      status VARCHAR(30) NOT NULL DEFAULT 'Pending',
-      converted_student_id INT,
-      converted_at TIMESTAMP,
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
 const list = async (centerId?: number, status?: string) => {
-  await ensureTable();
   const conditions: any[] = [];
   if (centerId) conditions.push(eq(telegramStudentRegistrations.centerId, centerId));
   if (status) conditions.push(eq(telegramStudentRegistrations.status, status));
@@ -103,7 +74,6 @@ const list = async (centerId?: number, status?: string) => {
 };
 
 const convertToStudent = async (id: number, centerId?: number, assignData?: { class_id?: number; teacher_id?: number }) => {
-  await ensureTable();
   return db.transaction(async (tx: any) => {
     const rows = await tx
       .select(registrationSelection)
@@ -162,7 +132,6 @@ const convertToStudent = async (id: number, centerId?: number, assignData?: { cl
 };
 
 const remove = async (id: number, centerId?: number) => {
-  await ensureTable();
   const conditions = [eq(telegramStudentRegistrations.registrationId, id), ne(telegramStudentRegistrations.status, 'Imported')];
   if (centerId) conditions.push(eq(telegramStudentRegistrations.centerId, centerId));
   const rows = await db

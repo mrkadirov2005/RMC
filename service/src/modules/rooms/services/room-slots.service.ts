@@ -96,8 +96,8 @@ const generateSlots = async (roomId: number, centerId: number, startDate: string
 };
 
 // ROOM BOOKINGS SERVICES
-const getBookingsBySlot = async (slotId: number) => {
-  return roomSlotsRepository.findBookingsBySlot(slotId);
+const getBookingsBySlot = async (slotId: number, centerId: number) => {
+  return roomSlotsRepository.findBookingsBySlot(slotId, centerId);
 };
 
 const getBookingsByClass = async (classId: number, centerId: number) => {

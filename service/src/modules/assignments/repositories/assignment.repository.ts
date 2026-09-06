@@ -32,7 +32,7 @@ const selection = {
 };
 
 const scopedConditions = (options: AssignmentListOptions = {}) => {
-  const conditions: any[] = [];
+  const conditions: any[] = [isNull(assignments.deletedAt)];
   if (options.centerId) conditions.push(eq(assignments.centerId, options.centerId));
   if (options.teacherId) conditions.push(eq(classes.teacherId, options.teacherId), isNull(classes.deletedAt));
   if (options.classId) conditions.push(eq(assignments.classId, options.classId));
@@ -108,7 +108,11 @@ const update = async (id: number, payload: any, centerId?: number, teacherId?: n
 const remove = async (id: number, centerId?: number, teacherId?: number) => {
   const existing = await getById(id, centerId, teacherId);
   if (!existing) return null;
-  const rows = await db.delete(assignments).where(eq(assignments.assignmentId, id)).returning(selection);
+  const rows = await db
+    .update(assignments)
+    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(assignments.assignmentId, id))
+    .returning(selection);
   return rows[0] || null;
 };
 

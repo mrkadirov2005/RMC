@@ -1,5 +1,11 @@
 const teacherTaskRepository = require('../repositories/teacherTask.repository');
 
+const isValidDeadline = (value: any) => {
+  if (value === undefined || value === null || value === '') return true;
+  const date = value instanceof Date ? value : new Date(value);
+  return !Number.isNaN(date.getTime());
+};
+
 const getAllTeacherTasks = (options: {
   centerId?: number;
   teacherId?: number;
@@ -51,6 +57,7 @@ module.exports = {
   updateTeacherTaskStatus,
   deleteTeacherTask,
   getTeacherTaskStats,
+  isValidDeadline,
 };
 
 export {};

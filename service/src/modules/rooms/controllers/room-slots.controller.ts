@@ -1,13 +1,27 @@
 const roomSlotsService = require('../services/room-slots.service');
+const { getScopedCenterId } = require('../../../shared/tenant');
+
+const resolveCenter = (req: any, res: any): number | null => {
+  const { centerId, isGlobal } = getScopedCenterId(req);
+  if (!centerId && !isGlobal) {
+    res.status(403).json({ error: 'Center scope required.' });
+    return null;
+  }
+  if (!centerId && isGlobal) {
+    res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    return null;
+  }
+  return centerId as number;
+};
 
 // ROOM SLOTS CONTROLLERS
 const getSlotsByRoom = async (req: any, res: any) => {
   try {
     const { roomId } = req.params;
     const { from_date, to_date } = req.query;
-    const centerId = req.query.center_id || req.user.center_id;
-    if (!centerId) return res.status(400).json({ error: 'Center ID is required' });
-    
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
     const slots = await roomSlotsService.getSlotsByRoom(roomId, centerId, from_date, to_date);
     res.json(slots);
   } catch (error: any) {
@@ -18,9 +32,9 @@ const getSlotsByRoom = async (req: any, res: any) => {
 const getSlotsByCenter = async (req: any, res: any) => {
   try {
     const { from_date, to_date } = req.query;
-    const centerId = req.query.center_id || req.user.center_id;
-    if (!centerId) return res.status(400).json({ error: 'Center ID is required' });
-    
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
     const slots = await roomSlotsService.getSlotsByCenter(centerId, from_date, to_date);
     res.json(slots);
   } catch (error: any) {
@@ -32,11 +46,10 @@ const getAvailableSlots = async (req: any, res: any) => {
   try {
     const { roomId } = req.params;
     const { slot_date } = req.query;
-    const centerId = req.query.center_id || req.user.center_id;
-    
-    if (!centerId) return res.status(400).json({ error: 'Center ID is required' });
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     if (!slot_date) return res.status(400).json({ error: 'Slot date is required' });
-    
+
     const slots = await roomSlotsService.getAvailableSlots(roomId, centerId, slot_date);
     res.json(slots);
   } catch (error: any) {
@@ -46,13 +59,10 @@ const getAvailableSlots = async (req: any, res: any) => {
 
 const createSlot = async (req: any, res: any) => {
   try {
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const { room_id, slot_date, start_time, end_time, duration_minutes } = req.body;
-    
-    if (!room_id || !slot_date || !start_time || !end_time) {
-      return res.status(400).json({ error: 'Missing required fields: room_id, slot_date, start_time, end_time' });
-    }
-    
+
     const slot = await roomSlotsService.addSlot({
       center_id: centerId,
       room_id,
@@ -61,7 +71,7 @@ const createSlot = async (req: any, res: any) => {
       end_time,
       duration_minutes: duration_minutes || 30
     });
-    
+
     res.status(201).json(slot);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -70,17 +80,14 @@ const createSlot = async (req: any, res: any) => {
 
 const createMultipleSlots = async (req: any, res: any) => {
   try {
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const { slots } = req.body;
-    
-    if (!Array.isArray(slots) || slots.length === 0) {
-      return res.status(400).json({ error: 'Slots array is required and must not be empty' });
-    }
-    
+
     // Add center_id to each slot
-    const slotsWithCenter = slots.map(s => ({ ...s, center_id: centerId }));
+    const slotsWithCenter = slots.map((s: any) => ({ ...s, center_id: centerId }));
     const createdSlots = await roomSlotsService.addMultipleSlots(slotsWithCenter);
-    
+
     res.status(201).json(createdSlots);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -89,13 +96,10 @@ const createMultipleSlots = async (req: any, res: any) => {
 
 const generateSlotsForDateRange = async (req: any, res: any) => {
   try {
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const { room_id, start_date, end_date, slot_configs } = req.body;
-    
-    if (!room_id || !start_date || !end_date || !Array.isArray(slot_configs)) {
-      return res.status(400).json({ error: 'Missing required fields: room_id, start_date, end_date, slot_configs' });
-    }
-    
+
     const slots = await roomSlotsService.generateSlots(room_id, centerId, start_date, end_date, slot_configs);
     res.status(201).json({ message: `Generated ${slots.length} slots`, slots });
   } catch (error: any) {
@@ -106,16 +110,17 @@ const generateSlotsForDateRange = async (req: any, res: any) => {
 const updateSlot = async (req: any, res: any) => {
   try {
     const { slotId } = req.params;
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const { start_time, end_time, duration_minutes, is_available } = req.body;
-    
+
     const slot = await roomSlotsService.modifySlot(slotId, {
       start_time,
       end_time,
       duration_minutes,
       is_available
     }, centerId);
-    
+
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
     res.json(slot);
   } catch (error: any) {
@@ -126,11 +131,12 @@ const updateSlot = async (req: any, res: any) => {
 const deleteSlot = async (req: any, res: any) => {
   try {
     const { slotId } = req.params;
-    const centerId = req.query.center_id || req.user.center_id;
-    
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
     const slot = await roomSlotsService.removeSlot(slotId, centerId);
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
-    
+
     res.json({ message: 'Slot deleted successfully' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -141,8 +147,10 @@ const deleteSlot = async (req: any, res: any) => {
 const getBookingsBySlot = async (req: any, res: any) => {
   try {
     const { slotId } = req.params;
-    
-    const bookings = await roomSlotsService.getBookingsBySlot(slotId);
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
+    const bookings = await roomSlotsService.getBookingsBySlot(slotId, centerId);
     res.json(bookings);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -152,9 +160,9 @@ const getBookingsBySlot = async (req: any, res: any) => {
 const getBookingsByClass = async (req: any, res: any) => {
   try {
     const { classId } = req.params;
-    const centerId = req.query.center_id || req.user.center_id;
-    if (!centerId) return res.status(400).json({ error: 'Center ID is required' });
-    
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
     const bookings = await roomSlotsService.getBookingsByClass(classId, centerId);
     res.json(bookings);
   } catch (error: any) {
@@ -166,9 +174,9 @@ const getBookingsByRoom = async (req: any, res: any) => {
   try {
     const { roomId } = req.params;
     const { from_date, to_date } = req.query;
-    const centerId = req.query.center_id || req.user.center_id;
-    if (!centerId) return res.status(400).json({ error: 'Center ID is required' });
-    
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
     const bookings = await roomSlotsService.getBookingsByRoom(roomId, centerId, from_date, to_date);
     res.json(bookings);
   } catch (error: any) {
@@ -178,13 +186,10 @@ const getBookingsByRoom = async (req: any, res: any) => {
 
 const createBooking = async (req: any, res: any) => {
   try {
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const { slot_id, class_id, session_id, teacher_id, notes } = req.body;
-    
-    if (!slot_id || !class_id) {
-      return res.status(400).json({ error: 'Missing required fields: slot_id, class_id' });
-    }
-    
+
     const booking = await roomSlotsService.bookSlot({
       center_id: centerId,
       slot_id,
@@ -193,7 +198,7 @@ const createBooking = async (req: any, res: any) => {
       teacher_id,
       notes
     });
-    
+
     res.status(201).json(booking);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -203,14 +208,15 @@ const createBooking = async (req: any, res: any) => {
 const updateBooking = async (req: any, res: any) => {
   try {
     const { bookingId } = req.params;
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const { booking_status, notes } = req.body;
-    
+
     const booking = await roomSlotsService.modifyBooking(bookingId, {
       booking_status,
       notes
     }, centerId);
-    
+
     if (!booking) return res.status(404).json({ error: 'Booking not found' });
     res.json(booking);
   } catch (error: any) {
@@ -221,8 +227,9 @@ const updateBooking = async (req: any, res: any) => {
 const cancelBooking = async (req: any, res: any) => {
   try {
     const { bookingId } = req.params;
-    const centerId = req.query.center_id || req.user.center_id;
-    
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
+
     await roomSlotsService.cancelBooking(bookingId, centerId);
     res.json({ message: 'Booking cancelled successfully' });
   } catch (error: any) {

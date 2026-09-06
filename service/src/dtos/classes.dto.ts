@@ -12,9 +12,14 @@ class CreateClassDto {
   @IsNotEmpty()
   class_name!: string;
 
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  subject_id!: number;
+
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  subject_name!: string;
+  subject_name?: string;
 
   @IsOptional()
   @IsString()
@@ -70,8 +75,13 @@ class UpdateClassDto {
   class_name?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  subject_id?: number;
+
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
   subject_name?: string;
 
   @IsOptional()

@@ -1,9 +1,23 @@
 const roomsService = require('../services/rooms.service');
+const { getScopedCenterId } = require('../../../shared/tenant');
+
+const resolveCenter = (req: any, res: any): number | null => {
+  const { centerId, isGlobal } = getScopedCenterId(req);
+  if (!centerId && !isGlobal) {
+    res.status(403).json({ error: 'Center scope required.' });
+    return null;
+  }
+  if (!centerId && isGlobal) {
+    res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    return null;
+  }
+  return centerId as number;
+};
 
 const getAllRooms = async (req: any, res: any) => {
   try {
-    const centerId = req.query.center_id || req.user.center_id;
-    if (!centerId) return res.status(400).json({ error: 'Center ID is required' });
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const rooms = await roomsService.getAllRooms(centerId);
     res.json(rooms);
   } catch (error: any) {
@@ -14,7 +28,8 @@ const getAllRooms = async (req: any, res: any) => {
 const getRoomById = async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const centerId = req.query.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const room = await roomsService.getRoomById(id, centerId);
     if (!room) return res.status(404).json({ error: 'Room not found' });
     res.json(room);
@@ -25,7 +40,8 @@ const getRoomById = async (req: any, res: any) => {
 
 const createRoom = async (req: any, res: any) => {
   try {
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const room = await roomsService.createRoom({ ...req.body, center_id: centerId });
     if (room?.error === 'bad_time_window') {
       return res.status(400).json({ error: 'End time must be after start time.' });
@@ -42,7 +58,8 @@ const createRoom = async (req: any, res: any) => {
 const updateRoom = async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const centerId = req.body.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const room = await roomsService.updateRoom(id, req.body, centerId);
     if (room?.error === 'bad_time_window') {
       return res.status(400).json({ error: 'End time must be after start time.' });
@@ -60,7 +77,8 @@ const updateRoom = async (req: any, res: any) => {
 const deleteRoom = async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const centerId = req.query.center_id || req.user.center_id;
+    const centerId = resolveCenter(req, res);
+    if (centerId == null) return;
     const room = await roomsService.deleteRoom(id, centerId);
     if (!room) return res.status(404).json({ error: 'Room not found' });
     res.json({ message: 'Room deleted successfully' });
