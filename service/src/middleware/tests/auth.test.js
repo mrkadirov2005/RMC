@@ -138,12 +138,12 @@ describe('role and ownership middleware', () => {
     expect(denied.status).toHaveBeenCalledWith(403);
   });
 
-  test('hard delete requires the named owner identity', () => {
+  test('hard delete requires the can_hard_delete permission flag', () => {
     const next = jest.fn();
-    requireMuzaffarHardDelete({ user: { userType: 'superuser', role: 'owner', username: 'Muzaffar' } }, response(), next);
+    requireMuzaffarHardDelete({ user: { userType: 'superuser', role: 'owner', can_hard_delete: true } }, response(), next);
     expect(next).toHaveBeenCalled();
     const denied = response();
-    requireMuzaffarHardDelete({ user: { userType: 'superuser', role: 'owner', username: 'other' } }, denied, jest.fn());
+    requireMuzaffarHardDelete({ user: { userType: 'superuser', role: 'owner', can_hard_delete: false } }, denied, jest.fn());
     expect(denied.status).toHaveBeenCalledWith(403);
   });
 

@@ -1,4 +1,7 @@
-jest.mock('../../../../shared/password', () => ({ hashPassword: jest.fn((value) => `hash:${value}`) }));
+jest.mock('../../../../shared/password', () => ({
+  hashPassword: jest.fn((value) => `hash:${value}`),
+  verifyPassword: jest.fn((password, storedHash) => ({ valid: storedHash === `hash:${password}`, legacy: false })),
+}));
 jest.mock('../../../../shared/tenantDb', () => ({ studentInCenter: jest.fn() }));
 jest.mock('../../repositories/parent.repository', () => ({
   findAllSafe: jest.fn(), findByIdSafe: jest.fn(), insert: jest.fn(), update: jest.fn(), remove: jest.fn(),
@@ -17,7 +20,7 @@ describe('parent service', () => {
   test('hashes parent credentials and applies safe optional defaults', async () => {
     repository.insert.mockResolvedValue({ parent_id: 1 });
     await service.createParent({ first_name: 'P', last_name: 'A', username: 'p', password: 'pw' });
-    expect(repository.insert).toHaveBeenCalledWith(['P', 'A', null, null, 'p', 'hash:pw', 'Active']);
+    expect(repository.insert).toHaveBeenCalledWith(['P', 'A', null, null, 'p', 'hash:pw', 'Active', null]);
   });
 
   test('rejects cross-center assignment and defaults relationship', async () => {

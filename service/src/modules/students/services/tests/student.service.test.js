@@ -1,3 +1,8 @@
+jest.mock('../../../../shared/password', () => ({
+  hashPassword: jest.fn((value) => `hash:${value}`),
+  verifyPassword: jest.fn((password, storedHash) => ({ valid: storedHash === `hash:${password}`, legacy: false })),
+}));
+
 jest.mock('../../repositories/student.repository', () => ({
   findAllWithClass: jest.fn(),
   findPaginatedWithClass: jest.fn(),

@@ -1,4 +1,7 @@
-jest.mock('../../../../shared/password', () => ({ hashPassword: jest.fn((value) => `hash:${value}`) }));
+jest.mock('../../../../shared/password', () => ({
+  hashPassword: jest.fn((value) => `hash:${value}`),
+  verifyPassword: jest.fn((password, storedHash) => ({ valid: storedHash === `hash:${password}`, legacy: false })),
+}));
 jest.mock('../../repositories/superuser.repository', () => ({
   findAllSafe: jest.fn(), findById: jest.fn(), countByUsername: jest.fn(), insert: jest.fn(), update: jest.fn(),
   remove: jest.fn(), findByUsernameForLogin: jest.fn(), incrementLoginAttempts: jest.fn(), resetLoginSuccess: jest.fn(),
@@ -28,10 +31,11 @@ describe('superuser service', () => {
   });
 
   test('forces list/get/update/delete repository center scope', async () => {
-    repository.findAllSafe.mockResolvedValue([]); repository.findById.mockResolvedValue(null);
+    repository.findAllSafe.mockResolvedValue([]);
+    repository.findById.mockResolvedValueOnce(null).mockResolvedValueOnce({ superuser_id: 1, role: 'admin' });
     repository.update.mockResolvedValue(null); repository.remove.mockResolvedValue(null);
     await service.listSuperusers(2); await service.getSuperuser(1, 2);
-    await service.updateSuperuser(1, {}, 2); await service.deleteSuperuser(1, 2);
+    await service.updateSuperuser(1, {}, undefined, 2); await service.deleteSuperuser(1, undefined, 2);
     expect(repository.findAllSafe).toHaveBeenCalledWith(2);
     expect(repository.findById).toHaveBeenCalledWith(1, 2);
     expect(repository.update.mock.calls[0][2]).toBe(2);

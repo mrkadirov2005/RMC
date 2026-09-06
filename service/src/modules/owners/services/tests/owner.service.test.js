@@ -1,4 +1,7 @@
-jest.mock('../../../../shared/password', () => ({ hashPassword: jest.fn((value) => `hash:${value}`) }));
+jest.mock('../../../../shared/password', () => ({
+  hashPassword: jest.fn((value) => `hash:${value}`),
+  verifyPassword: jest.fn((password, storedHash) => ({ valid: storedHash === `hash:${password}`, legacy: false })),
+}));
 jest.mock('../../repositories/owner.repository', () => ({
   findAllSafe: jest.fn(), findById: jest.fn(), countByUsername: jest.fn(), insert: jest.fn(), update: jest.fn(),
   remove: jest.fn(), findByUsernameForLogin: jest.fn(), incrementLoginAttempts: jest.fn(),
