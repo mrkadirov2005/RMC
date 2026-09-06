@@ -10,7 +10,9 @@ const findFiltered = (filters: { entityType?: string; entityId?: number; userTyp
   if (filters.entityId) conditions.push(eq(auditLogs.entityId, filters.entityId));
   if (filters.userType) conditions.push(eq(auditLogs.userType, filters.userType));
   if (filters.userId) conditions.push(eq(auditLogs.userId, filters.userId));
-  if (filters.centerId) conditions.push(sql`COALESCE(${auditLogs.details}->>'center_id', '') = ${String(filters.centerId)}`);
+  if (filters.centerId) {
+    conditions.push(sql`COALESCE(${auditLogs.centerId}, (${auditLogs.details}->>'center_id')::int) = ${filters.centerId}`);
+  }
 
   let query = db.select().from(auditLogs).orderBy(desc(auditLogs.createdAt));
   if (conditions.length) query = query.where(and(...conditions));

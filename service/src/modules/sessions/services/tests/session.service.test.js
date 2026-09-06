@@ -53,7 +53,7 @@ describe('session service', () => {
   test('rejects creating a session for an absent class', async () => {
     classes.findById.mockResolvedValue(null);
     await expect(service.createSession({ classId: 7, sessionDate: '2026-08-08', startTime: '09:00', durationMinutes: 60 }))
-      .rejects.toThrow('Class not found');
+      .resolves.toEqual({ error: 'not_found' });
   });
 
   test('forwards scoped list and deletion operations', () => {

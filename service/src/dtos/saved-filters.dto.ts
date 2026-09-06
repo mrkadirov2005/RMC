@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 class CreateSavedFilterDto {
   @IsString()
@@ -13,8 +13,18 @@ class CreateSavedFilterDto {
   filters_json!: any;
 }
 
+class UpdateSavedFilterDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  filters_json?: any;
+}
+
 module.exports = {
   CreateSavedFilterDto,
+  UpdateSavedFilterDto,
 };
 
 export {};

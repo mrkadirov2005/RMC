@@ -2,6 +2,7 @@ const {
   bigint,
   boolean,
   date,
+  index,
   integer,
   jsonb,
   numeric,
@@ -10,8 +11,10 @@ const {
   text,
   time,
   timestamp,
+  uniqueIndex,
   varchar,
 } = require('drizzle-orm/pg-core');
+const { sql } = require('drizzle-orm');
 
 const appSettings = pgTable('app_settings', {
   settingId: serial('setting_id').primaryKey(),
@@ -20,7 +23,9 @@ const appSettings = pgTable('app_settings', {
   settingValue: jsonb('setting_value').notNull(),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    uniqueIndex('uniq_app_settings_global_key').on(table.settingKey).where(sql`center_id IS NULL`),
+]);
 
 const translations = pgTable('translations', {
   id: text('id').primaryKey(),
@@ -38,7 +43,10 @@ const savedFilters = pgTable('saved_filters', {
   filtersJson: jsonb('filters_json').notNull(),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_saved_filters_user').on(table.userType, table.userId, table.entity),
+    index('idx_saved_filters_center_id').on(table.centerId),
+]);
 
 const teacherTasks = pgTable('teacher_tasks', {
   taskId: serial('task_id').primaryKey(),
@@ -54,7 +62,14 @@ const teacherTasks = pgTable('teacher_tasks', {
   statusNote: text('status_note'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_teacher_tasks_teacher_id').on(table.teacherId),
+    index('idx_teacher_tasks_center_id').on(table.centerId),
+    index('idx_teacher_tasks_deadline').on(table.deadline),
+    index('idx_teacher_tasks_admin_id').on(table.adminId),
+    index('idx_teacher_tasks_status').on(table.status),
+    index('idx_teacher_tasks_assignee_type').on(table.assigneeType),
+]);
 
 const teacherSalaries = pgTable('teacher_salaries', {
   salaryId: serial('salary_id').primaryKey(),
@@ -73,7 +88,11 @@ const teacherSalaries = pgTable('teacher_salaries', {
   notes: text('notes'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_teacher_salaries_teacher_id').on(table.teacherId),
+    index('idx_teacher_salaries_center_id').on(table.centerId),
+    index('idx_teacher_salaries_period').on(table.salaryYear, table.salaryMonth),
+]);
 
 const teacherKpis = pgTable('teacher_kpis', {
   kpiId: serial('kpi_id').primaryKey(),
@@ -93,7 +112,11 @@ const teacherKpis = pgTable('teacher_kpis', {
   markedByName: varchar('marked_by_name', { length: 200 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_teacher_kpis_teacher_id').on(table.teacherId),
+    index('idx_teacher_kpis_center_id').on(table.centerId),
+    index('idx_teacher_kpis_period').on(table.kpiYear, table.kpiMonth),
+]);
 
 const notifications = pgTable('notifications', {
   notificationId: serial('notification_id').primaryKey(),
@@ -105,7 +128,10 @@ const notifications = pgTable('notifications', {
   type: varchar('type', { length: 20 }),
   isRead: boolean('is_read'),
   createdAt: timestamp('created_at'),
-});
+}, (table) => [
+    index('idx_notifications_user').on(table.userType, table.userId, table.isRead),
+    index('idx_notifications_center_id').on(table.centerId),
+]);
 
 const teacherPaymentCredentials = pgTable('teacher_payment_credentials', {
   teacherId: integer('teacher_id').primaryKey(),
@@ -116,7 +142,9 @@ const teacherPaymentCredentials = pgTable('teacher_payment_credentials', {
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
   lastUsedAt: timestamp('last_used_at'),
-});
+}, (table) => [
+    index('idx_teacher_payment_active').on(table.isActive),
+]);
 
 const centers = pgTable('edu_centers', {
   centerId: serial('center_id').primaryKey(),
@@ -129,7 +157,9 @@ const centers = pgTable('edu_centers', {
   principalName: varchar('principal_name', { length: 255 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_center_code').on(table.centerCode),
+]);
 
 const rooms = pgTable('rooms', {
   roomId: serial('room_id').primaryKey(),
@@ -142,7 +172,12 @@ const rooms = pgTable('rooms', {
   endTime: time('end_time'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_rooms_center_id').on(table.centerId),
+    index('idx_rooms_room_number').on(table.roomNumber),
+    index('idx_rooms_class_id').on(table.classId),
+    index('idx_rooms_physical_room_id').on(table.physicalRoomId),
+]);
 
 const physicalRooms = pgTable('physical_rooms', {
   physicalRoomId: serial('physical_room_id').primaryKey(),
@@ -156,7 +191,10 @@ const physicalRooms = pgTable('physical_rooms', {
   operatingEndTime: time('operating_end_time').notNull(),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_physical_rooms_center_status').on(table.centerId, table.status),
+    uniqueIndex('uq_physical_rooms_center_name').on(table.centerId, sql`lower(trim(name))`),
+]);
 
 const classes = pgTable('classes', {
   classId: serial('class_id').primaryKey(),
@@ -176,7 +214,12 @@ const classes = pgTable('classes', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_class_code').on(table.classCode),
+    index('idx_classes_level').on(table.level),
+    index('idx_classes_deleted_at').on(table.deletedAt),
+    uniqueIndex('ux_classes_class_code_active').on(table.classCode).where(sql`deleted_at IS NULL`),
+]);
 
 const teachers = pgTable('teachers', {
   teacherId: serial('teacher_id').primaryKey(),
@@ -198,7 +241,14 @@ const teachers = pgTable('teachers', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_employee_id').on(table.employeeId),
+    index('idx_teachers_status').on(table.status),
+    index('idx_teachers_deleted_at').on(table.deletedAt),
+    uniqueIndex('ux_teachers_employee_id_active').on(table.employeeId).where(sql`deleted_at IS NULL`),
+    uniqueIndex('ux_teachers_email_active').on(table.email).where(sql`email IS NOT NULL AND deleted_at IS NULL`),
+    uniqueIndex('ux_teachers_username_active').on(table.username).where(sql`username IS NOT NULL AND deleted_at IS NULL`),
+]);
 
 const studentAcquisitionSources = pgTable('student_acquisition_sources', {
   sourceId: serial('source_id').primaryKey(),
@@ -247,7 +297,17 @@ const students = pgTable('students', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_enrollment_number').on(table.enrollmentNumber),
+    index('idx_students_status').on(table.status),
+    index('idx_students_teacher_id').on(table.teacherId),
+    index('idx_students_is_frozen').on(table.isFrozen),
+    index('idx_students_school_name').on(table.schoolName),
+    index('idx_students_deleted_at').on(table.deletedAt),
+    uniqueIndex('ux_students_enrollment_number_active').on(table.enrollmentNumber).where(sql`deleted_at IS NULL AND status IS DISTINCT FROM 'Transferred'`),
+    uniqueIndex('ux_students_username_active').on(table.username).where(sql`username IS NOT NULL AND deleted_at IS NULL AND status IS DISTINCT FROM 'Transferred'`),
+    index('idx_students_previous_class_id').on(table.previousClassId),
+]);
 
 const roomSlots = pgTable('room_slots', {
   slotId: serial('slot_id').primaryKey(),
@@ -260,7 +320,13 @@ const roomSlots = pgTable('room_slots', {
   isAvailable: boolean('is_available'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_room_slots_center_id').on(table.centerId),
+    index('idx_room_slots_room_id').on(table.roomId),
+    index('idx_room_slots_date').on(table.slotDate),
+    index('idx_room_slots_available').on(table.isAvailable),
+    index('idx_room_slots_room_date').on(table.roomId, table.slotDate),
+]);
 
 const roomBookings = pgTable('room_bookings', {
   bookingId: serial('booking_id').primaryKey(),
@@ -274,7 +340,14 @@ const roomBookings = pgTable('room_bookings', {
   notes: text('notes'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_room_bookings_center_id').on(table.centerId),
+    index('idx_room_bookings_slot_id').on(table.slotId),
+    index('idx_room_bookings_class_id').on(table.classId),
+    index('idx_room_bookings_session_id').on(table.sessionId),
+    index('idx_room_bookings_teacher_id').on(table.teacherId),
+    index('idx_room_bookings_status').on(table.bookingStatus),
+]);
 
 const assignments = pgTable('assignments', {
   assignmentId: serial('assignment_id').primaryKey(),
@@ -293,7 +366,15 @@ const assignments = pgTable('assignments', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_assignments_class_id').on(table.classId),
+    index('idx_assignments_status').on(table.status),
+    index('idx_assignments_center_id').on(table.centerId),
+    index('idx_assignments_student_id').on(table.studentId),
+    index('idx_assignments_teacher_id').on(table.teacherId),
+    index('idx_assignments_subject_id').on(table.subjectId),
+    index('idx_assignments_deleted_at').on(table.deletedAt),
+]);
 
 const attendance = pgTable('attendance', {
   attendanceId: serial('attendance_id').primaryKey(),
@@ -307,7 +388,13 @@ const attendance = pgTable('attendance', {
   notes: text('notes'),
   remarks: text('remarks'),
   createdAt: timestamp('created_at'),
-});
+}, (table) => [
+    index('idx_attendance_date').on(table.attendanceDate),
+    index('idx_attendance_center_id').on(table.centerId),
+    index('idx_attendance_session_id').on(table.sessionId),
+    uniqueIndex('uniq_attendance_no_session').on(table.studentId, table.classId, table.attendanceDate).where(sql`session_id IS NULL`),
+    uniqueIndex('uniq_attendance_session').on(table.studentId, table.sessionId).where(sql`session_id IS NOT NULL`),
+]);
 
 const auditLogs = pgTable('audit_logs', {
   auditLogId: serial('audit_log_id').primaryKey(),
@@ -320,7 +407,11 @@ const auditLogs = pgTable('audit_logs', {
   details: jsonb('details'),
   ipAddress: varchar('ip_address', { length: 100 }),
   createdAt: timestamp('created_at'),
-});
+}, (table) => [
+    index('idx_audit_logs_entity').on(table.entityType, table.entityId),
+    index('idx_audit_logs_user').on(table.userType, table.userId),
+    index('idx_audit_logs_center_id').on(table.centerId),
+]);
 
 const debts = pgTable('debts', {
   debtId: serial('debt_id').primaryKey(),
@@ -338,7 +429,13 @@ const debts = pgTable('debts', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_debt_date').on(table.debtDate),
+    index('idx_debts_center_id').on(table.centerId),
+    index('idx_debts_student_id').on(table.studentId),
+    index('idx_debts_deleted_at').on(table.deletedAt),
+    index('idx_debts_status').on(table.status),
+]);
 
 const discounts = pgTable('discounts', {
   discountId: serial('discount_id').primaryKey(),
@@ -356,7 +453,11 @@ const discounts = pgTable('discounts', {
   active: boolean('active'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_discounts_student').on(table.studentId, table.active),
+    index('idx_discounts_center_kind').on(table.centerId, table.discountKind),
+    index('idx_discounts_period').on(table.paymentPeriod),
+]);
 
 const grades = pgTable('grades', {
   gradeId: serial('grade_id').primaryKey(),
@@ -385,7 +486,14 @@ const grades = pgTable('grades', {
   notes: text('notes'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_grades_student_id').on(table.studentId),
+    index('idx_grades_academic_year').on(table.academicYear),
+    index('idx_grades_center_id').on(table.centerId),
+    index('idx_grades_session_id').on(table.sessionId),
+    uniqueIndex('uniq_grade_session').on(table.studentId, table.sessionId).where(sql`session_id IS NOT NULL`),
+    index('idx_grades_subject_id').on(table.subjectId),
+]);
 
 const importJobs = pgTable('import_jobs', {
   importJobId: serial('import_job_id').primaryKey(),
@@ -413,7 +521,9 @@ const invoices = pgTable('invoices', {
   dueDate: date('due_date'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_invoices_student').on(table.studentId, table.status),
+]);
 
 const invoiceItems = pgTable('invoice_items', {
   itemId: serial('item_id').primaryKey(),
@@ -424,7 +534,9 @@ const invoiceItems = pgTable('invoice_items', {
   total: numeric('total'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_invoice_items_center_id').on(table.centerId),
+]);
 
 const owners = pgTable('owners', {
   ownerId: serial('owner_id').primaryKey(),
@@ -440,7 +552,10 @@ const owners = pgTable('owners', {
   lastLogin: timestamp('last_login'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_owner_username').on(table.username),
+    index('idx_owner_status').on(table.status),
+]);
 
 const parents = pgTable('parents', {
   parentId: serial('parent_id').primaryKey(),
@@ -454,7 +569,9 @@ const parents = pgTable('parents', {
   status: varchar('status', { length: 50 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_parents_center_id').on(table.centerId),
+]);
 
 const parentStudents = pgTable('parent_students', {
   parentId: integer('parent_id'),
@@ -463,7 +580,10 @@ const parentStudents = pgTable('parent_students', {
   isPrimary: boolean('is_primary'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_parent_students_parent').on(table.parentId),
+    index('idx_parent_students_center_id').on(table.centerId),
+]);
 
 const paymentPlans = pgTable('payment_plans', {
   planId: serial('plan_id').primaryKey(),
@@ -487,7 +607,10 @@ const paymentPlanInstallments = pgTable('payment_plan_installments', {
   status: varchar('status', { length: 50 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_installments_plan').on(table.planId, table.status),
+    index('idx_payment_plan_installments_center_id').on(table.centerId),
+]);
 
 const payments = pgTable('payments', {
   paymentId: serial('payment_id').primaryKey(),
@@ -522,7 +645,15 @@ const payments = pgTable('payments', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_payment_date').on(table.paymentDate),
+    index('idx_payment_status').on(table.paymentStatus),
+    index('idx_payments_student_id').on(table.studentId),
+    index('idx_payments_deleted_at').on(table.deletedAt),
+    uniqueIndex('ux_payments_receipt_number_active').on(table.receiptNumber).where(sql`receipt_number IS NOT NULL AND deleted_at IS NULL`),
+    index('idx_payments_transfer_students').on(table.transferSourceStudentId, table.transferTargetStudentId),
+    index('idx_payments_discount_id').on(table.discountId),
+]);
 
 const refunds = pgTable('refunds', {
   refundId: serial('refund_id').primaryKey(),
@@ -533,7 +664,9 @@ const refunds = pgTable('refunds', {
   refundedAt: timestamp('refunded_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_refunds_payment').on(table.paymentId, table.status),
+]);
 
 const sessions = pgTable('sessions', {
   sessionId: serial('session_id').primaryKey(),
@@ -548,21 +681,14 @@ const sessions = pgTable('sessions', {
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
-
-const classSessions = pgTable('class_sessions', {
-  sessionId: serial('session_id').primaryKey(),
-  centerId: integer('center_id'),
-  classId: integer('class_id'),
-  teacherId: integer('teacher_id'),
-  sessionDate: date('session_date'),
-  startTime: time('start_time'),
-  durationMinutes: integer('duration_minutes'),
-  endTime: time('end_time'),
-  status: varchar('status', { length: 50 }),
-  createdAt: timestamp('created_at'),
-  updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_sessions_class_id').on(table.classId),
+    index('idx_sessions_date').on(table.sessionDate),
+    index('idx_sessions_center_id').on(table.centerId),
+    index('idx_sessions_deleted_at').on(table.deletedAt),
+    uniqueIndex('ux_sessions_class_date_time_active').on(table.classId, table.sessionDate, table.startTime).where(sql`deleted_at IS NULL`),
+    index('idx_sessions_status').on(table.status),
+]);
 
 const subjects = pgTable('subjects', {
   subjectId: serial('subject_id').primaryKey(),
@@ -573,7 +699,9 @@ const subjects = pgTable('subjects', {
   teacherId: integer('teacher_id'),
   totalMarks: integer('total_marks'),
   passingMarks: integer('passing_marks'),
-});
+}, (table) => [
+    index('idx_subjects_center_id').on(table.centerId),
+]);
 
 const superusers = pgTable('superusers', {
   superuserId: serial('superuser_id').primaryKey(),
@@ -592,7 +720,10 @@ const superusers = pgTable('superusers', {
   lastLogin: timestamp('last_login'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_superuser_username').on(table.username),
+    index('idx_superuser_status').on(table.status),
+]);
 
 const telegramRegistrations = pgTable('telegram_registrations', {
   registrationId: serial('registration_id').primaryKey(),
@@ -635,7 +766,11 @@ const telegramStudentRegistrations = pgTable('telegram_student_registrations', {
   convertedAt: timestamp('converted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_telegram_student_registrations_chat').on(table.telegramChatId),
+    index('idx_telegram_student_registrations_status').on(table.status),
+    index('idx_telegram_student_registrations_center').on(table.centerId),
+]);
 
 const tests = pgTable('tests', {
   testId: serial('test_id').primaryKey(),
@@ -663,7 +798,13 @@ const tests = pgTable('tests', {
   description: text('description'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_tests_center').on(table.centerId),
+    index('idx_tests_subject').on(table.subjectId),
+    index('idx_tests_type').on(table.testType),
+    index('idx_tests_active').on(table.isActive),
+    index('idx_tests_dates').on(table.startDate, table.endDate),
+]);
 
 const testAssignments = pgTable('test_assignments', {
   assignmentId: serial('assignment_id').primaryKey(),
@@ -676,7 +817,11 @@ const testAssignments = pgTable('test_assignments', {
   dueDate: timestamp('due_date'),
   isMandatory: boolean('is_mandatory'),
   notes: text('notes'),
-});
+}, (table) => [
+    index('idx_test_assignments_test').on(table.testId),
+    index('idx_test_assignments_assigned').on(table.assignedToType, table.assignedToId),
+    index('idx_test_assignments_center_id').on(table.centerId),
+]);
 
 const readingPassages = pgTable('reading_passages', {
   passageId: serial('passage_id').primaryKey(),
@@ -690,7 +835,10 @@ const readingPassages = pgTable('reading_passages', {
   audioUrl: varchar('audio_url', { length: 500 }),
   imageUrl: varchar('image_url', { length: 500 }),
   createdAt: timestamp('created_at'),
-});
+}, (table) => [
+    index('idx_passages_test').on(table.testId),
+    index('idx_reading_passages_center_id').on(table.centerId),
+]);
 
 const testQuestions = pgTable('test_questions', {
   questionId: serial('question_id').primaryKey(),
@@ -710,7 +858,11 @@ const testQuestions = pgTable('test_questions', {
   wordLimit: integer('word_limit'),
   rubric: text('rubric'),
   createdAt: timestamp('created_at'),
-});
+}, (table) => [
+    index('idx_questions_test').on(table.testId),
+    index('idx_questions_passage').on(table.passageId),
+    index('idx_test_questions_center_id').on(table.centerId),
+]);
 
 const requestLogs = pgTable('request_logs', {
   logId: serial('log_id').primaryKey(),
@@ -743,7 +895,13 @@ const testSubmissions = pgTable('test_submissions', {
   status: varchar('status', { length: 50 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_submissions_test').on(table.testId),
+    index('idx_submissions_student').on(table.studentId),
+    index('idx_submissions_status').on(table.status),
+    index('idx_submissions_graded').on(table.gradedBy, table.gradedByType),
+    index('idx_test_submissions_center_id').on(table.centerId),
+]);
 
 const testAnswers = pgTable('test_answers', {
   answerId: serial('answer_id').primaryKey(),
@@ -758,7 +916,12 @@ const testAnswers = pgTable('test_answers', {
   gradedAt: timestamp('graded_at'),
   gradedBy: integer('graded_by'),
   gradedByType: varchar('graded_by_type', { length: 20 }),
-});
+}, (table) => [
+    index('idx_answers_submission').on(table.submissionId),
+    index('idx_answers_question').on(table.questionId),
+    index('idx_test_answers_center_id').on(table.centerId),
+    uniqueIndex('idx_test_answers_submission_question').on(table.submissionId, table.questionId),
+]);
 
 const testResultsSummary = pgTable('test_results_summary', {
   resultId: serial('result_id').primaryKey(),
@@ -774,7 +937,11 @@ const testResultsSummary = pgTable('test_results_summary', {
   certificateIssued: boolean('certificate_issued'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_results_test').on(table.testId),
+    index('idx_results_student').on(table.studentId),
+    index('idx_test_results_summary_center_id').on(table.centerId),
+]);
 
 const studentCoinTransactions = pgTable('student_coin_transactions', {
   transactionId: serial('transaction_id').primaryKey(),
@@ -788,7 +955,11 @@ const studentCoinTransactions = pgTable('student_coin_transactions', {
   sourceId: integer('source_id'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
-});
+}, (table) => [
+    index('idx_student_coin_transactions_student_id').on(table.studentId),
+    index('idx_student_coin_transactions_center_id').on(table.centerId),
+    uniqueIndex('uniq_student_coin_source').on(table.studentId, table.sourceType, table.sourceId).where(sql`source_type IS NOT NULL AND source_id IS NOT NULL`),
+]);
 
 module.exports = {
   appSettings,
@@ -826,7 +997,6 @@ module.exports = {
   payments,
   refunds,
   sessions,
-  classSessions,
   subjects,
   superusers,
   telegramRegistrations,

@@ -1,11 +1,15 @@
 const auditLogRepository = require('../repositories/audit_log.repository');
 
+const MAX_LIMIT = 200;
+const DEFAULT_LIMIT = 50;
+
 const listLogs = (
   query: { entity_type?: string; entity_id?: string; user_type?: string; user_id?: string; limit?: string; offset?: string },
   centerId?: number
 ) => {
-  const limit = query.limit ? parseInt(query.limit, 10) : undefined;
-  const offset = query.offset ? parseInt(query.offset, 10) : undefined;
+  const requestedLimit = query.limit ? parseInt(query.limit, 10) : DEFAULT_LIMIT;
+  const limit = Math.min(MAX_LIMIT, Math.max(1, Number.isFinite(requestedLimit) ? requestedLimit : DEFAULT_LIMIT));
+  const offset = query.offset ? Math.max(0, parseInt(query.offset, 10) || 0) : undefined;
 
   return auditLogRepository.findFiltered(
     {

@@ -357,7 +357,11 @@ const createClassSession = async (req: any, res: any) => {
       startTime: req.body.start_time,
       durationMinutes: Number(req.body.duration_minutes ?? 90),
     });
-    
+
+    if (session && (session as any).error === 'not_found') {
+      return res.status(404).json({ error: 'Class not found' });
+    }
+
     res.status(201).json(session);
   } catch (error: any) {
     console.error('Database error:', error);

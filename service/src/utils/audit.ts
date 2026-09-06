@@ -27,7 +27,9 @@ exports.logAudit = async (payload: AuditPayload) => {
       ip_address,
     } = payload;
 
+    const resolvedCenterId = center_id ?? details?.center_id ?? null;
     await db.insert(auditLogs).values({
+      centerId: resolvedCenterId,
       userType: user_type,
       userId: user_id,
       action,
@@ -35,7 +37,7 @@ exports.logAudit = async (payload: AuditPayload) => {
       entityId: entity_id || null,
       details: {
         ...(details || {}),
-        center_id: center_id ?? details?.center_id ?? null,
+        center_id: resolvedCenterId,
       },
       ipAddress: ip_address || null,
     });

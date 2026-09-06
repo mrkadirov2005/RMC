@@ -1,9 +1,9 @@
 jest.mock('../../repositories/report.repository', () => ({
   countStudents: jest.fn(), countTeachers: jest.fn(), countClasses: jest.fn(), sumPayments: jest.fn(), sumDebts: jest.fn(),
   paymentsByMonth: jest.fn(), paymentsAggregate: jest.fn(), attendanceByStatus: jest.fn(),
-  countDeletedStudents: jest.fn(), deletedStudentsByMonth: jest.fn(), deletedStudentsByTeacher: jest.fn(),
+  countDeletedStudents: jest.fn(), deletedStudentsByMonth: jest.fn(), deletedStudentsByTeacherWithStudents: jest.fn(),
   deletedStudentsByClass: jest.fn(), recentDeletedStudents: jest.fn(), countIntakeStudents: jest.fn(),
-  intakeStudentsByMonth: jest.fn(), intakeStudentsByTeacher: jest.fn(), intakeStudentsByClass: jest.fn(), recentIntakeStudents: jest.fn(),
+  intakeStudentsByMonth: jest.fn(), intakeStudentsByTeacherWithStudents: jest.fn(), intakeStudentsByClass: jest.fn(), recentIntakeStudents: jest.fn(),
 }));
 const repository = require('../../repositories/report.repository');
 const service = require('../report.service');
@@ -27,7 +27,7 @@ describe('report service', () => {
   test('normalizes a six-month retention series and trend', async () => {
     repository.countDeletedStudents.mockResolvedValueOnce({ total: 4 }).mockResolvedValueOnce({ total: 2 });
     repository.deletedStudentsByMonth.mockResolvedValue([{ month_start: '2026-08-01', left_count: 4 }]);
-    repository.deletedStudentsByTeacher.mockResolvedValue([]); repository.deletedStudentsByClass.mockResolvedValue([]); repository.recentDeletedStudents.mockResolvedValue([]);
+    repository.deletedStudentsByTeacherWithStudents.mockResolvedValue([]); repository.deletedStudentsByClass.mockResolvedValue([]); repository.recentDeletedStudents.mockResolvedValue([]);
     const result = await service.retentionReport({ month: '2026-08', months: '6' }, 2);
     expect(result.period.selected_month).toBe('2026-08'); expect(result.monthly).toHaveLength(6);
     expect(result.summary).toMatchObject({ current_month_left: 4, previous_month_left: 2, delta: 2, delta_percent: 100, trend: 'up' });

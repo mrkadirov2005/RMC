@@ -3,11 +3,8 @@ const notificationRepository = require('../repositories/notification.repository'
 const listForUser = (userType: string, userId: number, centerId?: number) =>
   notificationRepository.findByUser(userType, userId, centerId);
 
-const create = (body: any, centerId?: number) => {
+const create = (body: any, centerId: number) => {
   const { user_type, user_id, title, message, type } = body;
-  if (!centerId) {
-    return { error: 'validation' as const };
-  }
   return notificationRepository.insert([centerId, user_type, user_id, title, message, type || 'info']).then((row: any) => ({ row }));
 };
 

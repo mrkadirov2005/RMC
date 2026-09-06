@@ -22,6 +22,9 @@ const assignments = require('./assignments.dto');
 const rooms = require('./rooms.dto');
 const telegram_registrations = require('./telegram_registrations.dto');
 const calendar = require('./calendar.dto');
+const settings = require('./settings.dto');
+const translations = require('./translations.dto');
+const system = require('./system.dto');
 
 module.exports = {
   ...common,
@@ -48,6 +51,9 @@ module.exports = {
   ...rooms,
   ...telegram_registrations,
   ...calendar,
+  ...settings,
+  ...translations,
+  ...system,
 };
 
 export {};
