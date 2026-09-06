@@ -148,4 +148,108 @@ describe('payments service', () => {
 
     expect(paymentRepository.findAll).toHaveBeenCalledWith({ centerId: 1, teacherId: 2, limit: 25, offset: 50 });
   });
+
+  // RMC-067: recording a payment now reconciles the matching debt's balance and
+  // the matching invoice's status, all inside the same withTransaction client.
+  describe('debt/invoice reconciliation', () => {
+    it('applies the payment to the open debt and marks a fully-covered invoice paid, in the same transaction client', async () => {
+      const client = { query: jest.fn() };
+      paymentRepository.withTransaction.mockImplementation(async (callback) => callback(client));
+      discountService.calculateDiscount.mockReturnValue({ originalAmount: 100000, discountAmount: 0, finalAmount: 100000 });
+      debtRepository.findOpenDebtsForStudent.mockResolvedValue([
+        { debt_id: 55, balance: 100000, amount_paid: 0 },
+      ]);
+      invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue({ invoice_id: 77, total: 100000 });
+
+      await paymentService.createPayment({ student_id: 9, amount: 100000, original_amount: 100000, payment_date: '2026-03-05' }, 4);
+
+      expect(debtRepository.findOpenDebtsForStudent).toHaveBeenCalledWith(9, client);
+      expect(debtRepository.applyPayment).toHaveBeenCalledWith(55, 100000, 0, client);
+      expect(invoiceRepository.findOpenInvoiceForPeriod).toHaveBeenCalledWith(9, 4, '2026-03-05', client);
+      expect(invoiceRepository.updateStatus).toHaveBeenCalledWith(77, 'Paid', client);
+    });
+
+    it('marks a partially-covered invoice Partially Paid and reduces the debt balance by the paid amount without going below zero', async () => {
+      const client = { query: jest.fn() };
+      paymentRepository.withTransaction.mockImplementation(async (callback) => callback(client));
+      // Explicit monthly discount resolves the final (post-discount) amount actually
+      // applied to the debt/invoice to 60000, independent of the raw `amount` field.
+      discountService.calculateDiscount.mockReturnValue({ originalAmount: 100000, discountAmount: 40000, finalAmount: 60000 });
+      debtRepository.findOpenDebtsForStudent.mockResolvedValue([
+        { debt_id: 55, balance: 40000, amount_paid: 60000 },
+      ]);
+      invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue({ invoice_id: 77, total: 100000 });
+
+      await paymentService.createPayment({
+        student_id: 9,
+        amount: 60000,
+        original_amount: 100000,
+        discount_kind: 'monthly_discount',
+        discount_value_type: 'fixed',
+        discount_value: 40000,
+      }, 4);
+
+      // balance (40000) - paid (60000) would go negative; it is floored at 0.
+      expect(debtRepository.applyPayment).toHaveBeenCalledWith(55, 120000, 0, client);
+      expect(invoiceRepository.updateStatus).toHaveBeenCalledWith(77, 'Partially Paid', client);
+    });
+
+    it('does not touch debts or invoices when there is no open debt/invoice, or when the paid amount is zero', async () => {
+      const client = { query: jest.fn() };
+      paymentRepository.withTransaction.mockImplementation(async (callback) => callback(client));
+      discountService.calculateDiscount.mockReturnValue({ originalAmount: 0, discountAmount: 0, finalAmount: 0 });
+      debtRepository.findOpenDebtsForStudent.mockResolvedValue([]);
+      invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue(null);
+
+      await paymentService.createPayment({ student_id: 9, amount: 0, original_amount: 0 }, 4);
+
+      expect(debtRepository.applyPayment).not.toHaveBeenCalled();
+      expect(invoiceRepository.updateStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  // RMC-067: resolveAppliedDiscount is shared by all three discount-resolution call
+  // sites (explicit monthly, auto-detected monthly, auto-detected serial); this test
+  // pins that, given equivalent inputs, all three paths compute the same numbers.
+  it('resolves an identical final amount from the shared discount calculator regardless of which of the three call sites triggers it', async () => {
+    discountService.calculateDiscount.mockReturnValue({ originalAmount: 200000, discountAmount: 40000, finalAmount: 160000 });
+
+    await paymentService.createPayment({
+      student_id: 1,
+      amount: 160000,
+      original_amount: 200000,
+      discount_kind: 'monthly_discount',
+      discount_value_type: 'percent',
+      discount_value: 20,
+    }, 1);
+    const explicitPayload = paymentRepository.insert.mock.calls[0][0];
+
+    jest.clearAllMocks();
+    paymentRepository.insert.mockResolvedValue({ payment_id: 1 });
+    paymentRepository.withTransaction.mockImplementation(async (callback) => callback({ query: jest.fn() }));
+    debtRepository.findOpenDebtsForStudent.mockResolvedValue([]);
+    invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue(null);
+    discountService.calculateDiscount.mockReturnValue({ originalAmount: 200000, discountAmount: 40000, finalAmount: 160000 });
+    discountService.getActiveByStudent.mockResolvedValue({ discount_id: 12, discount_type: 'percent', value: 20 });
+
+    await paymentService.createPayment({ student_id: 1, amount: 160000, original_amount: 200000 }, 1);
+    const autoMonthlyPayload = paymentRepository.insert.mock.calls[0][0];
+
+    jest.clearAllMocks();
+    paymentRepository.insert.mockResolvedValue({ payment_id: 1 });
+    paymentRepository.withTransaction.mockImplementation(async (callback) => callback({ query: jest.fn() }));
+    debtRepository.findOpenDebtsForStudent.mockResolvedValue([]);
+    invoiceRepository.findOpenInvoiceForPeriod.mockResolvedValue(null);
+    discountService.calculateDiscount.mockReturnValue({ originalAmount: 200000, discountAmount: 40000, finalAmount: 160000 });
+    discountService.getActiveByStudent.mockResolvedValue(null);
+    discountService.getActiveSerialByStudent.mockResolvedValue({ discount_id: 12, discount_type: 'percent', value: 20 });
+
+    await paymentService.createPayment({ student_id: 1, amount: 160000, original_amount: 200000 }, 1);
+    const serialPayload = paymentRepository.insert.mock.calls[0][0];
+
+    // original_amount, discount_amount, final_amount (indices 15-17) must agree across all three paths.
+    expect(explicitPayload.slice(15, 18)).toEqual([200000, 40000, 160000]);
+    expect(autoMonthlyPayload.slice(15, 18)).toEqual([200000, 40000, 160000]);
+    expect(serialPayload.slice(15, 18)).toEqual([200000, 40000, 160000]);
+  });
 });

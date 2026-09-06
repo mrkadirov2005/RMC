@@ -18,8 +18,16 @@ jest.mock('../../repositories/teacher.repository', () => ({
   updatePasswordHash: jest.fn(),
 }));
 
+jest.mock('../../repositories/teacher_payment.repository', () => ({
+  findByTeacherId: jest.fn(),
+  upsertPassword: jest.fn(),
+  markUsed: jest.fn(),
+}));
+
 const teacherService = require('../teacher.service');
+const teacherPaymentService = require('../teacher_payment.service');
 const teacherRepository = require('../../repositories/teacher.repository');
+const teacherPaymentRepository = require('../../repositories/teacher_payment.repository');
 const { hashPassword } = require('../../../../shared/password');
 
 describe('teachers service', () => {
@@ -114,6 +122,62 @@ describe('teachers service', () => {
     await expect(teacherService.authenticate('ali', 'secret')).resolves.toEqual({
       kind: 'ok',
       teacher: expect.objectContaining({ teacher_id: 4 }),
+    });
+  });
+
+  // RMC-054: the payment-access login must use its own credential store (teacher_payment_credentials),
+  // fully independent of the main teacher login's password_hash.
+  describe('payment-access login credential separation', () => {
+    it('does not grant payment access on a valid main-login password when no payment credential has been set', async () => {
+      teacherRepository.findByUsername.mockResolvedValue({
+        teacher_id: 4,
+        status: 'Active',
+        password_hash: hashPassword('secret'),
+      });
+      teacherPaymentRepository.findByTeacherId.mockResolvedValue(null);
+
+      await expect(teacherService.authenticate('ali', 'secret')).resolves.toEqual({
+        kind: 'ok',
+        teacher: expect.objectContaining({ teacher_id: 4 }),
+      });
+      await expect(teacherPaymentService.authenticatePaymentAccess('ali', 'secret')).resolves.toEqual({
+        kind: 'invalid',
+      });
+    });
+
+    it('validates payment access against its own stored hash, independent of the main login hash', async () => {
+      teacherRepository.findByUsername.mockResolvedValue({
+        teacher_id: 4,
+        status: 'Active',
+        password_hash: hashPassword('main-login-secret'),
+      });
+      teacherPaymentRepository.findByTeacherId.mockResolvedValue({
+        password_hash: hashPassword('payment-only-secret'),
+        is_active: true,
+      });
+
+      // Main login's password does not unlock payment access...
+      await expect(teacherPaymentService.authenticatePaymentAccess('ali', 'main-login-secret')).resolves.toEqual({
+        kind: 'invalid',
+      });
+      // ...but the distinct payment credential does, and only it does.
+      await expect(teacherPaymentService.authenticatePaymentAccess('ali', 'payment-only-secret')).resolves.toEqual({
+        kind: 'ok',
+        teacher: expect.objectContaining({ teacher_id: 4 }),
+      });
+      expect(teacherPaymentRepository.markUsed).toHaveBeenCalledWith(4);
+    });
+
+    it('blocks payment access when the payment credential row is inactive, regardless of correct password', async () => {
+      teacherRepository.findByUsername.mockResolvedValue({ teacher_id: 4, status: 'Active' });
+      teacherPaymentRepository.findByTeacherId.mockResolvedValue({
+        password_hash: hashPassword('payment-only-secret'),
+        is_active: false,
+      });
+
+      await expect(teacherPaymentService.authenticatePaymentAccess('ali', 'payment-only-secret')).resolves.toEqual({
+        kind: 'invalid',
+      });
     });
   });
 });

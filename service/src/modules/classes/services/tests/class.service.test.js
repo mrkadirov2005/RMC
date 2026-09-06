@@ -3,6 +3,7 @@ jest.mock('../../repositories/class.repository', () => ({
   findPaginated: jest.fn(),
   findById: jest.fn(),
   teacherExists: jest.fn(),
+  subjectCanAssign: jest.fn(),
   insert: jest.fn(),
   update: jest.fn(),
   remove: jest.fn(),
@@ -58,5 +59,41 @@ describe('classes service', () => {
       row: { class_id: 3 },
       deletedSessionCount: 6,
     });
+  });
+
+  // RMC-060: subject_id is now the field the service actually validates/persists;
+  // subject_name (still accepted by the DTO) is never read by the service.
+  it('creates a class when subject_id references a real subject in the center', async () => {
+    classRepository.subjectCanAssign.mockResolvedValue(true);
+    classRepository.insert.mockResolvedValue({ class_id: 21, subject_id: 9 });
+
+    const result = await classService.createClass({
+      class_name: 'B2',
+      subject_id: 9,
+      subject_name: 'Ignored Passthrough Name',
+    }, 3);
+
+    expect(classRepository.subjectCanAssign).toHaveBeenCalledWith(9, 3);
+    expect(classRepository.insert).toHaveBeenCalled();
+    expect(classRepository.insert.mock.calls[0][0][12]).toBe(9);
+    expect(result).toEqual({ row: { class_id: 21, subject_id: 9 } });
+  });
+
+  it('rejects class creation when subject_id is missing entirely', async () => {
+    const result = await classService.createClass({ class_name: 'B2', subject_name: 'Math' }, 3);
+
+    expect(result).toEqual({ error: 'bad_subject' });
+    expect(classRepository.subjectCanAssign).not.toHaveBeenCalled();
+    expect(classRepository.insert).not.toHaveBeenCalled();
+  });
+
+  it('rejects class creation when subject_id does not resolve to a subject in this center', async () => {
+    classRepository.subjectCanAssign.mockResolvedValue(false);
+
+    const result = await classService.createClass({ class_name: 'B2', subject_id: 999 }, 3);
+
+    expect(classRepository.subjectCanAssign).toHaveBeenCalledWith(999, 3);
+    expect(result).toEqual({ error: 'bad_subject' });
+    expect(classRepository.insert).not.toHaveBeenCalled();
   });
 });

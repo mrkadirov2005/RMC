@@ -107,4 +107,38 @@ describe('students service', () => {
 
     expect(studentRepository.updatePasswordHash).toHaveBeenCalledWith(4, hashPassword('new-password'));
   });
+
+  // RMC-053 (characterization, NOT fixed): createStudent/updateStudent call
+  // syncStudentDiscount after the student row is already written, with no
+  // db.transaction wrapping the two. A discount-sync failure therefore leaves
+  // the student write committed rather than rolled back.
+  describe('discount sync is not transactional with the student write (unfixed)', () => {
+    it('createStudent leaves the already-inserted student committed when discount sync fails', async () => {
+      studentRepository.insert.mockResolvedValue({ student_id: 44, center_id: 3 });
+      discountService.getActiveByStudent.mockRejectedValue(new Error('discount service unavailable'));
+
+      await expect(studentService.createStudent({
+        center_id: 3,
+        first_name: 'Ali',
+        is_discounted: true,
+        discount_value: 250,
+      })).rejects.toThrow('discount service unavailable');
+
+      // The insert already happened; nothing compensates for it, because
+      // createStudent does not wrap the insert + discount sync in a transaction.
+      expect(studentRepository.insert).toHaveBeenCalledTimes(1);
+    });
+
+    it('updateStudent leaves the already-updated student committed when discount sync fails', async () => {
+      studentRepository.update.mockResolvedValue({ student_id: 44, center_id: 3 });
+      discountService.getActiveByStudent.mockRejectedValue(new Error('discount service unavailable'));
+
+      await expect(studentService.updateStudent(44, {
+        is_discounted: true,
+        discount_value: 250,
+      }, 3)).rejects.toThrow('discount service unavailable');
+
+      expect(studentRepository.update).toHaveBeenCalledTimes(1);
+    });
+  });
 });

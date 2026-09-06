@@ -92,4 +92,26 @@ describe('classes controller', () => {
     }));
     expect(res.status).toHaveBeenCalledWith(400);
   });
+
+  // RMC-060: force must only be honored from req.query (validated by ForceQueryDto on the route);
+  // a force flag placed in the body alone must not trigger force-delete behavior.
+  it('reads the force flag for delete from the query string', async () => {
+    const req = { params: { id: '5' }, query: { force: 'true' }, body: {}, user: { userType: 'superuser' } };
+    const res = createResponse();
+    classService.deleteClass.mockResolvedValue({ row: { class_id: 5 } });
+
+    await classController.deleteClass(req, res);
+
+    expect(classService.deleteClass).toHaveBeenCalledWith(5, 3, { force: true });
+  });
+
+  it('ignores a force flag sent only in the request body', async () => {
+    const req = { params: { id: '5' }, query: {}, body: { force: true }, user: { userType: 'superuser' } };
+    const res = createResponse();
+    classService.deleteClass.mockResolvedValue({ row: { class_id: 5 } });
+
+    await classController.deleteClass(req, res);
+
+    expect(classService.deleteClass).toHaveBeenCalledWith(5, 3, { force: false });
+  });
 });

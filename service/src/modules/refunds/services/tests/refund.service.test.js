@@ -51,4 +51,52 @@ describe('refund service', () => {
     expect(refunds.update).toHaveBeenCalledWith(1, 'Processed', '2026-08-08', mockClient);
     expect(refunds.updatePaymentRefunded).toHaveBeenCalledWith(8, mockClient);
   });
+
+  // RMC-072/RMC-039: the refund cap sums only non-rejected prior refunds, and the
+  // two-write "Processed" update sequence (status, then payment-refunded flag) is
+  // wrapped in a single db.transaction so a failure on the second write rolls back the first.
+  describe('refund cap accounting and processed-update atomicity', () => {
+    test('a prior rejected refund does not count against the cap', async () => {
+      payments.findById.mockResolvedValue({ payment_id: 8, final_amount: 100 });
+      refunds.findAllFiltered.mockResolvedValue([{ refund_id: 2, amount: 90, status: 'Rejected' }]);
+      refunds.insert.mockResolvedValue({ refund_id: 3 });
+
+      await expect(service.create({ payment_id: 8, amount: 100 }, 2)).resolves.toEqual({ row: { refund_id: 3 } });
+      expect(refunds.insert).toHaveBeenCalledWith([8, 100, null]);
+    });
+
+    test('accepts a second refund whose cumulative total lands exactly at the payment amount', async () => {
+      payments.findById.mockResolvedValue({ payment_id: 8, final_amount: 100 });
+      refunds.findAllFiltered.mockResolvedValue([{ refund_id: 2, amount: 40, status: 'Approved' }]);
+      refunds.insert.mockResolvedValue({ refund_id: 3 });
+
+      await expect(service.create({ payment_id: 8, amount: 60 }, 2)).resolves.toEqual({ row: { refund_id: 3 } });
+      expect(refunds.insert).toHaveBeenCalled();
+    });
+
+    test('rejects a second refund whose cumulative total would exceed the payment amount by even a little', async () => {
+      payments.findById.mockResolvedValue({ payment_id: 8, final_amount: 100 });
+      refunds.findAllFiltered.mockResolvedValue([{ refund_id: 2, amount: 40, status: 'Approved' }]);
+      refunds.insert.mockResolvedValue({ refund_id: 3 });
+
+      await expect(service.create({ payment_id: 8, amount: 60.01 }, 2)).resolves.toEqual({ error: 'refund_exceeds_payment' });
+      expect(refunds.insert).not.toHaveBeenCalled();
+    });
+
+    test('rolls back the refund status update when marking the payment refunded fails, since both writes share one transaction', async () => {
+      refunds.findById.mockResolvedValue({ refund_id: 1, payment_id: 8, amount: 100 });
+      payments.findById.mockResolvedValue({ payment_id: 8, final_amount: 100 });
+      refunds.update.mockResolvedValue({ refund_id: 1, payment_id: 8 });
+      refunds.updatePaymentRefunded.mockRejectedValue(new Error('payment flag update failed'));
+
+      await expect(service.update(1, { status: 'Processed', refunded_at: '2026-08-08' }, 2))
+        .rejects.toThrow('payment flag update failed');
+
+      // Both writes ran inside the same withTransaction call; the second write's
+      // failure propagates out of that callback, so a real DB rolls back the first
+      // write (the refund status update) along with it.
+      expect(refunds.withTransaction).toHaveBeenCalledTimes(1);
+      expect(refunds.update).toHaveBeenCalledTimes(1);
+    });
+  });
 });

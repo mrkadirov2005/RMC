@@ -66,4 +66,49 @@ describe('grade service', () => {
     await expect(service.upsertSessionScores({ student_id: 1 }, 2)).resolves.toEqual({ error: 'session_id_required' });
     expect(repository.upsertSessionScores).not.toHaveBeenCalled();
   });
+
+  // RMC-062: createBulk wraps every insert of the batch in a single db.transaction
+  // so a mid-array failure rolls back the whole batch rather than leaving a partial write.
+  describe('createBulk atomicity', () => {
+    test('a failing insert partway through the batch aborts the whole transaction and stops the loop', async () => {
+      tenantDb.studentInCenter.mockResolvedValue(true);
+      tenantDb.classInCenter.mockResolvedValue(true);
+      transaction.mockImplementation(async (cb) => cb({}));
+      let calls = 0;
+      repository.insert.mockImplementation(async (params) => {
+        calls += 1;
+        if (calls === 2) throw new Error('constraint violation on grade #2');
+        return { grade_id: calls, student_id: params[0], marks_obtained: params[5], total_marks: params[6], percentage: params[7] };
+      });
+
+      await expect(service.createBulk([
+        { student_id: 1, class_id: 3 },
+        { student_id: 2, class_id: 3 },
+        { student_id: 3, class_id: 3 },
+      ], 2)).rejects.toThrow('constraint violation on grade #2');
+
+      // Everything ran inside one db.transaction call, and the third grade was
+      // never attempted once the second failed -- the failure propagates out of
+      // the transaction callback so a real DB would roll back grade #1's insert too.
+      expect(transaction).toHaveBeenCalledTimes(1);
+      expect(repository.insert).toHaveBeenCalledTimes(2);
+    });
+
+    test('an invalid_center error partway through the batch aborts the transaction without inserting the remaining grades', async () => {
+      tenantDb.studentInCenter.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+      tenantDb.classInCenter.mockResolvedValue(true);
+      transaction.mockImplementation(async (cb) => cb({}));
+      repository.insert.mockResolvedValue({ grade_id: 1, student_id: 1, marks_obtained: 1, total_marks: 100, percentage: 1 });
+
+      const result = await service.createBulk([
+        { student_id: 1, class_id: 3 },
+        { student_id: 2, class_id: 3 },
+      ], 2);
+
+      expect(result).toEqual([{ error: 'invalid_center' }]);
+      expect(transaction).toHaveBeenCalledTimes(1);
+      // Only the first grade's insert was ever attempted inside the aborted transaction.
+      expect(repository.insert).toHaveBeenCalledTimes(1);
+    });
+  });
 });
