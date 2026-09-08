@@ -74,6 +74,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use(helmet());
 
   const resolveCorsOrigins = (environment = process.env.NODE_ENV, configuredOrigins = process.env.CORS_ALLOWED_ORIGINS) => {
+    if (String(configuredOrigins || '').trim() === '*') return true;
     const allowed = String(configuredOrigins || '')
       .split(',')
       .map((origin: string) => origin.trim())

@@ -55,6 +55,7 @@ services:
       MONGO_DB: crm_logs
       REQUEST_LOG_TTL_DAYS: "0"
       OWNER_DATA_RESET_ENABLED: "${OWNER_DATA_RESET_ENABLED:-true}"
+      CORS_ALLOWED_ORIGINS: "*"
     depends_on:
       postgres:
         condition: service_healthy
