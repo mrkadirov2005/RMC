@@ -147,6 +147,15 @@ module.exports = {
   authenticate,
   setPasswordByAdmin,
   changePassword,
+  // Identification, not authentication — no password check. Callers must apply
+  // their own scoping (e.g. confirming the returned class_id/center_id matches
+  // what they expect) since a username alone is not proof of identity.
+  findByUsername: async (username: string) => {
+    const student = await studentRepository.findByUsername(username);
+    if (!student) return null;
+    const { password_hash, ...rest } = student;
+    return rest;
+  },
   getCoinSummary: async (studentId: number, centerId?: number, teacherId?: number) => {
     const student = await studentRepository.findByIdWithClass(studentId, centerId, teacherId);
     if (!student) return null;

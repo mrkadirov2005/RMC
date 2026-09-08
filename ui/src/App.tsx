@@ -16,6 +16,7 @@ const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) =
 const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then((module) => ({ default: module.OwnerLoginPage })));
 const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
 const ConsolidatePublicPage = lazy(() => import('./features/public/ConsolidatePublicPage'));
+const ConsolidationsOverviewPage = lazy(() => import('./features/crm/consolidations/ConsolidationsOverviewPage'));
 const ConsolidationSessionPage = lazy(() => import('./features/student/ConsolidationSessionPage'));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
 const OwnerManager = lazy(() => import('./features/owner/OwnerManager'));
@@ -326,6 +327,19 @@ function AppContent() {
             </ProtectedRoute>
           }
 
+        />
+
+        <Route
+          path="/consolidations"
+          element={
+            <ProtectedRoute allowedUserTypes={['superuser']}>
+              <Layout>
+                <Suspense fallback={<LoadingSpinner />}>
+                  <ConsolidationsOverviewPage />
+                </Suspense>
+              </Layout>
+            </ProtectedRoute>
+          }
         />
 
         <Route

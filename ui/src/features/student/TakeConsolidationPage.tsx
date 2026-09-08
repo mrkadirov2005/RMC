@@ -22,7 +22,7 @@ import {
 } from './api/consolidationExerciseApi';
 
 export type ExerciseContext =
-  | { mode: 'public'; shareToken: string; studentId: number; studentName: string }
+  | { mode: 'public'; shareToken: string; username: string }
   | { mode: 'auth'; setId: number };
 
 interface WordReview extends ConsolidationWord {
@@ -71,7 +71,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
             // Clicking "Try Again" is already an explicit, in-session choice to retry —
             // the "already completed today?" nudge exists to catch an *accidental*
             // re-click of the group-chat link, not to re-interrupt someone already here.
-            const result = await consolidatePublicAPI.startTrial(context.shareToken, context.studentId, true);
+            const result = await consolidatePublicAPI.startTrial(context.shareToken, context.username, true);
             if (result.needs_confirmation) throw new Error('Unexpected confirmation prompt on retry.');
             return { trial: result.trial, words: result.words };
           },

@@ -36,9 +36,12 @@ const formatScore = (trial: ConsolidationTrial | null) => {
 
 interface ConsolidationTabProps {
   sessionId: number;
+  // Fires after a set is created — lets a page embedding this tab elsewhere
+  // (e.g. the superuser overview page) refresh its own summary stats.
+  onChanged?: () => void;
 }
 
-export default function ConsolidationTab({ sessionId }: ConsolidationTabProps) {
+export default function ConsolidationTab({ sessionId, onChanged }: ConsolidationTabProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [set, setSet] = useState<ConsolidationSet | null>(null);
@@ -163,6 +166,7 @@ export default function ConsolidationTab({ sessionId }: ConsolidationTabProps) {
       setWords(created.words);
       await loadResults();
       showToast.success('Consolidation exercise created.');
+      onChanged?.();
     } catch (err: any) {
       setCreateError(err?.response?.data?.error || 'Failed to create consolidation exercise.');
     } finally {

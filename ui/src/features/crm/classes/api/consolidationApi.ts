@@ -70,6 +70,45 @@ export interface ConsolidationTrialDetailWord {
   is_correct: boolean | null;
 }
 
+export interface ConsolidationOverviewSet {
+  consolidation_set_id: number;
+  title: string | null;
+  teacher_id: number;
+  teacher_name: string;
+  class_id: number;
+  class_name: string;
+  session_id: number;
+  session_date: string;
+  word_count: number;
+  created_at: string;
+  trial_count: number;
+  student_count: number;
+  passed_student_count: number;
+  pass_rate: number | null;
+}
+
+export interface ConsolidationOverviewTeacher {
+  teacher_id: number;
+  teacher_name: string;
+  sets_count: number;
+  trial_count: number;
+  student_count: number;
+  passed_student_count: number;
+  pass_rate: number | null;
+}
+
+export interface ConsolidationOverview {
+  totals: {
+    total_sets: number;
+    total_trials: number;
+    total_students_submitted: number;
+    total_students_passed: number;
+    overall_pass_rate: number | null;
+  };
+  by_teacher: ConsolidationOverviewTeacher[];
+  sets: ConsolidationOverviewSet[];
+}
+
 export const consolidationApi = {
   async getForSession(sessionId: number): Promise<{ set: ConsolidationSet; words: ConsolidationWord[] } | null> {
     try {
@@ -105,5 +144,9 @@ export const consolidationApi = {
   async regenerateLink(setId: number): Promise<{ set: ConsolidationSet }> {
     const data = getApiPayload<any>(await apiClient.post(`/consolidations/${setId}/regenerate-link`));
     return { set: data.set ?? data };
+  },
+
+  async getOverview(): Promise<ConsolidationOverview> {
+    return getApiPayload<ConsolidationOverview>(await apiClient.get('/consolidations/overview'));
   },
 };

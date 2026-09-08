@@ -21,6 +21,8 @@ router.get('/session/:sessionId/student-view', requireAuth, requireRole('student
 
 router.get('/session/:sessionId/results', requireAuth, requireRole('superuser', 'teacher'), validateParams(SessionIdParamDto), consolidationController.getResultsDashboard);
 
+router.get('/overview', requireAuth, requireRole('superuser'), consolidationController.getOverview);
+
 router.get('/trials/:trialId', requireAuth, validateParams(TrialIdParamDto), consolidationController.getTrialDetail);
 
 router.post('/:setId/trials', requireAuth, requireRole('student'), validateParams(SetIdParamDto), consolidationController.startTrial);

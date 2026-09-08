@@ -1,4 +1,4 @@
-const { and, desc, eq, gte, sql } = require('drizzle-orm');
+const { and, desc, eq, gte, inArray, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const {
   classes,
@@ -7,6 +7,7 @@ const {
   consolidationTrials,
   consolidationWords,
   sessions,
+  teachers,
 } = require('../../../db/schema');
 
 const db = pool.db;
@@ -189,6 +190,48 @@ const countTrialsForSet = async (setId: number) => {
 const findTrialsForSet = async (setId: number) =>
   db.select(trialSelection).from(consolidationTrials).where(eq(consolidationTrials.consolidationSetId, Number(setId))).orderBy(desc(consolidationTrials.startedAt));
 
+// Center-wide overview: every non-deleted set with its teacher/class/session label
+// and word count, for the superuser dashboard (per-teacher and per-session stats).
+const findOverviewSets = async (centerId: number) =>
+  db
+    .select({
+      consolidation_set_id: consolidationSets.consolidationSetId,
+      title: consolidationSets.title,
+      teacher_id: consolidationSets.teacherId,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+      class_id: consolidationSets.classId,
+      class_name: classes.className,
+      session_id: consolidationSets.sessionId,
+      session_date: sessions.sessionDate,
+      word_count: sql<number>`(SELECT COUNT(*) FROM ${consolidationWords} w WHERE w.consolidation_set_id = ${consolidationSets.consolidationSetId})`,
+      created_at: consolidationSets.createdAt,
+    })
+    .from(consolidationSets)
+    .innerJoin(classes, eq(classes.classId, consolidationSets.classId))
+    .innerJoin(sessions, eq(sessions.sessionId, consolidationSets.sessionId))
+    .innerJoin(teachers, eq(teachers.teacherId, consolidationSets.teacherId))
+    .where(and(eq(consolidationSets.centerId, Number(centerId)), sql`${consolidationSets.deletedAt} IS NULL`))
+    .orderBy(desc(consolidationSets.createdAt));
+
+// One row per set: trial_count (every attempt), student_count (distinct students
+// with at least one attempt), passed_student_count (distinct students with at
+// least one passed attempt) — computed in one aggregation query rather than
+// looping per-set in application code.
+const findTrialAggregatesForSets = async (setIds: number[]) => {
+  if (setIds.length === 0) return [];
+  return db
+    .select({
+      consolidation_set_id: consolidationTrials.consolidationSetId,
+      trial_count: sql<number>`COUNT(*)`,
+      student_count: sql<number>`COUNT(DISTINCT ${consolidationTrials.studentId})`,
+      passed_student_count: sql<number>`COUNT(DISTINCT ${consolidationTrials.studentId}) FILTER (WHERE ${consolidationTrials.isPassed})`,
+    })
+    .from(consolidationTrials)
+    .where(inArray(consolidationTrials.consolidationSetId, setIds.map(Number)))
+    .groupBy(consolidationTrials.consolidationSetId);
+};
+
 const findTrialsByStudentAndSet = async (setId: number, studentId: number) =>
   db
     .select(trialSelection)
@@ -300,6 +343,8 @@ module.exports = {
   findSetBySession,
   findSetById,
   findSetByShareToken,
+  findOverviewSets,
+  findTrialAggregatesForSets,
   findPublicSetMeta,
   insertSet,
   insertWords,

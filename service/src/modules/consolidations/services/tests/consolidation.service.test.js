@@ -25,9 +25,12 @@ jest.mock('../../repositories/consolidation.repository', () => ({
   upsertAnswer: jest.fn(),
   findAnswersByTrial: jest.fn(),
   setAnswerCorrectness: jest.fn(),
+  findOverviewSets: jest.fn(),
+  findTrialAggregatesForSets: jest.fn(),
 }));
 jest.mock('../../../students/services/student.service', () => ({
   listClassStudentsWithTransfers: jest.fn(),
+  findByUsername: jest.fn(),
 }));
 
 const consolidationRepository = require('../../repositories/consolidation.repository');
@@ -148,6 +151,72 @@ describe('consolidation service', () => {
 
       const dave = result.rows.find((row) => row.student_id === 4);
       expect(dave.submitted).toBe(false);
+    });
+  });
+
+  describe('getConsolidationsOverview — center-wide fixture with two teachers', () => {
+    // Fixture: Teacher A has two sets (one with a mix of pass/fail, one with zero
+    // trials yet). Teacher B has one set, fully passed. Totals/per-teacher/per-set
+    // numbers must all agree with each other.
+    const overviewSets = [
+      { consolidation_set_id: 1, title: 'Unit 1', teacher_id: 7, teacher_first_name: 'Amina', teacher_last_name: 'A', class_id: 10, class_name: 'Class A', session_id: 100, session_date: '2026-09-01', word_count: 10, created_at: '2026-09-01T00:00:00Z' },
+      { consolidation_set_id: 2, title: 'Unit 2', teacher_id: 7, teacher_first_name: 'Amina', teacher_last_name: 'A', class_id: 10, class_name: 'Class A', session_id: 101, session_date: '2026-09-02', word_count: 5, created_at: '2026-09-02T00:00:00Z' },
+      { consolidation_set_id: 3, title: 'Unit 3', teacher_id: 8, teacher_first_name: 'Botir', teacher_last_name: 'B', class_id: 11, class_name: 'Class B', session_id: 102, session_date: '2026-09-03', word_count: 8, created_at: '2026-09-03T00:00:00Z' },
+    ];
+    const aggregates = [
+      { consolidation_set_id: 1, trial_count: 5, student_count: 3, passed_student_count: 1 },
+      // set 2 has zero trials — deliberately absent from the aggregates result, like a real GROUP BY would omit it.
+      { consolidation_set_id: 3, trial_count: 2, student_count: 2, passed_student_count: 2 },
+    ];
+
+    it('computes per-set stats, per-teacher rollups, and center-wide totals that all agree', async () => {
+      consolidationRepository.findOverviewSets.mockResolvedValue(overviewSets);
+      consolidationRepository.findTrialAggregatesForSets.mockResolvedValue(aggregates);
+
+      const result = await service.getConsolidationsOverview(2);
+
+      expect(consolidationRepository.findTrialAggregatesForSets).toHaveBeenCalledWith([1, 2, 3]);
+
+      // Per-set (the "per-class/session breakdown")
+      const setWithNoTrials = result.sets.find((s) => s.consolidation_set_id === 2);
+      expect(setWithNoTrials.trial_count).toBe(0);
+      expect(setWithNoTrials.pass_rate).toBeNull();
+      const setOne = result.sets.find((s) => s.consolidation_set_id === 1);
+      expect(setOne.pass_rate).toBeCloseTo(1 / 3);
+      expect(setOne.teacher_name).toBe('Amina A');
+
+      // Per-teacher rollup
+      const amina = result.by_teacher.find((t) => t.teacher_id === 7);
+      expect(amina.sets_count).toBe(2);
+      expect(amina.trial_count).toBe(5);
+      expect(amina.student_count).toBe(3);
+      expect(amina.pass_rate).toBeCloseTo(1 / 3);
+      const botir = result.by_teacher.find((t) => t.teacher_id === 8);
+      expect(botir.sets_count).toBe(1);
+      expect(botir.pass_rate).toBe(1);
+
+      // Center-wide totals must be the sum across all sets/teachers
+      expect(result.totals).toEqual({
+        total_sets: 3,
+        total_trials: 7,
+        total_students_submitted: 5,
+        total_students_passed: 3,
+        overall_pass_rate: 3 / 5,
+      });
+    });
+
+    it('returns zeroed totals and an empty breakdown when the center has no consolidation sets at all', async () => {
+      consolidationRepository.findOverviewSets.mockResolvedValue([]);
+      consolidationRepository.findTrialAggregatesForSets.mockResolvedValue([]);
+
+      const result = await service.getConsolidationsOverview(2);
+
+      expect(consolidationRepository.findTrialAggregatesForSets).toHaveBeenCalledWith([]);
+      expect(result).toEqual({
+        totals: { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0, overall_pass_rate: null },
+        by_teacher: [],
+        sets: [],
+      });
     });
   });
 
@@ -363,28 +432,38 @@ describe('consolidation service', () => {
     });
   });
 
-  describe('public share-link scoping', () => {
-    it('rejects a student_id not present on the token-resolved roster', async () => {
+  describe('public share-link scoping — identification is by username, not a roster pick', () => {
+    it('rejects an unknown username', async () => {
       consolidationRepository.findSetByShareToken.mockResolvedValue({ consolidation_set_id: 1, class_id: 5, center_id: 2 });
+      studentService.findByUsername.mockResolvedValue(null);
+      const result = await service.startPublicTrial('tok123', 'no-such-user', {});
+      expect(result).toEqual({ error: 'invalid_student' });
+      expect(studentService.listClassStudentsWithTransfers).not.toHaveBeenCalled();
+    });
+
+    it('rejects a real username belonging to a student not enrolled in this class', async () => {
+      consolidationRepository.findSetByShareToken.mockResolvedValue({ consolidation_set_id: 1, class_id: 5, center_id: 2 });
+      studentService.findByUsername.mockResolvedValue({ student_id: 999, class_id: 6 });
       studentService.listClassStudentsWithTransfers.mockResolvedValue([{ student_id: 1 }]);
-      const result = await service.startPublicTrial('tok123', 999, {});
+      const result = await service.startPublicTrial('tok123', 'wrong-class-student', {});
       expect(result).toEqual({ error: 'invalid_student' });
     });
 
     it('returns not_found for an unknown or deleted-set token', async () => {
       consolidationRepository.findSetByShareToken.mockResolvedValue(null);
-      const result = await service.startPublicTrial('bad-token', 1, {});
+      const result = await service.startPublicTrial('bad-token', 'someone', {});
       expect(result).toEqual({ error: 'not_found' });
     });
 
     it('holds back trial creation and asks for confirmation when the student already completed one today', async () => {
       const set = { consolidation_set_id: 1, class_id: 5, center_id: 2 };
       consolidationRepository.findSetByShareToken.mockResolvedValue(set);
+      studentService.findByUsername.mockResolvedValue({ student_id: 3, class_id: 5 });
       studentService.listClassStudentsWithTransfers.mockResolvedValue([{ student_id: 3 }]);
       const existingToday = { trial_id: 5, status: 'completed', correct_count: 8, total_words: 10 };
       consolidationRepository.findCompletedTrialToday.mockResolvedValue(existingToday);
 
-      const result = await service.startPublicTrial('tok123', 3, {});
+      const result = await service.startPublicTrial('tok123', 'alice', {});
 
       expect(result).toEqual({ needs_confirmation: true, existing_today: existingToday });
       expect(consolidationRepository.insertTrial).not.toHaveBeenCalled();
@@ -393,13 +472,14 @@ describe('consolidation service', () => {
     it('creates the trial anyway once the student confirms past the already-completed-today nudge', async () => {
       const set = { consolidation_set_id: 1, class_id: 5, center_id: 2 };
       consolidationRepository.findSetByShareToken.mockResolvedValue(set);
+      studentService.findByUsername.mockResolvedValue({ student_id: 3, class_id: 5 });
       studentService.listClassStudentsWithTransfers.mockResolvedValue([{ student_id: 3 }]);
       consolidationRepository.findCompletedTrialToday.mockResolvedValue({ trial_id: 5, status: 'completed' });
       consolidationRepository.countTrialsByStudentForSet.mockResolvedValue(1);
       consolidationRepository.insertTrial.mockResolvedValue({ trial_id: 6, trial_number: 2, access_token: 'tok' });
       consolidationRepository.findWordsBySetPublic.mockResolvedValue([]);
 
-      const result = await service.startPublicTrial('tok123', 3, { confirm: true });
+      const result = await service.startPublicTrial('tok123', 'alice', { confirm: true });
 
       expect(consolidationRepository.insertTrial).toHaveBeenCalled();
       expect(result.trial.trial_id).toBe(6);
@@ -408,13 +488,14 @@ describe('consolidation service', () => {
     it('creates the trial immediately when there is no completed-today trial to nudge about', async () => {
       const set = { consolidation_set_id: 1, class_id: 5, center_id: 2 };
       consolidationRepository.findSetByShareToken.mockResolvedValue(set);
+      studentService.findByUsername.mockResolvedValue({ student_id: 3, class_id: 5 });
       studentService.listClassStudentsWithTransfers.mockResolvedValue([{ student_id: 3 }]);
       consolidationRepository.findCompletedTrialToday.mockResolvedValue(null);
       consolidationRepository.countTrialsByStudentForSet.mockResolvedValue(0);
       consolidationRepository.insertTrial.mockResolvedValue({ trial_id: 1, trial_number: 1, access_token: 'tok' });
       consolidationRepository.findWordsBySetPublic.mockResolvedValue([]);
 
-      const result = await service.startPublicTrial('tok123', 3, {});
+      const result = await service.startPublicTrial('tok123', 'alice', {});
 
       expect(consolidationRepository.insertTrial).toHaveBeenCalled();
       expect(result.trial.trial_id).toBe(1);

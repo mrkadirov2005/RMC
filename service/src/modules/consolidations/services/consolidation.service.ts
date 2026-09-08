@@ -13,12 +13,6 @@ const isStudentEnrolled = async (classId: number, studentId: number, centerId?: 
   return roster.some((student: any) => Number(student.student_id) === Number(studentId));
 };
 
-const toRosterEntry = (student: any) => ({
-  student_id: student.student_id,
-  first_name: student.first_name,
-  last_name: student.last_name,
-});
-
 const teacherOwnsSet = (set: any, caller: { userType?: string; teacherId?: number }) =>
   caller.userType !== 'teacher' || Number(set.teacher_id) === Number(caller.teacherId);
 
@@ -130,6 +124,80 @@ const getResultsDashboard = async (sessionId: number, centerId: number | undefin
       submitted: rows.filter((row: any) => row.submitted).length,
     },
     rows,
+  };
+};
+
+// Center-wide overview for the superuser dashboard: every consolidation set with
+// its per-set stats (the "per-class/session breakdown"), rolled up by teacher and
+// as center-wide totals. One extra aggregation query instead of looping per set.
+const getConsolidationsOverview = async (centerId: number) => {
+  const sets = await consolidationRepository.findOverviewSets(centerId);
+  const setIds = sets.map((set: any) => set.consolidation_set_id);
+  const aggregates = await consolidationRepository.findTrialAggregatesForSets(setIds);
+  const aggByset = new Map<number, any>(aggregates.map((agg: any) => [Number(agg.consolidation_set_id), agg]));
+
+  const items = sets.map((set: any) => {
+    const agg = aggByset.get(Number(set.consolidation_set_id));
+    const trialCount = Number(agg?.trial_count ?? 0);
+    const studentCount = Number(agg?.student_count ?? 0);
+    const passedStudentCount = Number(agg?.passed_student_count ?? 0);
+    return {
+      consolidation_set_id: set.consolidation_set_id,
+      title: set.title,
+      teacher_id: set.teacher_id,
+      teacher_name: `${set.teacher_first_name} ${set.teacher_last_name}`.trim(),
+      class_id: set.class_id,
+      class_name: set.class_name,
+      session_id: set.session_id,
+      session_date: set.session_date,
+      word_count: Number(set.word_count ?? 0),
+      created_at: set.created_at,
+      trial_count: trialCount,
+      student_count: studentCount,
+      passed_student_count: passedStudentCount,
+      pass_rate: studentCount > 0 ? passedStudentCount / studentCount : null,
+    };
+  });
+
+  const totals = items.reduce(
+    (acc: any, item: any) => ({
+      total_sets: acc.total_sets + 1,
+      total_trials: acc.total_trials + item.trial_count,
+      total_students_submitted: acc.total_students_submitted + item.student_count,
+      total_students_passed: acc.total_students_passed + item.passed_student_count,
+    }),
+    { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0 }
+  );
+
+  const byTeacherMap = new Map<number, any>();
+  for (const item of items) {
+    const key = Number(item.teacher_id);
+    const entry = byTeacherMap.get(key) ?? {
+      teacher_id: item.teacher_id,
+      teacher_name: item.teacher_name,
+      sets_count: 0,
+      trial_count: 0,
+      student_count: 0,
+      passed_student_count: 0,
+    };
+    entry.sets_count += 1;
+    entry.trial_count += item.trial_count;
+    entry.student_count += item.student_count;
+    entry.passed_student_count += item.passed_student_count;
+    byTeacherMap.set(key, entry);
+  }
+  const byTeacher = Array.from(byTeacherMap.values()).map((entry: any) => ({
+    ...entry,
+    pass_rate: entry.student_count > 0 ? entry.passed_student_count / entry.student_count : null,
+  }));
+
+  return {
+    totals: {
+      ...totals,
+      overall_pass_rate: totals.total_students_submitted > 0 ? totals.total_students_passed / totals.total_students_submitted : null,
+    },
+    by_teacher: byTeacher,
+    sets: items,
   };
 };
 
@@ -295,10 +363,7 @@ const logViolation = async (trialId: number, preloadedTrial?: any) => {
 const getPublicSetView = async (shareToken: string) => {
   const set = await consolidationRepository.findPublicSetMeta(shareToken);
   if (!set) return null;
-  const [words, roster] = await Promise.all([
-    consolidationRepository.findWordsBySetPublic(set.consolidation_set_id),
-    studentService.listClassStudentsWithTransfers(Number(set.class_id), Number(set.center_id)),
-  ]);
+  const words = await consolidationRepository.findWordsBySetPublic(set.consolidation_set_id);
   return {
     consolidation_set_id: set.consolidation_set_id,
     title: set.title,
@@ -306,13 +371,19 @@ const getPublicSetView = async (shareToken: string) => {
     session_date: set.session_date,
     violation_limit: set.violation_limit,
     words,
-    roster: roster.map(toRosterEntry),
   };
 };
 
-const startPublicTrial = async (shareToken: string, studentId: number, meta: { ipAddress?: string | null; userAgent?: string | null; confirm?: boolean } = {}) => {
+const startPublicTrial = async (shareToken: string, username: string, meta: { ipAddress?: string | null; userAgent?: string | null; confirm?: boolean } = {}) => {
   const set = await consolidationRepository.findSetByShareToken(shareToken);
   if (!set) return { error: 'not_found' as const };
+
+  // Identification by username, not a roster pick — knowing a username still isn't
+  // proof of identity (same soft-signal tradeoff as before), but it no longer requires
+  // publishing the whole class roster's names to anyone holding the link.
+  const student = await studentService.findByUsername(String(username || '').trim());
+  if (!student) return { error: 'invalid_student' as const };
+  const studentId = Number(student.student_id);
 
   // Independent checks — enrollment doesn't depend on today's completion status —
   // run concurrently instead of as two sequential round trips.
@@ -355,6 +426,7 @@ module.exports = {
   getSetForTeacher,
   getSetForStudentView,
   getResultsDashboard,
+  getConsolidationsOverview,
   getTrial,
   getTrialDetail,
   deleteSet,

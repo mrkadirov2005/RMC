@@ -3,6 +3,7 @@ jest.mock('../../services/consolidation.service', () => ({
   getSetForTeacher: jest.fn(),
   getSetForStudentView: jest.fn(),
   getResultsDashboard: jest.fn(),
+  getConsolidationsOverview: jest.fn(),
   getTrial: jest.fn(),
   getTrialDetail: jest.fn(),
   deleteSet: jest.fn(),
@@ -142,6 +143,33 @@ describe('consolidation controller — access-control boundaries', () => {
     });
   });
 
+  describe('getOverview — center-scoped superuser dashboard', () => {
+    it('403s before calling the service when center scope cannot be resolved (e.g. an owner with no center_id)', async () => {
+      getCenterScope.mockReturnValue({ ok: false, status: 400, body: { error: 'center_id is required for superuser actions.' } });
+      sendScopeError.mockImplementation((res, scope) => {
+        res.status(scope.status).json(scope.body);
+        return true;
+      });
+      const res = response();
+
+      await controller.getOverview({ user: { userType: 'superuser' }, query: {} }, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(consolidationService.getConsolidationsOverview).not.toHaveBeenCalled();
+    });
+
+    it('forwards the resolved centerId to the service and returns its result', async () => {
+      const overview = { totals: { total_sets: 0 }, by_teacher: [], sets: [] };
+      consolidationService.getConsolidationsOverview.mockResolvedValue(overview);
+      const res = response();
+
+      await controller.getOverview({ user: { userType: 'superuser' }, query: {} }, res);
+
+      expect(consolidationService.getConsolidationsOverview).toHaveBeenCalledWith(2);
+      expect(res.json).toHaveBeenCalledWith(overview);
+    });
+  });
+
   describe('public share-link handlers — generic 404s, never a distinguishable reason', () => {
     it('getPublicSetView 404s the same way for a bad token as any other failure', async () => {
       consolidationService.getPublicSetView.mockResolvedValue(null);
@@ -153,11 +181,11 @@ describe('consolidation controller — access-control boundaries', () => {
       expect(res.json).toHaveBeenCalledWith({ error: 'Not found' });
     });
 
-    it('startPublicTrial rejects a student_id outside the roster with 400, not a stack trace', async () => {
+    it('startPublicTrial rejects an unknown/mismatched username with 400, not a stack trace', async () => {
       consolidationService.startPublicTrial.mockResolvedValue({ error: 'invalid_student' });
       const res = response();
 
-      await controller.startPublicTrial({ params: { shareToken: 'tok' }, body: { student_id: 999 }, get: () => null }, res);
+      await controller.startPublicTrial({ params: { shareToken: 'tok' }, body: { username: 'nobody' }, get: () => null }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
     });

@@ -41,12 +41,6 @@ export interface ConsolidationTrial {
   access_token?: string | null;
 }
 
-export interface RosterEntry {
-  student_id: number;
-  first_name: string;
-  last_name: string;
-}
-
 export type StartPublicTrialResponse =
   | { needs_confirmation: true; existing_today: ConsolidationTrial }
   | { needs_confirmation?: false; message: string; trial: ConsolidationTrial; words: ConsolidationWord[]; existing_today: ConsolidationTrial | null };
@@ -58,7 +52,6 @@ export interface PublicSetView {
   session_date: string;
   violation_limit: number;
   words: ConsolidationWord[];
-  roster: RosterEntry[];
 }
 
 export interface StudentSetView {
@@ -73,13 +66,15 @@ export type TrialDetailWord = ConsolidationWord & { translations: string[]; stud
 export const consolidatePublicAPI = {
   getSet: async (shareToken: string) => getApiPayload<PublicSetView>(await apiClient.get(`/consolidate/${shareToken}`)),
 
-  // Without `confirm`, the backend refuses to create a trial (returning
-  // `needs_confirmation: true` instead) when the student already completed
-  // one today — call again with `confirm: true` once the student has
+  // Identification is by username, not a roster pick — the public GET above no
+  // longer returns a roster at all, so nothing exposes the class's student list
+  // to anyone holding the link. Without `confirm`, the backend refuses to create
+  // a trial (returning `needs_confirmation: true` instead) when this student
+  // already completed one today — call again with `confirm: true` once they've
   // acknowledged the "continue anyway?" nudge to actually create it.
-  startTrial: async (shareToken: string, studentId: number, confirm?: boolean) =>
+  startTrial: async (shareToken: string, username: string, confirm?: boolean) =>
     getApiPayload<StartPublicTrialResponse>(
-      await apiClient.post(`/consolidate/${shareToken}/trials`, { student_id: studentId, ...(confirm ? { confirm: true } : {}) })
+      await apiClient.post(`/consolidate/${shareToken}/trials`, { username, ...(confirm ? { confirm: true } : {}) })
     ),
 
   saveAnswer: (shareToken: string, trialId: number, wordId: number, answer: string, trialToken: string | null) =>

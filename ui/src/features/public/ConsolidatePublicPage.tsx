@@ -1,10 +1,11 @@
 // Public, unauthenticated landing page for a vocabulary consolidation share
-// link — served at /consolidate/:shareToken with no login, no Layout shell.
-// A student picks their name from the class roster and starts the exercise.
+// link — served at /consolidate/:shareToken with no login. A student enters
+// their username and starts the exercise; the class roster is never exposed
+// here (the backend no longer returns it — see PublicSetView).
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2, Search } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,21 +17,20 @@ import {
   type ConsolidationTrial,
   type ConsolidationWord,
   type PublicSetView as SetView,
-  type RosterEntry,
 } from '@/features/student/api/consolidationExerciseApi';
 
 type Stage =
   | { step: 'loading' }
   | { step: 'invalid' }
-  | { step: 'picker'; data: SetView }
-  | { step: 'nudge'; data: SetView; student: RosterEntry; existing: ConsolidationTrial }
-  | { step: 'exercise'; student: RosterEntry; trial: ConsolidationTrial; words: ConsolidationWord[]; violationLimit: number };
+  | { step: 'form'; data: SetView }
+  | { step: 'nudge'; data: SetView; username: string; existing: ConsolidationTrial }
+  | { step: 'exercise'; username: string; trial: ConsolidationTrial; words: ConsolidationWord[]; violationLimit: number };
 
 export const ConsolidatePublicPage = () => {
   const { shareToken = '' } = useParams<{ shareToken: string }>();
   const [stage, setStage] = useState<Stage>({ step: 'loading' });
-  const [query, setQuery] = useState('');
-  const [starting, setStarting] = useState<number | null>(null);
+  const [username, setUsername] = useState('');
+  const [starting, setStarting] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export const ConsolidatePublicPage = () => {
     consolidatePublicAPI
       .getSet(shareToken)
       .then((data) => {
-        if (!cancelled) setStage({ step: 'picker', data });
+        if (!cancelled) setStage({ step: 'form', data });
       })
       .catch(() => {
         if (!cancelled) setStage({ step: 'invalid' });
@@ -48,24 +48,29 @@ export const ConsolidatePublicPage = () => {
     };
   }, [shareToken]);
 
-  const startFor = async (data: SetView, student: RosterEntry, confirm?: boolean) => {
-    setStarting(student.student_id);
+  const startFor = async (data: SetView, forUsername: string, confirm?: boolean) => {
+    const trimmed = forUsername.trim();
+    if (!trimmed) {
+      setError('Enter your username.');
+      return;
+    }
+    setStarting(true);
     setError('');
     try {
-      const result = await consolidatePublicAPI.startTrial(shareToken, student.student_id, confirm);
+      const result = await consolidatePublicAPI.startTrial(shareToken, trimmed, confirm);
       if (result.needs_confirmation) {
         // Nothing has been created yet — the backend now refuses to start a trial
         // until this nudge is acknowledged, so "never mind" below has nothing to
         // clean up.
-        setStage({ step: 'nudge', data, student, existing: result.existing_today });
+        setStage({ step: 'nudge', data, username: trimmed, existing: result.existing_today });
       } else {
         const { trial, words } = result;
-        setStage({ step: 'exercise', student, trial, words, violationLimit: data.violation_limit });
+        setStage({ step: 'exercise', username: trimmed, trial, words, violationLimit: data.violation_limit });
       }
     } catch (err) {
       setError(handleApiError(err));
     } finally {
-      setStarting(null);
+      setStarting(false);
     }
   };
 
@@ -93,7 +98,7 @@ export const ConsolidatePublicPage = () => {
   if (stage.step === 'exercise') {
     return (
       <TakeConsolidationPage
-        context={{ mode: 'public', shareToken, studentId: stage.student.student_id, studentName: `${stage.student.first_name} ${stage.student.last_name}` }}
+        context={{ mode: 'public', shareToken, username: stage.username }}
         initialTrial={stage.trial}
         initialWords={stage.words}
         violationLimit={stage.violationLimit}
@@ -108,7 +113,7 @@ export const ConsolidatePublicPage = () => {
           <CardContent className="space-y-4 p-8 text-center">
             <h1 className="text-lg font-semibold">Already completed today</h1>
             <p className="text-sm text-slate-600">
-              It looks like {stage.student.first_name} already completed this today
+              It looks like {stage.username} already completed this today
               {stage.existing.correct_count != null && stage.existing.total_words != null
                 ? ` (scored ${stage.existing.correct_count}/${stage.existing.total_words})`
                 : ''}
@@ -122,14 +127,14 @@ export const ConsolidatePublicPage = () => {
 
             <div className="flex justify-center gap-3">
               <Button
-                onClick={() => startFor(stage.data, stage.student, true)}
-                disabled={starting !== null}
+                onClick={() => startFor(stage.data, stage.username, true)}
+                disabled={starting}
                 className="bg-[#21116a] text-white hover:bg-[#160a4d]"
               >
-                {starting === stage.student.student_id && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {starting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Continue anyway
               </Button>
-              <Button variant="outline" disabled={starting !== null} onClick={() => setStage({ step: 'picker', data: stage.data })}>
+              <Button variant="outline" disabled={starting} onClick={() => setStage({ step: 'form', data: stage.data })}>
                 Never mind
               </Button>
             </div>
@@ -140,9 +145,6 @@ export const ConsolidatePublicPage = () => {
   }
 
   const { data } = stage;
-  const filtered = data.roster.filter((student) =>
-    `${student.first_name} ${student.last_name}`.toLowerCase().includes(query.trim().toLowerCase())
-  );
 
   return (
     <main data-translation-skip className="flex min-h-screen items-center justify-center bg-[#f6fbff] px-5 py-10 text-[#21116a]">
@@ -151,42 +153,35 @@ export const ConsolidatePublicPage = () => {
           <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#16a7e2]">{data.class_name}</p>
             <h1 className="mt-1 text-xl font-semibold">{data.title || 'Vocabulary Exercise'}</h1>
-            <p className="mt-1 text-sm text-slate-500">Who are you?</p>
+            <p className="mt-1 text-sm text-slate-500">Enter your username to begin</p>
           </div>
 
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void startFor(data, username);
+            }}
+            className="space-y-4"
+          >
             <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search your name"
-              className="h-11 pl-11"
+              autoFocus
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Your username"
+              className="h-11"
             />
-          </div>
 
-          {error && (
-            <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
+            {error && (
+              <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-          <div className="max-h-80 space-y-1 overflow-y-auto">
-            {filtered.map((student) => (
-              <button
-                key={student.student_id}
-                type="button"
-                disabled={starting !== null}
-                onClick={() => startFor(data, student)}
-                className="flex w-full items-center justify-between rounded-md border border-transparent px-3 py-2.5 text-left text-sm hover:border-[#d8e4f1] hover:bg-[#f6fbff] disabled:opacity-60"
-              >
-                <span>
-                  {student.first_name} {student.last_name}
-                </span>
-                {starting === student.student_id && <Loader2 className="h-4 w-4 animate-spin text-[#16a7e2]" />}
-              </button>
-            ))}
-            {filtered.length === 0 && <p className="py-4 text-center text-sm text-slate-400">No students match.</p>}
-          </div>
+            <Button type="submit" disabled={starting} className="h-11 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
+              {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Continue
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </main>

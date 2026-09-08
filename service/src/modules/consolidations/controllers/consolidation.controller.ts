@@ -81,6 +81,18 @@ const getResultsDashboard = async (req: any, res: any) => {
   }
 };
 
+const getOverview = async (req: any, res: any) => {
+  try {
+    const scope = requireConsolidationCenterScope(req, res);
+    if (!scope) return;
+    const data = await consolidationService.getConsolidationsOverview(scope.centerId ?? undefined);
+    res.json(data);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch consolidations overview', details: error.message || String(error) });
+  }
+};
+
 const getTrialDetail = async (req: any, res: any) => {
   try {
     const scope = requireConsolidationCenterScope(req, res);
@@ -206,13 +218,13 @@ const getPublicSetView = async (req: any, res: any) => {
 
 const startPublicTrial = async (req: any, res: any) => {
   try {
-    const result = await consolidationService.startPublicTrial(req.params.shareToken, req.body.student_id, {
+    const result = await consolidationService.startPublicTrial(req.params.shareToken, req.body.username, {
       ipAddress: req.ip,
       userAgent: req.get('user-agent') || null,
       confirm: Boolean(req.body.confirm),
     });
     if (result.error === 'not_found') return res.status(404).json({ error: 'Not found' });
-    if (result.error === 'invalid_student') return res.status(400).json({ error: 'That student is not on this roster.' });
+    if (result.error === 'invalid_student') return res.status(400).json({ error: 'Invalid username.' });
     if (result.needs_confirmation) {
       return res.status(200).json({ needs_confirmation: true, existing_today: result.existing_today });
     }
@@ -274,6 +286,7 @@ module.exports = {
   getSetForTeacher,
   getSetForStudentView,
   getResultsDashboard,
+  getOverview,
   getTrialDetail,
   startTrial,
   saveAnswer,

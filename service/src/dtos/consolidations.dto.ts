@@ -56,10 +56,9 @@ class SaveConsolidationAnswerDto {
 }
 
 class StartPublicTrialDto {
-  @Type(() => Number)
-  @IsInt()
-  @Min(1)
-  student_id!: number;
+  @IsString()
+  @IsNotEmpty()
+  username!: string;
 
   // Set once the student has seen the "already completed today, continue anyway?"
   // nudge and confirmed — without it, a repeat completed-today attempt is held back
