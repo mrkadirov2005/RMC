@@ -65,6 +65,8 @@ async function createApp(options: CreateAppOptions = {}) {
   const archiveRoutes = require('./routes/archiveRoutes');
   const telegramRegistrationRoutes = require('./routes/telegramRegistrationRoutes');
   const telegramStudentRoutes = require('./routes/telegramStudentRoutes');
+  const consolidationRoutes = require('./routes/consolidationRoutes');
+  const consolidatePublicRoutes = require('./routes/consolidatePublicRoutes');
 
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
@@ -90,6 +92,14 @@ async function createApp(options: CreateAppOptions = {}) {
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: 'Too many login attempts. Please try again in a minute.' },
+  });
+
+  const consolidatePublicRateLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: 'Too many requests. Please try again in a minute.' },
   });
 
   app.use(express.json({ limit: BODY_LIMIT }));
@@ -167,6 +177,8 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/archive', requireAuth, requireRole('superuser'), archiveRoutes);
   app.use('/api/telegram-registrations', requireAuth, requireRole('superuser'), telegramRegistrationRoutes);
   app.use('/api/telegram/student', telegramStudentRoutes);
+  app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
+  app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {

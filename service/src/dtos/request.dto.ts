@@ -25,6 +25,7 @@ const calendar = require('./calendar.dto');
 const settings = require('./settings.dto');
 const translations = require('./translations.dto');
 const system = require('./system.dto');
+const consolidations = require('./consolidations.dto');
 
 module.exports = {
   ...common,
@@ -54,6 +55,7 @@ module.exports = {
   ...settings,
   ...translations,
   ...system,
+  ...consolidations,
 };
 
 export {};

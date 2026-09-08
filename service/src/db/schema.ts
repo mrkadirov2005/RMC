@@ -961,6 +961,72 @@ const studentCoinTransactions = pgTable('student_coin_transactions', {
     uniqueIndex('uniq_student_coin_source').on(table.studentId, table.sourceType, table.sourceId).where(sql`source_type IS NOT NULL AND source_id IS NOT NULL`),
 ]);
 
+const consolidationSets = pgTable('consolidation_sets', {
+  consolidationSetId: serial('consolidation_set_id').primaryKey(),
+  centerId: integer('center_id'),
+  classId: integer('class_id'),
+  sessionId: integer('session_id').notNull(),
+  teacherId: integer('teacher_id').notNull(),
+  title: varchar('title', { length: 255 }),
+  violationLimit: integer('violation_limit').notNull().default(3),
+  shareToken: varchar('share_token', { length: 64 }).notNull(),
+  deletedAt: timestamp('deleted_at'),
+  createdAt: timestamp('created_at'),
+  updatedAt: timestamp('updated_at'),
+}, (table) => [
+    index('idx_consolidation_sets_session').on(table.sessionId),
+    index('idx_consolidation_sets_class').on(table.classId),
+    index('idx_consolidation_sets_center').on(table.centerId),
+    index('idx_consolidation_sets_deleted_at').on(table.deletedAt),
+    uniqueIndex('idx_consolidation_sets_share_token').on(table.shareToken),
+]);
+
+const consolidationWords = pgTable('consolidation_words', {
+  consolidationWordId: serial('consolidation_word_id').primaryKey(),
+  consolidationSetId: integer('consolidation_set_id').notNull(),
+  wordOrder: integer('word_order').notNull(),
+  mainWord: varchar('main_word', { length: 255 }).notNull(),
+  translations: jsonb('translations').notNull(),
+}, (table) => [
+    index('idx_consolidation_words_set').on(table.consolidationSetId),
+]);
+
+const consolidationTrials = pgTable('consolidation_trials', {
+  trialId: serial('trial_id').primaryKey(),
+  consolidationSetId: integer('consolidation_set_id').notNull(),
+  studentId: integer('student_id').notNull(),
+  centerId: integer('center_id'),
+  trialNumber: integer('trial_number').notNull(),
+  status: varchar('status', { length: 20 }).notNull(),
+  startedAt: timestamp('started_at').notNull(),
+  submittedAt: timestamp('submitted_at'),
+  correctCount: integer('correct_count'),
+  totalWords: integer('total_words'),
+  isPassed: boolean('is_passed'),
+  violationCount: integer('violation_count').notNull().default(0),
+  timeTakenSeconds: integer('time_taken_seconds'),
+  viaShareLink: boolean('via_share_link').notNull().default(false),
+  ipAddress: varchar('ip_address', { length: 50 }),
+  userAgent: text('user_agent'),
+  accessToken: varchar('access_token', { length: 64 }),
+}, (table) => [
+    index('idx_consolidation_trials_set').on(table.consolidationSetId),
+    index('idx_consolidation_trials_student').on(table.studentId),
+    index('idx_consolidation_trials_status').on(table.status),
+    uniqueIndex('idx_consolidation_trials_set_student_number').on(table.consolidationSetId, table.studentId, table.trialNumber),
+]);
+
+const consolidationAnswers = pgTable('consolidation_answers', {
+  answerId: serial('answer_id').primaryKey(),
+  trialId: integer('trial_id').notNull(),
+  consolidationWordId: integer('consolidation_word_id').notNull(),
+  studentAnswer: text('student_answer'),
+  isCorrect: boolean('is_correct').notNull(),
+}, (table) => [
+    index('idx_consolidation_answers_trial').on(table.trialId),
+    uniqueIndex('idx_consolidation_answers_trial_word').on(table.trialId, table.consolidationWordId),
+]);
+
 module.exports = {
   appSettings,
   translations,
@@ -1011,6 +1077,10 @@ module.exports = {
   testResultsSummary,
   requestLogs,
   studentCoinTransactions,
+  consolidationSets,
+  consolidationWords,
+  consolidationTrials,
+  consolidationAnswers,
 };
 
 export {};

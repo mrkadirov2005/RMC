@@ -1,0 +1,109 @@
+import { apiClient } from '@/shared/api/api';
+import { getApiPayload } from '@/shared/api/response';
+
+export interface ConsolidationWordInput {
+  main_word: string;
+  translations: string[];
+}
+
+export interface ConsolidationSet {
+  consolidation_set_id: number;
+  center_id: number | null;
+  class_id: number | null;
+  session_id: number;
+  teacher_id: number;
+  title: string | null;
+  violation_limit: number;
+  share_token: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConsolidationWord {
+  consolidation_word_id: number;
+  consolidation_set_id: number;
+  word_order: number;
+  main_word: string;
+  translations: string[];
+}
+
+export interface ConsolidationTrial {
+  trial_id: number;
+  consolidation_set_id: number;
+  student_id: number;
+  trial_number: number;
+  status: 'in_progress' | 'completed' | 'auto_submitted';
+  started_at: string;
+  submitted_at: string | null;
+  correct_count: number | null;
+  total_words: number | null;
+  is_passed: boolean | null;
+  violation_count: number;
+  time_taken_seconds: number | null;
+  via_share_link: boolean;
+  ip_address: string | null;
+  user_agent: string | null;
+}
+
+export interface ConsolidationResultsRow {
+  student_id: number;
+  first_name: string;
+  last_name: string;
+  submitted: boolean;
+  trial_count: number;
+  best_trial: ConsolidationTrial | null;
+  latest_trial: ConsolidationTrial | null;
+}
+
+export interface ConsolidationResultsDashboard {
+  set: ConsolidationSet;
+  summary: { total: number; submitted: number };
+  rows: ConsolidationResultsRow[];
+}
+
+export interface ConsolidationTrialDetailWord {
+  consolidation_word_id: number;
+  word_order: number;
+  main_word: string;
+  translations: string[];
+  student_answer: string | null;
+  is_correct: boolean | null;
+}
+
+export const consolidationApi = {
+  async getForSession(sessionId: number): Promise<{ set: ConsolidationSet; words: ConsolidationWord[] } | null> {
+    try {
+      const data = getApiPayload<any>(await apiClient.get(`/consolidations/session/${sessionId}`));
+      return { set: data, words: data.words };
+    } catch (err: any) {
+      if (err?.response?.status === 404) return null;
+      throw err;
+    }
+  },
+
+  async create(payload: {
+    session_id: number;
+    title?: string;
+    violation_limit?: number;
+    words: ConsolidationWordInput[];
+  }): Promise<{ set: ConsolidationSet; words: ConsolidationWord[] }> {
+    return getApiPayload<any>(await apiClient.post('/consolidations', payload));
+  },
+
+  async getResults(sessionId: number): Promise<ConsolidationResultsDashboard> {
+    return getApiPayload<ConsolidationResultsDashboard>(await apiClient.get(`/consolidations/session/${sessionId}/results`));
+  },
+
+  async getTrialDetail(trialId: number): Promise<{ trial: ConsolidationTrial; words: ConsolidationTrialDetailWord[] }> {
+    return getApiPayload<any>(await apiClient.get(`/consolidations/trials/${trialId}`));
+  },
+
+  async deleteSet(setId: number): Promise<void> {
+    await apiClient.delete(`/consolidations/${setId}`);
+  },
+
+  async regenerateLink(setId: number): Promise<{ set: ConsolidationSet }> {
+    const data = getApiPayload<any>(await apiClient.post(`/consolidations/${setId}/regenerate-link`));
+    return { set: data.set ?? data };
+  },
+};

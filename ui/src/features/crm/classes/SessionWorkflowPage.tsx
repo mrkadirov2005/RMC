@@ -21,11 +21,18 @@ import {
   toWorkflowPointMap,
 } from './sessionWorkflowModel';
 import { sessionWorkflowApi } from './api/sessionWorkflowApi';
+import ConsolidationTab from './components/ConsolidationTab';
 
 const toPointMap = (options: ScoreOption[]) => toWorkflowPointMap(options);
 
 type WorkflowTab = 'attendance' | 'homework' | 'activity' | 'points';
 type WorkflowAction = WorkflowTab | 'coins';
+// 'consolidation' is a standalone tab (vocabulary exercises for this session) — deliberately
+// outside the attendance/homework/activity/points stepper above, since it isn't a per-lesson
+// score to complete and shouldn't participate in `selectedActions`/`completeTab` navigation.
+type PageTab = WorkflowTab | 'consolidation';
+const isPageTab = (value: string | null): value is PageTab =>
+  value === 'consolidation' || WORKFLOW_TABS.includes(value as WorkflowTab);
 
 const DEFAULT_WORKFLOW_ACTIONS: WorkflowAction[] = ['attendance', 'homework', 'activity', 'coins'];
 const WORKFLOW_TABS: WorkflowTab[] = ['attendance', 'homework', 'activity', 'points'];
@@ -56,9 +63,9 @@ export default function SessionWorkflowPage() {
   const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
   const [stellarStudentId, setStellarStudentId] = useState<number | null>(null);
   const [scoringSettings, setScoringSettings] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
-  const [activeTab, setActiveTab] = useState<WorkflowTab>(() => {
-    const requestedTab = searchParams.get('tab') as WorkflowTab | null;
-    return requestedTab && WORKFLOW_TABS.includes(requestedTab) ? requestedTab : 'attendance';
+  const [activeTab, setActiveTab] = useState<PageTab>(() => {
+    const requestedTab = searchParams.get('tab');
+    return isPageTab(requestedTab) ? requestedTab : 'attendance';
   });
   const [selectedDate, setSelectedDate] = useState('');
   const [switchingDate, setSwitchingDate] = useState(false);
@@ -162,7 +169,7 @@ export default function SessionWorkflowPage() {
               nextPoints.clear();
               restoredPoints.forEach((value, key) => nextPoints.set(key, value));
               nextStellarStudentId = draft.stellarStudentId && studentIds.has(Number(draft.stellarStudentId)) ? Number(draft.stellarStudentId) : null;
-              if (WORKFLOW_TABS.includes(draft.activeTab)) setActiveTab(draft.activeTab);
+              if (isPageTab(draft.activeTab)) setActiveTab(draft.activeTab);
         }
 
         setClassData(nextClass);
@@ -196,14 +203,14 @@ export default function SessionWorkflowPage() {
       activityScores: Array.from(activityScores.entries()),
       pointsScores: Array.from(pointsScores.entries()),
       stellarStudentId,
-      activeTab,
+      activeTab: activeTab === 'consolidation' ? 'attendance' : activeTab,
     };
     dispatch(saveSessionWorkflowDraft({ key: draftKey, draft }));
   }, [activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, loading, numericClassId, numericSessionId, pointsScores, stellarStudentId]);
 
   useEffect(() => {
     if (selectedTabs.length === 0) return;
-    if (!selectedTabs.includes(activeTab)) {
+    if (activeTab !== 'consolidation' && !selectedTabs.includes(activeTab)) {
       setActiveTab(selectedTabs[0]);
     }
   }, [activeTab, selectedTabs]);
@@ -297,7 +304,7 @@ export default function SessionWorkflowPage() {
     setSelectedDate(nextDate);
     const existingSession = sessions.find((item) => toDateKey(item.session_date) === nextDate);
     const nextActions = selectedActions.join(',');
-    const nextTab = selectedTabs.includes(activeTab) ? activeTab : selectedTabs[0] || 'points';
+    const nextTab = activeTab === 'consolidation' ? 'consolidation' : selectedTabs.includes(activeTab) ? activeTab : selectedTabs[0] || 'points';
 
     if (existingSession) {
       const nextSessionId = Number(existingSession.session_id || existingSession.id);
@@ -440,7 +447,7 @@ export default function SessionWorkflowPage() {
 
       <Card className="rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <CardContent className="p-3">
-          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as WorkflowTab)}>
+          <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as PageTab)}>
             <div className="mb-3 grid gap-2 md:grid-cols-3">
               {selectedTabs.map((tab, index) => (
                 <StepTile
@@ -461,10 +468,11 @@ export default function SessionWorkflowPage() {
               ))}
             </div>
 
-            <TabsList className="grid h-auto w-full" style={{ gridTemplateColumns: `repeat(${Math.max(selectedTabs.length, 1)}, minmax(0, 1fr))` }}>
+            <TabsList className="grid h-auto w-full" style={{ gridTemplateColumns: `repeat(${Math.max(selectedTabs.length, 1) + 1}, minmax(0, 1fr))` }}>
               {selectedTabs.map((tab) => (
                 <TabsTrigger key={tab} value={tab} className="py-2">{ACTION_LABELS[tab]}</TabsTrigger>
               ))}
+              <TabsTrigger value="consolidation" className="py-2">Consolidation</TabsTrigger>
             </TabsList>
 
             {selectedActions.includes('attendance') && <TabsContent value="attendance" className="pt-4">
@@ -516,6 +524,10 @@ export default function SessionWorkflowPage() {
                 action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
               />
             </TabsContent>}
+
+            <TabsContent value="consolidation" className="pt-4">
+              <ConsolidationTab sessionId={numericSessionId} />
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
