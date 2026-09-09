@@ -196,6 +196,43 @@ const getConsolidationsOverview = async (centerId: number) => {
     pass_rate: entry.student_count > 0 ? entry.passed_student_count / entry.student_count : null,
   }));
 
+  // Per-(student, set) outcomes — the raw material for the effectiveness-by-
+  // attempt-number chart and its click-to-drill-down list. Enriched here with
+  // the teacher/class/session context already computed above, rather than a
+  // second join, since `items` already carries it per set.
+  const setContext = new Map<number, any>(items.map((item: any) => [Number(item.consolidation_set_id), item]));
+  const rawOutcomes = await consolidationRepository.findStudentOutcomesForSets(setIds);
+  const outcomes = rawOutcomes.map((row: any) => {
+    const ctx = setContext.get(Number(row.consolidation_set_id));
+    const firstPassAttempt = row.first_pass_attempt == null ? null : Number(row.first_pass_attempt);
+    const bucket: 'passed_1' | 'passed_2' | 'passed_3_plus' | 'never_passed' =
+      firstPassAttempt == null ? 'never_passed' : firstPassAttempt === 1 ? 'passed_1' : firstPassAttempt === 2 ? 'passed_2' : 'passed_3_plus';
+    return {
+      student_id: row.student_id,
+      student_name: `${row.student_first_name} ${row.student_last_name}`.trim(),
+      consolidation_set_id: row.consolidation_set_id,
+      set_title: ctx?.title ?? null,
+      teacher_id: ctx?.teacher_id ?? null,
+      teacher_name: ctx?.teacher_name ?? null,
+      class_id: ctx?.class_id ?? null,
+      class_name: ctx?.class_name ?? null,
+      session_id: ctx?.session_id ?? null,
+      session_date: ctx?.session_date ?? null,
+      trial_count: Number(row.trial_count),
+      first_pass_attempt: firstPassAttempt,
+      violation_count: Number(row.violation_count),
+      bucket,
+    };
+  });
+
+  const effectiveness = {
+    passed_1: outcomes.filter((o: any) => o.bucket === 'passed_1').length,
+    passed_2: outcomes.filter((o: any) => o.bucket === 'passed_2').length,
+    passed_3_plus: outcomes.filter((o: any) => o.bucket === 'passed_3_plus').length,
+    never_passed: outcomes.filter((o: any) => o.bucket === 'never_passed').length,
+    had_violations: outcomes.filter((o: any) => o.violation_count > 0).length,
+  };
+
   return {
     totals: {
       ...totals,
@@ -203,6 +240,8 @@ const getConsolidationsOverview = async (centerId: number) => {
     },
     by_teacher: byTeacher,
     sets: items,
+    outcomes,
+    effectiveness,
   };
 };
 

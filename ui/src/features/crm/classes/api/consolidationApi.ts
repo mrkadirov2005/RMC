@@ -99,6 +99,33 @@ export interface ConsolidationOverviewTeacher {
   total_violations: number;
 }
 
+export type ConsolidationOutcomeBucket = 'passed_1' | 'passed_2' | 'passed_3_plus' | 'never_passed';
+
+export interface ConsolidationOutcome {
+  student_id: number;
+  student_name: string;
+  consolidation_set_id: number;
+  set_title: string | null;
+  teacher_id: number | null;
+  teacher_name: string | null;
+  class_id: number | null;
+  class_name: string | null;
+  session_id: number | null;
+  session_date: string | null;
+  trial_count: number;
+  first_pass_attempt: number | null;
+  violation_count: number;
+  bucket: ConsolidationOutcomeBucket;
+}
+
+export interface ConsolidationEffectiveness {
+  passed_1: number;
+  passed_2: number;
+  passed_3_plus: number;
+  never_passed: number;
+  had_violations: number;
+}
+
 export interface ConsolidationOverview {
   totals: {
     total_sets: number;
@@ -110,6 +137,8 @@ export interface ConsolidationOverview {
   };
   by_teacher: ConsolidationOverviewTeacher[];
   sets: ConsolidationOverviewSet[];
+  outcomes: ConsolidationOutcome[];
+  effectiveness: ConsolidationEffectiveness;
 }
 
 export const consolidationApi = {

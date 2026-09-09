@@ -7,6 +7,7 @@ const {
   consolidationTrials,
   consolidationWords,
   sessions,
+  students,
   teachers,
 } = require('../../../db/schema');
 
@@ -233,6 +234,27 @@ const findTrialAggregatesForSets = async (setIds: number[]) => {
     .groupBy(consolidationTrials.consolidationSetId);
 };
 
+// One row per (student, set): how many attempts, which attempt first passed on
+// (null if never), and how many lockdown violations they racked up on this set —
+// the raw material for the overview's effectiveness-by-attempt-number chart.
+const findStudentOutcomesForSets = async (setIds: number[]) => {
+  if (setIds.length === 0) return [];
+  return db
+    .select({
+      student_id: consolidationTrials.studentId,
+      student_first_name: students.firstName,
+      student_last_name: students.lastName,
+      consolidation_set_id: consolidationTrials.consolidationSetId,
+      trial_count: sql<number>`COUNT(*)`,
+      first_pass_attempt: sql<number | null>`MIN(${consolidationTrials.trialNumber}) FILTER (WHERE ${consolidationTrials.isPassed})`,
+      violation_count: sql<number>`COALESCE(SUM(${consolidationTrials.violationCount}), 0)`,
+    })
+    .from(consolidationTrials)
+    .innerJoin(students, eq(students.studentId, consolidationTrials.studentId))
+    .where(inArray(consolidationTrials.consolidationSetId, setIds.map(Number)))
+    .groupBy(consolidationTrials.studentId, students.firstName, students.lastName, consolidationTrials.consolidationSetId);
+};
+
 const findTrialsByStudentAndSet = async (setId: number, studentId: number) =>
   db
     .select(trialSelection)
@@ -346,6 +368,7 @@ module.exports = {
   findSetByShareToken,
   findOverviewSets,
   findTrialAggregatesForSets,
+  findStudentOutcomesForSets,
   findPublicSetMeta,
   insertSet,
   insertWords,

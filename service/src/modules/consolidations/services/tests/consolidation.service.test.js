@@ -27,6 +27,7 @@ jest.mock('../../repositories/consolidation.repository', () => ({
   setAnswerCorrectness: jest.fn(),
   findOverviewSets: jest.fn(),
   findTrialAggregatesForSets: jest.fn(),
+  findStudentOutcomesForSets: jest.fn(),
 }));
 jest.mock('../../../students/services/student.service', () => ({
   listClassStudentsWithTransfers: jest.fn(),
@@ -168,10 +169,18 @@ describe('consolidation service', () => {
       // set 2 has zero trials — deliberately absent from the aggregates result, like a real GROUP BY would omit it.
       { consolidation_set_id: 3, trial_count: 2, student_count: 2, passed_student_count: 2, total_violations: 0 },
     ];
+    const rawOutcomes = [
+      { student_id: 101, student_first_name: 'Ann', student_last_name: 'X', consolidation_set_id: 1, trial_count: 1, first_pass_attempt: 1, violation_count: 0 },
+      { student_id: 102, student_first_name: 'Bek', student_last_name: 'Y', consolidation_set_id: 1, trial_count: 2, first_pass_attempt: null, violation_count: 4 },
+      { student_id: 103, student_first_name: 'Cid', student_last_name: 'Z', consolidation_set_id: 1, trial_count: 2, first_pass_attempt: null, violation_count: 0 },
+      { student_id: 201, student_first_name: 'Dan', student_last_name: 'W', consolidation_set_id: 3, trial_count: 1, first_pass_attempt: 1, violation_count: 0 },
+      { student_id: 202, student_first_name: 'Eva', student_last_name: 'V', consolidation_set_id: 3, trial_count: 1, first_pass_attempt: 1, violation_count: 0 },
+    ];
 
     it('computes per-set stats, per-teacher rollups, and center-wide totals that all agree', async () => {
       consolidationRepository.findOverviewSets.mockResolvedValue(overviewSets);
       consolidationRepository.findTrialAggregatesForSets.mockResolvedValue(aggregates);
+      consolidationRepository.findStudentOutcomesForSets.mockResolvedValue(rawOutcomes);
 
       const result = await service.getConsolidationsOverview(2);
 
@@ -207,11 +216,42 @@ describe('consolidation service', () => {
         total_violations: 4,
         overall_pass_rate: 3 / 5,
       });
+
+      // Effectiveness bucketing (the chart's data): 101/201/202 passed on their
+      // first attempt, 102/103 never passed, and only 102 racked up violations.
+      expect(result.effectiveness).toEqual({ passed_1: 3, passed_2: 0, passed_3_plus: 0, never_passed: 2, had_violations: 1 });
+      expect(result.outcomes).toHaveLength(5);
+      const bek = result.outcomes.find((o) => o.student_id === 102);
+      expect(bek.bucket).toBe('never_passed');
+      expect(bek.violation_count).toBe(4);
+      expect(bek.teacher_name).toBe('Amina A');
+      expect(bek.class_name).toBe('Class A');
+    });
+
+    it('buckets each outcome by which attempt first passed on, independent of whether it had violations', async () => {
+      consolidationRepository.findOverviewSets.mockResolvedValue([
+        { consolidation_set_id: 9, title: 'T', teacher_id: 1, teacher_first_name: 'Teacher', teacher_last_name: 'One', class_id: 1, class_name: 'Class C', session_id: 1, session_date: '2026-01-01', word_count: 5, created_at: '2026-01-01' },
+      ]);
+      consolidationRepository.findTrialAggregatesForSets.mockResolvedValue([]);
+      consolidationRepository.findStudentOutcomesForSets.mockResolvedValue([
+        { student_id: 1, student_first_name: 'A', student_last_name: 'One', consolidation_set_id: 9, trial_count: 1, first_pass_attempt: 1, violation_count: 0 },
+        { student_id: 2, student_first_name: 'B', student_last_name: 'Two', consolidation_set_id: 9, trial_count: 2, first_pass_attempt: 2, violation_count: 1 },
+        { student_id: 3, student_first_name: 'C', student_last_name: 'Three', consolidation_set_id: 9, trial_count: 4, first_pass_attempt: 4, violation_count: 0 },
+        { student_id: 4, student_first_name: 'D', student_last_name: 'Four', consolidation_set_id: 9, trial_count: 3, first_pass_attempt: null, violation_count: 2 },
+      ]);
+
+      const result = await service.getConsolidationsOverview(2);
+
+      expect(result.effectiveness).toEqual({ passed_1: 1, passed_2: 1, passed_3_plus: 1, never_passed: 1, had_violations: 2 });
+      expect(result.outcomes.find((o) => o.student_id === 2).bucket).toBe('passed_2');
+      expect(result.outcomes.find((o) => o.student_id === 3).bucket).toBe('passed_3_plus');
+      expect(result.outcomes.find((o) => o.student_id === 4).bucket).toBe('never_passed');
     });
 
     it('returns zeroed totals and an empty breakdown when the center has no consolidation sets at all', async () => {
       consolidationRepository.findOverviewSets.mockResolvedValue([]);
       consolidationRepository.findTrialAggregatesForSets.mockResolvedValue([]);
+      consolidationRepository.findStudentOutcomesForSets.mockResolvedValue([]);
 
       const result = await service.getConsolidationsOverview(2);
 
@@ -220,6 +260,8 @@ describe('consolidation service', () => {
         totals: { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0, total_violations: 0, overall_pass_rate: null },
         by_teacher: [],
         sets: [],
+        outcomes: [],
+        effectiveness: { passed_1: 0, passed_2: 0, passed_3_plus: 0, never_passed: 0, had_violations: 0 },
       });
     });
   });
