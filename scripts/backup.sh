@@ -32,6 +32,9 @@ TELEGRAM_BOT_TOKEN="${BACKUP_TELEGRAM_BOT_TOKEN:-}"
 TELEGRAM_CHAT_ID="${BACKUP_TELEGRAM_CHAT_ID:-}"
 TELEGRAM_CAPTION="${BACKUP_TELEGRAM_CAPTION:-RMC automated backup}"
 
+GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE="${GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE:-}"
+GOOGLE_SHEETS_SPREADSHEET_ID="${GOOGLE_SHEETS_SPREADSHEET_ID:-}"
+
 mkdir -p "$RUN_DIR"
 
 log() {
@@ -41,6 +44,26 @@ log() {
 require_command() {
   command -v "$1" >/dev/null 2>&1
 }
+
+send_telegram_message() {
+  text="$1"
+  [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ] && return 0
+  require_command curl || return 0
+  curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+    -d "chat_id=${TELEGRAM_CHAT_ID}" \
+    --data-urlencode "text=${text}" || true
+}
+
+# Whatever step fails, whoever's holding the phone should hear about it — a
+# backup that silently stopped running is worse than no backup, since it looks
+# fine until the night it's needed.
+report_failure_on_exit() {
+  exit_code=$?
+  if [ "$exit_code" -ne 0 ]; then
+    send_telegram_message "❌ RMC nightly backup FAILED (exit code ${exit_code}). Check /var/log/rmc-backup.log on the server."
+  fi
+}
+trap report_failure_on_exit EXIT
 
 backup_postgres() {
   local_file="$RUN_DIR/postgres_${DB_NAME}_${TIMESTAMP}.dump"
@@ -207,6 +230,25 @@ archive_backup_run() {
   log "Archive created."
 }
 
+send_telegram_document() {
+  file="$1"
+  caption="$2"
+  response_file="$RUN_DIR/telegram_response_$(basename "$file").json"
+  http_code="$(curl -sS -o "$response_file" -w '%{http_code}' \
+    -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
+    -F "chat_id=${TELEGRAM_CHAT_ID}" \
+    -F "caption=${caption}" \
+    -F "document=@${file}")"
+
+  if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+    log "ERROR: Telegram upload of $(basename "$file") failed with HTTP $http_code. Response saved to $response_file"
+    return 1
+  fi
+}
+
+# Telegram's standard Bot API caps uploads at 50MB. Anything bigger gets split
+# into <=45MB parts (a safety margin, not a hard cutoff) and sent as multiple
+# messages instead of failing outright — `part_aa` of `N`, `part_ab` of `N`, etc.
 upload_to_telegram() {
   if [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ]; then
     log "Telegram upload skipped; BACKUP_TELEGRAM_BOT_TOKEN or BACKUP_TELEGRAM_CHAT_ID is not set."
@@ -224,21 +266,133 @@ upload_to_telegram() {
 
   size_bytes="$(wc -c < "$ARCHIVE_FILE" | tr -d ' ')"
   size_mb="$((size_bytes / 1024 / 1024))"
-  log "Uploading backup archive to Telegram (${size_mb} MB)."
+  telegram_limit_bytes="$((45 * 1000 * 1000))"
 
-  response_file="$RUN_DIR/telegram_response.json"
-  http_code="$(curl -sS -o "$response_file" -w '%{http_code}' \
-    -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendDocument" \
-    -F "chat_id=${TELEGRAM_CHAT_ID}" \
-    -F "caption=${TELEGRAM_CAPTION} ${TIMESTAMP}" \
-    -F "document=@${ARCHIVE_FILE}")"
+  if [ "$size_bytes" -le "$telegram_limit_bytes" ]; then
+    log "Uploading backup archive to Telegram (${size_mb} MB)."
+    send_telegram_document "$ARCHIVE_FILE" "${TELEGRAM_CAPTION} ${TIMESTAMP}" || return 1
+    log "Telegram upload completed."
+    return 0
+  fi
 
-  if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-    log "ERROR: Telegram upload failed with HTTP $http_code. Response saved to $response_file"
+  log "Archive is ${size_mb} MB, over Telegram's per-file limit — splitting into parts."
+  split_prefix="$RUN_DIR/$(basename "$ARCHIVE_FILE").part_"
+  split -b 45m "$ARCHIVE_FILE" "$split_prefix"
+
+  part_count="$(find "$RUN_DIR" -maxdepth 1 -name "$(basename "$ARCHIVE_FILE").part_*" | wc -l | tr -d ' ')"
+  part_num=0
+  for part in "$split_prefix"*; do
+    part_num=$((part_num + 1))
+    log "Uploading part ${part_num}/${part_count}: $(basename "$part")"
+    send_telegram_document "$part" "${TELEGRAM_CAPTION} ${TIMESTAMP} (part ${part_num}/${part_count})" || return 1
+  done
+
+  log "Telegram upload completed (${part_count} parts)."
+}
+
+# Optional: mirror the live Postgres data into a hosted instance (Neon, Supabase,
+# etc.) so there's a live, queryable copy — not just a static file. Runs only
+# when BACKUP_REMOTE_POSTGRES_URL is set; silently skipped otherwise. --clean
+# --if-exists makes every run a full replace of the remote's schema, so nightly
+# re-runs stay idempotent instead of colliding with the previous night's data.
+mirror_remote_postgres() {
+  if [ -z "${BACKUP_REMOTE_POSTGRES_URL:-}" ]; then
+    log "Remote Postgres mirror skipped; BACKUP_REMOTE_POSTGRES_URL is not set."
+    return 0
+  fi
+
+  if ! require_command psql; then
+    log "ERROR: psql is required locally to mirror into the remote Postgres instance."
     return 1
   fi
 
-  log "Telegram upload completed."
+  log "Mirroring PostgreSQL into the remote hosted instance."
+  dump_cmd="PGPASSWORD=\"$DB_PASSWORD\" pg_dump --host \"$DB_HOST\" --port \"$DB_PORT\" --username \"$DB_USER\" --dbname \"$DB_NAME\" --clean --if-exists --no-owner --no-acl"
+  if require_command pg_dump; then
+    if ! eval "$dump_cmd" | psql "$BACKUP_REMOTE_POSTGRES_URL" > "$RUN_DIR/remote_mirror.log" 2>&1; then
+      log "ERROR: remote Postgres mirror failed — see $RUN_DIR/remote_mirror.log"
+      send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the hosted-Postgres mirror failed. Check $RUN_DIR/remote_mirror.log on the server."
+      return 1
+    fi
+  elif require_command docker; then
+    if ! docker exec -e PGPASSWORD="$DB_PASSWORD" "$POSTGRES_CONTAINER" pg_dump --username "$DB_USER" --dbname "$DB_NAME" --clean --if-exists --no-owner --no-acl \
+      | psql "$BACKUP_REMOTE_POSTGRES_URL" > "$RUN_DIR/remote_mirror.log" 2>&1; then
+      log "ERROR: remote Postgres mirror failed — see $RUN_DIR/remote_mirror.log"
+      send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the hosted-Postgres mirror failed. Check $RUN_DIR/remote_mirror.log on the server."
+      return 1
+    fi
+  else
+    log "ERROR: pg_dump or docker is required for the remote Postgres mirror."
+    return 1
+  fi
+
+  log "Remote Postgres mirror completed."
+}
+
+# Optional: mirror the readable CSV table exports into a Google Sheet, one tab
+# per table plus a Summary tab. Runs only when GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE
+# and GOOGLE_SHEETS_SPREADSHEET_ID are set; silently skipped otherwise. Auth is
+# a hand-rolled RS256 JWT (openssl) exchanged for an OAuth token — no Google
+# client library needed on the host.
+export_to_google_sheets() {
+  if [ -z "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE" ] || [ -z "$GOOGLE_SHEETS_SPREADSHEET_ID" ]; then
+    log "Google Sheets export skipped; GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE or GOOGLE_SHEETS_SPREADSHEET_ID is not set."
+    return 0
+  fi
+
+  if [ "$EXPORT_POSTGRES_TABLES" != "true" ]; then
+    log "Google Sheets export skipped; requires BACKUP_EXPORT_POSTGRES_TABLES=true CSV exports."
+    return 0
+  fi
+
+  if ! require_command jq || ! require_command openssl || ! require_command python3; then
+    log "ERROR: jq, openssl, and python3 are required for the Google Sheets export."
+    return 1
+  fi
+
+  if [ ! -f "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE" ]; then
+    log "ERROR: GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE not found: $GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE"
+    return 1
+  fi
+
+  log "Requesting a Google Sheets access token."
+  client_email="$(jq -r '.client_email' "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE")"
+  key_file="$RUN_DIR/.sheets_key.pem"
+  jq -r '.private_key' "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE" > "$key_file"
+  chmod 600 "$key_file"
+
+  jwt_now="$(date +%s)"
+  jwt_exp="$((jwt_now + 3600))"
+  jwt_header='{"alg":"RS256","typ":"JWT"}'
+  jwt_claims="$(printf '{"iss":"%s","scope":"https://www.googleapis.com/auth/spreadsheets","aud":"https://oauth2.googleapis.com/token","exp":%s,"iat":%s}' "$client_email" "$jwt_exp" "$jwt_now")"
+
+  jwt_header_b64="$(printf '%s' "$jwt_header" | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+  jwt_claims_b64="$(printf '%s' "$jwt_claims" | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+  jwt_signing_input="${jwt_header_b64}.${jwt_claims_b64}"
+  jwt_signature_b64="$(printf '%s' "$jwt_signing_input" | openssl dgst -sha256 -sign "$key_file" | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
+  jwt="${jwt_signing_input}.${jwt_signature_b64}"
+  rm -f "$key_file"
+
+  token_response="$(curl -sS -X POST https://oauth2.googleapis.com/token \
+    -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
+    --data-urlencode "assertion=${jwt}")"
+  access_token="$(printf '%s' "$token_response" | jq -r '.access_token // empty')"
+
+  if [ -z "$access_token" ]; then
+    log "ERROR: Google Sheets auth failed: $token_response"
+    send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the Google Sheets export failed (auth). Check /var/log/rmc-backup.log."
+    return 1
+  fi
+
+  sheets_tables="${GOOGLE_SHEETS_TABLES:-students,teachers,classes,payments,invoices,debts,attendance,teacher_salaries}"
+  sheets_export_dir="$RUN_DIR/postgres_tables"
+  if GOOGLE_ACCESS_TOKEN="$access_token" python3 "$ROOT_DIR/scripts/sheets_export.py" "$GOOGLE_SHEETS_SPREADSHEET_ID" "$sheets_export_dir" "$sheets_tables" >> "$RUN_DIR/sheets_export.log" 2>&1; then
+    log "Google Sheets export completed."
+  else
+    log "ERROR: Google Sheets export failed — see $RUN_DIR/sheets_export.log"
+    send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the Google Sheets export failed. Check $RUN_DIR/sheets_export.log on the server."
+    return 1
+  fi
 }
 
 cleanup_old_backups() {
@@ -257,6 +411,9 @@ write_manifest
 archive_backup_run
 upload_to_s3
 upload_to_telegram
+mirror_remote_postgres || true
+export_to_google_sheets || true
 cleanup_old_backups
 
 log "Backup finished: $RUN_DIR"
+send_telegram_message "✅ RMC nightly backup completed ($TIMESTAMP)."

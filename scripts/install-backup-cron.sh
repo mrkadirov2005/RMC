@@ -2,9 +2,9 @@
 set -eu
 
 ROOT_DIR="${BACKUP_ROOT_DIR:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
-SCHEDULE="${BACKUP_CRON_SCHEDULE:-0 * * * *}"
+SCHEDULE="${BACKUP_CRON_SCHEDULE:-0 3 * * *}"
 LOG_FILE="${BACKUP_LOG_FILE:-/var/log/rmc-backup.log}"
-MARKER="# RMC automated hourly backup"
+MARKER="# RMC automated nightly backup"
 COMMAND="cd $ROOT_DIR && /bin/sh scripts/backup.sh >> $LOG_FILE 2>&1"
 ENTRY="$SCHEDULE $COMMAND $MARKER"
 
