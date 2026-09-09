@@ -85,6 +85,7 @@ export interface ConsolidationOverviewSet {
   student_count: number;
   passed_student_count: number;
   pass_rate: number | null;
+  total_violations: number;
 }
 
 export interface ConsolidationOverviewTeacher {
@@ -95,6 +96,7 @@ export interface ConsolidationOverviewTeacher {
   student_count: number;
   passed_student_count: number;
   pass_rate: number | null;
+  total_violations: number;
 }
 
 export interface ConsolidationOverview {
@@ -103,6 +105,7 @@ export interface ConsolidationOverview {
     total_trials: number;
     total_students_submitted: number;
     total_students_passed: number;
+    total_violations: number;
     overall_pass_rate: number | null;
   };
   by_teacher: ConsolidationOverviewTeacher[];

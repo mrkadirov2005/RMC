@@ -226,6 +226,7 @@ const findTrialAggregatesForSets = async (setIds: number[]) => {
       trial_count: sql<number>`COUNT(*)`,
       student_count: sql<number>`COUNT(DISTINCT ${consolidationTrials.studentId})`,
       passed_student_count: sql<number>`COUNT(DISTINCT ${consolidationTrials.studentId}) FILTER (WHERE ${consolidationTrials.isPassed})`,
+      total_violations: sql<number>`COALESCE(SUM(${consolidationTrials.violationCount}), 0)`,
     })
     .from(consolidationTrials)
     .where(inArray(consolidationTrials.consolidationSetId, setIds.map(Number)))

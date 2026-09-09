@@ -34,6 +34,18 @@ const formatScore = (trial: ConsolidationTrial | null) => {
   return `${trial.correct_count ?? 0}/${trial.total_words}${trial.is_passed ? ' ✓' : ''}`;
 };
 
+const ViolationsCell = ({ trial }: { trial: ConsolidationTrial | null }) => {
+  if (!trial) return <span className="text-muted-foreground">—</span>;
+  const count = trial.violation_count ?? 0;
+  if (count === 0) return <span className="text-muted-foreground">0</span>;
+  return (
+    <span className="font-medium text-red-600">
+      {count}
+      {trial.status === 'auto_submitted' ? ' (auto-submitted)' : ''}
+    </span>
+  );
+};
+
 interface ConsolidationTabProps {
   sessionId: number;
   // Fires after a set is created — lets a page embedding this tab elsewhere
@@ -413,7 +425,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                           <td className="py-2 pr-3">{row.submitted ? 'Yes' : 'No'}</td>
                           <td className="py-2 pr-3">{row.trial_count}</td>
                           <td className="py-2 pr-3">{formatScore(row.best_trial)}</td>
-                          <td className="py-2 pr-3">{row.latest_trial?.violation_count ?? '—'}</td>
+                          <td className="py-2 pr-3"><ViolationsCell trial={row.latest_trial} /></td>
                           <td className="py-2 pr-3">
                             {row.latest_trial?.via_share_link && <Badge variant="outline">via link</Badge>}
                           </td>
@@ -429,6 +441,15 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                                 <p className="text-xs text-muted-foreground">Failed to load detail.</p>
                               ) : (
                                 <div className="space-y-2">
+                                  {trialDetail.trial.violation_count > 0 && (
+                                    <Alert variant="destructive" className="border-red-200 bg-red-50 py-2">
+                                      <AlertDescription className="text-xs">
+                                        {trialDetail.trial.violation_count} lockdown violation{trialDetail.trial.violation_count === 1 ? '' : 's'} —
+                                        the student left the exercise screen, switched tabs, or exited fullscreen during this attempt
+                                        {trialDetail.trial.status === 'auto_submitted' ? ', which auto-submitted the trial.' : '.'}
+                                      </AlertDescription>
+                                    </Alert>
+                                  )}
                                   <ul className="space-y-1 text-xs">
                                     {trialDetail.words.map((word) => (
                                       <li key={word.consolidation_word_id} className="flex flex-wrap items-center gap-2">

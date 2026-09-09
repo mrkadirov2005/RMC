@@ -164,9 +164,9 @@ describe('consolidation service', () => {
       { consolidation_set_id: 3, title: 'Unit 3', teacher_id: 8, teacher_first_name: 'Botir', teacher_last_name: 'B', class_id: 11, class_name: 'Class B', session_id: 102, session_date: '2026-09-03', word_count: 8, created_at: '2026-09-03T00:00:00Z' },
     ];
     const aggregates = [
-      { consolidation_set_id: 1, trial_count: 5, student_count: 3, passed_student_count: 1 },
+      { consolidation_set_id: 1, trial_count: 5, student_count: 3, passed_student_count: 1, total_violations: 4 },
       // set 2 has zero trials — deliberately absent from the aggregates result, like a real GROUP BY would omit it.
-      { consolidation_set_id: 3, trial_count: 2, student_count: 2, passed_student_count: 2 },
+      { consolidation_set_id: 3, trial_count: 2, student_count: 2, passed_student_count: 2, total_violations: 0 },
     ];
 
     it('computes per-set stats, per-teacher rollups, and center-wide totals that all agree', async () => {
@@ -184,6 +184,7 @@ describe('consolidation service', () => {
       const setOne = result.sets.find((s) => s.consolidation_set_id === 1);
       expect(setOne.pass_rate).toBeCloseTo(1 / 3);
       expect(setOne.teacher_name).toBe('Amina A');
+      expect(setOne.total_violations).toBe(4);
 
       // Per-teacher rollup
       const amina = result.by_teacher.find((t) => t.teacher_id === 7);
@@ -191,9 +192,11 @@ describe('consolidation service', () => {
       expect(amina.trial_count).toBe(5);
       expect(amina.student_count).toBe(3);
       expect(amina.pass_rate).toBeCloseTo(1 / 3);
+      expect(amina.total_violations).toBe(4);
       const botir = result.by_teacher.find((t) => t.teacher_id === 8);
       expect(botir.sets_count).toBe(1);
       expect(botir.pass_rate).toBe(1);
+      expect(botir.total_violations).toBe(0);
 
       // Center-wide totals must be the sum across all sets/teachers
       expect(result.totals).toEqual({
@@ -201,6 +204,7 @@ describe('consolidation service', () => {
         total_trials: 7,
         total_students_submitted: 5,
         total_students_passed: 3,
+        total_violations: 4,
         overall_pass_rate: 3 / 5,
       });
     });
@@ -213,7 +217,7 @@ describe('consolidation service', () => {
 
       expect(consolidationRepository.findTrialAggregatesForSets).toHaveBeenCalledWith([]);
       expect(result).toEqual({
-        totals: { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0, overall_pass_rate: null },
+        totals: { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0, total_violations: 0, overall_pass_rate: null },
         by_teacher: [],
         sets: [],
       });

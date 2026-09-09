@@ -34,6 +34,9 @@ interface SessionOption {
 
 const formatPercent = (value: number | null) => (value == null ? '—' : `${Math.round(value * 100)}%`);
 
+const ViolationsCell = ({ count }: { count: number }) =>
+  count > 0 ? <span className="font-medium text-red-600">{count}</span> : <span className="text-muted-foreground">0</span>;
+
 export default function ConsolidationsOverviewPage() {
   const [overview, setOverview] = useState<ConsolidationOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
@@ -121,7 +124,7 @@ export default function ConsolidationsOverviewPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
             <Card>
               <CardContent className="pt-6">
                 <p className="text-xs text-muted-foreground">Total sets</p>
@@ -146,6 +149,14 @@ export default function ConsolidationsOverviewPage() {
                 <p className="text-2xl font-semibold">{formatPercent(overview.totals.overall_pass_rate)}</p>
               </CardContent>
             </Card>
+            <Card>
+              <CardContent className="pt-6">
+                <p className="text-xs text-muted-foreground">Lockdown violations</p>
+                <p className={`text-2xl font-semibold ${overview.totals.total_violations > 0 ? 'text-red-600' : ''}`}>
+                  {overview.totals.total_violations}
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
           <Card>
@@ -163,6 +174,7 @@ export default function ConsolidationsOverviewPage() {
                         <th className="py-2 pr-3">Trials</th>
                         <th className="py-2 pr-3">Students</th>
                         <th className="py-2 pr-3">Pass rate</th>
+                        <th className="py-2 pr-3">Violations</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -173,6 +185,7 @@ export default function ConsolidationsOverviewPage() {
                           <td className="py-2 pr-3">{row.trial_count}</td>
                           <td className="py-2 pr-3">{row.student_count}</td>
                           <td className="py-2 pr-3">{formatPercent(row.pass_rate)}</td>
+                          <td className="py-2 pr-3"><ViolationsCell count={row.total_violations} /></td>
                         </tr>
                       ))}
                     </tbody>
@@ -200,6 +213,7 @@ export default function ConsolidationsOverviewPage() {
                         <th className="py-2 pr-3">Trials</th>
                         <th className="py-2 pr-3">Students</th>
                         <th className="py-2 pr-3">Pass rate</th>
+                        <th className="py-2 pr-3">Violations</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -213,6 +227,7 @@ export default function ConsolidationsOverviewPage() {
                           <td className="py-2 pr-3">{row.trial_count}</td>
                           <td className="py-2 pr-3">{row.student_count}</td>
                           <td className="py-2 pr-3">{formatPercent(row.pass_rate)}</td>
+                          <td className="py-2 pr-3"><ViolationsCell count={row.total_violations} /></td>
                         </tr>
                       ))}
                     </tbody>

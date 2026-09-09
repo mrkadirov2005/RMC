@@ -141,6 +141,7 @@ const getConsolidationsOverview = async (centerId: number) => {
     const trialCount = Number(agg?.trial_count ?? 0);
     const studentCount = Number(agg?.student_count ?? 0);
     const passedStudentCount = Number(agg?.passed_student_count ?? 0);
+    const totalViolations = Number(agg?.total_violations ?? 0);
     return {
       consolidation_set_id: set.consolidation_set_id,
       title: set.title,
@@ -156,6 +157,7 @@ const getConsolidationsOverview = async (centerId: number) => {
       student_count: studentCount,
       passed_student_count: passedStudentCount,
       pass_rate: studentCount > 0 ? passedStudentCount / studentCount : null,
+      total_violations: totalViolations,
     };
   });
 
@@ -165,8 +167,9 @@ const getConsolidationsOverview = async (centerId: number) => {
       total_trials: acc.total_trials + item.trial_count,
       total_students_submitted: acc.total_students_submitted + item.student_count,
       total_students_passed: acc.total_students_passed + item.passed_student_count,
+      total_violations: acc.total_violations + item.total_violations,
     }),
-    { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0 }
+    { total_sets: 0, total_trials: 0, total_students_submitted: 0, total_students_passed: 0, total_violations: 0 }
   );
 
   const byTeacherMap = new Map<number, any>();
@@ -179,11 +182,13 @@ const getConsolidationsOverview = async (centerId: number) => {
       trial_count: 0,
       student_count: 0,
       passed_student_count: 0,
+      total_violations: 0,
     };
     entry.sets_count += 1;
     entry.trial_count += item.trial_count;
     entry.student_count += item.student_count;
     entry.passed_student_count += item.passed_student_count;
+    entry.total_violations += item.total_violations;
     byTeacherMap.set(key, entry);
   }
   const byTeacher = Array.from(byTeacherMap.values()).map((entry: any) => ({
