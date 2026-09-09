@@ -163,55 +163,57 @@ export default function ConsolidationsOverviewPage() {
               effectiveness={overview.effectiveness}
               totalAttempts={overview.outcomes.length}
               selected={selectedBar}
-              onSelect={(key) => setSelectedBar((current) => (current === key ? null : key))}
+              onSelect={(key) => setSelectedBar(key)}
             />
-          )}
-
-          {selectedBar && (
-            <div className="mt-5 border-t pt-4">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {BAR_LABELS[selectedBar]} ({drillDownRows.length})
-              </h3>
-              {drillDownRows.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No students in this bucket.</p>
-              ) : (
-                <div className="max-h-80 overflow-y-auto overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                        <th className="py-2 pr-3">Student</th>
-                        <th className="py-2 pr-3">Teacher</th>
-                        <th className="py-2 pr-3">Class</th>
-                        <th className="py-2 pr-3">Session</th>
-                        <th className="py-2 pr-3">Set</th>
-                        <th className="py-2 pr-3">Attempts</th>
-                        <th className="py-2 pr-3">First passed on</th>
-                        <th className="py-2 pr-3">Violations</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {drillDownRows.map((row) => (
-                        <tr key={`${row.consolidation_set_id}-${row.student_id}`} className="border-b last:border-0">
-                          <td className="py-2 pr-3 font-medium">{row.student_name}</td>
-                          <td className="py-2 pr-3">{row.teacher_name}</td>
-                          <td className="py-2 pr-3">{row.class_name}</td>
-                          <td className="py-2 pr-3">{row.session_date}</td>
-                          <td className="py-2 pr-3">{row.set_title || '—'}</td>
-                          <td className="py-2 pr-3">{row.trial_count}</td>
-                          <td className="py-2 pr-3">{row.first_pass_attempt ?? '—'}</td>
-                          <td className="py-2 pr-3">
-                            {row.violation_count > 0 ? <span className="font-medium text-red-600">{row.violation_count}</span> : 0}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={selectedBar !== null} onOpenChange={(open) => !open && setSelectedBar(null)}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedBar ? BAR_LABELS[selectedBar] : ''} ({drillDownRows.length})
+            </DialogTitle>
+          </DialogHeader>
+          {drillDownRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No students in this bucket.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-xs uppercase text-muted-foreground">
+                    <th className="py-2 pr-3">Student</th>
+                    <th className="py-2 pr-3">Teacher</th>
+                    <th className="py-2 pr-3">Class</th>
+                    <th className="py-2 pr-3">Session</th>
+                    <th className="py-2 pr-3">Set</th>
+                    <th className="py-2 pr-3">Attempts</th>
+                    <th className="py-2 pr-3">First passed on</th>
+                    <th className="py-2 pr-3">Violations</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {drillDownRows.map((row) => (
+                    <tr key={`${row.consolidation_set_id}-${row.student_id}`} className="border-b last:border-0">
+                      <td className="py-2 pr-3 font-medium">{row.student_name}</td>
+                      <td className="py-2 pr-3">{row.teacher_name}</td>
+                      <td className="py-2 pr-3">{row.class_name}</td>
+                      <td className="py-2 pr-3">{row.session_date}</td>
+                      <td className="py-2 pr-3">{row.set_title || '—'}</td>
+                      <td className="py-2 pr-3">{row.trial_count}</td>
+                      <td className="py-2 pr-3">{row.first_pass_attempt ?? '—'}</td>
+                      <td className="py-2 pr-3">
+                        {row.violation_count > 0 ? <span className="font-medium text-red-600">{row.violation_count}</span> : 0}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
