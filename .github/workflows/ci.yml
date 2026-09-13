@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: service
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: service/package-lock.json
+      - run: npm ci
+      - name: Type-check
+        run: npm run build
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: service/coverage
+          retention-days: 7
+
+  backend-integration:
+    name: Backend integration tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: service
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: crm_user
+          POSTGRES_PASSWORD: crm_password
+          POSTGRES_DB: crm_backend_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U crm_user"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DB_HOST: 127.0.0.1
+      TEST_DB_PORT: 5432
+      TEST_DB_USER: crm_user
+      TEST_DB_PASSWORD: crm_password
+      TEST_DB_NAME: crm_backend_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: service/package-lock.json
+      - run: npm ci
+      - name: Integration tests
+        run: npm run test:integration
+
+  frontend:
+    name: Frontend unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci
+      # The repository carries pre-existing lint errors in application components, so this
+      # reports without blocking until those are cleared.
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+      - name: Type-check and build
+        run: npm run build
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: ui/coverage
+          retention-days: 7
+
+  e2e-inventory:
+    name: End-to-end workflow inventory
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci
+      - name: Install the Playwright browser used by the chromium project
+        run: npx playwright install --with-deps chromium
+      - name: Verify every numbered workflow is present exactly once
+        run: npm run test:e2e:verify

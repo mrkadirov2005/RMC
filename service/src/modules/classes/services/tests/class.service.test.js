@@ -30,12 +30,14 @@ describe('classes service', () => {
   it('creates class with generated code and monthly payment frequency defaults', async () => {
     jest.spyOn(Date, 'now').mockReturnValue(1234567890);
     classRepository.teacherExists.mockResolvedValue(true);
+    classRepository.subjectCanAssign.mockResolvedValue(true);
     classRepository.insert.mockResolvedValue({ class_id: 8 });
 
     await classService.createClass({
       center_id: 3,
       class_name: 'A1',
       teacher_id: 12,
+      subject_id: 5,
       payment_amount: 270000,
     }, 3);
 

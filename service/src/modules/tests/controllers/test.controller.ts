@@ -15,6 +15,145 @@ const getAllTests = async (req: any, res: any) => {
   }
 };
 
+const getStatistics = async (req: any, res: any) => {
+  try {
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
+    res.json(await testService.getStatistics(centerId ?? undefined, req.user));
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to fetch test statistics', details: error.message || String(error) });
+  }
+};
+
+const createShareLink = async (req: any, res: any) => {
+  try {
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
+    const out = await testService.rotateShareToken(Number(req.params.id), centerId ?? undefined, req.user);
+    if (!out) return res.status(404).json({ error: 'Test not found' });
+    if (out.error === 'forbidden') {
+      return res.status(403).json({ error: 'Only the test author or a superuser can share this test.' });
+    }
+    await logAudit({
+      user_type: req.user?.userType || 'system',
+      user_id: req.user?.id || 0,
+      action: 'SHARE',
+      entity_type: 'test',
+      entity_id: Number(req.params.id),
+      center_id: centerId ?? undefined,
+      details: { rotated: true },
+      ip_address: req.ip,
+    });
+    res.status(201).json({ message: 'Share link ready', share_token: out.share_token });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to create share link', details: error.message || String(error) });
+  }
+};
+
+const revokeShareLink = async (req: any, res: any) => {
+  try {
+    const centerId = requireTestCenterScope(req, res);
+    if (centerId == null) return;
+    const out = await testService.revokeShareToken(Number(req.params.id), centerId ?? undefined, req.user);
+    if (!out) return res.status(404).json({ error: 'Test not found' });
+    if (out.error === 'forbidden') {
+      return res.status(403).json({ error: 'Only the test author or a superuser can revoke this link.' });
+    }
+    res.json({ message: 'Share link revoked' });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to revoke share link', details: error.message || String(error) });
+  }
+};
+
+const getSharedTest = async (req: any, res: any) => {
+  try {
+    const view = await testService.getSharedTestView(req.params.shareToken);
+    if (!view) return res.status(404).json({ error: 'This link is no longer active.' });
+    res.json(view);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to open this link', details: error.message || String(error) });
+  }
+};
+
+const startSharedTest = async (req: any, res: any) => {
+  try {
+    const out = await testService.startSharedTest(req.params.shareToken, req.body?.username, {
+      ipAddress: req.ip || null,
+      confirm: Boolean(req.body?.confirm),
+    });
+    if (out.error === 'not_found') {
+      return res.status(404).json({ error: 'This link is no longer active.' });
+    }
+    // One message for an unknown username and for a student who was never assigned
+    // this test, so the link cannot be used to find out who studies here.
+    if (out.error === 'not_assigned') {
+      return res.status(403).json({ error: 'This test has not been assigned to that username.' });
+    }
+    if (out.error === 'already_submitted') {
+      return res.status(409).json({ error: 'You have already completed this test.', attempts: out.attempts });
+    }
+    if (out.needs_confirmation) {
+      return res.json({ needs_confirmation: true, attempts: out.attempts });
+    }
+    res.status(201).json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to start this test', details: error.message || String(error) });
+  }
+};
+
+const getSharedSubmission = async (req: any, res: any) => {
+  try {
+    const out = await testService.getSharedSubmission(
+      req.params.shareToken,
+      Number(req.params.submissionId),
+      String(req.query.access_token || '')
+    );
+    if (out.error === 'not_found') {
+      return res.status(404).json({ error: 'This link is no longer active.' });
+    }
+    res.json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to open this test', details: error.message || String(error) });
+  }
+};
+
+const submitSharedTest = async (req: any, res: any) => {
+  try {
+    const { access_token: accessToken, ...body } = req.body || {};
+    const out = await testService.submitSharedTest(
+      req.params.shareToken,
+      Number(req.params.submissionId),
+      String(accessToken || ''),
+      body
+    );
+    if (out.error === 'not_found') {
+      return res.status(404).json({ error: 'This link is no longer active.' });
+    }
+    if (out.error === 'already_submitted') {
+      return res.status(409).json({ error: 'This attempt has already been handed in.' });
+    }
+    if (out.error === 'invalid_center') {
+      return res.status(400).json({ error: 'Those answers do not belong to this test.' });
+    }
+    if (out.error === 'word_limit') {
+      return res.status(400).json({ error: 'One answer is over its word limit.', question_id: out.question_id });
+    }
+    if (out.error === 'required') {
+      return res.status(400).json({ error: 'Every required question needs an answer.', question_id: out.question_id });
+    }
+    res.json(out);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to hand in this test', details: error.message || String(error) });
+  }
+};
+
 const getTestById = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
@@ -395,6 +534,13 @@ const getAssignedTests = async (req: any, res: any) => {
 
 module.exports = {
   getAllTests,
+  getStatistics,
+  createShareLink,
+  revokeShareLink,
+  getSharedTest,
+  startSharedTest,
+  getSharedSubmission,
+  submitSharedTest,
   getTestById,
   createTest,
   updateTest,

@@ -555,8 +555,47 @@ class AssignTestDto {
   notes?: string;
 }
 
+class TestShareTokenParamDto {
+  @IsString()
+  @IsNotEmpty()
+  shareToken!: string;
+}
+
+// Both route params have to be declared: the validation middleware replaces
+// req.params with the DTO instance, so anything undeclared is dropped.
+class SharedSubmissionParamDto extends TestShareTokenParamDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  submissionId!: number;
+}
+
+class SubmitSharedTestDto extends SubmitTestDto {
+  @IsString()
+  @IsNotEmpty()
+  access_token!: string;
+}
+
+class StartSharedTestDto {
+  @IsString()
+  @IsNotEmpty()
+  username!: string;
+
+  // Set once the student has acknowledged the "you have already attempted this"
+  // nudge — without it a repeat attempt is held back before a submission row is
+  // created, so backing out leaves nothing behind.
+  @Type(() => Boolean)
+  @IsBoolean()
+  @IsOptional()
+  confirm?: boolean;
+}
+
 module.exports = {
   CreateTestDto,
+  TestShareTokenParamDto,
+  SharedSubmissionParamDto,
+  StartSharedTestDto,
+  SubmitSharedTestDto,
   UpdateTestDto,
   QuestionDto,
   PassageDto,

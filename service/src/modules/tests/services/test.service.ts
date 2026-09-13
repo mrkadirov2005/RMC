@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const testRepository = require('../repositories/test.repository');
 const pool = require('../../../db/pool');
 const { studentInCenter, classInCenter } = require('../../../shared/tenantDb');
@@ -632,8 +633,278 @@ const getAssignedTests = async (type: string, id: number, centerId?: number) => 
 
 const deleteAssignmentsByTest = async (testId: number, centerId?: number) => testRepository.deleteAssignmentsByTest(testId, centerId);
 
+// ---------------------------------------------------------------------------
+// Share links
+// ---------------------------------------------------------------------------
+
+const generateShareToken = () => crypto.randomBytes(24).toString('base64url');
+
+const canManageShareLink = (test: any, user: any) =>
+  user?.userType === 'superuser' || Number(test?.created_by) === Number(user?.id);
+
+// Minting and rotating are the same write: a fresh token always replaces whatever
+// was there, so a leaked link dies the moment a teacher presses Share again.
+const rotateShareToken = async (testId: number, centerId?: number, user: any = {}) => {
+  const test = await testRepository.findById(testId, centerId);
+  if (!test) return null;
+  if (!canManageShareLink(test, user)) return { error: 'forbidden' as const };
+  const updated = await testRepository.setShareToken(testId, generateShareToken(), centerId);
+  return { test: updated, share_token: updated?.share_token ?? null };
+};
+
+const revokeShareToken = async (testId: number, centerId?: number, user: any = {}) => {
+  const test = await testRepository.findById(testId, centerId);
+  if (!test) return null;
+  if (!canManageShareLink(test, user)) return { error: 'forbidden' as const };
+  await testRepository.setShareToken(testId, null, centerId);
+  return { revoked: true as const };
+};
+
+// The public view deliberately carries no questions and no roster — only what a
+// student needs to recognise the test before they type their username.
+const getSharedTestView = async (token: string) => {
+  const test = await testRepository.findByShareToken(String(token || '').trim());
+  if (!test) return null;
+  return {
+    test_name: test.test_name,
+    test_type: test.test_type,
+    description: test.description,
+    instructions: test.instructions,
+    total_marks: test.total_marks,
+    passing_marks: test.passing_marks,
+    duration_minutes: test.duration_minutes,
+    is_timed: test.is_timed,
+  };
+};
+
+const startSharedTest = async (token: string, username: string, meta: any = {}) => {
+  const test = await testRepository.findByShareToken(String(token || '').trim());
+  if (!test) return { error: 'not_found' as const };
+
+  // A username identifies; it does not authenticate. The assignment check below is
+  // what actually bounds who can start, and an unknown username returns the same
+  // answer as an unassigned one so the link cannot be used to probe the roster.
+  const student = await studentService.findByUsername(String(username || '').trim());
+  if (!student) return { error: 'not_assigned' as const };
+  if (Number(student.center_id) !== Number(test.center_id)) return { error: 'not_assigned' as const };
+
+  const assignment = await testRepository.findAssignmentForStudent(
+    Number(test.test_id),
+    Number(student.student_id),
+    student.class_id == null ? null : Number(student.class_id)
+  );
+  if (!assignment) return { error: 'not_assigned' as const };
+
+  const attempts = await testRepository.countSubmissionsByStudent(
+    Number(test.test_id),
+    Number(student.student_id),
+    Number(test.center_id)
+  );
+  const maxRetakes = Number(test.max_retakes ?? 1);
+  if (attempts > 0 && (!toBool(test.allow_retake) || attempts >= maxRetakes)) {
+    return { error: 'already_submitted' as const, attempts };
+  }
+
+  // Ask before creating anything on a repeat attempt, so backing out at the
+  // confirmation leaves no stray in_progress row behind.
+  if (attempts > 0 && !meta.confirm) {
+    return { needs_confirmation: true as const, attempts };
+  }
+
+  const submission = await testRepository.insertSubmission([
+    Number(test.center_id),
+    Number(test.test_id),
+    Number(student.student_id),
+    new Date(),
+    null,
+    null,
+    {},
+    null,
+    null,
+    null,
+    'in_progress',
+    null,
+    null,
+    null,
+    null,
+    null,
+    attempts + 1,
+    meta.ipAddress || null,
+  ]);
+
+  // The attempt carries its own secret, because every later call from the public
+  // take screen arrives without a session to identify the student.
+  const accessToken = generateShareToken();
+  await testRepository.setSubmissionAccessToken(Number(submission.submission_id), accessToken);
+
+  return {
+    submission,
+    access_token: accessToken,
+    student: {
+      student_id: student.student_id,
+      first_name: student.first_name,
+      last_name: student.last_name,
+    },
+  };
+};
+
+// A share-link student sees the paper, never the marking scheme. The authenticated
+// reader hands questions back with correct_answer and explanation attached; this
+// one strips both before the payload leaves the server.
+const toPublicQuestion = (question: any) => {
+  const { correct_answer, explanation, rubric, ...rest } = question;
+  return rest;
+};
+
+const resolveSharedSubmission = async (shareToken: string, submissionId: number, accessToken: string) => {
+  const test = await testRepository.findByShareToken(String(shareToken || '').trim());
+  if (!test) return { error: 'not_found' as const };
+
+  const submission = await testRepository.findSubmissionByAccessToken(submissionId, String(accessToken || '').trim());
+  if (!submission) return { error: 'not_found' as const };
+  if (Number(submission.test_id) !== Number(test.test_id)) return { error: 'not_found' as const };
+
+  return { test, submission };
+};
+
+const getSharedSubmission = async (shareToken: string, submissionId: number, accessToken: string) => {
+  const resolved = await resolveSharedSubmission(shareToken, submissionId, accessToken);
+  if ('error' in resolved) return resolved;
+  const { test, submission } = resolved;
+
+  const [questions, passages] = await Promise.all([
+    testRepository.findQuestionsByTest(Number(test.test_id), Number(test.center_id)),
+    testRepository.findPassagesByTest(Number(test.test_id), Number(test.center_id)),
+  ]);
+
+  return {
+    submission,
+    test: {
+      test_id: test.test_id,
+      test_name: test.test_name,
+      test_type: test.test_type,
+      description: test.description,
+      instructions: test.instructions,
+      total_marks: test.total_marks,
+      passing_marks: test.passing_marks,
+      duration_minutes: test.duration_minutes,
+      is_timed: test.is_timed,
+      shuffle_questions: test.shuffle_questions,
+      questions: questions.map(toPublicQuestion),
+      passages,
+    },
+  };
+};
+
+const submitSharedTest = async (shareToken: string, submissionId: number, accessToken: string, body: any) => {
+  const resolved = await resolveSharedSubmission(shareToken, submissionId, accessToken);
+  if ('error' in resolved) return resolved;
+  const { test, submission } = resolved;
+
+  if (submission.status !== 'in_progress') return { error: 'already_submitted' as const };
+
+  const result = await submitTest(Number(submissionId), body, Number(test.center_id));
+  // The link is single-use for this attempt: once the paper is handed in the
+  // token stops opening it, so a forwarded URL cannot reopen somebody's answers.
+  await testRepository.setSubmissionAccessToken(Number(submissionId), null);
+  return result;
+};
+
+// ---------------------------------------------------------------------------
+// Overview statistics
+// ---------------------------------------------------------------------------
+
+// Ranking a teacher on average score alone crowns whoever set one easy test, so
+// the leaderboard ranks on pass rate and only ranks a teacher once enough work
+// has actually been graded. Below the floor the row still appears, unranked.
+const RANKING_SUBMISSION_FLOOR = 20;
+
+const toNumberOrNull = (value: any) => {
+  if (value === null || value === undefined) return null;
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+};
+
+const median = (values: number[]) => {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const middle = Math.floor(sorted.length / 2);
+  const value = sorted.length % 2 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
+  return Math.round(value * 10) / 10;
+};
+
+const normalizeTeacherRow = (row: any) => ({
+  teacher_id: Number(row.teacher_id),
+  teacher_name: String(row.teacher_name || '').trim() || `Teacher ${row.teacher_id}`,
+  tests: Number(row.tests || 0),
+  submissions: Number(row.submissions || 0),
+  graded_submissions: Number(row.graded_submissions || 0),
+  average_score: toNumberOrNull(row.average_score),
+  pass_rate: toNumberOrNull(row.pass_rate),
+  ranked: Number(row.graded_submissions || 0) >= RANKING_SUBMISSION_FLOOR,
+});
+
+// Ranked teachers first, best pass rate at the top; unranked rows keep a stable
+// alphabetical order underneath so the table does not reshuffle between loads.
+const compareTeachers = (a: any, b: any) => {
+  if (a.ranked !== b.ranked) return a.ranked ? -1 : 1;
+  if (a.ranked) {
+    const byPassRate = (b.pass_rate ?? -1) - (a.pass_rate ?? -1);
+    if (byPassRate !== 0) return byPassRate;
+    const byAverage = (b.average_score ?? -1) - (a.average_score ?? -1);
+    if (byAverage !== 0) return byAverage;
+  }
+  return a.teacher_name.localeCompare(b.teacher_name);
+};
+
+const getStatistics = async (centerId?: number, user: any = {}) => {
+  const [totals, byType, byTeacher] = await Promise.all([
+    testRepository.statisticsTotals(centerId),
+    testRepository.statisticsByType(centerId),
+    testRepository.statisticsByTeacher(centerId),
+  ]);
+
+  const teachers = byTeacher.map(normalizeTeacherRow).sort(compareTeachers);
+  const ranked = teachers.filter((teacher: any) => teacher.ranked);
+  const centerMedian = {
+    average_score: median(ranked.map((teacher: any) => teacher.average_score).filter((value: any) => value != null)),
+    pass_rate: median(ranked.map((teacher: any) => teacher.pass_rate).filter((value: any) => value != null)),
+    ranked_teachers: ranked.length,
+  };
+
+  // A teacher sees their own row and the centre median. Naming every colleague
+  // would turn an internal quality measure into a public league table.
+  const isTeacher = user?.userType === 'teacher';
+  const visibleTeachers = isTeacher
+    ? teachers.filter((teacher: any) => teacher.teacher_id === Number(user?.id))
+    : teachers;
+
+  return {
+    totals: {
+      tests: Number(totals?.tests || 0),
+      active: Number(totals?.active || 0),
+      submissions: Number(totals?.submissions || 0),
+      awaiting_grading: Number(totals?.awaiting_grading || 0),
+      average_score: toNumberOrNull(totals?.average_score),
+      pass_rate: toNumberOrNull(totals?.pass_rate),
+    },
+    by_type: byType.map((row: any) => ({ test_type: row.test_type, tests: Number(row.tests || 0) })),
+    by_teacher: visibleTeachers,
+    center_median: centerMedian,
+    ranking: { metric: 'pass_rate', minimum_graded_submissions: RANKING_SUBMISSION_FLOOR },
+    scope: isTeacher ? 'self' : 'center',
+  };
+};
+
 module.exports = {
   listTests,
+  getStatistics,
+  rotateShareToken,
+  revokeShareToken,
+  getSharedTestView,
+  startSharedTest,
+  getSharedSubmission,
+  submitSharedTest,
   getTestById,
   createTest,
   updateTest,

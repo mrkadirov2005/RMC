@@ -67,6 +67,7 @@ async function createApp(options: CreateAppOptions = {}) {
   const telegramStudentRoutes = require('./routes/telegramStudentRoutes');
   const consolidationRoutes = require('./routes/consolidationRoutes');
   const consolidatePublicRoutes = require('./routes/consolidatePublicRoutes');
+  const testSharePublicRoutes = require('./routes/testSharePublicRoutes');
 
   const app = express();
   const BODY_LIMIT = process.env.BODY_LIMIT || '25mb';
@@ -180,6 +181,7 @@ async function createApp(options: CreateAppOptions = {}) {
   app.use('/api/telegram/student', telegramStudentRoutes);
   app.use('/api/consolidations', requireAuth, requireRole('superuser', 'teacher', 'student'), consolidationRoutes);
   app.use('/api/consolidate', consolidatePublicRateLimiter, consolidatePublicRoutes);
+  app.use('/api/share/tests', consolidatePublicRateLimiter, testSharePublicRoutes);
 
   // Error handling middleware
   app.use((err: Error, req: any, res: any, next: any): void => {

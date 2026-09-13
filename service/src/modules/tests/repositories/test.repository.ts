@@ -56,6 +56,7 @@ const testSelection = {
   created_by_type: tests.createdByType,
   is_active: tests.isActive,
   is_private: tests.isPrivate,
+  share_token: tests.shareToken,
   start_date: tests.startDate,
   end_date: tests.endDate,
   created_at: tests.createdAt,
@@ -177,6 +178,132 @@ const assignmentSelection = {
   due_date: testAssignments.dueDate,
   is_mandatory: testAssignments.isMandatory,
   notes: testAssignments.notes,
+};
+
+// ---------------------------------------------------------------------------
+// Share links
+// ---------------------------------------------------------------------------
+
+const setShareToken = async (testId: number, token: string | null, centerId?: number) => {
+  const conditions = [eq(tests.testId, Number(testId))];
+  if (centerId) conditions.push(eq(tests.centerId, Number(centerId)));
+  const rows = await db
+    .update(tests)
+    .set({ shareToken: token, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(...conditions))
+    .returning(testSelection);
+  return rows[0] || null;
+};
+
+const findByShareToken = async (token: string) => {
+  const rows = await db
+    .select(testSelection)
+    .from(tests)
+    .where(and(eq(tests.shareToken, String(token)), eq(tests.isActive, true)))
+    .limit(1);
+  return rows[0] || null;
+};
+
+const setSubmissionAccessToken = async (submissionId: number, token: string | null) => {
+  const rows = await db
+    .update(testSubmissions)
+    .set({ accessToken: token })
+    .where(eq(testSubmissions.submissionId, Number(submissionId)))
+    .returning(submissionSelection);
+  return rows[0] || null;
+};
+
+// The public take screen has no session, so a submission is reopened by the secret
+// minted when it was started rather than by who is asking.
+const findSubmissionByAccessToken = async (submissionId: number, token: string) => {
+  const rows = await db
+    .select(submissionSelection)
+    .from(testSubmissions)
+    .where(and(eq(testSubmissions.submissionId, Number(submissionId)), eq(testSubmissions.accessToken, String(token))))
+    .limit(1);
+  return rows[0] || null;
+};
+
+// A share link only opens for a student the test was actually assigned to, either
+// by name or through the class they sit in.
+const findAssignmentForStudent = async (testId: number, studentId: number, classId: number | null) => {
+  const targets = [sql`(${testAssignments.assignedToType} = 'student' AND ${testAssignments.assignedToId} = ${Number(studentId)})`];
+  if (classId) {
+    targets.push(sql`(${testAssignments.assignedToType} = 'class' AND ${testAssignments.assignedToId} = ${Number(classId)})`);
+  }
+  const rows = await db
+    .select(assignmentSelection)
+    .from(testAssignments)
+    .where(and(eq(testAssignments.testId, Number(testId)), sql`(${sql.join(targets, sql` OR `)})`))
+    .limit(1);
+  return rows[0] || null;
+};
+
+// ---------------------------------------------------------------------------
+// Centre statistics for the Tests overview. These are aggregates over the whole
+// catalogue, so they are written as raw SQL rather than assembled row by row in
+// the browser the way the old four count tiles were.
+// ---------------------------------------------------------------------------
+
+// A submission only counts once the student has actually handed it in; rows left
+// in_progress are abandoned attempts, not work awaiting a teacher.
+const SUBMITTED_STATES = "('submitted', 'graded')";
+
+const statisticsTotals = async (centerId?: number) => {
+  const result = await pool.query(`
+    SELECT
+      (SELECT COUNT(*)::int FROM tests WHERE ($1::int IS NULL OR center_id = $1)) AS tests,
+      (SELECT COUNT(*)::int FROM tests WHERE ($1::int IS NULL OR center_id = $1) AND COALESCE(is_active, false)) AS active,
+      COUNT(*) FILTER (WHERE s.status IN ${SUBMITTED_STATES})::int AS submissions,
+      COUNT(*) FILTER (WHERE s.status = 'submitted')::int AS awaiting_grading,
+      ROUND(AVG(s.percentage) FILTER (WHERE s.status = 'graded'), 1) AS average_score,
+      ROUND(
+        100.0 * COUNT(*) FILTER (WHERE s.status = 'graded' AND s.is_passed)
+        / NULLIF(COUNT(*) FILTER (WHERE s.status = 'graded'), 0)
+      ) AS pass_rate
+    FROM test_submissions s
+    WHERE ($1::int IS NULL OR s.center_id = $1)
+  `, [centerId ?? null]);
+  return result.rows[0];
+};
+
+const statisticsByType = async (centerId?: number) => {
+  const result = await pool.query(`
+    -- test_type is a Postgres enum, so the fallback has to be compared as text.
+    SELECT COALESCE(test_type::text, 'unspecified') AS test_type, COUNT(*)::int AS tests
+    FROM tests
+    WHERE ($1::int IS NULL OR center_id = $1)
+    GROUP BY COALESCE(test_type::text, 'unspecified')
+    ORDER BY tests DESC, test_type
+  `, [centerId ?? null]);
+  return result.rows;
+};
+
+const statisticsByTeacher = async (centerId?: number) => {
+  const result = await pool.query(`
+    SELECT
+      t.created_by AS teacher_id,
+      trim(concat_ws(' ', te.first_name, te.last_name)) AS teacher_name,
+      COUNT(DISTINCT t.test_id)::int AS tests,
+      COUNT(s.submission_id) FILTER (WHERE s.status IN ${SUBMITTED_STATES})::int AS submissions,
+      COUNT(s.submission_id) FILTER (WHERE s.status = 'graded')::int AS graded_submissions,
+      ROUND(AVG(s.percentage) FILTER (WHERE s.status = 'graded'), 1) AS average_score,
+      ROUND(
+        100.0 * COUNT(s.submission_id) FILTER (WHERE s.status = 'graded' AND s.is_passed)
+        / NULLIF(COUNT(s.submission_id) FILTER (WHERE s.status = 'graded'), 0)
+      ) AS pass_rate
+    FROM tests t
+    JOIN teachers te
+      ON te.teacher_id = t.created_by
+     AND te.center_id = t.center_id
+     AND te.deleted_at IS NULL
+    LEFT JOIN test_submissions s ON s.test_id = t.test_id
+    WHERE t.created_by_type = 'teacher'
+      AND ($1::int IS NULL OR t.center_id = $1)
+    GROUP BY t.created_by, te.first_name, te.last_name
+    ORDER BY teacher_name
+  `, [centerId ?? null]);
+  return result.rows;
 };
 
 const findAll = async (filters: Record<string, any> = {}) => {
@@ -650,6 +777,14 @@ const getQuestionsByIds = async (questionIds: number[], centerId?: number) => {
 
 module.exports = {
   findAll,
+  setShareToken,
+  findByShareToken,
+  findAssignmentForStudent,
+  setSubmissionAccessToken,
+  findSubmissionByAccessToken,
+  statisticsTotals,
+  statisticsByType,
+  statisticsByTeacher,
   findById,
   insertTest,
   updateTest,

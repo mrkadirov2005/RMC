@@ -20,9 +20,11 @@ describe('centers repository summaries', () => {
     centerRepository.getSummaries();
 
     const selection = mockDb.select.mock.calls[0][0];
-    const chunks = JSON.stringify(selection.attendance_present.queryChunks);
-    expect(chunks).toContain('::text');
-    expect(chunks).toContain("COALESCE(");
+    // queryChunks holds live PgTable/PgColumn objects with circular references, so render the
+    // expression through the dialect instead of serializing it.
+    const { sql: rendered } = dialect.sqlToQuery(selection.attendance_present.getSQL());
+    expect(rendered).toContain('::text');
+    expect(rendered).toContain('COALESCE(');
   });
 
   describe('falsy-but-valid centerId scoping (RMC-024)', () => {

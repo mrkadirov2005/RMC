@@ -1,7 +1,7 @@
-const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const request = require('supertest');
 
-const hash = (value) => crypto.createHash('sha256').update(value).digest('hex');
+const hash = (value) => bcrypt.hashSync(value, 10);
 
 describe('actor and student center isolation with PostgreSQL', () => {
   let app;
@@ -13,6 +13,8 @@ describe('actor and student center isolation with PostgreSQL', () => {
   let classA2;
   let classB;
   let adminToken;
+  let transferReasonId;
+  let deleteReasonId;
 
   beforeAll(async () => {
     pool = require('../../../src/db/pool');
@@ -46,6 +48,17 @@ describe('actor and student center isolation with PostgreSQL', () => {
        ($2, 'B-SECRET', 'Beta', 'Student', 'beta_student', $3, $5)`,
       [centerA, centerB, hash('student-password'), classA1, classB]
     );
+
+    // Reasons outlive the per-suite truncate, so seed them idempotently.
+    const seedReason = async (type, code, name) => (await pool.query(
+      `INSERT INTO student_action_reasons (reason_type, reason_code, reason_name, active)
+       VALUES ($1, $2, $3, true)
+       ON CONFLICT (reason_type, reason_code) DO UPDATE SET reason_name = EXCLUDED.reason_name, active = true
+       RETURNING reason_id`,
+      [type, code, name]
+    )).rows[0].reason_id;
+    transferReasonId = await seedReason('transfer', 'moved_group', 'Moved group');
+    deleteReasonId = await seedReason('delete', 'left_center', 'Left the center');
 
     const { createApp } = require('../../../src/index');
     app = await createApp({ initializeDatabase: false, initializeMongo: false });
@@ -121,7 +134,9 @@ describe('actor and student center isolation with PostgreSQL', () => {
       `SELECT center_id, password_hash FROM students WHERE enrollment_number = 'A-CREATED'`
     )).rows[0];
     expect(stored.center_id).toBe(centerA);
-    expect(stored.password_hash).toBe(hash('secret12'));
+    // Credentials are stored as bcrypt hashes, so the plaintext must verify rather than match.
+    expect(stored.password_hash.startsWith('$2')).toBe(true);
+    expect(await bcrypt.compare('secret12', stored.password_hash)).toBe(true);
   });
 
   test('duplicate username and enrollment return conflict without adding rows', async () => {
@@ -145,9 +160,9 @@ describe('actor and student center isolation with PostgreSQL', () => {
 
   test('transfer rejects same-class and cross-center targets without mutation', async () => {
     const studentId = (await pool.query(`SELECT student_id FROM students WHERE enrollment_number = 'A-EXISTING' AND deleted_at IS NULL`)).rows[0].student_id;
-    const same = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classA1 });
+    const same = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classA1, reason_id: transferReasonId });
     expect(same.status).toBe(400);
-    const otherCenter = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classB });
+    const otherCenter = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classB, reason_id: transferReasonId });
     expect(otherCenter.status).toBe(404);
     const stored = (await pool.query('SELECT class_id, deleted_at FROM students WHERE student_id = $1', [studentId])).rows[0];
     expect(stored.class_id).toBe(classA1); expect(stored.deleted_at).toBeNull();
@@ -155,7 +170,7 @@ describe('actor and student center isolation with PostgreSQL', () => {
 
   test('transfer preserves previous class history and creates one active target membership', async () => {
     const studentId = (await pool.query(`SELECT student_id FROM students WHERE enrollment_number = 'A-EXISTING' AND deleted_at IS NULL`)).rows[0].student_id;
-    const response = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classA2 });
+    const response = await request(server).post(`/api/students/${studentId}/transfer`).set('Authorization', `Bearer ${adminToken}`).send({ target_class_id: classA2, reason_id: transferReasonId });
     expect(response.status).toBe(201);
     const rows = (await pool.query(`SELECT class_id, previous_class_id, status, deleted_at FROM students WHERE enrollment_number = 'A-EXISTING' ORDER BY student_id`)).rows;
     expect(rows.filter((row) => row.status === 'Active' && row.deleted_at == null)).toHaveLength(1);
@@ -172,7 +187,7 @@ describe('actor and student center isolation with PostgreSQL', () => {
 
   test('soft delete hides an active student and archive restore returns it', async () => {
     const activeId = (await pool.query(`SELECT student_id FROM students WHERE enrollment_number = 'A-EXISTING' AND deleted_at IS NULL AND status = 'Active'`)).rows[0].student_id;
-    const deleted = await request(server).delete(`/api/students/${activeId}`).set('Authorization', `Bearer ${adminToken}`);
+    const deleted = await request(server).delete(`/api/students/${activeId}`).set('Authorization', `Bearer ${adminToken}`).send({ reason_id: deleteReasonId });
     expect(deleted.status).toBe(200);
     const hidden = await request(server).get(`/api/students/${activeId}`).set('Authorization', `Bearer ${adminToken}`);
     expect(hidden.status).toBe(404);

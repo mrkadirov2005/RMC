@@ -17,13 +17,26 @@ describe('calendar projection with PostgreSQL', () => {
     hiddenCenterId = (await pool.query("INSERT INTO edu_centers (center_name,center_code) VALUES ('Hidden Calendar','CAL-X') RETURNING center_id")).rows[0].center_id;
     teacherId = (await pool.query("INSERT INTO teachers (center_id,employee_id,first_name,last_name) VALUES ($1,'CAL-T1','Ada','Teacher') RETURNING teacher_id", [centerId])).rows[0].teacher_id;
     otherTeacherId = (await pool.query("INSERT INTO teachers (center_id,employee_id,first_name,last_name) VALUES ($1,'CAL-T2','Grace','Teacher') RETURNING teacher_id", [centerId])).rows[0].teacher_id;
-    classId = (await pool.query("INSERT INTO classes (center_id,class_name,class_code,teacher_id) VALUES ($1,'Calendar B1','CAL-C1',$2) RETURNING class_id", [centerId, teacherId])).rows[0].class_id;
-    otherClassId = (await pool.query("INSERT INTO classes (center_id,class_name,class_code,teacher_id) VALUES ($1,'Hidden Group','CAL-C2',$2) RETURNING class_id", [centerId, otherTeacherId])).rows[0].class_id;
+    // A group's recurring timetable is canonical in classes.section, stored as a JSON schedule.
+    const mondaySchedule = (time, endTime) => JSON.stringify({ days: ['Monday'], time, endTime });
+    classId = (await pool.query(
+      "INSERT INTO classes (center_id,class_name,class_code,teacher_id,section) VALUES ($1,'Calendar B1','CAL-C1',$2,$3) RETURNING class_id",
+      [centerId, teacherId, mondaySchedule('09:00', '10:00')],
+    )).rows[0].class_id;
+    otherClassId = (await pool.query(
+      "INSERT INTO classes (center_id,class_name,class_code,teacher_id,section) VALUES ($1,'Hidden Group','CAL-C2',$2,$3) RETURNING class_id",
+      [centerId, otherTeacherId, mondaySchedule('11:00', '12:00')],
+    )).rows[0].class_id;
     await pool.query("INSERT INTO classes (center_id,class_name,class_code) VALUES ($1,'Other Center Group','CAL-X1')", [hiddenCenterId]);
     await pool.query("INSERT INTO subjects (center_id,class_id,subject_name,teacher_id) VALUES ($1,$2,'English',$3)", [centerId, classId, teacherId]);
+    // An event only projects into a room that actually exists, so every group needs a physical
+    // room and a class room_number pointing at it.
     const physicalRoomId = (await pool.query("INSERT INTO physical_rooms (center_id,name) VALUES ($1,'Calendar Room') RETURNING physical_room_id", [centerId])).rows[0].physical_room_id;
+    const otherPhysicalRoomId = (await pool.query("INSERT INTO physical_rooms (center_id,name) VALUES ($1,'Other Room') RETURNING physical_room_id", [centerId])).rows[0].physical_room_id;
+    await pool.query("UPDATE classes SET room_number='Calendar Room' WHERE class_id=$1", [classId]);
+    await pool.query("UPDATE classes SET room_number='Other Room' WHERE class_id=$1", [otherClassId]);
     await pool.query("INSERT INTO rooms (center_id,room_number,physical_room_id,class_id,day,time,end_time) VALUES ($1,'Calendar Room',$2,$3,'Monday','09:00','10:00')", [centerId, physicalRoomId, classId]);
-    await pool.query("INSERT INTO rooms (center_id,room_number,class_id,day,time,end_time) VALUES ($1,'Other Room',$2,'Monday','11:00','12:00')", [centerId, otherClassId]);
+    await pool.query("INSERT INTO rooms (center_id,room_number,physical_room_id,class_id,day,time,end_time) VALUES ($1,'Other Room',$2,$3,'Monday','11:00','12:00')", [centerId, otherPhysicalRoomId, otherClassId]);
     studentId = (await pool.query("INSERT INTO students (center_id,enrollment_number,first_name,last_name,class_id,teacher_id,status) VALUES ($1,'CAL-S1','One','Student',$2,$3,'Active') RETURNING student_id", [centerId, classId, teacherId])).rows[0].student_id;
     await pool.query("INSERT INTO students (center_id,enrollment_number,first_name,last_name,class_id,teacher_id,status) VALUES ($1,'CAL-S2','Two','Student',$2,$3,'Active')", [centerId, classId, teacherId]);
     sessionId = (await pool.query("INSERT INTO sessions (center_id,class_id,teacher_id,session_date,start_time,duration_minutes,end_time) VALUES ($1,$2,$3,'2026-08-10','09:15',30,'09:45') RETURNING session_id", [centerId, classId, teacherId])).rows[0].session_id;

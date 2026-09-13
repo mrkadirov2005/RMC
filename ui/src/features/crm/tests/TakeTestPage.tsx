@@ -55,9 +55,26 @@ const hasInputRenderer = (question: any) => {
   }
 };
 
+// How the screen reaches the server. It defaults to the authenticated API, and a
+// share-link student passes the public transport instead — same paper, same
+// timer, same submit button, different door.
+export interface TakeTestTransport {
+  load: (submissionId: number) => Promise<{ test: any; startedAt: string | null }>;
+  submit: (submissionId: number, answers: Record<number, any>, timeTakenSeconds: number | null) => Promise<void>;
+  onFinished: () => void;
+}
+
+interface TakeTestPageProps {
+  transport?: TakeTestTransport;
+  // A share-link student reaches this screen without a route param, so the
+  // submission is handed in directly.
+  submissionId?: number;
+}
+
 // Renders the take test page screen.
-const TakeTestPage = () => {
-  const { submissionId } = useParams();
+const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPageProps = {}) => {
+  const params = useParams();
+  const submissionId = submissionIdProp != null ? String(submissionIdProp) : params.submissionId;
   const navigate = useNavigate();
 
   const [test, setTest] = useState<any>(null);
@@ -103,28 +120,41 @@ const TakeTestPage = () => {
     try {
       setLoading(true);
 
-      // Fetch submission details for the test id and the real start time
-      let testId = localStorage.getItem(`submission_${submissionId}_test`);
-      let submissionStartedAt: string | null = null;
+      let loadedTest: any;
+      let loadedStartedAt: string | null = null;
 
-      try {
-        const submissionRes = await testAPI.getSubmissionDetails(Number(submissionId));
-        testId = String(submissionRes.data.test_id);
-        submissionStartedAt = submissionRes.data.started_at || null;
-        setStartedAt(submissionStartedAt);
-      } catch (subErr) {
-        console.error('Could not fetch submission details:', subErr);
-        if (!testId) {
-          throw new Error('Test information not found. Please go back and start the test again.');
+      if (transport) {
+        const loaded = await transport.load(Number(submissionId));
+        loadedTest = loaded.test;
+        loadedStartedAt = loaded.startedAt;
+        setStartedAt(loadedStartedAt);
+      } else {
+        // Fetch submission details for the test id and the real start time
+        let testId = localStorage.getItem(`submission_${submissionId}_test`);
+        let submissionStartedAt: string | null = null;
+
+        try {
+          const submissionRes = await testAPI.getSubmissionDetails(Number(submissionId));
+          testId = String(submissionRes.data.test_id);
+          submissionStartedAt = submissionRes.data.started_at || null;
+          loadedStartedAt = submissionStartedAt;
+          setStartedAt(submissionStartedAt);
+        } catch (subErr) {
+          console.error('Could not fetch submission details:', subErr);
+          if (!testId) {
+            throw new Error('Test information not found. Please go back and start the test again.');
+          }
         }
+
+        const testRes = await testAPI.getById(Number(testId));
+        loadedTest = testRes.data;
       }
 
-      const testRes = await testAPI.getById(Number(testId));
-      setTest(testRes.data);
+      setTest(loadedTest);
 
-      const testQuestions = testRes.data.questions || [];
+      const testQuestions = loadedTest.questions || [];
       // Shuffle questions if enabled
-      if (testRes.data.shuffle_questions) {
+      if (loadedTest.shuffle_questions) {
         testQuestions.sort(() => Math.random() - 0.5);
       }
       setQuestions(testQuestions);
@@ -134,10 +164,10 @@ const TakeTestPage = () => {
       }
 
       // Calculate remaining time from when the submission actually started
-      if (testRes.data.is_timed) {
-        const durationSeconds = Number(testRes.data.duration_minutes || 0) * 60;
-        const elapsed = submissionStartedAt
-          ? Math.floor((Date.now() - new Date(submissionStartedAt).getTime()) / 1000)
+      if (loadedTest.is_timed) {
+        const durationSeconds = Number(loadedTest.duration_minutes || 0) * 60;
+        const elapsed = loadedStartedAt
+          ? Math.floor((Date.now() - new Date(loadedStartedAt).getTime()) / 1000)
           : 0;
         setTimeRemaining(Math.max(0, durationSeconds - Math.max(0, elapsed)));
       }
@@ -215,6 +245,12 @@ const TakeTestPage = () => {
       const timeTakenSeconds = startedAt
         ? Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000))
         : null;
+
+      if (transport) {
+        await transport.submit(Number(submissionId), formattedAnswers, timeTakenSeconds);
+        transport.onFinished();
+        return;
+      }
 
       await testAPI.submitTest(Number(submissionId), formattedAnswers, timeTakenSeconds);
 

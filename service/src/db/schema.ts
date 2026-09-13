@@ -796,6 +796,7 @@ const tests = pgTable('tests', {
   startDate: timestamp('start_date'),
   endDate: timestamp('end_date'),
   description: text('description'),
+  shareToken: varchar('share_token', { length: 64 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),
 }, (table) => [
@@ -892,6 +893,7 @@ const testSubmissions = pgTable('test_submissions', {
   gradedAt: timestamp('graded_at'),
   attemptNumber: integer('attempt_number'),
   ipAddress: varchar('ip_address', { length: 50 }),
+  accessToken: varchar('access_token', { length: 64 }),
   status: varchar('status', { length: 50 }),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),

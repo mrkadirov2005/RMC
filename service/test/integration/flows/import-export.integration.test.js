@@ -22,7 +22,8 @@ describe('CSV import/export safety with PostgreSQL', () => {
     await expect(service.importEntity('students', csv, centerId)).resolves.toEqual({ created: 1, entity: 'students' });
     const row = (await pool.query(`SELECT center_id, first_name, password_hash FROM students WHERE enrollment_number='CSV-1'`)).rows[0];
     expect(row.center_id).toBe(centerId); expect(row.first_name).toBe('Ali, Junior');
-    expect(row.password_hash).toMatch(/^[a-f0-9]{64}$/);
+    // Imported credentials are stored as bcrypt hashes, never as plaintext or a bare digest.
+    expect(row.password_hash.startsWith('$2')).toBe(true);
   });
 
   test('rejects cross-center rows without partial creation', async () => {

@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { testAPI } from './api';
+import { ShareTestPanel } from './components/ShareTestPanel';
 import { useAppSelector } from '../hooks';
 import {
   formatTestType,
@@ -546,6 +547,16 @@ const TestDetailPage = () => {
           )}
         </Tabs>
       </Card>
+
+      {isTeacherOrAdmin && (
+        <div className="mt-6">
+          <ShareTestPanel
+            testId={Number(testId)}
+            shareToken={test.share_token ?? null}
+            onTokenChange={(token) => setTest((current: any) => ({ ...current, share_token: token }))}
+          />
+        </div>
+      )}
 
       {/* Start Test Dialog */}
       <Dialog open={startDialogOpen} onOpenChange={setStartDialogOpen}>

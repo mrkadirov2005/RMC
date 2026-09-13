@@ -47,6 +47,9 @@ router_debt.get('/', requireAuth, debtController.getAllDebts);
  *       404:
  *         description: Debt not found
  */
+// Keep the literal /analyze route before `/:id`, or Express matches "analyze" as a debt id.
+router_debt.get('/analyze', requireAuth, debtController.analyzeUnpaidMonths);
+
 router_debt.get('/:id', requireAuth, debtController.getDebtById);
 
 /**
@@ -179,7 +182,6 @@ router_debt.get('/student/:studentId/summary', requireAuth, debtController.getPa
  *                 results:
  *                   type: array
  */
-router_debt.get('/analyze', requireAuth, debtController.analyzeUnpaidMonths);
 
 /**
  * @swagger

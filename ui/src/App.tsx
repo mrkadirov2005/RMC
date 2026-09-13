@@ -16,6 +16,7 @@ const LoginPage = lazy(() => import('./features/auth/LoginPage').then((module) =
 const OwnerLoginPage = lazy(() => import('./features/auth/OwnerLoginPage').then((module) => ({ default: module.OwnerLoginPage })));
 const OwnerRegisterPage = lazy(() => import('./features/auth/OwnerRegisterPage').then((module) => ({ default: module.OwnerRegisterPage })));
 const ConsolidatePublicPage = lazy(() => import('./features/public/ConsolidatePublicPage'));
+const SharedTestPage = lazy(() => import('./features/public/SharedTestPage'));
 const ConsolidationsOverviewPage = lazy(() => import('./features/crm/consolidations/ConsolidationsOverviewPage'));
 const ConsolidationSessionPage = lazy(() => import('./features/student/ConsolidationSessionPage'));
 const Dashboard = lazy(() => import('./features/crm/dashboard/Dashboard'));
@@ -287,6 +288,7 @@ function AppContent() {
         <Route path="/login/owner" element={<OwnerLoginPage />} />
         <Route path="/owner/register" element={<OwnerRegisterPage />} />
         <Route path="/consolidate/:shareToken" element={<ConsolidatePublicPage />} />
+        <Route path="/share/tests/:shareToken" element={<SharedTestPage />} />
         <Route path="/login/superuser" element={<LoginPage userType="superuser" />} />
         <Route path="/login/teacher" element={<LoginPage userType="teacher" />} />
         <Route path="/login/student" element={<LoginPage userType="student" />} />

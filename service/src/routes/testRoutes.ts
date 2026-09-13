@@ -98,6 +98,9 @@ router_test.get('/', requireAuth, testController.getAllTests);
  *       404:
  *         description: Test not found
  */
+// Keep the literal /statistics route before `/:id`, or Express matches "statistics" as a test id.
+router_test.get('/statistics', requireAuth, requireRole('superuser', 'teacher'), testController.getStatistics);
+
 router_test.get('/:id', requireAuth, testController.getTestById);
 
 /**
@@ -449,6 +452,12 @@ router_test.get('/student/:studentId/results', requireAuth, testController.getSt
  *         description: Test assigned successfully
  */
 router_test.post('/:testId/assign', requireAuth, requireRole('superuser', 'teacher'), validateBody(AssignTestDto), testController.assignTest);
+
+// ============================================================================
+// Share Link Routes
+// ============================================================================
+router_test.post('/:id/share', requireAuth, requireRole('superuser', 'teacher'), testController.createShareLink);
+router_test.delete('/:id/share', requireAuth, requireRole('superuser', 'teacher'), testController.revokeShareLink);
 
 /**
  * @swagger

@@ -9,8 +9,14 @@ const mockDb = {
   }),
 };
 
+// db/pool exports the pg Pool itself with `db`/`sql` attached, and rooms.repository upserts
+// physical_rooms through raw SQL (ON CONFLICT ... DO UPDATE) that the query builder cannot
+// express, so the mocked module needs a top-level `query` too.
+const mockQuery = jest.fn(async () => ({ rows: [{ physical_room_id: 77 }] }));
+
 jest.mock('../../../db/pool', () => ({
   db: mockDb,
+  query: mockQuery,
   sql: require('drizzle-orm').sql,
 }));
 
@@ -241,6 +247,7 @@ describe('Drizzle repositories', () => {
     expect(insertChain.values).toHaveBeenCalledWith({
       centerId: 2,
       roomNumber: '101',
+      physicalRoomId: 77,
       classId: 8,
       day: 'Monday',
       time: '09:00',

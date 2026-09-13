@@ -33,7 +33,8 @@ describe('online test lifecycle with PostgreSQL', () => {
       created_by: teacherId, created_by_type: 'teacher', is_private: true,
       passages: [{ title: 'Reading', content: 'Text', passage_order: 1 }],
       questions: [
-        { question_text: 'Choose B', question_type: 'multiple_choice', marks: 4, question_order: 1, options: ['A', 'B'], correct_answer: 'B' },
+        // Multiple choice answers are stored as the option index, the way the question editor writes them.
+        { question_text: 'Choose B', question_type: 'multiple_choice', marks: 4, question_order: 1, options: ['A', 'B'], correct_answer: { index: 1 } },
         { question_text: 'Explain', question_type: 'essay', marks: 6, question_order: 2 },
       ],
     });
@@ -68,10 +69,12 @@ describe('online test lifecycle with PostgreSQL', () => {
     const submission = (await pool.query('SELECT submission_id FROM test_submissions WHERE test_id=$1 AND student_id=$2', [testId, studentId])).rows[0];
     const invalid = await service.submitTest(submission.submission_id, { answers: [{ question_id: 999999, student_answer: 'x' }] }, centerId);
     expect(invalid).toEqual({ error: 'invalid_center' });
+    // A submission never carries its own marks: the objective question is auto-graded and the
+    // essay stays ungraded until a teacher scores it.
     const updated = await service.submitTest(submission.submission_id, {
       time_taken_seconds: 120,
       answers: [
-        { question_id: objectiveQuestionId, student_answer: 'B', is_correct: true, marks_obtained: 4, graded: true },
+        { question_id: objectiveQuestionId, student_answer: 1, is_correct: true, marks_obtained: 4, graded: true },
         { question_id: manualQuestionId, student_answer: 'Because...', marks_obtained: 3, graded: true },
       ],
     }, centerId);
@@ -81,9 +84,18 @@ describe('online test lifecycle with PostgreSQL', () => {
 
   test('grading recomputes totals and upserts one result summary idempotently', async () => {
     const submissionId = (await pool.query('SELECT submission_id FROM test_submissions WHERE test_id=$1 AND student_id=$2', [testId, studentId])).rows[0].submission_id;
-    const graded = await service.gradeSubmission(submissionId, { graded_by: teacherId, graded_by_type: 'teacher', feedback: 'Done' }, centerId);
+    const graded = await service.gradeSubmission(submissionId, {
+      graded_by: teacherId,
+      graded_by_type: 'teacher',
+      feedback: 'Done',
+      answer_grades: [{ question_id: manualQuestionId, marks_obtained: 3 }],
+    }, centerId);
     expect(graded).toMatchObject({ status: 'graded', total_score: '10.00', obtained_marks: '7.00', percentage: '70.00', is_passed: true });
-    await service.gradeSubmission(submissionId, { graded_by: teacherId, graded_by_type: 'teacher' }, centerId);
+    await service.gradeSubmission(submissionId, {
+      graded_by: teacherId,
+      graded_by_type: 'teacher',
+      answer_grades: [{ question_id: manualQuestionId, marks_obtained: 3 }],
+    }, centerId);
     expect(Number((await pool.query('SELECT COUNT(*) count FROM test_results_summary WHERE test_id=$1 AND student_id=$2', [testId, studentId])).rows[0].count)).toBe(1);
   });
 });

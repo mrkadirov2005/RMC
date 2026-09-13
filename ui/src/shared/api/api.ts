@@ -439,6 +439,7 @@ export const testAPI = {
   getAll: (params?: { center_id?: number; test_type?: string; is_active?: boolean; subject_id?: number }) =>
     apiClient.get('/tests', { params }),
   getById: (id: number) => apiClient.get(`/tests/${id}`),
+  getStatistics: () => apiClient.get('/tests/statistics'),
   create: (data: any) => apiClient.post('/tests', data),
   update: (id: number, data: any) => apiClient.put(`/tests/${id}`, data),
   delete: (id: number) => apiClient.delete(`/tests/${id}`),
@@ -470,6 +471,11 @@ export const testAPI = {
   // Assignments
   assignTest: (testId: number, assignments: any[], assignedBy: number) =>
     apiClient.post(`/tests/${testId}/assign`, { assignments, assigned_by: assignedBy }),
+
+  // Share links. Creating one always mints a fresh token, so pressing Share again
+  // is also how a teacher kills a link that has leaked.
+  createShareLink: (testId: number) => apiClient.post(`/tests/${testId}/share`),
+  revokeShareLink: (testId: number) => apiClient.delete(`/tests/${testId}/share`),
   getAssignedTests: (type: 'student' | 'teacher' | 'class', id: number, studentId?: number) =>
     apiClient.get(`/tests/assigned/${type}/${id}${studentId ? `?student_id=${studentId}` : ''}`),
 };

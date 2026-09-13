@@ -15,7 +15,8 @@
     "drizzle:studio": "drizzle-kit studio --config=drizzle.config.json",
     "db:migrate": "sequelize-cli db:migrate",
     "db:migrate:undo": "sequelize-cli db:migrate:undo",
-    "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all"
+    "db:migrate:undo:all": "sequelize-cli db:migrate:undo:all",
+    "test:coverage": "jest --runInBand --coverage"
   },
   "keywords": [
     "crm",

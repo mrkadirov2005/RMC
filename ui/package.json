@@ -15,7 +15,8 @@
     "test:e2e:headed": "playwright test --project=chromium --headed",
     "test:e2e:debug": "playwright test --project=chromium --debug",
     "test:e2e:verify": "node e2e/verify-workflows.cjs",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -59,6 +60,7 @@
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/coverage-v8": "^4.1.10",
     "autoprefixer": "^10.4.24",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",

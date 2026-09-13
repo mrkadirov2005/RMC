@@ -1,6 +1,14 @@
-// Page component for the tests screen in the crm feature.
+// Tests section landing page. Opens on an Overview of the whole catalogue —
+// headline figures, the mix of question types, and which teachers' students do
+// best — with the catalogue list itself on a second tab. Everything the list
+// could do before it still does: search, type filter, active/inactive tabs,
+// pagination and the per-card actions.
+//
+// The screen is built from the app's shared blocks (PageHeader, SectionPanel,
+// PageToolbar, EmptyState) rather than the bespoke gradients this section used
+// to carry, so it reads as the same product as the rest of the CRM.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Plus,
@@ -16,7 +24,6 @@ import {
   X,
   Loader2,
   ClipboardList,
-  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,6 +53,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { PageHeader } from '@/components/common/PageHeader';
+import { PageToolbar } from '@/components/common/PageToolbar';
+import { SectionPanel } from '@/components/common/SectionPanel';
+import { EmptyState } from '@/components/common/EmptyState';
 import {
   clearTestsPageError,
   setTestsPageDeleteDialogOpen,
@@ -65,15 +76,13 @@ import {
   selectTestsLoading,
   selectTestsStats,
 } from '../../../store/selectors';
-import {
-  formatTestType,
-  getTestTypeBadgeClass,
-  getTestTypeTheme,
-  testStatCardClass,
-  testSurfaceClass,
-} from './testVisuals';
+import { formatTestType, getTestTypeBadgeClass, getTestTypeTheme } from './testVisuals';
 import { TEST_TYPES } from './questionTypes';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import { testStatisticsApi, type TestStatistics } from './api/testStatisticsApi';
+import { TestStatTiles } from './components/TestStatTiles';
+import { TestTypeChart, type TestTypeSlice } from './components/TestTypeChart';
+import { TeacherTestLeaderboard } from './components/TeacherTestLeaderboard';
 
 interface Test {
   test_id: number;
@@ -91,12 +100,19 @@ interface Test {
   created_at?: string;
 }
 
+type View = 'overview' | 'catalogue';
+
 // Renders the tests page screen.
 const TestsPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(12);
+  const [view, setView] = useState<View>('overview');
+  const [statistics, setStatistics] = useState<TestStatistics | null>(null);
+  const [statisticsLoading, setStatisticsLoading] = useState(true);
+  const [statisticsError, setStatisticsError] = useState('');
+  const [selectedSlice, setSelectedSlice] = useState<string | null>(null);
   const { user } = useAppSelector((state) => state.auth);
   const loading = useAppSelector(selectTestsLoading);
   const testsError = useAppSelector(selectTestsError);
@@ -112,11 +128,30 @@ const TestsPage = () => {
   );
   const selectedTest = useAppSelector(selectTestsPageSelectedTest) as Test | null;
   const error = pageError || testsError;
+  const canCreate = user?.userType === 'superuser' || user?.userType === 'teacher';
 
 // Runs side effects for this component.
   useEffect(() => {
     dispatch(fetchTests());
   }, [dispatch]);
+
+  useEffect(() => {
+    let cancelled = false;
+    testStatisticsApi
+      .get()
+      .then((data) => {
+        if (!cancelled) setStatistics(data);
+      })
+      .catch(() => {
+        if (!cancelled) setStatisticsError('Could not load the overview statistics.');
+      })
+      .finally(() => {
+        if (!cancelled) setStatisticsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -136,6 +171,26 @@ const TestsPage = () => {
     }
   };
 
+  // A slice click is a filter, not a drill-down dialog: it hands the type to the
+  // catalogue tab and reuses the filter that was already there. The folded
+  // "Other" slice has no single type to filter on, so it only highlights.
+  const handleSliceSelect = useCallback(
+    (slice: TestTypeSlice) => {
+      if (selectedSlice === slice.key) {
+        setSelectedSlice(null);
+        dispatch(setTestsPageFilterType('all'));
+        return;
+      }
+      setSelectedSlice(slice.key);
+      if (slice.types.length === 1) {
+        dispatch(setTestsPageFilterType(slice.types[0]));
+        dispatch(setTestsPageTabValue('all'));
+        setView('catalogue');
+      }
+    },
+    [dispatch, selectedSlice]
+  );
+
   const testTypes = [
     { value: 'all', label: 'All Types' },
     ...TEST_TYPES.map((type) => ({ value: type as string, label: formatTestType(type) })),
@@ -143,47 +198,35 @@ const TestsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/60 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-fuchsia-100/45 via-amber-100/35 to-transparent dark:hidden" />
-        <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-lg shadow-indigo-900/10 dark:shadow-none">
-              <ClipboardList className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Tests Management</h1>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Create, assign, monitor, and grade student assessments.
-              </p>
-            </div>
-          </div>
-          {(user?.userType === 'superuser' || user?.userType === 'teacher') && (
-            <Button
-              onClick={() => navigate('/tests/create')}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-3 text-white hover:from-indigo-600 hover:to-purple-600"
-            >
+    <div className="space-y-5 p-6">
+      <PageHeader
+        title="Tests"
+        icon={ClipboardList}
+        description="Create, assign, monitor and grade student assessments."
+        primaryAction={
+          canCreate ? (
+            <Button onClick={() => navigate('/tests/create')}>
               <Plus className="mr-2 h-4 w-4" />
-              Create New Test
+              Create test
             </Button>
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+      />
 
       {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertDescription className="flex justify-between items-center">
+        <Alert variant="destructive">
+          <AlertDescription className="flex items-center justify-between">
             {getErrorMessage(error)}
             <button
+              type="button"
+              aria-label="Dismiss error"
               onClick={() => {
                 dispatch(clearTestsPageError());
                 dispatch(clearTestsError());
@@ -195,77 +238,82 @@ const TestsPage = () => {
         </Alert>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card className={cn(testStatCardClass, 'border-indigo-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-              <FileQuestion className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-indigo-700 dark:text-primary">{stats.total}</p>
-            <p className="text-sm text-muted-foreground">Total Tests</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-emerald-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-              <CheckCircle className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-emerald-700 dark:text-green-500">{stats.active}</p>
-            <p className="text-sm text-muted-foreground">Active Tests</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-slate-200 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700 dark:bg-muted dark:text-muted-foreground">
-              <X className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-slate-700 dark:text-muted-foreground">{stats.inactive}</p>
-            <p className="text-sm text-muted-foreground">Inactive Tests</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-sky-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-muted dark:text-muted-foreground">
-              <BarChart3 className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-sky-700 dark:text-blue-500">{stats.totalSubmissions}</p>
-            <p className="text-sm text-muted-foreground">Total Submissions</p>
-          </CardContent>
-        </Card>
-      </div>
+      <Tabs value={view} onValueChange={(value) => setView(value as View)}>
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="catalogue">All tests ({stats.total})</TabsTrigger>
+        </TabsList>
+      </Tabs>
 
-      {/* Filters and Search */}
-      <Card className={testSurfaceClass}>
-        <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <Tabs value={tabValue} onValueChange={(value) => dispatch(setTestsPageTabValue(value as 'all' | 'active' | 'inactive'))}>
-          <div className="border-b bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
-            <TabsList className="bg-transparent h-auto p-0">
-              <TabsTrigger value="all" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
-                All Tests ({stats.total})
-              </TabsTrigger>
-              <TabsTrigger value="active" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
-                Active ({stats.active})
-              </TabsTrigger>
-              <TabsTrigger value="inactive" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
-                Inactive ({stats.inactive})
-              </TabsTrigger>
-            </TabsList>
-          </div>
-          <CardContent className="pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-              <div className="md:col-span-6 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search tests..."
-                  value={searchTerm}
-                  onChange={(e) => dispatch(setTestsPageSearchTerm(e.target.value))}
-                  className="pl-9"
+      {view === 'overview' ? (
+        <div className="space-y-5">
+          {statisticsError && (
+            <Alert variant="destructive">
+              <AlertDescription>{statisticsError}</AlertDescription>
+            </Alert>
+          )}
+
+          {statisticsLoading ? (
+            <div className="flex min-h-[220px] items-center justify-center rounded-lg border bg-card">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            </div>
+          ) : statistics ? (
+            <>
+              <TestStatTiles totals={statistics.totals} />
+
+              <SectionPanel
+                title="Question types"
+                description="How the catalogue splits by type. Select a slice to filter the list."
+              >
+                <TestTypeChart
+                  counts={statistics.by_type}
+                  selected={selectedSlice}
+                  onSelect={handleSliceSelect}
                 />
-              </div>
-              <div className="md:col-span-3">
+              </SectionPanel>
+
+              <SectionPanel
+                title="Teachers"
+                description="Whose students clear the pass mark most often."
+              >
+                <TeacherTestLeaderboard
+                  teachers={statistics.by_teacher}
+                  centerMedian={statistics.center_median}
+                  minimumGradedSubmissions={statistics.ranking.minimum_graded_submissions}
+                  scope={statistics.scope}
+                />
+              </SectionPanel>
+            </>
+          ) : null}
+        </div>
+      ) : (
+        <div className="space-y-5">
+          <PageToolbar>
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <Tabs
+                value={tabValue}
+                onValueChange={(value) => dispatch(setTestsPageTabValue(value as 'all' | 'active' | 'inactive'))}
+              >
+                <TabsList>
+                  <TabsTrigger value="all">All ({stats.total})</TabsTrigger>
+                  <TabsTrigger value="active">Active ({stats.active})</TabsTrigger>
+                  <TabsTrigger value="inactive">Inactive ({stats.inactive})</TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="relative sm:w-72">
+                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="tests-search"
+                    placeholder="Search tests..."
+                    value={searchTerm}
+                    onChange={(e) => dispatch(setTestsPageSearchTerm(e.target.value))}
+                    className="pl-9"
+                  />
+                </div>
                 <Select value={filterType} onValueChange={(value) => dispatch(setTestsPageFilterType(value))}>
-                  <SelectTrigger>
+                  <SelectTrigger className="sm:w-48">
                     <SelectValue placeholder="All Types" />
                   </SelectTrigger>
                   <SelectContent>
@@ -278,172 +326,144 @@ const TestsPage = () => {
                 </Select>
               </div>
             </div>
-          </CardContent>
-        </Tabs>
-      </Card>
+          </PageToolbar>
 
-      {/* Tests Grid */}
-      {filteredTests.length === 0 ? (
-        <div className="rounded-2xl border-2 border-dashed border-indigo-200 bg-gradient-to-br from-indigo-50/80 via-white to-emerald-50/70 py-16 text-center dark:border-border dark:bg-muted/30 dark:bg-none">
-          <FileQuestion className="mx-auto mb-4 h-16 w-16 text-indigo-300 dark:text-muted-foreground/50" />
-          <h3 className="text-lg font-medium text-muted-foreground">No tests found</h3>
-          <p className="text-sm text-muted-foreground mb-6">
-            {searchTerm || filterType !== 'all'
-              ? 'Try adjusting your search or filters'
-              : 'Create your first test to get started'}
-          </p>
-          {!searchTerm && filterType === 'all' && (
-            <Button
-              onClick={() => navigate('/tests/create')}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Create Test
-            </Button>
+          {filteredTests.length === 0 ? (
+            <EmptyState
+              icon={FileQuestion}
+              title="No tests found"
+              description={
+                searchTerm || filterType !== 'all'
+                  ? 'Try adjusting your search or filters.'
+                  : 'Create your first test to get started.'
+              }
+              action={
+                !searchTerm && filterType === 'all' && canCreate ? (
+                  <Button onClick={() => navigate('/tests/create')}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create test
+                  </Button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {paginatedTests.items.map((test) => (
+                <Card
+                  key={test.test_id}
+                  className="h-full cursor-pointer overflow-hidden transition-shadow hover:shadow-md"
+                  onClick={() => navigate(`/tests/${test.test_id}`)}
+                >
+                  <div className={cn('h-1', getTestTypeTheme(test.test_type).dot)} />
+                  <CardContent className="pt-5">
+                    <div className="mb-3 flex items-start justify-between gap-2">
+                      <span className={getTestTypeBadgeClass(test.test_type)}>{formatTestType(test.test_type)}</span>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {test.is_private ? 'Private' : 'Public'}
+                        </Badge>
+                        <Badge variant={test.is_active ? 'default' : 'secondary'}>
+                          {test.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              aria-label={`Actions for ${test.test_name}`}
+                              className="rounded-md p-1 hover:bg-muted"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                dispatch(setTestsPageSelectedTestId(test.test_id));
+                              }}
+                            >
+                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}`); }}>
+                              <Eye className="mr-2 h-4 w-4" />
+                              View details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}/edit`); }}>
+                              <Pencil className="mr-2 h-4 w-4" />
+                              Edit test
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}/results`); }}>
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              View results
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                dispatch(setTestsPageSelectedTestId(test.test_id));
+                                dispatch(setTestsPageDeleteDialogOpen(true));
+                              }}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete test
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    <h3 className="mb-1 text-base font-semibold text-foreground">{test.test_name}</h3>
+
+                    {test.subject_name && <p className="mb-1 text-sm text-primary">{test.subject_name}</p>}
+
+                    {test.description && (
+                      <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">{test.description}</p>
+                    )}
+
+                    <div className="mt-4 flex flex-wrap gap-4 rounded-md border bg-muted/40 p-3">
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        {test.duration_minutes} min
+                      </span>
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <CheckCircle className="h-4 w-4" />
+                        {test.total_marks} marks
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex gap-4 text-xs text-muted-foreground">
+                      <span>{test.question_count || 0} questions</span>
+                      <span>{test.submission_count || 0} submissions</span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+
+          {filteredTests.length > 0 && (
+            <PaginationBar
+              total={filteredTests.length}
+              currentPage={paginatedTests.currentPage}
+              totalPages={paginatedTests.totalPages}
+              start={paginatedTests.start}
+              end={paginatedTests.end}
+              pageSize={pageSize}
+              pageSizeOptions={defaultCardPageSizeOptions}
+              onPageChange={setPage}
+              onPageSizeChange={(nextPageSize) => {
+                setPageSize(nextPageSize);
+                setPage(1);
+              }}
+            />
           )}
         </div>
-      ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-            {paginatedTests.items.map((test) => (
-              <Card
-                key={test.test_id}
-                className={cn(
-                  'h-full cursor-pointer overflow-hidden border-slate-200/80 bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-border dark:bg-card dark:hover:shadow-sm',
-                  getTestTypeTheme(test.test_type).panel,
-                  'dark:bg-none'
-                )}
-                onClick={() => navigate(`/tests/${test.test_id}`)}
-              >
-                <div className={cn('h-1', getTestTypeTheme(test.test_type).dot)} />
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-start mb-3">
-                    <span
-                      className={getTestTypeBadgeClass(test.test_type)}
-                    >
-                      {formatTestType(test.test_type)}
-                    </span>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={cn(
-                        'text-xs',
-                        test.is_private ? 'border-amber-300 text-amber-700 bg-amber-50' : 'border-emerald-300 text-emerald-700 bg-emerald-50'
-                      )}
-                    >
-                      {test.is_private ? 'Private' : 'Public'}
-                    </Badge>
-                    <Badge variant={test.is_active ? 'default' : 'secondary'} className={cn(test.is_active && 'bg-green-100 text-green-800 border-green-300')}>
-                      {test.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="p-1 rounded-md hover:bg-muted"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            dispatch(setTestsPageSelectedTestId(test.test_id));
-                          }}
-                        >
-                          <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}`); }}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}/edit`); }}>
-                          <Pencil className="h-4 w-4 mr-2" />
-                          Edit Test
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/tests/${test.test_id}/results`); }}>
-                          <BarChart3 className="h-4 w-4 mr-2" />
-                          View Results
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          className="text-red-600 focus:text-red-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            dispatch(setTestsPageSelectedTestId(test.test_id));
-                            dispatch(setTestsPageDeleteDialogOpen(true));
-                          }}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete Test
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                </div>
-
-                <h3 className="mb-1 text-lg font-semibold text-slate-950 dark:text-foreground">{test.test_name}</h3>
-
-                {test.subject_name && (
-                  <p className="text-sm text-primary mb-1">{test.subject_name}</p>
-                )}
-
-                {test.description && (
-                  <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                    {test.description}
-                  </p>
-                )}
-
-                <div className="mt-4 flex flex-wrap gap-2 rounded-lg border border-white/70 bg-white/65 p-3 dark:border-border dark:bg-muted/20">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{test.duration_minutes} min</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">{test.total_marks} marks</span>
-                  </div>
-                </div>
-
-                <div className="mt-3 flex gap-4">
-                  <span className="text-xs text-muted-foreground">
-                    {test.question_count || 0} questions
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {test.submission_count || 0} submissions
-                  </span>
-                  {Number(test.submission_count || 0) > 0 && (
-                    <span className="inline-flex items-center gap-1 text-xs text-indigo-700 dark:text-primary">
-                      <Sparkles className="h-3 w-3" />
-                      Has activity
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {filteredTests.length > 0 && (
-        <PaginationBar
-          total={filteredTests.length}
-          currentPage={paginatedTests.currentPage}
-          totalPages={paginatedTests.totalPages}
-          start={paginatedTests.start}
-          end={paginatedTests.end}
-          pageSize={pageSize}
-          pageSizeOptions={defaultCardPageSizeOptions}
-          onPageChange={setPage}
-          onPageSizeChange={(nextPageSize) => {
-            setPageSize(nextPageSize);
-            setPage(1);
-          }}
-        />
       )}
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={deleteDialogOpen} onOpenChange={(open) => dispatch(setTestsPageDeleteDialogOpen(open))}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Test</DialogTitle>
+            <DialogTitle>Delete test</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Are you sure you want to delete "{selectedTest?.test_name}"? This action cannot be undone.
+            Delete "{selectedTest?.test_name}"? This cannot be undone.
           </p>
           <DialogFooter>
             <Button variant="outline" onClick={() => dispatch(setTestsPageDeleteDialogOpen(false))}>

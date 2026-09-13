@@ -1,0 +1,277 @@
+
+<!doctype html>
+<html lang="en">
+
+<head>
+    <title>Code coverage report for features/crm/calendar/components/RoomTimetableSheet.tsx</title>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="../../../../prettify.css" />
+    <link rel="stylesheet" href="../../../../base.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="../../../../favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../../../sort-arrow-sprite.png);
+        }
+    </style>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../../../index.html">All files</a> / <a href="index.html">features/crm/calendar/components</a> RoomTimetableSheet.tsx</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">93.93% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>31/33</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">81.81% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>36/44</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">93.33% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>14/15</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>21/21</span>
+            </div>
+        
+            
+        </div>
+        <p class="quiet">
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+        </p>
+        <template id="filterTemplate">
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
+        </template>
+    </div>
+    <div class='status-line high'></div>
+    <pre><table class="coverage">
+<tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
+<a name='L2'></a><a href='#L2'>2</a>
+<a name='L3'></a><a href='#L3'>3</a>
+<a name='L4'></a><a href='#L4'>4</a>
+<a name='L5'></a><a href='#L5'>5</a>
+<a name='L6'></a><a href='#L6'>6</a>
+<a name='L7'></a><a href='#L7'>7</a>
+<a name='L8'></a><a href='#L8'>8</a>
+<a name='L9'></a><a href='#L9'>9</a>
+<a name='L10'></a><a href='#L10'>10</a>
+<a name='L11'></a><a href='#L11'>11</a>
+<a name='L12'></a><a href='#L12'>12</a>
+<a name='L13'></a><a href='#L13'>13</a>
+<a name='L14'></a><a href='#L14'>14</a>
+<a name='L15'></a><a href='#L15'>15</a>
+<a name='L16'></a><a href='#L16'>16</a>
+<a name='L17'></a><a href='#L17'>17</a>
+<a name='L18'></a><a href='#L18'>18</a>
+<a name='L19'></a><a href='#L19'>19</a>
+<a name='L20'></a><a href='#L20'>20</a>
+<a name='L21'></a><a href='#L21'>21</a>
+<a name='L22'></a><a href='#L22'>22</a>
+<a name='L23'></a><a href='#L23'>23</a>
+<a name='L24'></a><a href='#L24'>24</a>
+<a name='L25'></a><a href='#L25'>25</a>
+<a name='L26'></a><a href='#L26'>26</a>
+<a name='L27'></a><a href='#L27'>27</a>
+<a name='L28'></a><a href='#L28'>28</a>
+<a name='L29'></a><a href='#L29'>29</a>
+<a name='L30'></a><a href='#L30'>30</a>
+<a name='L31'></a><a href='#L31'>31</a>
+<a name='L32'></a><a href='#L32'>32</a>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63x</span>
+<span class="cline-any cline-yes">63x</span>
+<span class="cline-any cline-yes">63x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">63x</span>
+<span class="cline-any cline-yes">63x</span>
+<span class="cline-any cline-yes">63x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import type { CalendarEvent } from '../calendarWorkspace';
+import { Fragment } from 'react';
+import { buildTimeGridRows, groupRoomBands, patternForEvent, weekdayPatterns } from '../roomTimetableModel';
+import { getCalendarTimetableSlots } from '../utils';
+&nbsp;
+export const RoomTimetableSheet = ({ events, roomNames, onSelect, onMove, canMove }: { events: CalendarEvent[]; roomNames: string[]; onSelect: (event: CalendarEvent) =&gt; void; onMove: (event: CalendarEvent, room: string, pattern: string, start: string, end: string) =&gt; void; canMove: boolean }) =&gt; {
+  const rooms = [...roomNames, ...events.map(event =&gt; event.room_name || <span class="branch-1 cbranch-no" title="branch not covered" >'')</span>].filter(Boolean);
+  const bands = groupRoomBands(rooms);
+  const slots = getCalendarTimetableSlots();
+&nbsp;
+  <span class="missing-if-branch" title="if path not taken" >I</span>if (bands.length === 0) <span class="cstat-no" title="statement not covered" >return &lt;div className="py-16 text-center text-sm text-muted-foreground"&gt;No room schedules match this week and the selected filters.&lt;/div&gt;;</span>
+&nbsp;
+  return &lt;div className="overflow-auto" data-testid="room-timetable-sheet"&gt;
+    &lt;div className="min-w-[1050px] space-y-4 p-2"&gt;
+      {weekdayPatterns.map(pattern =&gt; {
+        const patternEvents = events.filter(event =&gt; patternForEvent(event)?.id === pattern.id);
+        return &lt;section key={pattern.id} aria-label={`${pattern.label} room timetable`} className="space-y-3"&gt;
+          {bands.map((band, bandIndex) =&gt; {
+            const bandEvents = patternEvents.filter(event =&gt; band.includes(event.room_name || <span class="branch-1 cbranch-no" title="branch not covered" >'')</span>);
+            const rows = buildTimeGridRows(bandEvents, band, slots);
+            return &lt;table key={`${pattern.id}-${bandIndex}`} className="w-full table-fixed border-collapse text-[11px]" aria-label={`${pattern.label}, rooms ${band.join(', ')}`}&gt;
+              &lt;thead&gt;
+                &lt;tr className="bg-yellow-300 text-slate-950 dark:bg-yellow-600 dark:text-white"&gt;
+                  {band.map((room, index) =&gt; &lt;Fragment key={room}&gt;
+                    &lt;th className="w-[76px] border border-slate-500 px-1 py-1 font-black uppercase"&gt;{index === 0 ? 'Temurbek' : <span class="branch-1 cbranch-no" title="branch not covered" >''}&lt;</span>/th&gt;
+                    &lt;th className="border border-slate-500 px-2 py-1 text-center font-black"&gt;{pattern.label}&lt;/th&gt;
+                  &lt;/Fragment&gt;)}
+                &lt;/tr&gt;
+                &lt;tr className="bg-yellow-200 text-slate-950 dark:bg-yellow-700 dark:text-white"&gt;
+                  {band.map((room, index) =&gt; &lt;Fragment key={room}&gt;
+                    &lt;th className="border border-slate-500 px-1 py-1 font-black uppercase"&gt;{index === 0 ? 'School' : <span class="branch-1 cbranch-no" title="branch not covered" >''}&lt;</span>/th&gt;
+                    &lt;th className="border border-slate-500 px-2 py-1 text-center font-black"&gt;{room}&lt;/th&gt;
+                  &lt;/Fragment&gt;)}
+                &lt;/tr&gt;
+              &lt;/thead&gt;
+              &lt;tbody&gt;
+                {rows.map((row, rowIndex) =&gt; {
+                  const isAfternoon = Number(row.start.slice(0, 2)) &gt;= 12;
+                  const previousIsAfternoon = rowIndex &gt; 0 &amp;&amp; Number(rows[rowIndex - 1].start.slice(0, 2)) &gt;= 12;
+                  return &lt;tr key={row.index} className={isAfternoon &amp;&amp; !previousIsAfternoon ? 'border-t-[8px] border-t-orange-400' : ''}&gt;
+                    {band.map(room =&gt; {
+                      const event = row.byRoom.get(room);
+                      const isMovable = Boolean(event) &amp;&amp; canMove &amp;&amp; event!.status !== 'conducted' &amp;&amp; event!.status !== 'in_progress';
+                      return &lt;Fragment key={room}&gt;
+                        &lt;td className="border border-slate-400 bg-emerald-100 px-1 py-1 text-center font-bold tabular-nums text-slate-950 dark:bg-emerald-900 dark:text-emerald-50"&gt;
+                          {row.start}–{row.end}
+                        &lt;/td&gt;
+                        &lt;td onDragOver={(dragEvent) =&gt; { <span class="missing-if-branch" title="else path not taken" >E</span>if (!event &amp;&amp; canMove) dragEvent.preventDefault(); }} onDrop={(dragEvent) =&gt; { dragEvent.preventDefault(); const dragged = events.find(item =&gt; item.event_id === dragEvent.dataTransfer.getData('text/calendar-event')); <span class="missing-if-branch" title="else path not taken" >E</span>if (!event &amp;&amp; dragged) onMove(dragged, room, pattern.id, row.start, row.end); }} className={`border border-slate-400 p-0 text-center ${event ? 'bg-white dark:bg-card' : 'bg-slate-50 dark:bg-muted/20'} ${!event &amp;&amp; canMove ? 'transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30' : ''}`}&gt;
+                          {event ? &lt;button type="button" draggable={isMovable} onDragStart={(dragEvent) =&gt; { dragEvent.dataTransfer.effectAllowed = 'move'; dragEvent.dataTransfer.setData('text/calendar-event', event.event_id); }} data-testid={`calendar-event-${event.event_id}`} onClick={<span class="fstat-no" title="function not covered" >() =&gt; <span class="cstat-no" title="statement not covered" >o</span>nSelect(event)} t</span>itle={isMovable ? 'Drag to a free room slot to move this lesson' : undefined} className={`w-full px-1.5 py-1 font-semibold hover:bg-yellow-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-yellow-950/40 ${event.status === 'conducted' ? 'text-emerald-700 dark:text-emerald-300' : ''} ${isMovable ? 'cursor-grab active:cursor-grabbing' : ''}`}&gt;
+                            &lt;span className="block truncate"&gt;{event.class_name}{event.teacher_name ? <span class="branch-0 cbranch-no" title="branch not covered" >` (${event.teacher_name})` : '</span>'}&lt;/span&gt;
+                          &lt;/button&gt; : &lt;span className="block px-1 py-1 font-medium text-muted-foreground"&gt;Free&lt;/span&gt;}
+                        &lt;/td&gt;
+                      &lt;/Fragment&gt;;
+                    })}
+                  &lt;/tr&gt;;
+                })}
+              &lt;/tbody&gt;
+            &lt;/table&gt;;
+          })}
+        &lt;/section&gt;;
+      })}
+    &lt;/div&gt;
+  &lt;/div&gt;;
+};
+&nbsp;</pre></td></tr></table></pre>
+
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-09-13T15:30:09.006Z
+            </div>
+        <script src="../../../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../../../sorter.js"></script>
+        <script src="../../../../block-navigation.js"></script>
+    </body>
+</html>
+    
