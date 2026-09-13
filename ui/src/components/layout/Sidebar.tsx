@@ -24,7 +24,7 @@ import { selectCenterOptions } from '../../store/selectors';
 import { useThemeMode } from '../../theme/ThemeContext';
 import { getStoredActiveCenterId, setStoredActiveCenterId } from '../../shared/auth/authStorage';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { settingsAPI } from '@/shared/api/api';
+import { settingsAPI } from '@/features/crm/settings/api';
 
 const iconMap: Record<string, ElementType> = {
   Dashboard: LayoutDashboard,

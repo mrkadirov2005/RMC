@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { StudentFormFields } from './StudentFormFields';
 import type { Class, Student } from '../types';
-import { studentAPI } from '@/shared/api/api';
+import { studentAPI } from '../api';
 
 type Option = { id?: number; label: string; value: string | number };
 

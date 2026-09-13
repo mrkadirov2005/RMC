@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Loader2, Mail, Phone, IdCard, UserRound, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { teacherAPI } from '@/shared/api/api';
+import { teacherAPI } from '../api';
 import { useMySalaryDetail } from '../hooks/useMySalaryDetail';
 import TeacherSalaryStatsView from './TeacherSalaryStatsView';
 import TeacherSalaryTab from './TeacherSalaryTab';

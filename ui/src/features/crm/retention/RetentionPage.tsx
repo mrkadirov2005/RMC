@@ -15,7 +15,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
 import { reportAPI } from './api';
-import { studentAPI, teacherAPI } from '@/shared/api/api';
+import { studentAPI, teacherAPI } from './api';
 import { useAppSelector } from '../hooks';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { PieChart } from '@/shared/components/PieChart';

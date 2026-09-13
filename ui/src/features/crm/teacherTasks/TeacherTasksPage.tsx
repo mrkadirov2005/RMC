@@ -30,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { superuserAPI } from '../../../shared/api/api';
+import { superuserAPI } from './api';
 import { fetchTeachers } from '../../../slices/teachersSlice';
 import { selectTeacherOptions } from '../../../store/selectors';
 import {

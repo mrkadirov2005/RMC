@@ -49,15 +49,18 @@ export default function EffectivenessChart({ effectiveness, totalAttempts, selec
 
   const passRate = Math.round(((effectiveness.passed_1 + effectiveness.passed_2 + effectiveness.passed_3_plus) / totalAttempts) * 100);
 
-  let cumulative = 0;
-  const arcs = SLICES.map((slice) => {
+  // Each arc starts where the ones before it ended, so the offsets are a running
+  // total over the slices rather than a counter mutated during the render.
+  const arcs = SLICES.map((slice, index) => {
     const value = effectiveness[slice.key];
+    const startedAt = SLICES.slice(0, index).reduce(
+      (sum, earlier) => sum + (effectiveness[earlier.key] / totalAttempts) * CIRCUMFERENCE,
+      0
+    );
     const segLen = (value / totalAttempts) * CIRCUMFERENCE;
     const dash = Math.max(segLen - GAP, 0);
-    const offset = -cumulative;
-    cumulative += segLen;
     const pct = Math.round((value / totalAttempts) * 100);
-    return { ...slice, value, pct, dash, offset };
+    return { ...slice, value, pct, dash, offset: -startedAt };
   });
 
   return (

@@ -87,11 +87,8 @@ jobs:
           cache: npm
           cache-dependency-path: ui/package-lock.json
       - run: npm ci
-      # The repository carries pre-existing lint errors in application components, so this
-      # reports without blocking until those are cleared.
       - name: Lint
         run: npm run lint
-        continue-on-error: true
       - name: Type-check and build
         run: npm run build
       - name: Unit tests with coverage

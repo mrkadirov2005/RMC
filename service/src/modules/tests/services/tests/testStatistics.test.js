@@ -205,3 +205,55 @@ describe('test statistics', () => {
     });
   });
 });
+
+describe('what a student receives when they open a test', () => {
+  beforeEach(() => {
+    testRepository.findById = jest.fn();
+    testRepository.findQuestionsByTest = jest.fn();
+    testRepository.findPassagesByTest = jest.fn();
+  });
+
+  const scoredTest = { test_id: 7, center_id: 3, is_private: false, created_by: 4 };
+  const question = {
+    question_id: 1,
+    question_text: 'Choose the best answer',
+    options: ['A', 'B'],
+    correct_answer: { index: 1 },
+    explanation: 'B is correct',
+    rubric: 'Full marks for B',
+  };
+
+  it('hides the marking scheme from the student sitting the paper', async () => {
+    testRepository.findById.mockResolvedValue(scoredTest);
+    testRepository.findQuestionsByTest.mockResolvedValue([question]);
+    testRepository.findPassagesByTest.mockResolvedValue([]);
+
+    const result = await testService.getTestById(7, 3, { userType: 'student', id: 9 });
+
+    expect(result.questions[0]).not.toHaveProperty('correct_answer');
+    expect(result.questions[0]).not.toHaveProperty('explanation');
+    expect(result.questions[0]).not.toHaveProperty('rubric');
+    expect(result.questions[0].options).toEqual(['A', 'B']);
+  });
+
+  it('still gives a teacher the marking scheme', async () => {
+    testRepository.findById.mockResolvedValue(scoredTest);
+    testRepository.findQuestionsByTest.mockResolvedValue([question]);
+    testRepository.findPassagesByTest.mockResolvedValue([]);
+
+    const result = await testService.getTestById(7, 3, { userType: 'teacher', id: 4 });
+
+    expect(result.questions[0].correct_answer).toEqual({ index: 1 });
+    expect(result.questions[0].explanation).toBe('B is correct');
+  });
+
+  it('still gives a superuser the marking scheme', async () => {
+    testRepository.findById.mockResolvedValue(scoredTest);
+    testRepository.findQuestionsByTest.mockResolvedValue([question]);
+    testRepository.findPassagesByTest.mockResolvedValue([]);
+
+    const result = await testService.getTestById(7, 3, { userType: 'superuser', id: 1 });
+
+    expect(result.questions[0].correct_answer).toEqual({ index: 1 });
+  });
+});

@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useLanguage } from '../../i18n/LanguageContext';
 import type { TranslationRow } from '../../i18n/api';
 import { showToast } from '../../utils/toast';
-import { settingsAPI } from '../../shared/api/api';
+import { settingsAPI } from '@/features/crm/settings/api';
 import { applyVisualOverrides, findColorSurface, getVisualOverrideKey, markVisualStyleTarget, type VisualOverride } from '../../features/crm/settings/visualOverrides';
 
 type EditableTarget = {

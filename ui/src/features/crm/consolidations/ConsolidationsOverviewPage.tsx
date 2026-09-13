@@ -14,7 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { teacherAPI, classAPI } from '@/shared/api/api';
+import { teacherAPI, classAPI } from './api';
 import { unwrapApiRows } from '@/shared/api/response';
 import { consolidationApi, type ConsolidationOutcome, type ConsolidationOverview } from '../classes/api/consolidationApi';
 import ConsolidationTab from '../classes/components/ConsolidationTab';

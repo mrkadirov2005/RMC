@@ -66,7 +66,7 @@ import { getStoredActiveCenterId, setStoredActiveCenterId } from './shared/auth/
 import { PERMISSION_CODES } from './types';
 import { TOP_STATUS_MESSAGE_EVENT } from './utils/toast';
 import { useLanguage } from './i18n/LanguageContext';
-import { settingsAPI } from './shared/api/api';
+import { settingsAPI } from './features/crm/settings/api';
 import { saveOwnerPalette } from './features/crm/settings/ownerPalette';
 import { applyVisualOverrides, type VisualOverride } from './features/crm/settings/visualOverrides';
 

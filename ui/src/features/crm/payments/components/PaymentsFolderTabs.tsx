@@ -74,11 +74,6 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
     paginatedRootStudents,
     getPaymentCountForStudent,
     getTotalAmountForStudent,
-    // classes tab
-    filteredRootClasses,
-    paginatedRootClasses,
-    getPaymentCountForClass,
-    getTotalAmountForClass,
     // teachers tab
     filteredRootTeachers,
     paginatedRootTeachers,
@@ -263,73 +258,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
 
         {activeTab === 'classes' && <GroupPaymentsOverview hook={hook} />}
 
-        {/* Legacy class folders are intentionally kept out of the UI. */}
-        {false && (
-          <div className="space-y-4">
-            <div className={folderListClass}>
-              {loadingData ? (
-                <div className="col-span-full text-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                  <p className="text-muted-foreground">{t('Loading classes...')}</p>
-                </div>
-              ) : filteredRootClasses.length === 0 ? (
-                <div className="col-span-full text-center py-8">
-                  <p className="text-muted-foreground">{searchTerm ? t('No classes match your search') : t('No classes found')}</p>
-                </div>
-              ) : (
-                paginatedRootClasses.items.map((cls) => {
-                  const classId = cls.class_id || cls.id || 0;
-                  const paymentCount = getPaymentCountForClass(classId);
-                  const totalAmount = getTotalAmountForClass(classId);
-                  const teacherName = getTeacherName(cls.teacher_id);
-                  return (
-                    <Card
-                      key={classId}
-                      className={cn(folderCardClass, 'border-cyan-100 dark:border-border')}
-                      onClick={() => handleFolderClick('class', classId, cls.class_name)}
-                    >
-                      <CardContent className="folder-card-content">
-                        <div className={cn(rowClass, 'border-cyan-500')}>
-                          <div className={cn(rowIconClass, 'bg-cyan-100 text-cyan-700 dark:bg-muted dark:text-muted-foreground')}>
-                              <Folder className="h-3.5 w-3.5" />
-                            </div>
-                          <h3 className={rowNameClass}>{cls.class_name}</h3>
-                          <div className={rowMetaClass}>
-                            <span className={cn(infoPillClass, 'bg-violet-100 text-violet-700')}>{teacherName}</span>
-                            <span className={cn(infoPillClass, 'bg-sky-100 text-sky-700')}>Level {cls.level}</span>
-                          </div>
-                          <div className={rowStatsClass}>
-                            <span className={cn(infoPillClass, 'bg-amber-100 text-amber-700')}>
-                              <CreditCard className="mr-1 inline h-3 w-3" />
-                              {paymentCount}
-                            </span>
-                            <span className={cn(infoPillClass, 'bg-emerald-100 text-emerald-700')}>
-                              {formatMoney(totalAmount)}
-                            </span>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
-            </div>
-            <SimplePaginationBar
-              total={filteredRootClasses.length}
-              currentPage={paginatedRootClasses.currentPage}
-              totalPages={paginatedRootClasses.totalPages}
-              start={paginatedRootClasses.start}
-              end={paginatedRootClasses.end}
-              pageSize={folderPageSize}
-              pageSizeOptions={folderPageSizeOptions}
-              onPageChange={setFolderPage}
-              onPageSizeChange={(value) => {
-                setFolderPageSize(value);
-                setFolderPage(1);
-              }}
-            />
-          </div>
-        )}
+        {/* Legacy class folders were removed from the UI; see git history for the old markup. */}
 
         {activeTab === 'groupPayments' && <PaymentGroupsMatrixTab />}
 

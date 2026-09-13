@@ -1,1 +1,1 @@
-export { reportAPI } from '@/shared/api/api';
+export { reportAPI, studentAPI, teacherAPI } from '@/shared/api/api';

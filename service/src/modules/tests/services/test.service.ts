@@ -91,6 +91,13 @@ const listTests = async (query: any, centerId?: number, user?: any) => {
   return testRepository.findAll(filters);
 };
 
+// Students sit the paper; only the people marking it see the scheme. Used by both
+// the authenticated reader and the share-link one so the two cannot drift apart.
+const toPublicQuestion = (question: any) => {
+  const { correct_answer, explanation, rubric, ...rest } = question;
+  return rest;
+};
+
 const getTestById = async (id: number, centerId?: number, user?: any) => {
   const test = await testRepository.findById(id, centerId);
   if (!test) return null;
@@ -100,7 +107,11 @@ const getTestById = async (id: number, centerId?: number, user?: any) => {
     testRepository.findQuestionsByTest(id, centerId ?? Number(test.center_id)),
     testRepository.findPassagesByTest(id, centerId ?? Number(test.center_id)),
   ]);
-  return { ...test, questions, passages };
+  // A student sits the paper; they never receive the marking scheme with it.
+  // Sending correct_answer here put the answers one network-tab click away from
+  // anyone taking the test.
+  const visibleQuestions = user?.userType === 'student' ? questions.map(toPublicQuestion) : questions;
+  return { ...test, questions: visibleQuestions, passages };
 };
 
 const createTest = async (body: any) => {
@@ -746,14 +757,6 @@ const startSharedTest = async (token: string, username: string, meta: any = {}) 
       last_name: student.last_name,
     },
   };
-};
-
-// A share-link student sees the paper, never the marking scheme. The authenticated
-// reader hands questions back with correct_answer and explanation attached; this
-// one strips both before the payload leaves the server.
-const toPublicQuestion = (question: any) => {
-  const { correct_answer, explanation, rubric, ...rest } = question;
-  return rest;
 };
 
 const resolveSharedSubmission = async (shareToken: string, submissionId: number, accessToken: string) => {

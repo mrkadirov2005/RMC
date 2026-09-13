@@ -12,8 +12,7 @@ import { Check, Copy, Link2, RefreshCw, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SectionPanel } from '@/components/common/SectionPanel';
-import { testAPI } from '@/shared/api/api';
-import { getApiPayload } from '@/shared/api/response';
+import { testShareApi } from '../api/testShareApi';
 
 export const buildShareUrl = (token: string, origin: string) => `${origin}/#/share/tests/${token}`;
 
@@ -34,7 +33,7 @@ export const ShareTestPanel = ({ testId, shareToken, onTokenChange }: ShareTestP
     setWorking(true);
     setError('');
     try {
-      const payload = getApiPayload<{ share_token: string }>(await testAPI.createShareLink(testId));
+      const payload = await testShareApi.create(testId);
       onTokenChange(payload.share_token);
     } catch {
       setError('Could not create the link. Try again.');
@@ -47,7 +46,7 @@ export const ShareTestPanel = ({ testId, shareToken, onTokenChange }: ShareTestP
     setWorking(true);
     setError('');
     try {
-      await testAPI.revokeShareLink(testId);
+      await testShareApi.revoke(testId);
       onTokenChange(null);
     } catch {
       setError('Could not turn the link off. Try again.');

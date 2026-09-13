@@ -92,18 +92,20 @@ export const TestTypeChart = ({ counts, selected, onSelect }: TestTypeChartProps
     return <p className="py-10 text-center text-sm text-muted-foreground">No tests have been created yet.</p>;
   }
 
-  let cumulative = 0;
+  // Each arc starts where the ones before it ended, so the offsets are a running
+  // total over the slices rather than a counter mutated during the render.
   const arcs = slices.map((slice, index) => {
+    const startedAt = slices
+      .slice(0, index)
+      .reduce((sum, earlier) => sum + (earlier.tests / total) * CIRCUMFERENCE, 0);
     const length = (slice.tests / total) * CIRCUMFERENCE;
-    const arc = {
+    return {
       ...slice,
       index,
       percent: Math.round((slice.tests / total) * 100),
       dash: Math.max(length - GAP, 0),
-      offset: -cumulative,
+      offset: -startedAt,
     };
-    cumulative += length;
-    return arc;
   });
 
   return (
