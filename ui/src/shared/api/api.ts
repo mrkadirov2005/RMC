@@ -287,6 +287,8 @@ export const teacherAPI = {
     apiClient.post(`/teachers/${id}/set-password`, data),
   setPaymentPassword: (id: number, data: { password: string }) =>
     apiClient.post(`/teachers/${id}/payment-password`, data),
+  changePassword: (id: number, data: { old_password: string; new_password: string }) =>
+    apiClient.post(`/teachers/${id}/change-password`, data),
   getMyProfile: () => apiClient.get('/teachers/me'),
 };
 

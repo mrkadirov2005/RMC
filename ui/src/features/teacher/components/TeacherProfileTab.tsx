@@ -1,12 +1,15 @@
 // Teacher's own profile: read-only personal info + their salary history.
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Loader2, Mail, Phone, IdCard, UserRound, Wallet } from 'lucide-react';
+import { ArrowLeft, KeyRound, Loader2, Mail, Phone, IdCard, UserRound, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { teacherAPI } from '../api';
 import { useMySalaryDetail } from '../hooks/useMySalaryDetail';
 import TeacherSalaryStatsView from './TeacherSalaryStatsView';
 import TeacherSalaryTab from './TeacherSalaryTab';
+import { showToast } from '@/utils/toast';
 
 interface TeacherProfileTabProps {
   teacherId?: number | string;
@@ -27,6 +30,32 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
   const [loading, setLoading] = useState(true);
   const [salaryView, setSalaryView] = useState<'stats' | 'details'>('stats');
   const { detail: salaryDetail, loading: salaryLoading } = useMySalaryDetail(teacherId);
+  const [oldPw, setOldPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
+  const [changing, setChanging] = useState(false);
+
+  const handleChangePassword = async () => {
+    if (!teacherId) return;
+    if (newPw.length < 6) {
+      showToast.error('Password must be at least 6 characters');
+      return;
+    }
+    if (newPw !== confirmPw) {
+      showToast.error('Passwords do not match');
+      return;
+    }
+    setChanging(true);
+    try {
+      await teacherAPI.changePassword(Number(teacherId), { old_password: oldPw, new_password: newPw });
+      showToast.success('Password changed');
+      setOldPw(''); setNewPw(''); setConfirmPw('');
+    } catch (err: any) {
+      showToast.error(err?.response?.data?.error || 'Failed to change password');
+    } finally {
+      setChanging(false);
+    }
+  };
 
   useEffect(() => {
     if (!teacherId) return;
@@ -84,6 +113,37 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
             </div>
           </div>
         )}
+      </div>
+
+      <div className="rounded-lg border bg-card p-5 shadow-sm">
+        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
+          <KeyRound className="h-4 w-4 text-sky-600" />
+          Change Password
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="teacher-old-pw" className="text-xs">Current password</Label>
+            <Input id="teacher-old-pw" type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} autoComplete="current-password" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="teacher-new-pw" className="text-xs">New password</Label>
+            <Input id="teacher-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="teacher-confirm-pw" className="text-xs">Confirm new password</Label>
+            <Input id="teacher-confirm-pw" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button
+            size="sm"
+            onClick={handleChangePassword}
+            disabled={changing || !oldPw || !newPw || !confirmPw}
+          >
+            {changing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
+            {changing ? 'Saving...' : 'Update password'}
+          </Button>
+        </div>
       </div>
 
       <div>
