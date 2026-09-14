@@ -4,12 +4,14 @@ import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
+  FileText,
   Check,
   X,
   Pencil,
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -61,7 +63,7 @@ const ViewSubmissionPage = () => {
       case 'in_progress':
         return 'bg-blue-100 text-blue-800 hover:bg-blue-100';
       default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-100';
+        return 'bg-muted text-foreground hover:bg-muted';
     }
   };
 
@@ -93,25 +95,30 @@ const ViewSubmissionPage = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" onClick={() => navigate(`/tests/${submission.test_id}`)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Submission Details</h1>
-          <p className="text-gray-500">{submission.test_name}</p>
-        </div>
-        {submission.status === 'submitted' && (
-          <Button
-            className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
-            onClick={() => navigate(`/tests/submissions/${submissionId}/grade`)}
-          >
-            <Pencil className="mr-2 h-4 w-4" />
-            Grade Submission
-          </Button>
-        )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="mb-4 gap-2"
+        onClick={() => navigate(`/tests/${submission.test_id}`)}
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to test
+      </Button>
+
+      <div className="mb-5">
+        <PageHeader
+          title="Submission"
+          icon={FileText}
+          description={submission.test_name}
+          primaryAction={
+            submission.status === 'submitted' ? (
+              <Button onClick={() => navigate(`/tests/submissions/${submissionId}/grade`)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Grade submission
+              </Button>
+            ) : undefined
+          }
+        />
       </div>
 
       {error && (
@@ -119,7 +126,7 @@ const ViewSubmissionPage = () => {
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => dispatch(clearSubmissionDetailsError())}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+            className="absolute top-2 right-2 text-muted-foreground hover:text-muted-foreground"
           >
             ×
           </button>
@@ -131,30 +138,30 @@ const ViewSubmissionPage = () => {
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Student</p>
+              <p className="mb-1 text-sm font-medium text-muted-foreground">Student</p>
               <h3 className="text-lg font-semibold">
                 {submission.first_name} {submission.last_name}
               </h3>
               {submission.enrollment_number && (
-                <p className="text-sm text-gray-500">{submission.enrollment_number}</p>
+                <p className="text-sm text-muted-foreground">{submission.enrollment_number}</p>
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Score</p>
+              <p className="mb-1 text-sm font-medium text-muted-foreground">Score</p>
               <div className="flex items-baseline gap-1">
                 <span
                   className={cn(
-                    'text-3xl font-bold',
+                    'text-2xl font-semibold tabular-nums',
                     submission.status === 'graded'
                       ? isPassing
-                        ? 'text-green-600'
-                        : 'text-red-600'
-                      : 'text-gray-900'
+                        ? 'text-emerald-600 dark:text-emerald-500'
+                        : 'text-destructive'
+                      : 'text-foreground'
                   )}
                 >
                   {submission.score ?? '-'}
                 </span>
-                <span className="text-lg text-gray-500">/ {submission.total_marks}</span>
+                <span className="text-lg text-muted-foreground">/ {submission.total_marks}</span>
               </div>
               {pendingManualCount > 0 ? (
                 <Badge className="mt-1 bg-amber-100 text-amber-800 hover:bg-amber-100">
@@ -174,18 +181,18 @@ const ViewSubmissionPage = () => {
               ) : null}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Status</p>
+              <p className="mb-1 text-sm font-medium text-muted-foreground">Status</p>
               <Badge className={getStatusBadgeClass(submission.status)}>
                 {submission.status.replace(/_/g, ' ')}
               </Badge>
               {submission.attempt_number && (
-                <p className="text-sm text-gray-500 mt-1">
+                <p className="text-sm text-muted-foreground mt-1">
                   Attempt #{submission.attempt_number}
                 </p>
               )}
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-500 mb-1">Timestamps</p>
+              <p className="mb-1 text-sm font-medium text-muted-foreground">Timestamps</p>
               <p className="text-sm">
                 Started: {submission.started_at ? new Date(submission.started_at).toLocaleString() : 'N/A'}
               </p>
@@ -255,7 +262,7 @@ const ViewSubmissionPage = () => {
       {submission.answers?.length === 0 ? (
         <Card>
           <CardContent className="flex items-center justify-center py-10">
-            <p className="text-gray-500">No answers recorded</p>
+            <p className="text-muted-foreground">No answers recorded</p>
           </CardContent>
         </Card>
       ) : (
@@ -265,7 +272,7 @@ const ViewSubmissionPage = () => {
               <div className="flex justify-between items-start mb-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm text-gray-500">Question {index + 1}</span>
+                    <span className="text-sm text-muted-foreground">Question {index + 1}</span>
                     <Badge variant="outline">
                       {formatTestType(answer.question_type)}
                     </Badge>
@@ -288,12 +295,12 @@ const ViewSubmissionPage = () => {
                       'text-2xl font-bold',
                       answer.marks_obtained === answer.marks
                         ? 'text-green-600'
-                        : 'text-gray-900'
+                        : 'text-foreground'
                     )}
                   >
                     {answer.marks_obtained ?? '-'}
                   </span>
-                  <p className="text-sm text-gray-500">/ {answer.marks} marks</p>
+                  <p className="text-sm text-muted-foreground">/ {answer.marks} marks</p>
                 </div>
               </div>
 
@@ -301,14 +308,14 @@ const ViewSubmissionPage = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">Student's Answer</p>
-                  <div className="p-4 bg-gray-100 rounded-lg min-h-[60px] whitespace-pre-wrap">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Student's Answer</p>
+                  <div className="p-4 bg-muted rounded-lg min-h-[60px] whitespace-pre-wrap">
                     {formatStudentAnswer(answer, answer.student_answer)}
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-sm font-medium text-gray-500 mb-2">Correct Answer</p>
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Correct Answer</p>
                   <div className="p-4 bg-green-50 rounded-lg min-h-[60px] whitespace-pre-wrap">
                     {formatCorrectAnswer(answer)}
                   </div>
@@ -316,7 +323,7 @@ const ViewSubmissionPage = () => {
 
                 {answer.feedback && (
                   <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Feedback</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Feedback</p>
                     <div className="p-4 bg-orange-50 rounded-lg">
                       {answer.feedback}
                     </div>
@@ -325,8 +332,8 @@ const ViewSubmissionPage = () => {
 
                 {answer.explanation && (
                   <div className="md:col-span-2">
-                    <p className="text-sm font-medium text-gray-500 mb-2">Explanation</p>
-                    <p className="text-sm text-gray-500">{answer.explanation}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-2">Explanation</p>
+                    <p className="text-sm text-muted-foreground">{answer.explanation}</p>
                   </div>
                 )}
               </div>

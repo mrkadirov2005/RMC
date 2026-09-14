@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
+  ClipboardList,
   Plus,
   Trash2,
   GripVertical,
@@ -12,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -430,7 +432,7 @@ const CreateTestPage = () => {
       </div>
 
       {questions.length === 0 ? (
-        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed border-gray-200">
+        <div className="text-center py-12 bg-muted/40 rounded-lg border-2 border-dashed border">
           <p className="text-muted-foreground mb-4">No questions added yet</p>
           <Button variant="outline" onClick={addQuestion}>
             <Plus className="h-4 w-4 mr-2" />
@@ -609,7 +611,7 @@ const CreateTestPage = () => {
                 type="checkbox"
                 checked={testData.is_timed}
                 onChange={(e) => setTestData({ ...testData, is_timed: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-input"
               />
               <span className="text-sm">Timed Test</span>
             </label>
@@ -618,7 +620,7 @@ const CreateTestPage = () => {
                 type="checkbox"
                 checked={testData.shuffle_questions}
                 onChange={(e) => setTestData({ ...testData, shuffle_questions: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-input"
               />
               <span className="text-sm">Shuffle Questions</span>
             </label>
@@ -627,7 +629,7 @@ const CreateTestPage = () => {
                 type="checkbox"
                 checked={testData.show_results_immediately}
                 onChange={(e) => setTestData({ ...testData, show_results_immediately: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-input"
               />
               <span className="text-sm">Show Results Immediately</span>
             </label>
@@ -636,7 +638,7 @@ const CreateTestPage = () => {
                 type="checkbox"
                 checked={testData.is_private}
                 onChange={(e) => setTestData({ ...testData, is_private: e.target.checked })}
-                className="mt-1 h-4 w-4 rounded border-gray-300"
+                className="mt-1 h-4 w-4 rounded border-input"
               />
               <span className="text-sm">
                 Private test
@@ -650,7 +652,7 @@ const CreateTestPage = () => {
                 type="checkbox"
                 checked={testData.allow_retake}
                 onChange={(e) => setTestData({ ...testData, allow_retake: e.target.checked })}
-                className="h-4 w-4 rounded border-gray-300"
+                className="h-4 w-4 rounded border-input"
               />
               <span className="text-sm">Allow Retakes</span>
             </label>
@@ -748,17 +750,17 @@ const CreateTestPage = () => {
   };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-8">
-        <button
-          className="p-2 rounded-md hover:bg-muted"
-          onClick={() => navigate('/tests')}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </button>
-        <h1 className="text-3xl font-bold">Create New Test</h1>
-      </div>
+    <div className="space-y-5 p-6">
+      <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/tests')}>
+        <ArrowLeft className="h-4 w-4" />
+        Back to Tests
+      </Button>
+
+      <PageHeader
+        title="Create test"
+        icon={ClipboardList}
+        description="Set the paper up, write the questions, then choose who sits it."
+      />
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -828,7 +830,6 @@ const CreateTestPage = () => {
         <Button
           onClick={handleNext}
           disabled={loading}
-          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
         >
           {loading ? (
             <>

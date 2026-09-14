@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
+  ClipboardList,
   Save,
   Users,
   School,
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -198,16 +200,13 @@ const TestAssignPage = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Button variant="ghost" onClick={() => navigate(`/tests/${testId}`)}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">Assign Test</h1>
-          <p className="text-gray-500">{test?.test_name}</p>
-        </div>
+      <Button variant="ghost" size="sm" className="mb-4 gap-2" onClick={() => navigate(`/tests/${testId}`)}>
+        <ArrowLeft className="h-4 w-4" />
+        Back to test
+      </Button>
+
+      <div className="mb-5">
+        <PageHeader title="Assign test" icon={ClipboardList} description={test?.test_name} />
       </div>
 
       {error && (
@@ -215,7 +214,7 @@ const TestAssignPage = () => {
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => setError(null)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+            className="absolute top-2 right-2 text-muted-foreground hover:text-muted-foreground"
           >
             ×
           </button>
@@ -234,7 +233,7 @@ const TestAssignPage = () => {
                 id="assignmentType"
                 value={assignmentType}
                 onChange={(e) => setAssignmentType(e.target.value as any)}
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="all">All Students</option>
                 <option value="class">By Class</option>
@@ -259,7 +258,7 @@ const TestAssignPage = () => {
                 id="mandatory"
                 value={isMandatory ? 'yes' : 'no'}
                 onChange={(e) => setIsMandatory(e.target.value === 'yes')}
-                className="mt-1 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="mt-1 w-full rounded-md border border-input bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
               >
                 <option value="yes">Yes - Required</option>
                 <option value="no">No - Optional</option>
@@ -277,7 +276,7 @@ const TestAssignPage = () => {
             <h3 className="text-lg font-semibold">
               This test will be assigned to all students
             </h3>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Total: {students.length} students
             </p>
           </CardContent>
@@ -295,7 +294,7 @@ const TestAssignPage = () => {
             </div>
 
             {classes.length === 0 ? (
-              <p className="text-gray-500">No classes available</p>
+              <p className="text-muted-foreground">No classes available</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {classes.map((cls) => (
@@ -306,7 +305,7 @@ const TestAssignPage = () => {
                       'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium transition-colors',
                       selectedClasses.includes(cls.class_id)
                         ? 'bg-indigo-100 text-indigo-800 border-indigo-300'
-                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                        : 'bg-white text-foreground border-input hover:bg-muted/40'
                     )}
                   >
                     <School className="h-4 w-4" />
@@ -317,7 +316,7 @@ const TestAssignPage = () => {
             )}
 
             {selectedClasses.length > 0 && (
-              <p className="text-sm text-gray-500 mt-3">
+              <p className="text-sm text-muted-foreground mt-3">
                 Selected: {selectedClasses.length} class(es)
               </p>
             )}
@@ -336,7 +335,7 @@ const TestAssignPage = () => {
             </div>
 
             {students.length === 0 ? (
-              <p className="text-gray-500">No students available</p>
+              <p className="text-muted-foreground">No students available</p>
             ) : (
               <div className="border rounded-lg overflow-hidden">
                 <Table>
@@ -354,7 +353,7 @@ const TestAssignPage = () => {
                             }
                           }}
                           onChange={handleSelectAllStudents}
-                          className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                          className="h-4 w-4 rounded border-input text-indigo-600 focus:ring-indigo-500"
                         />
                       </TableHead>
                       <TableHead>Name</TableHead>
@@ -366,7 +365,7 @@ const TestAssignPage = () => {
                     {students.map((student) => (
                       <TableRow
                         key={student.student_id}
-                        className="cursor-pointer hover:bg-gray-50"
+                        className="cursor-pointer hover:bg-muted/40"
                         onClick={() => handleStudentToggle(student.student_id)}
                       >
                         <TableCell>
@@ -375,7 +374,7 @@ const TestAssignPage = () => {
                             checked={selectedStudents.includes(student.student_id)}
                             onChange={() => handleStudentToggle(student.student_id)}
                             onClick={(e) => e.stopPropagation()}
-                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            className="h-4 w-4 rounded border-input text-indigo-600 focus:ring-indigo-500"
                           />
                         </TableCell>
                         <TableCell>
@@ -391,7 +390,7 @@ const TestAssignPage = () => {
             )}
 
             {selectedStudents.length > 0 && (
-              <p className="text-sm text-gray-500 mt-3">
+              <p className="text-sm text-muted-foreground mt-3">
                 Selected: {selectedStudents.length} student(s)
               </p>
             )}
@@ -405,7 +404,6 @@ const TestAssignPage = () => {
           Cancel
         </Button>
         <Button
-          className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
           onClick={handleSave}
           disabled={
             saving ||

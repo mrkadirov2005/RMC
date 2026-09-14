@@ -12,7 +12,7 @@ const optionAt = (options: string[] | null | undefined, index: unknown) => {
 
 export const formatStudentAnswer = (question: TestAnswer, answer: any): ReactNode => {
   if (answer === null || answer === undefined || answer === '') {
-    return <em className="text-gray-400">No answer provided</em>;
+    return <em className="text-muted-foreground">No answer provided</em>;
   }
 
   switch (getQuestionTypeMeta(question.question_type).answerShape) {
@@ -36,7 +36,7 @@ export const formatStudentAnswer = (question: TestAnswer, answer: any): ReactNod
 export const formatCorrectAnswer = (question: TestAnswer): ReactNode => {
   const correct = question.correct_answer;
   if (correct === null || correct === undefined || correct === '') {
-    return <em className="text-gray-400">Not specified</em>;
+    return <em className="text-muted-foreground">Not specified</em>;
   }
 
   switch (getQuestionTypeMeta(question.question_type).correctAnswerShape) {
@@ -50,7 +50,7 @@ export const formatCorrectAnswer = (question: TestAnswer): ReactNode => {
       return Array.isArray(answers) ? answers.join(', ') : JSON.stringify(correct);
     }
     case 'none':
-      return <em className="text-gray-400">Not specified</em>;
+      return <em className="text-muted-foreground">Not specified</em>;
     default:
       return JSON.stringify(correct);
   }

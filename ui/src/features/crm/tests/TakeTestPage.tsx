@@ -314,7 +314,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h2 className="text-lg font-bold">{test?.test_name}</h2>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-muted-foreground">
               Question {currentIndex + 1} of {questions.length}
             </p>
           </div>
@@ -332,7 +332,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
           )}
 
           <div className="flex gap-3">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-muted-foreground">
               {answeredCount}/{questions.length} answered
             </span>
             <span className="text-sm text-amber-600">
@@ -341,7 +341,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
           </div>
         </div>
         {/* Progress bar */}
-        <div className="mt-3 h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+        <div className="mt-3 h-1.5 w-full bg-muted rounded-full overflow-hidden">
           <div
             className="h-full bg-indigo-500 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
@@ -354,7 +354,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
           <button
             onClick={() => setError(null)}
-            className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+            className="absolute top-2 right-2 text-muted-foreground hover:text-muted-foreground"
           >
             ×
           </button>
@@ -377,7 +377,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                     ? 'bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-200'
                     : answers[q.question_id]
                       ? 'bg-green-100 text-green-800 border-green-300 hover:bg-green-200'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      : 'bg-white text-foreground border-input hover:bg-muted/40'
               )}
             >
               {index + 1}
@@ -406,7 +406,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                   'p-2 rounded-md transition-colors',
                   flagged.has(currentQuestion.question_id)
                     ? 'text-amber-500 hover:bg-amber-50'
-                    : 'text-gray-400 hover:bg-gray-100'
+                    : 'text-muted-foreground hover:bg-muted'
                 )}
               >
                 {flagged.has(currentQuestion.question_id) ? (
@@ -429,7 +429,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                       'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border',
                       answers[currentQuestion.question_id]?.index === index
                         ? 'bg-indigo-50 border-indigo-300'
-                        : 'hover:bg-gray-50 border-transparent'
+                        : 'hover:bg-muted/40 border-transparent'
                     )}
                   >
                     <input
@@ -440,7 +440,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                       onChange={() =>
                         handleAnswerChange(currentQuestion.question_id, { index })
                       }
-                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                      className="h-4 w-4 text-indigo-600 border-input focus:ring-indigo-500"
                     />
                     <span>
                       {String.fromCharCode(65 + index)}. {option}
@@ -462,7 +462,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                       'flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors border',
                       answers[currentQuestion.question_id]?.value === opt.value
                         ? 'bg-indigo-50 border-indigo-300'
-                        : 'hover:bg-gray-50 border-transparent'
+                        : 'hover:bg-muted/40 border-transparent'
                     )}
                   >
                     <input
@@ -473,7 +473,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                       onChange={() =>
                         handleAnswerChange(currentQuestion.question_id, { value: opt.value })
                       }
-                      className="h-4 w-4 text-indigo-600 border-gray-300 focus:ring-indigo-500"
+                      className="h-4 w-4 text-indigo-600 border-input focus:ring-indigo-500"
                     />
                     <span>{opt.label}</span>
                   </label>
@@ -521,7 +521,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                       ? 'text-red-600'
                       : currentQuestion.word_limit > 0 && currentWordCount >= currentQuestion.word_limit * 0.9
                         ? 'text-amber-600'
-                        : 'text-gray-500'
+                        : 'text-muted-foreground'
                   )}
                 >
                   {currentQuestion.word_limit > 0
@@ -533,12 +533,12 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
 
             {currentQuestion.question_type === 'matching' && currentQuestion.matching_pairs && (
               <div>
-                <p className="text-sm text-gray-500 mb-3">
+                <p className="text-sm text-muted-foreground mb-3">
                   Match the items on the left with the correct items on the right
                 </p>
                 {currentQuestion.matching_pairs.map((pair: any, index: number) => (
                   <div key={index} className="flex items-center gap-3 mb-3">
-                    <div className="flex-1 p-3 bg-gray-100 rounded-lg">
+                    <div className="flex-1 p-3 bg-muted rounded-lg">
                       <span>{pair.left}</span>
                     </div>
                     <select
@@ -550,7 +550,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
                           matches: { ...currentMatches, [index]: e.target.value },
                         });
                       }}
-                      className="min-w-[200px] rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="min-w-[200px] rounded-md border border-input bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     >
                       <option value="">Select match...</option>
                       {currentQuestion.matching_pairs.map((p: any, i: number) => (
@@ -567,7 +567,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
             {/* Reading Passage */}
             {currentQuestion.question_type === 'reading_passage' && currentQuestion.passage && (
               <div className="mb-4">
-                <div className="p-4 bg-gray-50 rounded-lg max-h-[300px] overflow-auto mb-3 border">
+                <div className="p-4 bg-muted/40 rounded-lg max-h-[300px] overflow-auto mb-3 border">
                   <h4 className="font-semibold mb-2">{currentQuestion.passage.title}</h4>
                   <p className="text-sm whitespace-pre-wrap">{currentQuestion.passage.content}</p>
                 </div>
@@ -621,7 +621,6 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
 
           {currentIndex < questions.length - 1 && (
             <Button
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
               onClick={() =>
                 setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))
               }

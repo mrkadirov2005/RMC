@@ -16,6 +16,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -43,9 +44,6 @@ import { useAppSelector } from '../hooks';
 import {
   formatTestType,
   getTestTypeBadgeClass,
-  getTestTypeTheme,
-  testStatCardClass,
-  testSurfaceClass,
 } from './testVisuals';
 
 // Renders the test detail page screen.
@@ -119,7 +117,7 @@ const TestDetailPage = () => {
       case 'in_progress':
         return 'bg-yellow-100 text-yellow-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-muted text-foreground';
     }
   };
 
@@ -154,75 +152,50 @@ const TestDetailPage = () => {
 
   return (
     <div className="space-y-6 p-6">
-      {/* Header */}
-      <div
-        className={cn(
-          'relative overflow-hidden rounded-2xl border p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:shadow-sm',
-          getTestTypeTheme(test.test_type).panel,
-          'dark:bg-none'
-        )}
+      <Button
+        variant="ghost"
+        size="sm"
+        className="gap-2"
+        onClick={() => navigate(user?.userType === 'student' ? '/my-tests' : '/tests')}
       >
-        <div className={cn('pointer-events-none absolute inset-x-0 top-0 h-1', getTestTypeTheme(test.test_type).dot)} />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-80 bg-gradient-to-l from-white/70 via-white/20 to-transparent dark:hidden" />
-        <div className="relative flex flex-col gap-4 lg:flex-row lg:items-start">
-          <button
-            className="mt-1 rounded-md p-2 hover:bg-white/70 dark:hover:bg-muted"
-            onClick={() => navigate(user?.userType === 'student' ? '/my-tests' : '/tests')}
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <div className="flex-1">
-            <div className="mb-1 flex flex-wrap items-center gap-3">
-              <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">{test.test_name}</h1>
-              <span className={getTestTypeBadgeClass(test.test_type)}>
-                {formatTestType(test.test_type)}
-              </span>
-              <Badge
-                variant="outline"
-                className={cn(
-                  'text-xs',
-                  test.is_private
-                    ? 'border-amber-300 bg-amber-50 text-amber-700'
-                    : 'border-emerald-300 bg-emerald-50 text-emerald-700'
-                )}
-              >
-                {test.is_private ? 'Private' : 'Public'}
-              </Badge>
-              <Badge variant={test.is_active ? 'default' : 'secondary'} className={cn(test.is_active && 'border-green-300 bg-green-100 text-green-800')}>
-                {test.is_active ? 'Active' : 'Inactive'}
-              </Badge>
-            </div>
-            {test.subject_name && (
-              <p className="text-base font-medium text-indigo-700 dark:text-primary">{test.subject_name}</p>
-            )}
-          </div>
+        <ArrowLeft className="h-4 w-4" />
+        {user?.userType === 'student' ? 'Back to my tests' : 'Back to Tests'}
+      </Button>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2">
-            {canTakeTest && (
-              <Button
-                onClick={() => setStartDialogOpen(true)}
-                className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600"
-              >
-                <Play className="mr-2 h-4 w-4" />
-                Take Test
+      <PageHeader
+        title={test.test_name}
+        icon={ClipboardList}
+        description={test.subject_name || undefined}
+        meta={
+          <>
+            <span className={getTestTypeBadgeClass(test.test_type)}>{formatTestType(test.test_type)}</span>
+            <Badge variant="outline">{test.is_private ? 'Private' : 'Public'}</Badge>
+            <Badge variant={test.is_active ? 'default' : 'secondary'}>{test.is_active ? 'Active' : 'Inactive'}</Badge>
+          </>
+        }
+        actions={
+          isTeacherOrAdmin ? (
+            <>
+              <Button variant="outline" onClick={() => navigate(`/tests/${testId}/edit`)}>
+                <Pencil className="mr-2 h-4 w-4" />
+                Edit
               </Button>
-            )}
-            {isTeacherOrAdmin && (
-              <>
-                <Button variant="outline" onClick={() => navigate(`/tests/${testId}/edit`)}>
-                  <Pencil className="mr-2 h-4 w-4" />
-                  Edit
-                </Button>
-                <Button variant="outline" onClick={() => navigate(`/tests/${testId}/assign`)}>
-                  <ClipboardList className="mr-2 h-4 w-4" />
-                  Assign
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
+              <Button variant="outline" onClick={() => navigate(`/tests/${testId}/assign`)}>
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Assign
+              </Button>
+            </>
+          ) : undefined
+        }
+        primaryAction={
+          canTakeTest ? (
+            <Button onClick={() => setStartDialogOpen(true)}>
+              <Play className="mr-2 h-4 w-4" />
+              Take test
+            </Button>
+          ) : undefined
+        }
+      />
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -235,51 +208,27 @@ const TestDetailPage = () => {
         </Alert>
       )}
 
-      {/* Test Overview Cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Card className={cn(testStatCardClass, 'border-indigo-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-              <Clock className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-indigo-700 dark:text-primary">{test.duration_minutes}</p>
-            <p className="text-sm text-muted-foreground">Minutes</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-emerald-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-              <CheckCircle className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-emerald-700 dark:text-green-500">{test.total_marks}</p>
-            <p className="text-sm text-muted-foreground">Total Marks</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-sky-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-sky-100 text-sky-700 dark:bg-muted dark:text-muted-foreground">
-              <BarChart3 className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-sky-700 dark:text-blue-500">{test.passing_marks}</p>
-            <p className="text-sm text-muted-foreground">Passing Marks</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-fuchsia-100 dark:border-border')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-100 text-fuchsia-700 dark:bg-muted dark:text-muted-foreground">
-              <FileQuestion className="h-5 w-5" />
-            </div>
-            <p className="text-3xl font-bold text-fuchsia-700 dark:text-purple-500">{test.questions?.length || 0}</p>
-            <p className="text-sm text-muted-foreground">Questions</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-4">
+        {[
+          { label: 'Minutes', value: test.duration_minutes, icon: Clock },
+          { label: 'Total marks', value: test.total_marks, icon: CheckCircle },
+          { label: 'Passing marks', value: test.passing_marks, icon: BarChart3 },
+          { label: 'Questions', value: test.questions?.length || 0, icon: FileQuestion },
+        ].map((tile) => (
+          <div key={tile.label} className="bg-card p-4">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <tile.icon className="h-3.5 w-3.5" />
+              {tile.label}
+            </p>
+            <p className="mt-1.5 text-2xl font-semibold tabular-nums text-foreground">{tile.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Tabs */}
-      <Card className={testSurfaceClass}>
-        <div className={cn('h-1', getTestTypeTheme(test.test_type).dot)} />
+      <Card>
         <Tabs value={tabValue} onValueChange={setTabValue}>
-          <div className="border-b bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 dark:bg-none">
+          <div className="border-b">
             <TabsList className="bg-transparent h-auto p-0">
               <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
                 Overview
@@ -448,7 +397,7 @@ const TestDetailPage = () => {
                                   <p className="text-sm font-medium">
                                     {sub.obtained_marks}/{test.total_marks}
                                   </p>
-                                  <div className="w-full bg-gray-200 rounded-full h-1 mt-1">
+                                  <div className="w-full bg-muted rounded-full h-1 mt-1">
                                     <div
                                       className={cn(
                                         'h-1 rounded-full',
@@ -517,25 +466,22 @@ const TestDetailPage = () => {
             <TabsContent value="statistics">
               <CardContent className="pt-6">
                 {resultsStats?.statistics ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    <div className="rounded-xl border border-slate-200 bg-indigo-50/70 p-4 text-center dark:border-border dark:bg-muted/20">
-                      <p className="text-3xl font-bold">
-                        {resultsStats.statistics.total_submissions || 0}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Total Submissions</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-emerald-50/70 p-4 text-center dark:border-border dark:bg-muted/20">
-                      <p className="text-3xl font-bold text-green-600">
-                        {resultsStats.statistics.passed_count || 0}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Passed</p>
-                    </div>
-                    <div className="rounded-xl border border-slate-200 bg-sky-50/70 p-4 text-center dark:border-border dark:bg-muted/20">
-                      <p className="text-3xl font-bold text-primary">
-                        {parseFloat(resultsStats.statistics.average_percentage || 0).toFixed(1)}%
-                      </p>
-                      <p className="text-sm text-muted-foreground">Average Score</p>
-                    </div>
+                  <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3">
+                    {[
+                      { label: 'Submissions', value: resultsStats.statistics.total_submissions || 0 },
+                      { label: 'Passed', value: resultsStats.statistics.passed_count || 0 },
+                      {
+                        label: 'Average score',
+                        value: `${parseFloat(resultsStats.statistics.average_percentage || 0).toFixed(1)}%`,
+                      },
+                    ].map((tile) => (
+                      <div key={tile.label} className="bg-card p-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {tile.label}
+                        </p>
+                        <p className="mt-1.5 text-2xl font-semibold tabular-nums text-foreground">{tile.value}</p>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <Alert>
@@ -587,7 +533,6 @@ const TestDetailPage = () => {
             </Button>
             <Button
               onClick={handleStartTest}
-              className="bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
             >
               Start Test
             </Button>

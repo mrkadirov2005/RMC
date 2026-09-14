@@ -15,6 +15,7 @@ import {
   Timer,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -39,8 +40,6 @@ import {
   formatTestType,
   getTestTypeBadgeClass,
   getTestTypeTheme,
-  testStatCardClass,
-  testSurfaceClass,
 } from './testVisuals';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
 
@@ -119,44 +118,17 @@ const StudentTestsPage = () => {
   }
 
   return (
-    <div className="min-h-screen space-y-6 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.16),transparent_30%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.16),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef6ff_50%,#f8fafc_100%)] p-4 sm:p-6 dark:bg-none">
-      {/* Header */}
-      <div className="relative overflow-hidden rounded-lg border border-white/70 bg-gradient-to-br from-indigo-600 via-sky-500 to-emerald-400 p-6 text-white shadow-[0_24px_70px_-42px_rgba(14,165,233,0.95)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-        <div className="pointer-events-none absolute right-0 top-0 h-full w-96 bg-gradient-to-l from-amber-300/35 via-white/10 to-transparent dark:hidden" />
-        <div className="relative flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => navigate('/student-portal')}
-              aria-label="Back to student portal"
-              className="rounded-lg border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-white/20 text-white shadow-lg shadow-indigo-900/10 ring-1 ring-white/25 dark:shadow-none">
-              <BookOpenCheck className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold tracking-normal text-white">My Tests</h1>
-              <p className="mt-1 max-w-xl text-sm font-medium text-white/80">
-                Track assigned tests, continue work in progress, and review completed results.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant="outline"
-              onClick={() => navigate('/student-portal')}
-              className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Portal
-            </Button>
-          </div>
-        </div>
-      </div>
+    <div className="min-h-screen space-y-5 p-4 sm:p-6">
+      <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/student-portal')}>
+        <ArrowLeft className="h-4 w-4" />
+        Back to portal
+      </Button>
+
+      <PageHeader
+        title="My tests"
+        icon={BookOpenCheck}
+        description="Track assigned tests, continue work in progress, and review completed results."
+      />
 
       {(error || storeError) && (
         <Alert variant="destructive" className="mb-6">
@@ -174,35 +146,20 @@ const StudentTestsPage = () => {
         </Alert>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <Card className={cn(testStatCardClass, 'border-indigo-100 bg-gradient-to-br from-white to-indigo-50 dark:border-border dark:bg-none')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-muted dark:text-muted-foreground">
-              <FileQuestion className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-indigo-700 dark:text-primary">{availableTests.length}</p>
-            <p className="text-sm text-muted-foreground">Available</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-amber-100 bg-gradient-to-br from-white to-amber-50 dark:border-border dark:bg-none')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-amber-100 text-amber-700 dark:bg-muted dark:text-muted-foreground">
-              <Timer className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-amber-600 dark:text-amber-500">{inProgressTests.length}</p>
-            <p className="text-sm text-muted-foreground">In Progress</p>
-          </CardContent>
-        </Card>
-        <Card className={cn(testStatCardClass, 'border-emerald-100 bg-gradient-to-br from-white to-emerald-50 dark:border-border dark:bg-none')}>
-          <CardContent className="pt-5">
-            <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700 dark:bg-muted dark:text-muted-foreground">
-              <CheckCircle className="h-5 w-5" />
-            </div>
-            <p className="text-4xl font-bold text-emerald-700 dark:text-green-500">{completedTests.length}</p>
-            <p className="text-sm text-muted-foreground">Completed</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-3 gap-px overflow-hidden rounded-lg border bg-border">
+        {[
+          { label: 'Available', value: availableTests.length, icon: FileQuestion },
+          { label: 'In progress', value: inProgressTests.length, icon: Timer },
+          { label: 'Completed', value: completedTests.length, icon: CheckCircle },
+        ].map((tile) => (
+          <div key={tile.label} className="bg-card p-4">
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <tile.icon className="h-3.5 w-3.5" />
+              {tile.label}
+            </p>
+            <p className="mt-1.5 text-2xl font-semibold tabular-nums text-foreground">{tile.value}</p>
+          </div>
+        ))}
       </div>
 
       {/* Tabs */}
@@ -212,9 +169,8 @@ const StudentTestsPage = () => {
           dispatch(setStudentTestsPageTabValue(value as 'available' | 'in_progress' | 'completed'))
         }
       >
-        <Card className={testSurfaceClass}>
-          <div className="h-1 bg-gradient-to-r from-indigo-500 via-cyan-500 to-emerald-400 dark:hidden" />
-          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-gradient-to-r from-sky-50/80 via-white to-emerald-50/70 p-0 dark:bg-none">
+        <Card>
+          <TabsList className="h-auto w-full justify-start rounded-none border-b bg-transparent p-0">
             <TabsTrigger value="available" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 py-3">
               Available ({availableTests.length})
             </TabsTrigger>
@@ -229,7 +185,7 @@ const StudentTestsPage = () => {
 
         {/* Tests Grid */}
         {visibleTests.length === 0 ? (
-          <Card className={testSurfaceClass}>
+          <Card>
             <CardContent className="py-12 text-center">
               <FileQuestion className="mx-auto mb-4 h-16 w-16 text-indigo-300 dark:text-muted-foreground" />
               <h3 className="text-lg font-medium text-muted-foreground">
@@ -315,7 +271,7 @@ const StudentTestsPage = () => {
 
                   {tabValue === 'available' && (
                     <Button
-                      className="w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white"
+                      className="w-full"
                       onClick={() => handleStartTest(test)}
                     >
                       <Play className="h-4 w-4 mr-2" />
