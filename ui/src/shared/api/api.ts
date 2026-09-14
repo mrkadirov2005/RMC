@@ -469,8 +469,10 @@ export const testAPI = {
   getStudentResults: (studentId: number) => apiClient.get(`/tests/student/${studentId}/results`),
   
   // Assignments
-  assignTest: (testId: number, assignments: any[], assignedBy: number) =>
-    apiClient.post(`/tests/${testId}/assign`, { assignments, assigned_by: assignedBy }),
+  // The server records who assigned from the authenticated session; a client that
+  // asserts it can only get it wrong or claim somebody else did it.
+  assignTest: (testId: number, assignments: any[]) =>
+    apiClient.post(`/tests/${testId}/assign`, { assignments }),
 
   // Share links. Creating one always mints a fresh token, so pressing Share again
   // is also how a teacher kills a link that has leaked.

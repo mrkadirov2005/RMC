@@ -103,15 +103,8 @@ const GradeSubmissionPage = () => {
         feedback: grade.feedback || '',
       }));
 
-      // Get current user info
-      const authData = localStorage.getItem('crm_auth');
-      const authUser = authData ? JSON.parse(authData).user : null;
-
-      await testAPI.gradeSubmission(Number(submissionId), {
-        answer_grades: answerGrades,
-        graded_by: authUser?.id,
-        graded_by_type: authUser?.userType || 'superuser',
-      });
+      // Who graded is stamped from the authenticated session on the server.
+      await testAPI.gradeSubmission(Number(submissionId), { answer_grades: answerGrades });
 
       navigate(`/tests/${submission?.test_id}`);
     } catch (err: any) {

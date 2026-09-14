@@ -387,7 +387,13 @@ const gradeSubmission = async (req: any, res: any) => {
       const ok = await studentBelongsToTeacher(submission.student_id, req.user?.id);
       if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
     }
-    const row = await testService.gradeSubmission(Number(req.params.submissionId), req.body, centerId ?? req.body.center_id);
+    // Who marked the paper comes from the session, not the request body: a client
+    // should not be able to file a grade under somebody else's name.
+    const row = await testService.gradeSubmission(
+      Number(req.params.submissionId),
+      { ...req.body, graded_by: req.user?.id ?? null, graded_by_type: req.user?.userType ?? null },
+      centerId ?? req.body.center_id
+    );
     if (row?.error === 'invalid_center') {
       return res.status(400).json({ error: 'Submission contains records from another center.' });
     }

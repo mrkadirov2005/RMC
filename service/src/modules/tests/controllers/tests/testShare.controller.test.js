@@ -14,6 +14,7 @@ const controller = require('../test.controller');
 const testService = require('../../services/test.service');
 const { logAudit } = require('../../../../utils/audit');
 const { requireTestCenterScope } = require('../testScope');
+const { studentBelongsToTeacher, testInCenter } = require('../../../../shared/tenantDb');
 
 const createResponse = () => {
   const res = {};
@@ -249,5 +250,55 @@ describe('tests controller statistics and share links', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
     });
+  });
+});
+
+describe('who the server records as the actor', () => {
+  beforeEach(() => {
+    testService.assignTest = jest.fn().mockResolvedValue([{ assignment_id: 1 }]);
+    testService.gradeSubmission = jest.fn().mockResolvedValue({ submission_id: 55 });
+    testService.getSubmissionDetails = jest.fn().mockResolvedValue({ student_id: 9 });
+    testInCenter.mockResolvedValue(true);
+    studentBelongsToTeacher.mockResolvedValue(true);
+  });
+
+  it('takes the assigning user from the session, never the request body', async () => {
+    const res = createResponse();
+
+    await controller.assignTest({
+      params: { testId: '7' },
+      body: { assignments: [{ assigned_to_type: 'class', assigned_to_id: 3 }], assigned_by: 999 },
+      user: { userType: 'teacher', id: 4 },
+    }, res);
+
+    expect(testService.assignTest).toHaveBeenCalledWith(7, expect.anything(), { userId: 4 }, 3);
+  });
+
+  it('stamps the grader from the session, overriding anything the client sent', async () => {
+    const res = createResponse();
+
+    await controller.gradeSubmission({
+      params: { submissionId: '55' },
+      body: { answer_grades: [], graded_by: 999, graded_by_type: 'superuser' },
+      user: { userType: 'teacher', id: 4 },
+    }, res);
+
+    const body = testService.gradeSubmission.mock.calls[0][1];
+    expect(body.graded_by).toBe(4);
+    expect(body.graded_by_type).toBe('teacher');
+  });
+
+  it('records no grader when the session carries none', async () => {
+    const res = createResponse();
+
+    await controller.gradeSubmission({
+      params: { submissionId: '55' },
+      body: { answer_grades: [] },
+      user: {},
+    }, res);
+
+    const body = testService.gradeSubmission.mock.calls[0][1];
+    expect(body.graded_by).toBeNull();
+    expect(body.graded_by_type).toBeNull();
   });
 });

@@ -175,11 +175,7 @@ const TestAssignPage = () => {
         }));
       }
 
-      // Get current user ID from localStorage
-      const authData = localStorage.getItem('crm_auth');
-      const userId = authData ? JSON.parse(authData).user?.id : 0;
-
-      await testAPI.assignTest(Number(testId), assignments, userId);
+      await testAPI.assignTest(Number(testId), assignments);
 
       navigate(`/tests/${testId}`);
     } catch (err: any) {
