@@ -80,7 +80,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
   <article class="flow" id="SAL-salary-views">
       <h2>Read salaries as totals, by month, or as a list <span class="fid">SAL-salary-views</span></h2>
       <div class="meta-row">
-        <span class="pill url">/salary</span>
+        <span class="pill url" data-route="/salary">/salary</span>
         <span class="pill perm">MANAGE_SALARY</span>
       </div>
       <ol class="steps">
@@ -94,7 +94,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="SAL-teacher-salary-history">
       <h2>Read one teacher’s salary history <span class="fid">SAL-teacher-salary-history</span></h2>
       <div class="meta-row">
-        <span class="pill url">/salary/:teacherId</span>
+        <span class="pill url" data-route="/salary/:teacherId">/salary/:teacherId</span>
         <span class="pill perm">MANAGE_SALARY</span>
       </div>
       <ol class="steps">
@@ -108,7 +108,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="SAL-open-full-history-monthly">
       <h2>Open full history from the monthly view <span class="fid">SAL-open-full-history-monthly</span></h2>
       <div class="meta-row">
-        <span class="pill url">/salary</span>
+        <span class="pill url" data-route="/salary">/salary</span>
         <span class="pill perm">MANAGE_SALARY</span>
       </div>
       <ol class="steps">
@@ -121,7 +121,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="SAL-mark-salary-paid">
       <h2>Mark a salary as paid <span class="fid">SAL-mark-salary-paid</span></h2>
       <div class="meta-row">
-        <span class="pill url">/salary</span>
+        <span class="pill url" data-route="/salary">/salary</span>
         <span class="pill perm">MANAGE_SALARY</span>
       </div>
       <ol class="steps">
@@ -138,5 +138,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
     <a href="asg.html" style="text-align:right"><span class="lbl">Next →</span>Assignments</a>
   </nav>
 </div>
+<script src="../../shared/config.js"></script>
+<script src="../../shared/apply-urls.js"></script>
 </body>
 </html>

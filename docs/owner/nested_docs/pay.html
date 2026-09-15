@@ -80,7 +80,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
   <article class="flow" id="PAY-record-payment">
       <h2>Record a payment <span class="fid">PAY-record-payment</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -96,7 +96,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-edit-payment">
       <h2>Edit a payment <span class="fid">PAY-edit-payment</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments/:paymentId/edit</span>
+        <span class="pill url" data-route="/payments/:paymentId/edit">/payments/:paymentId/edit</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -110,7 +110,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-delete-payment">
       <h2>Delete a payment <span class="fid">PAY-delete-payment</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -124,7 +124,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-payment-history">
       <h2>Read payment history <span class="fid">PAY-payment-history</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -137,7 +137,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-open-student-payment-history">
       <h2>Open a student’s payment history <span class="fid">PAY-open-student-payment-history</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -150,7 +150,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-import-export-payments">
       <h2>Import or export payments <span class="fid">PAY-import-export-payments</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -163,7 +163,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-payments-by-teacher">
       <h2>Read payments by teacher group or total <span class="fid">PAY-payments-by-teacher</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -177,7 +177,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-payment-statistics">
       <h2>Read payment statistics <span class="fid">PAY-payment-statistics</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -190,7 +190,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-clear-payment-student">
       <h2>Change the student on a new payment <span class="fid">PAY-clear-payment-student</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -204,7 +204,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
 <article class="flow" id="PAY-jump-to-salary">
       <h2>Jump to the salary report from Payments <span class="fid">PAY-jump-to-salary</span></h2>
       <div class="meta-row">
-        <span class="pill url">/payments</span>
+        <span class="pill url" data-route="/payments">/payments</span>
         <span class="pill perm">CRUD_PAYMENT</span>
       </div>
       <ol class="steps">
@@ -219,5 +219,7 @@ h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weigh
     <a href="sal.html" style="text-align:right"><span class="lbl">Next →</span>Salary</a>
   </nav>
 </div>
+<script src="../../shared/config.js"></script>
+<script src="../../shared/apply-urls.js"></script>
 </body>
 </html>
