@@ -26,6 +26,7 @@
 }
 *{box-sizing:border-box}
 body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+[hidden]{display:none!important}
 code,.fid,.perm{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
 a{color:inherit}
 .wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px}
@@ -100,7 +101,7 @@ nav.toc{position:sticky;top:20px;font-size:13px}
     <nav class="toc" aria-label="Areas"><h4>Areas</h4><ul><li><a href="#g-ACC"><span>Account and access</span><b>7</b></a></li><li><a href="#g-DSH"><span>Dashboard</span><b>4</b></a></li><li><a href="#g-STU"><span>Students list</span><b>17</b></a></li><li><a href="#g-SPR"><span>Student profile</span><b>13</b></a></li><li><a href="#g-LED"><span>Telegram leads</span><b>4</b></a></li><li><a href="#g-ARC"><span>Archive</span><b>4</b></a></li><li><a href="#g-RET"><span>Retention</span><b>3</b></a></li><li><a href="#g-TCH"><span>Teachers</span><b>10</b></a></li><li><a href="#g-TPR"><span>Teacher profile</span><b>7</b></a></li><li><a href="#g-CLS"><span>Classes</span><b>10</b></a></li><li><a href="#g-CDT"><span>Class detail and lessons</span><b>13</b></a></li><li><a href="#g-CON"><span>Consolidations</span><b>3</b></a></li><li><a href="#g-ROM"><span>Rooms</span><b>11</b></a></li><li><a href="#g-CAL"><span>Calendar</span><b>7</b></a></li><li><a href="#g-TST"><span>Tests</span><b>11</b></a></li><li><a href="#g-PAY"><span>Payments</span><b>10</b></a></li><li><a href="#g-SAL"><span>Salary</span><b>4</b></a></li><li><a href="#g-ASG"><span>Assignments</span><b>5</b></a></li><li><a href="#g-SUB"><span>Subjects</span><b>3</b></a></li><li><a href="#g-DEB"><span>Debts</span><b>4</b></a></li></ul></nav>
     <main>
       <label for="flow-search" class="eyebrow" style="display:block;margin-bottom:6px">Filter flows</label>
-      <input id="flow-search" class="search" type="search" placeholder="Search by title, URL, ID, permission, or “known issue”">
+      <input id="flow-search" class="search" type="search" placeholder="Search by title, URL, ID, permission, or “known issue”" data-total="150">
       <p class="shown" id="shown">Showing all 150 flows. Each flow becomes one step-by-step document once approved.</p>
     <section class="group" id="g-ACC">
       <header class="ghead"><h2>Account and access</h2><span class="gright"><a class="guide-link" href="nested_docs/acc.html">Step-by-step guide →</a><span class="gcount">7 flows</span></span></header>
@@ -960,19 +961,8 @@ nav.toc{position:sticky;top:20px;font-size:13px}
     </main>
   </div>
 </div>
-<script>
-(function(){
-  var input=document.getElementById('flow-search'), shown=document.getElementById('shown');
-  var flows=[].slice.call(document.querySelectorAll('.flow')), groups=[].slice.call(document.querySelectorAll('.group'));
-  input.addEventListener('input',function(){
-    var q=input.value.trim().toLowerCase(), n=0;
-    flows.forEach(function(f){var hit=!q||f.dataset.hay.indexOf(q)>-1;f.hidden=!hit;if(hit)n++;});
-    groups.forEach(function(g){g.hidden=!g.querySelector('.flow:not([hidden])');});
-    shown.textContent=q?('Showing '+n+' of 150 flows.'):'Showing all 150 flows. Each flow becomes one step-by-step document once approved.';
-  });
-})();
-</script>
 <script src="../shared/config.js"></script>
 <script src="../shared/apply-urls.js"></script>
+<script src="../shared/flow-filter.js"></script>
 </body>
 </html>

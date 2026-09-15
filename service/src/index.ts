@@ -14,6 +14,7 @@ async function createApp(options: CreateAppOptions = {}) {
   // Must happen before requiring modules that connect to Postgres at import-time.
   if (initializeDatabase) await ensureDatabaseAndMigrate();
 
+  const path = require('path');
   const express = require('express');
   const cors = require('cors');
   const helmet = require('helmet');
@@ -124,6 +125,13 @@ async function createApp(options: CreateAppOptions = {}) {
 
   // Swagger UI
   app.use('/docs', swaggerUI.serve, swaggerUI.setup(swaggerDocs, { explorer: true }));
+
+  // Public user documentation: every action each role (owner, superuser,
+  // teacher, student) can take in the app, mapped from the real interface.
+  // Static HTML, no auth — served straight from the repo's docs/ folder.
+  // Its pages load Google Fonts and same-origin JS only, both allowed
+  // under helmet()'s default policy above, so no CSP override is needed.
+  app.use('/help', express.static(path.join(__dirname, '../../docs'), { extensions: ['html'] }));
 
   // Public static-content translations. Writes are protected inside the router.
   app.use('/api/translations', translationRoutes);
