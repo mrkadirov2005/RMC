@@ -18,6 +18,12 @@ RUN rm -rf dist \
     && npm run build \
     && ! grep -q "config/dbcon" dist/db/pool.js
 
+# The public user-docs route (index.ts, mounted at /help) serves this folder
+# via path.join(__dirname, '../../docs') — __dirname is /app/service/dist at
+# runtime, so it resolves to /app/docs. Copied here, not under WORKDIR, to
+# match that path exactly.
+COPY docs /app/docs
+
 WORKDIR /app/service
 EXPOSE 4000
 CMD ["sh", "-lc", "npm run db:migrate && node dist/index.js"]
