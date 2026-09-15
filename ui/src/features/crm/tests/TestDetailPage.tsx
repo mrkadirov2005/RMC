@@ -40,6 +40,7 @@ import {
 import { cn } from '@/lib/utils';
 import { testAPI } from './api';
 import { ShareTestPanel } from './components/ShareTestPanel';
+import { useTestsHome } from './useTestsHome';
 import { useAppSelector } from '../hooks';
 import {
   formatTestType,
@@ -47,8 +48,17 @@ import {
 } from './testVisuals';
 
 // Renders the test detail page screen.
-const TestDetailPage = () => {
-  const { testId } = useParams();
+interface TestDetailPageProps {
+  // Set when the page is shown inside the teacher portal rather than at its own URL.
+  testId?: number;
+  onBack?: () => void;
+}
+
+const TestDetailPage = ({ testId: testIdProp, onBack }: TestDetailPageProps = {}) => {
+  const params = useParams();
+  const testId = testIdProp != null ? String(testIdProp) : params.testId;
+  const testsHome = useTestsHome();
+  const goBack = onBack ?? testsHome.goHome;
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
 
@@ -137,17 +147,23 @@ const TestDetailPage = () => {
         </Alert>
         <Button
           variant="ghost"
-          onClick={() => navigate(user?.userType === 'student' ? '/my-tests' : '/tests')}
+          onClick={goBack}
           className="mt-4"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Tests
+          {testsHome.label}
         </Button>
       </div>
     );
   }
 
   const isTeacherOrAdmin = user?.userType === 'superuser' || user?.userType === 'teacher';
+  // Mirrors the server rule: a teacher changes only tests they wrote.
+  const canManageTest =
+    user?.userType === 'superuser' ||
+    (user?.userType === 'teacher' &&
+      String(test.created_by_type || 'teacher') === 'teacher' &&
+      Number(test.created_by) === Number(user?.id));
   const canTakeTest = test.is_active && user?.userType === 'student';
 
   return (
@@ -156,10 +172,10 @@ const TestDetailPage = () => {
         variant="ghost"
         size="sm"
         className="gap-2"
-        onClick={() => navigate(user?.userType === 'student' ? '/my-tests' : '/tests')}
+        onClick={goBack}
       >
         <ArrowLeft className="h-4 w-4" />
-        {user?.userType === 'student' ? 'Back to my tests' : 'Back to Tests'}
+        {testsHome.label}
       </Button>
 
       <PageHeader
@@ -176,10 +192,12 @@ const TestDetailPage = () => {
         actions={
           isTeacherOrAdmin ? (
             <>
-              <Button variant="outline" onClick={() => navigate(`/tests/${testId}/edit`)}>
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit
-              </Button>
+              {canManageTest && (
+                <Button variant="outline" onClick={() => navigate(`/tests/${testId}/edit`)}>
+                  <Pencil className="mr-2 h-4 w-4" />
+                  Edit
+                </Button>
+              )}
               <Button variant="outline" onClick={() => navigate(`/tests/${testId}/assign`)}>
                 <ClipboardList className="mr-2 h-4 w-4" />
                 Assign
@@ -494,7 +512,7 @@ const TestDetailPage = () => {
         </Tabs>
       </Card>
 
-      {isTeacherOrAdmin && (
+      {canManageTest && (
         <div className="mt-6">
           <ShareTestPanel
             testId={Number(testId)}

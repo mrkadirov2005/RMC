@@ -3,6 +3,26 @@ const testService = require('../services/test.service');
 const { requireTestCenterScope } = require('./testScope');
 const { studentBelongsToTeacher, testInCenter } = require('../../../shared/tenantDb');
 
+// Stops a teacher changing a test somebody else wrote. Answers the request itself
+// and returns false when the write must not go ahead.
+const guardTestWrite = async (
+  req: any,
+  res: any,
+  target: { testId?: number; questionId?: number; passageId?: number },
+  centerId: number | undefined
+) => {
+  const access = await testService.checkTestWriteAccess(target, centerId, req.user);
+  if (access === 'not_found') {
+    res.status(404).json({ error: target.testId != null ? 'Test not found' : 'Not found' });
+    return false;
+  }
+  if (access === 'forbidden') {
+    res.status(403).json({ error: 'Only the teacher who created this test can change it.' });
+    return false;
+  }
+  return true;
+};
+
 const getAllTests = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
@@ -174,8 +194,10 @@ const createTest = async (req: any, res: any) => {
     const out = await testService.createTest({
       ...req.body,
       center_id: centerId ?? req.body.center_id,
-      created_by: req.body.created_by ?? req.user?.id,
-      created_by_type: req.body.created_by_type ?? req.user?.userType ?? 'superuser',
+      // The author is whoever is signed in. Trusting the body would let a teacher
+      // create a test under a colleague's name and then edit it as them.
+      created_by: req.user?.id ?? null,
+      created_by_type: req.user?.userType ?? null,
     });
     const { test, questions, passages } = out as { test: any; questions?: any[]; passages?: any[] };
     await logAudit({
@@ -198,10 +220,7 @@ const updateTest = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
-    if (centerId) {
-      const ok = await testInCenter(Number(req.params.id), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
-    }
+    if (!(await guardTestWrite(req, res, { testId: Number(req.params.id) }, centerId ?? undefined))) return;
     const row = await testService.updateTest(Number(req.params.id), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Test not found' });
     res.json({ message: 'Test updated', test: row });
@@ -215,10 +234,7 @@ const deleteTest = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
-    if (centerId) {
-      const ok = await testInCenter(Number(req.params.id), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
-    }
+    if (!(await guardTestWrite(req, res, { testId: Number(req.params.id) }, centerId ?? undefined))) return;
     const row = await testService.deleteTest(Number(req.params.id), centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Test not found' });
     res.json({ message: 'Test deleted', test: row });
@@ -232,10 +248,7 @@ const addQuestion = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
-    if (centerId) {
-      const ok = await testInCenter(Number(req.params.testId), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
-    }
+    if (!(await guardTestWrite(req, res, { testId: Number(req.params.testId) }, centerId ?? undefined))) return;
     const row = await testService.addQuestion(Number(req.params.testId), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Test not found' });
     res.status(201).json({ message: 'Question added', question: row });
@@ -249,6 +262,7 @@ const updateQuestion = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
+    if (!(await guardTestWrite(req, res, { questionId: Number(req.params.questionId) }, centerId ?? undefined))) return;
     const row = await testService.updateQuestion(Number(req.params.questionId), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Question not found' });
     res.json({ message: 'Question updated', question: row });
@@ -262,6 +276,7 @@ const deleteQuestion = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
+    if (!(await guardTestWrite(req, res, { questionId: Number(req.params.questionId) }, centerId ?? undefined))) return;
     const row = await testService.deleteQuestion(Number(req.params.questionId), centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Question not found' });
     res.json({ message: 'Question deleted', question: row });
@@ -275,10 +290,7 @@ const addPassage = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
-    if (centerId) {
-      const ok = await testInCenter(Number(req.params.testId), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
-    }
+    if (!(await guardTestWrite(req, res, { testId: Number(req.params.testId) }, centerId ?? undefined))) return;
     const row = await testService.addPassage(Number(req.params.testId), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Test not found' });
     res.status(201).json({ message: 'Passage added', passage: row });
@@ -292,6 +304,7 @@ const updatePassage = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
+    if (!(await guardTestWrite(req, res, { passageId: Number(req.params.passageId) }, centerId ?? undefined))) return;
     const row = await testService.updatePassage(Number(req.params.passageId), req.body, centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Passage not found' });
     res.json({ message: 'Passage updated', passage: row });
@@ -305,6 +318,7 @@ const deletePassage = async (req: any, res: any) => {
   try {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
+    if (!(await guardTestWrite(req, res, { passageId: Number(req.params.passageId) }, centerId ?? undefined))) return;
     const row = await testService.deletePassage(Number(req.params.passageId), centerId ?? req.body.center_id);
     if (!row) return res.status(404).json({ error: 'Passage not found' });
     res.json({ message: 'Passage deleted', passage: row });

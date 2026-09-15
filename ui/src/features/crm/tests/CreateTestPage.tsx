@@ -1,7 +1,7 @@
 // Page component for the tests screen in the crm feature.
 
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ClipboardList,
@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTestsHome } from './useTestsHome';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import { fetchCentersForce } from '../../../slices/centersSlice';
 import { fetchSubjects, fetchSubjectsForce } from '../../../slices/subjectsSlice';
-import { createTest } from '../../../slices/testsSlice';
+import { createTest, fetchTestsForce } from '../../../slices/testsSlice';
+import { testAPI } from './api';
+import { canEditTest, planSave, toEditablePassages, toEditableQuestions } from './testEditModel';
 import { selectCenterOptions, selectSubjectOptions } from '../../../store/selectors';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
@@ -37,6 +40,7 @@ const authorableQuestionTypes = QUESTION_TYPES.filter(
 
 interface Question {
   id: string;
+  question_id?: number;
   question_text: string;
   question_type: string;
   marks: number;
@@ -49,6 +53,7 @@ interface Question {
 
 interface Passage {
   id: string;
+  passage_id?: number;
   title: string;
   content: string;
   difficulty_level: string;
@@ -56,7 +61,7 @@ interface Passage {
 
 // Renders the create test page screen.
 const CreateTestPage = () => {
-  const navigate = useNavigate();
+  const testsHome = useTestsHome();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const subjectOptions = useAppSelector(selectSubjectOptions);
@@ -93,6 +98,64 @@ const CreateTestPage = () => {
   const [passages, setPassages] = useState<Passage[]>([]);
 
   const steps = ['Basic Info', 'Add Questions', 'Settings', 'Review'];
+
+  // /tests/:testId/edit renders this same page. Before, it ignored the id, opened
+  // an empty form, and saving created a second copy of the test.
+  const { testId: editTestIdParam } = useParams();
+  const editTestId = editTestIdParam ? Number(editTestIdParam) : null;
+  const isEditMode = editTestId != null;
+  const [loadingTest, setLoadingTest] = useState(isEditMode);
+  const [editBlocked, setEditBlocked] = useState<string | null>(null);
+  const [originalQuestionIds, setOriginalQuestionIds] = useState<number[]>([]);
+  const [originalPassageIds, setOriginalPassageIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (!isEditMode) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await testAPI.getById(Number(editTestId));
+        const saved = response.data;
+        if (cancelled) return;
+        if (!canEditTest(saved, user)) {
+          setEditBlocked('Only the teacher who created this test can edit it.');
+          return;
+        }
+        setTestData((current) => ({
+          ...current,
+          test_name: saved.test_name ?? '',
+          test_type: saved.test_type ?? current.test_type,
+          description: saved.description ?? '',
+          instructions: saved.instructions ?? '',
+          subject_id: saved.subject_id != null ? String(saved.subject_id) : '',
+          center_id: saved.center_id ?? current.center_id,
+          total_marks: Number(saved.total_marks ?? 0),
+          passing_marks: Number(saved.passing_marks ?? 0),
+          duration_minutes: Number(saved.duration_minutes ?? current.duration_minutes),
+          is_timed: Boolean(saved.is_timed),
+          shuffle_questions: Boolean(saved.shuffle_questions),
+          show_results_immediately: Boolean(saved.show_results_immediately),
+          allow_retake: Boolean(saved.allow_retake),
+          max_retakes: Number(saved.max_retakes ?? 1),
+          assignment_type: saved.assignment_type ?? current.assignment_type,
+          is_private: Boolean(saved.is_private),
+        }));
+        const loadedQuestions = toEditableQuestions(saved.questions);
+        const loadedPassages = toEditablePassages(saved.passages);
+        setQuestions(loadedQuestions);
+        setPassages(loadedPassages);
+        setOriginalQuestionIds(loadedQuestions.map((q) => q.question_id as number));
+        setOriginalPassageIds(loadedPassages.map((p) => p.passage_id as number));
+      } catch {
+        if (!cancelled) setEditBlocked('This test could not be loaded. It may have been deleted.');
+      } finally {
+        if (!cancelled) setLoadingTest(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editTestId, isEditMode, user]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -242,11 +305,53 @@ const CreateTestPage = () => {
         passages: testData.test_type === 'reading_passage' ? formattedPassages : undefined,
       };
 
-      await dispatch(createTest(submitData)).unwrap();
-      navigate('/tests');
+      if (isEditMode) {
+        const { questions: _questions, passages: _passages, created_by: _createdBy, created_by_type: _createdByType, ...fields } = submitData;
+        await testAPI.update(Number(editTestId), fields);
+
+        const questionPlan = planSave(
+          formattedQuestions.map((question, index) => ({ ...question, question_id: questions[index].question_id })),
+          originalQuestionIds,
+          'question_id'
+        );
+        for (const questionId of questionPlan.remove) await testAPI.deleteQuestion(questionId);
+        for (const question of questionPlan.update) {
+          const { question_id: questionId, ...data } = question;
+          await testAPI.updateQuestion(Number(questionId), data);
+        }
+        for (const question of questionPlan.create) {
+          const { question_id: _unsaved, ...data } = question;
+          await testAPI.addQuestion(Number(editTestId), data);
+        }
+
+        if (testData.test_type === 'reading_passage') {
+          const passagePlan = planSave(
+            formattedPassages.map((passage, index) => ({ ...passage, passage_id: passages[index].passage_id })),
+            originalPassageIds,
+            'passage_id'
+          );
+          for (const passageId of passagePlan.remove) await testAPI.deletePassage(passageId);
+          for (const passage of passagePlan.update) {
+            const { passage_id: passageId, ...data } = passage;
+            await testAPI.updatePassage(Number(passageId), data);
+          }
+          for (const passage of passagePlan.create) {
+            const { passage_id: _unsaved, ...data } = passage;
+            await testAPI.addPassage(Number(editTestId), data);
+          }
+        }
+
+        dispatch(fetchTestsForce());
+      } else {
+        await dispatch(createTest(submitData)).unwrap();
+      }
+      testsHome.goHome();
     } catch (err: any) {
-      console.error('Error creating test:', err);
-      setError(err.response?.data?.error || 'Failed to create test. Please try again.');
+      console.error(isEditMode ? 'Error saving test:' : 'Error creating test:', err);
+      setError(
+        err.response?.data?.error ||
+          (isEditMode ? 'Failed to save your changes. Please try again.' : 'Failed to create test. Please try again.')
+      );
     } finally {
       setLoading(false);
     }
@@ -749,17 +854,41 @@ const CreateTestPage = () => {
     }
   };
 
+  if (loadingTest) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // A teacher who opens the edit address for someone else's test gets told why,
+  // rather than a form whose save the server would refuse.
+  if (editBlocked) {
+    return (
+      <div className="space-y-5 p-6">
+        <Button variant="ghost" size="sm" className="gap-2" onClick={testsHome.goHome}>
+          <ArrowLeft className="h-4 w-4" />
+          {testsHome.label}
+        </Button>
+        <Alert variant="destructive">
+          <AlertDescription>{editBlocked}</AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 p-6">
-      <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/tests')}>
+      <Button variant="ghost" size="sm" className="gap-2" onClick={testsHome.goHome}>
         <ArrowLeft className="h-4 w-4" />
-        Back to Tests
+        {testsHome.label}
       </Button>
 
       <PageHeader
-        title="Create test"
+        title={isEditMode ? 'Edit test' : 'Create test'}
         icon={ClipboardList}
-        description="Set the paper up, write the questions, then choose who sits it."
+        description={isEditMode ? 'Change the paper, its questions or its settings, then save.' : 'Set the paper up, write the questions, then choose who sits it.'}
       />
 
       {error && (
@@ -834,10 +963,10 @@ const CreateTestPage = () => {
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Creating...
+              {isEditMode ? 'Saving...' : 'Creating...'}
             </>
           ) : activeStep === steps.length - 1 ? (
-            'Create Test'
+            isEditMode ? 'Save changes' : 'Create Test'
           ) : (
             'Next'
           )}

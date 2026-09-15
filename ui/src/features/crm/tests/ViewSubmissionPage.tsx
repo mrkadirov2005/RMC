@@ -11,6 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTestsHome } from './useTestsHome';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,6 +41,7 @@ import { formatTestType } from './testVisuals';
 const ViewSubmissionPage = () => {
   const { submissionId } = useParams();
   const navigate = useNavigate();
+  const testsHome = useTestsHome();
   const dispatch = useAppDispatch();
   const submission = useAppSelector(selectSubmissionDetailsItem) as TestSubmission | null;
   const loading = useAppSelector(selectSubmissionDetailsLoading);
@@ -99,10 +101,10 @@ const ViewSubmissionPage = () => {
         variant="ghost"
         size="sm"
         className="mb-4 gap-2"
-        onClick={() => navigate(`/tests/${submission.test_id}`)}
+        onClick={() => testsHome.goToTest(submission.test_id)}
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to test
+        {testsHome.testLabel}
       </Button>
 
       <div className="mb-5">

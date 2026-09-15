@@ -302,3 +302,23 @@ describe('who the server records as the actor', () => {
     expect(body.graded_by_type).toBeNull();
   });
 });
+
+describe('who is recorded as the author of a new test', () => {
+  beforeEach(() => {
+    testService.createTest = jest.fn().mockResolvedValue({ test: { test_id: 7, test_name: 'Unit 4', test_type: 'essay' } });
+  });
+
+  it('uses the signed-in user, ignoring any author the client sends', async () => {
+    const res = createResponse();
+
+    await controller.createTest({
+      body: { test_name: 'Unit 4', created_by: 999, created_by_type: 'superuser' },
+      user: { userType: 'teacher', id: 4 },
+    }, res);
+
+    const body = testService.createTest.mock.calls[0][0];
+    expect(body.created_by).toBe(4);
+    expect(body.created_by_type).toBe('teacher');
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+});

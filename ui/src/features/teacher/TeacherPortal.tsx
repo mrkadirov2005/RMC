@@ -54,7 +54,7 @@ import { fetchPayments } from '../../slices/paymentsSlice';
 import { logout } from '../../slices/authSlice';
 import { selectTeacherPortalUi } from '../../store/selectors';
 import { useLanguage } from '../../i18n/LanguageContext';
-import TestsPage from '../crm/tests/TestsPage';
+import TeacherTestsView from './tests/TeacherTestsView';
 import CalendarPage from '../crm/calendar/CalendarPage';
 import OverallStatisticsTab from './components/OverallStatisticsTab';
 import TeacherProfileTab from './components/TeacherProfileTab';
@@ -393,9 +393,7 @@ const TeacherPortal = () => {
               />
             </TabsContent>
             <TabsContent value="tests">
-              <div className="-m-4">
-                <TestsPage />
-              </div>
+              <TeacherTestsView />
             </TabsContent>
             <TabsContent value="calendar">
               <div className="-m-4">

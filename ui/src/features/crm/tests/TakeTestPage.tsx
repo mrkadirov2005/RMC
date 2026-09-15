@@ -12,6 +12,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTestsHome } from './useTestsHome';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -76,6 +77,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
   const params = useParams();
   const submissionId = submissionIdProp != null ? String(submissionIdProp) : params.submissionId;
   const navigate = useNavigate();
+  const testsHome = useTestsHome();
 
   const [test, setTest] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([]);
@@ -255,7 +257,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
       await testAPI.submitTest(Number(submissionId), formattedAnswers, timeTakenSeconds);
 
       // Navigate to results or confirmation
-      navigate('/tests', {
+      navigate(testsHome.path, {
         state: { message: 'Test submitted successfully!' },
       });
     } catch (err: any) {
@@ -299,7 +301,7 @@ const TakeTestPage = ({ transport, submissionId: submissionIdProp }: TakeTestPag
         <Alert variant="destructive">
           <AlertDescription>{getErrorMessage(error)}</AlertDescription>
         </Alert>
-        <Button variant="ghost" onClick={() => navigate('/tests')} className="mt-4">
+        <Button variant="ghost" onClick={testsHome.goHome} className="mt-4">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Tests
         </Button>

@@ -1,7 +1,7 @@
 // Page component for the tests screen in the crm feature.
 
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ClipboardList,
@@ -11,6 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTestsHome } from './useTestsHome';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -49,7 +50,7 @@ interface ClassType {
 // Renders the test assign page screen.
 const TestAssignPage = () => {
   const { testId } = useParams();
-  const navigate = useNavigate();
+  const testsHome = useTestsHome();
   const dispatch = useAppDispatch();
   const students = useAppSelector(selectStudentItems) as Student[];
   const classes = useAppSelector(selectClassItems) as ClassType[];
@@ -177,7 +178,7 @@ const TestAssignPage = () => {
 
       await testAPI.assignTest(Number(testId), assignments);
 
-      navigate(`/tests/${testId}`);
+      testsHome.goToTest(testId);
     } catch (err: any) {
       console.error('Error assigning test:', err);
       setError(err.response?.data?.error || 'Failed to assign test');
@@ -196,9 +197,9 @@ const TestAssignPage = () => {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <Button variant="ghost" size="sm" className="mb-4 gap-2" onClick={() => navigate(`/tests/${testId}`)}>
+      <Button variant="ghost" size="sm" className="mb-4 gap-2" onClick={() => testsHome.goToTest(testId)}>
         <ArrowLeft className="h-4 w-4" />
-        Back to test
+        {testsHome.testLabel}
       </Button>
 
       <div className="mb-5">
@@ -396,7 +397,7 @@ const TestAssignPage = () => {
 
       {/* Save Button */}
       <div className="mt-6 flex justify-end gap-3">
-        <Button variant="outline" onClick={() => navigate(`/tests/${testId}`)}>
+        <Button variant="outline" onClick={() => testsHome.goToTest(testId)}>
           Cancel
         </Button>
         <Button

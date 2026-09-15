@@ -316,7 +316,22 @@ const findAll = async (filters: Record<string, any> = {}) => {
     conditions.push(sql`(COALESCE(${tests.isPrivate}, false) = false OR ${tests.createdBy} = ${Number(filters.visible_to_creator_id)})`);
   }
   if (filters.public_only) conditions.push(sql`COALESCE(${tests.isPrivate}, false) = false`);
-  const query = db.select(testSelection).from(tests);
+  // The list cards show how big each test is and how much it has been used, so the
+  // counts come back with the rows rather than as a request per card.
+  const query = db
+    .select({
+      ...testSelection,
+      question_count: sql<number>`(SELECT COUNT(*)::int FROM test_questions q WHERE q.test_id = ${tests.testId})`,
+      submission_count: sql<number>`(
+        SELECT COUNT(*)::int FROM test_submissions ts
+        WHERE ts.test_id = ${tests.testId} AND ts.status IN ('submitted', 'graded')
+      )`,
+      awaiting_grading_count: sql<number>`(
+        SELECT COUNT(*)::int FROM test_submissions ts
+        WHERE ts.test_id = ${tests.testId} AND ts.status = 'submitted'
+      )`,
+    })
+    .from(tests);
   return (conditions.length ? query.where(and(...conditions)) : query).orderBy(desc(tests.createdAt));
 };
 
@@ -431,6 +446,22 @@ const insertQuestion = async (params: any[], runner: any = db) => {
     })
     .returning(questionSelection);
   return rows[0];
+};
+
+// Questions and passages are edited by their own id, so authorship checks first
+// resolve which test they belong to.
+const findQuestionTestId = async (questionId: number, centerId?: number) => {
+  const conditions = [eq(testQuestions.questionId, Number(questionId))];
+  if (centerId) conditions.push(eq(testQuestions.centerId, Number(centerId)));
+  const rows = await db.select({ test_id: testQuestions.testId }).from(testQuestions).where(and(...conditions)).limit(1);
+  return rows[0]?.test_id ?? null;
+};
+
+const findPassageTestId = async (passageId: number, centerId?: number) => {
+  const conditions = [eq(readingPassages.passageId, Number(passageId))];
+  if (centerId) conditions.push(eq(readingPassages.centerId, Number(centerId)));
+  const rows = await db.select({ test_id: readingPassages.testId }).from(readingPassages).where(and(...conditions)).limit(1);
+  return rows[0]?.test_id ?? null;
 };
 
 const updateQuestion = async (params: any[], questionId: number, centerId?: number) => {
@@ -777,6 +808,8 @@ const getQuestionsByIds = async (questionIds: number[], centerId?: number) => {
 
 module.exports = {
   findAll,
+  findQuestionTestId,
+  findPassageTestId,
   setShareToken,
   findByShareToken,
   findAssignmentForStudent,
