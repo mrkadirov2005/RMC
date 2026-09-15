@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student profile — Superuser Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#1f5fa8; --accent-soft:color-mix(in srgb, #1f5fa8 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#7fb0ee; --accent-soft:color-mix(in srgb, #7fb0ee 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#7fb0ee; --accent-soft:color-mix(in srgb, #7fb0ee 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+code,.pill,.field code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--accent)}
+strong{color:var(--ink);font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 72px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0 0 20px;max-width:70ch;color:var(--ink-2)}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin:0 0 22px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toc{list-style:none;margin:0 0 36px;padding:0;display:grid;gap:8px}
+.toc li{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;text-decoration:none;color:var(--ink);align-items:baseline}
+.toc a:hover{border-color:var(--accent)}
+.toc b{font-weight:500}
+.toc span{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.area-intro{margin:0 0 28px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;color:var(--ink-2);font-size:14px}
+.flow{border-top:1px solid var(--rule);padding-block:26px;scroll-margin-top:16px}
+.flow:first-of-type{border-top:0}
+.flow h2{margin:0 0 6px;font-size:19px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.flow .fid{font-size:12px;color:var(--ink-3);font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--chip)}
+.pill.url{color:var(--ink)}
+.pill.perm{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+.steps{margin:0 0 14px;padding-left:22px;display:grid;gap:9px}
+.steps li{padding-left:2px}
+.fields{margin:0 0 14px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fields .fh{padding:8px 12px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);background:var(--chip);border-bottom:1px solid var(--rule)}
+.fields ul{list-style:none;margin:0;padding:0}
+.fields li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-top:1px solid var(--rule);font-size:13.5px}
+.fields li:first-child{border-top:0}
+.fields .fnote{color:var(--ink-3);font-size:12.5px;text-align:right}
+.tip{margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.issue{margin:0;padding:9px 12px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:13.5px}
+.issue b{color:var(--warn);text-transform:uppercase;font-size:11px;letter-spacing:.04em;margin-right:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-size:13.5px}
+.pager a{text-decoration:none;color:var(--ink-2);max-width:46%}
+.pager a:hover{color:var(--accent)}
+.pager .lbl{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+@media (max-width:640px){ .flow h2{font-size:17px} .fields li{flex-direction:column;gap:2px} .fields .fnote{text-align:left} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="crumbs"><a href="../user-action-flows.html">Superuser flows</a><span>/</span><a href="index.html">Getting started docs</a><span>/</span><span>Student profile</span></p>
+  <p class="eyebrow">Superuser · SPR</p>
+  <h1>Student profile</h1>
+  <p class="area-intro">Every student has a profile page with tabs for their day-to-day records. Open it from the Students list by clicking a student’s name or the row’s <strong>View</strong> action.</p>
+  <article class="flow" id="SPR-open-profile">
+      <h2>Open a student’s profile <span class="fid">SPR-open-profile</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>From <strong>Students</strong>, click the student’s row.</li>
+        <li>The profile opens on the <strong>Overview</strong> tab, with Attendance, Payments, Assignments, Individual Tasks, Grades and Coins tabs along the top.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-edit-student">
+      <h2>Edit a student <span class="fid">SPR-edit-student</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>On the student’s profile, click <strong>Edit information</strong> (or <strong>Edit</strong> from the Students list row menu).</li>
+        <li>Change any field — the same fields as adding a student — and save.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-edit-overview-inline">
+      <h2>Edit the overview inline <span class="fid">SPR-edit-overview-inline</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>On the <strong>Overview</strong> tab, click <strong>Edit information</strong>.</li>
+        <li>Update the fields shown and click <strong>Save</strong> without leaving the profile page.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-toggle-status">
+      <h2>Activate or deactivate a student <span class="fid">SPR-toggle-status</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>On the student’s profile, open the status control near the top of the Overview tab.</li>
+        <li>Choose the new status and confirm — the change applies immediately.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-set-password-profile">
+      <h2>Set a student’s password <span class="fid">SPR-set-password-profile</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>On the profile, click <strong>Update Password</strong>.</li>
+        <li>Type the new password, or generate one, then save.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-reset-password-profile">
+      <h2>Reset a student’s password and copy it <span class="fid">SPR-reset-password-profile</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>On the profile, click <strong>Reset Password</strong>.</li>
+        <li>A new password is generated and shown once — click <strong>Copy</strong> to copy it before closing.</li>
+        <li>Click <strong>Done</strong> to close the dialog. The password cannot be shown again after this.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-attendance-tab">
+      <h2>Add, edit or delete attendance records <span class="fid">SPR-attendance-tab</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the student’s profile and click the <strong>Attendance</strong> tab.</li>
+        <li>Click <strong>Add Record</strong> to log a new entry, or the row’s edit icon to change one.</li>
+        <li>Click the row’s delete icon and confirm to remove a record.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-payments-tab">
+      <h2>Add, edit or delete payments <span class="fid">SPR-payments-tab</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the student’s profile and click the <strong>Payments</strong> tab.</li>
+        <li>Click <strong>Add Payment</strong> to record one, or the row’s edit icon to change one.</li>
+        <li>Use the row’s delete icon and confirm to remove a payment.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-assignments-tab-profile">
+      <h2>Add, edit or delete assignments <span class="fid">SPR-assignments-tab-profile</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the student’s profile and click the <strong>Assignments</strong> tab.</li>
+        <li>Click <strong>Add Assignment</strong>, fill in the title, description and due date, and save.</li>
+        <li>Click a row to edit it, or <strong>Cancel</strong> to close without saving.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-individual-tasks-tab">
+      <h2>Add, edit or delete individual tasks <span class="fid">SPR-individual-tasks-tab</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the student’s profile and click the <strong>Individual Tasks</strong> tab.</li>
+        <li>Use the same Add, edit and delete controls as the Assignments tab — these tasks apply to this one student only.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-grades-tab">
+      <h2>Add, edit or delete grades <span class="fid">SPR-grades-tab</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the student’s profile and click the <strong>Grades</strong> tab.</li>
+        <li>Click <strong>Add Grade</strong>, fill in the score, and save.</li>
+        <li>Click a row to edit it, or use its delete icon to remove it.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-coins-tab">
+      <h2>Give or take coins <span class="fid">SPR-coins-tab</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the student’s profile and click the <strong>Coins</strong> tab.</li>
+        <li>Click <strong>Update Coins</strong>.</li>
+        <li>Enter the amount to add or remove and a short reason, then save.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="SPR-delete-coin-tx">
+      <h2>Delete a coin transaction <span class="fid">SPR-delete-coin-tx</span></h2>
+      <div class="meta-row">
+        <span class="pill url">/students/:studentId</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>On the <strong>Coins</strong> tab, find the transaction in the history.</li>
+        <li>Click its delete icon and confirm — the balance recalculates automatically.</li>
+      </ol>
+      
+      
+      
+    </article>
+  <nav class="pager">
+    <a href="stu.html"><span class="lbl">← Previous</span>Students list</a>
+    <a href="led.html" style="text-align:right"><span class="lbl">Next →</span>Telegram leads</a>
+  </nav>
+</div>
+</body>
+</html>

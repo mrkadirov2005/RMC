@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Action Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#6a3fa0; --accent-soft:color-mix(in srgb, #6a3fa0 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#b99be6; --accent-soft:color-mix(in srgb, #b99be6 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#b99be6; --accent-soft:color-mix(in srgb, #b99be6 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+code,.fid,.perm{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px}
+.roles{display:flex;flex-wrap:wrap;gap:4px;font-size:13px;margin-bottom:28px}
+.roles a,.roles span{padding:5px 12px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
+.roles a:hover{background:var(--chip)}
+.roles span{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.top{display:grid;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:22px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:0;font-size:clamp(26px,4vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0;max-width:68ch;color:var(--ink-2)}
+.stats{display:flex;flex-wrap:wrap;gap:22px;margin-top:6px;font-size:13px;color:var(--ink-3)}
+.stats b{display:block;font-size:22px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.note{margin:18px 0 0;padding:12px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink-2);max-width:80ch}
+.note a{color:var(--accent);font-weight:500}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:36px;margin-top:28px;align-items:start}
+nav.toc{position:sticky;top:20px;font-size:13px}
+.toc h4{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.toc ul{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.toc a{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:5px;text-decoration:none;color:var(--ink-2)}
+.toc a:hover{background:var(--chip);color:var(--ink)}
+.toc b{font-weight:500;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin-bottom:8px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.shown{font-size:12px;color:var(--ink-3);margin:0 0 20px}
+.group{margin-bottom:30px}
+.ghead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.gright{display:flex;align-items:baseline;gap:14px}
+.guide-link{font-size:12.5px;text-decoration:none;color:var(--accent);font-weight:500;white-space:nowrap}
+.guide-link:hover{text-decoration:underline}
+.ghead h2{margin:0;font-size:17px;font-weight:600}
+.only{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:2px}
+.gcount{font-size:12px;color:var(--ink-3)}
+.flows{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.flow{display:grid;grid-template-columns:112px minmax(0,1fr) minmax(0,300px);gap:14px;padding:12px 16px;border-top:1px solid var(--rule);align-items:start}
+.flow:first-child{border-top:0}
+.fid{font-size:12px;color:var(--accent);padding-top:2px;font-weight:500}
+.fbody h3{margin:0;font-size:15px;font-weight:500}
+.fbody p{margin:2px 0 0;font-size:13.5px;color:var(--ink-2)}
+.fmeta{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.url{font-size:12px;background:var(--chip);padding:2px 7px;border-radius:4px;color:var(--ink);overflow-wrap:anywhere}
+.perm{font-size:11px;color:var(--ink-3);border:1px solid var(--rule);padding:1px 6px;border-radius:4px}
+.gaps{margin-top:40px;padding:18px 20px;border-radius:10px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)}
+.gaps h2{margin:0 0 4px;font-size:17px;color:var(--warn)}
+.gaps>p{margin:0 0 12px;font-size:13.5px;color:var(--ink-2)}
+.gaps ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.gaps li{display:grid;gap:2px;font-size:14px}
+.gaps li span{color:var(--ink-2);font-size:13.5px}
+.issue{margin:6px 0 0!important;font-size:13px!important;color:var(--ink)!important;background:var(--warn-soft);border-left:3px solid var(--warn);padding:5px 9px;border-radius:0 5px 5px 0}
+.issue b{color:var(--warn);font-weight:600;margin-right:4px;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.empty{padding:18px;color:var(--ink-3)}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.toc{position:static}
+  .toc ul{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .flow{grid-template-columns:1fr;gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="roles" aria-label="Role indexes"><a href="../owner/user-action-flows.html">Owner</a><a href="../superuser/user-action-flows.html">Superuser</a><a href="../teacher/user-action-flows.html">Teacher</a><span aria-current="page">Student</span></div>
+  <header class="top">
+    <div class="eyebrow">RMC user documentation · Flow index</div>
+    <h1>Student action flows</h1>
+    <p class="lede">A student uses the student portal to see their schedule, take tests, and do consolidation exercises. Some flows work from a public link without signing in.</p>
+    <div class="stats"><span><b>30</b>flows</span><span><b>6</b>areas</span><span><b>5</b>flows with known issues</span><span><b>2</b>gaps found</span></div>
+    <p class="note"><a href="nested_docs/index.html">Open the step-by-step documentation →</a> — click-by-click guides for every flow below, written for newcomers.</p>
+    
+  </header>
+  <div class="layout">
+    <nav class="toc" aria-label="Areas"><h4>Areas</h4><ul><li><a href="#g-ACC"><span>Account and access</span><b>3</b></a></li><li><a href="#g-OVR"><span>Portal home</span><b>10</b></a></li><li><a href="#g-TST"><span>Tests</span><b>8</b></a></li><li><a href="#g-CAL"><span>Calendar</span><b>2</b></a></li><li><a href="#g-CON"><span>Consolidation exercises</span><b>2</b></a></li><li><a href="#g-PUB"><span>Public links (no sign-in)</span><b>5</b></a></li></ul></nav>
+    <main>
+      <label for="flow-search" class="eyebrow" style="display:block;margin-bottom:6px">Filter flows</label>
+      <input id="flow-search" class="search" type="search" placeholder="Search by title, URL, ID, permission, or “known issue”">
+      <p class="shown" id="shown">Showing all 30 flows. Each flow becomes one step-by-step document once approved.</p>
+    <section class="group" id="g-ACC">
+      <header class="ghead"><h2>Account and access</h2><span class="gright"><a class="guide-link" href="nested_docs/acc.html">Step-by-step guide →</a><span class="gcount">3 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="p-acc-01 sign in as student the student lands on the portal home. /login/student  ">
+          <span class="fid">P-ACC-01</span>
+          <div class="fbody"><h3>Sign in as student</h3><p>The student lands on the portal home.</p></div>
+          <div class="fmeta"><code class="url">/login/student</code></div>
+        </li>
+        <li class="flow" data-hay="p-acc-02 use “forgot password?” on the sign-in page a notice says to contact the school administration. /login/student  ">
+          <span class="fid">P-ACC-02</span>
+          <div class="fbody"><h3>Use “Forgot password?” on the sign-in page</h3><p>A notice says to contact the school administration.</p></div>
+          <div class="fmeta"><code class="url">/login/student</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="p-acc-03 sign out the session ends. /student-portal, header  known issue the student is sent to the superuser sign-in page, not the student one.">
+          <span class="fid">P-ACC-03</span>
+          <div class="fbody"><h3>Sign out</h3><p>The session ends.</p><p class="issue"><b>Known issue</b> The student is sent to the superuser sign-in page, not the student one.</p></div>
+          <div class="fmeta"><code class="url">/student-portal, header</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-OVR">
+      <header class="ghead"><h2>Portal home</h2><span class="gright"><a class="guide-link" href="nested_docs/ovr.html">Step-by-step guide →</a><span class="gcount">10 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="p-ovr-01 move between home, my tests and calendar the chosen section opens. /student-portal, header  ">
+          <span class="fid">P-OVR-01</span>
+          <div class="fbody"><h3>Move between Home, My Tests and Calendar</h3><p>The chosen section opens.</p></div>
+          <div class="fmeta"><code class="url">/student-portal, header</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-02 read the summary cards teacher, class, subjects, attendance, average grade and debt. /student-portal  ">
+          <span class="fid">P-OVR-02</span>
+          <div class="fbody"><h3>Read the summary cards</h3><p>Teacher, class, subjects, attendance, average grade and debt.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-03 read today’s and this week’s schedule lessons with times and rooms. /student-portal  ">
+          <span class="fid">P-OVR-03</span>
+          <div class="fbody"><h3>Read today’s and this week’s schedule</h3><p>Lessons with times and rooms.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-04 see the next test and assignment what is due soonest. /student-portal  ">
+          <span class="fid">P-OVR-04</span>
+          <div class="fbody"><h3>See the next test and assignment</h3><p>What is due soonest.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-05 read upcoming tests and assignments due everything coming up, in order. /student-portal  ">
+          <span class="fid">P-OVR-05</span>
+          <div class="fbody"><h3>Read upcoming tests and assignments due</h3><p>Everything coming up, in order.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-06 read recent grades the latest marks from lessons and tests. /student-portal  ">
+          <span class="fid">P-OVR-06</span>
+          <div class="fbody"><h3>Read recent grades</h3><p>The latest marks from lessons and tests.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-07 read payment history past payments and what is outstanding. /student-portal  ">
+          <span class="fid">P-OVR-07</span>
+          <div class="fbody"><h3>Read payment history</h3><p>Past payments and what is outstanding.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-08 open my profile the student’s own details and coins, from the header avatar or “my profile”. /student-portal  ">
+          <span class="fid">P-OVR-08</span>
+          <div class="fbody"><h3>Open my profile</h3><p>The student’s own details and coins, from the header avatar or “My Profile”.</p></div>
+          <div class="fmeta"><code class="url">/student-portal</code></div>
+        </li>
+        <li class="flow" data-hay="p-ovr-09 go back to the portal from my tests the portal home opens. /my-tests, back  ">
+          <span class="fid">P-OVR-09</span>
+          <div class="fbody"><h3>Go back to the portal from My Tests</h3><p>The portal home opens.</p></div>
+          <div class="fmeta"><code class="url">/my-tests, Back</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="p-ovr-10 read notifications should list messages from teachers and the centre. /student-portal, bell button  known issue the bell button does nothing yet.">
+          <span class="fid">P-OVR-10</span>
+          <div class="fbody"><h3>Read notifications</h3><p>Should list messages from teachers and the centre.</p><p class="issue"><b>Known issue</b> The bell button does nothing yet.</p></div>
+          <div class="fmeta"><code class="url">/student-portal, bell button</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-TST">
+      <header class="ghead"><h2>Tests</h2><span class="gright"><a class="guide-link" href="nested_docs/tst.html">Step-by-step guide →</a><span class="gcount">8 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="p-tst-01 browse available, in-progress and completed tests tests grouped by status. /my-tests  ">
+          <span class="fid">P-TST-01</span>
+          <div class="fbody"><h3>Browse available, in-progress and completed tests</h3><p>Tests grouped by status.</p></div>
+          <div class="fmeta"><code class="url">/my-tests</code></div>
+        </li>
+        <li class="flow" data-hay="p-tst-02 start a test the test opens with a timer. /my-tests  ">
+          <span class="fid">P-TST-02</span>
+          <div class="fbody"><h3>Start a test</h3><p>The test opens with a timer.</p></div>
+          <div class="fmeta"><code class="url">/my-tests</code></div>
+        </li>
+        <li class="flow" data-hay="p-tst-03 jump between questions with the question navigator the chosen question opens. /tests/take/:submissionid  ">
+          <span class="fid">P-TST-03</span>
+          <div class="fbody"><h3>Jump between questions with the Question Navigator</h3><p>The chosen question opens.</p></div>
+          <div class="fmeta"><code class="url">/tests/take/:submissionId</code></div>
+        </li>
+        <li class="flow" data-hay="p-tst-04 flag a question for review the question is marked to come back to. /tests/take/:submissionid  ">
+          <span class="fid">P-TST-04</span>
+          <div class="fbody"><h3>Flag a question for review</h3><p>The question is marked to come back to.</p></div>
+          <div class="fmeta"><code class="url">/tests/take/:submissionId</code></div>
+        </li>
+        <li class="flow" data-hay="p-tst-05 answer and submit a test answers are handed in. /tests/take/:submissionid  ">
+          <span class="fid">P-TST-05</span>
+          <div class="fbody"><h3>Answer and submit a test</h3><p>Answers are handed in.</p></div>
+          <div class="fmeta"><code class="url">/tests/take/:submissionId</code></div>
+        </li>
+        <li class="flow" data-hay="p-tst-06 finish when time runs out the test is handed in automatically. /tests/take/:submissionid  ">
+          <span class="fid">P-TST-06</span>
+          <div class="fbody"><h3>Finish when time runs out</h3><p>The test is handed in automatically.</p></div>
+          <div class="fmeta"><code class="url">/tests/take/:submissionId</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="p-tst-07 continue a test in progress should return to where the student stopped. /my-tests  known issue the button opens a staff-only page and the student lands on unauthorized.">
+          <span class="fid">P-TST-07</span>
+          <div class="fbody"><h3>Continue a test in progress</h3><p>Should return to where the student stopped.</p><p class="issue"><b>Known issue</b> The button opens a staff-only page and the student lands on Unauthorized.</p></div>
+          <div class="fmeta"><code class="url">/my-tests</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="p-tst-08 view results of a completed test should show score and reviewed answers. /my-tests  known issue the button opens a staff-only page and the student lands on unauthorized.">
+          <span class="fid">P-TST-08</span>
+          <div class="fbody"><h3>View results of a completed test</h3><p>Should show score and reviewed answers.</p><p class="issue"><b>Known issue</b> The button opens a staff-only page and the student lands on Unauthorized.</p></div>
+          <div class="fmeta"><code class="url">/my-tests</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-CAL">
+      <header class="ghead"><h2>Calendar</h2><span class="gright"><a class="guide-link" href="nested_docs/cal.html">Step-by-step guide →</a><span class="gcount">2 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="p-cal-01 read my calendar all lessons by day, week, month or agenda. /calendar  ">
+          <span class="fid">P-CAL-01</span>
+          <div class="fbody"><h3>Read my calendar</h3><p>All lessons by day, week, month or agenda.</p></div>
+          <div class="fmeta"><code class="url">/calendar</code></div>
+        </li>
+        <li class="flow" data-hay="p-cal-02 open a lesson’s details a side panel with the lesson’s time, room and teacher. /calendar  ">
+          <span class="fid">P-CAL-02</span>
+          <div class="fbody"><h3>Open a lesson’s details</h3><p>A side panel with the lesson’s time, room and teacher.</p></div>
+          <div class="fmeta"><code class="url">/calendar</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-CON">
+      <header class="ghead"><h2>Consolidation exercises</h2><span class="gright"><a class="guide-link" href="nested_docs/con.html">Step-by-step guide →</a><span class="gcount">2 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow has-issue" data-hay="p-con-01 do a consolidation exercise from the portal the exercise score is saved. /student-portal/consolidation/:sessionid  known issue no link inside the app leads here. it opens from a link the teacher shares.">
+          <span class="fid">P-CON-01</span>
+          <div class="fbody"><h3>Do a consolidation exercise from the portal</h3><p>The exercise score is saved.</p><p class="issue"><b>Known issue</b> No link inside the app leads here. It opens from a link the teacher shares.</p></div>
+          <div class="fmeta"><code class="url">/student-portal/consolidation/:sessionId</code></div>
+        </li>
+        <li class="flow" data-hay="p-con-02 try an exercise again or finish “try again” starts a new attempt and “done” closes the exercise. /student-portal/consolidation/:sessionid  ">
+          <span class="fid">P-CON-02</span>
+          <div class="fbody"><h3>Try an exercise again or finish</h3><p>“Try Again” starts a new attempt and “Done” closes the exercise.</p></div>
+          <div class="fmeta"><code class="url">/student-portal/consolidation/:sessionId</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-PUB">
+      <header class="ghead"><h2>Public links (no sign-in)</h2><span class="gright"><a class="guide-link" href="nested_docs/pub.html">Step-by-step guide →</a><span class="gcount">5 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="p-pub-01 take a test from a share link the student types their username and takes an assigned test. /share/tests/:sharetoken  ">
+          <span class="fid">P-PUB-01</span>
+          <div class="fbody"><h3>Take a test from a share link</h3><p>The student types their username and takes an assigned test.</p></div>
+          <div class="fmeta"><code class="url">/share/tests/:shareToken</code></div>
+        </li>
+        <li class="flow" data-hay="p-pub-02 start a repeat attempt from a share link the student confirms and a new attempt begins. /share/tests/:sharetoken  ">
+          <span class="fid">P-PUB-02</span>
+          <div class="fbody"><h3>Start a repeat attempt from a share link</h3><p>The student confirms and a new attempt begins.</p></div>
+          <div class="fmeta"><code class="url">/share/tests/:shareToken</code></div>
+        </li>
+        <li class="flow" data-hay="p-pub-03 open an expired share link a notice says the link is no longer active. /share/tests/:sharetoken  ">
+          <span class="fid">P-PUB-03</span>
+          <div class="fbody"><h3>Open an expired share link</h3><p>A notice says the link is no longer active.</p></div>
+          <div class="fmeta"><code class="url">/share/tests/:shareToken</code></div>
+        </li>
+        <li class="flow" data-hay="p-pub-04 do a consolidation exercise from a public link the student identifies by username and does the exercise. /consolidate/:sharetoken  ">
+          <span class="fid">P-PUB-04</span>
+          <div class="fbody"><h3>Do a consolidation exercise from a public link</h3><p>The student identifies by username and does the exercise.</p></div>
+          <div class="fmeta"><code class="url">/consolidate/:shareToken</code></div>
+        </li>
+        <li class="flow" data-hay="p-pub-05 confirm a repeat attempt on a consolidation link the student confirms and a new attempt begins. /consolidate/:sharetoken  ">
+          <span class="fid">P-PUB-05</span>
+          <div class="fbody"><h3>Confirm a repeat attempt on a consolidation link</h3><p>The student confirms and a new attempt begins.</p></div>
+          <div class="fmeta"><code class="url">/consolidate/:shareToken</code></div>
+        </li>
+      </ol>
+    </section>
+      <aside class="gaps">
+        <h2>Gaps found while mapping</h2>
+        <p>These are not flows. They are problems or missing screens the docs will mention.</p>
+        <ul><li><strong>No self-service password reset</strong><span>“Forgot password?” only shows a contact message.</span></li><li><strong>Share links identify, they do not verify</strong><span>Anyone who knows an assigned student’s username can start the test from the link.</span></li></ul>
+      </aside>
+    </main>
+  </div>
+</div>
+<script>
+(function(){
+  var input=document.getElementById('flow-search'), shown=document.getElementById('shown');
+  var flows=[].slice.call(document.querySelectorAll('.flow')), groups=[].slice.call(document.querySelectorAll('.group'));
+  input.addEventListener('input',function(){
+    var q=input.value.trim().toLowerCase(), n=0;
+    flows.forEach(function(f){var hit=!q||f.dataset.hay.indexOf(q)>-1;f.hidden=!hit;if(hit)n++;});
+    groups.forEach(function(g){g.hidden=!g.querySelector('.flow:not([hidden])');});
+    shown.textContent=q?('Showing '+n+' of 30 flows.'):'Showing all 30 flows. Each flow becomes one step-by-step document once approved.';
+  });
+})();
+</script>
+</body>
+</html>

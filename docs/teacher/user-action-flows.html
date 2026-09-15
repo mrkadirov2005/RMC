@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher Action Flows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#1d7a55; --accent-soft:color-mix(in srgb, #1d7a55 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#6fcf9f; --accent-soft:color-mix(in srgb, #6fcf9f 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#6fcf9f; --accent-soft:color-mix(in srgb, #6fcf9f 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.55 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+code,.fid,.perm{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:inherit}
+.wrap{max-width:1180px;margin:0 auto;padding-block:28px 64px}
+.roles{display:flex;flex-wrap:wrap;gap:4px;font-size:13px;margin-bottom:28px}
+.roles a,.roles span{padding:5px 12px;border-radius:6px;text-decoration:none;color:var(--ink-2)}
+.roles a:hover{background:var(--chip)}
+.roles span{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.top{display:grid;gap:10px;border-bottom:1px solid var(--rule);padding-bottom:22px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:0;font-size:clamp(26px,4vw,34px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0;max-width:68ch;color:var(--ink-2)}
+.stats{display:flex;flex-wrap:wrap;gap:22px;margin-top:6px;font-size:13px;color:var(--ink-3)}
+.stats b{display:block;font-size:22px;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.note{margin:18px 0 0;padding:12px 14px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink-2);max-width:80ch}
+.note a{color:var(--accent);font-weight:500}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:36px;margin-top:28px;align-items:start}
+nav.toc{position:sticky;top:20px;font-size:13px}
+.toc h4{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.toc ul{list-style:none;margin:0;padding:0;display:grid;gap:1px}
+.toc a{display:flex;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:5px;text-decoration:none;color:var(--ink-2)}
+.toc a:hover{background:var(--chip);color:var(--ink)}
+.toc b{font-weight:500;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin-bottom:8px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.shown{font-size:12px;color:var(--ink-3);margin:0 0 20px}
+.group{margin-bottom:30px}
+.ghead{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.gright{display:flex;align-items:baseline;gap:14px}
+.guide-link{font-size:12.5px;text-decoration:none;color:var(--accent);font-weight:500;white-space:nowrap}
+.guide-link:hover{text-decoration:underline}
+.ghead h2{margin:0;font-size:17px;font-weight:600}
+.only{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--accent);background:var(--accent-soft);padding:2px 7px;border-radius:4px;margin-left:8px;vertical-align:2px}
+.gcount{font-size:12px;color:var(--ink-3)}
+.flows{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.flow{display:grid;grid-template-columns:112px minmax(0,1fr) minmax(0,300px);gap:14px;padding:12px 16px;border-top:1px solid var(--rule);align-items:start}
+.flow:first-child{border-top:0}
+.fid{font-size:12px;color:var(--accent);padding-top:2px;font-weight:500}
+.fbody h3{margin:0;font-size:15px;font-weight:500}
+.fbody p{margin:2px 0 0;font-size:13.5px;color:var(--ink-2)}
+.fmeta{display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.url{font-size:12px;background:var(--chip);padding:2px 7px;border-radius:4px;color:var(--ink);overflow-wrap:anywhere}
+.perm{font-size:11px;color:var(--ink-3);border:1px solid var(--rule);padding:1px 6px;border-radius:4px}
+.gaps{margin-top:40px;padding:18px 20px;border-radius:10px;background:var(--warn-soft);border:1px solid color-mix(in srgb,var(--warn) 25%,transparent)}
+.gaps h2{margin:0 0 4px;font-size:17px;color:var(--warn)}
+.gaps>p{margin:0 0 12px;font-size:13.5px;color:var(--ink-2)}
+.gaps ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.gaps li{display:grid;gap:2px;font-size:14px}
+.gaps li span{color:var(--ink-2);font-size:13.5px}
+.issue{margin:6px 0 0!important;font-size:13px!important;color:var(--ink)!important;background:var(--warn-soft);border-left:3px solid var(--warn);padding:5px 9px;border-radius:0 5px 5px 0}
+.issue b{color:var(--warn);font-weight:600;margin-right:4px;font-size:11px;letter-spacing:.04em;text-transform:uppercase}
+.empty{padding:18px;color:var(--ink-3)}
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr}
+  nav.toc{position:static}
+  .toc ul{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .flow{grid-template-columns:1fr;gap:6px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="roles" aria-label="Role indexes"><a href="../owner/user-action-flows.html">Owner</a><a href="../superuser/user-action-flows.html">Superuser</a><span aria-current="page">Teacher</span><a href="../student/user-action-flows.html">Student</a></div>
+  <header class="top">
+    <div class="eyebrow">RMC user documentation · Flow index</div>
+    <h1>Teacher action flows</h1>
+    <p class="lede">A teacher works from one place, the teacher portal. Almost every flow starts from a tab in that portal. The sidebar is hidden for teachers.</p>
+    <div class="stats"><span><b>48</b>flows</span><span><b>9</b>areas</span><span><b>4</b>flows with known issues</span><span><b>3</b>gaps found</span></div>
+    <p class="note"><a href="nested_docs/index.html">Open the step-by-step documentation →</a> — click-by-click guides for every flow below, written for newcomers.</p>
+    
+  </header>
+  <div class="layout">
+    <nav class="toc" aria-label="Areas"><h4>Areas</h4><ul><li><a href="#g-ACC"><span>Account and access</span><b>3</b></a></li><li><a href="#g-PRT"><span>Portal and overview</span><b>7</b></a></li><li><a href="#g-CLS"><span>My classes and students</span><b>8</b></a></li><li><a href="#g-LES"><span>Lessons</span><b>7</b></a></li><li><a href="#g-ATT"><span>Attendance and calendar</span><b>3</b></a></li><li><a href="#g-TST"><span>My tests</span><b>10</b></a></li><li><a href="#g-ASG"><span>Assignments</span><b>3</b></a></li><li><a href="#g-TSK"><span>Tasks from the administration</span><b>3</b></a></li><li><a href="#g-PRF"><span>Profile, salary and payments</span><b>4</b></a></li></ul></nav>
+    <main>
+      <label for="flow-search" class="eyebrow" style="display:block;margin-bottom:6px">Filter flows</label>
+      <input id="flow-search" class="search" type="search" placeholder="Search by title, URL, ID, permission, or “known issue”">
+      <p class="shown" id="shown">Showing all 48 flows. Each flow becomes one step-by-step document once approved.</p>
+    <section class="group" id="g-ACC">
+      <header class="ghead"><h2>Account and access</h2><span class="gright"><a class="guide-link" href="nested_docs/acc.html">Step-by-step guide →</a><span class="gcount">3 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-acc-01 sign in as teacher the teacher lands on the portal’s overall tab. /login/teacher  ">
+          <span class="fid">T-ACC-01</span>
+          <div class="fbody"><h3>Sign in as teacher</h3><p>The teacher lands on the portal’s Overall tab.</p></div>
+          <div class="fmeta"><code class="url">/login/teacher</code></div>
+        </li>
+        <li class="flow" data-hay="t-acc-02 use “forgot password?” on the sign-in page a notice says to contact the school administration. /login/teacher  ">
+          <span class="fid">T-ACC-02</span>
+          <div class="fbody"><h3>Use “Forgot password?” on the sign-in page</h3><p>A notice says to contact the school administration.</p></div>
+          <div class="fmeta"><code class="url">/login/teacher</code></div>
+        </li>
+        <li class="flow" data-hay="t-acc-03 sign out the session ends. /teacher-portal, header  ">
+          <span class="fid">T-ACC-03</span>
+          <div class="fbody"><h3>Sign out</h3><p>The session ends.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, header</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-PRT">
+      <header class="ghead"><h2>Portal and overview</h2><span class="gright"><a class="guide-link" href="nested_docs/prt.html">Step-by-step guide →</a><span class="gcount">7 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-prt-01 reorder the portal tabs tabs stay in the dragged order. /teacher-portal, tab bar  ">
+          <span class="fid">T-PRT-01</span>
+          <div class="fbody"><h3>Reorder the portal tabs</h3><p>Tabs stay in the dragged order.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, tab bar</code></div>
+        </li>
+        <li class="flow" data-hay="t-prt-02 reset the tab order tabs return to their default order. /teacher-portal, tab bar  ">
+          <span class="fid">T-PRT-02</span>
+          <div class="fbody"><h3>Reset the tab order</h3><p>Tabs return to their default order.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, tab bar</code></div>
+        </li>
+        <li class="flow" data-hay="t-prt-03 read the overall tab student count, attendance, points and payments, with a drill-down per group. /teacher-portal, overall tab  ">
+          <span class="fid">T-PRT-03</span>
+          <div class="fbody"><h3>Read the Overall tab</h3><p>Student count, attendance, points and payments, with a drill-down per group.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Overall tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-prt-04 read the statistics tab charts for the teacher’s classes compared with the whole centre. /teacher-portal, statistics tab  ">
+          <span class="fid">T-PRT-04</span>
+          <div class="fbody"><h3>Read the Statistics tab</h3><p>Charts for the teacher’s classes compared with the whole centre.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Statistics tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-prt-05 switch statistics between daily and monthly charts regroup by the chosen period. /teacher-portal, statistics tab  ">
+          <span class="fid">T-PRT-05</span>
+          <div class="fbody"><h3>Switch statistics between daily and monthly</h3><p>Charts regroup by the chosen period.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Statistics tab</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="t-prt-06 use the quick actions menu shortcuts to create test, take attendance and create assignment. /teacher-portal, header  known issue “create assignment” opens a superuser-only page, and “take attendance” opens the read-only attendance tab.">
+          <span class="fid">T-PRT-06</span>
+          <div class="fbody"><h3>Use the quick actions menu</h3><p>Shortcuts to Create Test, Take Attendance and Create Assignment.</p><p class="issue"><b>Known issue</b> “Create Assignment” opens a superuser-only page, and “Take Attendance” opens the read-only Attendance tab.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, header</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="t-prt-07 use the header notifications and schedule buttons should open notifications and the schedule. /teacher-portal, header  known issue both buttons do nothing yet.">
+          <span class="fid">T-PRT-07</span>
+          <div class="fbody"><h3>Use the header Notifications and Schedule buttons</h3><p>Should open notifications and the schedule.</p><p class="issue"><b>Known issue</b> Both buttons do nothing yet.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, header</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-CLS">
+      <header class="ghead"><h2>My classes and students</h2><span class="gright"><a class="guide-link" href="nested_docs/cls.html">Step-by-step guide →</a><span class="gcount">8 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-cls-01 view my classes every class the teacher runs, with schedule and size. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-01</span>
+          <div class="fbody"><h3>View my classes</h3><p>Every class the teacher runs, with schedule and size.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-cls-02 open a class group the class roster and its lessons. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-02</span>
+          <div class="fbody"><h3>Open a class group</h3><p>The class roster and its lessons.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-cls-03 filter my students by payment, status or class the student directory narrows to matching students. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-03</span>
+          <div class="fbody"><h3>Filter my students by payment, status or class</h3><p>The student directory narrows to matching students.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-cls-04 open a student’s details overview, grades, attendance, test results and coins, also reachable from the row menu. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-04</span>
+          <div class="fbody"><h3>Open a student’s details</h3><p>Overview, Grades, Attendance, Test Results and Coins, also reachable from the row menu.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-cls-05 clear student filters the full student directory returns. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-05</span>
+          <div class="fbody"><h3>Clear student filters</h3><p>The full student directory returns.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-cls-06 update a student’s coins the student’s coin balance changes. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-06</span>
+          <div class="fbody"><h3>Update a student’s coins</h3><p>The student’s coin balance changes.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-cls-07 delete a coin transaction a coin entry is removed and the balance is recalculated. /teacher-portal, my classes tab  ">
+          <span class="fid">T-CLS-07</span>
+          <div class="fbody"><h3>Delete a coin transaction</h3><p>A coin entry is removed and the balance is recalculated.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="t-cls-08 open a student’s full profile page should open the student profile. /teacher-portal, student link  known issue the link goes to /student/:id, which only superusers can open.">
+          <span class="fid">T-CLS-08</span>
+          <div class="fbody"><h3>Open a student’s full profile page</h3><p>Should open the student profile.</p><p class="issue"><b>Known issue</b> The link goes to /student/:id, which only superusers can open.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, student link</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-LES">
+      <header class="ghead"><h2>Lessons</h2><span class="gright"><a class="guide-link" href="nested_docs/les.html">Step-by-step guide →</a><span class="gcount">7 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-les-01 choose lesson actions before starting the lesson starts with the chosen steps, including coins. /teacher-portal, my classes tab  ">
+          <span class="fid">T-LES-01</span>
+          <div class="fbody"><h3>Choose lesson actions before starting</h3><p>The lesson starts with the chosen steps, including coins.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-les-02 start a lesson the lesson workflow opens for today’s session. /teacher-portal, my classes tab  ">
+          <span class="fid">T-LES-02</span>
+          <div class="fbody"><h3>Start a lesson</h3><p>The lesson workflow opens for today’s session.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Classes tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-les-03 take attendance in a lesson present, absent and late are saved per student. /classes/:classid/sessions/:sessionid/workflow  ">
+          <span class="fid">T-LES-03</span>
+          <div class="fbody"><h3>Take attendance in a lesson</h3><p>Present, absent and late are saved per student.</p></div>
+          <div class="fmeta"><code class="url">/classes/:classId/sessions/:sessionId/workflow</code></div>
+        </li>
+        <li class="flow" data-hay="t-les-04 record homework, activity and points lesson scores are saved per student. /classes/:classid/sessions/:sessionid/workflow  ">
+          <span class="fid">T-LES-04</span>
+          <div class="fbody"><h3>Record homework, activity and points</h3><p>Lesson scores are saved per student.</p></div>
+          <div class="fmeta"><code class="url">/classes/:classId/sessions/:sessionId/workflow</code></div>
+        </li>
+        <li class="flow" data-hay="t-les-05 create a consolidation exercise students get a post-lesson exercise. lesson workflow  ">
+          <span class="fid">T-LES-05</span>
+          <div class="fbody"><h3>Create a consolidation exercise</h3><p>Students get a post-lesson exercise.</p></div>
+          <div class="fmeta"><code class="url">Lesson workflow</code></div>
+        </li>
+        <li class="flow" data-hay="t-les-06 copy or regenerate the consolidation link the public exercise link is shared or replaced. lesson workflow  ">
+          <span class="fid">T-LES-06</span>
+          <div class="fbody"><h3>Copy or regenerate the consolidation link</h3><p>The public exercise link is shared or replaced.</p></div>
+          <div class="fmeta"><code class="url">Lesson workflow</code></div>
+        </li>
+        <li class="flow" data-hay="t-les-07 read consolidation results for my lesson each student’s exercise score. lesson workflow, consolidation tab  ">
+          <span class="fid">T-LES-07</span>
+          <div class="fbody"><h3>Read consolidation results for my lesson</h3><p>Each student’s exercise score.</p></div>
+          <div class="fmeta"><code class="url">Lesson workflow, Consolidation tab</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-ATT">
+      <header class="ghead"><h2>Attendance and calendar</h2><span class="gright"><a class="guide-link" href="nested_docs/att.html">Step-by-step guide →</a><span class="gcount">3 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-att-01 view a group’s attendance by date who attended on the chosen day, moving day by day. read-only. /teacher-portal, attendance tab  ">
+          <span class="fid">T-ATT-01</span>
+          <div class="fbody"><h3>View a group’s attendance by date</h3><p>Who attended on the chosen day, moving day by day. Read-only.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Attendance tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-att-02 view monthly points for a group points per student across the month. /teacher-portal, attendance tab  ">
+          <span class="fid">T-ATT-02</span>
+          <div class="fbody"><h3>View monthly points for a group</h3><p>Points per student across the month.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Attendance tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-att-03 read my calendar the teacher’s sessions by day, week, month or agenda. /teacher-portal, calendar tab  ">
+          <span class="fid">T-ATT-03</span>
+          <div class="fbody"><h3>Read my calendar</h3><p>The teacher’s sessions by day, week, month or agenda.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Calendar tab</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-TST">
+      <header class="ghead"><h2>My tests</h2><span class="gright"><a class="guide-link" href="nested_docs/tst.html">Step-by-step guide →</a><span class="gcount">10 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-tst-01 browse my tests the list of tests the teacher wrote, with counts. /teacher-portal, my tests tab  ">
+          <span class="fid">T-TST-01</span>
+          <div class="fbody"><h3>Browse my tests</h3><p>The list of tests the teacher wrote, with counts.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Tests tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-02 filter tests by owner, status and type switch between “mine” and all tests, or show only those to grade. /teacher-portal, my tests tab  ">
+          <span class="fid">T-TST-02</span>
+          <div class="fbody"><h3>Filter tests by owner, status and type</h3><p>Switch between “mine” and all tests, or show only those to grade.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Tests tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-03 create a test a test with questions and passages is saved. /tests/create  ">
+          <span class="fid">T-TST-03</span>
+          <div class="fbody"><h3>Create a test</h3><p>A test with questions and passages is saved.</p></div>
+          <div class="fmeta"><code class="url">/tests/create</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-04 open a test the test details open inside the portal. /teacher-portal, my tests tab  ">
+          <span class="fid">T-TST-04</span>
+          <div class="fbody"><h3>Open a test</h3><p>The test details open inside the portal.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Tests tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-05 edit a test i wrote questions and settings are changed. other teachers’ tests cannot be edited. /tests/:testid/edit  ">
+          <span class="fid">T-TST-05</span>
+          <div class="fbody"><h3>Edit a test I wrote</h3><p>Questions and settings are changed. Other teachers’ tests cannot be edited.</p></div>
+          <div class="fmeta"><code class="url">/tests/:testId/edit</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-06 delete a test i wrote the test is removed. /teacher-portal, my tests tab  ">
+          <span class="fid">T-TST-06</span>
+          <div class="fbody"><h3>Delete a test I wrote</h3><p>The test is removed.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Tests tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-07 assign a test to classes or students students see the test in their list. /tests/:testid/assign  ">
+          <span class="fid">T-TST-07</span>
+          <div class="fbody"><h3>Assign a test to classes or students</h3><p>Students see the test in their list.</p></div>
+          <div class="fmeta"><code class="url">/tests/:testId/assign</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-08 create, copy, replace or turn off a share link assigned students can start the test from a link. /teacher-portal, my tests tab  ">
+          <span class="fid">T-TST-08</span>
+          <div class="fbody"><h3>Create, copy, replace or turn off a share link</h3><p>Assigned students can start the test from a link.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, My Tests tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-09 review submissions every student’s attempt and score. /tests/submissions/:submissionid  ">
+          <span class="fid">T-TST-09</span>
+          <div class="fbody"><h3>Review submissions</h3><p>Every student’s attempt and score.</p></div>
+          <div class="fmeta"><code class="url">/tests/submissions/:submissionId</code></div>
+        </li>
+        <li class="flow" data-hay="t-tst-10 grade a submission marks and feedback are saved for written answers. /tests/submissions/:submissionid/grade  ">
+          <span class="fid">T-TST-10</span>
+          <div class="fbody"><h3>Grade a submission</h3><p>Marks and feedback are saved for written answers.</p></div>
+          <div class="fmeta"><code class="url">/tests/submissions/:submissionId/grade</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-ASG">
+      <header class="ghead"><h2>Assignments</h2><span class="gright"><a class="guide-link" href="nested_docs/asg.html">Step-by-step guide →</a><span class="gcount">3 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-asg-01 browse active, past due and all assignments assignments filtered by status. /teacher-portal, assignments tab  ">
+          <span class="fid">T-ASG-01</span>
+          <div class="fbody"><h3>Browse active, past due and all assignments</h3><p>Assignments filtered by status.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Assignments tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-asg-02 create an assignment students get homework with a due date. /teacher-portal, assignments tab  ">
+          <span class="fid">T-ASG-02</span>
+          <div class="fbody"><h3>Create an assignment</h3><p>Students get homework with a due date.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Assignments tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-asg-03 edit or delete an assignment the assignment is changed or removed. /teacher-portal, assignments tab  ">
+          <span class="fid">T-ASG-03</span>
+          <div class="fbody"><h3>Edit or delete an assignment</h3><p>The assignment is changed or removed.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Assignments tab</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-TSK">
+      <header class="ghead"><h2>Tasks from the administration</h2><span class="gright"><a class="guide-link" href="nested_docs/tsk.html">Step-by-step guide →</a><span class="gcount">3 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-tsk-01 accept a task the task shows as accepted to the owner. /teacher-portal, tasks tab  ">
+          <span class="fid">T-TSK-01</span>
+          <div class="fbody"><h3>Accept a task</h3><p>The task shows as accepted to the owner.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Tasks tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tsk-02 reject a task the task shows as rejected to the owner. /teacher-portal, tasks tab  ">
+          <span class="fid">T-TSK-02</span>
+          <div class="fbody"><h3>Reject a task</h3><p>The task shows as rejected to the owner.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Tasks tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-tsk-03 mark a task done the task shows as done to the owner. /teacher-portal, tasks tab  ">
+          <span class="fid">T-TSK-03</span>
+          <div class="fbody"><h3>Mark a task done</h3><p>The task shows as done to the owner.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Tasks tab</code></div>
+        </li>
+      </ol>
+    </section>
+    <section class="group" id="g-PRF">
+      <header class="ghead"><h2>Profile, salary and payments</h2><span class="gright"><a class="guide-link" href="nested_docs/prf.html">Step-by-step guide →</a><span class="gcount">4 flows</span></span></header>
+      <ol class="flows">
+        <li class="flow" data-hay="t-prf-01 change my password the teacher signs in with the new password next time. /teacher-portal, profile tab  ">
+          <span class="fid">T-PRF-01</span>
+          <div class="fbody"><h3>Change my password</h3><p>The teacher signs in with the new password next time.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Profile tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-prf-02 read my salary what the teacher has earned and been paid. /teacher-portal, profile tab  ">
+          <span class="fid">T-PRF-02</span>
+          <div class="fbody"><h3>Read my salary</h3><p>What the teacher has earned and been paid.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Profile tab</code></div>
+        </li>
+        <li class="flow" data-hay="t-prf-03 switch the salary view between stats and details salary shown as summary figures or line by line. /teacher-portal, profile tab  ">
+          <span class="fid">T-PRF-03</span>
+          <div class="fbody"><h3>Switch the salary view between stats and details</h3><p>Salary shown as summary figures or line by line.</p></div>
+          <div class="fmeta"><code class="url">/teacher-portal, Profile tab</code></div>
+        </li>
+        <li class="flow has-issue" data-hay="t-prf-04 open payments with the payment password should show payments for the teacher’s groups. /payments  known issue nothing in the portal links there, and the payment sign-in screen is not shown.">
+          <span class="fid">T-PRF-04</span>
+          <div class="fbody"><h3>Open Payments with the payment password</h3><p>Should show payments for the teacher’s groups.</p><p class="issue"><b>Known issue</b> Nothing in the portal links there, and the payment sign-in screen is not shown.</p></div>
+          <div class="fmeta"><code class="url">/payments</code></div>
+        </li>
+      </ol>
+    </section>
+      <aside class="gaps">
+        <h2>Gaps found while mapping</h2>
+        <p>These are not flows. They are problems or missing screens the docs will mention.</p>
+        <ul><li><strong>No language or theme switch</strong><span>The portal header that had the UZ/EN switch is never shown, and the hidden sidebar removes the theme button.</span></li><li><strong>Attendance only inside a lesson</strong><span>The Attendance tab is read-only. Attendance is taken from the lesson workflow.</span></li><li><strong>No self-service password reset</strong><span>“Forgot password?” only shows a contact message.</span></li></ul>
+      </aside>
+    </main>
+  </div>
+</div>
+<script>
+(function(){
+  var input=document.getElementById('flow-search'), shown=document.getElementById('shown');
+  var flows=[].slice.call(document.querySelectorAll('.flow')), groups=[].slice.call(document.querySelectorAll('.group'));
+  input.addEventListener('input',function(){
+    var q=input.value.trim().toLowerCase(), n=0;
+    flows.forEach(function(f){var hit=!q||f.dataset.hay.indexOf(q)>-1;f.hidden=!hit;if(hit)n++;});
+    groups.forEach(function(g){g.hidden=!g.querySelector('.flow:not([hidden])');});
+    shown.textContent=q?('Showing '+n+' of 48 flows.'):'Showing all 48 flows. Each flow becomes one step-by-step document once approved.';
+  });
+})();
+</script>
+</body>
+</html>
