@@ -58,6 +58,7 @@ import CalendarPage from '../crm/calendar/CalendarPage';
 import OverallStatisticsTab from './components/OverallStatisticsTab';
 import TeacherProfileTab from './components/TeacherProfileTab';
 import TeacherStatisticsTab from './statistics/TeacherStatisticsTab';
+import ConsolidationsOverviewPage from '../crm/consolidations/ConsolidationsOverviewPage';
 
 // Tab order is a per-browser preference only - it's never sent to the server, just like the
 // sidebar's drag-to-reorder, except this one stays local instead of syncing through settingsAPI.
@@ -224,6 +225,7 @@ const TeacherPortal = () => {
 
     { value: 'overall', label: t('Overall'), icon: <ClipboardCopy className = " h-4 w-4" /> },
     { value: 'statistics', label: t('Statistics'), icon: <Star className="h-4 w-4" /> },
+    { value: 'consolidations', label: t('Consolidations'), icon: <ClipboardCheck className="h-4 w-4" /> },
     { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
     { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'calendar', label: t('Calendar'), icon: <CalendarDays className="h-4 w-4" /> },
@@ -380,6 +382,9 @@ const TeacherPortal = () => {
                 classes={classesData}
                 students={studentsData}
               />
+            </TabsContent>
+            <TabsContent value="consolidations" className="-m-4">
+              <ConsolidationsOverviewPage />
             </TabsContent>
             <TabsContent value="tests">
               <TeacherTestsView />
