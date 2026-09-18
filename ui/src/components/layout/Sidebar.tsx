@@ -224,7 +224,7 @@ const Sidebar = memo(() => {
     },
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
-    { label: 'Consolidations', path: '/consolidations', iconName: 'MdQuiz', roles: ['superuser'] },
+    { label: 'Consolidations', path: '/consolidations', iconName: 'MdQuiz', roles: ['superuser', 'teacher'] },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'], permission: 'VIEW_CALENDAR' },
 

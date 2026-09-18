@@ -127,11 +127,14 @@ const getResultsDashboard = async (sessionId: number, centerId: number | undefin
   };
 };
 
-// Center-wide overview for the superuser dashboard: every consolidation set with
-// its per-set stats (the "per-class/session breakdown"), rolled up by teacher and
-// as center-wide totals. One extra aggregation query instead of looping per set.
-const getConsolidationsOverview = async (centerId: number) => {
-  const sets = await consolidationRepository.findOverviewSets(centerId);
+// Consolidation overview: superusers receive center-wide data while teachers are
+// limited to their own sets. One extra aggregation query avoids looping per set.
+const getConsolidationsOverview = async (
+  centerId: number,
+  caller: { userType?: string; teacherId?: number } = {},
+) => {
+  const teacherId = caller.userType === 'teacher' ? caller.teacherId : undefined;
+  const sets = await consolidationRepository.findOverviewSets(centerId, teacherId);
   const setIds = sets.map((set: any) => set.consolidation_set_id);
   const aggregates = await consolidationRepository.findTrialAggregatesForSets(setIds);
   const aggByset = new Map<number, any>(aggregates.map((agg: any) => [Number(agg.consolidation_set_id), agg]));

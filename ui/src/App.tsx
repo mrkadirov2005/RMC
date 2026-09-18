@@ -334,7 +334,7 @@ function AppContent() {
         <Route
           path="/consolidations"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <ConsolidationsOverviewPage />

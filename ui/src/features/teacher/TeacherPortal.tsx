@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Star,
   Plus,
-  Bell,
   Clock,
   Loader2,
   ClipboardCopy,
@@ -283,16 +282,6 @@ const TeacherPortal = () => {
         }
         actions={
           <>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button type="button" variant="outline" size="icon" aria-label={t('Notifications')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-                    <Bell className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={8}>{t('Notifications')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

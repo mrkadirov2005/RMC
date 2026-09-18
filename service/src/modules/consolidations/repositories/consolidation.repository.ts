@@ -191,10 +191,16 @@ const countTrialsForSet = async (setId: number) => {
 const findTrialsForSet = async (setId: number) =>
   db.select(trialSelection).from(consolidationTrials).where(eq(consolidationTrials.consolidationSetId, Number(setId))).orderBy(desc(consolidationTrials.startedAt));
 
-// Center-wide overview: every non-deleted set with its teacher/class/session label
-// and word count, for the superuser dashboard (per-teacher and per-session stats).
-const findOverviewSets = async (centerId: number) =>
-  db
+// Overview sets with their teacher/class/session labels and word counts. Teachers
+// pass a teacherId to limit this query to their own consolidation sets.
+const findOverviewSets = async (centerId: number, teacherId?: number) => {
+  const conditions = [
+    eq(consolidationSets.centerId, Number(centerId)),
+    sql`${consolidationSets.deletedAt} IS NULL`,
+  ];
+  if (teacherId != null) conditions.push(eq(consolidationSets.teacherId, Number(teacherId)));
+
+  return db
     .select({
       consolidation_set_id: consolidationSets.consolidationSetId,
       title: consolidationSets.title,
@@ -212,8 +218,9 @@ const findOverviewSets = async (centerId: number) =>
     .innerJoin(classes, eq(classes.classId, consolidationSets.classId))
     .innerJoin(sessions, eq(sessions.sessionId, consolidationSets.sessionId))
     .innerJoin(teachers, eq(teachers.teacherId, consolidationSets.teacherId))
-    .where(and(eq(consolidationSets.centerId, Number(centerId)), sql`${consolidationSets.deletedAt} IS NULL`))
+    .where(and(...conditions))
     .orderBy(desc(consolidationSets.createdAt));
+};
 
 // One row per set: trial_count (every attempt), student_count (distinct students
 // with at least one attempt), passed_student_count (distinct students with at

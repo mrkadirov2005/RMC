@@ -1,4 +1,5 @@
-// Superuser-only overview for vocabulary consolidation exercises. One main
+// Overview for vocabulary consolidation exercises. Superusers see center-wide
+// data; teachers see only their own sets. One main
 // chart (effectiveness: pass-by-attempt-number + violations) with click-to-
 // drill-down, plus two actions in the top-right corner: "Create Consolidator"
 // (the Teacher -> Class -> Session picker, which opens the same creation/
@@ -19,6 +20,8 @@ import { unwrapApiRows } from '@/shared/api/response';
 import { consolidationApi, type ConsolidationOutcome, type ConsolidationOverview } from '../classes/api/consolidationApi';
 import ConsolidationTab from '../classes/components/ConsolidationTab';
 import EffectivenessChart, { type EffectivenessBarKey } from './EffectivenessChart';
+import { useAppSelector } from '../hooks';
+import type { RootState } from '@/store';
 
 interface TeacherOption {
   teacher_id: number;
@@ -50,6 +53,8 @@ const matchesBucket = (outcome: ConsolidationOutcome, bucket: EffectivenessBarKe
   bucket === 'had_violations' ? outcome.violation_count > 0 : outcome.bucket === bucket;
 
 export default function ConsolidationsOverviewPage() {
+  const { user } = useAppSelector((state: RootState) => state.auth);
+  const isTeacher = user?.userType === 'teacher';
   const [overview, setOverview] = useState<ConsolidationOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState('');
@@ -62,7 +67,7 @@ export default function ConsolidationsOverviewPage() {
   const [classes, setClasses] = useState<ClassOption[]>([]);
   const [sessions, setSessions] = useState<SessionOption[]>([]);
 
-  const [teacherId, setTeacherId] = useState<string>('');
+  const [teacherId, setTeacherId] = useState<string>(isTeacher && user?.id ? String(user.id) : '');
   const [classId, setClassId] = useState<string>('');
   const [sessionId, setSessionId] = useState<string>('');
   const [classesLoading, setClassesLoading] = useState(false);
@@ -83,8 +88,14 @@ export default function ConsolidationsOverviewPage() {
 
   useEffect(() => {
     loadOverview();
-    teacherAPI.getAll().then((response) => setTeachers(unwrapApiRows<TeacherOption>(response)));
-  }, []);
+    if (!isTeacher) {
+      teacherAPI.getAll().then((response) => setTeachers(unwrapApiRows<TeacherOption>(response)));
+    }
+  }, [isTeacher]);
+
+  useEffect(() => {
+    if (isTeacher && user?.id) setTeacherId(String(user.id));
+  }, [isTeacher, user?.id]);
 
   useEffect(() => {
     setClassId('');
@@ -131,7 +142,9 @@ export default function ConsolidationsOverviewPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">Consolidations</h1>
-          <p className="text-sm text-muted-foreground">Vocabulary consolidation exercises across every teacher and class.</p>
+          <p className="text-sm text-muted-foreground">
+            {isTeacher ? 'Your vocabulary consolidation exercises.' : 'Vocabulary consolidation exercises across every teacher and class.'}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setResultsOpen(true)}>
@@ -184,7 +197,7 @@ export default function ConsolidationsOverviewPage() {
                 <thead>
                   <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                     <th className="py-2 pr-3">Student</th>
-                    <th className="py-2 pr-3">Teacher</th>
+                    {!isTeacher && <th className="py-2 pr-3">Teacher</th>}
                     <th className="py-2 pr-3">Class</th>
                     <th className="py-2 pr-3">Session</th>
                     <th className="py-2 pr-3">Set</th>
@@ -197,7 +210,7 @@ export default function ConsolidationsOverviewPage() {
                   {drillDownRows.map((row) => (
                     <tr key={`${row.consolidation_set_id}-${row.student_id}`} className="border-b last:border-0">
                       <td className="py-2 pr-3 font-medium">{row.student_name}</td>
-                      <td className="py-2 pr-3">{row.teacher_name}</td>
+                      {!isTeacher && <td className="py-2 pr-3">{row.teacher_name}</td>}
                       <td className="py-2 pr-3">{row.class_name}</td>
                       <td className="py-2 pr-3">{row.session_date}</td>
                       <td className="py-2 pr-3">{row.set_title || '—'}</td>
@@ -270,7 +283,7 @@ export default function ConsolidationsOverviewPage() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                          <th className="py-2 pr-3">Teacher</th>
+                          {!isTeacher && <th className="py-2 pr-3">Teacher</th>}
                           <th className="py-2 pr-3">Sets</th>
                           <th className="py-2 pr-3">Trials</th>
                           <th className="py-2 pr-3">Students</th>
@@ -281,7 +294,7 @@ export default function ConsolidationsOverviewPage() {
                       <tbody>
                         {overview.by_teacher.map((row) => (
                           <tr key={row.teacher_id} className="border-b last:border-0">
-                            <td className="py-2 pr-3 font-medium">{row.teacher_name}</td>
+                            {!isTeacher && <td className="py-2 pr-3 font-medium">{row.teacher_name}</td>}
                             <td className="py-2 pr-3">{row.sets_count}</td>
                             <td className="py-2 pr-3">{row.trial_count}</td>
                             <td className="py-2 pr-3">{row.student_count}</td>
@@ -308,7 +321,7 @@ export default function ConsolidationsOverviewPage() {
                         <tr className="border-b text-left text-xs uppercase text-muted-foreground">
                           <th className="py-2 pr-3">Class</th>
                           <th className="py-2 pr-3">Session</th>
-                          <th className="py-2 pr-3">Teacher</th>
+                          {!isTeacher && <th className="py-2 pr-3">Teacher</th>}
                           <th className="py-2 pr-3">Title</th>
                           <th className="py-2 pr-3">Words</th>
                           <th className="py-2 pr-3">Trials</th>
@@ -322,7 +335,7 @@ export default function ConsolidationsOverviewPage() {
                           <tr key={row.consolidation_set_id} className="border-b last:border-0">
                             <td className="py-2 pr-3 font-medium">{row.class_name}</td>
                             <td className="py-2 pr-3">{row.session_date}</td>
-                            <td className="py-2 pr-3">{row.teacher_name}</td>
+                            {!isTeacher && <td className="py-2 pr-3">{row.teacher_name}</td>}
                             <td className="py-2 pr-3">{row.title || '—'}</td>
                             <td className="py-2 pr-3">{row.word_count}</td>
                             <td className="py-2 pr-3">{row.trial_count}</td>
@@ -350,7 +363,7 @@ export default function ConsolidationsOverviewPage() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
-              <div>
+              {!isTeacher && <div>
                 <Label className="mb-1 block">Teacher</Label>
                 <Select value={teacherId} onValueChange={setTeacherId}>
                   <SelectTrigger>
@@ -364,7 +377,7 @@ export default function ConsolidationsOverviewPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div>}
 
               <div>
                 <Label className="mb-1 block">Class</Label>
