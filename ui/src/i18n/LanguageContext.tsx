@@ -1481,7 +1481,6 @@ const translations: Record<string, string> = {
   'Temporary password copied.': 'Vaqtinchalik parol nusxalandi.',
   'Failed to copy password.': "Parolni nusxalab bo'lmadi.",
   'User not authenticated': 'Foydalanuvchi autentifikatsiya qilinmagan',
-  'Welcome': 'Xush kelibsiz',
   'Good morning': 'Xayrli tong',
   'Good afternoon': 'Xayrli kun',
   'Good evening': 'Xayrli kech',
@@ -1575,21 +1574,14 @@ const translations: Record<string, string> = {
   'No status': "Holat yo'q",
   'No statuses found.': 'Holatlar topilmadi.',
   'No username': "Foydalanuvchi nomi yo'q",
-  'None': "Yo'q",
   'Not selected': 'Tanlanmagan',
   'Not selected yet': 'Hali tanlanmagan',
   'Not set': "Belgilanmagan",
-  'Open': 'Ochish',
   'Open profile': 'Profilni ochish',
   'Operation failed': 'Amal bajarilmadi',
-  'Optional': 'Ixtiyoriy',
   'Optional notes': 'Ixtiyoriy eslatmalar',
-  'Overdue': "Muddati o'tgan",
-  'Overview': "Umumiy ko'rinish",
   'Points': 'Ballar',
   'Portals': 'Portallar',
-  'Private': 'Shaxsiy',
-  'Public': 'Ommaviy',
   'Range': 'Diapazon',
   'Drag to pick a range': 'Diapazoni tanlash uchun torting',
   'Adjust range start': 'Diapazon boshlanishini sozlang',
@@ -1772,7 +1764,6 @@ const translations: Record<string, string> = {
   'Academic Core': "O'quv yadrosi",
   'Telegram Leads': 'Telegram lidlari',
   'Imports': 'Importlar',
-  'Notifications': 'Bildirishnomalar',
   'Layout': "Joylashuv",
   'Sidebar': 'Yon panel',
   'All Ages': 'Barcha yoshlar',
@@ -1800,7 +1791,6 @@ const translations: Record<string, string> = {
   'Please choose a CSV file.': 'CSV faylini tanlang.',
   'Start date must be before end date': "Boshlanish sanasi tugash sanasidan oldin bo'lishi kerak",
   'Confirmed': 'Tasdiqlangan',
-  'Rejected': 'Rad etilgan',
   'Bar chart': 'Ustunli grafik',
   'Line chart': 'Chiziqli grafik',
   'Age': 'Yosh',
@@ -1888,22 +1878,7 @@ const translations: Record<string, string> = {
   'Selection': 'Tanlov',
 
   // ── Missing page headers & menu items ────────────────────────
-  'Attendance': 'Davomat',
-  'Assignments': 'Topshiriqlar',
-  'Calendar': 'Kalendar',
-  'Grades': 'Baholar',
-  'Groups': 'Guruhlar',
-  'Rooms': 'Xonalar',
   'Results': 'Natijalar',
-  'Students': "O'quvchilar",
-  'Teachers': "O'qituvchilar",
-  'Tests': 'Testlar',
-  'Subject': 'Fan',
-  'Schedule': 'Jadval',
-  'Filters': 'Filtrlar',
-  'Questions': 'Savollar',
-  'Instructions': "Ko'rsatmalar",
-  'Outstanding': "To'lanmagan",
   'Effectiveness': 'Samaradorlik',
 
   // ── Consolidations page ──────────────────────────────────────
@@ -1950,23 +1925,16 @@ const translations: Record<string, string> = {
   'Logged User Accounts': 'Tizimga kirgan foydalanuvchilar',
 
   // ── Additional page headers ──────────────────────────────────
-  'Settings': 'Sozlamalar',
   'Configure lesson generation, calendar defaults, and local workspace preferences.': "Dars yaratish, kalendar sozlamalari va mahalliy ish muhiti parametrlarini sozlang.",
   'Track assigned tests, continue work in progress, and review completed results.': "Tayinlangan testlarni kuzating, davom ettiring va yakunlangan natijalarni ko'ring.",
   "Set the paper up, write the questions, then choose who sits it.": "Testni tayyorlang, savollarni yozing, keyin kimlar topshirishini tanlang.",
   'Create, assign, monitor and grade student assessments.': "O'quvchi baholashlarini yarating, tayinlang, kuzating va baholang.",
   'All classes, sessions, rooms, and attendance touchpoints.': "Barcha sinflar, sessiyalar, xonalar va davomat nuqtalari.",
-  'Total': 'Jami',
-  'Payments': "To'lovlar",
   'Total sets': 'Jami setlar',
   'Total trials': 'Jami urinishlar',
   'Students submitted': "Topshirgan o'quvchilar",
   'Lockdown violations': 'Qoidabuzarliklar',
   'No consolidation sets created yet.': "Hali mustahkamlash setlari yaratilmagan.",
-  'Student': "O'quvchi",
-  'Teacher': "O'qituvchi",
-  'Class': 'Sinf',
-  'Session': 'Sessiya',
   'Set': 'Set',
   'Attempts': 'Urinishlar',
   'First passed on': "Birinchi o'tgan",
@@ -2021,9 +1989,6 @@ const translateExact = (
 };
 
 const translateStaticDom = (
-  language: AppLanguage,
-  translationMap: Record<string, string>,
-  reverseTranslationMap: Record<string, string>
 ) => {
   if (typeof document === 'undefined' || !document.body) return;
 
@@ -2055,7 +2020,6 @@ const translateStaticDom = (
 };
 
 interface LanguageContextValue {
-  language: AppLanguage;
   setLanguage: (language: AppLanguage) => void;
   toggleLanguage: () => void;
   t: (value: string) => string;
@@ -2166,7 +2130,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       setLanguage,
       toggleLanguage,
       t,
-      translations: remoteTranslations,
       refreshTranslations,
       saveTranslation,
     }),
