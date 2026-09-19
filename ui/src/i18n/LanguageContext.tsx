@@ -1974,7 +1974,6 @@ const translations: Record<string, string> = {
   'Sets': 'Setlar',
   'Trials': 'Urinishlar',
   "Choose a teacher and group to see every student's payment status.": "Har bir o'quvchining to'lov holatini ko'rish uchun o'qituvchi va guruhni tanlang.",
-  'Group': 'Guruh',
   "No students in this bucket.": "Bu guruhda o'quvchilar yo'q.",
   "Your vocabulary consolidation exercises.": "Sizning lug'at mustahkamlash mashqlaringiz.",
   'Edit test': 'Testni tahrirlash',
