@@ -98,6 +98,32 @@ const toPublicQuestion = (question: any) => {
   return rest;
 };
 
+// A teacher may only change a test they wrote. Superusers can change any test in
+// their centre. Reading, taking and assigning are governed elsewhere.
+const canModifyTest = (test: any, user: any) => {
+  if (!test || !user) return false;
+  if (user.userType === 'superuser' || user.userType === 'owner') return true;
+  return user.userType === 'teacher'
+    && String(test.created_by_type || 'teacher') === 'teacher'
+    && Number(test.created_by) === Number(user.id);
+};
+
+// Resolves the test a write targets and decides whether this user may make it.
+// `not_found` covers a test outside the caller's centre as well as a missing one.
+const checkTestWriteAccess = async (
+  target: { testId?: number; questionId?: number; passageId?: number },
+  centerId: number | undefined,
+  user: any
+) => {
+  let testId = target.testId ?? null;
+  if (testId == null && target.questionId != null) testId = await testRepository.findQuestionTestId(target.questionId, centerId);
+  if (testId == null && target.passageId != null) testId = await testRepository.findPassageTestId(target.passageId, centerId);
+  if (testId == null) return 'not_found' as const;
+  const test = await testRepository.findById(Number(testId), centerId);
+  if (!test) return 'not_found' as const;
+  return canModifyTest(test, user) ? ('ok' as const) : ('forbidden' as const);
+};
+
 const getTestById = async (id: number, centerId?: number, user?: any) => {
   const test = await testRepository.findById(id, centerId);
   if (!test) return null;
@@ -268,7 +294,8 @@ const addQuestion = async (testId: number, body: any, centerId?: number) => {
 };
 
 const updateQuestion = async (questionId: number, body: any, centerId?: number) => testRepository.updateQuestion([
-  body.test_id ?? null,
+  // Never re-parent a question: it stays on the test it was written for.
+  null,
   body.passage_id ?? null,
   body.question_text ?? null,
   body.question_type ?? null,
@@ -303,7 +330,8 @@ const addPassage = async (testId: number, body: any, centerId?: number) => {
 };
 
 const updatePassage = async (passageId: number, body: any, centerId?: number) => testRepository.updatePassage([
-  body.test_id ?? null,
+  // Never re-parent a passage: it stays on the test it was written for.
+  null,
   body.title ?? null,
   body.content ?? null,
   body.word_count ?? null,
@@ -901,6 +929,8 @@ const getStatistics = async (centerId?: number, user: any = {}) => {
 
 module.exports = {
   listTests,
+  canModifyTest,
+  checkTestWriteAccess,
   getStatistics,
   rotateShareToken,
   revokeShareToken,

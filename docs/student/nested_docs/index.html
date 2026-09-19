@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Getting Started</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#6a3fa0; --accent-soft:color-mix(in srgb, #6a3fa0 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#b99be6; --accent-soft:color-mix(in srgb, #b99be6 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#b99be6; --accent-soft:color-mix(in srgb, #b99be6 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+[hidden]{display:none!important}
+code,.pill,.field code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--accent)}
+strong{color:var(--ink);font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 72px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0 0 20px;max-width:70ch;color:var(--ink-2)}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin:0 0 22px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toc{list-style:none;margin:0 0 36px;padding:0;display:grid;gap:8px}
+.toc li{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;text-decoration:none;color:var(--ink);align-items:baseline}
+.toc a:hover{border-color:var(--accent)}
+.toc b{font-weight:500}
+.toc span{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.area-intro{margin:0 0 28px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;color:var(--ink-2);font-size:14px}
+.flow{border-top:1px solid var(--rule);padding-block:26px;scroll-margin-top:16px}
+.flow:first-of-type{border-top:0}
+.flow h2{margin:0 0 6px;font-size:19px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.flow .fid{font-size:12px;color:var(--ink-3);font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--chip)}
+.pill.url{color:var(--ink)}
+.pill.perm{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+.steps{margin:0 0 14px;padding-left:22px;display:grid;gap:9px}
+.steps li{padding-left:2px}
+.fields{margin:0 0 14px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fields .fh{padding:8px 12px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);background:var(--chip);border-bottom:1px solid var(--rule)}
+.fields ul{list-style:none;margin:0;padding:0}
+.fields li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-top:1px solid var(--rule);font-size:13.5px}
+.fields li:first-child{border-top:0}
+.fields .fnote{color:var(--ink-3);font-size:12.5px;text-align:right}
+.tip{margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.issue{margin:0;padding:9px 12px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:13.5px}
+.issue b{color:var(--warn);text-transform:uppercase;font-size:11px;letter-spacing:.04em;margin-right:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-size:13.5px}
+.pager a{text-decoration:none;color:var(--ink-2);max-width:46%}
+.pager a:hover{color:var(--accent)}
+.pager .lbl{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+@media (max-width:640px){ .flow h2{font-size:17px} .fields li{flex-direction:column;gap:2px} .fields .fnote{text-align:left} }
+
+.result{display:block;padding:10px 14px;border:1px solid var(--rule);border-radius:8px;text-decoration:none;color:var(--ink);margin-bottom:8px;background:var(--surface)}
+.result:hover{border-color:var(--accent)}
+.result small{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
+#results{margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="crumbs"><a href="../user-action-flows.html">Student flows</a><span>/</span><span>Getting started docs</span></p>
+  <p class="eyebrow">Student documentation</p>
+  <h1>Step-by-step guides for newcomers</h1>
+  <p class="lede">Every action a student can take in the platform, written as click-by-click steps. Search for what you want to do — for example “create student” or “assign a test” — or browse by area below.</p>
+  <input id="q" class="search" type="search" placeholder="Search for an action, e.g. “create student”, “assign test”, “mark salary paid”…" autocomplete="off">
+  <div id="results"></div>
+  <ul class="toc" id="toc"><li><a href="acc.html"><b>Account and access</b><span>3 guides</span></a></li>
+    <li><a href="ovr.html"><b>Portal home</b><span>10 guides</span></a></li>
+    <li><a href="tst.html"><b>Tests</b><span>8 guides</span></a></li>
+    <li><a href="cal.html"><b>Calendar</b><span>2 guides</span></a></li>
+    <li><a href="con.html"><b>Consolidation exercises</b><span>2 guides</span></a></li>
+    <li><a href="pub.html"><b>Public links (no sign-in)</b><span>5 guides</span></a></li></ul>
+  <p style="font-size:12.5px;color:var(--ink-3)">30 guides across 6 areas.</p>
+</div>
+<script type="application/json" id="search-data">[{"t":"Sign in as student","a":"Account and access","h":"acc.html#ACC-s-sign-in"},{"t":"Use “Forgot password?” on the sign-in page","a":"Account and access","h":"acc.html#ACC-s-forgot-password"},{"t":"Sign out","a":"Account and access","h":"acc.html#ACC-s-sign-out"},{"t":"Move between Home, My Tests and Calendar","a":"Portal home","h":"ovr.html#OVR-move-between-sections"},{"t":"Read the summary cards","a":"Portal home","h":"ovr.html#OVR-read-summary-cards"},{"t":"Read today’s and this week’s schedule","a":"Portal home","h":"ovr.html#OVR-read-schedule"},{"t":"See the next test and assignment","a":"Portal home","h":"ovr.html#OVR-next-test-assignment"},{"t":"Read upcoming tests and assignments due","a":"Portal home","h":"ovr.html#OVR-upcoming-due"},{"t":"Read recent grades","a":"Portal home","h":"ovr.html#OVR-recent-grades"},{"t":"Read payment history","a":"Portal home","h":"ovr.html#OVR-payment-history-student"},{"t":"Open my profile","a":"Portal home","h":"ovr.html#OVR-open-my-profile"},{"t":"Go back to the portal from My Tests","a":"Portal home","h":"ovr.html#OVR-back-from-mytests"},{"t":"Read notifications","a":"Portal home","h":"ovr.html#OVR-read-notifications"},{"t":"Browse available, in-progress and completed tests","a":"Tests","h":"tst.html#TST-browse-my-tests-student"},{"t":"Start a test","a":"Tests","h":"tst.html#TST-start-test-student"},{"t":"Jump between questions","a":"Tests","h":"tst.html#TST-jump-between-questions"},{"t":"Flag a question for review","a":"Tests","h":"tst.html#TST-flag-question"},{"t":"Answer and submit a test","a":"Tests","h":"tst.html#TST-answer-submit"},{"t":"Finish when time runs out","a":"Tests","h":"tst.html#TST-time-up"},{"t":"Continue a test in progress","a":"Tests","h":"tst.html#TST-continue-test-broken"},{"t":"View results of a completed test","a":"Tests","h":"tst.html#TST-view-results-broken-student"},{"t":"Read my calendar","a":"Calendar","h":"cal.html#CAL-read-calendar-student"},{"t":"Open a lesson’s details","a":"Calendar","h":"cal.html#CAL-open-lesson-details"},{"t":"Do a consolidation exercise from the portal","a":"Consolidation exercises","h":"con.html#CON-do-exercise-portal"},{"t":"Try an exercise again or finish","a":"Consolidation exercises","h":"con.html#CON-try-exercise-again"},{"t":"Take a test from a share link","a":"Public links (no sign-in)","h":"pub.html#PUB-take-test-share-link"},{"t":"Start a repeat attempt from a share link","a":"Public links (no sign-in)","h":"pub.html#PUB-repeat-attempt-share"},{"t":"Open an expired share link","a":"Public links (no sign-in)","h":"pub.html#PUB-expired-link"},{"t":"Do a consolidation exercise from a public link","a":"Public links (no sign-in)","h":"pub.html#PUB-consolidate-public"},{"t":"Confirm a repeat attempt on a consolidation link","a":"Public links (no sign-in)","h":"pub.html#PUB-confirm-repeat-consolidate"}]</script>
+<script src="../../shared/guide-search.js"></script>
+</body>
+</html>

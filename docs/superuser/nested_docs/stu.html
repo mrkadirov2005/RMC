@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Students list — Superuser Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#1f5fa8; --accent-soft:color-mix(in srgb, #1f5fa8 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#7fb0ee; --accent-soft:color-mix(in srgb, #7fb0ee 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#7fb0ee; --accent-soft:color-mix(in srgb, #7fb0ee 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+[hidden]{display:none!important}
+code,.pill,.field code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--accent)}
+strong{color:var(--ink);font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 72px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0 0 20px;max-width:70ch;color:var(--ink-2)}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin:0 0 22px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toc{list-style:none;margin:0 0 36px;padding:0;display:grid;gap:8px}
+.toc li{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;text-decoration:none;color:var(--ink);align-items:baseline}
+.toc a:hover{border-color:var(--accent)}
+.toc b{font-weight:500}
+.toc span{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.area-intro{margin:0 0 28px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;color:var(--ink-2);font-size:14px}
+.flow{border-top:1px solid var(--rule);padding-block:26px;scroll-margin-top:16px}
+.flow:first-of-type{border-top:0}
+.flow h2{margin:0 0 6px;font-size:19px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.flow .fid{font-size:12px;color:var(--ink-3);font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--chip)}
+.pill.url{color:var(--ink)}
+.pill.perm{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+.steps{margin:0 0 14px;padding-left:22px;display:grid;gap:9px}
+.steps li{padding-left:2px}
+.fields{margin:0 0 14px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fields .fh{padding:8px 12px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);background:var(--chip);border-bottom:1px solid var(--rule)}
+.fields ul{list-style:none;margin:0;padding:0}
+.fields li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-top:1px solid var(--rule);font-size:13.5px}
+.fields li:first-child{border-top:0}
+.fields .fnote{color:var(--ink-3);font-size:12.5px;text-align:right}
+.tip{margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.issue{margin:0;padding:9px 12px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:13.5px}
+.issue b{color:var(--warn);text-transform:uppercase;font-size:11px;letter-spacing:.04em;margin-right:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-size:13.5px}
+.pager a{text-decoration:none;color:var(--ink-2);max-width:46%}
+.pager a:hover{color:var(--accent)}
+.pager .lbl{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+@media (max-width:640px){ .flow h2{font-size:17px} .fields li{flex-direction:column;gap:2px} .fields .fnote{text-align:left} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="crumbs"><a href="../user-action-flows.html">Superuser flows</a><span>/</span><a href="index.html">Getting started docs</a><span>/</span><span>Students list</span></p>
+  <p class="eyebrow">Superuser · STU</p>
+  <h1>Students list</h1>
+  <p class="area-intro">The Students page is where every enrolled student is found, added, and organised into classes. Open it from the sidebar item “Students”.</p>
+  <article class="flow" id="STU-find-student">
+      <h2>Find a student with search and filters <span class="fid">STU-find-student</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> from the sidebar.</li>
+        <li>Type a name, phone number or ID into the search box at the top of the list — the list narrows as you type.</li>
+        <li>Click <strong>Filters</strong> to open the filter bar, and set any of class, status, teacher or payment state.</li>
+        <li>Click <strong>Clear All</strong> in the filter bar to remove every filter and search term at once.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-clear-student-filters-list">
+      <h2>Clear all student filters <span class="fid">STU-clear-student-filters-list</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong>.</li>
+        <li>Click <strong>Clear All</strong> in the filter bar — the search term and every filter reset, and the full list returns.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-open-student-from-list">
+      <h2>Open a student from the list <span class="fid">STU-open-student-from-list</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong>, find the student, and open the row’s actions menu.</li>
+        <li>Click <strong>View</strong> — the student’s profile opens.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-add-student">
+      <h2>Add a student <span class="fid">STU-add-student</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> from the sidebar.</li>
+        <li>Click <strong>Add Student</strong> above the list. A dialog titled “Add Student” opens.</li>
+        <li>Fill in the required fields — first name, last name, phone, date of birth, parent name, parent phone, gender and status are all required. School name and school class are optional.</li>
+        <li>If you are the owner, also choose the <strong>Center</strong>.</li>
+        <li>Choose the student’s <strong>Teacher</strong> and <strong>Class</strong> from the dropdowns — a class must belong to the chosen teacher.</li>
+        <li>Optional: tick <strong>Discount</strong> to open the discount fields, then choose Serial, One-time, Fixed or Percent and enter the value and a reason.</li>
+        <li>Optional: choose where the student came from under the acquisition source dropdown (Advertisement, Teacher referral, Student or parent referral, Social media, Walk-in, Other, or add a custom source).</li>
+        <li>Click <strong>Save student</strong>.</li>
+      </ol>
+      <div class="fields"><div class="fh">Form fields</div><ul><li><span>First Name / Last Name</span><span class="fnote">required</span></li><li><span>Phone</span><span class="fnote">required</span></li><li><span>Date of Birth</span><span class="fnote">required</span></li><li><span>Parent Name / Parent Phone</span><span class="fnote">required</span></li><li><span>School (optional) / School Class (optional)</span></li><li><span>Gender</span><span class="fnote">required, select</span></li><li><span>Status</span><span class="fnote">required, select</span></li><li><span>Teacher</span><span class="fnote">required, select</span></li><li><span>Class</span><span class="fnote">required, select</span></li><li><span>Discount</span><span class="fnote">optional toggle — Serial / One-time / Fixed / Percent, value, reason</span></li></ul></div>
+      
+      
+    </article>
+<article class="flow" id="STU-import-students">
+      <h2>Import students from CSV <span class="fid">STU-import-students</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and click the file icon next to <strong>Export CSV</strong> (it opens the file picker).</li>
+        <li>Choose a CSV file from your computer. Use <strong>Export CSV</strong> first on an existing list if you need to see the expected column layout.</li>
+        <li>The import runs immediately after you pick the file — watch for a success or error toast.</li>
+      </ol>
+      
+      <p class="tip">If a row fails, fix that row in the CSV and re-import just the corrected rows — importing does not remove existing students.</p>
+      
+    </article>
+<article class="flow" id="STU-export-students">
+      <h2>Export students to CSV <span class="fid">STU-export-students</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong>, apply any filters you want reflected in the export, then click <strong>Export CSV</strong>.</li>
+        <li>The file downloads with the students currently shown in the list.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-sheets-push">
+      <h2>Push students to Google Sheets <span class="fid">STU-sheets-push</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and click <strong>Update Sheets</strong>.</li>
+        <li>Wait for the button to show “Updating…” and finish — the linked Google Sheet now matches the student list in the app.</li>
+      </ol>
+      
+      <p class="tip">This requires the centre’s Google Sheets link to already be configured; ask the owner if the button errors.</p>
+      
+    </article>
+<article class="flow" id="STU-sheets-pull">
+      <h2>Import students from Google Sheets <span class="fid">STU-sheets-pull</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and click <strong>Import Sheets</strong>.</li>
+        <li>Wait for “Importing…” to finish — students added or edited in the linked sheet are pulled into the app.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-transfer-student">
+      <h2>Transfer a student to another class <span class="fid">STU-transfer-student</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong>, find the student, and click the row’s actions menu (<strong>Open actions</strong>).</li>
+        <li>Choose <strong>Transfer</strong>.</li>
+        <li>Pick the destination class and confirm.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-bulk-transfer">
+      <h2>Transfer several students at once <span class="fid">STU-bulk-transfer</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and tick the checkbox on each student to move.</li>
+        <li>In the bulk action bar that appears, click <strong>Transfer</strong>.</li>
+        <li>Pick the destination class and confirm — every selected student moves together.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-bulk-delete">
+      <h2>Delete several students at once <span class="fid">STU-bulk-delete</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and tick the checkbox on each student to remove.</li>
+        <li>In the bulk action bar, click <strong>Delete</strong>.</li>
+        <li>Confirm — the selected students move to the archive together.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-set-password-list">
+      <h2>Set a student’s password from the list <span class="fid">STU-set-password-list</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the row’s actions menu on <strong>Students</strong> and choose the password option.</li>
+        <li>Type the new password and save.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-delete-student">
+      <h2>Delete a student <span class="fid">STU-delete-student</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open the row’s actions menu on <strong>Students</strong> and choose <strong>Delete</strong>.</li>
+        <li>Confirm in the dialog — the student moves to the archive and can be restored from there.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-student-statistics">
+      <h2>Read student statistics <span class="fid">STU-student-statistics</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and click the <strong>Statistics</strong> tab at the top of the page.</li>
+        <li>Review the counts and breakdowns shown — this tab has no editable fields.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-groups-by-teacher">
+      <h2>Browse groups by teacher <span class="fid">STU-groups-by-teacher</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students</strong> and click the <strong>Teachers</strong> tab.</li>
+        <li>Click a teacher to see their groups, or a group to see its students.</li>
+        <li>Use <strong>Back to teachers</strong> or <strong>Back to classes</strong> to move up a level.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-move-group">
+      <h2>Move a group to another teacher <span class="fid">STU-move-group</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students → Teachers tab</strong>, open the group to move.</li>
+        <li>Click <strong>Transfer</strong>, choose the new teacher, and click <strong>Transfer</strong> in the dialog to confirm.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="STU-bulk-delete-groups">
+      <h2>Delete several groups at once <span class="fid">STU-bulk-delete-groups</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/students">/students</span>
+        <span class="pill perm">CRUD_STUDENT</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Students → Teachers tab</strong>, tick the checkbox on each group to remove.</li>
+        <li>Click <strong>Delete</strong> in the bar that appears, then confirm.</li>
+      </ol>
+      
+      
+      
+    </article>
+  <nav class="pager">
+    <a href="dsh.html"><span class="lbl">← Previous</span>Dashboard</a>
+    <a href="spr.html" style="text-align:right"><span class="lbl">Next →</span>Student profile</a>
+  </nav>
+</div>
+<script src="../../shared/config.js"></script>
+<script src="../../shared/apply-urls.js"></script>
+</body>
+</html>

@@ -85,7 +85,10 @@ const getOverview = async (req: any, res: any) => {
   try {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
-    const data = await consolidationService.getConsolidationsOverview(scope.centerId ?? undefined);
+    const data = await consolidationService.getConsolidationsOverview(
+      scope.centerId ?? undefined,
+      callerScope(req, scope),
+    );
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);

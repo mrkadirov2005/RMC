@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Superuser Getting Started</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#1f5fa8; --accent-soft:color-mix(in srgb, #1f5fa8 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#7fb0ee; --accent-soft:color-mix(in srgb, #7fb0ee 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#7fb0ee; --accent-soft:color-mix(in srgb, #7fb0ee 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+[hidden]{display:none!important}
+code,.pill,.field code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--accent)}
+strong{color:var(--ink);font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 72px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0 0 20px;max-width:70ch;color:var(--ink-2)}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin:0 0 22px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toc{list-style:none;margin:0 0 36px;padding:0;display:grid;gap:8px}
+.toc li{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;text-decoration:none;color:var(--ink);align-items:baseline}
+.toc a:hover{border-color:var(--accent)}
+.toc b{font-weight:500}
+.toc span{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.area-intro{margin:0 0 28px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;color:var(--ink-2);font-size:14px}
+.flow{border-top:1px solid var(--rule);padding-block:26px;scroll-margin-top:16px}
+.flow:first-of-type{border-top:0}
+.flow h2{margin:0 0 6px;font-size:19px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.flow .fid{font-size:12px;color:var(--ink-3);font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--chip)}
+.pill.url{color:var(--ink)}
+.pill.perm{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+.steps{margin:0 0 14px;padding-left:22px;display:grid;gap:9px}
+.steps li{padding-left:2px}
+.fields{margin:0 0 14px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fields .fh{padding:8px 12px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);background:var(--chip);border-bottom:1px solid var(--rule)}
+.fields ul{list-style:none;margin:0;padding:0}
+.fields li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-top:1px solid var(--rule);font-size:13.5px}
+.fields li:first-child{border-top:0}
+.fields .fnote{color:var(--ink-3);font-size:12.5px;text-align:right}
+.tip{margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.issue{margin:0;padding:9px 12px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:13.5px}
+.issue b{color:var(--warn);text-transform:uppercase;font-size:11px;letter-spacing:.04em;margin-right:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-size:13.5px}
+.pager a{text-decoration:none;color:var(--ink-2);max-width:46%}
+.pager a:hover{color:var(--accent)}
+.pager .lbl{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+@media (max-width:640px){ .flow h2{font-size:17px} .fields li{flex-direction:column;gap:2px} .fields .fnote{text-align:left} }
+
+.result{display:block;padding:10px 14px;border:1px solid var(--rule);border-radius:8px;text-decoration:none;color:var(--ink);margin-bottom:8px;background:var(--surface)}
+.result:hover{border-color:var(--accent)}
+.result small{display:block;color:var(--ink-3);font-size:12px;margin-top:2px}
+#results{margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="crumbs"><a href="../user-action-flows.html">Superuser flows</a><span>/</span><span>Getting started docs</span></p>
+  <p class="eyebrow">Superuser documentation</p>
+  <h1>Step-by-step guides for newcomers</h1>
+  <p class="lede">Every action a superuser can take in the platform, written as click-by-click steps. Search for what you want to do — for example “create student” or “assign a test” — or browse by area below.</p>
+  <input id="q" class="search" type="search" placeholder="Search for an action, e.g. “create student”, “assign test”, “mark salary paid”…" autocomplete="off">
+  <div id="results"></div>
+  <ul class="toc" id="toc"><li><a href="acc.html"><b>Account and access</b><span>7 guides</span></a></li>
+    <li><a href="dsh.html"><b>Dashboard</b><span>4 guides</span></a></li>
+    <li><a href="stu.html"><b>Students list</b><span>17 guides</span></a></li>
+    <li><a href="spr.html"><b>Student profile</b><span>13 guides</span></a></li>
+    <li><a href="led.html"><b>Telegram leads</b><span>4 guides</span></a></li>
+    <li><a href="arc.html"><b>Archive</b><span>4 guides</span></a></li>
+    <li><a href="ret.html"><b>Retention</b><span>3 guides</span></a></li>
+    <li><a href="tch.html"><b>Teachers</b><span>10 guides</span></a></li>
+    <li><a href="tpr.html"><b>Teacher profile</b><span>7 guides</span></a></li>
+    <li><a href="cls.html"><b>Classes</b><span>10 guides</span></a></li>
+    <li><a href="cdt.html"><b>Class detail and lessons</b><span>13 guides</span></a></li>
+    <li><a href="con.html"><b>Consolidations</b><span>3 guides</span></a></li>
+    <li><a href="rom.html"><b>Rooms</b><span>11 guides</span></a></li>
+    <li><a href="cal.html"><b>Calendar</b><span>7 guides</span></a></li>
+    <li><a href="tst.html"><b>Tests</b><span>11 guides</span></a></li>
+    <li><a href="pay.html"><b>Payments</b><span>10 guides</span></a></li>
+    <li><a href="sal.html"><b>Salary</b><span>4 guides</span></a></li>
+    <li><a href="asg.html"><b>Assignments</b><span>5 guides</span></a></li>
+    <li><a href="sub.html"><b>Subjects</b><span>3 guides</span></a></li>
+    <li><a href="deb.html"><b>Debts</b><span>4 guides</span></a></li></ul>
+  <p style="font-size:12.5px;color:var(--ink-3)">150 guides across 20 areas.</p>
+</div>
+<script type="application/json" id="search-data">[{"t":"Sign in as superuser","a":"Account and access","h":"acc.html#ACC-sign-in-superuser"},{"t":"Use “Forgot password?” on the sign-in page","a":"Account and access","h":"acc.html#ACC-forgot-password-su"},{"t":"Open a page without permission","a":"Account and access","h":"acc.html#ACC-unauthorized-page"},{"t":"Return to the dashboard from an error page","a":"Account and access","h":"acc.html#ACC-go-to-dashboard-error"},{"t":"Reorder the sidebar","a":"Account and access","h":"acc.html#ACC-reorder-sidebar-admin"},{"t":"Switch between light and dark theme","a":"Account and access","h":"acc.html#ACC-theme-toggle-admin"},{"t":"Sign out","a":"Account and access","h":"acc.html#ACC-sign-out-admin"},{"t":"Read the dashboard","a":"Dashboard","h":"dsh.html#DSH-read-dashboard"},{"t":"Filter the dashboard scope","a":"Dashboard","h":"dsh.html#DSH-filter-dashboard"},{"t":"Change the dashboard month","a":"Dashboard","h":"dsh.html#DSH-change-dashboard-month"},{"t":"Open a stat’s details and jump to a profile","a":"Dashboard","h":"dsh.html#DSH-dashboard-drilldown"},{"t":"Find a student with search and filters","a":"Students list","h":"stu.html#STU-find-student"},{"t":"Clear all student filters","a":"Students list","h":"stu.html#STU-clear-student-filters-list"},{"t":"Open a student from the list","a":"Students list","h":"stu.html#STU-open-student-from-list"},{"t":"Add a student","a":"Students list","h":"stu.html#STU-add-student"},{"t":"Import students from CSV","a":"Students list","h":"stu.html#STU-import-students"},{"t":"Export students to CSV","a":"Students list","h":"stu.html#STU-export-students"},{"t":"Push students to Google Sheets","a":"Students list","h":"stu.html#STU-sheets-push"},{"t":"Import students from Google Sheets","a":"Students list","h":"stu.html#STU-sheets-pull"},{"t":"Transfer a student to another class","a":"Students list","h":"stu.html#STU-transfer-student"},{"t":"Transfer several students at once","a":"Students list","h":"stu.html#STU-bulk-transfer"},{"t":"Delete several students at once","a":"Students list","h":"stu.html#STU-bulk-delete"},{"t":"Set a student’s password from the list","a":"Students list","h":"stu.html#STU-set-password-list"},{"t":"Delete a student","a":"Students list","h":"stu.html#STU-delete-student"},{"t":"Read student statistics","a":"Students list","h":"stu.html#STU-student-statistics"},{"t":"Browse groups by teacher","a":"Students list","h":"stu.html#STU-groups-by-teacher"},{"t":"Move a group to another teacher","a":"Students list","h":"stu.html#STU-move-group"},{"t":"Delete several groups at once","a":"Students list","h":"stu.html#STU-bulk-delete-groups"},{"t":"Open a student’s profile","a":"Student profile","h":"spr.html#SPR-open-profile"},{"t":"Edit a student","a":"Student profile","h":"spr.html#SPR-edit-student"},{"t":"Edit the overview inline","a":"Student profile","h":"spr.html#SPR-edit-overview-inline"},{"t":"Activate or deactivate a student","a":"Student profile","h":"spr.html#SPR-toggle-status"},{"t":"Set a student’s password","a":"Student profile","h":"spr.html#SPR-set-password-profile"},{"t":"Reset a student’s password and copy it","a":"Student profile","h":"spr.html#SPR-reset-password-profile"},{"t":"Add, edit or delete attendance records","a":"Student profile","h":"spr.html#SPR-attendance-tab"},{"t":"Add, edit or delete payments","a":"Student profile","h":"spr.html#SPR-payments-tab"},{"t":"Add, edit or delete assignments","a":"Student profile","h":"spr.html#SPR-assignments-tab-profile"},{"t":"Add, edit or delete individual tasks","a":"Student profile","h":"spr.html#SPR-individual-tasks-tab"},{"t":"Add, edit or delete grades","a":"Student profile","h":"spr.html#SPR-grades-tab"},{"t":"Give or take coins","a":"Student profile","h":"spr.html#SPR-coins-tab"},{"t":"Delete a coin transaction","a":"Student profile","h":"spr.html#SPR-delete-coin-tx"},{"t":"Review registrations from the Telegram bot","a":"Telegram leads","h":"led.html#LED-review-leads"},{"t":"Refresh the leads list","a":"Telegram leads","h":"led.html#LED-refresh-leads"},{"t":"Assign a lead to a group and teacher","a":"Telegram leads","h":"led.html#LED-assign-lead"},{"t":"Reject a lead","a":"Telegram leads","h":"led.html#LED-reject-lead"},{"t":"Browse archived records","a":"Archive","h":"arc.html#ARC-browse-archive"},{"t":"Refresh the archive","a":"Archive","h":"arc.html#ARC-refresh-archive"},{"t":"Restore an archived record","a":"Archive","h":"arc.html#ARC-restore-record"},{"t":"Purge an archived record","a":"Archive","h":"arc.html#ARC-purge-record"},{"t":"Read retention figures in Overview or Teachers mode","a":"Retention","h":"ret.html#RET-retention-figures"},{"t":"Read intake figures","a":"Retention","h":"ret.html#RET-intake-figures"},{"t":"Filter intake by source or referring teacher","a":"Retention","h":"ret.html#RET-filter-intake"},{"t":"Find a teacher","a":"Teachers","h":"tch.html#TCH-find-teacher"},{"t":"Add a teacher","a":"Teachers","h":"tch.html#TCH-add-teacher"},{"t":"Edit a teacher","a":"Teachers","h":"tch.html#TCH-edit-teacher"},{"t":"Import or export teachers","a":"Teachers","h":"tch.html#TCH-import-export-teachers"},{"t":"Delete a teacher","a":"Teachers","h":"tch.html#TCH-delete-teacher"},{"t":"Delete several teachers at once","a":"Teachers","h":"tch.html#TCH-bulk-delete-teachers"},{"t":"Read the KPI overview","a":"Teachers","h":"tch.html#TCH-kpi-overview"},{"t":"Search the KPI overview","a":"Teachers","h":"tch.html#TCH-search-kpi"},{"t":"Open a teacher’s KPI history","a":"Teachers","h":"tch.html#TCH-kpi-history"},{"t":"Read teacher statistics","a":"Teachers","h":"tch.html#TCH-teacher-statistics"},{"t":"Open a teacher’s profile","a":"Teacher profile","h":"tpr.html#TPR-open-teacher-profile"},{"t":"Edit teacher information inline","a":"Teacher profile","h":"tpr.html#TPR-edit-teacher-inline"},{"t":"Update a teacher’s password","a":"Teacher profile","h":"tpr.html#TPR-update-teacher-password"},{"t":"Manage assignments from the profile","a":"Teacher profile","h":"tpr.html#TPR-manage-assignments-profile"},{"t":"Jump to tests from the profile","a":"Teacher profile","h":"tpr.html#TPR-jump-to-tests"},{"t":"Read a teacher’s payments from the profile","a":"Teacher profile","h":"tpr.html#TPR-teacher-payments-profile"},{"t":"Set a teacher’s payment password","a":"Teacher profile","h":"tpr.html#TPR-set-payment-password"},{"t":"Find a class","a":"Classes","h":"cls.html#CLS-find-class"},{"t":"Switch between Groups and By teachers views","a":"Classes","h":"cls.html#CLS-groups-view"},{"t":"Create a class","a":"Classes","h":"cls.html#CLS-create-class"},{"t":"Edit a class","a":"Classes","h":"cls.html#CLS-edit-class-list"},{"t":"Import or export classes","a":"Classes","h":"cls.html#CLS-import-export-classes"},{"t":"Generate this month’s sessions","a":"Classes","h":"cls.html#CLS-generate-sessions"},{"t":"Set the lesson length for the next generation","a":"Classes","h":"cls.html#CLS-lesson-length-override"},{"t":"Delete a class","a":"Classes","h":"cls.html#CLS-delete-class"},{"t":"Force-delete a class that has attendance","a":"Classes","h":"cls.html#CLS-force-delete-class"},{"t":"Delete several classes at once","a":"Classes","h":"cls.html#CLS-bulk-delete-classes"},{"t":"Open a class and move between its tabs","a":"Class detail and lessons","h":"cdt.html#CDT-open-class-tabs"},{"t":"Edit the class from its Overview","a":"Class detail and lessons","h":"cdt.html#CDT-edit-class-overview"},{"t":"Edit or archive a student from the class","a":"Class detail and lessons","h":"cdt.html#CDT-students-tab-class"},{"t":"Read class points","a":"Class detail and lessons","h":"cdt.html#CDT-points-tab"},{"t":"Open a session from the Sessions tab","a":"Class detail and lessons","h":"cdt.html#CDT-open-session"},{"t":"Pick lesson actions and start a lesson","a":"Class detail and lessons","h":"cdt.html#CDT-lesson-actions"},{"t":"Run a lesson from start to finish","a":"Class detail and lessons","h":"cdt.html#CDT-run-lesson"},{"t":"Fill a score for the whole class at once","a":"Class detail and lessons","h":"cdt.html#CDT-fill-all-scores"},{"t":"Mark a student as stellar","a":"Class detail and lessons","h":"cdt.html#CDT-mark-stellar"},{"t":"Award coins from lesson scores","a":"Class detail and lessons","h":"cdt.html#CDT-award-coins"},{"t":"Create a consolidation exercise for a lesson","a":"Class detail and lessons","h":"cdt.html#CDT-create-consolidation"},{"t":"Copy or regenerate a consolidation link","a":"Class detail and lessons","h":"cdt.html#CDT-copy-consolidation-link"},{"t":"Read consolidation results per student","a":"Class detail and lessons","h":"cdt.html#CDT-consolidation-results-lesson"},{"t":"Read consolidation effectiveness","a":"Consolidations","h":"con.html#CON-consolidation-effectiveness"},{"t":"Create a consolidator","a":"Consolidations","h":"con.html#CON-create-consolidator"},{"t":"Read consolidation results","a":"Consolidations","h":"con.html#CON-consolidation-results-page"},{"t":"Create a room","a":"Rooms","h":"rom.html#ROM-create-room"},{"t":"Import or export rooms","a":"Rooms","h":"rom.html#ROM-import-export-rooms"},{"t":"Assign a class to a room","a":"Rooms","h":"rom.html#ROM-assign-class-room"},{"t":"Edit or delete a room assignment","a":"Rooms","h":"rom.html#ROM-edit-delete-assignment"},{"t":"Generate and book slots","a":"Rooms","h":"rom.html#ROM-generate-book-slots"},{"t":"Create a single slot by hand","a":"Rooms","h":"rom.html#ROM-create-single-slot"},{"t":"Cancel a booking","a":"Rooms","h":"rom.html#ROM-cancel-booking"},{"t":"Read the room calendar","a":"Rooms","h":"rom.html#ROM-room-calendar"},{"t":"Manage a room’s slots from Availability","a":"Rooms","h":"rom.html#ROM-manage-slots-availability"},{"t":"Use the Overview, Availability, By Teacher, By Subject and Reports tabs","a":"Rooms","h":"rom.html#ROM-room-tabs"},{"t":"Delete a room","a":"Rooms","h":"rom.html#ROM-delete-room"},{"t":"Switch views and move through dates","a":"Calendar","h":"cal.html#CAL-calendar-views"},{"t":"Filter the calendar","a":"Calendar","h":"cal.html#CAL-filter-calendar"},{"t":"Start a lesson from the calendar","a":"Calendar","h":"cal.html#CAL-start-lesson-calendar"},{"t":"Open an existing lesson from the calendar","a":"Calendar","h":"cal.html#CAL-open-lesson-calendar"},{"t":"Complete attendance, homework and activity in the pop-up","a":"Calendar","h":"cal.html#CAL-complete-session-popup"},{"t":"Drag a recurring lesson to another room","a":"Calendar","h":"cal.html#CAL-drag-room"},{"t":"Delete a session","a":"Calendar","h":"cal.html#CAL-delete-session-calendar"},{"t":"Read test statistics","a":"Tests","h":"tst.html#TST-test-statistics"},{"t":"Browse and filter the test catalogue","a":"Tests","h":"tst.html#TST-test-catalogue"},{"t":"Create a test","a":"Tests","h":"tst.html#TST-create-test"},{"t":"Open a test","a":"Tests","h":"tst.html#TST-open-test"},{"t":"Edit a test","a":"Tests","h":"tst.html#TST-edit-test"},{"t":"Assign a test to classes or students","a":"Tests","h":"tst.html#TST-assign-test"},{"t":"Create, copy, replace or turn off a share link","a":"Tests","h":"tst.html#TST-share-link"},{"t":"Review a submission","a":"Tests","h":"tst.html#TST-review-submission"},{"t":"Grade a submission","a":"Tests","h":"tst.html#TST-grade-submission"},{"t":"Open results from the catalogue menu","a":"Tests","h":"tst.html#TST-view-results-broken"},{"t":"Delete a test","a":"Tests","h":"tst.html#TST-delete-test"},{"t":"Record a payment","a":"Payments","h":"pay.html#PAY-record-payment"},{"t":"Edit a payment","a":"Payments","h":"pay.html#PAY-edit-payment"},{"t":"Delete a payment","a":"Payments","h":"pay.html#PAY-delete-payment"},{"t":"Read payment history","a":"Payments","h":"pay.html#PAY-payment-history"},{"t":"Open a student’s payment history","a":"Payments","h":"pay.html#PAY-open-student-payment-history"},{"t":"Import or export payments","a":"Payments","h":"pay.html#PAY-import-export-payments"},{"t":"Read payments by teacher group or total","a":"Payments","h":"pay.html#PAY-payments-by-teacher"},{"t":"Read payment statistics","a":"Payments","h":"pay.html#PAY-payment-statistics"},{"t":"Change the student on a new payment","a":"Payments","h":"pay.html#PAY-clear-payment-student"},{"t":"Jump to the salary report from Payments","a":"Payments","h":"pay.html#PAY-jump-to-salary"},{"t":"Read salaries as totals, by month, or as a list","a":"Salary","h":"sal.html#SAL-salary-views"},{"t":"Read one teacher’s salary history","a":"Salary","h":"sal.html#SAL-teacher-salary-history"},{"t":"Open full history from the monthly view","a":"Salary","h":"sal.html#SAL-open-full-history-monthly"},{"t":"Mark a salary as paid","a":"Salary","h":"sal.html#SAL-mark-salary-paid"},{"t":"Switch between By Classes and Personal Tasks","a":"Assignments","h":"asg.html#ASG-switch-assignment-view"},{"t":"Search assignments and clear filters","a":"Assignments","h":"asg.html#ASG-search-assignments"},{"t":"Create an assignment","a":"Assignments","h":"asg.html#ASG-create-assignment-area"},{"t":"Edit or delete an assignment","a":"Assignments","h":"asg.html#ASG-edit-delete-assignment"},{"t":"Import or export assignments","a":"Assignments","h":"asg.html#ASG-import-export-assignments"},{"t":"Add, edit or delete a subject","a":"Subjects","h":"sub.html#SUB-add-edit-delete-subject"},{"t":"View a subject’s details","a":"Subjects","h":"sub.html#SUB-subject-details"},{"t":"Import or export subjects","a":"Subjects","h":"sub.html#SUB-import-export-subjects"},{"t":"Search debts","a":"Debts","h":"deb.html#DEB-search-debts"},{"t":"Add a debt record","a":"Debts","h":"deb.html#DEB-add-debt"},{"t":"Edit or delete a debt","a":"Debts","h":"deb.html#DEB-edit-delete-debt"},{"t":"Generate debt records from unpaid months","a":"Debts","h":"deb.html#DEB-generate-debts"}]</script>
+<script src="../../shared/guide-search.js"></script>
+</body>
+</html>

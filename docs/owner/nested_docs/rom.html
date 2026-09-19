@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rooms — Owner Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#8a5a12; --accent-soft:color-mix(in srgb, #8a5a12 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#e0b25c; --accent-soft:color-mix(in srgb, #e0b25c 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#e0b25c; --accent-soft:color-mix(in srgb, #e0b25c 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+[hidden]{display:none!important}
+code,.pill,.field code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--accent)}
+strong{color:var(--ink);font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 72px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0 0 20px;max-width:70ch;color:var(--ink-2)}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin:0 0 22px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toc{list-style:none;margin:0 0 36px;padding:0;display:grid;gap:8px}
+.toc li{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;text-decoration:none;color:var(--ink);align-items:baseline}
+.toc a:hover{border-color:var(--accent)}
+.toc b{font-weight:500}
+.toc span{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.area-intro{margin:0 0 28px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;color:var(--ink-2);font-size:14px}
+.flow{border-top:1px solid var(--rule);padding-block:26px;scroll-margin-top:16px}
+.flow:first-of-type{border-top:0}
+.flow h2{margin:0 0 6px;font-size:19px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.flow .fid{font-size:12px;color:var(--ink-3);font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--chip)}
+.pill.url{color:var(--ink)}
+.pill.perm{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+.steps{margin:0 0 14px;padding-left:22px;display:grid;gap:9px}
+.steps li{padding-left:2px}
+.fields{margin:0 0 14px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fields .fh{padding:8px 12px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);background:var(--chip);border-bottom:1px solid var(--rule)}
+.fields ul{list-style:none;margin:0;padding:0}
+.fields li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-top:1px solid var(--rule);font-size:13.5px}
+.fields li:first-child{border-top:0}
+.fields .fnote{color:var(--ink-3);font-size:12.5px;text-align:right}
+.tip{margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.issue{margin:0;padding:9px 12px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:13.5px}
+.issue b{color:var(--warn);text-transform:uppercase;font-size:11px;letter-spacing:.04em;margin-right:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-size:13.5px}
+.pager a{text-decoration:none;color:var(--ink-2);max-width:46%}
+.pager a:hover{color:var(--accent)}
+.pager .lbl{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+@media (max-width:640px){ .flow h2{font-size:17px} .fields li{flex-direction:column;gap:2px} .fields .fnote{text-align:left} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="crumbs"><a href="../user-action-flows.html">Owner flows</a><span>/</span><a href="index.html">Getting started docs</a><span>/</span><span>Rooms</span></p>
+  <p class="eyebrow">Owner · ROM</p>
+  <h1>Rooms</h1>
+  <p class="area-intro">Rooms are the physical spaces classes are booked into. This page has five views: Overview, Availability, By Teacher, By Subject and Reports.</p>
+  <article class="flow" id="ROM-create-room">
+      <h2>Create a room <span class="fid">ROM-create-room</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Rooms</strong> and click <strong>Create room</strong>.</li>
+        <li>Enter the <strong>Room number</strong> and save.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-import-export-rooms">
+      <h2>Import or export rooms <span class="fid">ROM-import-export-rooms</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Click <strong>Export CSV</strong> to download the room list, or use the import control to create rooms from a CSV file.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-assign-class-room">
+      <h2>Assign a class to a room <span class="fid">ROM-assign-class-room</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Rooms</strong> and click <strong>Assign class</strong> on a room.</li>
+        <li>Choose the <strong>Teacher</strong>, then the <strong>Group</strong>, then the <strong>Day</strong>, <strong>Start</strong> and <strong>End</strong> time.</li>
+        <li>Save — the class now appears on that room’s calendar.</li>
+      </ol>
+      <div class="fields"><div class="fh">Form fields</div><ul><li><span>Room number</span></li><li><span>Teacher</span></li><li><span>Group</span></li><li><span>Day</span></li><li><span>Start / End</span></li></ul></div>
+      
+      
+    </article>
+<article class="flow" id="ROM-edit-delete-assignment">
+      <h2>Edit or delete a room assignment <span class="fid">ROM-edit-delete-assignment</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>On a room’s list of assignments, click the edit icon to change the day or time, or the delete icon to remove the booking.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-generate-book-slots">
+      <h2>Generate and book slots <span class="fid">ROM-generate-book-slots</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Rooms → Availability tab → Manage slots</strong> for a room.</li>
+        <li>Click <strong>Generate Slots</strong>, set Start Date, End Date, Start Time, End Time, Slot Duration and the Days of Week, then review the preview.</li>
+        <li>Click <strong>Generate Slots</strong> to confirm.</li>
+        <li>To book one of the created slots, click it and choose <strong>Book Room Slot</strong>, then pick the class.</li>
+      </ol>
+      <div class="fields"><div class="fh">Form fields</div><ul><li><span>Start Date / End Date</span></li><li><span>Start Time / End Time</span></li><li><span>Slot Duration (min)</span></li><li><span>Days of Week</span></li></ul></div>
+      
+      
+    </article>
+<article class="flow" id="ROM-create-single-slot">
+      <h2>Create a single slot by hand <span class="fid">ROM-create-single-slot</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>On the room’s calendar, click an empty time and choose <strong>Create New Slot</strong>.</li>
+        <li>Set the Date, Start Time and End Time, then save.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-cancel-booking">
+      <h2>Cancel a booking <span class="fid">ROM-cancel-booking</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>On the room’s calendar, click the booked slot and choose the cancel action.</li>
+        <li>Confirm — the slot becomes free again.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-room-calendar">
+      <h2>Read the room calendar <span class="fid">ROM-room-calendar</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Open a room’s <strong>Availability</strong> tab to see every booking for that room.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-manage-slots-availability">
+      <h2>Manage a room’s slots from Availability <span class="fid">ROM-manage-slots-availability</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Rooms → Availability tab</strong> and click <strong>Manage slots</strong> on a room.</li>
+        <li>Switch between <strong>Calendar View</strong> and <strong>Info</strong> inside the manager.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-room-tabs">
+      <h2>Use the Overview, Availability, By Teacher, By Subject and Reports tabs <span class="fid">ROM-room-tabs</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>Open <strong>Rooms</strong> and click each tab to see room usage from that angle: totals, live availability, grouped by teacher, grouped by subject, or a usage report.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="ROM-delete-room">
+      <h2>Delete a room <span class="fid">ROM-delete-room</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/rooms">/rooms</span>
+        <span class="pill perm">CRUD_ROOM</span>
+      </div>
+      <ol class="steps">
+        <li>On a room’s card, click <strong>Delete room</strong>.</li>
+        <li>Confirm — the room and its future bookings are removed.</li>
+      </ol>
+      
+      
+      
+    </article>
+  <nav class="pager">
+    <a href="con.html"><span class="lbl">← Previous</span>Consolidations</a>
+    <a href="cal.html" style="text-align:right"><span class="lbl">Next →</span>Calendar</a>
+  </nav>
+</div>
+<script src="../../shared/config.js"></script>
+<script src="../../shared/apply-urls.js"></script>
+</body>
+</html>

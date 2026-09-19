@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Temurbek School Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595; --rule:#dfe3e9; --chip:#eef1f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794; --rule:#2a313b; --chip:#212833; }
+}
+:root[data-theme="dark"]{ --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794; --rule:#2a313b; --chip:#212833; }
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+.wrap{max-width:760px;margin:0 auto;padding-block:56px 72px}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+h1{margin:6px 0 10px;font-size:clamp(26px,4vw,34px);font-weight:600;text-wrap:balance}
+.lede{margin:0 0 34px;max-width:62ch;color:var(--ink-2)}
+.roles{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.role{display:block;background:var(--surface);border:1px solid var(--rule);border-radius:12px;padding:18px 20px;text-decoration:none;color:var(--ink)}
+.role:hover{border-color:var(--accent)}
+.role h2{margin:0 0 4px;font-size:17px;font-weight:600}
+.role p{margin:0;font-size:13.5px;color:var(--ink-2)}
+.role .links{margin-top:10px;display:flex;gap:14px;font-size:12.5px}
+.role .links a{color:var(--accent);text-decoration:none;font-weight:500}
+.role .links a:hover{text-decoration:underline}
+.owner{--accent:#8a5a12}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .owner{--accent:#e0b25c} }
+:root[data-theme="dark"] .owner{--accent:#e0b25c}
+.superuser{--accent:#1f5fa8}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .superuser{--accent:#7fb0ee} }
+:root[data-theme="dark"] .superuser{--accent:#7fb0ee}
+.teacher{--accent:#1d7a55}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .teacher{--accent:#6fcf9f} }
+:root[data-theme="dark"] .teacher{--accent:#6fcf9f}
+.student{--accent:#6a3fa0}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .student{--accent:#b99be6} }
+:root[data-theme="dark"] .student{--accent:#b99be6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="eyebrow">Temurbek School CRM</p>
+  <h1>User documentation</h1>
+  <p class="lede">Every action each role can take in the platform, mapped from the real interface. Pick a role for its full flow index, or jump straight to its step-by-step guides.</p>
+  <ul class="roles">
+    <li>
+      <a class="role owner" href="owner/user-action-flows.html">
+        <h2>Owner</h2>
+        <p>Branches, admins, owners, reports, engineering and every day-to-day page.</p>
+        <span class="links"><a href="owner/user-action-flows.html">Flow index</a><a href="owner/nested_docs/index.html">Step-by-step guides</a></span>
+      </a>
+    </li>
+    <li>
+      <a class="role superuser" href="superuser/user-action-flows.html">
+        <h2>Superuser</h2>
+        <p>Branch admin: students, teachers, classes, tests, payments and more, by permission.</p>
+        <span class="links"><a href="superuser/user-action-flows.html">Flow index</a><a href="superuser/nested_docs/index.html">Step-by-step guides</a></span>
+      </a>
+    </li>
+    <li>
+      <a class="role teacher" href="teacher/user-action-flows.html">
+        <h2>Teacher</h2>
+        <p>The teacher portal: classes, lessons, tests, assignments and profile.</p>
+        <span class="links"><a href="teacher/user-action-flows.html">Flow index</a><a href="teacher/nested_docs/index.html">Step-by-step guides</a></span>
+      </a>
+    </li>
+    <li>
+      <a class="role student" href="student/user-action-flows.html">
+        <h2>Student</h2>
+        <p>The student portal: tests, calendar, consolidation exercises and public links.</p>
+        <span class="links"><a href="student/user-action-flows.html">Flow index</a><a href="student/nested_docs/index.html">Step-by-step guides</a></span>
+      </a>
+    </li>
+  </ul>
+</div>
+</body>
+</html>

@@ -165,7 +165,26 @@ describe('consolidation controller — access-control boundaries', () => {
 
       await controller.getOverview({ user: { userType: 'superuser' }, query: {} }, res);
 
-      expect(consolidationService.getConsolidationsOverview).toHaveBeenCalledWith(2);
+      expect(consolidationService.getConsolidationsOverview).toHaveBeenCalledWith(2, {
+        userType: 'superuser',
+        teacherId: undefined,
+        centerId: 2,
+      });
+      expect(res.json).toHaveBeenCalledWith(overview);
+    });
+
+    it('passes the authenticated teacher identity so the service can scope the overview', async () => {
+      const overview = { totals: { total_sets: 1 }, by_teacher: [], sets: [] };
+      consolidationService.getConsolidationsOverview.mockResolvedValue(overview);
+      const res = response();
+
+      await controller.getOverview({ user: { userType: 'teacher', id: 7 }, query: {} }, res);
+
+      expect(consolidationService.getConsolidationsOverview).toHaveBeenCalledWith(2, {
+        userType: 'teacher',
+        teacherId: 7,
+        centerId: 2,
+      });
       expect(res.json).toHaveBeenCalledWith(overview);
     });
   });

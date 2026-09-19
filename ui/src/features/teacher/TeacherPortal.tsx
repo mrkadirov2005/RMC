@@ -9,7 +9,6 @@ import {
   CalendarDays,
   Star,
   Plus,
-  Bell,
   Clock,
   Loader2,
   ClipboardCopy,
@@ -54,11 +53,12 @@ import { fetchPayments } from '../../slices/paymentsSlice';
 import { logout } from '../../slices/authSlice';
 import { selectTeacherPortalUi } from '../../store/selectors';
 import { useLanguage } from '../../i18n/LanguageContext';
-import TestsPage from '../crm/tests/TestsPage';
+import TeacherTestsView from './tests/TeacherTestsView';
 import CalendarPage from '../crm/calendar/CalendarPage';
 import OverallStatisticsTab from './components/OverallStatisticsTab';
 import TeacherProfileTab from './components/TeacherProfileTab';
 import TeacherStatisticsTab from './statistics/TeacherStatisticsTab';
+import ConsolidationsOverviewPage from '../crm/consolidations/ConsolidationsOverviewPage';
 
 // Tab order is a per-browser preference only - it's never sent to the server, just like the
 // sidebar's drag-to-reorder, except this one stays local instead of syncing through settingsAPI.
@@ -225,6 +225,7 @@ const TeacherPortal = () => {
 
     { value: 'overall', label: t('Overall'), icon: <ClipboardCopy className = " h-4 w-4" /> },
     { value: 'statistics', label: t('Statistics'), icon: <Star className="h-4 w-4" /> },
+    { value: 'consolidations', label: t('Consolidations'), icon: <ClipboardCheck className="h-4 w-4" /> },
     { value: 'classes', label: t('My Classes'), icon: <GraduationCap className="h-4 w-4" /> },
     { value: 'tests', label: t('My Tests'), icon: <FileQuestion className="h-4 w-4" /> },
     { value: 'calendar', label: t('Calendar'), icon: <CalendarDays className="h-4 w-4" /> },
@@ -283,16 +284,6 @@ const TeacherPortal = () => {
         }
         actions={
           <>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button type="button" variant="outline" size="icon" aria-label={t('Notifications')} className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white">
-                    <Bell className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom" sideOffset={8}>{t('Notifications')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -392,10 +383,11 @@ const TeacherPortal = () => {
                 students={studentsData}
               />
             </TabsContent>
+            <TabsContent value="consolidations" className="-m-4">
+              <ConsolidationsOverviewPage />
+            </TabsContent>
             <TabsContent value="tests">
-              <div className="-m-4">
-                <TestsPage />
-              </div>
+              <TeacherTestsView />
             </TabsContent>
             <TabsContent value="calendar">
               <div className="-m-4">

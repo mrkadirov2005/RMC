@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Class detail and lessons — Owner Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#8a5a12; --accent-soft:color-mix(in srgb, #8a5a12 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#e0b25c; --accent-soft:color-mix(in srgb, #e0b25c 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#e0b25c; --accent-soft:color-mix(in srgb, #e0b25c 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;padding-inline:20px}
+[hidden]{display:none!important}
+code,.pill,.field code{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+a{color:var(--accent)}
+strong{color:var(--ink);font-weight:600}
+.wrap{max-width:920px;margin:0 auto;padding-block:28px 72px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+.eyebrow{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{margin:6px 0 8px;font-size:clamp(24px,3.6vw,32px);line-height:1.15;font-weight:600;text-wrap:balance}
+.lede{margin:0 0 20px;max-width:70ch;color:var(--ink-2)}
+.search{display:block;width:100%;padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink);font:inherit;margin:0 0 22px}
+.search:focus{outline:2px solid var(--accent);outline-offset:1px}
+.toc{list-style:none;margin:0 0 36px;padding:0;display:grid;gap:8px}
+.toc li{background:var(--surface);border:1px solid var(--rule);border-radius:10px}
+.toc a{display:flex;justify-content:space-between;gap:12px;padding:12px 16px;text-decoration:none;color:var(--ink);align-items:baseline}
+.toc a:hover{border-color:var(--accent)}
+.toc b{font-weight:500}
+.toc span{font-size:12px;color:var(--ink-3);white-space:nowrap}
+.area-intro{margin:0 0 28px;padding:14px 16px;background:var(--surface);border:1px solid var(--rule);border-radius:10px;color:var(--ink-2);font-size:14px}
+.flow{border-top:1px solid var(--rule);padding-block:26px;scroll-margin-top:16px}
+.flow:first-of-type{border-top:0}
+.flow h2{margin:0 0 6px;font-size:19px;font-weight:600;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.flow .fid{font-size:12px;color:var(--ink-3);font-weight:400}
+.meta-row{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.pill{font-size:11.5px;padding:2px 8px;border-radius:999px;border:1px solid var(--rule);color:var(--ink-2);background:var(--chip)}
+.pill.url{color:var(--ink)}
+.pill.perm{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+.steps{margin:0 0 14px;padding-left:22px;display:grid;gap:9px}
+.steps li{padding-left:2px}
+.fields{margin:0 0 14px;border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.fields .fh{padding:8px 12px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);background:var(--chip);border-bottom:1px solid var(--rule)}
+.fields ul{list-style:none;margin:0;padding:0}
+.fields li{display:flex;justify-content:space-between;gap:12px;padding:8px 12px;border-top:1px solid var(--rule);font-size:13.5px}
+.fields li:first-child{border-top:0}
+.fields .fnote{color:var(--ink-3);font-size:12.5px;text-align:right}
+.tip{margin:0 0 10px;padding:8px 12px;background:var(--chip);border-radius:8px;font-size:13.5px;color:var(--ink-2)}
+.issue{margin:0;padding:9px 12px;background:var(--warn-soft);border-left:3px solid var(--warn);border-radius:0 8px 8px 0;font-size:13.5px}
+.issue b{color:var(--warn);text-transform:uppercase;font-size:11px;letter-spacing:.04em;margin-right:6px}
+.pager{display:flex;justify-content:space-between;gap:12px;margin-top:40px;padding-top:20px;border-top:1px solid var(--rule);font-size:13.5px}
+.pager a{text-decoration:none;color:var(--ink-2);max-width:46%}
+.pager a:hover{color:var(--accent)}
+.pager .lbl{display:block;font-size:11px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+@media (max-width:640px){ .flow h2{font-size:17px} .fields li{flex-direction:column;gap:2px} .fields .fnote{text-align:left} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="crumbs"><a href="../user-action-flows.html">Owner flows</a><span>/</span><a href="index.html">Getting started docs</a><span>/</span><span>Class detail and lessons</span></p>
+  <p class="eyebrow">Owner · CDT</p>
+  <h1>Class detail and lessons</h1>
+  <p class="area-intro">Opening a class shows its Overview, roster, subjects, points, tests and session history in one page.</p>
+  <article class="flow" id="CDT-open-class-tabs">
+      <h2>Open a class and move between its tabs <span class="fid">CDT-open-class-tabs</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>From <strong>Classes</strong>, click a class to open it.</li>
+        <li>Use the tab bar for Overview, Students, Subjects, Points, Tests and Sessions.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-edit-class-overview">
+      <h2>Edit the class from its Overview <span class="fid">CDT-edit-class-overview</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>On the class page, click <strong>Edit details</strong> on the Overview tab.</li>
+        <li>Change the fields and save without leaving the page.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-students-tab-class">
+      <h2>Edit or archive a student from the class <span class="fid">CDT-students-tab-class</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>Open the class and click the <strong>Students</strong> tab.</li>
+        <li>Click <strong>Edit</strong> on a student’s row to update their details, or the delete action to move them to the archive.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-points-tab">
+      <h2>Read class points <span class="fid">CDT-points-tab</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>Open the class and click the <strong>Points</strong> tab to see points earned per student.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-open-session">
+      <h2>Open a session from the Sessions tab <span class="fid">CDT-open-session</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>Open the class and click the <strong>Sessions</strong> tab.</li>
+        <li>Click <strong>Open</strong> on a session row to enter that lesson’s workflow.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-lesson-actions">
+      <h2>Pick lesson actions and start a lesson <span class="fid">CDT-lesson-actions</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>On the class page, click <strong>Start</strong>.</li>
+        <li>In the lesson picker, choose which steps to run for this lesson (attendance, homework, activity, points, coins).</li>
+        <li>Confirm to begin the lesson workflow.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-run-lesson">
+      <h2>Run a lesson from start to finish <span class="fid">CDT-run-lesson</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId/sessions/:sessionId/workflow">/classes/:classId/sessions/:sessionId/workflow</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>Start the lesson from the class page, or open an existing session.</li>
+        <li>On the <strong>Attendance</strong> tab, mark each student, then click <strong>Complete Attendance</strong>.</li>
+        <li>On the <strong>Homework</strong> tab, use <strong>Fill all</strong> to set one score for everyone, then adjust individual students, and click through to complete it.</li>
+        <li>On the <strong>Activity</strong> tab, do the same for in-class participation.</li>
+        <li>Mark any student <strong>stellar</strong> for a bonus, if the lesson earned it.</li>
+        <li>Continue through the remaining tabs until the workflow shows the lesson as complete.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-fill-all-scores">
+      <h2>Fill a score for the whole class at once <span class="fid">CDT-fill-all-scores</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>In the lesson workflow’s Homework or Activity tab, click <strong>Fill all</strong> and choose a score.</li>
+        <li>Every student gets that score at once — adjust any individual student afterward.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-mark-stellar">
+      <h2>Mark a student as stellar <span class="fid">CDT-mark-stellar</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>In the lesson workflow’s scoring tab, click the star toggle next to a student’s name.</li>
+        <li>That student earns the stellar bonus for the lesson.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-award-coins">
+      <h2>Award coins from lesson scores <span class="fid">CDT-award-coins</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>While completing the lesson’s Points step, confirm the coin totals shown — they are calculated from the lesson’s scores using the coin-mapping rules set in Settings.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-create-consolidation">
+      <h2>Create a consolidation exercise for a lesson <span class="fid">CDT-create-consolidation</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>Inside the lesson workflow, open the <strong>Consolidation</strong> tab.</li>
+        <li>Click <strong>Add word</strong>, type a word, then <strong>Add another accepted translation</strong> for each accepted spelling of its translation.</li>
+        <li>Repeat for every word to include, then set the <strong>Violation limit</strong> (how many lockdown violations a student may have before it is flagged).</li>
+        <li>Click <strong>Create Consolidation Exercise</strong>.</li>
+      </ol>
+      <div class="fields"><div class="fh">Form fields</div><ul><li><span>Word</span></li><li><span>Accepted translations</span><span class="fnote">one or more per word</span></li><li><span>Violation limit</span></li></ul></div>
+      
+      
+    </article>
+<article class="flow" id="CDT-copy-consolidation-link">
+      <h2>Copy or regenerate a consolidation link <span class="fid">CDT-copy-consolidation-link</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>On the Consolidation tab, click <strong>Copy link</strong> to copy the public link for students.</li>
+        <li>Click <strong>Regenerate link</strong> to invalidate the old link and create a new one.</li>
+      </ol>
+      
+      
+      
+    </article>
+<article class="flow" id="CDT-consolidation-results-lesson">
+      <h2>Read consolidation results per student <span class="fid">CDT-consolidation-results-lesson</span></h2>
+      <div class="meta-row">
+        <span class="pill url" data-route="/classes/:classId">/classes/:classId</span>
+        <span class="pill perm">CRUD_CLASS</span>
+      </div>
+      <ol class="steps">
+        <li>On the Consolidation tab, scroll to the results list to see each student’s score and any lockdown violations.</li>
+      </ol>
+      
+      
+      
+    </article>
+  <nav class="pager">
+    <a href="cls.html"><span class="lbl">← Previous</span>Classes</a>
+    <a href="con.html" style="text-align:right"><span class="lbl">Next →</span>Consolidations</a>
+  </nav>
+</div>
+<script src="../../shared/config.js"></script>
+<script src="../../shared/apply-urls.js"></script>
+</body>
+</html>
