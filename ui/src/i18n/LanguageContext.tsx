@@ -1916,7 +1916,7 @@ const translations: Record<string, string> = {
   "Vocabulary consolidation exercises across every teacher and class.": "Barcha o'qituvchi va sinflar bo'yicha lug'at mustahkamlash mashqlari.",
 
   // ── Owner welcome page ───────────────────────────────────────
-  "Your learning centers are ready. Here is a clear view of the people and activity across the platform.": "O'quv markazlaringiz tayyor. Platformadagi odamlar va faoliyatning aniq ko'rinishi.",
+  "Your learning centers are ready. Here is a clear view of the people and activity across the platform.": "O'quv markazlaringiz tayyor. Bu yerda platforma bo'ylab odamlar va faoliyat haqida aniq ma'lumot berilgan.",
   'System overview ready': 'Tizim sharhi tayyor',
 
   // ── Attendance & schedule headers ────────────────────────────
