@@ -3,6 +3,7 @@
 import { CalendarDays } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useAppSelector } from '@/features/crm/hooks';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface CalendarPageHeaderProps {
   today: Date;
@@ -11,6 +12,7 @@ interface CalendarPageHeaderProps {
 // Renders the calendar page header module.
 export const CalendarPageHeader = ({ today }: CalendarPageHeaderProps) => {
   const { user } = useAppSelector((state) => state.auth);
+  const { t } = useLanguage();
 
   return (
     <div className="relative mb-6 overflow-hidden rounded-2xl border border-indigo-100 bg-gradient-to-br from-white via-indigo-50/70 to-emerald-50/55 p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.65)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
@@ -22,13 +24,13 @@ export const CalendarPageHeader = ({ today }: CalendarPageHeaderProps) => {
             <CalendarDays className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">Calendar</h1>
+            <h1 className="text-3xl font-bold text-slate-950 dark:text-foreground">{t('Calendar')}</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {user?.userType === 'teacher'
-                ? 'Your class schedule for the month.'
+                ? t('Your class schedule for the month.')
                 : user?.userType === 'student'
-                ? 'Your class schedule for the month.'
-                : 'All classes, sessions, rooms, and attendance touchpoints.'}
+                ? t('Your class schedule for the month.')
+                : t('All classes, sessions, rooms, and attendance touchpoints.')}
             </p>
           </div>
         </div>

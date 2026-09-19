@@ -15,10 +15,12 @@ import {
 import { useAppSelector } from '../../hooks';
 import { useTeacherKpiDetail } from './hooks/useTeacherKpiDetail';
 import { AddEditKpiDialog } from './components/AddEditKpiDialog';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { formatKpiPeriod, formatScore, resolveCurrentMonth, teacherFullName } from './model/kpiModel';
 import type { KpiRecord } from './types';
 
 const TeacherKpiDetailPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { teacherId: teacherIdParam } = useParams<{ teacherId: string }>();
   const teacherId = Number(teacherIdParam);
@@ -66,8 +68,8 @@ const TeacherKpiDetailPage = () => {
       </Button>
 
       <PageHeader
-        title={teacherName || 'Teacher KPI'}
-        description="Monthly KPI history for this teacher."
+        title={teacherName || t('Teacher KPI')}
+        description={t('Monthly KPI history for this teacher.')}
         icon={Target}
         primaryAction={
           isOwner ? (

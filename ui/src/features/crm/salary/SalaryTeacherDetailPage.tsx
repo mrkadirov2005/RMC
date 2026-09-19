@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Loader2, Wallet } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ const EMPTY_STATS: SalaryStudentStats = {
 
 const SalaryTeacherDetailPage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const { teacherId: teacherIdParam } = useParams<{ teacherId: string }>();
   const teacherId = Number(teacherIdParam);
   const { detail, loading } = useSalaryTeacherDetail(teacherId);
@@ -65,8 +67,8 @@ const SalaryTeacherDetailPage = () => {
       </Button>
 
       <PageHeader
-        title={teacherName || 'Teacher Salary'}
-        description="Monthly salary history and student payment coverage for this teacher."
+        title={teacherName || t('Teacher Salary')}
+        description={t('Monthly salary history and student payment coverage for this teacher.')}
         icon={Wallet}
         primaryAction={
           <Button

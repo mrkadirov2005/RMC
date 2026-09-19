@@ -19,6 +19,7 @@ import { unwrapApiRows } from '@/shared/api/response';
 import { consolidationApi, type ConsolidationOutcome, type ConsolidationOverview } from '../classes/api/consolidationApi';
 import ConsolidationTab from '../classes/components/ConsolidationTab';
 import EffectivenessChart, { type EffectivenessBarKey } from './EffectivenessChart';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherOption {
   teacher_id: number;
@@ -50,6 +51,7 @@ const matchesBucket = (outcome: ConsolidationOutcome, bucket: EffectivenessBarKe
   bucket === 'had_violations' ? outcome.violation_count > 0 : outcome.bucket === bucket;
 
 export default function ConsolidationsOverviewPage() {
+  const { t } = useLanguage();
   const [overview, setOverview] = useState<ConsolidationOverview | null>(null);
   const [overviewLoading, setOverviewLoading] = useState(true);
   const [overviewError, setOverviewError] = useState('');
@@ -130,17 +132,17 @@ export default function ConsolidationsOverviewPage() {
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">Consolidations</h1>
-          <p className="text-sm text-muted-foreground">Vocabulary consolidation exercises across every teacher and class.</p>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-foreground">{t('Consolidations')}</h1>
+          <p className="text-sm text-muted-foreground">{t('Vocabulary consolidation exercises across every teacher and class.')}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={() => setResultsOpen(true)}>
             <BarChart3 className="mr-2 h-4 w-4" />
-            Results
+            {t('Results')}
           </Button>
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="mr-2 h-4 w-4" />
-            Create Consolidator
+            {t('Create Consolidator')}
           </Button>
         </div>
       </div>
@@ -153,7 +155,7 @@ export default function ConsolidationsOverviewPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-foreground">Effectiveness</h2>
+          <h2 className="mb-4 text-sm font-semibold text-slate-700 dark:text-foreground">{t('Effectiveness')}</h2>
           {overviewLoading || !overview ? (
             <div className="flex min-h-[160px] items-center justify-center">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
@@ -173,7 +175,7 @@ export default function ConsolidationsOverviewPage() {
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
             <DialogTitle>
-              {selectedBar ? BAR_LABELS[selectedBar] : ''} ({drillDownRows.length})
+              {selectedBar ? t(BAR_LABELS[selectedBar]) : ''} ({drillDownRows.length})
             </DialogTitle>
           </DialogHeader>
           {drillDownRows.length === 0 ? (
@@ -218,7 +220,7 @@ export default function ConsolidationsOverviewPage() {
       <Dialog open={resultsOpen} onOpenChange={setResultsOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
           <DialogHeader>
-            <DialogTitle>Results</DialogTitle>
+            <DialogTitle>{t('Results')}</DialogTitle>
           </DialogHeader>
           {overviewLoading || !overview ? (
             <div className="flex min-h-[120px] items-center justify-center">
@@ -229,31 +231,31 @@ export default function ConsolidationsOverviewPage() {
               <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                 <Card>
                   <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Total sets</p>
+                    <p className="text-xs text-muted-foreground">{t('Total sets')}</p>
                     <p className="text-2xl font-semibold">{overview.totals.total_sets}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Total trials</p>
+                    <p className="text-xs text-muted-foreground">{t('Total trials')}</p>
                     <p className="text-2xl font-semibold">{overview.totals.total_trials}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Students submitted</p>
+                    <p className="text-xs text-muted-foreground">{t('Students submitted')}</p>
                     <p className="text-2xl font-semibold">{overview.totals.total_students_submitted}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Overall pass rate</p>
+                    <p className="text-xs text-muted-foreground">{t('Overall pass rate')}</p>
                     <p className="text-2xl font-semibold">{formatPercent(overview.totals.overall_pass_rate)}</p>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardContent className="pt-6">
-                    <p className="text-xs text-muted-foreground">Lockdown violations</p>
+                    <p className="text-xs text-muted-foreground">{t('Lockdown violations')}</p>
                     <p className={`text-2xl font-semibold ${overview.totals.total_violations > 0 ? 'text-red-600' : ''}`}>
                       {overview.totals.total_violations}
                     </p>
@@ -262,7 +264,7 @@ export default function ConsolidationsOverviewPage() {
               </div>
 
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-foreground">By teacher</h2>
+                <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-foreground">{t('By teacher')}</h2>
                 {overview.by_teacher.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No consolidation sets created yet.</p>
                 ) : (

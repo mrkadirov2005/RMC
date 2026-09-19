@@ -87,16 +87,16 @@ const PaymentsPage = () => {
   }, [selectedClass?.payment_amount, selectedStudent, setFormData]);
 
   const pageTitle = !selectedFolder
-    ? 'Payments Management'
+    ? t('Payments Management')
     : selectedFolder.type === 'teacher'
-      ? `${selectedFolder.name} - ${teacherDetailView === 'groups' ? 'Groups' : 'Total'}`
-      : `${selectedFolder.name} - Payments`;
+      ? `${selectedFolder.name} - ${teacherDetailView === 'groups' ? t('Groups') : t('Total')}`
+      : `${selectedFolder.name} - ${t('Payments')}`;
 
   return (
     <div className="container mx-auto space-y-6">
       <PageHeader
         title={pageTitle}
-        description="Organize payments by student, class, teacher, and collection status."
+        description={t("Organize payments by student, class, teacher, and collection status.")}
         icon={Wallet}
         actions={
           <>
