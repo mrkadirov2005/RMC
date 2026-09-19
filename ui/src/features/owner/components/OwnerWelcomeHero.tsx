@@ -1,5 +1,6 @@
 import { CalendarDays, Sparkles, TrendingUp } from 'lucide-react';
 import { useAppSelector } from '@/features/crm/hooks';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const getGreeting = () => {
   const hour = new Date().getHours();
@@ -9,6 +10,7 @@ const getGreeting = () => {
 };
 
 export const OwnerWelcomeHero = () => {
+  const { t } = useLanguage();
   const user = useAppSelector((state) => state.auth.user);
   const name = user?.first_name || user?.username || 'Owner';
   const date = new Intl.DateTimeFormat(undefined, {
@@ -20,20 +22,20 @@ export const OwnerWelcomeHero = () => {
       <div className="relative z-10 max-w-2xl">
         <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-medium text-indigo-50 backdrop-blur">
           <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-          Welcome back
+          {t('Welcome back')}
         </div>
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-          {getGreeting()}, {name}.
+          {t(getGreeting())}, {name}.
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-indigo-100/75 sm:text-base">
-          Your learning centers are ready. Here is a clear view of the people and activity across the platform.
+          {t('Your learning centers are ready. Here is a clear view of the people and activity across the platform.')}
         </p>
         <div className="mt-6 flex flex-wrap gap-3 text-xs font-medium text-indigo-100/80">
           <span className="inline-flex items-center gap-2 rounded-lg bg-white/10 px-3 py-2 backdrop-blur">
             <CalendarDays className="h-4 w-4" />{date}
           </span>
           <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-400/15 px-3 py-2 text-emerald-100 backdrop-blur">
-            <TrendingUp className="h-4 w-4" />System overview ready
+            <TrendingUp className="h-4 w-4" />{t('System overview ready')}
           </span>
         </div>
       </div>

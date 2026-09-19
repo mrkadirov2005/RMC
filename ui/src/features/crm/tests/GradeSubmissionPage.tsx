@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { testAPI } from './api';
 import type { TestAnswer, TestSubmission } from '@/types';
 import { countWords, formatCorrectAnswer, formatStudentAnswer } from './answerFormat';
@@ -27,6 +28,7 @@ import { formatTestType } from './testVisuals';
 
 // Renders the grade submission page screen.
 const GradeSubmissionPage = () => {
+  const { t } = useLanguage();
   const { submissionId } = useParams();
   const navigate = useNavigate();
   const testsHome = useTestsHome();
@@ -156,7 +158,7 @@ const GradeSubmissionPage = () => {
 
       <div className="mb-5">
         <PageHeader
-          title="Grade submission"
+          title={t('Grade submission')}
           icon={Pencil}
           description={`${submission.test_name} — ${submission.first_name} ${submission.last_name}`}
           primaryAction={

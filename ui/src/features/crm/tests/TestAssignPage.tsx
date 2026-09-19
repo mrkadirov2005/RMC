@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { testAPI } from './api';
 import { fetchClasses } from '../../../slices/classesSlice';
 import { fetchStudents } from '../../../slices/studentsSlice';
@@ -49,6 +50,7 @@ interface ClassType {
 
 // Renders the test assign page screen.
 const TestAssignPage = () => {
+  const { t } = useLanguage();
   const { testId } = useParams();
   const testsHome = useTestsHome();
   const dispatch = useAppDispatch();
@@ -203,7 +205,7 @@ const TestAssignPage = () => {
       </Button>
 
       <div className="mb-5">
-        <PageHeader title="Assign test" icon={ClipboardList} description={test?.test_name} />
+        <PageHeader title={t('Assign test')} icon={ClipboardList} description={test?.test_name} />
       </div>
 
       {error && (
