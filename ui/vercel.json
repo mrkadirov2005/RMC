@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://api-temurbek.e-tizim.uz/$1"
+      "destination": "https://api-temurbek.e-tizim.uz/api/$1"
     }
   ]
 }
