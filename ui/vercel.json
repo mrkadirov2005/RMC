@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://temurbek.m-kadirov.uz/api/$1"
+      "destination": "https://api-temurbek.e-tizim.uz/$1"
     }
   ]
 }
