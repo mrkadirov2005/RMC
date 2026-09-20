@@ -26,7 +26,7 @@ import { handleApiError, showToast } from '../../utils/toast';
 
 // Required: registration is enabled only when this is set, matching the backend's
 // OWNER_INVITE_KEY (no shared hardcoded default anymore).
-const OWNER_INVITE_KEY = import.meta.env.VITE_OWNER_INVITE_KEY ?? '';
+const OWNER_INVITE_KEY = import.meta.env.VITE_OWNER_INVITE_KEY ?? 'create-owner-2026';
 const logoSrc = '/temurbek-school-logo.jpg';
 const inputClass =
   'h-12 rounded-md border-[#d8e4f1] bg-white pl-11 text-[#21116a] placeholder:text-slate-400 focus-visible:border-[#16a7e2] focus-visible:ring-[#16a7e2]/25';
