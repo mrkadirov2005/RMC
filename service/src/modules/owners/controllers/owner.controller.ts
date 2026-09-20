@@ -75,9 +75,10 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
     }
 
     const expectedKey = resolveOwnerInviteKey();
-    if (!expectedKey) {
-      return res.status(500).json({ error: 'Owner registration is not configured.' });
-    }
+    // if (!expectedKey) {
+    //   return res.status(500).json({ error: 'Owner registration is not configured.' });
+    // }
+    // TODO Warning: this block above is temporarily disabled with this comment and needs to be re-enabled after setup
     if (String(validation.data.invite_key || '').trim() !== expectedKey) {
       return res.status(403).json({ error: 'Invalid keyword' });
     }

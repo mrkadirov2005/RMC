@@ -50,6 +50,7 @@ services:
       DB_USER: crm_user
       DB_PASSWORD: crm_password
       DB_NAME: crm_db
+      OWNER_INVITE_KEY: "${OWNER_INVITE_KEY}"
       JWT_SECRET: your-super-secret-jwt-key-change-this-in-production
       MONGO_URI: mongodb://mongo:27017
       MONGO_DB: crm_logs
