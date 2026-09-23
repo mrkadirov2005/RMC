@@ -1,0 +1,322 @@
+source_row,teacher_name,group_name,subject_name,subject_code,room_number,schedule,student_number,first_name,last_name,source_date,date_of_birth,school_class,school_name,parent_phone,student_phone,source_status,notes
+7,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",1,Ruxshona,Rustamova,2026-07-23,2026-07-23,10-sinf,2-maktab,+998901037602,,,Non-ISO source dates retained in source_date
+8,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",2,Gulruh,Saidmurodova,2026-07-16,2026-07-16,11-sinf,7-maktab,+998947895981,,,Non-ISO source dates retained in source_date
+9,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",3,Kumushbibi,Abdurazzoqova,2026-07-16,2026-07-16,-sinf,-maktab,+998947016306,,,Non-ISO source dates retained in source_date
+10,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",4,Xojiakbar,Abduraupov,2026-07-10,2026-07-10,10-sinf,27-maktab,+998932399460,,,Non-ISO source dates retained in source_date
+11,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",5,Mohinso,Juraqulova,2026-07-06,2026-07-06,11-sinf,71-maktab,+998979073035,,,Non-ISO source dates retained in source_date
+12,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",6,Hasan,Islomov,2026-07-01,2026-07-01,9 sinf,135 maktab,+998902513635,,,Non-ISO source dates retained in source_date
+13,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",7,Ilhom,Amriyev,2026-07-01,2026-07-01,9,3,+998889355531,,,Non-ISO source dates retained in source_date
+14,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",8,Mumtozbegim,Akramova,2026-06-20,2026-06-20,9-sinf,pima 3-maktab,+998915522975,,,Non-ISO source dates retained in source_date
+15,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",9,Ibrohim,Abduroziqov,2026-06-01,2026-06-01,10-sinf,136-maktab,+998700385508,,,Non-ISO source dates retained in source_date
+16,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",10,Mushtariy,Ahmadova,2026-05-15,2026-05-15,10-sinf,54-maktab,+998944751909,,,Non-ISO source dates retained in source_date
+17,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",11,Shirin,A`zamova,2026-05-15,2026-05-15,10-sinf,4-Texnikum,,,,Non-ISO source dates retained in source_date
+18,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",12,Charos,Soliyeva,2026-05-01,2026-05-01,10-sinf,71-maktab,+998991368784,,,Non-ISO source dates retained in source_date
+19,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",13,Kumushbibi,Qobilova,2026-05-01,2026-05-01,9-sinf,121-maktab,+998886148322,,,Non-ISO source dates retained in source_date
+20,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",14,Mehrinso,Olimjonova,2026-05-01,2026-05-01,9-sinf,121-maktab,+998979471525,,,Non-ISO source dates retained in source_date
+21,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",15,Rukiza,Odilova,2026-03-16,2026-03-16,11-sinf,-maktab,+998910338177,,,Non-ISO source dates retained in source_date
+22,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",16,Zulfiya,Asliyeva,2026-03-16,2026-03-16,9-sinf,2-maktab,+998883990044,,,Non-ISO source dates retained in source_date
+23,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",17,Afshona,Xurshidova,2026-02-11,2026-02-11,11-sinf,97-maktab,+998904727244,,,Non-ISO source dates retained in source_date
+24,Shodiyev Odiljon,Odiljon 14:00,English,ENG,5,"Dush, Chor, Juma",18,Islombek,Nasimov,2026-02-11,2026-02-11,3-kurs,kasbhunar,+998772201858,,,Non-ISO source dates retained in source_date
+29,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",1,Dilnavoz,Musurmonova,2026-08-17,2026-08-17,-sinf,-maktab,+998994562106,,,Non-ISO source dates retained in source_date
+30,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",2,Gulshoda,Rahimova,2026-08-12,2026-08-12,O'qituvchi,144-maktab,+998883986550,,,Non-ISO source dates retained in source_date
+31,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",3,Shaxrizoda,Barotova,2026-08-12,2026-08-12,11-sinf,54-maktab,+998981600366,,,Non-ISO source dates retained in source_date
+32,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",4,Bahora,Niyozova,2026-08-12,2026-08-12,-sinf,-maktab,+998700545252,,,Non-ISO source dates retained in source_date
+33,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",5,Fotima,Davronova,2026-08-07,2026-08-07,11-sinf,123-maktab,+998979143071,,,Non-ISO source dates retained in source_date
+34,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",6,Shoxjahon,Ibragimov,2026-08-07,2026-08-07,3 kurs,4- Texnikum Kollej,+998940834656,,,Non-ISO source dates retained in source_date
+35,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",7,Farzona,Abdulmajidova,2026-08-07,2026-08-07,11-sinf,48-maktab,+998772852683,,,Non-ISO source dates retained in source_date
+36,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",8,Madina,O`ktamova,2026-08-04,2026-08-04,8-sinf,2-maktab,+998970308729,,,Non-ISO source dates retained in source_date
+37,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",9,Marjona,Nabiyeva,2026-08-04,2026-08-04,8-sinf,2-maktab,+998883911900,,,Non-ISO source dates retained in source_date
+38,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",10,Akbar,Samadov,2026-08-04,2026-08-04,11-sinf,kollej Kasb hunar,+998904224417,,,Non-ISO source dates retained in source_date
+39,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",11,Mumtozbibi,Samiyeva,2026-08-04,2026-08-04,2 kurs,kollej Kasb hunar,+998995999232,,,Non-ISO source dates retained in source_date
+41,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",13,Nilufar,Hoshimjonova,,,,,,,,Non-ISO source dates retained in source_date
+42,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",14,Marjona,Qurbonova,,,,,,,,Non-ISO source dates retained in source_date
+43,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",15,Mohinur,Rahmonberdiyeva,,,,,,,,Non-ISO source dates retained in source_date
+44,Shodiyev Odiljon,Odiljon 15:30,English,ENG,5,"Dush, Chor, Juma",16,Begoyim,Erkinova,Platformada yo'q,,,,,,,Non-ISO source dates retained in source_date
+51,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",1,Alisher,Abloyorov,2026-08-03,2026-08-03,3-sinf,55-maktab,+998970304643,,,Non-ISO source dates retained in source_date
+52,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",2,Firdavs,Jamshedov,2026-08-01,2026-08-01,3-sinf,121-maktab,+998904727353,,,Non-ISO source dates retained in source_date
+53,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",3,Javohir,Abdusiddiqov,2026-07-27,2026-07-27,1-sinf,2-maktab,+998881315511,,,Non-ISO source dates retained in source_date
+54,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",4,Muhammadjon,Zayniddinov,2026-07-01,2026-07-01,4-sinf,2-maktab,+998886143944,,,Non-ISO source dates retained in source_date
+55,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",5,Demir,Hayrullayev,2026-06-29,2026-06-29,3-sinf,7-maktab,+998978979333,,,Non-ISO source dates retained in source_date
+56,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",6,Ulug;bek,Yusupov,2026-06-01,2026-06-01,4-sinf,54-maktab,+998950993328,,,Non-ISO source dates retained in source_date
+57,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",7,Ahmadjon,Zayniddinov,2026-05-28,2026-05-28,4-sinf,2-maktab,,,,Non-ISO source dates retained in source_date
+58,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",8,Umarbek,Bozorov,2026-03-26,2026-03-26,5-sinf,54-maktab,+998979611600,,,Non-ISO source dates retained in source_date
+59,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",9,Yasmina,Yardonova,2026-02-22,2026-02-22,3-sinf,137-maktab,+998933535125,,,Non-ISO source dates retained in source_date
+60,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",10,Abubakir,Haqberdiyev,2026-02-19,2026-02-19,3-sinf,55-maktab,+998879075045,,,Non-ISO source dates retained in source_date
+61,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",11,Ahliddin,Qahramonov,2025-12-01,2025-12-01,3-sinf,7-maktab,+998945485101,,,Non-ISO source dates retained in source_date
+62,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",12,Ibrohim,Olimjonov,2025-04-09,2025-04-09,3-sinf,89-maktab,+998975752966,,,Non-ISO source dates retained in source_date
+63,Uktamov Alisher,Uktamov 08:00,English,ENG,777,"Sesh, Pay, Yakshanba",13,Ayubbek,Botirov,2025-01-07,2025-01-07,3-sinf,55-maktab,+998590776212,,,Non-ISO source dates retained in source_date
+68,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",1,Raxmatillo,Rustamov,2026-09-15,2026-09-15,4-sinf,86-maktab,+998881590231,,,Non-ISO source dates retained in source_date
+69,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",2,Islom,Rustamov,2026-09-01,2026-09-01,-sinf,-maktab,+998883980015,,,Non-ISO source dates retained in source_date
+70,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",3,Shoxrux,Axrorov,2026-08-24,2026-08-24,4-sinf,4-maktab,+998932634646,,,Non-ISO source dates retained in source_date
+71,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",4,Hojiakbar,Xushvaqtov,2026-08-04,2026-08-04,8-sinf,54-maktab,+998979115633,,,Non-ISO source dates retained in source_date
+72,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",5,Mustafo,Davronov,2026-07-01,2026-07-01,1-sinf,54-maktab,+998771857404,,,Non-ISO source dates retained in source_date
+73,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",6,Nilufar,Abdug`aniyeva,2026-06-01,2026-06-01,6-sinf,2-maktab,+998979126339,,,Non-ISO source dates retained in source_date
+74,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",7,Shukrullo,G`aybullayev,2026-06-01,2026-06-01,1-sinf,2-maktab,+998917040301,,,Non-ISO source dates retained in source_date
+75,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",8,Sabina,Abdug`aniyeva,2026-06-01,2026-06-01,6-sinf,2-maktab,+998979126339,,,Non-ISO source dates retained in source_date
+76,Uktamov Alisher,Uktamov 14:00,English,ENG,777,"Sesh, Pay, Shanba",9,Humoyun,Rajabov,2025-08-14,2025-08-14,2-sinf,4-maktab,+998974722226,,,Non-ISO source dates retained in source_date
+89,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",1,Abdulvosid,Olimov,2025-06-18,2025-06-18,10,142,+998906059595,,,Non-ISO source dates retained in source_date
+90,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",2,Mannopov,Kamron,2025-01-01,2025-01-01,9 sinf,3 maktab,+998886137770,,,Non-ISO source dates retained in source_date
+91,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",3,Xayrullo,Axadov,2025-01-01,2025-01-01,9-sinf,135-maktab,+998947126434,,,Non-ISO source dates retained in source_date
+92,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",4,Abdulaziz,Abduraupov,2025-01-01,2025-01-01,8-sinf,69-maktab,+998904776028,,,Non-ISO source dates retained in source_date
+93,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",5,Nusratillo,Solehov,2025-01-01,2025-01-01,8-sinf,54-Maktab,+998979481961,,,Non-ISO source dates retained in source_date
+94,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",6,Asadbek,Oqilov,2025-01-01,2025-01-01,7-sinf,1-maktab,+998915452630,,,Non-ISO source dates retained in source_date
+95,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",7,Javohir,Abduvohidov,2025-01-01,2025-01-01,7-sinf,55-maktab,+998975145566,,,Non-ISO source dates retained in source_date
+96,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",8,Abdulloh,Qiyomov,2025-01-01,2025-01-01,7-sinf,1-maktab,+998902769820,,,Non-ISO source dates retained in source_date
+98,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",10,Kamron,Manobov,,,11,kollej,+886947700,,,Non-ISO source dates retained in source_date
+99,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",11,Muqaddas,Ikromova,,,11,71,+991219650,,,Non-ISO source dates retained in source_date
+100,Sodiqov Xurshid,B2 Intro,English,ENG,777,"Du, Cho, Juma 16:00-18:00",12,Xushnud,Aslamov,,,11,121,+944583031,,,Non-ISO source dates retained in source_date
+111,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",1,Xislat,Rafiqov,2026-09-12,2026-09-12,9 sinf,122 maktab,+998882448881,,,Non-ISO source dates retained in source_date
+112,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",2,Laziz,Muhtorov,2026-07-11,2026-07-11,7-sinf,7-maktab,+998882237733,,,Non-ISO source dates retained in source_date
+113,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",3,Izzatillo,Mansurov,2026-07-11,2026-07-11,8-sinf,7-maktab,+998973981338,,,Non-ISO source dates retained in source_date
+114,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",4,Muhammadsodiq,Qurbonov,2026-04-25,2026-04-25,6-sinf,136-maktab,+998702321011,,,Non-ISO source dates retained in source_date
+115,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",5,Zulfiya,Zokirova,2026-04-21,2026-04-21,7-sinf,56-maktab,+998773445253,,,Non-ISO source dates retained in source_date
+116,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",6,E`zoza,Jamoliddinova,2026-03-03,2026-03-03,6 sinf,56 Maktab,+998906020342,,,Non-ISO source dates retained in source_date
+117,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",7,Athamjon,Ahmadov,2026-01-15,2026-01-15,9-sinf,54-maktab,+998976104000,,,Non-ISO source dates retained in source_date
+118,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",8,Fayoz,Fazliddinov,2025-09-15,2025-09-15,10-sinf,83-maktab,+998951394787,,,Non-ISO source dates retained in source_date
+119,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",9,Umid,Abduvahobov,2025-09-01,2025-09-01,8,82,,,,Non-ISO source dates retained in source_date
+120,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",10,Muslimbek,Raupov,2025-08-23,2025-08-23,9-sinf,82-maktab,+998944762509,,,Non-ISO source dates retained in source_date
+121,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",11,Sunnatillo,Tolibov,2025-07-28,2025-07-28,6-sinf,5-maktab,+998979235652,,,Non-ISO source dates retained in source_date
+122,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",12,Pokiza,Abduvahobova,2025-06-05,2025-06-05,9,82,+998938833079,,,Non-ISO source dates retained in source_date
+123,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",13,Azizbek,Ahmadjonov,2025-06-02,2025-06-02,9-sinf,3-maktab,+998882858387,,,Non-ISO source dates retained in source_date
+124,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",14,Elshod,Hakimov,2025-01-01,2025-01-01,7 sinf,69 maktab,+998901028408,,,Non-ISO source dates retained in source_date
+125,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",15,Aminjon,Sharopov,2025-01-01,2025-01-01,7 sinf,1 maktab,+998904743860,,,Non-ISO source dates retained in source_date
+126,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",16,Sokinbek,Shonazarov,2025-01-01,2025-01-01,7 sinf,39 maktab,+998930382086,,,Non-ISO source dates retained in source_date
+127,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",17,Ravshan,Boboyorov,2025-01-01,2025-01-01,6 sinf,71 maktab,+998953979889,,,Non-ISO source dates retained in source_date
+128,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",18,Behruz,Ismatov,2025-01-01,2025-01-01,9 sinf,54 maktab,+998972858004,,,Non-ISO source dates retained in source_date
+129,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",19,Shoxjaxon,Ibragimov,2025-01-01,2025-01-01,9 sinf,70 maktab,+998885555600,,,Non-ISO source dates retained in source_date
+130,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",20,Bexruz,Burxonov,2025-01-01,2025-01-01,8 sinf,70 maktab,+998500103765,,,Non-ISO source dates retained in source_date
+131,Sodiqov Xurshid,B1 Intro,English,ENG,777,"Du, Cho, Juma",21,Muhlisbek,Mamatqulov,2025-01-01,2025-01-01,9 sinf,1 maktab,+998981987787,,,Non-ISO source dates retained in source_date
+134,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",1,Abduvali,Azamatov,2026-09-15,2026-09-15,10-sinf,36-maktab,+998946810343,,,Non-ISO source dates retained in source_date
+135,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",2,Shohjahon,Mahmarajabov,2026-09-01,2026-09-01,11-sinf,71-maktab,+998978931577,,,Non-ISO source dates retained in source_date
+136,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",3,Hojimurod,Abduqodirov,2026-09-01,2026-09-01,7 sinf,8 maktab,+998941075897,,,Non-ISO source dates retained in source_date
+137,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",4,Nozli,Murodullayeva,2026-05-01,2026-05-01,9-sinf,82-maktab,+998970301337,,,Non-ISO source dates retained in source_date
+138,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",5,Bexruz,Zamonov,2026-04-21,2026-04-21,9-sinf,6-maktab,+998888825040,,,Non-ISO source dates retained in source_date
+139,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",6,Laziza,Ahxmadova,2026-03-15,2026-03-15,7-sinf,7-maktab,+998904466475,,,Non-ISO source dates retained in source_date
+140,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",7,G`anijon,Voseyiv,2026-02-12,2026-02-12,8-sinf,121-maktab,,,,Non-ISO source dates retained in source_date
+141,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",8,Elnura,Rasulberdiyeva,2026-02-10,2026-02-10,9-sinf,48-maktab,+998901597751,,,Non-ISO source dates retained in source_date
+142,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",9,Elbekjon,Rasulberdiyev,2026-02-10,2026-02-10,5-sinf,48-maktab,+998901597751,,,Non-ISO source dates retained in source_date
+143,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",10,Muhammadamin,Bahrullayev,2026-02-01,2026-02-01,7-sinf,89-maktab,+998904586363,,,Non-ISO source dates retained in source_date
+144,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",11,Ilhom,Marupov,2026-02-01,2026-02-01,9-sinf,97-maktab,+998883935002,,,Non-ISO source dates retained in source_date
+145,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",12,Shahina,Temirova,2026-02-01,2026-02-01,10-sinf,64-maktab,+998979321722,,,Non-ISO source dates retained in source_date
+146,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",13,Mashhura,Latipova,2026-02-01,2026-02-01,10-sinf,73-maktab,+998879321636,,,Non-ISO source dates retained in source_date
+147,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",14,Mehribon,Norqulova,2026-02-01,2026-02-01,9-sinf,36-maktab,+998508079039,,,Non-ISO source dates retained in source_date
+148,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",15,Charos,Farhodova,2026-02-01,2026-02-01,9-sinf,36-maktab,+998935097432,,,Non-ISO source dates retained in source_date
+149,Sodiqov Xurshid,A2 Plus,English,ENG,777,"Se, Pa, Shanba 08:00-10:00",16,Iqboljon,Xudoyqulov,2026-02-01,2026-02-01,8-sinf,97-maktab,+998338906565,,,Non-ISO source dates retained in source_date
+157,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",1,Doniyor,To`xtayev,2026-09-01,2026-09-01,8-sinf,154-maktab,+998885764747,,,Non-ISO source dates retained in source_date
+158,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",2,Abdulloh,Sodiqov,2026-08-06,2026-08-06,7-sinf,5-maktab,+998997110045,,,Non-ISO source dates retained in source_date
+159,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",3,Lola,Latipova,2026-07-06,2026-07-06,7-sinf,36-maktab,+998944274626,,,Non-ISO source dates retained in source_date
+160,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",4,Asilbek,Nishonov,2026-07-01,2026-07-01,9-sinf,122-maktab,+998992214849,,,Non-ISO source dates retained in source_date
+161,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",5,Saidakbar,Ashurmurodov,2026-05-07,2026-05-07,7,144,+998917097128,,,Non-ISO source dates retained in source_date
+162,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",6,Ahmadjon,Sodiqov,2026-04-29,2026-04-29,1-sinf,144-maktab,,,,Non-ISO source dates retained in source_date
+163,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",7,Shabbona,Yarashova,2026-04-13,2026-04-13,10-sinf,11-maktab,+998992553295,,,Non-ISO source dates retained in source_date
+164,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",8,Baxtiyor,Qo`ysinov,2026-04-01,2026-04-01,9-sinf,122-maktab,+998882874405,,,Non-ISO source dates retained in source_date
+165,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",9,Nigina,Jo`rayeva,2026-03-02,2026-03-02,10-sinf,71-maktab,+998335291611,,,Non-ISO source dates retained in source_date
+166,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",10,Akobir,Abdullayev,2026-01-26,2026-01-26,9 sinf,7 maktab,+998974058707,,,Non-ISO source dates retained in source_date
+167,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",11,Bahodir,Nazarov,2026-01-22,2026-01-22,7-sinf,7-maktab,+998932397315,,,Non-ISO source dates retained in source_date
+168,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",12,Yashnarbek,Yarashev,2026-01-14,2026-01-14,10-sinf,11-maktab,+998991366025,,,Non-ISO source dates retained in source_date
+169,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",13,Intizor,Samehjonova,2025-11-01,2025-11-01,7,86,+998915457725,,,Non-ISO source dates retained in source_date
+170,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",14,Ulug`bek,Amrillayev,2025-09-16,2025-09-16,8-sinf,14-maktab,+998930869772,,,Non-ISO source dates retained in source_date
+171,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",15,Bahodir,Akbarov,2025-09-11,2025-09-11,10-sinf,121-maktab,+998904592669,,,Non-ISO source dates retained in source_date
+172,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",16,Amirxon,Rabbimov,2025-07-08,2025-07-08,6-sinf,70-maktab,+998940420062,,,Non-ISO source dates retained in source_date
+173,Sodiqov Xurshid,A2 Flyers,English,ENG,777,"Se, Pa, Shanba 14:00-15:30",17,Ozodbek,Rahmatullayev,2025-06-16,2025-06-16,5-sinf,3-maktab,+998979536535,,,Non-ISO source dates retained in source_date
+183,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",1,Alisher,Sharifboyev,2026-09-08,2026-09-08,8-sinf,2-maktab,+998901021293,,,Non-ISO source dates retained in source_date
+184,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",2,Abror,O`rinboyev,2026-07-02,2026-07-02,9-sinf,1-maktab,+998901918287,,,Non-ISO source dates retained in source_date
+185,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",3,Jahongir,O`lmasov,2026-06-17,2026-06-17,8-sinf,1-maktab,+998901017731,,,Non-ISO source dates retained in source_date
+186,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",4,Farzod,Rajabov,2026-06-09,2026-06-09,7-sinf,2-maktab,+998915305202,,,Non-ISO source dates retained in source_date
+187,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",5,Salohiddin,Shokirov,2026-06-09,2026-06-09,4-sinf,89-maktab,+998952741015,,,Non-ISO source dates retained in source_date
+188,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",6,Xushnudbek,Hazratqulov,2026-06-09,2026-06-09,6-sinf,75-maktab,+998992928983,,,Non-ISO source dates retained in source_date
+189,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",7,Fayro`z,Tojimurodov,2026-06-09,2026-06-09,4-sinf,84-maktab,,,,Non-ISO source dates retained in source_date
+190,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",8,Elshodbek,Shaxriyorov,2026-06-09,2026-06-09,4-sinf,48-maktab,+998994625945,,,Non-ISO source dates retained in source_date
+191,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",9,Marjona,Zubaydullayeva,2026-04-02,2026-04-02,9-sinf,136-maktab,+998944350217,,,Non-ISO source dates retained in source_date
+192,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",10,Soliha,Yoqubjonova,2026-02-18,2026-02-18,9-sinf,70-maktab,+998886135650,,,Non-ISO source dates retained in source_date
+193,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",11,Malika,Nurillayeva,2025-12-16,2025-12-16,7-sinf,136-maktab,+998931288633,,,Non-ISO source dates retained in source_date
+194,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",12,Intizor,Rajabova,2025-12-15,2025-12-15,7-sinf,53-maktab,+998957771586,,,Non-ISO source dates retained in source_date
+195,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",13,Ezoza,Rahimova,2025-12-05,2025-12-05,7-sinf,86-maktab,+998979284842,,,Non-ISO source dates retained in source_date
+196,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",14,Tojioy,Mamatqulova,2025-11-19,2025-11-19,8-sinf,6-maktab,+998338810039,,,Non-ISO source dates retained in source_date
+197,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",15,Jahongir,Ismatov,2025-11-10,2025-11-10,8,56,+998993403612,,,Non-ISO source dates retained in source_date
+198,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",16,Doston,Halimov,2025-09-10,2025-09-10,-sinf,-maktab,+998954401812,,,Non-ISO source dates retained in source_date
+199,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",17,Sunbula,Ikromova,2025-09-08,2025-09-08,9-sinf,75-maktab,+998979102608,,,Non-ISO source dates retained in source_date
+200,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",18,Zohida,Obloberdiyeva,2025-09-01,2025-09-01,8-sinf,71-maktab,+998993198905,,,Non-ISO source dates retained in source_date
+201,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",19,Mexrangiz,Kamolova,2025-06-17,2025-06-17,7,54,+998909657562,,,Non-ISO source dates retained in source_date
+202,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",20,Nurbek,Raupov,2025-06-02,2025-06-02,10-sinf,128-maktab,+998941800063,,,Non-ISO source dates retained in source_date
+203,Tursunov Shuhratjon,A2 Plus Afternoon,English,ENG,777,"Sesh, Pay, Shanba 14:00",21,Aslbek,Mahmudov,2025-06-02,2025-06-02,-sinf,-maktab,+998942691881,,,Non-ISO source dates retained in source_date
+206,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",1,Ibrohim,Raufov,2026-09-15,2026-09-15,6-sinf,136-maktab,+998505814374,,,Non-ISO source dates retained in source_date
+207,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",2,Ahmadamin,Ravshanov,2026-09-12,2026-09-12,6 sinf,1 maktab,+998915470510,,,Non-ISO source dates retained in source_date
+208,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",3,Nusrat,Mansurov,2026-09-01,2026-09-01,8-sinf,97-maktab,+998500779544,,,Non-ISO source dates retained in source_date
+209,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",4,Muhammadyusuf,Hamdamov,2026-06-09,2026-06-09,4,1,+998976123222,,,Non-ISO source dates retained in source_date
+210,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",5,Islom,Begmurodov,2026-06-09,2026-06-09,3-sinf,3-maktab,+998901965686,,,Non-ISO source dates retained in source_date
+211,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",6,Muhammadsodiq,Zohirov,2026-04-16,2026-04-16,6-sinf,136-maktab,+998889387010,,,Non-ISO source dates retained in source_date
+212,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",7,Ibrohim,Mardonov,2026-03-01,2026-03-01,6,33,+998902248185,,,Non-ISO source dates retained in source_date
+213,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",8,Akbar,Ergashev,2025-12-03,2025-12-03,2 kurs,Kasb xunar,+998992271132,,,Non-ISO source dates retained in source_date
+214,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",9,Muhammadali,Zafarov,2025-12-03,2025-12-03,2 kurs,Kasb xunar,+998915410232,,,Non-ISO source dates retained in source_date
+215,Tursunov Shuhratjon,A2 Plus Morning,English,ENG,777,"Sesh, Pay, Shanba 10:00",10,Abdumubin,Matlabov,2025-10-22,2025-10-22,5,136-maktab,+998907426788,,,Non-ISO source dates retained in source_date
+229,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",1,Amir,Xursandov,2026-09-01,2026-09-01,-sinf,-maktab,+998901581770,,,Non-ISO source dates retained in source_date
+230,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",2,Mehroj,Azimov,2026-09-01,2026-09-01,0-sinf,0-maktab,+998904579044,,,Non-ISO source dates retained in source_date
+231,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",3,Sardor,Samadov,2026-08-04,2026-08-04,6-sinf,85-maktab,+998979273388,,,Non-ISO source dates retained in source_date
+232,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",4,Muhammad,Bozorboyev,2026-06-26,2026-06-26,1-kurs,Kollej,+998901907022,,,Non-ISO source dates retained in source_date
+233,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",5,Abduhamid,O`ktamov,2026-06-08,2026-06-08,6-sinf,86-maktab,+99895284460,,,Non-ISO source dates retained in source_date
+234,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",6,Matlab,Muxbilov,2026-05-12,2026-05-12,7-sinf,121-maktab,+998979435533,,,Non-ISO source dates retained in source_date
+235,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",7,Mansurbek,G`iyosiddinov,2026-04-02,2026-04-02,9-sinf,56-maktab,+998880082213,,,Non-ISO source dates retained in source_date
+236,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",8,Islom,Ruslanov,2026-03-26,2026-03-26,6-sinf,136-maktab,+998915385388,,,Non-ISO source dates retained in source_date
+237,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",9,Sahobiddin,Saidaliyev,2026-03-24,2026-03-24,7-sinf,1-maktab,+998976138707,,,Non-ISO source dates retained in source_date
+238,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",10,Qamariddin,Saidaliyev,2026-03-24,2026-03-24,9-sinf,54-maktab,+998883900101,,,Non-ISO source dates retained in source_date
+239,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",11,Jasmina,Hasanova,2026-03-24,2026-03-24,8-sinf,38-maktab,+998770277032,,,Non-ISO source dates retained in source_date
+240,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",12,Shoxjahon,Qurbonov,2026-03-14,2026-03-14,7-sinf,6-maktab,+998889172426,,,Non-ISO source dates retained in source_date
+241,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",13,Samiya,Nematova,2026-03-07,2026-03-07,10-sinf,7-maktab,+998887270606,,,Non-ISO source dates retained in source_date
+242,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",14,Bobirmirzo,Sayfiddinov,2026-03-07,2026-03-07,10-sinf,152-maktab,+998878482228,,,Non-ISO source dates retained in source_date
+243,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",15,Dilnavoz,Shukurova,2026-03-05,2026-03-05,7-sinf,3-maktab,+998902507060,,,Non-ISO source dates retained in source_date
+244,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",16,Abdulloh,Mamamurodov,2026-03-03,2026-03-03,7-sinf,7-maktab,+998991664604,,,Non-ISO source dates retained in source_date
+245,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",17,Abdulloh,Mardonov,2026-03-03,2026-03-03,0-sinf,0-maktab,+998504407006,,,Non-ISO source dates retained in source_date
+246,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",18,Dilnura,Suyunova,2025-11-10,2025-11-10,10,71,+998886150386,,,Non-ISO source dates retained in source_date
+247,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",19,Otabek,Rajabov,2025-01-06,2025-01-06,9-sinf,1-maktab,+998339588580,,,Non-ISO source dates retained in source_date
+248,Tursunov Shuhratjon,Flyers Afternoon,English,ENG,777,"Dush, Chor, Juma 15:30",20,Muhammadali,Rahmonov,2025-01-01,2025-01-01,iqbol,8-maktab,+998951875958,,,Non-ISO source dates retained in source_date
+254,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",1,Sanjar,Rajabov,2026-09-01,2026-09-01,9-sinf,53-maktab,+998995551831,,,Non-ISO source dates retained in source_date
+255,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",2,Dilnavo,Boboyorova,2026-09-01,2026-09-01,8-sinf,71-maktab,+998502202908,,,Non-ISO source dates retained in source_date
+256,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",3,Muhammadamin,Qobilov,2026-07-04,2026-07-04,7-sinf,120-maktab,+998974087858,,,Non-ISO source dates retained in source_date
+257,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",4,Muhammad,Rabbimov,2026-07-03,2026-07-03,5-sinf,48-maktab,+998993440213,,,Non-ISO source dates retained in source_date
+258,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",5,Oyatillo,Rajabboyev,2026-07-01,2026-07-01,8-sinf,156-maktab,+998775179232,,,Non-ISO source dates retained in source_date
+259,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",6,Umid,Tursunov,2026-07-01,2026-07-01,7-sinf,71-maktab,+99897912077,,,Non-ISO source dates retained in source_date
+260,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",7,Baxtiyor,Bo`ronov,2026-07-01,2026-07-01,8-sinf,97-maktab,+998951306606,,,Non-ISO source dates retained in source_date
+261,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",8,Alisher,Nematov,2026-07-01,2026-07-01,8-sinf,7-maktab,+998883993635,,,Non-ISO source dates retained in source_date
+262,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",9,Mehribon,Ahmadqulova,2026-07-01,2026-07-01,10-sinf,75-maktab,+998771236323,,,Non-ISO source dates retained in source_date
+263,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",10,Og`abek,Narzullayev,2026-07-01,2026-07-01,9-sinf,82-maktab,+998882867554,,,Non-ISO source dates retained in source_date
+264,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",11,Behruz,Rustamov,2026-07-01,2026-07-01,9-sinf,82-maktab,+998933976644,,,Non-ISO source dates retained in source_date
+265,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",12,Gulsevar,Mahmarasulova,2026-07-01,2026-07-01,8-sinf,48-maktab,+998993176857,,,Non-ISO source dates retained in source_date
+266,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",13,Ruxshona,Fazliyeva,2026-06-15,2026-06-15,9-sinf,5-maktab,+998944753100,,,Non-ISO source dates retained in source_date
+267,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",14,Alisher,Rabbimov,2026-06-08,2026-06-08,6-sinf,48-maktab,+998990917194,,,Non-ISO source dates retained in source_date
+268,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",15,Shahlo,Obloberdiyeva,2026-06-08,2026-06-08,7-sinf,71-maktab,+998993198905,,,Non-ISO source dates retained in source_date
+269,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",16,Murod,Rahimov,2026-06-01,2026-06-01,8-sinf,7-maktab,+998973956661,,,Non-ISO source dates retained in source_date
+270,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",17,Zahro,Xalilova,2026-05-23,2026-05-23,7-sinf,82-maktab,+998889332240,,,Non-ISO source dates retained in source_date
+271,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",18,shodiyona,Hasanova,2026-05-21,2026-05-21,5-sinf,82-maktab,+998888860216,,,Non-ISO source dates retained in source_date
+272,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",19,Shahrizoda,Uzoqova,2026-05-21,2026-05-21,6-sinf,55-maktab,+998889474743,,,Non-ISO source dates retained in source_date
+273,Tursunov Shuhratjon,Movers Afternoon,English,ENG,777,"Dush, Chor, Juma 14:00",20,Muhammadzohid,Ismatullayev,2026-05-12,2026-05-12,3-sinf,6-maktab,+998991507744,,,Non-ISO source dates retained in source_date
+276,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",1,Sarvar,Ziyodullayev,2026-09-08,2026-09-08,7-sinf,7-maktab,+998944146677,,,Non-ISO source dates retained in source_date
+277,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",2,Parvina,Xudoyberdiyeva,2026-09-01,2026-09-01,9-sinf,142-maktab,+998701511406,,,Non-ISO source dates retained in source_date
+278,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",3,Muhammadsodiq,Shahobov,2026-08-11,2026-08-11,6-sinf,7-maktab,+998978951177,,,Non-ISO source dates retained in source_date
+279,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",4,Islom,Rahimjonov,2026-08-01,2026-08-01,3-sinf,123-maktab,+998995992213,,,Non-ISO source dates retained in source_date
+280,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",5,Muhammadamin,Nematov,2026-07-01,2026-07-01,5-sinf,7-maktab,+998883993635,,,Non-ISO source dates retained in source_date
+281,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",6,Asadbek,Muhammadaliyev,2026-07-01,2026-07-01,4-sinf,2-maktab,+998886120678,,,Non-ISO source dates retained in source_date
+282,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",7,Abdulvosit,Abduraupov,2026-06-26,2026-06-26,5-sinf,8-maktab,+998915402419,,,Non-ISO source dates retained in source_date
+283,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",8,Sabina,Salimova,2026-06-17,2026-06-17,5-sinf,55-maktab,+998973948324,,,Non-ISO source dates retained in source_date
+284,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",9,Muhammadali,Salimov,2026-06-17,2026-06-17,4-sinf,55-maktab,+998973948324,,,Non-ISO source dates retained in source_date
+285,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",10,Kamoliddin,Shahobov,2026-06-17,2026-06-17,6-sinf,136-maktab,+998915505063,,,Non-ISO source dates retained in source_date
+286,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",11,Munisa,Karimova,2026-06-17,2026-06-17,6-sinf,55-maktab,+998888941485,,,Non-ISO source dates retained in source_date
+287,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",12,Amirun,Uzoqov,2026-06-10,2026-06-10,6-sinf,54-maktab,+998941890707,,,Non-ISO source dates retained in source_date
+288,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",13,Ibrohim,Hasanov,2026-06-09,2026-06-09,6-sinf,144-maktab,+998917041994,,,Non-ISO source dates retained in source_date
+289,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",14,Taxmina,O`roqova,2026-05-23,2026-05-23,5-sinf,55-maktab,+998915311499,,,Non-ISO source dates retained in source_date
+290,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",15,Feruzbek,Shavkatov,2026-05-23,2026-05-23,4-sinf,121-maktab,+998979621920,,,Non-ISO source dates retained in source_date
+291,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",16,Azizbek,Izzatullayev,2026-05-12,2026-05-12,5-sinf,54-maktab,+998979240332,,,Non-ISO source dates retained in source_date
+292,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",17,Akobir,Amriddinov,2026-05-01,2026-05-01,5-sinf,5-maktab,+998949990077,,,Non-ISO source dates retained in source_date
+293,Tursunov Shuhratjon,Movers Morning,English,ENG,777,"Dush, Chor, Juma 10:00",18,Zinnurbek,Faxriddinov,2026-02-16,2026-02-16,5-sinf,89-maktab,+998975721252,,,Non-ISO source dates retained in source_date
+299,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",1,Amirjon,Sa`dullayev,2026-09-12,2026-09-12,7-sinf,55-maktab,+998880301845,,,Non-ISO source dates retained in source_date
+300,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",2,Nargiza,Obloberdiyeva,2026-09-12,2026-09-12,9-sinf,136-maktab,+998901981862,,,Non-ISO source dates retained in source_date
+301,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",3,Egamberdi,Bozorov,2026-09-10,2026-09-10,9-sinf,48-maktab,+998992020759,,,Non-ISO source dates retained in source_date
+302,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",4,Shahrizoda,Sarifboyeva,2026-09-10,2026-09-10,9-sinf,36-maktab,+998937725076,,,Non-ISO source dates retained in source_date
+303,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",5,Sarvar,Asadov,2026-09-01,2026-09-01,8-sinf,82-maktab,+998507121815,,,Non-ISO source dates retained in source_date
+304,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",6,Abdusamad,Farmonov,2026-09-01,2026-09-01,11-sinf,31-maktab,+998882880677,,,Non-ISO source dates retained in source_date
+305,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",7,Mushtariy,Sadriddinova,2026-09-01,2026-09-01,1-kurs,Kollej,+998915211437,,,Non-ISO source dates retained in source_date
+306,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",8,Mumtoza,Sadriddinova,2026-09-01,2026-09-01,8-sinf,1-maktab,+998915211437,,,Non-ISO source dates retained in source_date
+307,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",9,Oybek,Hamroqulov,2026-09-01,2026-09-01,8-sinf,56-maktab,+998993381164,,,Non-ISO source dates retained in source_date
+308,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",10,Sardorbek,Baxriddinov,2026-09-01,2026-09-01,9-sinf,38-maktab,+998508826505,,,Non-ISO source dates retained in source_date
+309,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",11,Mehribon,Karimjonova,2026-09-01,2026-09-01,-sinf,-maktab,+998901914131,,,Non-ISO source dates retained in source_date
+310,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",12,Dilnura,Hamroqulova,2026-09-01,2026-09-01,7-sinf,SAMDU,+998337220891,,,Non-ISO source dates retained in source_date
+311,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",13,Elbek,Akramov,2026-09-01,2026-09-01,6-sinf,82-maktab,+998500749658,,,Non-ISO source dates retained in source_date
+312,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",14,Dilnura,Latipova,2026-08-20,2026-08-20,10-sinf,73-maktab,+998870011125,,,Non-ISO source dates retained in source_date
+313,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",15,Otabek,Mahmudov,2026-08-12,2026-08-12,11-sinf,2-maktab,+998980708283,,,Non-ISO source dates retained in source_date
+314,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",16,Bilol,Raupov,2026-08-12,2026-08-12,10-sinf,136-maktab,+998981161993,,,Non-ISO source dates retained in source_date
+315,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",17,Jahongir,Xazratqulov,2026-08-12,2026-08-12,11-sinf,75-maktab,+998953519050,,,Non-ISO source dates retained in source_date
+316,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",18,Ibrohim,Jamolov,2026-08-11,2026-08-11,7-sinf,85-maktab,+998870230236,,,Non-ISO source dates retained in source_date
+317,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",19,Muhammad,Ulashev,2026-07-24,2026-07-24,1-sinf,Kollej,+998888920001,,,Non-ISO source dates retained in source_date
+318,Tursunov Shuhratjon,Starter Afternoon,English,ENG,777,"Sesh, Pay, Shanba 15:30",20,Nodirbek,Karimov,2026-07-22,2026-07-22,6-sinf,122-maktab,+998915572899,,,Non-ISO source dates retained in source_date
+332,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,1,Robiya,Sharopova,2026-06-20,2026-06-20,4-sinf,-maktab,+998981000475,,,Non-ISO source dates retained in source_date
+333,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,2,Farzona,Faxriddinova,2026-04-03,2026-04-03,3-sinf,86-maktab,+998996240010,,,Non-ISO source dates retained in source_date
+334,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,3,Mustafo,Jamshidov,2026-03-28,2026-03-28,2-sinf,54-maktab,+998944784444,,,Non-ISO source dates retained in source_date
+335,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,4,Abdukarim,Aslamov,2026-03-03,2026-03-03,3-sinf,89-maktab,+998889148085,,,Non-ISO source dates retained in source_date
+336,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,5,Mehrinso,Nematillayeva,2026-02-16,2026-02-16,-sinf,86-maktab,,,,Non-ISO source dates retained in source_date
+337,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,6,Azizbek,Faxriddinov,2026-02-16,2026-02-16,3-sinf,89-maktab,+998975751252,,,Non-ISO source dates retained in source_date
+338,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,7,Zohid,Nurullayev,2026-02-05,2026-02-05,4-sinf,156-maktab,,,,Non-ISO source dates retained in source_date
+339,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,8,Fazilat,Rahimova,2026-02-05,2026-02-05,4-sinf,156-maktab,,,,Non-ISO source dates retained in source_date
+340,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,9,Samir,Farmonov,2026-02-05,2026-02-05,5-sinf,48-maktab,+998915263514,,,Non-ISO source dates retained in source_date
+341,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,10,Aziz,Sodiqov,2025-12-01,2025-12-01,1,54-maktab,+998910385206,,,Non-ISO source dates retained in source_date
+342,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,11,Akbar,Soliyev,2025-10-04,2025-10-04,2-sinf,86-maktab,+998973900651,,,Non-ISO source dates retained in source_date
+343,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,12,Umar,Fazliddinov,2025-08-20,2025-08-20,6-sinf,144-maktab,+998904561225,,,Non-ISO source dates retained in source_date
+344,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,13,Imomali,Jamolov,2025-06-16,2025-06-16,3-sinf,7-maktab,+998947311221,,,Non-ISO source dates retained in source_date
+345,Xursandmurodova Shamsiya,A1 Movers,English,ENG,777,Unknown,14,Muhammadali,Qobilov,2025-01-01,2025-01-01,2 sinf,2 maktab,+998976149596,,,Non-ISO source dates retained in source_date
+358,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,1,Nurmuhammad,Sharofiddinov,2026-09-16,2026-09-16,1-sinf,2-maktab,+998889311770,,,Non-ISO source dates retained in source_date
+359,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,2,Shavkatmirzo,Furqatov,2026-09-01,2026-09-01,2-sinf,7-maktab,+998981403838,,,Non-ISO source dates retained in source_date
+360,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,3,Mustafo,Umidov,2026-09-01,2026-09-01,1-sinf,2-maktab,+998887761412,,,Non-ISO source dates retained in source_date
+361,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,4,Abdurahmon,G`iyosov,2026-09-01,2026-09-01,3-sinf,54-maktab,+998883931752,,,Non-ISO source dates retained in source_date
+362,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,5,Shahrizoda,Qurbonova,2026-09-01,2026-09-01,3-sinf,1-maktab,+998975761906,,,Non-ISO source dates retained in source_date
+363,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,6,Firdavs,Fozilov,2026-09-01,2026-09-01,4-sinf,86-maktab,+998972880043,,,Non-ISO source dates retained in source_date
+364,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,7,Muhammadjon,Farhodov,2026-08-17,2026-08-17,4-sinf,86-maktab,+998902871717,,,Non-ISO source dates retained in source_date
+365,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,8,Mansur,Sharipov,2026-07-06,2026-07-06,4-sinf,122-maktab,+998901003393,,,Non-ISO source dates retained in source_date
+366,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,9,Afruza,Tolibjonova,2026-06-19,2026-06-19,2-sinf,54-maktab,,,,Non-ISO source dates retained in source_date
+367,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,10,Jaloliddin,Soatov,2026-06-05,2026-06-05,2-sinf,54-maktab,+998889153070,,,Non-ISO source dates retained in source_date
+368,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,11,Abdusaid,Abdurasulov,2026-06-02,2026-06-02,4-sinf,142-maktab,+998901840777,,,Non-ISO source dates retained in source_date
+369,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,12,Samira,Amrullayeva,2026-05-26,2026-05-26,3-sinf,1-maktab,+998931369454,,,Non-ISO source dates retained in source_date
+370,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,13,Muhammadzohid,Ismatullayev,2026-05-12,2026-05-12,3-sinf,6-maktab,+998991507744,,,Non-ISO source dates retained in source_date
+371,Tursunboyeva Mahzuna,Starter,English,ENG,777,Unknown,14,Muhammadsodiq,Mahmudov,2026-02-05,2026-02-05,1-sinf,55-maktab,+998979366633,,,Non-ISO source dates retained in source_date
+377,G'aybullayev Soxib,IT,IT,IT,5,Unknown,1,Xurshid,Rustamov,2026-08-29,2026-08-29,1-kurs,kolej,+998973243555,,,Non-ISO source dates retained in source_date
+378,G'aybullayev Soxib,IT,IT,IT,5,Unknown,2,Abror,Ergashev,2026-08-01,2026-08-01,6,2,+998507225017,,,Non-ISO source dates retained in source_date
+379,G'aybullayev Soxib,IT,IT,IT,5,Unknown,3,Abdurahmon,Nurillayev,2026-07-01,2026-07-01,5-sinf,136-maktab,+998990480034,,,Non-ISO source dates retained in source_date
+380,G'aybullayev Soxib,IT,IT,IT,5,Unknown,4,Ibrohim,Raufov,2026-06-06,2026-06-06,6-sinf,136-maktab,+998505814374,,,Non-ISO source dates retained in source_date
+381,G'aybullayev Soxib,IT,IT,IT,5,Unknown,5,Sarvinoz,A`zamova,2026-06-01,2026-06-01,5-sinf,3-maktab,+998979311188,,,Non-ISO source dates retained in source_date
+382,G'aybullayev Soxib,IT,IT,IT,5,Unknown,6,Charos,A`zamova,2026-01-01,2026-01-01,7-sinf,3-maktab,+998979311188,,,Non-ISO source dates retained in source_date
+383,G'aybullayev Soxib,IT,IT,IT,5,Unknown,7,Elbek,Kenjayev,2026-07-18,2026-07-18,-sinf,-maktab,+998990058474,,,Non-ISO source dates retained in source_date
+384,G'aybullayev Soxib,IT,IT,IT,5,Unknown,8,Athamjon,Ahmadov,2026-07-01,2026-07-01,1-kurs,kolej,+998976104000,,,Non-ISO source dates retained in source_date
+385,G'aybullayev Soxib,IT,IT,IT,5,Unknown,9,Og`abek,Olimov,2026-07-01,2026-07-01,1-kurs,kolej,+998904775202,,,Non-ISO source dates retained in source_date
+386,G'aybullayev Soxib,IT,IT,IT,5,Unknown,10,Asqar,Ahmadov,2026-07-01,2026-07-01,1-kurs,kolej,+998981111240,,,Non-ISO source dates retained in source_date
+387,G'aybullayev Soxib,IT,IT,IT,5,Unknown,11,Xudoyberdi,Abdusalomov,2026-07-01,2026-07-01,8-sinf,82-maktab,+998773691389,,,Non-ISO source dates retained in source_date
+394,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",1,Muhammadali,Musurmonov,2026-09-01,2026-09-01,3-sinf,121-maktab,+998902514606,,,Non-ISO source dates retained in source_date
+395,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",2,Hamidjon,Uktamov,2026-07-17,2026-07-17,5-sinf,2-maktab,+998902241019,,,Non-ISO source dates retained in source_date
+396,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",3,Imona,Musurmonova,2026-07-03,2026-07-03,3-sinf,121-maktab,+998902514606,,,Non-ISO source dates retained in source_date
+397,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",4,Jafar,Salimov,2026-06-17,2026-06-17,3-sinf,54-maktab,+998975790723,,,Non-ISO source dates retained in source_date
+398,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",5,Elbek,Ilhomov,2026-06-17,2026-06-17,4-sinf,85-maktab,+998883950558,,,Non-ISO source dates retained in source_date
+399,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",6,Zuxriddin,Ahmadov,2026-06-08,2026-06-08,2-sinf,89-maktab,+998915510053,,,Non-ISO source dates retained in source_date
+400,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",7,Afruza,Amrillayeva,4-Jun,,3-sinf,54-maktab,,,,Non-ISO source dates retained in source_date
+401,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",8,Xonzoda,Ibodullayeva,2026-06-03,2026-06-03,5-sinf,154-maktab,+998954197973,,,Non-ISO source dates retained in source_date
+402,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",9,Shodiyona,Yunusova,2026-06-03,2026-06-03,6-sinf,8-maktab,+99899505460,,,Non-ISO source dates retained in source_date
+403,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",10,Madina,Ahmadova,2026-06-03,2026-06-03,4-sinf,121-maktab,+998509987330,,,Non-ISO source dates retained in source_date
+404,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",11,Aliakbar,Rustamov,2026-06-03,2026-06-03,4-sinf,2-maktab,+998999106282,,,Non-ISO source dates retained in source_date
+405,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",12,Ulug`bek,Izzatullayev,2026-06-01,2026-06-01,3-sinf,elita-maktab,+998979240332,,,Non-ISO source dates retained in source_date
+406,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",13,Bilolbek,Umarov,2026-05-04,2026-05-04,2-sinf,3-maktab,,,,Non-ISO source dates retained in source_date
+407,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",14,Husan,Jo`rayev,2026-04-04,2026-04-04,5-sinf,38-maktab,+998505796953,,,Non-ISO source dates retained in source_date
+408,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",15,Mubina,Shahobova,2026-04-01,2026-04-01,1-sinf,3-maktab,+998338927070,,,Non-ISO source dates retained in source_date
+409,Mamasolihova Zubayda,Starter,English,ENG,6,"Dush, Chor, Juma 08:00",16,Umarbek,Shavkatov,2025-10-17,2025-10-17,5,136,+998979228303,,,Non-ISO source dates retained in source_date
+420,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",1,Muhammadjon,Zayniddinov,,,2,5,+886143844,,,Non-ISO source dates retained in source_date
+421,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",2,Mubina,Baxtiyorova,,,4,54,+930452238,,,Non-ISO source dates retained in source_date
+422,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",3,Farida,Tohirova,,,3,3,+508875300,,,Non-ISO source dates retained in source_date
+423,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",4,Muslima,Xolmurodova,,,5,1,,,,Non-ISO source dates retained in source_date
+424,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",5,Sharofiddin,Murodillayev,,,6,1,+915533477,,,Non-ISO source dates retained in source_date
+425,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",6,Xosiyatoy,Ismatullayeva,,,5,121,+905024858,,,Non-ISO source dates retained in source_date
+426,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",7,Alibek,Oltinboyev,,,6,8,+952484821,,,Non-ISO source dates retained in source_date
+427,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",8,Muhammadjon,Yusupov,,,3,7,+952484821,,,Non-ISO source dates retained in source_date
+428,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",9,Najmiddin,Najmiyev,,,6,2,+930754800,,,Non-ISO source dates retained in source_date
+429,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",10,Abdushukur,No'monov,,,5,54,+914051604,,,Non-ISO source dates retained in source_date
+430,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",11,Fazliddin,Salohiddinov,,,5,2,+991084169,,,Non-ISO source dates retained in source_date
+431,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",12,Shohida,No'monova,,,6,54,+991084169,,,Non-ISO source dates retained in source_date
+432,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",13,Bilol,Aslamov,,,6,1,+979430115,,,Non-ISO source dates retained in source_date
+433,Ahatova Farangiz,Movers Morning,English,ENG,777,"Sesh, Pay, Shanba 08:00",14,Mironshoh,Xurshedov,,,7,54,+939970054,,,Non-ISO source dates retained in source_date
+441,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",1,Muhammadyusuf,Qiyomov,5-sentabr,,3,136,+902821212,,,Non-ISO source dates retained in source_date
+442,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",2,Demir,Xayrullayev,2-iyul,,3,7,+978979333,,,Non-ISO source dates retained in source_date
+443,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",3,Yasmina,Eldonova,9-iyun,,4,137,+933535125,,,Non-ISO source dates retained in source_date
+444,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",4,Azamat,Samehjonov,10-aprel,,4,86,+910336110,,,Non-ISO source dates retained in source_date
+445,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",5,Ahmadjon,Dilshodov,1-aprel,,3,,+889351336,,,Non-ISO source dates retained in source_date
+446,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",6,Hojiahmad,Hasanov,2-mart,,3,121,+997737262,,,Non-ISO source dates retained in source_date
+447,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",7,Afzalbek,Namozov,13-yanvar,,4,136,+972882580,,,Non-ISO source dates retained in source_date
+448,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",8,Ahliddin,Qahramonov,2025-12-01,2025-12-01,3,,+945485101,,,Non-ISO source dates retained in source_date
+449,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",9,Bektemur,Shuxratov,2025-11-15,2025-11-15,4,7,+979582255,,,Non-ISO source dates retained in source_date
+450,Ahatova Farangiz,Movers,English,ENG,777,"Sesh, Pay, Shanba 10:00",10,Abubakir,Soliyev,2025-09-06,2025-09-06,6,7,,,,Non-ISO source dates retained in source_date
+475,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",1,Abubakir,Qobilov,2026-06-24,2026-06-24,8-sinf,54-maktab,+99891162226,,,Non-ISO source dates retained in source_date
+476,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",2,Saidhon,Shukrullayev,2026-06-24,2026-06-24,7-sinf,136-maktab,+998990332628,,,Non-ISO source dates retained in source_date
+477,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",3,Shukrullo,Shokirov,2026-06-03,2026-06-03,8-sinf,89-maktab,+998889105272,,,Non-ISO source dates retained in source_date
+478,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",4,Zayniddin,Murodillayev,2026-06-03,2026-06-03,7-sinf,55-maktab,+998981904210,,,Non-ISO source dates retained in source_date
+479,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",5,Shohruz,G`ulomov,2026-06-01,2026-06-01,7-sinf,82-maktab,+998979128844,,,Non-ISO source dates retained in source_date
+480,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",6,Firdavs,Qurbonov,2026-06-01,2026-06-01,7 sinf,82 Maktab,+998883614700,,,Non-ISO source dates retained in source_date
+481,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",7,Abdusamat,Abdurasulov,2026-06-01,2026-06-01,-sinf,142-maktab,+998997709190,,,Non-ISO source dates retained in source_date
+482,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",8,Odiljon,Rahimov,2026-06-01,2026-06-01,8-sinf,82-maktab,+998885777091,,,Non-ISO source dates retained in source_date
+483,Ibrohim Vafoyev,Dasturlash Turbo,IT,IT,777,"Sesh, Pay, Shanba 15:30",9,Sunnat,G`ulomov,2026-06-01,2026-06-01,8-sinf,82-maktab,+998979128844,,,Non-ISO source dates retained in source_date
+502,Ibrohim Vafoyev,Savodxonlik,Literacy,LIT,777,"Sesh, Pay, Shanba 15:30",1,Bexruz,Baxronov,2026-09-15,2026-09-15,7-sinf,82-maktab,+998870022446,,,Non-ISO source dates retained in source_date
+503,Ibrohim Vafoyev,Savodxonlik,Literacy,LIT,777,"Sesh, Pay, Shanba 15:30",2,Asilbek,Baxronov,2026-09-15,2026-09-15,7-sinf,82-maktab,+998973927772,,,Non-ISO source dates retained in source_date
+504,Ibrohim Vafoyev,Savodxonlik,Literacy,LIT,777,"Sesh, Pay, Shanba 15:30",3,Zoyirbek,Baxronov,2026-09-15,2026-09-15,7-sinf,82-maktab,+998931870322,,,Non-ISO source dates retained in source_date
+505,Ibrohim Vafoyev,Savodxonlik,Literacy,LIT,777,"Sesh, Pay, Shanba 15:30",4,Mubina,Fazliddinova,2026-09-15,2026-09-15,10-sinf,7-maktab,+998873991400,,,Non-ISO source dates retained in source_date

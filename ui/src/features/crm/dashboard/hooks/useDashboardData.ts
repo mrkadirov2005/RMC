@@ -7,6 +7,7 @@ import { fetchClasses, fetchClassesForce } from '../../../../slices/classesSlice
 import { fetchTeachers, fetchTeachersForce } from '../../../../slices/teachersSlice';
 import { fetchPayments, fetchPaymentsForce } from '../../../../slices/paymentsSlice';
 import { fetchDebts, fetchDebtsForce } from '../../../../slices/debtsSlice';
+import { fetchAttendance, fetchAttendanceForce } from '../../../../slices/attendanceSlice';
 import {
   selectDashboardCollections,
   selectDashboardLoadingByRole,
@@ -59,6 +60,7 @@ export const useDashboardData = (
   useEffect(() => {
     dispatch(fetchStudents());
     dispatch(fetchClasses());
+    dispatch(fetchAttendance());
     if (isSuperuser) {
       dispatch(fetchTeachers());
       dispatch(fetchPayments());
@@ -72,6 +74,7 @@ export const useDashboardData = (
     const handleActiveCenterChanged = () => {
       dispatch(fetchStudentsForce());
       dispatch(fetchClassesForce());
+      dispatch(fetchAttendanceForce());
       if (isSuperuser) {
         dispatch(fetchTeachersForce());
         dispatch(fetchPaymentsForce());
