@@ -1,13 +1,16 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, CalendarDays, CheckCircle2, Clock3, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import SessionModal from '@/features/crm/classes/SessionModal';
 import { useAppDispatch, useAppSelector } from '@/features/crm/hooks';
 import { fetchClasses, fetchClassesForce } from '@/slices/classesSlice';
 import { fetchStudents } from '@/slices/studentsSlice';
 import { showToast } from '@/utils/toast';
 import { calendarAPI, classAPI } from './api';
-import { EMPTY_FILTERS, localDateKey, type CalendarEvent, type CalendarFilters, type CalendarView } from './calendarWorkspace';
+import { EMPTY_FILTERS, localDateKey, type CalendarConflict, type CalendarEvent, type CalendarFilters, type CalendarView } from './calendarWorkspace';
 import { CalendarEventDrawer } from './components/CalendarEventDrawer';
 import { CalendarWorkspaceFilters } from './components/CalendarWorkspaceFilters';
 import { CalendarWorkspaceToolbar } from './components/CalendarWorkspaceToolbar';
@@ -50,6 +53,7 @@ const CalendarPage = () => {
   const [view, setView] = useState<CalendarView>(state.view);
   const [filters, setFilters] = useState<CalendarFilters>(state.filters);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [showConflicts, setShowConflicts] = useState(false);
   const [sessionData, setSessionData] = useState<{ classData: any; id: number; date: string } | null>(null);
   const workspace = useCalendarWorkspace(anchor, view, filters);
   const classMap = useMemo(() => new Map(classes.map(item => [Number(item.class_id || item.id), item])), [classes]);
@@ -132,6 +136,11 @@ const CalendarPage = () => {
     attendance: workspace.events.filter(event => (event.attendance?.unmarked || 0) > 0).length,
   }), [workspace.events]);
   const calendarRooms = useMemo(() => workspace.resources.filter(resource => resource.type === 'room').map(resource => resource.name), [workspace.resources]);
+  const eventMap = useMemo(() => new Map(workspace.events.map(event => [event.event_id, event])), [workspace.events]);
+  const conflictDetails = useMemo(() => workspace.conflicts.map((conflict: CalendarConflict) => ({
+    ...conflict,
+    events: conflict.event_ids.map(id => eventMap.get(id)).filter((event): event is CalendarEvent => Boolean(event)),
+  })), [eventMap, workspace.conflicts]);
 
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4 sm:px-5">
     <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">Calendar</h1><p className="text-xs text-muted-foreground">Lessons, rooms, teachers and attendance in one schedule.</p></div></header>
@@ -141,7 +150,7 @@ const CalendarPage = () => {
       <div className="grid grid-cols-2 border-b sm:grid-cols-4">{([
         ['Lessons', counts.total, CalendarDays], ['Conducted', counts.conducted, CheckCircle2], ['Pending', counts.pending, Clock3], ['Attendance missing', counts.attendance, AlertTriangle],
       ] as const).map(([label, value, Icon]) => <div key={label} className="flex items-center gap-2 border-r px-3 py-2 last:border-r-0"><Icon className="h-4 w-4 text-muted-foreground" /><div><div className="text-lg font-bold leading-none">{value}</div><div className="mt-1 text-[11px] text-muted-foreground">{label}</div></div></div>)}</div>
-      {workspace.conflicts.length > 0 && <div className="flex items-center gap-2 border-b bg-rose-50 px-3 py-2 text-xs font-medium text-rose-800 dark:bg-rose-950/40 dark:text-rose-200"><AlertTriangle className="h-4 w-4" />{workspace.conflicts.length} scheduling conflict{workspace.conflicts.length === 1 ? '' : 's'} need attention.</div>}
+      {workspace.conflicts.length > 0 && <button type="button" onClick={() => setShowConflicts(true)} className="flex w-full items-center gap-2 border-b bg-rose-50 px-3 py-2 text-left text-xs font-medium text-rose-800 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"><AlertTriangle className="h-4 w-4" /><span className="flex-1">{workspace.conflicts.length} scheduling conflict{workspace.conflicts.length === 1 ? '' : 's'} need attention.</span><span className="underline underline-offset-2">View details</span></button>}
       {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{workspace.error}</div>}
       {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label="Loading calendar" className="h-7 w-7 animate-spin text-primary" /></div> : <>
         {view === 'day' && <DayCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} />}
@@ -151,6 +160,37 @@ const CalendarPage = () => {
       </>}
     </Card>
     <CalendarEventDrawer event={selectedEvent} canManage={canManage} canDelete={canDelete} onClose={() => setSelectedEvent(null)} onStart={startLesson} onOpen={openSession} onDelete={deleteSession} />
+    <Dialog open={showConflicts} onOpenChange={setShowConflicts}>
+      <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
+        <DialogHeader>
+          <DialogTitle>Scheduling conflicts</DialogTitle>
+          <DialogDescription>
+            Each entry shows the two classes that overlap and the reason for the conflict.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
+          {conflictDetails.map((conflict, index) => (
+            <div key={`${conflict.event_ids.join('-')}-${index}`} className="rounded-lg border border-rose-200 bg-rose-50/60 p-3 dark:border-rose-900 dark:bg-rose-950/20">
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <span className="text-xs font-semibold text-muted-foreground">Conflict {index + 1}</span>
+                {conflict.reasons.map(reason => <Badge key={reason} variant="outline" className="border-rose-300 text-rose-700">{reason}</Badge>)}
+              </div>
+              <div className="grid gap-2 md:grid-cols-2">
+                {conflict.events.length > 0 ? conflict.events.map(event => (
+                  <Button key={event.event_id} type="button" variant="outline" className="h-auto justify-start whitespace-normal p-3 text-left" onClick={() => { setSelectedEvent(event); setShowConflicts(false); }}>
+                    <span>
+                      <span className="block font-semibold">{event.class_name}</span>
+                      <span className="block text-xs text-muted-foreground">{event.date} · {event.start_time.slice(0, 5)}–{event.end_time.slice(0, 5)} · {event.room_name || 'No room'}</span>
+                      {event.teacher_name && <span className="block text-xs text-muted-foreground">{event.teacher_name}</span>}
+                    </span>
+                  </Button>
+                )) : <p className="text-sm text-muted-foreground">The conflicting event details are outside the current loaded view.</p>}
+              </div>
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
     <SessionModal open={Boolean(sessionData)} classData={sessionData?.classData} sessionId={sessionData?.id || null} selectedDate={sessionData?.date} onClose={() => { setSessionData(null); workspace.refresh(); }} />
   </div>;
 };

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { calendarAPI } from '../api';
-import { filterEvents, viewRange, type CalendarEvent, type CalendarFilters, type CalendarResource, type CalendarView } from '../calendarWorkspace';
+import { filterEvents, viewRange, type CalendarConflict, type CalendarEvent, type CalendarFilters, type CalendarResource, type CalendarView } from '../calendarWorkspace';
 
 const rows = (response: any) => {
   const data = response?.data?.data ?? response?.data ?? response;
@@ -26,7 +26,7 @@ export const useCalendarWorkspace = (anchor: Date, view: CalendarView, filters: 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [resources, setResources] = useState<CalendarResource[]>([]);
   const [summary, setSummary] = useState<Record<string, number>>({});
-  const [conflicts, setConflicts] = useState<any[]>([]);
+  const [conflicts, setConflicts] = useState<CalendarConflict[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [revision, setRevision] = useState(0);

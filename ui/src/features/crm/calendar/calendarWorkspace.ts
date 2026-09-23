@@ -6,6 +6,10 @@ export type CalendarEvent = {
   room_id?: number; room_name?: string; session_id?: number;
   attendance?: { present:number; absent:number; unmarked:number };
 };
+export type CalendarConflict = {
+  event_ids: string[];
+  reasons: string[];
+};
 export type CalendarFilters = { query:string; teacherId:string; classId:string; subjectId:string; roomId:string; status:string };
 export type CalendarResource = { type:'teacher'|'class'|'subject'|'room'; id:string; name:string };
 export const EMPTY_FILTERS:CalendarFilters={query:'',teacherId:'',classId:'',subjectId:'',roomId:'',status:''};
