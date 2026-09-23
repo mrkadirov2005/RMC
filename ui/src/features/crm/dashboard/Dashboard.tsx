@@ -20,6 +20,19 @@ const Dashboard = memo(() => {
   const scope: DashboardScope = { type: 'all', value: 'all' };
   const { loading, scopedCollections, stats } = useDashboardData(role, selectedMonth, scope);
   const paymentHook = usePaymentsPage();
+  const selectedStudent = paymentHook.students.find(
+    (student) => Number(student.student_id || student.id || 0) === Number(paymentHook.formData.student_id || 0)
+  );
+  const selectedClass = paymentHook.classes.find(
+    (classItem) => Number(classItem.class_id || classItem.id || 0) === Number(selectedStudent?.class_id || 0)
+  );
+  const selectedStudentHistory = useMemo(
+    () =>
+      paymentHook.state.items.filter(
+        (payment) => Number(payment.student_id || 0) === Number(paymentHook.formData.student_id || 0)
+      ),
+    [paymentHook.formData.student_id, paymentHook.state.items]
+  );
   const today = new Date();
   const dateKey = (date: Date) => date.toISOString().slice(0, 10);
   const todayKey = dateKey(today);
@@ -101,7 +114,40 @@ const Dashboard = memo(() => {
           <Button variant="outline" onClick={() => navigate('/attendance')}>Open attendance management</Button>
         </div>
       )}
-      <PaymentFormDialog open={isModalOpen} onOpenChange={(open) => { if (!open) handleCloseModal(); }} title="Add Payment" description="Record a payment without leaving the dashboard." formData={formData} setFormData={setFormData} onSubmit={handleSubmit} isSubmitting={state.loading} submitLabel="Save payment" studentOptions={studentOptions} centerOptions={centerOptions} isLoadingOptions={isLoadingOptions} showStudentSelect showCenterSelect={Boolean(centerOptions.length)} submitDisabled={!formData.student_id} />
+      <PaymentFormDialog
+        open={isModalOpen}
+        onOpenChange={(open) => { if (!open) handleCloseModal(); }}
+        title="Add Payment"
+        description="Record a payment without leaving the dashboard."
+        formData={formData}
+        setFormData={setFormData}
+        onSubmit={handleSubmit}
+        isSubmitting={state.loading}
+        submitLabel="Save payment"
+        studentOptions={studentOptions}
+        centerOptions={centerOptions}
+        isLoadingOptions={isLoadingOptions}
+        showStudentSelect
+        showCenterSelect={Boolean(centerOptions.length)}
+        selectedStudent={
+          selectedStudent
+            ? {
+                name: `${selectedStudent.first_name || ''} ${selectedStudent.last_name || ''}`.trim(),
+                subtitle: `ID ${selectedStudent.student_id || selectedStudent.id || ''}${selectedStudent.phone ? ` / ${selectedStudent.phone}` : ''}`,
+                className: selectedClass?.class_name || selectedStudent.class_name || undefined,
+                amount: selectedClass?.payment_amount,
+              }
+            : null
+        }
+        paymentHistory={selectedStudentHistory}
+        historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
+        amountHint={
+          selectedClass?.payment_amount
+            ? `Suggested from ${selectedClass.class_name || 'selected class'} fee: ${Number(selectedClass.payment_amount).toLocaleString()}`
+            : undefined
+        }
+        submitDisabled={!formData.student_id}
+      />
     </div>
   );
 });
