@@ -158,13 +158,15 @@ export const usePaymentsPage = () => {
     handleCloseModal();
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: number): Promise<boolean> => {
     if (user?.userType === 'teacher') {
-      return;
+      return false;
     }
     if (window.confirm('Are you sure you want to delete this payment?')) {
       await dispatch(deletePayment(id));
+      return true;
     }
+    return false;
   };
 
   const handleImportPayments = async (file?: File) => {

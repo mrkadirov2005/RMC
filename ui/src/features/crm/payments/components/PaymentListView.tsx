@@ -267,7 +267,33 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                         <p className="text-xs text-muted-foreground">{payment.payment_method || 'Payment'}</p>
                       </div>
                     </div>
-                    <p className="font-bold text-emerald-700">{formatAmount(Number(payment.amount || 0))}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-emerald-700">{formatAmount(Number(payment.amount || 0))}</p>
+                      {!isTeacher && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                          aria-label={`Delete payment for ${paymentHistoryRow?.name || 'student'}`}
+                          onClick={async () => {
+                            const deleted = await handleDelete(Number(payment.payment_id || payment.id || 0));
+                            if (deleted) {
+                              setPaymentHistoryRow((current) => {
+                                if (!current) return null;
+                                const paymentId = Number(payment.payment_id || payment.id || 0);
+                                const payments = current.payments.filter(
+                                  (item) => Number(item.payment_id || item.id || 0) !== paymentId
+                                );
+                                return payments.length > 0 ? { ...current, payments } : null;
+                              });
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
             </div>
