@@ -155,15 +155,17 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
 
   const handleCreate = async () => {
     setCreateError('');
-    const cleanedWords = draftWords
-      .map((word) => ({
-        main_word: word.main_word.trim(),
-        translations: word.translations.map((t) => t.trim()).filter(Boolean),
-      }))
-      .filter((word) => word.main_word && word.translations.length > 0);
+    const cleanedWords = draftWords.map((word) => ({
+      main_word: word.main_word.trim(),
+      translations: word.translations.map((t) => t.trim()).filter(Boolean),
+    }));
 
     if (cleanedWords.length === 0) {
       setCreateError('Add at least one word with at least one accepted translation.');
+      return;
+    }
+    if (cleanedWords.some((word) => !word.main_word || word.translations.length === 0)) {
+      setCreateError('Complete every word with a main word and at least one accepted translation, or remove the empty row.');
       return;
     }
 
@@ -271,6 +273,13 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
           </Alert>
         )}
 
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleCreate();
+          }}
+        >
         <div className="space-y-3">
           {draftWords.map((word, index) => (
             <Card key={word.id}>
@@ -288,6 +297,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                   {draftWords.length > 1 && (
                     <button
                       className="mt-6 rounded p-2 text-red-500 hover:bg-red-50"
+                      type="button"
                       onClick={() => deleteWord(word.id)}
                       aria-label="Remove word"
                     >
@@ -308,6 +318,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                         {word.translations.length > 1 && (
                           <button
                             className="rounded p-2 text-red-500 hover:bg-red-50"
+                            type="button"
                             onClick={() => deleteTranslation(word.id, tIndex)}
                             aria-label="Remove translation"
                           >
@@ -318,7 +329,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                     ))}
                   </div>
                   {word.translations.length < MAX_TRANSLATIONS && (
-                    <Button variant="ghost" size="sm" className="mt-2" onClick={() => addTranslation(word.id)}>
+                    <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => addTranslation(word.id)}>
                       <Plus className="mr-1 h-3.5 w-3.5" />
                       Add another accepted translation
                     </Button>
@@ -330,7 +341,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
         </div>
 
         {draftWords.length < MAX_WORDS && (
-          <Button variant="outline" onClick={addWord}>
+          <Button type="button" variant="outline" onClick={addWord}>
             <Plus className="mr-2 h-4 w-4" />
             Add word
           </Button>
@@ -350,11 +361,12 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
         </div>
 
         <div>
-          <Button onClick={handleCreate} disabled={creating}>
+          <Button type="submit" disabled={creating}>
             {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
             Create Consolidation Exercise
           </Button>
         </div>
+        </form>
       </div>
     );
   }

@@ -147,11 +147,18 @@ export default function ConsolidationsOverviewPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setResultsOpen(true)}>
+          <Button type="button" variant="outline" onClick={() => setResultsOpen(true)}>
             <BarChart3 className="mr-2 h-4 w-4" />
             Results
           </Button>
-          <Button onClick={() => setCreateOpen(true)}>
+          <Button
+            type="button"
+            onClick={() => {
+              setClassId('');
+              setSessionId('');
+              setCreateOpen(true);
+            }}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Create Consolidator
           </Button>

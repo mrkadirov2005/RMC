@@ -32,13 +32,20 @@ const createSet = async (body: any, caller: { userType?: string; teacherId?: num
   if (caller.userType === 'teacher' && Number(session.teacher_id) !== Number(caller.teacherId)) {
     return { error: 'forbidden' as const };
   }
-  if (existing) return { error: 'already_exists' as const };
-
   const words = (body.words || []).map((word: any, index: number) => ({
     main_word: word.main_word,
     translations: word.translations,
     word_order: index + 1,
   }));
+
+  if (existing) {
+    const existingWords = await consolidationRepository.findWordsBySet(existing.consolidation_set_id);
+    if (!Array.isArray(existingWords) || existingWords.length > 0) {
+      return { error: 'already_exists' as const };
+    }
+    const savedWords = await consolidationRepository.insertWords(existing.consolidation_set_id, words);
+    return { set: existing, words: savedWords };
+  }
 
   return withTransaction(async (db: any) => {
     const set = await consolidationRepository.insertSet({
@@ -60,6 +67,7 @@ const getSetForTeacher = async (sessionId: number, centerId: number | undefined,
   if (!set) return null;
   if (!teacherOwnsSet(set, caller)) return { error: 'forbidden' as const };
   const words = await consolidationRepository.findWordsBySet(set.consolidation_set_id);
+  if (words.length === 0) return null;
   return { ...set, words };
 };
 
