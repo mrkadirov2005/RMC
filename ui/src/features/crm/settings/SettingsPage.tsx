@@ -212,8 +212,8 @@ const SettingsPage = () => {
   return (
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-6">
       <PageHeader
-        title="Settings"
-        description="Configure lesson generation, calendar defaults, and local workspace preferences."
+        title={t('Settings')}
+        description={t('Configure lesson generation, calendar defaults, and local workspace preferences.')}
         icon={SettingsIcon}
         actions={
           <div className="flex flex-wrap gap-2">

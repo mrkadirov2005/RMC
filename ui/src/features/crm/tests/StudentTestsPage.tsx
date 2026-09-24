@@ -21,6 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { testAPI } from './api';
 import {
   clearStudentTestsPageError,
@@ -60,6 +61,7 @@ interface Test {
 
 // Renders the student tests page screen.
 const StudentTestsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [page, setPage] = useState(1);
@@ -125,9 +127,9 @@ const StudentTestsPage = () => {
       </Button>
 
       <PageHeader
-        title="My tests"
+        title={t('My tests')}
         icon={BookOpenCheck}
-        description="Track assigned tests, continue work in progress, and review completed results."
+        description={t('Track assigned tests, continue work in progress, and review completed results.')}
       />
 
       {(error || storeError) && (
