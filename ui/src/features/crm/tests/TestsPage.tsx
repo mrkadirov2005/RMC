@@ -53,6 +53,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { PageHeader } from '@/components/common/PageHeader';
 import { PageToolbar } from '@/components/common/PageToolbar';
 import { SectionPanel } from '@/components/common/SectionPanel';
@@ -104,6 +105,7 @@ type View = 'overview' | 'catalogue';
 
 // Renders the tests page screen.
 const TestsPage = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [page, setPage] = useState(1);
@@ -207,9 +209,9 @@ const TestsPage = () => {
   return (
     <div className="space-y-5 p-6">
       <PageHeader
-        title="Tests"
+        title={t('Tests')}
         icon={ClipboardList}
-        description="Create, assign, monitor and grade student assessments."
+        description={t('Create, assign, monitor and grade student assessments.')}
         primaryAction={
           canCreate ? (
             <Button onClick={() => navigate('/tests/create')}>

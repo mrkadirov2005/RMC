@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { fetchCentersForce } from '../../../slices/centersSlice';
 import { fetchSubjects, fetchSubjectsForce } from '../../../slices/subjectsSlice';
 import { createTest, fetchTestsForce } from '../../../slices/testsSlice';
@@ -61,6 +62,7 @@ interface Passage {
 
 // Renders the create test page screen.
 const CreateTestPage = () => {
+  const { t } = useLanguage();
   const testsHome = useTestsHome();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
@@ -886,9 +888,9 @@ const CreateTestPage = () => {
       </Button>
 
       <PageHeader
-        title={isEditMode ? 'Edit test' : 'Create test'}
+        title={isEditMode ? t('Edit test') : t('Create test')}
         icon={ClipboardList}
-        description={isEditMode ? 'Change the paper, its questions or its settings, then save.' : 'Set the paper up, write the questions, then choose who sits it.'}
+        description={isEditMode ? t('Change the paper, its questions or its settings, then save.') : t('Set the paper up, write the questions, then choose who sits it.')}
       />
 
       {error && (

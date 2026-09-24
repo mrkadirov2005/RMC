@@ -26,6 +26,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { clearSubmissionDetailsError, fetchSubmissionDetails } from '../../../slices/testsSlice';
 import {
@@ -39,6 +40,7 @@ import { formatTestType } from './testVisuals';
 
 // Renders the view submission page screen.
 const ViewSubmissionPage = () => {
+  const { t } = useLanguage();
   const { submissionId } = useParams();
   const navigate = useNavigate();
   const testsHome = useTestsHome();
@@ -109,7 +111,7 @@ const ViewSubmissionPage = () => {
 
       <div className="mb-5">
         <PageHeader
-          title="Submission"
+          title={t('Submission')}
           icon={FileText}
           description={submission.test_name}
           primaryAction={
