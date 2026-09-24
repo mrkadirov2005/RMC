@@ -72,6 +72,7 @@ const ClassDetailPage = () => {
   const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
   const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null);
   const [deleteStudentTarget, setDeleteStudentTarget] = useState<(typeof students)[number] | null>(null);
+  const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
 
   const schedule = useMemo(() => parseSchedule(classData?.section), [classData?.section]);
   const className = classData?.class_name || 'Class';
@@ -154,6 +155,25 @@ const ClassDetailPage = () => {
       showToast.error(deleteError?.response?.data?.error || deleteError?.response?.data?.details || 'Failed to delete student.');
     } finally {
       setDeletingStudentId(null);
+    }
+  };
+
+  const handleDeleteSession = async (session: any) => {
+    const targetClassId = Number(classData?.class_id || classData?.id || classId || 0);
+    const sessionId = Number(session?.session_id || session?.id || 0);
+    if (!targetClassId || !sessionId || deletingSessionId) return;
+    if (!window.confirm('Delete this session? This will remove the session from the group schedule.')) return;
+
+    setDeletingSessionId(sessionId);
+    try {
+      await classAPI.deleteSessionById(targetClassId, sessionId);
+      setSessions((current) => current.filter((item) => Number(item?.session_id || item?.id || 0) !== sessionId));
+      showToast.success('Session deleted.');
+    } catch (deleteError) {
+      console.error('Failed to delete session:', deleteError);
+      showToast.error('Failed to delete session.');
+    } finally {
+      setDeletingSessionId(null);
     }
   };
 
@@ -400,6 +420,7 @@ const ClassDetailPage = () => {
                 <TableRow>
                   <TableHead>Student</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -572,19 +593,30 @@ const ClassDetailPage = () => {
               </TableHeader>
               <TableBody>
                 {sessions.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No sessions generated.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">No sessions generated.</TableCell></TableRow>
                 ) : sessions.slice(0, 80).map((session) => (
                   <TableRow key={session.session_id || session.id}>
                     <TableCell>{session.session_date ? new Date(session.session_date).toLocaleDateString() : '-'}</TableCell>
                     <TableCell>{session.start_time || '-'}</TableCell>
                     <TableCell>{session.duration_minutes ? `${session.duration_minutes} min` : '-'}</TableCell>
+                    <TableCell>{session.status || '-'}</TableCell>
                     <TableCell>
-                      <div className="flex items-center justify-between gap-3">
-                        <span>{session.status || '-'}</span>
+                      <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" onClick={() => openSessionWorkflow(session)}>
                           <PlayCircle className="mr-2 h-4 w-4" />
                           Open
                         </Button>
+                        <button
+                          type="button"
+                          className="session-delete-button inline-flex h-9 w-9 items-center justify-center rounded-md border border-red-600 shadow-sm transition-colors hover:bg-red-700 disabled:cursor-not-allowed"
+                          style={{ backgroundColor: '#dc2626', borderColor: '#dc2626', color: '#ffffff', opacity: 1 }}
+                          onClick={() => void handleDeleteSession(session)}
+                          disabled={deletingSessionId === Number(session.session_id || session.id)}
+                          aria-label={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : 'Delete session'}
+                          title={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : 'Delete session'}
+                        >
+                          <Trash2 className="h-4 w-4" stroke="#ffffff" color="#ffffff" />
+                        </button>
                       </div>
                     </TableCell>
                   </TableRow>

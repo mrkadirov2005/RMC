@@ -16,6 +16,8 @@ import {
   UserRound,
   RotateCcw,
   LogOut,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
@@ -59,6 +61,7 @@ import OverallStatisticsTab from './components/OverallStatisticsTab';
 import TeacherProfileTab from './components/TeacherProfileTab';
 import TeacherStatisticsTab from './statistics/TeacherStatisticsTab';
 import ConsolidationsOverviewPage from '../crm/consolidations/ConsolidationsOverviewPage';
+import { useThemeMode } from '../../theme/ThemeContext';
 
 // Tab order is a per-browser preference only - it's never sent to the server, just like the
 // sidebar's drag-to-reorder, except this one stays local instead of syncing through settingsAPI.
@@ -101,6 +104,7 @@ const TeacherPortal = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { toggleTheme, isDark } = useThemeMode();
   const teacherPortalUi = useAppSelector(selectTeacherPortalUi);
   const { tabValue } = teacherPortalUi;
   const [tabOrder, setTabOrder] = useState<string[]>(getStoredTabOrder);
@@ -294,6 +298,16 @@ const TeacherPortal = () => {
                 <TooltipContent side="bottom" sideOffset={8}>{t('Schedule')}</TooltipContent>
               </Tooltip>
             </TooltipProvider>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              aria-label={isDark ? t('Switch to light mode') : t('Switch to dark mode')}
+              onClick={toggleTheme}
+              className="border-white/30 bg-white/10 text-white hover:bg-white/20 hover:text-white"
+            >
+              {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </Button>
             <Button
               type="button"
               variant="outline"
