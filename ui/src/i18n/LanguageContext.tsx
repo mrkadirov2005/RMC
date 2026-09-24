@@ -1989,6 +1989,9 @@ const translateExact = (
 };
 
 const translateStaticDom = (
+  language: AppLanguage,
+  translationMap: Record<string, string>,
+  reverseTranslationMap: Record<string, string>
 ) => {
   if (typeof document === 'undefined' || !document.body) return;
 
@@ -2020,6 +2023,7 @@ const translateStaticDom = (
 };
 
 interface LanguageContextValue {
+  language: AppLanguage;
   setLanguage: (language: AppLanguage) => void;
   toggleLanguage: () => void;
   t: (value: string) => string;
@@ -2127,6 +2131,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   const contextValue = useMemo(
     () => ({
       language,
+      translations: remoteTranslations,
       setLanguage,
       toggleLanguage,
       t,
