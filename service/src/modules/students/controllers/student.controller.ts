@@ -37,6 +37,13 @@ const createActionReason = async (req: any, res: any) => {
 
 const getAllStudents = async (req: any, res: any) => {
   try {
+    if (typeof res.set === 'function') {
+      res.set({
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        Pragma: 'no-cache',
+        Expires: '0',
+      });
+    }
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {

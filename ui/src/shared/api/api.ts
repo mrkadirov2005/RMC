@@ -209,8 +209,11 @@ export const studentAPI = {
     apiClient.post('/students/action-reasons', { reason_type, reason_name }),
   getAll: (params?: object, options?: { skipCenterScope?: boolean }) =>
     apiClient.get('/students', {
-      params,
-      headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
+      params: params ? { ...params, _cacheBust: Date.now() } : params,
+      headers: {
+        ...(options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : {}),
+        'Cache-Control': 'no-cache',
+      },
     }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
   getByClassWithTransfers: (classId: number, params?: Record<string, unknown>) =>
