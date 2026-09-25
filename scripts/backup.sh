@@ -41,8 +41,8 @@ exec 2>> "$RUN_DIR/backup.log"
 
 log() {
   line="$(printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*")"
-  printf '%s' "$line"
-  printf '%s' "$line" >> "$RUN_DIR/backup.log"
+  printf '%s\n' "$line"
+  printf '%s\n' "$line" >> "$RUN_DIR/backup.log"
 }
 
 record_backup_started() {
@@ -376,7 +376,7 @@ export_to_google_sheets() {
     return 1
   fi
 
-  sheets_tables="${GOOGLE_SHEETS_TABLES:-students,teachers,classes,payments,invoices,debts,attendance,teacher_salaries}"
+  sheets_tables="${GOOGLE_SHEETS_TABLES:-all}"
   sheets_export_dir="$RUN_DIR/postgres_tables"
   if GOOGLE_APPS_SCRIPT_URL="$apps_script_url" python3 "$ROOT_DIR/scripts/apps_script_sheets_export.py" "$sheets_export_dir" "$sheets_tables" >> "$RUN_DIR/sheets_export.log" 2>&1; then
     log "Google Sheets export completed."

@@ -3,6 +3,9 @@ set -eu
 
 CONTROL_DIR="${BACKUP_CONTROL_DIR:-/backup-control}"
 TRIGGER_FILE="$CONTROL_DIR/run-now"
+BACKUP_TIMEZONE="${BACKUP_TIMEZONE:-UTC}"
+BACKUP_HOUR="${BACKUP_HOUR:-00}"
+BACKUP_MINUTE="${BACKUP_MINUTE:-00}"
 mkdir -p "$CONTROL_DIR"
 
 run_backup() {
@@ -18,10 +21,10 @@ run_backup() {
 }
 
 while :; do
-  now="$(date +%s)"
-  target="$(date -d 'today 03:00' +%s)"
+  now="$(TZ="$BACKUP_TIMEZONE" date +%s)"
+  target="$(TZ="$BACKUP_TIMEZONE" date -d "today ${BACKUP_HOUR}:${BACKUP_MINUTE}" +%s)"
   if [ "$target" -le "$now" ]; then
-    target="$(date -d 'tomorrow 03:00' +%s)"
+    target="$(TZ="$BACKUP_TIMEZONE" date -d "tomorrow ${BACKUP_HOUR}:${BACKUP_MINUTE}" +%s)"
   fi
   delay=$((target - now))
   echo "Next scheduled RMC backup in ${delay}s"

@@ -79,7 +79,7 @@ BACKUP_TELEGRAM_BOT_TOKEN=123456789:AA...
 BACKUP_TELEGRAM_CHAT_ID=-1001234567890
 BACKUP_TELEGRAM_CAPTION=RMC automated backup
 GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/your-deployment-id/exec
-GOOGLE_SHEETS_TABLES=students,teachers,classes,payments,invoices,debts,attendance,teacher_salaries
+GOOGLE_SHEETS_TABLES=all
 ```
 
 For Telegram backups, add the bot to the target chat/channel first, then set the chat ID. The script sends one compressed archive for the whole backup run. Inside the archive, `postgres_*.dump` is the restore-ready full database backup and `postgres_tables/*.csv` contains readable exports for tables such as students, teachers, classes, payments, discounts, attendance, grades, and the rest of the public schema.

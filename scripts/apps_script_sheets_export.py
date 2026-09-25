@@ -9,6 +9,9 @@ import urllib.error
 import urllib.request
 from datetime import datetime, timezone
 
+SENSITIVE_TABLES = {"superusers", "owners", "teacher_payment_credentials"}
+SENSITIVE_COLUMNS = ("password", "secret", "token", "credential", "private_key", "api_key", "hash")
+
 
 def post_json(url, payload):
     request = urllib.request.Request(
@@ -43,10 +46,19 @@ def main():
 
     csv_dir, tables_csv = sys.argv[1], sys.argv[2]
     exported_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    tables = [table.strip() for table in tables_csv.split(",") if table.strip()]
+    requested_tables = [table.strip() for table in tables_csv.split(",") if table.strip()]
+    available_tables = sorted(
+        filename[len("public_"):-len(".csv")]
+        for filename in os.listdir(csv_dir)
+        if filename.startswith("public_") and filename.endswith(".csv")
+    )
+    tables = available_tables if not requested_tables or requested_tables == ["all"] else requested_tables
     total_rows = 0
 
     for table in tables:
+        if table in SENSITIVE_TABLES:
+            print(f"skip {table}: security-sensitive table", file=sys.stderr)
+            continue
         csv_path = os.path.join(csv_dir, f"public_{table}.csv")
         try:
             with open(csv_path, newline="", encoding="utf-8") as handle:
@@ -58,7 +70,16 @@ def main():
         if not rows:
             columns, data_rows = [], []
         else:
-            columns, data_rows = rows[0], rows[1:]
+            sensitive_indexes = {
+                index for index, column in enumerate(rows[0])
+                if any(marker in column.lower() for marker in SENSITIVE_COLUMNS)
+            }
+            columns = [column for index, column in enumerate(rows[0]) if index not in sensitive_indexes]
+            data_rows = [
+                [value for index, value in enumerate(row) if index not in sensitive_indexes]
+                for row in rows[1:]
+            ]
+        sanitized_rows = [columns, *data_rows] if rows else []
 
         post_json(
             url,
@@ -66,10 +87,11 @@ def main():
                 "action": "push",
                 "entity": table,
                 "columns": columns,
-                "rows": rows,
+                "rows": data_rows,
                 "csv": "".join(
-                    ",".join('"' + value.replace('"', '""') + '"' for value in row) + "\n"
-                    for row in rows
+                    ",".join('"' + value.replace('"', '""') + '"' for value in row)
+                    + "\n"
+                    for row in sanitized_rows
                 ),
                 "backup": True,
                 "exported_at_utc": exported_at,

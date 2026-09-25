@@ -103,6 +103,8 @@ services:
       dockerfile: backup/Dockerfile
     container_name: crm_backup
     env_file:
+      - path: ./service/.env.example
+        required: true
       - path: ./service/.env
         required: false
     environment:

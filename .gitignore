@@ -1,4 +1,5 @@
 bot/.env
+service/.env
 dist/
 node_modules
 backups/
