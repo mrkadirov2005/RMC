@@ -10,8 +10,9 @@ import { StudentStatsCarousel } from './components/student-stats/StudentStatsCar
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
 import RetentionPage from '../crm/retention/RetentionPage';
 import { AttendanceReportPanel } from './components/AttendanceReportPanel';
+import { ClassReportsPanel } from './components/ClassReportsPanel';
 
-type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance';
+type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance' | 'classes';
 
 const emptyCollections: OwnerManagerStatisticsCollections = {
   students: [],
@@ -27,7 +28,7 @@ const OwnerReports = () => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const requestedSection = searchParams.get('section');
-  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention', 'attendance'].includes(String(requestedSection))
+  const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes'].includes(String(requestedSection))
     ? requestedSection as ReportTab
     : 'finance';
   const [collections, setCollections] = useState<OwnerManagerStatisticsCollections>(emptyCollections);
@@ -131,6 +132,13 @@ const OwnerReports = () => {
           nextCollections.teachers = mergeSuccessful(teacherResults);
           nextCollections.classes = mergeSuccessful(classResults);
           nextCollections.students = mergeSuccessful(studentResults);
+        } else if (activeTab === 'classes') {
+          const [classesRes, studentsRes] = await Promise.all([
+            ownerManagerApi.classes.getAllAcrossCenters(),
+            ownerManagerApi.students.getAllAcrossCenters(),
+          ]);
+          nextCollections.classes = toRows(classesRes);
+          nextCollections.students = toRows(studentsRes);
         }
         if (!alive) return;
         setCollections(nextCollections);
@@ -173,6 +181,7 @@ const OwnerReports = () => {
             {activeTab === 'students' && <StudentStatsCarousel data={collections.students} collections={collections} />}
             {activeTab === 'teachers' && <TeacherStatsPanel data={collections.teachers} collections={collections} />}
             {activeTab === 'attendance' && <AttendanceReportPanel collections={collections} />}
+            {activeTab === 'classes' && <ClassReportsPanel classes={collections.classes} students={collections.students} />}
           </>
         )}
       </div>

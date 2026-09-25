@@ -271,6 +271,7 @@ const Sidebar = memo(() => {
         { label: 'Chegirmalar', path: '/owner/reports?section=discounts', iconName: 'Discounts' },
         { label: 'Retention', path: '/owner/reports?section=retention', iconName: 'Retention' },
         { label: 'Davomat', path: '/owner/reports?section=attendance', iconName: 'Attendance' },
+        { label: 'Class Reports', path: '/owner/reports?section=classes', iconName: 'Classes' },
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },

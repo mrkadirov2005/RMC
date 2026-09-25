@@ -48,6 +48,12 @@ class CreateRoomDto {
   @Type(() => Number)
   @IsInt()
   @Min(1)
+  capacity?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   class_id?: number | null;
 
   @IsString()
@@ -73,6 +79,12 @@ class UpdateRoomDto {
   @IsString()
   @IsNotEmpty()
   room_number!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  capacity?: number;
 
   @IsOptional()
   @Type(() => Number)

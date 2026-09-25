@@ -5,6 +5,7 @@ export type CalendarEvent = {
   teacher_id?: number; teacher_name?: string; subject_id?: number; subject_name?: string;
   room_id?: number; room_name?: string; session_id?: number;
   attendance?: { present:number; absent:number; unmarked:number };
+  student_count?: number; capacity?: number | null;
 };
 export type CalendarConflict = {
   event_ids: string[];

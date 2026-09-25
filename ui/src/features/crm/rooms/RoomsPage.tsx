@@ -27,7 +27,7 @@ import { RoomInventory } from './components/RoomInventory';
 import { RoomAssignmentDialog, type RoomFormData } from './components/RoomAssignmentDialog';
 import { RoomSlotsPage } from './RoomSlotsManagementPage';
 
-const emptyForm = (): RoomFormData => ({ room_number: '', class_id: '', day: 'Monday', time: '09:00', end_time: '10:00' });
+const emptyForm = (): RoomFormData => ({ room_number: '', capacity: '', class_id: '', day: 'Monday', time: '09:00', end_time: '10:00' });
 
 const RoomsPage = () => {
   const dispatch = useAppDispatch();
@@ -66,7 +66,7 @@ const RoomsPage = () => {
     setMode(dialogMode);
     const group = row?.class_id ? classes.find((item: any) => Number(item.class_id || item.id) === Number(row.class_id)) : null;
     setTeacherId(group?.teacher_id ? String(group.teacher_id) : '');
-    setForm(row ? { room_number: row.room_number || '', class_id: row.class_id ? String(row.class_id) : '', day: row.day || 'Monday', time: String(row.time || '09:00').slice(0, 5), end_time: String(row.end_time || '10:00').slice(0, 5) } : { ...emptyForm(), room_number: dialogMode === 'assignment' ? selectedRoom : '' });
+    setForm(row ? { room_number: row.room_number || '', capacity: row.capacity ? String(row.capacity) : '', class_id: row.class_id ? String(row.class_id) : '', day: row.day || 'Monday', time: String(row.time || '09:00').slice(0, 5), end_time: String(row.end_time || '10:00').slice(0, 5) } : { ...emptyForm(), room_number: dialogMode === 'assignment' ? selectedRoom : '' });
     dispatch(setRoomsPageEditingId(row?.room_id || null));
     dispatch(setRoomsPageModalOpen(true));
   };
@@ -78,7 +78,7 @@ const RoomsPage = () => {
     if (mode === 'assignment' && (!teacherId || !form.class_id)) return showToast.error('Choose a teacher and group');
     dispatch(setRoomsPageSubmitting(true));
     try {
-      const payload = { ...form, class_id: form.class_id ? Number(form.class_id) : null };
+      const payload = { ...form, capacity: form.capacity ? Number(form.capacity) : undefined, class_id: form.class_id ? Number(form.class_id) : null };
       if (editingId) await roomAPI.update(editingId, payload); else await roomAPI.create(payload);
       showToast.success(editingId ? 'Room assignment updated' : mode === 'room' ? 'Room created' : 'Class assigned to room');
       closeDialog(); await dispatch(fetchRoomsForce());
@@ -92,7 +92,7 @@ const RoomsPage = () => {
     try {
       const row = normalizedRooms.find((item) => item.room_id === id); await roomAPI.delete(id);
       const sameRoom = normalizedRooms.filter((item) => item.room_number === row?.room_number);
-      if (row?.class_id && sameRoom.length === 1) await roomAPI.create({ room_number: row.room_number, class_id: null, day: 'Monday', time: '09:00', end_time: '10:00' });
+      if (row?.class_id && sameRoom.length === 1) await roomAPI.create({ room_number: row.room_number, capacity: row.capacity, class_id: null, day: 'Monday', time: '09:00', end_time: '10:00' });
       showToast.success('Room assignment deleted'); await dispatch(fetchRoomsForce());
     } catch { showToast.error('Failed to delete room assignment'); } finally { dispatch(setRoomsPageSubmitting(false)); }
   };

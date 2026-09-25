@@ -35,6 +35,10 @@ const normalizeDay = (value: unknown) => {
   return aliases[day.slice(0, 3)] || day;
 };
 const roomKey = (value: unknown) => String(value ?? '').trim().toLowerCase();
+const capacityFields = (studentCount: unknown, capacity: unknown) => ({
+  student_count: Number(studentCount || 0),
+  capacity: capacity == null ? null : Number(capacity),
+});
 const addMinutes = (time: string, minutes: number) => {
   const [hours, minute] = time.split(':').map(Number);
   if (!Number.isInteger(hours) || !Number.isInteger(minute)) return '';
@@ -121,6 +125,8 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
         subject_name: definition.subject_name,
         physical_room_id: null,
         room_name: definition.room_name,
+        student_count: definition.student_count,
+        class_capacity: definition.class_capacity,
       });
     });
   });
@@ -161,7 +167,7 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
     subject_name: row.subject_name,
     room_id: Number(room.room_id),
     room_name: room.name || room.room_name,
-    student_count: row.student_count,
+    ...capacityFields(row.student_count, room.capacity || row.room_capacity),
     attendance: {
       present: row.present,
       absent: row.absent,
@@ -178,6 +184,7 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
     .map((row: any) => {
       const room = resolveAvailableRoom(row);
       if (!room) return null;
+      const definition: any = definitionByClass.get(Number(row.class_id));
       return ({
       event_id: `${row.source === 'booking' ? 'booking' : 'planned'}-${row.assignment_id}-${date}`,
       source: row.source === 'booking' ? 'booking' : 'recurring',
@@ -193,6 +200,7 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
       subject_name: row.subject_name,
       room_id: Number(room.room_id),
       room_name: room.name || room.room_name,
+      ...capacityFields(row.student_count ?? definition?.student_count, room.capacity || row.room_capacity || row.class_capacity || definition?.class_capacity),
       });
     }).filter(Boolean));
 

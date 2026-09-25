@@ -1,7 +1,7 @@
 const pool = require('../../../db/pool');
 const { db } = pool;
 const { and, asc, eq, ne, sql } = require('drizzle-orm');
-const { classes, rooms } = require('../../../db/schema');
+const { classes, rooms, physicalRooms } = require('../../../db/schema');
 
 const roomColumns = {
   roomId: rooms.roomId,
@@ -14,6 +14,7 @@ const roomColumns = {
   endTime: rooms.endTime,
   createdAt: rooms.createdAt,
   updatedAt: rooms.updatedAt,
+  capacity: physicalRooms.capacity,
 };
 
 const findAll = (centerId: number) => {
@@ -26,6 +27,7 @@ const findAll = (centerId: number) => {
       endDate: classes.endDate,
     })
     .from(rooms)
+    .leftJoin(physicalRooms, eq(rooms.physicalRoomId, physicalRooms.physicalRoomId))
     .leftJoin(classes, and(eq(rooms.classId, classes.classId), sql`${classes.deletedAt} IS NULL`))
     .where(eq(rooms.centerId, centerId))
     .orderBy(asc(rooms.roomNumber), asc(rooms.day), asc(rooms.time));
@@ -39,17 +41,19 @@ const findById = (id: number, centerId: number) => {
     .then((rows: any[]) => rows[0] || null);
 };
 
-const ensurePhysicalRoom = async (centerId: number, roomNumber: string) => {
+const ensurePhysicalRoom = async (centerId: number, roomNumber: string, capacity?: number) => {
   const result = await pool.query(`
-    INSERT INTO physical_rooms (center_id, name) VALUES ($1, trim($2))
-    ON CONFLICT (center_id, lower(trim(name))) DO UPDATE SET updated_at = physical_rooms.updated_at
+    INSERT INTO physical_rooms (center_id, name, capacity) VALUES ($1, trim($2), $3)
+    ON CONFLICT (center_id, lower(trim(name))) DO UPDATE
+      SET capacity = COALESCE(EXCLUDED.capacity, physical_rooms.capacity),
+          updated_at = CURRENT_TIMESTAMP
     RETURNING physical_room_id
-  `, [centerId, roomNumber]);
+  `, [centerId, roomNumber, capacity ?? null]);
   return result.rows[0].physical_room_id;
 };
 
 const insert = async (params: any[]) => {
-  const physicalRoomId = await ensurePhysicalRoom(params[0], params[1]);
+  const physicalRoomId = await ensurePhysicalRoom(params[0], params[1], params[6]);
   return db
     .insert(rooms)
     .values({
@@ -66,7 +70,7 @@ const insert = async (params: any[]) => {
 };
 
 const update = async (id: number, params: any[], centerId: number) => {
-  const physicalRoomId = await ensurePhysicalRoom(centerId, params[0]);
+  const physicalRoomId = await ensurePhysicalRoom(centerId, params[0], params[5]);
   return db
     .update(rooms)
     .set({

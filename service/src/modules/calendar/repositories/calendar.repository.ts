@@ -17,6 +17,7 @@ const datedSessions = async (centerId: number, from: string, to: string, scope: 
       subj.subject_id, subj.subject_name,
       room.physical_room_id AS room_id,
       COALESCE(room.room_name, c.room_number) AS room_name,
+      room.capacity AS room_capacity,
       COALESCE(att.marked, 0)::int AS attendance_marked,
       COALESCE(att.present, 0)::int AS present,
       COALESCE(att.absent, 0)::int AS absent,
@@ -31,7 +32,7 @@ const datedSessions = async (centerId: number, from: string, to: string, scope: 
       ORDER BY subject_id LIMIT 1
     ) subj ON true
     LEFT JOIN LATERAL (
-      SELECT r.physical_room_id, COALESCE(pr.name, r.room_number) AS room_name
+      SELECT r.physical_room_id, COALESCE(pr.name, r.room_number) AS room_name, pr.capacity
       FROM rooms r
       LEFT JOIN physical_rooms pr ON pr.physical_room_id = r.physical_room_id AND pr.center_id = r.center_id
       WHERE r.center_id = s.center_id AND r.class_id = s.class_id
@@ -118,7 +119,10 @@ const recurringDefinitions = async (centerId: number, scope: CalendarScope) => {
     SELECT c.class_id, c.class_name, c.section, c.start_date::date::text AS active_from,
       c.end_date::date::text AS active_to, c.teacher_id,
       trim(concat_ws(' ', t.first_name, t.last_name)) AS teacher_name,
-      subj.subject_id, subj.subject_name, c.room_number AS room_name
+      subj.subject_id, subj.subject_name, c.room_number AS room_name,
+      c.capacity AS class_capacity,
+      (SELECT count(*) FROM students st WHERE st.class_id = c.class_id AND st.center_id = c.center_id
+        AND st.deleted_at IS NULL AND lower(st.status::text) = 'active')::int AS student_count
     FROM classes c
     LEFT JOIN teachers t ON t.teacher_id = c.teacher_id AND t.center_id = c.center_id AND t.deleted_at IS NULL
     LEFT JOIN LATERAL (
