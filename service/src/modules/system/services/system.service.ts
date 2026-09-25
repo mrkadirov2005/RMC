@@ -9,6 +9,26 @@ const v8 = require('v8');
 
 const db = pool.db;
 const SENSITIVE_COLUMN = /(password|secret|token|credential|private_key|api_key|hash)/i;
+let backupRunsTableReady: Promise<void> | null = null;
+
+const ensureBackupRunsTable = async () => {
+  if (!backupRunsTableReady) {
+    backupRunsTableReady = pool.query(`
+      CREATE TABLE IF NOT EXISTS backup_runs (
+        run_id VARCHAR(100) PRIMARY KEY,
+        started_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMPTZ,
+        status VARCHAR(20) NOT NULL,
+        trigger_source VARCHAR(20) NOT NULL DEFAULT 'scheduled',
+        error_message TEXT
+      )
+    `).then(() => undefined).catch((error) => {
+      backupRunsTableReady = null;
+      throw error;
+    });
+  }
+  return backupRunsTableReady;
+};
 
 const RESET_CONFIRMATION = 'TRUNCATE_EDUCATION_DATA';
 const RESET_TABLES = {
@@ -72,6 +92,37 @@ const triggerBackup = () => {
     error.statusCode = 503;
     throw error;
   }
+};
+
+const getBackupStats = async () => {
+  await ensureBackupRunsTable();
+  const [summaryResult, recentResult] = await Promise.all([
+    pool.query(`
+      SELECT
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status = 'success')::int AS successful,
+        COUNT(*) FILTER (WHERE status = 'failed')::int AS failed,
+        COUNT(*) FILTER (WHERE status = 'started')::int AS running,
+        MAX(completed_at) AS last_completed_at
+      FROM backup_runs
+    `),
+    pool.query(`
+      SELECT run_id, started_at, completed_at, status, trigger_source, error_message
+      FROM backup_runs
+      ORDER BY started_at DESC
+      LIMIT 20
+    `),
+  ]);
+
+  const summary = summaryResult.rows[0] || {};
+  return {
+    total: Number(summary.total || 0),
+    successful: Number(summary.successful || 0),
+    failed: Number(summary.failed || 0),
+    running: Number(summary.running || 0),
+    lastCompletedAt: summary.last_completed_at || null,
+    recent: recentResult.rows,
+  };
 };
 
 const validateDevResetRequest = (confirmation: string) => {
@@ -287,6 +338,7 @@ module.exports = {
   validateRedeployPassword,
   scheduleRedeploy,
   triggerBackup,
+  getBackupStats,
   validateDevResetRequest,
   resetTable,
   getStats,

@@ -6,9 +6,10 @@ TRIGGER_FILE="$CONTROL_DIR/run-now"
 mkdir -p "$CONTROL_DIR"
 
 run_backup() {
+  source="${1:-scheduled}"
   if mkdir "$CONTROL_DIR/lock" 2>/dev/null; then
     status=0
-    /bin/sh /app/scripts/backup.sh || status=$?
+    BACKUP_TRIGGER_SOURCE="$source" /bin/sh /app/scripts/backup.sh || status=$?
     rmdir "$CONTROL_DIR/lock" 2>/dev/null || true
     return "$status"
   else
@@ -30,11 +31,11 @@ while :; do
     if [ -f "$TRIGGER_FILE" ]; then
       rm -f "$TRIGGER_FILE"
       echo "Manual RMC backup requested."
-      run_backup
+      run_backup manual
     fi
     sleep 5
     elapsed=$((elapsed + 5))
   done
 
-  run_backup
+  run_backup scheduled
 done

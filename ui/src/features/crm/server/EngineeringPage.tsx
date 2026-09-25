@@ -1,14 +1,15 @@
 import { useState } from 'react';
-import { AlertTriangle, Boxes, Database, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
+import { AlertTriangle, Boxes, Database, DatabaseBackup, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import ServerMonitorPage from './ServerMonitorPage';
 import EngineeringDatabaseTab from './tabs/EngineeringDatabaseTab';
+import EngineeringBackupTab from './tabs/EngineeringBackupTab';
 import EngineeringLoggingTab from './tabs/EngineeringLoggingTab';
 import EngineeringOperationsTab from './tabs/EngineeringOperationsTab';
 import EngineeringRequestHealthTab from './tabs/EngineeringRequestHealthTab';
 import EngineeringStudioTab from './tabs/EngineeringStudioTab';
 
-type EngineeringTab = 'server' | 'database' | 'studio' | 'warnings' | 'failed' | 'logging' | 'operations';
+type EngineeringTab = 'server' | 'database' | 'studio' | 'warnings' | 'failed' | 'logging' | 'operations' | 'backup';
 
 const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = [
   { id: 'server', label: 'Server', icon: Server },
@@ -18,6 +19,7 @@ const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = 
   { id: 'failed', label: 'Failed Requests', icon: ShieldAlert },
   { id: 'logging', label: 'Logging', icon: ScrollText },
   { id: 'operations', label: 'Operations', icon: Boxes },
+  { id: 'backup', label: 'Backup', icon: DatabaseBackup },
 ];
 
 const EngineeringPage = () => {
@@ -58,6 +60,7 @@ const EngineeringPage = () => {
       {activeTab === 'failed' && <EngineeringRequestHealthTab mode="failed" />}
       {activeTab === 'logging' && <EngineeringLoggingTab />}
       {activeTab === 'operations' && <EngineeringOperationsTab />}
+      {activeTab === 'backup' && <EngineeringBackupTab />}
     </div>
   );
 };

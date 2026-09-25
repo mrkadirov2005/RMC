@@ -17,6 +17,7 @@ router.patch('/database/tables/:table/rows', requireOwner, validateParams(TableP
 router.delete('/database/tables/:table/rows', requireOwner, validateParams(TableParamDto), validateBody(DeleteTableRowDto), systemController.deleteDatabaseTableRow);
 router.post('/redeploy', requireOwner, systemController.redeployServer);
 router.post('/backup', requireOwner, systemController.triggerBackup);
+router.get('/backup/stats', requireOwner, systemController.getBackupStats);
 router.post('/dev/reset-students', requireOwner, systemController.resetStudents);
 router.post('/dev/reset-teachers', requireOwner, systemController.resetTeachers);
 router.post('/dev/reset-classes', requireOwner, systemController.resetClasses);

@@ -591,6 +591,7 @@ export const systemAPI = {
   deleteDatabaseTableRow: (table: string, key: Record<string, unknown>) => apiClient.delete(`/system/database/tables/${encodeURIComponent(table)}/rows`, { data: { key } }),
   redeploy: (password: string) => apiClient.post('/system/redeploy', { password }),
   triggerBackup: () => apiClient.post('/system/backup'),
+  getBackupStats: () => apiClient.get('/system/backup/stats'),
   resetStudents: (confirmation: string) => apiClient.post('/system/dev/reset-students', { confirmation }),
   resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),
   resetClasses: (confirmation: string) => apiClient.post('/system/dev/reset-classes', { confirmation }),

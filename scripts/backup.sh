@@ -15,6 +15,7 @@ BACKUP_DIR="${BACKUP_DIR:-$ROOT_DIR/backups}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 RUN_DIR="$BACKUP_DIR/$TIMESTAMP"
+BACKUP_TRIGGER_SOURCE="${BACKUP_TRIGGER_SOURCE:-scheduled}"
 
 DB_HOST="${DB_HOST:-127.0.0.1}"
 DB_PORT="${DB_PORT:-5432}"
@@ -41,6 +42,17 @@ log() {
   printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
 }
 
+record_backup_started() {
+  postgres_query "INSERT INTO backup_runs (run_id, status, trigger_source) VALUES ('$TIMESTAMP', 'started', '$BACKUP_TRIGGER_SOURCE') ON CONFLICT (run_id) DO NOTHING" >/dev/null 2>&1 || true
+}
+
+record_backup_finished() {
+  status="$1"
+  error_message="${2:-}"
+  escaped_error="$(printf '%s' "$error_message" | sed "s/'/''/g")"
+  postgres_query "UPDATE backup_runs SET status = '$status', completed_at = CURRENT_TIMESTAMP, error_message = NULLIF('$escaped_error', '') WHERE run_id = '$TIMESTAMP'" >/dev/null 2>&1 || true
+}
+
 require_command() {
   command -v "$1" >/dev/null 2>&1
 }
@@ -60,7 +72,10 @@ send_telegram_message() {
 report_failure_on_exit() {
   exit_code=$?
   if [ "$exit_code" -ne 0 ]; then
+    record_backup_finished "failed" "Backup exited with code $exit_code."
     send_telegram_message "❌ RMC nightly backup FAILED (exit code ${exit_code}). Check /var/log/rmc-backup.log on the server."
+  else
+    record_backup_finished "success"
   fi
 }
 trap report_failure_on_exit EXIT
@@ -371,6 +386,7 @@ cleanup_old_backups() {
   find "$BACKUP_DIR" -mindepth 1 -maxdepth 1 -type d -mtime "+$RETENTION_DAYS" -print -exec rm -rf {} \;
 }
 
+record_backup_started
 backup_postgres
 export_postgres_tables
 backup_mongo
