@@ -44,27 +44,29 @@ const teacherSelection = {
   updated_at: teachers.updatedAt,
 };
 
+const teacherStudentCount = sql`
+  COALESCE((
+    SELECT COUNT(DISTINCT counted_students.student_id)::int
+    FROM students AS counted_students
+    WHERE counted_students.deleted_at IS NULL
+      AND counted_students.center_id = teachers.center_id
+      AND (
+        counted_students.teacher_id = teachers.teacher_id
+        OR EXISTS (
+          SELECT 1
+          FROM classes AS assigned_class
+          WHERE assigned_class.class_id = counted_students.class_id
+            AND assigned_class.center_id = teachers.center_id
+            AND assigned_class.teacher_id = teachers.teacher_id
+            AND assigned_class.deleted_at IS NULL
+        )
+      )
+  ), 0)::int
+`;
+
 const teacherListSelection = {
   ...teacherSelection,
-  student_count: sql`
-    COALESCE((
-      SELECT COUNT(DISTINCT counted_students.student_id)::int
-      FROM students AS counted_students
-      WHERE counted_students.deleted_at IS NULL
-        AND counted_students.center_id = teachers.center_id
-        AND (
-          counted_students.teacher_id = teachers.teacher_id
-          OR EXISTS (
-            SELECT 1
-            FROM classes AS assigned_class
-            WHERE assigned_class.class_id = counted_students.class_id
-              AND assigned_class.center_id = teachers.center_id
-              AND assigned_class.teacher_id = teachers.teacher_id
-              AND assigned_class.deleted_at IS NULL
-          )
-        )
-    ), 0)::int
-  `,
+  student_count: teacherStudentCount,
   class_count: sql`
     COALESCE((
       SELECT COUNT(*)::int
@@ -117,7 +119,7 @@ const findAll = (centerId?: number) =>
     .select(teacherListSelection)
     .from(teachers)
     .where(and(...buildListConditions({}, centerId)))
-    .orderBy(asc(teachers.teacherId));
+    .orderBy(desc(teacherStudentCount), asc(teachers.firstName), asc(teachers.lastName), asc(teachers.teacherId));
 
 const findPaginated = async (filters: Record<string, any> = {}, centerId?: number) => {
   const conditions = buildListConditions(filters, centerId);
@@ -127,7 +129,7 @@ const findPaginated = async (filters: Record<string, any> = {}, centerId?: numbe
       .select(teacherListSelection)
       .from(teachers)
       .where(and(...conditions))
-      .orderBy(desc(teachers.teacherId))
+      .orderBy(desc(teacherStudentCount), asc(teachers.firstName), asc(teachers.lastName), asc(teachers.teacherId))
       .limit(Math.min(100, Math.max(1, Number(filters.limit || 20))))
       .offset((Math.max(1, Number(filters.page || 1)) - 1) * Math.min(100, Math.max(1, Number(filters.limit || 20)))),
   ]);

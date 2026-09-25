@@ -111,7 +111,22 @@ const TeachersPage = () => {
     const timeout = window.setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
     return () => window.clearTimeout(timeout);
   }, [searchTerm]);
-  const visibleTeachers = state.items;
+  const visibleTeachers = useMemo(
+    () =>
+      [...state.items].sort((left, right) => {
+        const studentCountDifference =
+          Number(right.student_count || 0) - Number(left.student_count || 0);
+        if (studentCountDifference !== 0) return studentCountDifference;
+
+        const leftName = `${left.first_name || ''} ${left.last_name || ''}`.trim();
+        const rightName = `${right.first_name || ''} ${right.last_name || ''}`.trim();
+        const nameDifference = leftName.localeCompare(rightName);
+        if (nameDifference !== 0) return nameDifference;
+
+        return Number(left.teacher_id || left.id || 0) - Number(right.teacher_id || right.id || 0);
+      }),
+    [state.items],
+  );
   const totalTeachers = Number(state.meta?.total || 0);
   const totalPages = Math.max(1, Math.ceil(totalTeachers / pageSize));
   const pageStart = totalTeachers === 0 ? 0 : (page - 1) * pageSize + 1;

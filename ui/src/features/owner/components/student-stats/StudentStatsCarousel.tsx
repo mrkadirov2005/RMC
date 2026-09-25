@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, ChevronLeft, ChevronRight, LineChart, PieChart as PieChartIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { OwnerManagerStatisticsCollections } from '../../types';
 import { buildStudentStatSlides } from './studentStats';
 import { StudentStatsChart } from './StudentStatsChart';
@@ -16,8 +17,41 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
   const { t } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [chartMode, setChartMode] = useState<StudentChartMode>('pie');
-  const slides = useMemo(() => buildStudentStatSlides(data, collections), [collections, data]);
+  const [selectedTeacherId, setSelectedTeacherId] = useState('all');
+  const classTeacherById = useMemo(() => {
+    const lookup = new Map<number, number>();
+    for (const cls of collections.classes) {
+      const classId = Number(cls?.class_id || cls?.id || 0);
+      const teacherId = Number(cls?.teacher_id || 0);
+      if (classId > 0 && teacherId > 0) lookup.set(classId, teacherId);
+    }
+    return lookup;
+  }, [collections.classes]);
+  const teachers = useMemo(
+    () =>
+      [...collections.teachers]
+        .map((teacher) => ({
+          id: Number(teacher?.teacher_id || teacher?.id || 0),
+          name: [teacher?.first_name, teacher?.last_name].filter(Boolean).join(' ').trim() || `Teacher #${teacher?.teacher_id || teacher?.id}`,
+        }))
+        .filter((teacher) => teacher.id > 0)
+        .sort((left, right) => left.name.localeCompare(right.name)),
+    [collections.teachers],
+  );
+  const filteredStudents = useMemo(() => {
+    if (selectedTeacherId === 'all') return data;
+    const teacherId = Number(selectedTeacherId);
+    return data.filter((student) => {
+      const classTeacherId = classTeacherById.get(Number(student?.class_id || 0));
+      return (classTeacherId || Number(student?.teacher_id || 0)) === teacherId;
+    });
+  }, [classTeacherById, data, selectedTeacherId]);
+  const slides = useMemo(() => buildStudentStatSlides(filteredStudents, collections), [collections, filteredStudents]);
   const selectedSlide = slides[activeSlide] || slides[0];
+
+  useEffect(() => {
+    setActiveSlide(0);
+  }, [selectedTeacherId]);
 
   const goToSlide = (nextIndex: number) => {
     setActiveSlide((nextIndex + slides.length) % slides.length);
@@ -30,6 +64,28 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
     <div className="relative rounded-xl border border-cyan-100 bg-gradient-to-br from-cyan-50 via-white to-fuchsia-50 p-4 shadow-sm dark:border-white/10 dark:from-white/[0.04] dark:via-white/[0.03] dark:to-white/[0.04]">
       <div className="mx-auto mb-4 max-w-lg rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-sm font-black text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.05] dark:text-white">
         {t('Student analytics')}
+      </div>
+
+      <div className="mx-auto mb-4 flex max-w-6xl flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-sm font-black text-slate-900 dark:text-white">Filter by teacher</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-white/55">
+            {selectedTeacherId === 'all' ? `${data.length} students across all teachers` : `${filteredStudents.length} students assigned to the selected teacher`}
+          </p>
+        </div>
+        <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
+          <SelectTrigger className="w-full sm:w-72">
+            <SelectValue placeholder="All teachers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All teachers</SelectItem>
+            {teachers.map((teacher) => (
+              <SelectItem key={teacher.id} value={String(teacher.id)}>
+                {teacher.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <NavButton direction="left" onClick={() => goToSlide(activeSlide - 1)} />
