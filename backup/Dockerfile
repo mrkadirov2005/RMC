@@ -1,14 +1,11 @@
-FROM mongo:7
+FROM postgres:16-bookworm
+
+ARG MONGO_TOOLS_VERSION=100.13.0
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl ca-certificates python3 gnupg \
-  && mkdir -p /etc/apt/keyrings \
-  && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
-    | gpg --dearmor -o /etc/apt/keyrings/postgresql.gpg \
-  && echo "deb [signed-by=/etc/apt/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
-    > /etc/apt/sources.list.d/pgdg.list \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends postgresql-client-16 \
+  && apt-get install -y --no-install-recommends curl ca-certificates python3 \
+  && curl -fsSL "https://fastdl.mongodb.org/tools/db/mongodb-database-tools-debian12-x86_64-${MONGO_TOOLS_VERSION}.tgz" \
+    | tar -xz --strip-components=1 -C /usr/local \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
