@@ -34,6 +34,12 @@ Services:
 - Postgres: `localhost:5432`
 - Mongo: `localhost:27017`
 - Telegram bot: `crm_telegram_bot` container
+- Nightly backup worker: `crm_backup` container
+
+The backup worker runs every night at 03:00 (UTC by default), stores archives in
+the persistent `backup_data` volume, and uploads the archive to Telegram when
+`BACKUP_TELEGRAM_BOT_TOKEN` and `BACKUP_TELEGRAM_CHAT_ID` are set in
+`service/.env`. Set `BACKUP_TIMEZONE` there if 03:00 should use another timezone.
 
 PostgreSQL schema is auto-initialized from `service/db/schema/` on first start (stored in the `postgres_data` volume).
 

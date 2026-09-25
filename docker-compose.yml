@@ -95,9 +95,42 @@ services:
     networks:
       - crm_network
 
+  backup:
+    build:
+      context: .
+      dockerfile: backup/Dockerfile
+    container_name: crm_backup
+    env_file:
+      - path: ./service/.env
+        required: false
+    environment:
+      BACKUP_ROOT_DIR: /app
+      BACKUP_ENV_FILE: /dev/null
+      BACKUP_DIR: /backups
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: crm_user
+      DB_PASSWORD: crm_password
+      DB_NAME: crm_db
+      MONGO_URI: mongodb://mongo:27017
+      MONGO_DB: crm_logs
+      POSTGRES_CONTAINER: crm_postgres
+      MONGO_CONTAINER: crm_mongo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    volumes:
+      - backup_data:/backups
+    restart: unless-stopped
+    networks:
+      - crm_network
+
 volumes:
   postgres_data:
   mongo_data:
+  backup_data:
 
 networks:
   crm_network:
