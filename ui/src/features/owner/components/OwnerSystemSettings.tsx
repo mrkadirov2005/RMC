@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { AlertTriangle, DatabaseZap, RotateCcw, ServerCog } from 'lucide-react';
+import { AlertTriangle, DatabaseZap, RotateCcw, ServerCog, Upload } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +32,7 @@ export const OwnerSystemSettings = () => {
   const [resetTarget, setResetTarget] = useState<ResetTarget | null>(null);
   const [resetConfirmation, setResetConfirmation] = useState('');
   const [resetSubmitting, setResetSubmitting] = useState(false);
+  const [backupSubmitting, setBackupSubmitting] = useState(false);
   const { t } = useLanguage();
 
   const close = () => {
@@ -83,6 +84,19 @@ export const OwnerSystemSettings = () => {
     }
   };
 
+  const triggerBackup = async () => {
+    if (!window.confirm('Start a backup now and send it to the configured Telegram chat?')) return;
+    setBackupSubmitting(true);
+    try {
+      await systemAPI.triggerBackup();
+      showToast.success('Backup started. It will be sent to Telegram when complete.');
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || 'Could not start backup.');
+    } finally {
+      setBackupSubmitting(false);
+    }
+  };
+
   return (
     <>
       <Card className="border-amber-200 bg-amber-50/60 dark:border-amber-500/20 dark:bg-amber-500/5">
@@ -102,6 +116,27 @@ export const OwnerSystemSettings = () => {
           <Button type="button" variant="outline" className="gap-2 border-amber-300 bg-white dark:bg-background" onClick={() => setOpen(true)}>
             <RotateCcw className="h-4 w-4" />
             {t('Redeploy')}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="border-cyan-200 bg-cyan-50/60 dark:border-cyan-500/20 dark:bg-cyan-500/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Upload className="h-5 w-5 text-cyan-600 dark:text-cyan-300" />
+            Backup
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="max-w-2xl space-y-1">
+            <p className="text-sm font-medium text-slate-900 dark:text-white">Run backup now</p>
+            <p className="text-sm text-slate-600 dark:text-white/65">
+              Starts the Docker backup worker immediately and sends the archive to the configured Telegram chat.
+            </p>
+          </div>
+          <Button type="button" className="gap-2 bg-cyan-600 text-white hover:bg-cyan-700" onClick={triggerBackup} disabled={backupSubmitting}>
+            <Upload className="h-4 w-4" />
+            {backupSubmitting ? 'Starting...' : 'Run backup now'}
           </Button>
         </CardContent>
       </Card>

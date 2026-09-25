@@ -8,6 +8,7 @@ jest.mock('../../modules/system', () => ({
   updateDatabaseTableRow: jest.fn(),
   deleteDatabaseTableRow: jest.fn(),
   redeployServer: jest.fn(),
+  triggerBackup: jest.fn(),
   resetStudents: jest.fn(),
   resetTeachers: jest.fn(),
   resetClasses: jest.fn(),

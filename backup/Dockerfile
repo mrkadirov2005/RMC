@@ -6,6 +6,7 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY scripts/backup.sh /app/scripts/backup.sh
-RUN chmod 755 /app/scripts/backup.sh
+COPY backup/entrypoint.sh /app/entrypoint.sh
+RUN chmod 755 /app/scripts/backup.sh /app/entrypoint.sh
 
-CMD ["sh", "-c", "export TZ=\"${BACKUP_TIMEZONE:-UTC}\"; while :; do now=$(date +%s); target=$(date -d 'today 03:00' +%s); if [ \"$target\" -le \"$now\" ]; then target=$(date -d 'tomorrow 03:00' +%s); fi; delay=$((target - now)); echo \"Next RMC backup in ${delay}s\"; sleep \"$delay\"; /bin/sh /app/scripts/backup.sh; done"]
+CMD ["/app/entrypoint.sh"]

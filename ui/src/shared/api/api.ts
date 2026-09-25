@@ -590,6 +590,7 @@ export const systemAPI = {
   updateDatabaseTableRow: (table: string, key: Record<string, unknown>, values: Record<string, unknown>) => apiClient.patch(`/system/database/tables/${encodeURIComponent(table)}/rows`, { key, values }),
   deleteDatabaseTableRow: (table: string, key: Record<string, unknown>) => apiClient.delete(`/system/database/tables/${encodeURIComponent(table)}/rows`, { data: { key } }),
   redeploy: (password: string) => apiClient.post('/system/redeploy', { password }),
+  triggerBackup: () => apiClient.post('/system/backup'),
   resetStudents: (confirmation: string) => apiClient.post('/system/dev/reset-students', { confirmation }),
   resetTeachers: (confirmation: string) => apiClient.post('/system/dev/reset-teachers', { confirmation }),
   resetClasses: (confirmation: string) => apiClient.post('/system/dev/reset-classes', { confirmation }),

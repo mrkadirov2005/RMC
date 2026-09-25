@@ -12,6 +12,15 @@ const redeployServer = async (req: any, res: any) => {
   }
 };
 
+const triggerBackup = async (_req: any, res: any) => {
+  try {
+    systemService.triggerBackup();
+    res.status(202).json({ message: 'Backup started.' });
+  } catch (error: any) {
+    res.status(error.statusCode || 500).json({ error: error.message || 'Failed to start backup.' });
+  }
+};
+
 const resetTable = (tableName: 'students' | 'teachers' | 'classes' | 'payments') => async (req: any, res: any) => {
   try {
     systemService.validateDevResetRequest(req.body?.confirmation);
@@ -58,6 +67,7 @@ module.exports = {
   updateDatabaseTableRow,
   deleteDatabaseTableRow,
   redeployServer,
+  triggerBackup,
   resetStudents: resetTable('students'),
   resetTeachers: resetTable('teachers'),
   resetClasses: resetTable('classes'),

@@ -23,6 +23,7 @@ RUN rm -rf dist \
 # runtime, so it resolves to /app/docs. Copied here, not under WORKDIR, to
 # match that path exactly.
 COPY docs /app/docs
+RUN mkdir -p /backup-control
 
 WORKDIR /app/service
 EXPOSE 4000

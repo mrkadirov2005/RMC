@@ -2,6 +2,7 @@ const { spawn } = require('child_process');
 const crypto = require('crypto');
 const os = require('os');
 const path = require('path');
+const fs = require('fs');
 const pool = require('../../../db/pool');
 const { sql } = require('drizzle-orm');
 const v8 = require('v8');
@@ -59,6 +60,18 @@ const scheduleRedeploy = () => {
     });
     child.unref();
   }, 500);
+};
+
+const triggerBackup = () => {
+  const controlDir = process.env.BACKUP_CONTROL_DIR || '/backup-control';
+  try {
+    fs.mkdirSync(controlDir, { recursive: true });
+    fs.writeFileSync(path.join(controlDir, 'run-now'), `${Date.now()}\n`, { mode: 0o600 });
+  } catch {
+    const error: any = new Error('Backup worker is not available.');
+    error.statusCode = 503;
+    throw error;
+  }
 };
 
 const validateDevResetRequest = (confirmation: string) => {
@@ -273,6 +286,7 @@ const getDatabaseTableRows = async (tableName: string, options: { limit?: number
 module.exports = {
   validateRedeployPassword,
   scheduleRedeploy,
+  triggerBackup,
   validateDevResetRequest,
   resetTable,
   getStats,
