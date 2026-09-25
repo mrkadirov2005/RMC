@@ -7,11 +7,11 @@ import Sidebar from './Sidebar';
 import { useAppSelector } from '../../features/crm/hooks';
 import { TranslationEditMode } from './TranslationEditMode';
 
-const SIDEBAR_OPEN_KEY = 'crm_sidebar_open';
+const SIDEBAR_MODE_KEY = 'crm_sidebar_mode';
 
-const getInitialOpen = () => {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(SIDEBAR_OPEN_KEY) === 'true';
+const getInitialWidth = () => {
+  if (typeof window === 'undefined') return 72;
+  return localStorage.getItem(SIDEBAR_MODE_KEY) === 'open' ? 280 : 72;
 };
 
 export const MainContentLoading = () => (
@@ -29,7 +29,7 @@ interface LayoutProps {
 
 // Renders the layout module.
 const Layout = memo(({ children }: LayoutProps) => {
-  const [sidebarOpen, setSidebarOpen] = useState(getInitialOpen);
+  const [sidebarWidth, setSidebarWidth] = useState(getInitialWidth);
   const [isMobile, setIsMobile] = useState(false);
   const user = useAppSelector((state) => state.auth.user);
   const isOwner = user?.userType === 'superuser' && String(user.role || '').toLowerCase() === 'owner';
@@ -48,15 +48,15 @@ const Layout = memo(({ children }: LayoutProps) => {
   useEffect(() => {
     const handler = (e: Event) => {
       const detail = (e as CustomEvent).detail;
-      if (detail && typeof detail.isOpen === 'boolean') {
-        setSidebarOpen(detail.isOpen);
+      if (detail && typeof detail.isExpanded === 'boolean') {
+        setSidebarWidth(detail.isExpanded ? 280 : 72);
       }
     };
     window.addEventListener('sidebar-toggled', handler);
     return () => window.removeEventListener('sidebar-toggled', handler);
   }, []);
 
-  const marginLeft = hideSidebar || isMobile ? 0 : sidebarOpen ? 280 : 72;
+  const marginLeft = hideSidebar || isMobile ? 0 : sidebarWidth;
 
   return (
     <div className="flex min-h-screen bg-background">

@@ -60,15 +60,6 @@ require_command() {
   command -v "$1" >/dev/null 2>&1
 }
 
-send_telegram_message() {
-  text="$1"
-  [ -z "$TELEGRAM_BOT_TOKEN" ] || [ -z "$TELEGRAM_CHAT_ID" ] && return 0
-  require_command curl || return 0
-  curl -sS -o /dev/null -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-    -d "chat_id=${TELEGRAM_CHAT_ID}" \
-    --data-urlencode "text=${text}" || true
-}
-
 # Whatever step fails, whoever's holding the phone should hear about it — a
 # backup that silently stopped running is worse than no backup, since it looks
 # fine until the night it's needed.
@@ -80,7 +71,6 @@ report_failure_on_exit() {
       failure_detail="Backup exited with code $exit_code."
     fi
     record_backup_finished "failed" "$failure_detail"
-    send_telegram_message "❌ RMC nightly backup FAILED (exit code ${exit_code}). Check /var/log/rmc-backup.log on the server."
   else
     record_backup_finished "success"
   fi
@@ -266,7 +256,8 @@ send_telegram_document() {
     -F "document=@${file}")"
 
   if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
-    log "ERROR: Telegram upload of $(basename "$file") failed with HTTP $http_code. Response saved to $response_file"
+    telegram_error="$(tr '\n' ' ' < "$response_file" 2>/dev/null | cut -c1-500)"
+    log "ERROR: Telegram upload of $(basename "$file") failed with HTTP $http_code: ${telegram_error:-no response body}. Response saved to $response_file"
     return 1
   fi
 }
@@ -336,14 +327,12 @@ mirror_remote_postgres() {
   if require_command pg_dump; then
     if ! eval "$dump_cmd" | psql "$BACKUP_REMOTE_POSTGRES_URL" > "$RUN_DIR/remote_mirror.log" 2>&1; then
       log "ERROR: remote Postgres mirror failed — see $RUN_DIR/remote_mirror.log"
-      send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the hosted-Postgres mirror failed. Check $RUN_DIR/remote_mirror.log on the server."
       return 1
     fi
   elif require_command docker; then
     if ! docker exec -e PGPASSWORD="$DB_PASSWORD" "$POSTGRES_CONTAINER" pg_dump --username "$DB_USER" --dbname "$DB_NAME" --clean --if-exists --no-owner --no-acl \
       | psql "$BACKUP_REMOTE_POSTGRES_URL" > "$RUN_DIR/remote_mirror.log" 2>&1; then
       log "ERROR: remote Postgres mirror failed — see $RUN_DIR/remote_mirror.log"
-      send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the hosted-Postgres mirror failed. Check $RUN_DIR/remote_mirror.log on the server."
       return 1
     fi
   else
@@ -382,7 +371,6 @@ export_to_google_sheets() {
     log "Google Sheets export completed."
   else
     log "ERROR: Google Sheets export failed — see $RUN_DIR/sheets_export.log"
-    send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the Google Sheets export failed. Check $RUN_DIR/sheets_export.log on the server."
     return 1
   fi
 }
@@ -409,4 +397,3 @@ export_to_google_sheets || true
 cleanup_old_backups
 
 log "Backup finished: $RUN_DIR"
-send_telegram_message "✅ RMC nightly backup completed ($TIMESTAMP)."

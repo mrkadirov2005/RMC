@@ -10,7 +10,8 @@ import {
   Archive, MessageCircle, GraduationCap, UserRoundCheck, Presentation,
   DoorOpen, NotebookTabs, UserCheck, ListTodo, BookMarked, Crown,
   School, BadgeAlert, Server, ClipboardCheck,
-  TrendingDown, BadgePercent, ChevronDown, GripVertical, Wallet,
+  TrendingDown, BadgePercent, ChevronDown, GripVertical, Wallet, PanelLeft,
+  PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -96,11 +97,16 @@ const filledIconNames = new Set(['Students', 'PortalStudent', 'Attendance', 'Own
 
 const DRAWER_WIDTH = 280;
 const COLLAPSED_DRAWER_WIDTH = 72;
-const SIDEBAR_OPEN_KEY = 'crm_sidebar_open';
+const SIDEBAR_MODE_KEY = 'crm_sidebar_mode';
+type SidebarMode = 'open' | 'closed' | 'partial';
 
-const getStoredSidebarOpen = () => {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(SIDEBAR_OPEN_KEY) === 'true';
+const getDesktopExpanded = (mode: SidebarMode, hovered: boolean) =>
+  mode === 'open' || (mode === 'partial' && hovered);
+
+const getStoredSidebarMode = (): SidebarMode => {
+  if (typeof window === 'undefined') return 'closed';
+  const stored = localStorage.getItem(SIDEBAR_MODE_KEY);
+  return stored === 'open' || stored === 'partial' || stored === 'closed' ? stored : 'closed';
 };
 
 type MenuItem = {
@@ -116,7 +122,9 @@ type MenuItem = {
 
 // Renders the sidebar module.
 const Sidebar = memo(() => {
-  const [isOpen, setIsOpen] = useState(getStoredSidebarOpen);
+  const [sidebarMode, setSidebarMode] = useState<SidebarMode>(getStoredSidebarMode);
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -169,10 +177,12 @@ const Sidebar = memo(() => {
 // Runs side effects for this component.
   useEffect(() => {
     if (!isMobile) {
-      localStorage.setItem(SIDEBAR_OPEN_KEY, String(isOpen));
-      window.dispatchEvent(new CustomEvent('sidebar-toggled', { detail: { isOpen } }));
+      localStorage.setItem(SIDEBAR_MODE_KEY, sidebarMode);
+      window.dispatchEvent(new CustomEvent('sidebar-toggled', {
+        detail: { isOpen: sidebarMode === 'open', isExpanded: getDesktopExpanded(sidebarMode, isHovered) },
+      }));
     }
-  }, [isMobile, isOpen]);
+  }, [isHovered, isMobile, sidebarMode]);
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -205,7 +215,11 @@ const Sidebar = memo(() => {
     setStoredActiveCenterId(nextCenterId);
   };
 
-  const isExpanded = isMobile || isOpen;
+  const isExpanded = isMobile ? isMobileOpen : getDesktopExpanded(sidebarMode, isHovered);
+  const setMode = (mode: SidebarMode) => {
+    setSidebarMode(mode);
+    setIsHovered(false);
+  };
 
   const menuItems: MenuItem[] = [
     { label: 'Dashboard', path: '/dashboard', iconName: 'Dashboard', roles: ['superuser'], permission: 'VIEW_DASHBOARD', hideFromOwner: true },
@@ -305,7 +319,7 @@ const Sidebar = memo(() => {
   const handleNavigation = (path: string) => {
     navigate(path);
     if (isMobile) {
-      setIsOpen(false);
+      setIsMobileOpen(false);
     }
   };
 
@@ -318,12 +332,25 @@ const Sidebar = memo(() => {
           <div className={cn('flex items-center min-w-0', isExpanded ? 'gap-3' : 'gap-0')}>
             <button
               type="button"
-              onClick={() => setIsOpen(true)}
+              onClick={() => (isMobile ? setIsMobileOpen(true) : setMode('open'))}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/40"
               aria-label="Open sidebar"
             >
               {isExpanded ? <LayoutDashboard className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
+            {!isMobile && (
+              <div className="flex items-center gap-1 rounded-md border border-sidebar-border p-0.5" aria-label="Sidebar mode">
+                <button type="button" onClick={() => setMode('open')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'open' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label="Keep sidebar open">
+                  <PanelLeftOpen className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" onClick={() => setMode('partial')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'partial' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label="Expand sidebar on hover">
+                  <PanelLeft className="h-3.5 w-3.5" />
+                </button>
+                <button type="button" onClick={() => setMode('closed')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'closed' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label="Keep sidebar closed">
+                  <PanelLeftClose className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            )}
             {isExpanded && <h1 className="truncate text-lg font-bold tracking-tight">EduCRM</h1>}
           </div>
           {isExpanded && (
@@ -346,7 +373,7 @@ const Sidebar = memo(() => {
               </button>
               <button
                 type="button"
-                onClick={() => setIsOpen(false)}
+                onClick={() => (isMobile ? setIsMobileOpen(false) : setMode('closed'))}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 aria-label="Close sidebar"
               >
@@ -549,7 +576,7 @@ const Sidebar = memo(() => {
       {/* Mobile Toggle */}
       {isMobile && (
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsMobileOpen(true)}
           className="fixed top-4 left-4 z-[999] p-2 rounded-lg bg-slate-800 text-white hover:bg-slate-700 transition-colors shadow-lg"
         >
           <Menu className="w-5 h-5" />
@@ -557,18 +584,20 @@ const Sidebar = memo(() => {
       )}
 
       {/* Mobile overlay */}
-      {isMobile && isOpen && (
-        <div className="fixed inset-0 z-[1200] bg-black/50" onClick={() => setIsOpen(false)} />
+      {isMobile && isMobileOpen && (
+        <div className="fixed inset-0 z-[1200] bg-black/50" onClick={() => setIsMobileOpen(false)} />
       )}
 
       {/* Sidebar */}
       <aside
+        onMouseEnter={() => !isMobile && sidebarMode === 'partial' && setIsHovered(true)}
+        onMouseLeave={() => !isMobile && sidebarMode === 'partial' && setIsHovered(false)}
         className={cn(
           'z-[1300] h-screen shrink-0 overflow-hidden border-r border-sidebar-border transition-all duration-300',
           isMobile ? 'fixed top-0 left-0' : 'fixed top-0 left-0',
-          isMobile && !isOpen && '-translate-x-full'
+          isMobile && !isMobileOpen && '-translate-x-full'
         )}
-        style={{ width: isMobile || isOpen ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH }}
+        style={{ width: isMobile || isExpanded ? DRAWER_WIDTH : COLLAPSED_DRAWER_WIDTH }}
       >
         {sidebarContent}
       </aside>

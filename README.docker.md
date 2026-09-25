@@ -36,10 +36,16 @@ Services:
 - Telegram bot: `crm_telegram_bot` container
 - Nightly backup worker: `crm_backup` container
 
-The backup worker runs every night at 03:00 (UTC by default), stores archives in
-the persistent `backup_data` volume, and uploads the archive to Telegram when
-`BACKUP_TELEGRAM_BOT_TOKEN` and `BACKUP_TELEGRAM_CHAT_ID` are set in
-`service/.env`. Set `BACKUP_TIMEZONE` there if 03:00 should use another timezone.
+The backup worker runs every day at 00:00 in `Asia/Tashkent` by default, stores
+archives in the persistent `backup_data` volume, and uploads the archive to the
+configured Telegram group when `BACKUP_TELEGRAM_BOT_TOKEN` and
+`BACKUP_TELEGRAM_CHAT_ID` are set in `service/.env`. The owner can also start a
+run from **Engineering → Backup → Run backup now**. Set `BACKUP_TIMEZONE`,
+`BACKUP_HOUR`, and `BACKUP_MINUTE` to change the schedule.
+
+For the complete backup workflow, environment configuration, Google Sheets
+integration, Telegram group setup, verification, and troubleshooting, see
+`docs/backup_important/README.md`.
 
 PostgreSQL schema is auto-initialized from `service/db/schema/` on first start (stored in the `postgres_data` volume).
 
