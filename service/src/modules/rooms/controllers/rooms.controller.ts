@@ -1,5 +1,6 @@
 const roomsService = require('../services/rooms.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
+const { logAudit } = require('../../../utils/audit');
 
 const resolveCenter = (req: any, res: any): number | null => {
   const { centerId, isGlobal } = getScopedCenterId(req);
@@ -49,6 +50,7 @@ const createRoom = async (req: any, res: any) => {
     if (room?.error === 'room_unavailable') {
       return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
     }
+    await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'create', entity_type: 'room', entity_id: room?.room_id || room?.roomId || null, center_id: centerId, details: { room_name: req.body.room_number, class_id: req.body.class_id || null, capacity: req.body.capacity || null } });
     res.status(201).json(room);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -68,6 +70,7 @@ const updateRoom = async (req: any, res: any) => {
       return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
     }
     if (!room) return res.status(404).json({ error: 'Room not found' });
+    await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'update', entity_type: 'room', entity_id: Number(id), center_id: centerId, details: { room_name: req.body.room_number, class_id: req.body.class_id || null, capacity: req.body.capacity || null } });
     res.json(room);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -81,6 +84,7 @@ const deleteRoom = async (req: any, res: any) => {
     if (centerId == null) return;
     const room = await roomsService.deleteRoom(id, centerId);
     if (!room) return res.status(404).json({ error: 'Room not found' });
+    await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'delete', entity_type: 'room', entity_id: Number(id), center_id: centerId, details: { room_name: room.room_number || room.roomNumber || null } });
     res.json({ message: 'Room deleted successfully' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });

@@ -39,8 +39,8 @@ export const RoomTimetableSheet = ({ events, roomNames, onSelect, onMove, canMov
                   const previousIsAfternoon = rowIndex > 0 && Number(rows[rowIndex - 1].start.slice(0, 2)) >= 12;
                   return <tr key={row.index} className={isAfternoon && !previousIsAfternoon ? 'border-t-[8px] border-t-orange-400' : ''}>
                     {band.map(room => {
-                      const event = row.byRoom.get(room);
-                      const isMovable = Boolean(event) && canMove && event!.status !== 'conducted' && event!.status !== 'in_progress';
+                      const roomEvents = row.byRoom.get(room) || [];
+                      const event = roomEvents[0];
                       return <Fragment key={room}>
                         <td className="border border-slate-400 bg-emerald-100 px-1 py-1 text-center font-bold tabular-nums text-slate-950 dark:bg-emerald-900 dark:text-emerald-50">
                           {event
@@ -48,9 +48,14 @@ export const RoomTimetableSheet = ({ events, roomNames, onSelect, onMove, canMov
                             : `${row.start}–${row.end}`}
                         </td>
                         <td onDragOver={(dragEvent) => { if (!event && canMove) dragEvent.preventDefault(); }} onDrop={(dragEvent) => { dragEvent.preventDefault(); const dragged = events.find(item => item.event_id === dragEvent.dataTransfer.getData('text/calendar-event')); if (!event && dragged) onMove(dragged, room, pattern.id, row.start, row.end); }} className={`border border-slate-400 p-0 text-center ${event ? 'bg-white dark:bg-card' : 'bg-slate-50 dark:bg-muted/20'} ${!event && canMove ? 'transition-colors hover:bg-emerald-50 dark:hover:bg-emerald-950/30' : ''}`}>
-                          {event ? <button type="button" draggable={isMovable} onDragStart={(dragEvent) => { dragEvent.dataTransfer.effectAllowed = 'move'; dragEvent.dataTransfer.setData('text/calendar-event', event.event_id); }} data-testid={`calendar-event-${event.event_id}`} onClick={() => onSelect(event)} title={isMovable ? 'Drag to a free room slot to move this lesson' : undefined} className={`w-full px-1.5 py-1 font-semibold hover:bg-yellow-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-yellow-950/40 ${event.status === 'conducted' ? 'text-emerald-700 dark:text-emerald-300' : ''} ${isMovable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
-                            <span className="block truncate">{event.class_name}{event.teacher_name ? ` (${event.teacher_name})` : ''}</span>
-                          </button> : <span className="block px-1 py-1 font-medium text-muted-foreground">Free</span>}
+                          {roomEvents.length > 0 ? <div className="flex min-w-0 gap-0.5">
+                            {roomEvents.map(item => {
+                              const movable = canMove && item.status !== 'conducted' && item.status !== 'in_progress';
+                              return <button key={item.event_id} type="button" draggable={movable} onDragStart={(dragEvent) => { dragEvent.dataTransfer.effectAllowed = 'move'; dragEvent.dataTransfer.setData('text/calendar-event', item.event_id); }} data-testid={`calendar-event-${item.event_id}`} onClick={() => onSelect(item)} title={item.conflict ? 'Scheduling conflict: fix the time or move this class to another room' : movable ? 'Drag to a free room slot to move this lesson' : undefined} className={`min-w-0 flex-1 px-1.5 py-1 text-left font-semibold hover:bg-yellow-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-yellow-950/40 ${item.conflict ? 'rounded border border-red-500 bg-red-100 text-red-950 dark:bg-red-950/70 dark:text-red-100' : ''} ${item.status === 'conducted' ? 'text-emerald-700 dark:text-emerald-300' : ''} ${movable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+                                <span className="block truncate">{item.class_name}{item.teacher_name ? ` (${item.teacher_name})` : ''}</span>
+                              </button>;
+                            })}
+                          </div> : <span className="block px-1 py-1 font-medium text-muted-foreground">Free</span>}
                         </td>
                       </Fragment>;
                     })}

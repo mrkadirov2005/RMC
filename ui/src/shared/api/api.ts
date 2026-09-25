@@ -552,6 +552,11 @@ export const roomAPI = {
   getUtilization: (params?: Record<string, unknown>) => apiClient.get('/rooms/reports/utilization', { params }),
 };
 
+export const auditLogsAPI = {
+  list: (params?: { entity_type?: string; entity_id?: number | string; limit?: number; offset?: number }) =>
+    apiClient.get('/audit-logs', { params }),
+};
+
 export const roomSlotAPI = {
   getBookingsByClass: (classId: number, params?: { center_id?: number }) =>
     apiClient.get(`/room-slots/bookings/class/${classId}`, { params }),

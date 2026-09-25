@@ -1,5 +1,6 @@
 const service = require('../services/room-insights.service');
 const { getScopedCenterId } = require('../../../shared/tenant');
+const { logAudit } = require('../../../utils/audit');
 
 const resolveCenter = (req: any, res: any): number | null => {
   const { centerId, isGlobal } = getScopedCenterId(req);
@@ -28,8 +29,16 @@ const handle = (operation: (req: any, centerId: number) => Promise<any>) => asyn
 
 module.exports = {
   physicalRooms: handle((_req, centerId) => service.getPhysicalRooms(centerId)),
-  updatePhysicalRoom: handle((req, centerId) => service.updatePhysicalRoom(Number(req.params.id), centerId, req.body)),
-  deletePhysicalRoom: handle((req, centerId) => service.deletePhysicalRoom(Number(req.params.id), centerId)),
+  updatePhysicalRoom: handle(async (req, centerId) => {
+    const result = await service.updatePhysicalRoom(Number(req.params.id), centerId, req.body);
+    if (result) await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'update', entity_type: 'room', entity_id: Number(req.params.id), center_id: centerId, details: { room_name: result.name, capacity: result.capacity } });
+    return result;
+  }),
+  deletePhysicalRoom: handle(async (req, centerId) => {
+    const result = await service.deletePhysicalRoom(Number(req.params.id), centerId);
+    if (result) await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'delete', entity_type: 'room', entity_id: Number(req.params.id), center_id: centerId, details: { room_name: result.name } });
+    return result;
+  }),
   overview: handle((req, centerId) => service.getOverview(centerId, req.query)),
   availability: handle((req, centerId) => service.getAvailability(centerId, req.query)),
   schedule: handle((req, centerId) => service.getSchedule(centerId, req.query)),

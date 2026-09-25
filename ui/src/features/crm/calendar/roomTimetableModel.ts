@@ -43,7 +43,19 @@ export const buildTimeGridRows = (events: CalendarEvent[], roomNames: string[], 
   slots.map((slot, index) => ({
     ...slot,
     index,
-    byRoom: new Map(roomNames.map(room => [room, events.find(event =>
-      event.room_name === room && event.start_time.slice(0, 5) >= slot.start && event.start_time.slice(0, 5) < slot.end
-    )])),
+    byRoom: new Map(roomNames.map(room => {
+      const unique = new Map<string, CalendarEvent>();
+      events
+        .filter(event =>
+          event.room_name === room
+          && event.start_time.slice(0, 5) >= slot.start
+          && event.start_time.slice(0, 5) < slot.end
+        )
+        .sort((a, b) => a.start_time.localeCompare(b.start_time) || a.end_time.localeCompare(b.end_time))
+        .forEach(event => {
+          const key = `${event.class_id ?? event.class_name}|${event.teacher_id ?? event.teacher_name ?? ''}|${event.start_time.slice(0, 5)}|${event.end_time.slice(0, 5)}`;
+          if (!unique.has(key)) unique.set(key, event);
+        });
+      return [room, [...unique.values()]] as const;
+    })),
   }));

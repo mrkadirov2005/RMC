@@ -1,6 +1,7 @@
 export type RoomAssignment = {
   room_id: number;
   room_number?: string;
+  physical_room_id?: number | null;
   capacity?: number | null;
   class_id?: number | null;
   class_name?: string | null;
@@ -13,6 +14,7 @@ export const normalizeRoomAssignment = (row: any): RoomAssignment => ({
   ...row,
   room_id: Number(row?.room_id ?? row?.roomId ?? row?.id ?? 0),
   room_number: row?.room_number ?? row?.roomNumber ?? '',
+  physical_room_id: row?.physical_room_id ?? row?.physicalRoomId ?? null,
   capacity: row?.capacity == null ? null : Number(row.capacity),
   class_id: row?.class_id ?? row?.classId ?? null,
   class_name: row?.class_name ?? row?.className ?? null,

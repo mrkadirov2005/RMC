@@ -141,6 +141,11 @@ const CalendarPage = () => {
     ...conflict,
     events: conflict.event_ids.map(id => eventMap.get(id)).filter((event): event is CalendarEvent => Boolean(event)),
   })), [eventMap, workspace.conflicts]);
+  const conflictEventIds = useMemo(() => new Set(workspace.conflicts.flatMap(conflict => conflict.event_ids)), [workspace.conflicts]);
+  const displayEvents = useMemo(() => workspace.events.map(event => ({
+    ...event,
+    conflict: conflictEventIds.has(event.event_id),
+  })), [conflictEventIds, workspace.events]);
 
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4 sm:px-5">
     <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">Calendar</h1><p className="text-xs text-muted-foreground">Lessons, rooms, teachers and attendance in one schedule.</p></div></header>
@@ -153,10 +158,10 @@ const CalendarPage = () => {
       {workspace.conflicts.length > 0 && <button type="button" onClick={() => setShowConflicts(true)} className="flex w-full items-center gap-2 border-b bg-rose-50 px-3 py-2 text-left text-xs font-medium text-rose-800 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"><AlertTriangle className="h-4 w-4" /><span className="flex-1">{workspace.conflicts.length} scheduling conflict{workspace.conflicts.length === 1 ? '' : 's'} need attention.</span><span className="underline underline-offset-2">View details</span></button>}
       {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{workspace.error}</div>}
       {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label="Loading calendar" className="h-7 w-7 animate-spin text-primary" /></div> : <>
-        {view === 'day' && <DayCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} />}
-        {view === 'week' && <WeekCalendarView anchor={anchor} events={workspace.events} rooms={calendarRooms} onSelect={setSelectedEvent} onMove={moveRecurring} canMove={canManage} />}
-        {view === 'month' && <MonthCalendarView anchor={anchor} events={workspace.events} onSelect={setSelectedEvent} onDay={date => { setAnchor(date); setView('day'); }} />}
-        {view === 'agenda' && <AgendaCalendarView events={workspace.events} onSelect={setSelectedEvent} />}
+        {view === 'day' && <DayCalendarView anchor={anchor} events={displayEvents} onSelect={setSelectedEvent} />}
+        {view === 'week' && <WeekCalendarView anchor={anchor} events={displayEvents} rooms={calendarRooms} onSelect={setSelectedEvent} onMove={moveRecurring} canMove={canManage} />}
+        {view === 'month' && <MonthCalendarView anchor={anchor} events={displayEvents} onSelect={setSelectedEvent} onDay={date => { setAnchor(date); setView('day'); }} />}
+        {view === 'agenda' && <AgendaCalendarView events={displayEvents} onSelect={setSelectedEvent} />}
       </>}
     </Card>
     <CalendarEventDrawer event={selectedEvent} canManage={canManage} canDelete={canDelete} onClose={() => setSelectedEvent(null)} onStart={startLesson} onOpen={openSession} onDelete={deleteSession} />

@@ -1,8 +1,9 @@
 import type { RoomsTab } from '../types';
 
 const tabs: Array<{ id: RoomsTab; label: string }> = [
-  { id: 'overview', label: 'Overview' }, { id: 'availability', label: 'Availability' },
-  { id: 'teacher', label: 'By Teacher' }, { id: 'subject', label: 'By Subject' }, { id: 'reports', label: 'Reports' },
+  { id: 'statistics', label: 'Statistics' },
+  { id: 'management', label: 'Room management' },
+  { id: 'reports', label: 'Room reports' },
 ];
 
 export const RoomsWorkspaceTabs = ({ active, onChange }: { active: RoomsTab; onChange: (tab: RoomsTab) => void }) => (
