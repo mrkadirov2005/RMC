@@ -1,5 +1,5 @@
 import { CalendarEventButton } from './CalendarEventButton';
-import { clockLabels, DAY_MINUTES, eventPosition, HOUR_HEIGHT, timeToMinutes } from '../timeGridModel';
+import { clockLabels, DAY_MINUTES, HOUR_HEIGHT, layoutOverlappingEvents, timeToMinutes } from '../timeGridModel';
 import { localDateKey, type CalendarEvent } from '../calendarWorkspace';
 
 type DayColumn = { date: Date; label?: string };
@@ -34,7 +34,11 @@ export const CalendarTimeGrid = ({ days, events, onSelect, label }: {
             return <div role="gridcell" aria-label={date.toLocaleDateString()} key={key} className="relative border-r bg-white dark:bg-card" style={{ height: DAY_MINUTES / 60 * HOUR_HEIGHT }}>
               {clockLabels.slice(0, -1).map((time, hour) => <div key={time} className="absolute inset-x-0 border-t border-slate-200 dark:border-border" style={{ top: hour * HOUR_HEIGHT }} />)}
               {key === todayKey && <div className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-rose-500" style={{ top: nowTop }}><span className="absolute -top-1.5 left-0 h-3 w-3 -translate-x-1/2 rounded-full bg-rose-500" /></div>}
-              {dayEvents.map(event => { const position = eventPosition(event.start_time, event.end_time); return <div key={event.event_id} className="absolute inset-x-1 z-20 overflow-hidden" style={position}><CalendarEventButton event={event} compact={position.height < 48} onSelect={onSelect} /></div>; })}
+              {layoutOverlappingEvents(dayEvents).map(({ event, position }) => (
+                <div key={event.event_id} className="absolute z-20 overflow-hidden px-0.5" style={position}>
+                  <CalendarEventButton event={event} compact={position.height < 48} onSelect={onSelect} />
+                </div>
+              ))}
             </div>;
           })}
         </div>
