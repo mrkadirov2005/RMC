@@ -24,16 +24,6 @@ const schedule = async (centerId: number, filters: Filters) => {
       ) s ON true
       WHERE r.center_id = $1
         AND ($2::date IS NULL OR lower(r.day) = lower(trim(to_char($2::date, 'Day'))))
-        AND ($2::date IS NULL OR NOT EXISTS (
-          SELECT 1 FROM room_bookings rb2
-          JOIN room_slots rs2 ON rs2.slot_id = rb2.slot_id
-          JOIN rooms r2 ON r2.room_id = rs2.room_id
-          WHERE rb2.center_id = r.center_id AND rs2.slot_date = $2::date
-            AND r2.physical_room_id = r.physical_room_id
-            AND rs2.start_time < COALESCE(r.end_time, r.time + interval '1 hour')
-            AND rs2.end_time > r.time
-            AND lower(COALESCE(rb2.booking_status, 'confirmed')) <> 'cancelled'
-        ))
       UNION ALL
       SELECT r.physical_room_id, r.room_id, COALESCE(pr.name, r.room_number),
         trim(to_char(rs.slot_date, 'Day')), rs.slot_date, rs.start_time::text, rs.end_time::text,
