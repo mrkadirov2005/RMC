@@ -335,8 +335,9 @@ mirror_remote_postgres() {
 # a hand-rolled RS256 JWT (openssl) exchanged for an OAuth token — no Google
 # client library needed on the host.
 export_to_google_sheets() {
-  if [ -z "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE" ] || [ -z "$GOOGLE_SHEETS_SPREADSHEET_ID" ]; then
-    log "Google Sheets export skipped; GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE or GOOGLE_SHEETS_SPREADSHEET_ID is not set."
+  apps_script_url="${GOOGLE_APPS_SCRIPT_URL:-${APPS_SCRIPT_URL:-}}"
+  if [ -z "$apps_script_url" ]; then
+    log "Google Sheets export skipped; GOOGLE_APPS_SCRIPT_URL is not set."
     return 0
   fi
 
@@ -345,48 +346,14 @@ export_to_google_sheets() {
     return 0
   fi
 
-  if ! require_command jq || ! require_command openssl || ! require_command python3; then
-    log "ERROR: jq, openssl, and python3 are required for the Google Sheets export."
-    return 1
-  fi
-
-  if [ ! -f "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE" ]; then
-    log "ERROR: GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE not found: $GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE"
-    return 1
-  fi
-
-  log "Requesting a Google Sheets access token."
-  client_email="$(jq -r '.client_email' "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE")"
-  key_file="$RUN_DIR/.sheets_key.pem"
-  jq -r '.private_key' "$GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE" > "$key_file"
-  chmod 600 "$key_file"
-
-  jwt_now="$(date +%s)"
-  jwt_exp="$((jwt_now + 3600))"
-  jwt_header='{"alg":"RS256","typ":"JWT"}'
-  jwt_claims="$(printf '{"iss":"%s","scope":"https://www.googleapis.com/auth/spreadsheets","aud":"https://oauth2.googleapis.com/token","exp":%s,"iat":%s}' "$client_email" "$jwt_exp" "$jwt_now")"
-
-  jwt_header_b64="$(printf '%s' "$jwt_header" | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
-  jwt_claims_b64="$(printf '%s' "$jwt_claims" | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
-  jwt_signing_input="${jwt_header_b64}.${jwt_claims_b64}"
-  jwt_signature_b64="$(printf '%s' "$jwt_signing_input" | openssl dgst -sha256 -sign "$key_file" | openssl base64 -A | tr '+/' '-_' | tr -d '=')"
-  jwt="${jwt_signing_input}.${jwt_signature_b64}"
-  rm -f "$key_file"
-
-  token_response="$(curl -sS -X POST https://oauth2.googleapis.com/token \
-    -d "grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer" \
-    --data-urlencode "assertion=${jwt}")"
-  access_token="$(printf '%s' "$token_response" | jq -r '.access_token // empty')"
-
-  if [ -z "$access_token" ]; then
-    log "ERROR: Google Sheets auth failed: $token_response"
-    send_telegram_message "⚠️ RMC backup: nightly files sent fine, but the Google Sheets export failed (auth). Check /var/log/rmc-backup.log."
+  if ! require_command python3; then
+    log "ERROR: python3 is required for the Google Apps Script Sheets export."
     return 1
   fi
 
   sheets_tables="${GOOGLE_SHEETS_TABLES:-students,teachers,classes,payments,invoices,debts,attendance,teacher_salaries}"
   sheets_export_dir="$RUN_DIR/postgres_tables"
-  if GOOGLE_ACCESS_TOKEN="$access_token" python3 "$ROOT_DIR/scripts/sheets_export.py" "$GOOGLE_SHEETS_SPREADSHEET_ID" "$sheets_export_dir" "$sheets_tables" >> "$RUN_DIR/sheets_export.log" 2>&1; then
+  if GOOGLE_APPS_SCRIPT_URL="$apps_script_url" python3 "$ROOT_DIR/scripts/apps_script_sheets_export.py" "$sheets_export_dir" "$sheets_tables" >> "$RUN_DIR/sheets_export.log" 2>&1; then
     log "Google Sheets export completed."
   else
     log "ERROR: Google Sheets export failed — see $RUN_DIR/sheets_export.log"

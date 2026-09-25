@@ -1,11 +1,12 @@
 FROM mongo:7
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends curl ca-certificates postgresql-client \
+  && apt-get install -y --no-install-recommends curl ca-certificates python3 postgresql-client \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY scripts/backup.sh /app/scripts/backup.sh
+COPY scripts/apps_script_sheets_export.py /app/scripts/apps_script_sheets_export.py
 COPY backup/entrypoint.sh /app/entrypoint.sh
 RUN chmod 755 /app/scripts/backup.sh /app/entrypoint.sh
 

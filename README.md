@@ -62,6 +62,7 @@ It backs up:
 - MongoDB request logs with `mongodump` when Mongo is available
 - optional S3 upload via `BACKUP_S3_URI`
 - optional Telegram bot upload via `BACKUP_TELEGRAM_BOT_TOKEN` and `BACKUP_TELEGRAM_CHAT_ID`
+- optional Google Sheets export through `GOOGLE_APPS_SCRIPT_URL`
 - local retention cleanup via `BACKUP_RETENTION_DAYS`
 
 Configure these in `service/.env`:
@@ -77,9 +78,21 @@ BACKUP_EXPORT_POSTGRES_TABLES=true
 BACKUP_TELEGRAM_BOT_TOKEN=123456789:AA...
 BACKUP_TELEGRAM_CHAT_ID=-1001234567890
 BACKUP_TELEGRAM_CAPTION=RMC automated backup
+GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/your-deployment-id/exec
+GOOGLE_SHEETS_TABLES=students,teachers,classes,payments,invoices,debts,attendance,teacher_salaries
 ```
 
 For Telegram backups, add the bot to the target chat/channel first, then set the chat ID. The script sends one compressed archive for the whole backup run. Inside the archive, `postgres_*.dump` is the restore-ready full database backup and `postgres_tables/*.csv` contains readable exports for tables such as students, teachers, classes, payments, discounts, attendance, grades, and the rest of the public schema.
+
+When `GOOGLE_APPS_SCRIPT_URL` is configured, the backup worker sends the selected
+CSV tables to the Apps Script `push` endpoint. Apps Script owns the spreadsheet
+and writes the tables to its configured tabs; no Google service-account file or
+direct Sheets API token is required.
+
+Ready-to-paste Apps Script code is in `scripts/google_apps_script.gs`. In
+Apps Script, deploy it as a Web app, choose **Execute as me**, allow **Anyone**
+to access it, then copy the `/exec` deployment URL into
+`GOOGLE_APPS_SCRIPT_URL`.
 
 Run once manually:
 
