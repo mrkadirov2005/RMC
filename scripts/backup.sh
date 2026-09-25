@@ -37,9 +37,12 @@ GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE="${GOOGLE_SHEETS_SERVICE_ACCOUNT_FILE:-}"
 GOOGLE_SHEETS_SPREADSHEET_ID="${GOOGLE_SHEETS_SPREADSHEET_ID:-}"
 
 mkdir -p "$RUN_DIR"
+exec 2>> "$RUN_DIR/backup.log"
 
 log() {
-  printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*"
+  line="$(printf '%s %s\n' "$(date '+%Y-%m-%d %H:%M:%S')" "$*")"
+  printf '%s' "$line"
+  printf '%s' "$line" >> "$RUN_DIR/backup.log"
 }
 
 record_backup_started() {
@@ -72,7 +75,11 @@ send_telegram_message() {
 report_failure_on_exit() {
   exit_code=$?
   if [ "$exit_code" -ne 0 ]; then
-    record_backup_finished "failed" "Backup exited with code $exit_code."
+    failure_detail="$(tail -n 1 "$RUN_DIR/backup.log" 2>/dev/null || true)"
+    if [ -z "$failure_detail" ]; then
+      failure_detail="Backup exited with code $exit_code."
+    fi
+    record_backup_finished "failed" "$failure_detail"
     send_telegram_message "❌ RMC nightly backup FAILED (exit code ${exit_code}). Check /var/log/rmc-backup.log on the server."
   else
     record_backup_finished "success"

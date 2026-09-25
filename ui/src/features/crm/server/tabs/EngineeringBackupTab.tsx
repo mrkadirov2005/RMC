@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, Clock3, DatabaseBackup, Loader2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { AlertCircle, CheckCircle2, Clock3, DatabaseBackup, Loader2, Upload } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { systemAPI } from '@/shared/api/api';
+import { showToast } from '@/utils/toast';
 
 type BackupRun = {
   run_id: string;
@@ -29,6 +31,17 @@ const formatDate = (value: string | null) => {
 const EngineeringBackupTab = () => {
   const [stats, setStats] = useState<BackupStats | null>(null);
   const [error, setError] = useState('');
+  const [backupSubmitting, setBackupSubmitting] = useState(false);
+
+  const loadStats = useCallback(async () => {
+    try {
+      const response = await systemAPI.getBackupStats();
+      setStats(response.data);
+      setError('');
+    } catch (loadError: any) {
+      setError(loadError?.response?.data?.error || 'Could not load backup statistics.');
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -51,6 +64,20 @@ const EngineeringBackupTab = () => {
     };
   }, []);
 
+  const triggerBackup = async () => {
+    if (!window.confirm('Start a backup now and send it to the configured Telegram chat?')) return;
+    setBackupSubmitting(true);
+    try {
+      await systemAPI.triggerBackup();
+      showToast.success('Backup started. The history will update when it finishes.');
+      window.setTimeout(() => void loadStats(), 2000);
+    } catch (triggerError: any) {
+      showToast.error(triggerError?.response?.data?.error || 'Could not start backup.');
+    } finally {
+      setBackupSubmitting(false);
+    }
+  };
+
   const cards = [
     { label: 'Total backups', value: stats?.total ?? 0, icon: DatabaseBackup, color: 'text-primary' },
     { label: 'Successful', value: stats?.successful ?? 0, icon: CheckCircle2, color: 'text-emerald-600' },
@@ -68,6 +95,21 @@ const EngineeringBackupTab = () => {
           </CardContent>
         </Card>
       )}
+
+      <Card className="border-cyan-200 bg-cyan-50/60 dark:border-cyan-500/20 dark:bg-cyan-500/5">
+        <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-sm font-medium">Run backup now</p>
+            <p className="text-sm text-muted-foreground">
+              Starts the backup worker immediately and records the result here.
+            </p>
+          </div>
+          <Button type="button" className="gap-2 bg-cyan-600 text-white hover:bg-cyan-700" onClick={triggerBackup} disabled={backupSubmitting}>
+            <Upload className="h-4 w-4" />
+            {backupSubmitting ? 'Starting...' : 'Run backup now'}
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => {
@@ -122,7 +164,7 @@ const EngineeringBackupTab = () => {
                         </span>
                       </td>
                       <td className="px-2 py-3">{formatDate(run.completed_at)}</td>
-                      <td className="max-w-xs truncate px-2 py-3 text-red-600">{run.error_message || '—'}</td>
+                      <td className="max-w-[28rem] truncate px-2 py-3 text-red-600" title={run.error_message || undefined}>{run.error_message || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
