@@ -90,6 +90,9 @@ trap report_failure_on_exit EXIT
 backup_postgres() {
   local_file="$RUN_DIR/postgres_${DB_NAME}_${TIMESTAMP}.dump"
   log "Starting PostgreSQL full database backup: $local_file"
+  if require_command pg_dump; then
+    log "Using PostgreSQL client: $(pg_dump --version)"
+  fi
 
   if require_command pg_dump; then
     PGPASSWORD="$DB_PASSWORD" pg_dump \
