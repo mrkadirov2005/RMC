@@ -334,7 +334,12 @@ const StudentsPage = () => {
           </div>
         </TabsContent>
         <TabsContent value="statistics" className="mt-0">
-          <StudentsStatisticsTab students={pageStudents} teacherOptions={s.teacherOptions} loading={s.state.loading} />
+          <StudentsStatisticsTab
+            queryParams={s.studentParams}
+            teacherOptions={s.teacherOptions}
+            loading={s.state.loading}
+            active={activeTab === 'statistics'}
+          />
         </TabsContent>
         <TabsContent value="teachers" className="mt-0">
           <StudentsTeacherGroupsTab

@@ -10,6 +10,8 @@ export interface Student {
   student_id?: number;
   id?: number;
   center_id: number;
+  created_at?: string | null;
+  createdAt?: string | null;
   enrollment_number: string;
   first_name: string;
   last_name: string;

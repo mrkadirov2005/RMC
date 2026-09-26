@@ -1,7 +1,13 @@
+import { useEffect, useState } from 'react';
 import { Award, BookOpen, Coins, GraduationCap, School, ShieldCheck, UserCheck, Users, VenusAndMars } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { studentAPI } from '@/shared/api/api';
+import { useLanguage } from '@/i18n/LanguageContext';
+import type { StudentListParams } from '@/slices/studentsSlice';
 import type { Student } from '../types';
+import { StudentTimelineView } from './StudentTimelineView';
 
 interface Option {
   id?: number;
@@ -10,9 +16,10 @@ interface Option {
 }
 
 interface Props {
-  students: Student[];
+  queryParams: StudentListParams;
   teacherOptions: Option[];
   loading: boolean;
+  active: boolean;
 }
 
 const toNumberId = (value: unknown) => {
@@ -126,7 +133,64 @@ const CountList = ({
   </Card>
 );
 
-export const StudentsStatisticsTab = ({ students, teacherOptions, loading }: Props) => {
+export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, active }: Props) => {
+  const { t } = useLanguage();
+  const paramsKey = JSON.stringify(queryParams);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<'statistics' | 'timeline'>('statistics');
+
+  useEffect(() => {
+    if (!active) return;
+    let cancelled = false;
+    const loadAllFilteredStudents = async () => {
+      setStudentsLoading(true);
+      setStudentsError(null);
+      try {
+        const filters = JSON.parse(paramsKey) as StudentListParams;
+        const rows: Student[] = [];
+        let page = 1;
+        let total = Number.POSITIVE_INFINITY;
+        while (rows.length < total) {
+          const response = await studentAPI.getAll({ ...filters, page, limit: 100 });
+          const payload = (response as any).data ?? response;
+          const pageRows = Array.isArray(payload)
+            ? payload as Student[]
+            : Array.isArray(payload?.data)
+              ? payload.data as Student[]
+              : Array.isArray(payload?.items)
+                ? payload.items as Student[]
+                : [];
+          if (cancelled) return;
+          rows.push(...pageRows);
+          if (Array.isArray(payload)) {
+            total = rows.length;
+          } else {
+            const reportedTotal = Number(payload?.total);
+            total = Number.isFinite(reportedTotal) ? reportedTotal : rows.length + (pageRows.length === 100 ? 1 : 0);
+          }
+          if (pageRows.length === 0) {
+            if (rows.length < total) throw new Error('The student list response ended before all filtered records were loaded.');
+            break;
+          }
+          page += 1;
+        }
+        if (!cancelled) setStudents(rows);
+      } catch (error) {
+        if (!cancelled) {
+          setStudentsError(error instanceof Error ? error.message : 'Failed to load the filtered student roster.');
+        }
+      } finally {
+        if (!cancelled) setStudentsLoading(false);
+      }
+    };
+    loadAllFilteredStudents();
+    return () => {
+      cancelled = true;
+    };
+  }, [active, paramsKey]);
+
   const total = students.length;
   const teacherCounts = new Map<number, { id: number; name: string; count: number }>();
 
@@ -171,6 +235,23 @@ export const StudentsStatisticsTab = ({ students, teacherOptions, loading }: Pro
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" size="sm" variant={activeView === 'statistics' ? 'default' : 'outline'} onClick={() => setActiveView('statistics')}>
+          {t('Statistics')}
+        </Button>
+        <Button type="button" size="sm" variant={activeView === 'timeline' ? 'default' : 'outline'} onClick={() => setActiveView('timeline')}>
+          {t('Timeline')}
+        </Button>
+        <span className="ml-auto text-xs text-muted-foreground">{total.toLocaleString()} {t('students in current filter')}</span>
+      </div>
+      {studentsLoading ? (
+        <Card><CardContent className="py-8 text-center text-sm text-muted-foreground">{t('Loading filtered students...')}</CardContent></Card>
+      ) : studentsError ? (
+        <Card><CardContent className="py-8 text-center text-sm text-destructive">{t('Unable to load the complete filtered student roster.')}: {studentsError}</CardContent></Card>
+      ) : activeView === 'timeline' ? (
+        <StudentTimelineView students={students} />
+      ) : (
+      <>
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard label="Total students" value={total} sub={`${activeCount} active`} icon={Users} color="bg-blue-600" />
         <MetricCard label="Teacher assigned" value={`${percent(assignedTeacherCount, total)}%`} sub={`${assignedTeacherCount} students`} icon={UserCheck} color="bg-emerald-600" />
@@ -265,6 +346,8 @@ export const StudentsStatisticsTab = ({ students, teacherOptions, loading }: Pro
           </Table>
         </CardContent>
       </Card>
+      </>
+      )}
     </div>
   );
 };

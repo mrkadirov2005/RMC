@@ -397,7 +397,8 @@ const attendance = pgTable('attendance', {
 ]);
 
 const auditLogs = pgTable('audit_logs', {
-  auditLogId: serial('audit_log_id').primaryKey(),
+  // Existing deployments use the original audit_id column from 002_phase1.sql.
+  auditLogId: serial('audit_id').primaryKey(),
   centerId: integer('center_id'),
   userType: varchar('user_type', { length: 50 }),
   userId: integer('user_id'),

@@ -7,6 +7,7 @@ import type { OwnerManagerStatisticsCollections } from '../../types';
 import { buildStudentStatSlides } from './studentStats';
 import { StudentStatsChart } from './StudentStatsChart';
 import type { StudentChartMode } from './types';
+import { StudentTimelineView } from '../../../crm/students/components/StudentTimelineView';
 
 interface Props {
   data: any[];
@@ -17,6 +18,7 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
   const { t } = useLanguage();
   const [activeSlide, setActiveSlide] = useState(0);
   const [chartMode, setChartMode] = useState<StudentChartMode>('pie');
+  const [activeView, setActiveView] = useState<'statistics' | 'timeline'>('statistics');
   const [selectedTeacherId, setSelectedTeacherId] = useState('all');
   const classTeacherById = useMemo(() => {
     const lookup = new Map<number, number>();
@@ -65,6 +67,22 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
       <div className="mx-auto mb-4 max-w-lg rounded-md border border-slate-200 bg-white px-3 py-2 text-center text-sm font-black text-slate-900 shadow-sm dark:border-white/10 dark:bg-white/[0.05] dark:text-white">
         {t('Student analytics')}
       </div>
+      <div className="mx-auto mb-4 flex max-w-6xl gap-2">
+        <button
+          type="button"
+          onClick={() => setActiveView('statistics')}
+          className={cn('rounded-md px-3 py-2 text-xs font-black', activeView === 'statistics' ? 'bg-blue-600 text-white' : 'border bg-white text-slate-700 dark:bg-white/[0.04] dark:text-white')}
+        >
+          {t('Statistics')}
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveView('timeline')}
+          className={cn('rounded-md px-3 py-2 text-xs font-black', activeView === 'timeline' ? 'bg-blue-600 text-white' : 'border bg-white text-slate-700 dark:bg-white/[0.04] dark:text-white')}
+        >
+          {t('Timeline')}
+        </button>
+      </div>
 
       <div className="mx-auto mb-4 flex max-w-6xl flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -88,10 +106,15 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
         </Select>
       </div>
 
-      <NavButton direction="left" onClick={() => goToSlide(activeSlide - 1)} />
-      <NavButton direction="right" onClick={() => goToSlide(activeSlide + 1)} />
-
-      <div className="mx-auto max-w-6xl rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
+      {activeView === 'timeline' ? (
+        <div className="mx-auto max-w-6xl">
+          <StudentTimelineView students={filteredStudents} />
+        </div>
+      ) : (
+      <>
+        <NavButton direction="left" onClick={() => goToSlide(activeSlide - 1)} />
+        <NavButton direction="right" onClick={() => goToSlide(activeSlide + 1)} />
+        <div className="mx-auto max-w-6xl rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <div className="min-w-0 flex-1">
             <p className="truncate text-base font-black text-slate-950 dark:text-white">{t(selectedSlide.title)}</p>
@@ -130,7 +153,9 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
             </button>
           ))}
         </div>
-      </div>
+        </div>
+      </>
+      )}
     </div>
   );
 };
