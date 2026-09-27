@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from 'vitest';
 import { RoomTimetableSheet } from '../components/RoomTimetableSheet';
 import type { CalendarEvent } from '../calendarWorkspace';
 
+vi.mock('@/i18n/LanguageContext', () => ({
+  useLanguage: () => ({ t: (value: string) => value }),
+}));
+
 // 2026-08-17 is a Monday, which falls in the "mwf" weekday pattern.
 const recurringEvent: CalendarEvent = {
   event_id: 'planned-class-1-2026-08-17',
@@ -47,7 +51,7 @@ describe('RoomTimetableSheet drag and drop', () => {
     render(
       <RoomTimetableSheet
         events={[recurringEvent]}
-        roomNames={['101']}
+        roomNames={['101', '102']}
         onSelect={vi.fn()}
         onMove={onMove}
         canMove
@@ -60,9 +64,7 @@ describe('RoomTimetableSheet drag and drop', () => {
     const dataTransfer = makeDataTransfer();
     fireEvent.dragStart(source, { dataTransfer });
 
-    const freeCells = screen.getAllByText('Free');
-    expect(freeCells.length).toBeGreaterThan(0);
-    const targetCell = freeCells[0].closest('td')!;
+    const targetCell = source.closest('tr')!.children[3] as HTMLTableCellElement;
 
     fireEvent.dragOver(targetCell, { dataTransfer });
     fireEvent.drop(targetCell, { dataTransfer });
@@ -70,8 +72,10 @@ describe('RoomTimetableSheet drag and drop', () => {
     expect(onMove).toHaveBeenCalledTimes(1);
     const [movedEvent, room, pattern] = onMove.mock.calls[0];
     expect(movedEvent.event_id).toBe(recurringEvent.event_id);
-    expect(room).toBe('101');
+    expect(room).toBe('102');
     expect(pattern).toBe('mwf');
+    expect(onMove.mock.calls[0][3]).toBe('08:00');
+    expect(onMove.mock.calls[0][4]).toBe('09:00');
   });
 
   it('allows dragging a lesson that already has a session created but not yet started', () => {
@@ -79,7 +83,7 @@ describe('RoomTimetableSheet drag and drop', () => {
     render(
       <RoomTimetableSheet
         events={[sessionEvent]}
-        roomNames={['101']}
+        roomNames={['101', '102']}
         onSelect={vi.fn()}
         onMove={onMove}
         canMove
@@ -91,7 +95,7 @@ describe('RoomTimetableSheet drag and drop', () => {
 
     const dataTransfer = makeDataTransfer();
     fireEvent.dragStart(source, { dataTransfer });
-    const targetCell = screen.getAllByText('Free')[0].closest('td')!;
+    const targetCell = source.closest('tr')!.children[3] as HTMLTableCellElement;
     fireEvent.dragOver(targetCell, { dataTransfer });
     fireEvent.drop(targetCell, { dataTransfer });
 

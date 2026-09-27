@@ -119,6 +119,42 @@ describe('calendar service', () => {
     ]);
   });
 
+  test('uses legacy room assignments when the class has no usable room schedule', async () => {
+    repository.datedSessions.mockResolvedValue([]);
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 3, class_name: 'Legacy group', section: '{bad json' },
+    ]);
+    roomInsights.getSchedule.mockResolvedValue([
+      planned({ source: 'recurring', room_name: '1 xona', start_time: '08:30', end_time: '10:00' }),
+    ]);
+
+    await expect(service.events(2, { from: '2026-08-10', to: '2026-08-10' })).resolves.toEqual([
+      expect.objectContaining({
+        event_id: 'planned-9-2026-08-10',
+        class_id: 3,
+        room_name: 'Room 1',
+        start_time: '08:30',
+        end_time: '10:00',
+      }),
+    ]);
+  });
+
+  test('projects Uzbek weekday arrays and strings into the weekly calendar', async () => {
+    repository.datedSessions.mockResolvedValue([]);
+    repository.recurringDefinitions.mockResolvedValue([
+      { class_id: 31, class_name: 'MWF class', room_name: 'Room 1', section: JSON.stringify({ days: ['Dush', 'Chor', 'Juma'], time: '08:00', endTime: '09:30' }) },
+      { class_id: 32, class_name: 'TTS class', room_name: 'Room 1', section: JSON.stringify({ days: 'Sesh pay shanba', time: '10:00', endTime: '11:30' }) },
+      { class_id: 33, class_name: 'Sunday class', room_name: 'Room 1', section: JSON.stringify({ days: ['Yakshanba'], time: '12:00', endTime: '13:30' }) },
+    ]);
+    roomInsights.getSchedule.mockImplementation(() => Promise.resolve([]));
+
+    const rows = await service.events(2, { from: '2026-08-10', to: '2026-08-16' });
+
+    expect(rows.filter(row => row.class_id === 31).map(row => row.date)).toEqual(['2026-08-10', '2026-08-12', '2026-08-14']);
+    expect(rows.filter(row => row.class_id === 32).map(row => row.date)).toEqual(['2026-08-11', '2026-08-13', '2026-08-15']);
+    expect(rows.filter(row => row.class_id === 33).map(row => row.date)).toEqual(['2026-08-16']);
+  });
+
   test('does not duplicate a class-section fallback already projected by Rooms', async () => {
     repository.datedSessions.mockResolvedValue([]);
     repository.recurringDefinitions.mockResolvedValue([

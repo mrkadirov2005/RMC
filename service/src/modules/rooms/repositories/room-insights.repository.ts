@@ -60,7 +60,6 @@ const physicalRooms = async (centerId: number) => (await pool.query(`
     array_remove(array_agg(r.room_id ORDER BY r.room_id), NULL) AS assignment_ids
   FROM physical_rooms pr LEFT JOIN rooms r ON r.physical_room_id = pr.physical_room_id
   WHERE pr.center_id = $1
-    AND EXISTS (SELECT 1 FROM rooms existing_room WHERE existing_room.physical_room_id = pr.physical_room_id)
   GROUP BY pr.physical_room_id ORDER BY pr.name
 `, [centerId])).rows;
 

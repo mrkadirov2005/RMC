@@ -1,6 +1,6 @@
 import type { CalendarEvent } from './calendarWorkspace';
 
-export const ROOM_BAND_SIZE = 5;
+export const ROOM_BAND_SIZE = 6;
 export const weekdayPatterns = [
   { id: 'mwf', label: 'Monday · Wednesday · Friday', weekdays: [1, 3, 5] },
   { id: 'tts', label: 'Tuesday · Thursday · Saturday', weekdays: [2, 4, 6] },
@@ -39,23 +39,32 @@ export const buildPatternRows = (events: CalendarEvent[], roomNames: string[]) =
   }));
 };
 
-export const buildTimeGridRows = (events: CalendarEvent[], roomNames: string[], slots: Array<{ start: string; end: string }>) =>
-  slots.map((slot, index) => ({
-    ...slot,
-    index,
-    byRoom: new Map(roomNames.map(room => {
-      const unique = new Map<string, CalendarEvent>();
-      events
-        .filter(event =>
-          event.room_name === room
-          && event.start_time.slice(0, 5) >= slot.start
-          && event.start_time.slice(0, 5) < slot.end
-        )
-        .sort((a, b) => a.start_time.localeCompare(b.start_time) || a.end_time.localeCompare(b.end_time))
-        .forEach(event => {
-          const key = `${event.class_id ?? event.class_name}|${event.teacher_id ?? event.teacher_name ?? ''}|${event.start_time.slice(0, 5)}|${event.end_time.slice(0, 5)}`;
-          if (!unique.has(key)) unique.set(key, event);
-        });
-      return [room, [...unique.values()]] as const;
-    })),
+export const buildTimeGridRows = (events: CalendarEvent[], roomNames: string[]) => {
+  const eventsByRoom = new Map(roomNames.map(room => {
+    const unique = new Map<string, CalendarEvent>();
+    events
+      .filter(event => event.room_name === room)
+      .sort((a, b) => Number(Boolean(b.conflict)) - Number(Boolean(a.conflict))
+        || a.start_time.localeCompare(b.start_time)
+        || a.end_time.localeCompare(b.end_time))
+      .forEach(event => {
+        const start = event.start_time.slice(0, 5);
+        const end = event.end_time.slice(0, 5);
+        const key = `${event.class_id ?? event.class_name}|${event.teacher_id ?? event.teacher_name ?? ''}|${start}|${end}`;
+        if (!unique.has(key)) unique.set(key, event);
+      });
+    return [room, [...unique.values()]] as const;
   }));
+  const startTimes = [...new Set([...eventsByRoom.values()].flatMap(roomEvents =>
+    roomEvents.map(event => event.start_time.slice(0, 5))
+  ))].sort();
+
+  return startTimes.map((start, index) => ({
+    start,
+    index,
+    byRoom: new Map(roomNames.map(room => [
+      room,
+      (eventsByRoom.get(room) || []).filter(event => event.start_time.slice(0, 5) === start),
+    ])),
+  }));
+};

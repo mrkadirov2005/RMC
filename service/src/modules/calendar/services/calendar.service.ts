@@ -29,12 +29,21 @@ const allowedSources = new Set(['recurring', 'booking', 'session']);
 const normalizeDay = (value: unknown) => {
   const day = String(value ?? '').trim().toLowerCase();
   const aliases: Record<string, string> = {
-    sun: 'sunday', mon: 'monday', tue: 'tuesday', wed: 'wednesday',
-    thu: 'thursday', fri: 'friday', sat: 'saturday',
+    sunday: 'sunday', sun: 'sunday', yakshanba: 'sunday', yak: 'sunday',
+    monday: 'monday', mon: 'monday', dushanba: 'monday', dush: 'monday',
+    tuesday: 'tuesday', tue: 'tuesday', seshanba: 'tuesday', sesh: 'tuesday',
+    wednesday: 'wednesday', wed: 'wednesday', chorshanba: 'wednesday', chor: 'wednesday',
+    thursday: 'thursday', thu: 'thursday', payshanba: 'thursday', pay: 'thursday',
+    friday: 'friday', fri: 'friday', juma: 'friday',
+    saturday: 'saturday', sat: 'saturday', shanba: 'saturday',
   };
-  return aliases[day.slice(0, 3)] || day;
+  return aliases[day] || aliases[day.slice(0, 3)] || day;
 };
-const roomKey = (value: unknown) => String(value ?? '').trim().toLowerCase();
+const roomKey = (value: unknown) => {
+  const normalized = String(value ?? '').trim().toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ');
+  const numberedRoom = normalized.match(/^(?:room\s*)?(\d+)\s*(?:xona)?$/);
+  return numberedRoom ? numberedRoom[1] : normalized;
+};
 const capacityFields = (studentCount: unknown, capacity: unknown) => ({
   student_count: Number(studentCount || 0),
   capacity: capacity == null ? null : Number(capacity),
@@ -50,8 +59,11 @@ const parseDefinition = (row: any) => {
     const schedule = JSON.parse(row.section);
     const start = String(schedule.time || '').slice(0, 8);
     const end = String(schedule.endTime || addMinutes(start, 60)).slice(0, 8);
-    if (!start || !end || end <= start || !Array.isArray(schedule.days)) return null;
-    return { ...row, start_time: start, end_time: end, days: schedule.days.map(normalizeDay) };
+    const rawDays = Array.isArray(schedule.days)
+      ? schedule.days
+      : typeof schedule.days === 'string' ? schedule.days.split(/[,\s·]+/) : [];
+    if (!start || !end || end <= start || rawDays.length === 0) return null;
+    return { ...row, start_time: start, end_time: end, days: rawDays.map(normalizeDay) };
   } catch {
     return null;
   }
@@ -101,10 +113,12 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
   const parsedDefinitions = definitions.map(parseDefinition).filter(Boolean);
   const definitionByClass = new Map(parsedDefinitions.map((definition: any) => [Number(definition.class_id), definition]));
   schedules.forEach(({ date, rows }: any) => {
-    // A group's recurring timetable is canonical in classes.section. Legacy
-    // recurring rows in rooms may contain days that are no longer selected.
-    // Keep only dated bookings here; class definitions are projected below.
-    rows.splice(0, rows.length, ...rows.filter((row: any) => row.source === 'booking'));
+    // Prefer classes.section, but preserve a legacy assignment if its class
+    // definition is missing or does not resolve to an active physical room.
+    rows.splice(0, rows.length, ...rows.filter((row: any) => {
+      const definition = definitionByClass.get(Number(row.class_id)) as any;
+      return row.source === 'booking' || !definition || !resolveAvailableRoom(definition);
+    }));
     const weekday = normalizeDay(new Date(`${date}T00:00:00Z`).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' }));
     parsedDefinitions.forEach((definition: any) => {
       if (!definition.days.includes(weekday)) return;

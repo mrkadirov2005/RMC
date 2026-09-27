@@ -1916,6 +1916,7 @@ const translations: Record<string, string> = {
 
   // ── Room & lesson headers ────────────────────────────────────
   'Room Slots Management': 'Xona slotlarini boshqarish',
+  'No lessons scheduled.': 'Darslar rejalashtirilmagan.',
   Timeline: 'Vaqt jadvali',
   'Student timeline': "O'quvchilar vaqt jadvali",
   'Cumulative students by registration date.': "Ro'yxatdan o'tgan sana bo'yicha jami o'quvchilar.",
