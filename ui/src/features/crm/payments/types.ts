@@ -61,6 +61,7 @@ export interface Student {
   first_name: string;
   last_name: string;
   phone?: string;
+  date_of_birth?: string;
   class_id?: number;
   teacher_id?: number;
   class_name?: string;

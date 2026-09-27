@@ -20,6 +20,7 @@ import { PaymentsFolderTabs } from './components/PaymentsFolderTabs';
 import { PaymentTeacherDetail } from './components/PaymentTeacherDetail';
 import { PaymentListView } from './components/PaymentListView';
 import { PaymentFormDialog } from './components/PaymentFormDialog';
+import { getPaymentStudentGroupOptions } from './utils/paymentStudentGroups';
 
 // Renders the payments page screen.
 const PaymentsPage = () => {
@@ -57,6 +58,10 @@ const PaymentsPage = () => {
   const selectedClass = classes.find(
     (classItem) => Number(classItem.class_id || classItem.id || 0) === Number(selectedStudent?.class_id || 0)
   );
+  const studentGroupOptions = useMemo(
+    () => getPaymentStudentGroupOptions(selectedStudent, students, classes),
+    [classes, selectedStudent, students]
+  );
   const selectedStudentHistory = useMemo(
     () =>
       state.items.filter(
@@ -85,6 +90,30 @@ const PaymentsPage = () => {
       return changed ? next : current;
     });
   }, [selectedClass?.payment_amount, selectedStudent, setFormData]);
+
+  const handleStudentGroupChange = (studentId: number) => {
+    const targetStudent = students.find(
+      (student) => Number(student.student_id || student.id || 0) === studentId
+    );
+    if (!targetStudent) return;
+    const targetClass = classes.find(
+      (classItem) => Number(classItem.class_id || classItem.id || 0) === Number(targetStudent.class_id || 0)
+    );
+    setFormData((current) => ({
+      ...current,
+      student_id: studentId,
+      center_id: Number(targetStudent.center_id || current.center_id || 0),
+      amount: Number(targetClass?.payment_amount || 0) || undefined,
+      discount_id: null,
+      discount_kind: null,
+      discount_value_type: null,
+      discount_value: 0,
+      discount_amount: 0,
+      original_amount: undefined,
+      final_amount: undefined,
+      is_complete: false,
+    }));
+  };
 
   const pageTitle = !selectedFolder
     ? t('Payments Management')
@@ -190,6 +219,8 @@ const PaymentsPage = () => {
                 }
               : null
           }
+          studentGroupOptions={studentGroupOptions}
+          onStudentGroupChange={handleStudentGroupChange}
           paymentHistory={selectedStudentHistory}
           historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
           amountHint={

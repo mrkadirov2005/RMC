@@ -1,6 +1,7 @@
 import { classAPI, dataAPI, studentAPI } from '@/shared/api/api';
 
 export const studentsApi = {
+  getAll: (params?: Record<string, unknown>) => studentAPI.getAll(params),
   importCsv: (csv: string) => dataAPI.importEntity('students', csv),
   pushToSheets: () => dataAPI.pushEntityToSheets('students'),
   pullFromSheets: () => dataAPI.pullEntityFromSheets('students'),

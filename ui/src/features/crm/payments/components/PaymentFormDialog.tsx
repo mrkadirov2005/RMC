@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SelectField } from '../../students/components/SelectField';
 import { formLabelClassName } from '@/components/ui/form-control';
 import { cn } from '@/lib/utils';
 import type { Payment } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
 import { discountAPI } from '../api';
+import type { PaymentStudentGroupOption } from '../utils/paymentStudentGroups';
 import {
   getMonthKey,
   getMonthLabel,
@@ -45,6 +47,8 @@ interface PaymentFormDialogProps {
   showStudentSelect?: boolean;
   showCenterSelect?: boolean;
   selectedStudent?: StudentSummary | null;
+  studentGroupOptions?: PaymentStudentGroupOption[];
+  onStudentGroupChange?: (studentId: number) => void;
   paymentHistory?: Partial<Payment>[];
   historyExpectedAmount?: number;
   amountHint?: string;
@@ -85,6 +89,8 @@ export const PaymentFormDialog = ({
   showStudentSelect = false,
   showCenterSelect = false,
   selectedStudent,
+  studentGroupOptions = [],
+  onStudentGroupChange,
   paymentHistory = [],
   historyExpectedAmount = 0,
   amountHint,
@@ -247,9 +253,27 @@ export const PaymentFormDialog = ({
             </div>
             <div className={statClass}>
               <p className={formLabelClassName}>Group</p>
-              <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
-                {selectedStudent?.className || 'No group attached'}
-              </p>
+              {studentGroupOptions.length > 1 && onStudentGroupChange ? (
+                <Select
+                  value={String(formData.student_id || '')}
+                  onValueChange={(value) => onStudentGroupChange(Number(value))}
+                >
+                  <SelectTrigger className="mt-2 w-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none focus:ring-0">
+                    <SelectValue placeholder="Choose group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {studentGroupOptions.map((option) => (
+                      <SelectItem key={option.studentId} value={String(option.studentId)}>
+                        {option.groupName}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  {selectedStudent?.className || 'No group attached'}
+                </p>
+              )}
             </div>
             <div className={statClass}>
               <p className={formLabelClassName}>Current amount</p>

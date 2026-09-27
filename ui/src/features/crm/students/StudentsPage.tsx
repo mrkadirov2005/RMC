@@ -15,6 +15,7 @@ import { StudentsFilterPanel } from './components/StudentsFilterPanel';
 import { StudentsFiltersBar } from './components/StudentsFiltersBar';
 import { StudentFormDialog } from './components/StudentFormDialog';
 import { StudentsStatisticsTab } from './components/StudentsStatisticsTab';
+import { MultiGroupStudentsTab } from './components/MultiGroupStudentsTab';
 import { StudentsTableView } from './components/StudentsTableView';
 import { StudentsTeacherGroupsTab } from './components/StudentsTeacherGroupsTab';
 import { useStudentsPage } from './hooks/useStudentsPage';
@@ -215,6 +216,7 @@ const StudentsPage = () => {
           <TabsList className="bg-slate-100/80 dark:bg-muted">
             <TabsTrigger value="students">{t('Students')}</TabsTrigger>
             <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
+            <TabsTrigger value="multi-group-students">{t('Multiple groups')}</TabsTrigger>
             <TabsTrigger value="teachers">Teachers</TabsTrigger>
           </TabsList>
           <div className="owner-primary-card flex h-10 min-w-[145px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm dark:border-border dark:bg-card">
@@ -339,6 +341,44 @@ const StudentsPage = () => {
             teacherOptions={s.teacherOptions}
             loading={s.state.loading}
             active={activeTab === 'statistics'}
+          />
+        </TabsContent>
+        <TabsContent value="multi-group-students" className="mt-0">
+          <MultiGroupStudentsTab
+            queryParams={s.studentParams}
+            active={activeTab === 'multi-group-students'}
+            searchTerm={s.searchTerm}
+            setSearchTerm={s.setSearchTerm}
+            showFilters={s.showFilters}
+            setShowFilters={s.setShowFilters}
+            hasActiveFilters={s.hasActiveFilters}
+            clearFilters={s.clearFilters}
+            filters={{
+              gender: s.filterGender,
+              status: s.filterStatus,
+              school: s.filterSchool,
+              classId: s.filterClassId,
+              teacherId: s.filterTeacherId,
+              subjectId: s.filterSubjectId,
+              level: s.filterLevel,
+              address: s.filterAddress,
+              age: s.filterAge,
+              onGender: s.setFilterGender,
+              onStatus: s.setFilterStatus,
+              onSchool: s.setFilterSchool,
+              onClassId: s.setFilterClassId,
+              onTeacherId: s.setFilterTeacherId,
+              onSubjectId: s.setFilterSubjectId,
+              onLevel: s.setFilterLevel,
+              onAddress: s.setFilterAddress,
+              onAge: s.setFilterAge,
+            }}
+            schoolOptions={schoolOptions}
+            classOptions={s.classOptions}
+            teacherOptions={s.teacherOptions}
+            subjectOptions={s.subjectOptions}
+            levelOptions={levelOptions}
+            addressOptions={addressOptions}
           />
         </TabsContent>
         <TabsContent value="teachers" className="mt-0">

@@ -38,23 +38,36 @@ export const selectCenterItems = (state: RootState) => state.centers.items as an
 // Selects payment items.
 export const selectPaymentItems = (state: RootState) => state.payments.items as any[];
 
-export const selectStudentOptions = createSelector([selectStudentItems], (students): SelectOption[] =>
-  students
+export const selectStudentOptions = createSelector([selectStudentItems], (students): SelectOption[] => {
+  const options = students
     .map<SelectOption | null>((student) => {
       const id = firstId(student, ['student_id', 'id']);
       if (!id) return null;
       const firstName = String(student?.first_name || '').trim();
       const lastName = String(student?.last_name || '').trim();
       const enrollment = String(student?.enrollment_number || '').trim();
+      const classId = firstId(student, ['class_id']);
+      const className = String(student?.class_name || '').trim();
       const baseLabel = [firstName, lastName].filter(Boolean).join(' ').trim() || `Student ${id}`;
+      const enrollmentLabel = enrollment ? `${baseLabel} (${enrollment})` : baseLabel;
+      const groupLabel = classId || className
+        ? formatGroupLabel({ class_id: classId || undefined, class_name: className || undefined })
+        : '';
       return {
         id,
         value: id,
-        label: enrollment ? `${baseLabel} (${enrollment})` : baseLabel,
+        label: groupLabel ? `${enrollmentLabel} · ${groupLabel}` : enrollmentLabel,
       };
     })
-    .filter((option): option is SelectOption => option !== null)
-);
+    .filter((option): option is SelectOption => option !== null);
+  const labelCounts = new Map<string, number>();
+  options.forEach(({ label }) => labelCounts.set(label, (labelCounts.get(label) || 0) + 1));
+  return options.map((option) => (
+    (labelCounts.get(option.label) || 0) > 1
+      ? { ...option, label: `${option.label} · Student #${option.id}` }
+      : option
+  ));
+});
 
 export const selectTeacherOptions = createSelector([selectTeacherItems], (teachers): SelectOption[] =>
   teachers

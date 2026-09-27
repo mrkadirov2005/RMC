@@ -41,6 +41,42 @@ describe('option selectors', () => {
     expect(options[0].id).toBe(7);
   });
 
+  it('distinguishes students with the same name by their group', () => {
+    const options = selectors.selectStudentOptions(
+      state({
+        students: {
+          items: [
+            { student_id: 1, first_name: 'Ada', last_name: 'Lovelace', class_id: 10, class_name: 'Math' },
+            { student_id: 2, first_name: 'Ada', last_name: 'Lovelace', class_id: 20, class_name: 'English' },
+          ],
+        },
+      }),
+    );
+
+    expect(options.map(({ value, label }) => ({ value, label }))).toEqual([
+      { value: 1, label: 'Ada Lovelace · Math' },
+      { value: 2, label: 'Ada Lovelace · English' },
+    ]);
+  });
+
+  it('adds student IDs when otherwise identical records have identical labels', () => {
+    const options = selectors.selectStudentOptions(
+      state({
+        students: {
+          items: [
+            { student_id: 1, first_name: 'Ada', class_id: 10, class_name: 'Math' },
+            { student_id: 2, first_name: 'Ada', class_id: 10, class_name: 'Math' },
+          ],
+        },
+      }),
+    );
+
+    expect(options.map(({ label }) => label)).toEqual([
+      'Ada · Math · Student #1',
+      'Ada · Math · Student #2',
+    ]);
+  });
+
   it.each([
     [{ student_id: 0 }],
     [{ student_id: -1 }],
