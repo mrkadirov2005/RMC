@@ -134,7 +134,18 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
 
   const totalCollected = monthPayments.reduce((sum, payment) => sum + getOwnerPaymentAmount(payment), 0);
   const totalSalary = Math.round((totalCollected * salaryPercent) / 100);
-  const expectedMonthlyTotal = collections.students.reduce((sum, student) => sum + Number(student?.payment_amount || 0), 0);
+  const classPaymentAmountById = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const cls of collections.classes) {
+      const classId = getId(cls, 'class_id');
+      if (classId) map.set(classId, Number(cls?.payment_amount || 0));
+    }
+    return map;
+  }, [collections.classes]);
+  const expectedMonthlyTotal = collections.students.reduce(
+    (sum, student) => sum + Number(student?.payment_amount || classPaymentAmountById.get(Number(student?.class_id || 0)) || 0),
+    0
+  );
   const unpaidEstimate = Math.max(expectedMonthlyTotal - totalCollected, 0);
   const filteredTeachers = teacherRows.filter((row) =>
     row.teacherName.toLowerCase().includes(searchTerm.trim().toLowerCase())

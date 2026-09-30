@@ -319,6 +319,8 @@ export const classAPI = {
     apiClient.delete(`/classes/${id}/sessions/${sessionId}/purge`),
   createSession: (id: number, data: { session_date: string; start_time: string; duration_minutes?: number; teacher_id?: number; center_id?: number }) =>
     apiClient.post(`/classes/${id}/sessions`, data),
+  updateSession: (id: number, sessionId: number, data: { start_time: string; end_time: string }) =>
+    apiClient.patch(`/classes/${id}/sessions/${sessionId}`, data),
 };
 
 

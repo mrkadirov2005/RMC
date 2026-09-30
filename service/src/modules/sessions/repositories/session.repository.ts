@@ -117,6 +117,26 @@ const deleteUpcoming = async (classId: number, fromDate: string, toDate?: string
   return { deleted: rows.length };
 };
 
+const updateTime = async (
+  classId: number,
+  sessionId: number,
+  fields: { start_time: string; end_time: string; duration_minutes: number },
+  centerId?: number,
+  teacherId?: number
+) => {
+  const rows = await db
+    .update(sessions)
+    .set({
+      startTime: fields.start_time,
+      endTime: fields.end_time,
+      durationMinutes: fields.duration_minutes,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(and(eq(sessions.sessionId, sessionId), eq(sessions.classId, classId), isNull(sessions.deletedAt), ...scoped(centerId, teacherId)))
+    .returning(selection);
+  return rows[0];
+};
+
 const deleteById = async (classId: number, sessionId: number, centerId?: number, teacherId?: number) => {
   const rows = await db
     .update(sessions)
@@ -143,6 +163,6 @@ const purgeById = async (classId: number, sessionId: number, centerId?: number, 
   return { deleted: rows.length };
 };
 
-module.exports = { create, bulkInsert, findByClass, findByClasses, deleteUpcoming, deleteById, softDeleteByClass, purgeById };
+module.exports = { create, bulkInsert, findByClass, findByClasses, deleteUpcoming, updateTime, deleteById, softDeleteByClass, purgeById };
 
 export {};

@@ -155,6 +155,16 @@ class CreateClassSessionDto {
   duration_minutes?: number;
 }
 
+class UpdateClassSessionDto {
+  @IsString()
+  @IsNotEmpty()
+  start_time!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  end_time!: string;
+}
+
 class GenerateClassSessionsDto {
   @IsOptional()
   @Type(() => Number)
@@ -193,6 +203,7 @@ module.exports = {
   CreateClassDto,
   UpdateClassDto,
   CreateClassSessionDto,
+  UpdateClassSessionDto,
   GenerateClassSessionsDto,
   DeleteUpcomingSessionsDto,
 };

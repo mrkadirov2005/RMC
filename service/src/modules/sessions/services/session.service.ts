@@ -145,6 +145,20 @@ const deleteUpcomingSessions = (params: {
   return sessionRepository.deleteUpcoming(classId, fromDate, toDate, centerId, teacherId);
 };
 
+const updateSessionTime = (params: {
+  classId: number;
+  sessionId: number;
+  centerId?: number;
+  teacherId?: number;
+  startTime: string;
+  endTime: string;
+}) => {
+  const { classId, sessionId, centerId, teacherId, startTime, endTime } = params;
+  const durationMinutes = minutesBetweenTimes(startTime, endTime);
+  if (!durationMinutes) return Promise.resolve({ error: 'invalid_time' as const });
+  return sessionRepository.updateTime(classId, sessionId, { start_time: startTime, end_time: endTime, duration_minutes: durationMinutes }, centerId, teacherId);
+};
+
 const deleteSessionById = (params: {
   classId: number;
   sessionId: number;
@@ -189,12 +203,13 @@ const createSession = async (params: {
   });
 };
 
-module.exports = { 
+module.exports = {
   createSession,
-  generateMonthlySessions, 
-  listByClass, 
+  generateMonthlySessions,
+  listByClass,
   listByClasses,
-  deleteUpcomingSessions, 
+  deleteUpcomingSessions,
+  updateSessionTime,
   deleteSessionById,
   purgeSessionById
 };

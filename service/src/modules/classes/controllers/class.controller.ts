@@ -340,6 +340,52 @@ const purgeClassSessionById = async (req: any, res: any) => {
   }
 };
 
+const updateClassSession = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Center scope required.' });
+    }
+    if (!centerId && isGlobal) {
+      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    }
+    if (req.user?.userType === 'student') {
+      return res.status(403).json({ error: 'Access denied.' });
+    }
+
+    const classId = Number(req.params.id);
+    const sessionId = Number(req.params.sessionId);
+    if (!Number.isFinite(sessionId)) {
+      return res.status(400).json({ error: 'sessionId is required.' });
+    }
+
+    const startTime = String(req.body.start_time || '').slice(0, 5);
+    const endTime = String(req.body.end_time || '').slice(0, 5);
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(endTime) || endTime <= startTime) {
+      return res.status(400).json({ error: 'A valid start_time and end_time (with end after start) are required.' });
+    }
+
+    const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
+    const updated = await sessionService.updateSessionTime({
+      classId,
+      sessionId,
+      centerId: centerId ?? undefined,
+      teacherId,
+      startTime,
+      endTime,
+    });
+
+    if (!updated || (updated as any).error) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json(updated);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to update session', details: error.message || String(error) });
+  }
+};
+
 const createClassSession = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -377,6 +423,7 @@ module.exports = {
   deleteClass,
   purgeClass,
   createClassSession,
+  updateClassSession,
   generateClassSessions,
   getClassSessions,
   getBulkClassSessions,

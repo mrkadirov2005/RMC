@@ -13,6 +13,7 @@ const {
   GenerateClassSessionsDto,
   IdParamDto,
   UpdateClassDto,
+  UpdateClassSessionDto,
 } = require('../dtos/request.dto');
 const classController=require('../modules/classes/controllers/class.controller');
 /**
@@ -217,6 +218,7 @@ router_class.delete('/:id/sessions', requireAuth, validateParams(IdParamDto), va
  *       200:
  *         description: Session deleted
  */
+router_class.patch('/:id/sessions/:sessionId', requireAuth, validateParams(ClassSessionParamDto), validateBody(UpdateClassSessionDto), classController.updateClassSession);
 router_class.delete('/:id/sessions/:sessionId', requireAuth, validateParams(ClassSessionParamDto), classController.deleteClassSessionById);
 router_class.delete('/:id/sessions/:sessionId/purge', requireAuth, requireMuzaffarHardDelete, validateParams(ClassSessionParamDto), classController.purgeClassSessionById);
 

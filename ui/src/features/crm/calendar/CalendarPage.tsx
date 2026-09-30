@@ -11,6 +11,7 @@ import { fetchStudents } from '@/slices/studentsSlice';
 import { showToast } from '@/utils/toast';
 import { calendarAPI, classAPI } from './api';
 import { EMPTY_FILTERS, localDateKey, type CalendarConflict, type CalendarEvent, type CalendarFilters, type CalendarView } from './calendarWorkspace';
+import { patternForEvent } from './roomTimetableModel';
 import { CalendarEventDrawer } from './components/CalendarEventDrawer';
 import { CalendarWorkspaceFilters } from './components/CalendarWorkspaceFilters';
 import { CalendarWorkspaceToolbar } from './components/CalendarWorkspaceToolbar';
@@ -119,6 +120,28 @@ const CalendarPage = () => {
     catch { showToast.error('Failed to delete session.'); }
   };
 
+  const updateEventTime = async (event: CalendarEvent, startTime: string, endTime: string) => {
+    try {
+      if (event.session_id) {
+        await classAPI.updateSession(event.class_id, event.session_id, { start_time: startTime, end_time: endTime });
+      } else {
+        const roomName = event.room_name;
+        const pattern = patternForEvent(event)?.id;
+        if (!roomName || !pattern) {
+          showToast.error('Assign a room to this class before editing its time.');
+          return;
+        }
+        await calendarAPI.moveRecurring(event.class_id, { room_name: roomName, pattern, start_time: startTime, end_time: endTime });
+        await dispatch(fetchClassesForce());
+      }
+      setSelectedEvent(current => current && current.event_id === event.event_id ? { ...current, start_time: startTime, end_time: endTime } : current);
+      workspace.refresh();
+      showToast.success('Lesson time updated.');
+    } catch (error: any) {
+      showToast.error(error?.response?.data?.error || 'Failed to update lesson time.');
+    }
+  };
+
   const moveRecurring = async (event: CalendarEvent, room: string, pattern: string, start: string, end: string) => {
     if (!canManage || event.status === 'conducted' || event.status === 'in_progress') return;
     try {
@@ -164,7 +187,7 @@ const CalendarPage = () => {
         {view === 'agenda' && <AgendaCalendarView events={displayEvents} onSelect={setSelectedEvent} />}
       </>}
     </Card>
-    <CalendarEventDrawer event={selectedEvent} canManage={canManage} canDelete={canDelete} onClose={() => setSelectedEvent(null)} onStart={startLesson} onOpen={openSession} onDelete={deleteSession} />
+    <CalendarEventDrawer event={selectedEvent} canManage={canManage} canDelete={canDelete} onClose={() => setSelectedEvent(null)} onStart={startLesson} onOpen={openSession} onDelete={deleteSession} onUpdateTime={updateEventTime} />
     <Dialog open={showConflicts} onOpenChange={setShowConflicts}>
       <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
         <DialogHeader>
