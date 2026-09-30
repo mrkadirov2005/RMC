@@ -1,15 +1,16 @@
 // Source file for the students area in the crm feature.
 
 import type { ReactNode } from 'react';
+import { useMemo } from 'react';
 import { BadgePercent, Building2, GraduationCap, KeyRound, Megaphone, UserRound } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import type { Student } from '../types';
+import type { Class, Student } from '../types';
 import { SelectField } from './SelectField';
 
 interface Option { id?: number; label: string; value: string | number }
-interface Props { formData: Partial<Student>; setFormData: (value: Partial<Student>) => void; centerOptions: Option[]; classOptions: Option[]; teacherOptions: Option[]; acquisitionSourceOptions?: Option[]; genderOptions: Option[]; statusOptions: Option[]; showCenterField?: boolean }
+interface Props { formData: Partial<Student>; setFormData: (value: Partial<Student>) => void; centerOptions: Option[]; classOptions: Option[]; teacherOptions: Option[]; classes?: Class[]; acquisitionSourceOptions?: Option[]; genderOptions: Option[]; statusOptions: Option[]; showCenterField?: boolean }
 
 interface FormSectionProps {
   title: string;
@@ -100,9 +101,24 @@ const TextField = ({
 );
 
 // Renders the student form fields module.
-export const StudentFormFields = ({ formData, setFormData, centerOptions, classOptions, teacherOptions, acquisitionSourceOptions = [
+export const StudentFormFields = ({ formData, setFormData, centerOptions, classOptions, teacherOptions, classes = [], acquisitionSourceOptions = [
   { label: 'Advertisement', value: 1 }, { label: 'Teacher referral', value: 2 }, { label: 'Student or parent referral', value: 3 }, { label: 'Social media', value: 4 }, { label: 'Walk-in', value: 5 }, { label: 'Other', value: 6 },
 ], genderOptions, statusOptions, showCenterField = true }: Props) => {
+  const selectedTeacherId = Number(formData.teacher_id) || 0;
+  const classesByTeacher = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const cls of classes) {
+      const classId = Number(cls.class_id || cls.id);
+      const teacherId = Number(cls.teacher_id);
+      if (classId && teacherId) map.set(classId, teacherId);
+    }
+    return map;
+  }, [classes]);
+  const classOptionsForTeacher = useMemo(() => {
+    if (!selectedTeacherId) return [];
+    const currentClassId = Number(formData.class_id) || 0;
+    return classOptions.filter((opt) => Number(opt.value) === currentClassId || classesByTeacher.get(Number(opt.value)) === selectedTeacherId);
+  }, [classOptions, classesByTeacher, selectedTeacherId, formData.class_id]);
   const discountOriginalPrice = Number(formData.discount_original_price || 0);
   const discountValue = Number(formData.discount_value || 0);
   const discountAmount =
@@ -142,7 +158,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
 
       <FormSection
         title="Placement"
-        detail="Connect the student to center, class, and teacher ownership."
+        detail="Pick the teacher first, then choose one of their groups."
         icon={<GraduationCap className="h-5 w-5" />}
         tone="emerald"
       >
@@ -152,10 +168,31 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           </div>
         )}
         <div className={fieldClass}>
-          <SelectField compact label="Class" name="class_id" value={formData.class_id || ''} onChange={(value) => setFormData({ ...formData, class_id: Number(value) })} options={classOptions} placeholder="Select class" />
+          <SelectField
+            compact
+            label="Teacher"
+            name="teacher_id"
+            value={formData.teacher_id || ''}
+            onChange={(value) => {
+              const teacherId = Number(value);
+              const classStillValid = classesByTeacher.get(Number(formData.class_id)) === teacherId;
+              setFormData({ ...formData, teacher_id: teacherId, class_id: classStillValid ? formData.class_id : undefined });
+            }}
+            options={teacherOptions}
+            placeholder="Select teacher"
+          />
         </div>
         <div className={fieldClass}>
-          <SelectField compact label="Teacher" name="teacher_id" value={formData.teacher_id || ''} onChange={(value) => setFormData({ ...formData, teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" />
+          <SelectField
+            compact
+            label="Class"
+            name="class_id"
+            value={formData.class_id || ''}
+            onChange={(value) => setFormData({ ...formData, class_id: Number(value) })}
+            options={classOptionsForTeacher}
+            placeholder={selectedTeacherId ? 'Select class' : 'Select a teacher first'}
+            disabled={!selectedTeacherId}
+          />
         </div>
       </FormSection>
 

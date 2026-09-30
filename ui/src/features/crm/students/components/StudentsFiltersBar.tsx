@@ -20,6 +20,7 @@ export const StudentsFiltersBar = ({ searchTerm, onSearchChange, onClearSearch, 
     <div className="relative flex-1 min-w-[250px] max-w-[400px]">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
+        type="search"
         placeholder="Search by name, email, phone, enrollment..."
         value={searchTerm}
         onChange={(e) => onSearchChange(e.target.value)}
@@ -28,7 +29,7 @@ export const StudentsFiltersBar = ({ searchTerm, onSearchChange, onClearSearch, 
         autoCapitalize="off"
         spellCheck={false}
         name="students-directory-search"
-        className="border-white/80 bg-white/90 pl-9 shadow-sm dark:border-input dark:bg-background dark:shadow-none"
+        className="border-white/80 bg-white/90 pl-9 shadow-sm [&::-webkit-search-cancel-button]:appearance-none dark:border-input dark:bg-background dark:shadow-none"
       />
       {searchTerm && <button onClick={onClearSearch} className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"><X className="h-4 w-4 text-muted-foreground" /></button>}
     </div>

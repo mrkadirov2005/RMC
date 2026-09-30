@@ -139,6 +139,7 @@ const StudentFormPage = () => {
               centerOptions={options.centerOptions}
               classOptions={options.classOptions}
               teacherOptions={options.teacherOptions}
+              classes={options.classes}
               genderOptions={studentGenderOptions}
               statusOptions={studentStatusOptions}
               showCenterField={showCenterField}

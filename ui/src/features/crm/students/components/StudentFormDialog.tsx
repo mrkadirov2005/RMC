@@ -113,6 +113,7 @@ export const StudentFormDialog = ({
             centerOptions={centerOptions}
             classOptions={classOptions}
             teacherOptions={teacherOptions}
+            classes={classes}
             acquisitionSourceOptions={acquisitionSourceOptions}
             genderOptions={genderOptions}
             statusOptions={statusOptions}
