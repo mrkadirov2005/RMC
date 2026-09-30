@@ -37,6 +37,45 @@ class CreateConsolidationSetDto {
   words!: ConsolidationWordDto[];
 }
 
+// Same shape as creation, except each word may carry the id of an existing row it
+// replaces — words without an id are added, and omitted existing ids are removed.
+class UpdateConsolidationWordDto {
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  consolidation_word_id?: number;
+
+  @IsString()
+  @IsNotEmpty()
+  main_word!: string;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(5)
+  @IsString({ each: true })
+  translations!: string[];
+}
+
+class UpdateConsolidationSetDto {
+  @IsString()
+  @IsOptional()
+  title?: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @IsOptional()
+  violation_limit?: number;
+
+  @IsArray()
+  @ArrayMinSize(1)
+  @ArrayMaxSize(10)
+  @ValidateNested({ each: true })
+  @Type(() => UpdateConsolidationWordDto)
+  words!: UpdateConsolidationWordDto[];
+}
+
 class SaveConsolidationAnswerDto {
   @Type(() => Number)
   @IsInt()
@@ -99,6 +138,8 @@ class ShareTokenTrialParamDto extends ShareTokenParamDto {
 module.exports = {
   ConsolidationWordDto,
   CreateConsolidationSetDto,
+  UpdateConsolidationWordDto,
+  UpdateConsolidationSetDto,
   SaveConsolidationAnswerDto,
   StartPublicTrialDto,
   SetIdParamDto,

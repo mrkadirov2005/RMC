@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { Copy, Link2, Loader2, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { Copy, Link2, Loader2, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,8 @@ import {
 
 interface DraftWord {
   id: string;
+  // Present only for a word that already exists server-side; absent means "add this one".
+  wordId?: number;
   main_word: string;
   translations: string[];
 }
@@ -26,6 +28,29 @@ const MAX_WORDS = 10;
 const MAX_TRANSLATIONS = 5;
 
 const newDraftWord = (): DraftWord => ({ id: Date.now().toString() + Math.random().toString(36).slice(2), main_word: '', translations: [''] });
+
+const toDraftWords = (words: ConsolidationWord[]): DraftWord[] =>
+  words.map((word) => ({
+    id: `saved-${word.consolidation_word_id}`,
+    wordId: word.consolidation_word_id,
+    main_word: word.main_word,
+    translations: word.translations.length > 0 ? [...word.translations] : [''],
+  }));
+
+// Trims and drops blank translations; returns null when the draft isn't submittable yet
+// so create and edit can share one validation rule.
+const cleanDraftWords = (draftWords: DraftWord[]) => {
+  const cleaned = draftWords.map((word) => ({
+    consolidation_word_id: word.wordId,
+    main_word: word.main_word.trim(),
+    translations: word.translations.map((translation) => translation.trim()).filter(Boolean),
+  }));
+  if (cleaned.length === 0) return { error: 'Add at least one word with at least one accepted translation.' as const };
+  if (cleaned.some((word) => !word.main_word || word.translations.length === 0)) {
+    return { error: 'Complete every word with a main word and at least one accepted translation, or remove the empty row.' as const };
+  }
+  return { words: cleaned };
+};
 
 const buildShareUrl = (shareToken: string) => `${window.location.origin}/#/consolidate/${shareToken}`;
 
@@ -46,6 +71,114 @@ const ViolationsCell = ({ trial }: { trial: ConsolidationTrial | null }) => {
   );
 };
 
+interface WordDraftEditorProps {
+  draftWords: DraftWord[];
+  violationLimit: number;
+  onUpdateWord: (id: string, updates: Partial<DraftWord>) => void;
+  onDeleteWord: (id: string) => void;
+  onAddWord: () => void;
+  onAddTranslation: (id: string) => void;
+  onUpdateTranslation: (id: string, index: number, value: string) => void;
+  onDeleteTranslation: (id: string, index: number) => void;
+  onViolationLimitChange: (value: number) => void;
+}
+
+// Shared by the "create" and "edit" flows so both always offer the same rules
+// (max words, max translations, required fields).
+const WordDraftEditor = ({
+  draftWords,
+  violationLimit,
+  onUpdateWord,
+  onDeleteWord,
+  onAddWord,
+  onAddTranslation,
+  onUpdateTranslation,
+  onDeleteTranslation,
+  onViolationLimitChange,
+}: WordDraftEditorProps) => (
+  <>
+    <div className="space-y-3">
+      {draftWords.map((word, index) => (
+        <Card key={word.id}>
+          <CardContent className="space-y-3 pt-6">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <Label>Word {index + 1} — Main word</Label>
+                <Input
+                  value={word.main_word}
+                  onChange={(e) => onUpdateWord(word.id, { main_word: e.target.value })}
+                  placeholder="e.g. salom"
+                  className="mt-1"
+                />
+              </div>
+              {draftWords.length > 1 && (
+                <button
+                  className="mt-6 rounded p-2 text-red-500 hover:bg-red-50"
+                  type="button"
+                  onClick={() => onDeleteWord(word.id)}
+                  aria-label="Remove word"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <div>
+              <Label className="mb-1 block">Accepted translations</Label>
+              <div className="space-y-2">
+                {word.translations.map((translation, tIndex) => (
+                  <div key={tIndex} className="flex items-center gap-2">
+                    <Input
+                      value={translation}
+                      onChange={(e) => onUpdateTranslation(word.id, tIndex, e.target.value)}
+                      placeholder="e.g. hello"
+                    />
+                    {word.translations.length > 1 && (
+                      <button
+                        className="rounded p-2 text-red-500 hover:bg-red-50"
+                        type="button"
+                        onClick={() => onDeleteTranslation(word.id, tIndex)}
+                        aria-label="Remove translation"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {word.translations.length < MAX_TRANSLATIONS && (
+                <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => onAddTranslation(word.id)}>
+                  <Plus className="mr-1 h-3.5 w-3.5" />
+                  Add another accepted translation
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+
+    {draftWords.length < MAX_WORDS && (
+      <Button type="button" variant="outline" onClick={onAddWord}>
+        <Plus className="mr-2 h-4 w-4" />
+        Add word
+      </Button>
+    )}
+
+    <div className="w-40">
+      <Label htmlFor="violation_limit">Violation limit</Label>
+      <Input
+        id="violation_limit"
+        type="number"
+        min={1}
+        value={violationLimit}
+        onChange={(e) => onViolationLimitChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
+        className="mt-1"
+      />
+      <p className="mt-1 text-xs text-muted-foreground">Lockdown violations allowed before auto-submit.</p>
+    </div>
+  </>
+);
+
 interface ConsolidationTabProps {
   sessionId: number;
   // Fires after a set is created — lets a page embedding this tab elsewhere
@@ -64,11 +197,14 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
   const [violationLimit, setViolationLimit] = useState(3);
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState('');
+  const [editing, setEditing] = useState(false);
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // Results dashboard state
   const [results, setResults] = useState<ConsolidationResultsDashboard | null>(null);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [regenerating, setRegenerating] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [expandedStudentId, setExpandedStudentId] = useState<number | null>(null);
   const [trialDetail, setTrialDetail] = useState<{ trial: ConsolidationTrial; words: ConsolidationTrialDetailWord[] } | null>(null);
   const [trialDetailLoading, setTrialDetailLoading] = useState(false);
@@ -92,6 +228,10 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
     const load = async () => {
       setLoading(true);
       setError('');
+      setCreateError('');
+      setEditing(false);
+      setDraftWords([newDraftWord()]);
+      setViolationLimit(3);
       try {
         const data = await consolidationApi.getForSession(sessionId);
         if (cancelled) return;
@@ -153,19 +293,59 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
     }));
   };
 
-  const handleCreate = async () => {
+  const startEditing = () => {
+    if (!set) return;
+    setDraftWords(words.length > 0 ? toDraftWords(words) : [newDraftWord()]);
+    setViolationLimit(set.violation_limit);
     setCreateError('');
-    const cleanedWords = draftWords.map((word) => ({
-      main_word: word.main_word.trim(),
-      translations: word.translations.map((t) => t.trim()).filter(Boolean),
-    }));
+    setEditing(true);
+  };
 
-    if (cleanedWords.length === 0) {
-      setCreateError('Add at least one word with at least one accepted translation.');
+  const cancelEditing = () => {
+    setEditing(false);
+    setCreateError('');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!set) return;
+    setCreateError('');
+    const cleaned = cleanDraftWords(draftWords);
+    if ('error' in cleaned) {
+      setCreateError(cleaned.error);
       return;
     }
-    if (cleanedWords.some((word) => !word.main_word || word.translations.length === 0)) {
-      setCreateError('Complete every word with a main word and at least one accepted translation, or remove the empty row.');
+
+    setSavingEdit(true);
+    try {
+      const updated = await consolidationApi.updateSet(set.consolidation_set_id, {
+        violation_limit: violationLimit,
+        words: cleaned.words,
+      });
+      setSet(updated.set);
+      setWords(updated.words);
+      setEditing(false);
+      trialDetailCache.current.clear();
+      setExpandedStudentId(null);
+      setTrialDetail(null);
+      await loadResults();
+      showToast.success(
+        updated.regraded > 0
+          ? `Exercise updated — ${updated.regraded} submitted attempt${updated.regraded === 1 ? '' : 's'} re-graded.`
+          : 'Exercise updated.'
+      );
+      onChanged?.();
+    } catch (err: any) {
+      setCreateError(err?.response?.data?.error || 'Failed to update the exercise.');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleCreate = async () => {
+    setCreateError('');
+    const cleaned = cleanDraftWords(draftWords);
+    if ('error' in cleaned) {
+      setCreateError(cleaned.error);
       return;
     }
 
@@ -174,7 +354,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
       const created = await consolidationApi.create({
         session_id: sessionId,
         violation_limit: violationLimit,
-        words: cleanedWords,
+        words: cleaned.words.map(({ main_word, translations }) => ({ main_word, translations })),
       });
       setSet(created.set);
       setWords(created.words);
@@ -210,6 +390,31 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
       showToast.error('Failed to regenerate link.');
     } finally {
       setRegenerating(false);
+    }
+  };
+
+  const handleDeleteSet = async () => {
+    if (!set) return;
+    if (!window.confirm('Delete this exercise and start over? The share link stops working immediately. Only possible while no student has attempted it yet.')) return;
+    setDeleting(true);
+    try {
+      await consolidationApi.deleteSet(set.consolidation_set_id);
+      // Back to a clean creation form for this same session.
+      setSet(null);
+      setWords([]);
+      setResults(null);
+      setExpandedStudentId(null);
+      setTrialDetail(null);
+      trialDetailCache.current.clear();
+      setDraftWords([newDraftWord()]);
+      setViolationLimit(3);
+      setCreateError('');
+      showToast.success('Exercise deleted — you can enter new words now.');
+      onChanged?.();
+    } catch (err: any) {
+      showToast.error(err?.response?.data?.error || 'Failed to delete the exercise.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -280,85 +485,17 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
             void handleCreate();
           }}
         >
-        <div className="space-y-3">
-          {draftWords.map((word, index) => (
-            <Card key={word.id}>
-              <CardContent className="space-y-3 pt-6">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <Label>Word {index + 1} — Main word</Label>
-                    <Input
-                      value={word.main_word}
-                      onChange={(e) => updateWord(word.id, { main_word: e.target.value })}
-                      placeholder="e.g. salom"
-                      className="mt-1"
-                    />
-                  </div>
-                  {draftWords.length > 1 && (
-                    <button
-                      className="mt-6 rounded p-2 text-red-500 hover:bg-red-50"
-                      type="button"
-                      onClick={() => deleteWord(word.id)}
-                      aria-label="Remove word"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-                <div>
-                  <Label className="mb-1 block">Accepted translations</Label>
-                  <div className="space-y-2">
-                    {word.translations.map((translation, tIndex) => (
-                      <div key={tIndex} className="flex items-center gap-2">
-                        <Input
-                          value={translation}
-                          onChange={(e) => updateTranslation(word.id, tIndex, e.target.value)}
-                          placeholder="e.g. hello"
-                        />
-                        {word.translations.length > 1 && (
-                          <button
-                            className="rounded p-2 text-red-500 hover:bg-red-50"
-                            type="button"
-                            onClick={() => deleteTranslation(word.id, tIndex)}
-                            aria-label="Remove translation"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                  {word.translations.length < MAX_TRANSLATIONS && (
-                    <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => addTranslation(word.id)}>
-                      <Plus className="mr-1 h-3.5 w-3.5" />
-                      Add another accepted translation
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {draftWords.length < MAX_WORDS && (
-          <Button type="button" variant="outline" onClick={addWord}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add word
-          </Button>
-        )}
-
-        <div className="w-40">
-          <Label htmlFor="violation_limit">Violation limit</Label>
-          <Input
-            id="violation_limit"
-            type="number"
-            min={1}
-            value={violationLimit}
-            onChange={(e) => setViolationLimit(Math.max(1, parseInt(e.target.value, 10) || 1))}
-            className="mt-1"
-          />
-          <p className="mt-1 text-xs text-muted-foreground">Lockdown violations allowed before auto-submit.</p>
-        </div>
+        <WordDraftEditor
+          draftWords={draftWords}
+          violationLimit={violationLimit}
+          onUpdateWord={updateWord}
+          onDeleteWord={deleteWord}
+          onAddWord={addWord}
+          onAddTranslation={addTranslation}
+          onUpdateTranslation={updateTranslation}
+          onDeleteTranslation={deleteTranslation}
+          onViolationLimitChange={setViolationLimit}
+        />
 
         <div>
           <Button type="submit" disabled={creating}>
@@ -366,6 +503,57 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
             Create Consolidation Exercise
           </Button>
         </div>
+        </form>
+      </div>
+    );
+  }
+
+  if (editing) {
+    const attempts = results?.summary.submitted ?? 0;
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertDescription>
+            {attempts > 0
+              ? `Editing the words re-grades the ${attempts} attempt${attempts === 1 ? '' : 's'} already submitted. Removing a word also removes the answers students gave for it.`
+              : 'Change the words, their accepted translations, or the violation limit. The share link stays the same.'}
+          </AlertDescription>
+        </Alert>
+
+        {createError && (
+          <Alert variant="destructive">
+            <AlertDescription>{createError}</AlertDescription>
+          </Alert>
+        )}
+
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSaveEdit();
+          }}
+        >
+          <WordDraftEditor
+            draftWords={draftWords}
+            violationLimit={violationLimit}
+            onUpdateWord={updateWord}
+            onDeleteWord={deleteWord}
+            onAddWord={addWord}
+            onAddTranslation={addTranslation}
+            onUpdateTranslation={updateTranslation}
+            onDeleteTranslation={deleteTranslation}
+            onViolationLimitChange={setViolationLimit}
+          />
+
+          <div className="flex gap-2">
+            <Button type="submit" disabled={savingEdit}>
+              {savingEdit ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Save changes
+            </Button>
+            <Button type="button" variant="outline" onClick={cancelEditing} disabled={savingEdit}>
+              Cancel
+            </Button>
+          </div>
         </form>
       </div>
     );
@@ -399,7 +587,29 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
             can submit under any enrolled student&apos;s name, so treat submissions from this link as a soft signal, not a
             verified identity (rows below flag exactly which trials came through the link).
           </p>
-          <div className="text-xs text-muted-foreground">{words.length} word{words.length === 1 ? '' : 's'} · violation limit {set.violation_limit}</div>
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
+            <div className="text-xs text-muted-foreground">{words.length} word{words.length === 1 ? '' : 's'} · violation limit {set.violation_limit}</div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={startEditing}>
+                <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                Edit words
+              </Button>
+              <Button variant="destructive" size="sm" onClick={handleDeleteSet} disabled={deleting}>
+                {deleting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
+                Delete
+              </Button>
+            </div>
+          </div>
+          <details className="text-xs text-muted-foreground">
+            <summary className="cursor-pointer select-none">Words in this exercise</summary>
+            <ul className="mt-2 space-y-1 pl-4">
+              {words.map((word) => (
+                <li key={word.consolidation_word_id} className="list-disc">
+                  <span className="font-medium text-foreground">{word.main_word}</span> — {word.translations.join(', ')}
+                </li>
+              ))}
+            </ul>
+          </details>
         </CardContent>
       </Card>
 

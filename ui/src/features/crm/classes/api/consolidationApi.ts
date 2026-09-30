@@ -161,6 +161,17 @@ export const consolidationApi = {
     return getApiPayload<any>(await apiClient.post('/consolidations', payload));
   },
 
+  async updateSet(
+    setId: number,
+    payload: {
+      title?: string;
+      violation_limit?: number;
+      words: Array<ConsolidationWordInput & { consolidation_word_id?: number }>;
+    }
+  ): Promise<{ set: ConsolidationSet; words: ConsolidationWord[]; regraded: number }> {
+    return getApiPayload<any>(await apiClient.patch(`/consolidations/${setId}`, payload));
+  },
+
   async getResults(sessionId: number): Promise<ConsolidationResultsDashboard> {
     return getApiPayload<ConsolidationResultsDashboard>(await apiClient.get(`/consolidations/session/${sessionId}/results`));
   },

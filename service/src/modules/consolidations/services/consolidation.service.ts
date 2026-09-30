@@ -282,6 +282,90 @@ const getTrialDetail = async (trialId: number, requester: { userType?: string; i
   return { trial, words: items };
 };
 
+// Editing a set's wording changes what "correct" means, so every already-submitted
+// trial is re-scored against the new words. Without this a teacher who adds a missing
+// accepted translation would leave the students it affects still marked wrong.
+const regradeSubmittedTrials = async (setId: number) => {
+  const [words, trials] = await Promise.all([
+    consolidationRepository.findWordsBySet(setId),
+    consolidationRepository.findTrialsForSet(setId),
+  ]);
+  const totalWords = words.length;
+  // in_progress trials are graded when they are submitted, so they are left alone.
+  const submitted = trials.filter((trial: any) => trial.status === 'completed' || trial.status === 'auto_submitted');
+
+  await Promise.all(submitted.map(async (trial: any) => {
+    const answers = await consolidationRepository.findAnswersByTrial(trial.trial_id);
+    const answerByWord = new Map<number, any>(answers.map((answer: any) => [Number(answer.consolidation_word_id), answer]));
+
+    let correctCount = 0;
+    const writes: Array<Promise<void>> = [];
+    for (const word of words) {
+      const answer = answerByWord.get(Number(word.consolidation_word_id));
+      const correct = isAnswerCorrect(answer?.student_answer ?? null, word.translations);
+      if (correct) correctCount += 1;
+      if (answer && answer.is_correct !== correct) writes.push(consolidationRepository.setAnswerCorrectness(answer.answer_id, correct));
+    }
+    await Promise.all(writes);
+
+    await consolidationRepository.updateTrialScores(trial.trial_id, {
+      correctCount,
+      totalWords,
+      isPassed: totalWords > 0 && correctCount === totalWords,
+    });
+  }));
+
+  return { regraded: submitted.length };
+};
+
+const updateSet = async (setId: number, body: any, centerId: number | undefined, caller: { userType?: string; teacherId?: number } = {}) => {
+  const set = await consolidationRepository.findSetById(setId, centerId);
+  if (!set) return null;
+  if (!teacherOwnsSet(set, caller)) return { error: 'forbidden' as const };
+
+  const existingWords = await consolidationRepository.findWordsBySet(setId);
+  const existingIds = new Set(existingWords.map((word: any) => Number(word.consolidation_word_id)));
+  const incoming = Array.isArray(body.words) ? body.words : [];
+
+  // A payload id that isn't one of this set's own words is a client bug or a probe for
+  // another set's rows — reject rather than silently treating it as a new word.
+  const unknownId = incoming.find((word: any) => word.consolidation_word_id != null && !existingIds.has(Number(word.consolidation_word_id)));
+  if (unknownId) return { error: 'unknown_word' as const };
+
+  const keptIds = new Set(incoming.filter((word: any) => word.consolidation_word_id != null).map((word: any) => Number(word.consolidation_word_id)));
+  const removedIds = existingWords.map((word: any) => Number(word.consolidation_word_id)).filter((id: number) => !keptIds.has(id));
+
+  await withTransaction(async (db: any) => {
+    await consolidationRepository.updateSetMeta(setId, { title: body.title, violationLimit: body.violation_limit }, centerId, db);
+
+    // word_order follows the submitted array order so reordering in the editor sticks.
+    for (let index = 0; index < incoming.length; index += 1) {
+      const word = incoming[index];
+      if (word.consolidation_word_id == null) continue;
+      await consolidationRepository.updateWord(setId, Number(word.consolidation_word_id), {
+        main_word: word.main_word,
+        translations: word.translations,
+        word_order: index + 1,
+      }, db);
+    }
+
+    const added = incoming
+      .map((word: any, index: number) => ({ word, order: index + 1 }))
+      .filter(({ word }: any) => word.consolidation_word_id == null)
+      .map(({ word, order }: any) => ({ main_word: word.main_word, translations: word.translations, word_order: order }));
+    if (added.length > 0) await consolidationRepository.insertWords(setId, added, db);
+
+    await consolidationRepository.deleteWordsWithAnswers(setId, removedIds, db);
+  });
+
+  const [updatedSet, words] = await Promise.all([
+    consolidationRepository.findSetById(setId, centerId),
+    consolidationRepository.findWordsBySet(setId),
+  ]);
+  const { regraded } = await regradeSubmittedTrials(setId);
+  return { set: updatedSet, words, regraded };
+};
+
 const deleteSet = async (setId: number, centerId: number | undefined, caller: { userType?: string; teacherId?: number } = {}) => {
   const set = await consolidationRepository.findSetById(setId, centerId);
   if (!set) return null;
@@ -484,6 +568,7 @@ module.exports = {
   getConsolidationsOverview,
   getTrial,
   getTrialDetail,
+  updateSet,
   deleteSet,
   regenerateLink,
   startTrial,

@@ -11,6 +11,10 @@ jest.mock('../../repositories/consolidation.repository', () => ({
   findWordsBySet: jest.fn(),
   findWordsBySetPublic: jest.fn(),
   softDeleteSet: jest.fn(),
+  updateSetMeta: jest.fn(),
+  updateWord: jest.fn(),
+  deleteWordsWithAnswers: jest.fn(),
+  updateTrialScores: jest.fn(),
   updateShareToken: jest.fn(),
   countTrialsForSet: jest.fn(),
   findTrialsForSet: jest.fn(),
@@ -568,6 +572,112 @@ describe('consolidation service', () => {
       const result = await service.resolveTrialForToken('tokA', 9, 'secret');
       expect(result).not.toBeNull();
       expect(consolidationRepository.findTrialById).not.toHaveBeenCalled();
+    });
+  });
+  describe('updateSet — in-place word edits and re-grading', () => {
+    const set = { consolidation_set_id: 3, center_id: 2, class_id: 5, session_id: 10, teacher_id: 7, violation_limit: 3 };
+
+    const existingWords = [
+      { consolidation_word_id: 21, word_order: 1, main_word: 'salom', translations: ['hello'] },
+      { consolidation_word_id: 22, word_order: 2, main_word: 'rahmat', translations: ['thanks'] },
+    ];
+
+    beforeEach(() => {
+      consolidationRepository.findSetById.mockResolvedValue(set);
+      consolidationRepository.findWordsBySet.mockResolvedValue(existingWords);
+      consolidationRepository.findTrialsForSet.mockResolvedValue([]);
+      consolidationRepository.updateSetMeta.mockResolvedValue(set);
+      consolidationRepository.deleteWordsWithAnswers.mockResolvedValue({ deleted: 0 });
+    });
+
+    it('returns null when the set does not exist', async () => {
+      consolidationRepository.findSetById.mockResolvedValue(null);
+      const result = await service.updateSet(3, { words: [] }, 2, { userType: 'superuser' });
+      expect(result).toBeNull();
+    });
+
+    it('rejects a teacher who does not own the set', async () => {
+      const result = await service.updateSet(3, { words: [] }, 2, { userType: 'teacher', teacherId: 999 });
+      expect(result).toEqual({ error: 'forbidden' });
+      expect(consolidationRepository.updateSetMeta).not.toHaveBeenCalled();
+    });
+
+    it('rejects a word id that belongs to some other set instead of silently adding it', async () => {
+      const result = await service.updateSet(3, { words: [{ consolidation_word_id: 999, main_word: 'x', translations: ['y'] }] }, 2, { userType: 'superuser' });
+      expect(result).toEqual({ error: 'unknown_word' });
+      expect(consolidationRepository.updateSetMeta).not.toHaveBeenCalled();
+    });
+
+    it('updates kept words, inserts new ones, and deletes the omitted ones with their answers', async () => {
+      await service.updateSet(3, {
+        violation_limit: 5,
+        words: [
+          { consolidation_word_id: 21, main_word: 'salom', translations: ['hello', 'hi'] },
+          { main_word: 'kitob', translations: ['book'] },
+        ],
+      }, 2, { userType: 'superuser' });
+
+      expect(consolidationRepository.updateSetMeta).toHaveBeenCalledWith(3, { title: undefined, violationLimit: 5 }, 2, 'tx');
+      expect(consolidationRepository.updateWord).toHaveBeenCalledWith(3, 21, { main_word: 'salom', translations: ['hello', 'hi'], word_order: 1 }, 'tx');
+      expect(consolidationRepository.insertWords).toHaveBeenCalledWith(3, [{ main_word: 'kitob', translations: ['book'], word_order: 2 }], 'tx');
+      // Word 22 was omitted from the payload, so it goes away along with its answers.
+      expect(consolidationRepository.deleteWordsWithAnswers).toHaveBeenCalledWith(3, [22], 'tx');
+    });
+
+    it('re-grades a submitted trial so an answer covered by a newly added translation now counts as correct', async () => {
+      consolidationRepository.findWordsBySet.mockResolvedValue([
+        { consolidation_word_id: 21, word_order: 1, main_word: 'salom', translations: ['hello', 'hi'] },
+      ]);
+      consolidationRepository.findTrialsForSet.mockResolvedValue([
+        { trial_id: 90, status: 'completed', consolidation_set_id: 3 },
+      ]);
+      consolidationRepository.findAnswersByTrial.mockResolvedValue([
+        { answer_id: 500, consolidation_word_id: 21, student_answer: 'hi', is_correct: false },
+      ]);
+
+      const result = await service.updateSet(3, {
+        words: [{ consolidation_word_id: 21, main_word: 'salom', translations: ['hello', 'hi'] }],
+      }, 2, { userType: 'superuser' });
+
+      expect(consolidationRepository.setAnswerCorrectness).toHaveBeenCalledWith(500, true);
+      expect(consolidationRepository.updateTrialScores).toHaveBeenCalledWith(90, { correctCount: 1, totalWords: 1, isPassed: true });
+      expect(result.regraded).toBe(1);
+    });
+
+    it('leaves an in-progress trial untouched, since it is graded on submit', async () => {
+      consolidationRepository.findWordsBySet.mockResolvedValue([
+        { consolidation_word_id: 21, word_order: 1, main_word: 'salom', translations: ['hello'] },
+      ]);
+      consolidationRepository.findTrialsForSet.mockResolvedValue([
+        { trial_id: 91, status: 'in_progress', consolidation_set_id: 3 },
+      ]);
+
+      const result = await service.updateSet(3, {
+        words: [{ consolidation_word_id: 21, main_word: 'salom', translations: ['hello'] }],
+      }, 2, { userType: 'superuser' });
+
+      expect(consolidationRepository.findAnswersByTrial).not.toHaveBeenCalled();
+      expect(consolidationRepository.updateTrialScores).not.toHaveBeenCalled();
+      expect(result.regraded).toBe(0);
+    });
+
+    it('does not rewrite answer correctness rows that already match the new grading', async () => {
+      consolidationRepository.findWordsBySet.mockResolvedValue([
+        { consolidation_word_id: 21, word_order: 1, main_word: 'salom', translations: ['hello'] },
+      ]);
+      consolidationRepository.findTrialsForSet.mockResolvedValue([
+        { trial_id: 92, status: 'auto_submitted', consolidation_set_id: 3 },
+      ]);
+      consolidationRepository.findAnswersByTrial.mockResolvedValue([
+        { answer_id: 501, consolidation_word_id: 21, student_answer: 'hello', is_correct: true },
+      ]);
+
+      await service.updateSet(3, {
+        words: [{ consolidation_word_id: 21, main_word: 'salom', translations: ['hello'] }],
+      }, 2, { userType: 'superuser' });
+
+      expect(consolidationRepository.setAnswerCorrectness).not.toHaveBeenCalled();
+      expect(consolidationRepository.updateTrialScores).toHaveBeenCalledWith(92, { correctCount: 1, totalWords: 1, isPassed: true });
     });
   });
 });

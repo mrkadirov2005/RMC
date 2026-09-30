@@ -177,6 +177,21 @@ const logViolation = async (req: any, res: any) => {
   }
 };
 
+const updateSet = async (req: any, res: any) => {
+  try {
+    const scope = requireConsolidationCenterScope(req, res);
+    if (!scope) return;
+    const result = await consolidationService.updateSet(Number(req.params.setId), req.body, scope.centerId ?? undefined, callerScope(req, scope));
+    if (!result) return res.status(404).json({ error: 'Consolidation set not found' });
+    if (result.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
+    if (result.error === 'unknown_word') return res.status(400).json({ error: 'A submitted word does not belong to this exercise.' });
+    res.json(result);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: 'Failed to update consolidation set', details: error.message || String(error) });
+  }
+};
+
 const deleteSet = async (req: any, res: any) => {
   try {
     const scope = requireConsolidationCenterScope(req, res);
@@ -295,6 +310,7 @@ module.exports = {
   saveAnswer,
   submitTrial,
   logViolation,
+  updateSet,
   deleteSet,
   regenerateLink,
   getPublicSetView,

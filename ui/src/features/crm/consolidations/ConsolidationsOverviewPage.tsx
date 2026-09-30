@@ -139,6 +139,13 @@ export default function ConsolidationsOverviewPage() {
     return overview.outcomes.filter((outcome) => matchesBucket(outcome, selectedBar));
   }, [overview, selectedBar]);
 
+  // Lets the session picker flag dates that already have an exercise, so landing on
+  // the read-only share-link view instead of the word form is never a surprise.
+  const sessionIdsWithSet = useMemo(
+    () => new Set((overview?.sets ?? []).map((item) => Number(item.session_id))),
+    [overview]
+  );
+
   return (
     <div className="space-y-6 p-4 md:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -414,6 +421,7 @@ export default function ConsolidationsOverviewPage() {
                     {sessions.map((session) => (
                       <SelectItem key={session.session_id} value={String(session.session_id)}>
                         {session.session_date}
+                        {sessionIdsWithSet.has(Number(session.session_id)) ? ' · has exercise' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>

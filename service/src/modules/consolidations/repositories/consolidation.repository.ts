@@ -161,6 +161,64 @@ const findWordsBySet = async (setId: number) =>
 const findWordsBySetPublic = async (setId: number) =>
   db.select(publicWordSelection).from(consolidationWords).where(eq(consolidationWords.consolidationSetId, Number(setId))).orderBy(consolidationWords.wordOrder);
 
+const updateSetMeta = async (
+  setId: number,
+  values: { title?: string | null; violationLimit?: number },
+  centerId?: number,
+  runner: any = db
+) => {
+  const patch: any = { updatedAt: sql`CURRENT_TIMESTAMP` };
+  if (values.title !== undefined) patch.title = values.title;
+  if (values.violationLimit !== undefined) patch.violationLimit = values.violationLimit;
+  const conditions = [eq(consolidationSets.consolidationSetId, Number(setId)), sql`${consolidationSets.deletedAt} IS NULL`];
+  if (centerId) conditions.push(eq(consolidationSets.centerId, Number(centerId)));
+  const rows = await runner.update(consolidationSets).set(patch).where(and(...conditions)).returning(setSelection);
+  return rows[0] || null;
+};
+
+const updateWord = async (
+  setId: number,
+  wordId: number,
+  values: { main_word: string; translations: string[]; word_order: number },
+  runner: any = db
+) => {
+  const rows = await runner
+    .update(consolidationWords)
+    .set({ mainWord: values.main_word, translations: values.translations, wordOrder: values.word_order })
+    .where(and(eq(consolidationWords.consolidationWordId, Number(wordId)), eq(consolidationWords.consolidationSetId, Number(setId))))
+    .returning(wordSelection);
+  return rows[0] || null;
+};
+
+// Answers are deleted alongside their word: a consolidation_answers row keyed to a
+// word that no longer exists can never be rendered or re-graded, and leaving it behind
+// would keep inflating the trial totals recomputed from the set's current words.
+const deleteWordsWithAnswers = async (setId: number, wordIds: number[], runner: any = db) => {
+  if (wordIds.length === 0) return { deleted: 0 };
+  const ids = wordIds.map((id) => Number(id));
+  await runner.delete(consolidationAnswers).where(inArray(consolidationAnswers.consolidationWordId, ids));
+  const rows = await runner
+    .delete(consolidationWords)
+    .where(and(eq(consolidationWords.consolidationSetId, Number(setId)), inArray(consolidationWords.consolidationWordId, ids)))
+    .returning({ consolidation_word_id: consolidationWords.consolidationWordId });
+  return { deleted: rows.length };
+};
+
+// Re-grade only: deliberately leaves status/submitted_at/time_taken_seconds untouched,
+// so recomputing an already-submitted trial's score never rewrites its submission history.
+const updateTrialScores = async (
+  trialId: number,
+  values: { correctCount: number; totalWords: number; isPassed: boolean },
+  runner: any = db
+) => {
+  const rows = await runner
+    .update(consolidationTrials)
+    .set({ correctCount: values.correctCount, totalWords: values.totalWords, isPassed: values.isPassed })
+    .where(eq(consolidationTrials.trialId, Number(trialId)))
+    .returning(trialSelection);
+  return rows[0] || null;
+};
+
 const softDeleteSet = async (setId: number, centerId?: number) => {
   const conditions = [eq(consolidationSets.consolidationSetId, Number(setId)), sql`${consolidationSets.deletedAt} IS NULL`];
   if (centerId) conditions.push(eq(consolidationSets.centerId, Number(centerId)));
@@ -381,6 +439,10 @@ module.exports = {
   insertWords,
   findWordsBySet,
   findWordsBySetPublic,
+  updateSetMeta,
+  updateWord,
+  deleteWordsWithAnswers,
+  updateTrialScores,
   softDeleteSet,
   updateShareToken,
   countTrialsForSet,

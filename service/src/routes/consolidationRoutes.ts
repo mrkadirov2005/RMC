@@ -11,6 +11,7 @@ const {
   SessionIdParamDto,
   SetIdParamDto,
   TrialIdParamDto,
+  UpdateConsolidationSetDto,
 } = require('../dtos/request.dto');
 
 router.post('/', requireAuth, requireRole('superuser', 'teacher'), validateBody(CreateConsolidationSetDto), consolidationController.createSet);
@@ -32,6 +33,8 @@ router.patch('/trials/:trialId/answer', requireAuth, requireRole('student'), val
 router.post('/trials/:trialId/submit', requireAuth, requireRole('student'), validateParams(TrialIdParamDto), consolidationController.submitTrial);
 
 router.post('/trials/:trialId/violation', requireAuth, requireRole('student'), validateParams(TrialIdParamDto), consolidationController.logViolation);
+
+router.patch('/:setId', requireAuth, requireRole('superuser', 'teacher'), validateParams(SetIdParamDto), validateBody(UpdateConsolidationSetDto), consolidationController.updateSet);
 
 router.delete('/:setId', requireAuth, requireRole('superuser', 'teacher'), validateParams(SetIdParamDto), consolidationController.deleteSet);
 
