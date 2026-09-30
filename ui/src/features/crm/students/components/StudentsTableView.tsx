@@ -46,11 +46,13 @@ interface Props {
   startIndex?: number;
 }
 
-const PasswordField = ({
+const PasswordResetDialog = ({
   student,
+  onOpenChange,
   onPasswordUpdate,
 }: {
-  student: Student;
+  student: Student | null;
+  onOpenChange: (open: boolean) => void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
 }) => {
   const [value, setValue] = useState('');
@@ -58,48 +60,59 @@ const PasswordField = ({
 
   useEffect(() => {
     setValue('');
-  }, [student.student_id, student.id]);
+  }, [student?.student_id, student?.id]);
 
   const save = async () => {
     const next = value.trim();
-    if (!onPasswordUpdate || !next || saving) return;
+    if (!student || !onPasswordUpdate || !next || saving) return;
 
     setSaving(true);
     try {
       await onPasswordUpdate(student, next);
-      setValue('');
-    } catch {
-      setValue('');
+      onOpenChange(false);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="max-w-[180px]">
-      <div className="relative">
-        <KeyRound className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="password"
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          onBlur={save}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.currentTarget.blur();
-            }
-            if (event.key === 'Escape') {
-              setValue('');
-              event.currentTarget.blur();
-            }
-          }}
-          disabled={saving}
-          placeholder="New password"
-          className="h-7 bg-white/80 pl-7 text-xs dark:bg-background"
-        />
-      </div>
-      {saving && <p className="mt-1 text-xs text-muted-foreground">Saving...</p>}
-    </div>
+    <Dialog open={student != null} onOpenChange={(open) => (!open && !saving ? onOpenChange(false) : undefined)}>
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Reset password</DialogTitle>
+          <DialogDescription>
+            {student ? `Set a new login password for ${student.first_name} ${student.last_name}.` : ''}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label htmlFor="reset-password">New password</Label>
+          <div className="relative">
+            <KeyRound className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="reset-password"
+              type="password"
+              value={value}
+              onChange={(event) => setValue(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') save();
+              }}
+              disabled={saving}
+              placeholder="New password"
+              autoComplete="new-password"
+              className="pl-8"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+            Cancel
+          </Button>
+          <Button type="button" onClick={save} disabled={saving || !value.trim()}>
+            {saving ? 'Saving...' : 'Save password'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
@@ -132,6 +145,7 @@ export const StudentsTableView = ({
   const [transferCustomReason, setTransferCustomReason] = useState('');
   const [transferring, setTransferring] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ ids: number[]; bulk: boolean } | null>(null);
+  const [passwordTarget, setPasswordTarget] = useState<Student | null>(null);
 
   const getStudentId = (student: Student) => Number(student.student_id || student.id || 0);
   const getClassTeacherId = (student: Student) => {
@@ -323,6 +337,12 @@ export const StudentsTableView = ({
             Transfer
           </DropdownMenuItem>
         )}
+        {onPasswordUpdate && (
+          <DropdownMenuItem onClick={() => setPasswordTarget(student)}>
+            <KeyRound className={actionIconClass} />
+            Reset password
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem className="text-rose-600 focus:text-rose-700" onClick={() => setDeleteTarget({ ids: [student.student_id || student.id || 0], bulk: false })}>
           <Trash2 className={actionIconClass} />
           Delete
@@ -432,6 +452,11 @@ export const StudentsTableView = ({
         onOpenChange={(open) => (!open ? setDeleteTarget(null) : undefined)}
         onConfirm={confirmDelete}
       />
+      <PasswordResetDialog
+        student={passwordTarget}
+        onOpenChange={(open) => (!open ? setPasswordTarget(null) : undefined)}
+        onPasswordUpdate={onPasswordUpdate}
+      />
     </>
   );
 
@@ -520,9 +545,6 @@ export const StudentsTableView = ({
                           <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
                           {showMonthlyPaymentStatus && renderPaymentChip(student)}
                         </div>
-                        <div className="mt-1.5">
-                          <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
-                        </div>
                       </div>
                     </div>
                   ) : (
@@ -539,9 +561,6 @@ export const StudentsTableView = ({
                         <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
                         <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
                         {showMonthlyPaymentStatus && renderPaymentChip(student)}
-                      </div>
-                      <div className="mt-2">
-                        <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
                       </div>
                     </div>
                   )}
@@ -606,20 +625,19 @@ export const StudentsTableView = ({
             <TableHead className="h-8 px-2 text-xs">Phone</TableHead>
             <TableHead className="h-8 px-2 text-xs">Age</TableHead>
             {showMonthlyPaymentStatus && <TableHead className="h-8 px-2 text-xs">This month</TableHead>}
-            <TableHead className="h-8 px-2 text-xs">Password</TableHead>
             <TableHead className="h-8 px-2 text-right text-xs"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {loading ? (
             <TableRow>
-              <TableCell colSpan={(hideTeacherGroup ? 9 : 11) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center">
+              <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center">
                 Loading...
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={(hideTeacherGroup ? 9 : 11) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center text-muted-foreground">
+              <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center text-muted-foreground">
                 {emptyText}
               </TableCell>
             </TableRow>
@@ -695,9 +713,6 @@ export const StudentsTableView = ({
                     {renderPaymentChip(student)}
                   </TableCell>
                 )}
-                <TableCell className="px-2 py-2">
-                  <PasswordField student={student} onPasswordUpdate={onPasswordUpdate} />
-                </TableCell>
                 <TableCell className="px-2 py-2 text-right">
                   {renderActions(student)}
                 </TableCell>
