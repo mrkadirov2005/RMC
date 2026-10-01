@@ -9,7 +9,7 @@ const getAllDiscounts = async (req: any, res: any) => {
     const { centerId } = scope;
     res.json(await discountService.list(req.query, centerId ?? undefined));
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch discounts');
+    sendError(res, error, "Chegirmalarni yuklab bo'lmadi");
   }
 };
 
@@ -19,10 +19,10 @@ const getDiscountById = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId } = scope;
     const row = await discountService.getById(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Discount not found' });
+    if (!row) return res.status(404).json({ error: 'Chegirma topilmadi' });
     res.json(row);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch discount');
+    sendError(res, error, "Chegirmani yuklab bo'lmadi");
   }
 };
 
@@ -34,7 +34,7 @@ const getActiveSerialDiscountByStudent = async (req: any, res: any) => {
     const row = await discountService.getActiveSerialByStudent(Number(req.params.studentId), centerId ?? undefined);
     res.json(row || null);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch active discount');
+    sendError(res, error, "Faol chegirmani yuklab bo'lmadi");
   }
 };
 
@@ -50,7 +50,7 @@ const getActiveDiscountByStudent = async (req: any, res: any) => {
     );
     res.json(row || null);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch active discount');
+    sendError(res, error, "Faol chegirmani yuklab bo'lmadi");
   }
 };
 
@@ -61,7 +61,7 @@ const createDiscount = async (req: any, res: any) => {
     const { centerId } = scope;
     const out = await discountService.create(req.body, centerId ?? undefined);
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Student does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     const { row } = out as { row: any };
     await logAudit({
@@ -79,9 +79,9 @@ const createDiscount = async (req: any, res: any) => {
       },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Discount created', discount: row });
+    res.status(201).json({ message: 'Chegirma yaratildi', discount: row });
   } catch (error: any) {
-    sendError(res, error, 'Failed to create discount');
+    sendError(res, error, "Chegirmani yaratib bo'lmadi");
   }
 };
 
@@ -91,10 +91,10 @@ const updateDiscount = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId } = scope;
     const row = await discountService.update(Number(req.params.id), req.body, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Discount not found' });
-    res.json({ message: 'Discount updated', discount: row });
+    if (!row) return res.status(404).json({ error: 'Chegirma topilmadi' });
+    res.json({ message: 'Chegirma yangilandi', discount: row });
   } catch (error: any) {
-    sendError(res, error, 'Failed to update discount');
+    sendError(res, error, "Chegirmani yangilab bo'lmadi");
   }
 };
 
@@ -104,10 +104,10 @@ const deleteDiscount = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId } = scope;
     const row = await discountService.remove(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Discount not found' });
-    res.json({ message: 'Discount deleted', discount: row });
+    if (!row) return res.status(404).json({ error: 'Chegirma topilmadi' });
+    res.json({ message: "Chegirma o'chirildi", discount: row });
   } catch (error: any) {
-    sendError(res, error, 'Failed to delete discount');
+    sendError(res, error, "Chegirmani o'chirib bo'lmadi");
   }
 };
 

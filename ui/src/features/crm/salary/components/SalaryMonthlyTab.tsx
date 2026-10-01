@@ -18,6 +18,7 @@ import {
 import { useSalaryTeacherDetail } from '../hooks/useSalaryTeacherDetail';
 import { formatSalaryPeriod, teacherFullName } from '../model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const BAR_GRADIENTS = [
   'linear-gradient(180deg, #34d399, #0d9488)',
@@ -32,6 +33,7 @@ const PAID_COLOR = '#10b981';
 const UNPAID_COLOR = '#f43f5e';
 
 export const SalaryMonthlyTab = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const monthlySummary = useAppSelector(selectSalaryMonthlySummary);
   const monthlySummaryLoading = useAppSelector(selectSalaryMonthlySummaryLoading);
@@ -71,7 +73,7 @@ export const SalaryMonthlyTab = () => {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
       <div className="rounded-lg border bg-card p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-bold">Total salary paid per month</h3>
+        <h3 className="mb-3 text-sm font-bold">{t('Total salary paid per month')}</h3>
         {monthlySummaryLoading ? (
           <div className="flex h-52 items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -95,13 +97,13 @@ export const SalaryMonthlyTab = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search teachers..."
+                placeholder={t('Search teachers...')}
                 className="h-8 pl-8 text-xs"
               />
             </div>
             <div className="max-h-[320px] space-y-1 overflow-y-auto">
               {filteredTeachers.length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">No teachers found</p>
+                <p className="py-6 text-center text-xs text-muted-foreground">{t('No teachers found')}</p>
               ) : (
                 filteredTeachers.map((teacher) => {
                   const id = Number(teacher.teacher_id || teacher.id);
@@ -135,6 +137,7 @@ const TeacherSalaryPieView = ({
   teacherName: string;
   onBack: () => void;
 }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { detail, loading } = useSalaryTeacherDetail(teacherId, 12);
 
@@ -148,7 +151,7 @@ const TeacherSalaryPieView = ({
     <div className="space-y-3">
       <Button variant="ghost" size="sm" className="gap-1.5 px-1.5" onClick={onBack}>
         <ArrowLeft className="h-3.5 w-3.5" />
-        Back to teachers
+        {t('Back to teachers')}
       </Button>
       <p className="truncate text-sm font-bold">{teacherName}</p>
 
@@ -157,7 +160,7 @@ const TeacherSalaryPieView = ({
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : paid + unpaid === 0 ? (
-        <p className="py-8 text-center text-xs text-muted-foreground">No salary history yet.</p>
+        <p className="py-8 text-center text-xs text-muted-foreground">{t('No salary history yet.')}</p>
       ) : (
         <div className="flex flex-col items-center gap-3">
           <div className="relative flex items-center justify-center">
@@ -171,20 +174,20 @@ const TeacherSalaryPieView = ({
             />
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-xl font-black">{paid + unpaid}</span>
-              <span className="text-[10px] font-semibold uppercase text-muted-foreground">Months</span>
+              <span className="text-[10px] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
             </div>
           </div>
           <div className="flex w-full justify-around text-xs">
             <span className="flex items-center gap-1.5 font-semibold text-emerald-600">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" /> Paid: {paid}
+              <span className="h-2 w-2 rounded-full bg-emerald-500" /> {t('Paid:')} {paid}
             </span>
             <span className="flex items-center gap-1.5 font-semibold text-rose-600">
-              <span className="h-2 w-2 rounded-full bg-rose-500" /> Unpaid: {unpaid}
+              <span className="h-2 w-2 rounded-full bg-rose-500" /> {t('Unpaid:')} {unpaid}
             </span>
           </div>
           {detail?.history?.[0]?.salary && (
             <p className="text-[11px] text-muted-foreground">
-              Last recorded: {formatMoney(detail.history[0].salary.amount)}
+              {t('Last recorded:')} {formatMoney(detail.history[0].salary.amount)}
             </p>
           )}
         </div>
@@ -194,7 +197,7 @@ const TeacherSalaryPieView = ({
         className="w-full gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
         onClick={() => navigate(`/salary/${teacherId}`)}
       >
-        View full history
+        {t('View full history')}
         <ArrowRight className="h-4 w-4" />
       </Button>
     </div>

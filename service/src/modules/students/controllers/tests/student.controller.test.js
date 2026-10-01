@@ -61,7 +61,7 @@ describe('students controller', () => {
       await studentController.getAllStudents(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
   });
 
@@ -89,7 +89,7 @@ describe('students controller', () => {
       await studentController.createStudent(req, res);
 
       expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Username already exists' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' }));
     });
   });
 
@@ -101,7 +101,7 @@ describe('students controller', () => {
       await studentController.updateStudent(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
   });
 });

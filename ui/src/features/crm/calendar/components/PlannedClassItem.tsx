@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import type { ClassItem } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface PlannedClassItemProps {
   item: any;
@@ -27,6 +28,7 @@ export const PlannedClassItem = ({
   classes,
   index,
 }: PlannedClassItemProps) => {
+  const { t } = useLanguage();
   return (
     <div
       key={`planned-${item.class_id}-${item.time}-${index}`}
@@ -46,7 +48,7 @@ export const PlannedClassItem = ({
             className="bg-amber-600 hover:bg-amber-700 text-white border-none"
             onClick={() => onStartLesson(Number(item.class_id), selectedDay, item.time, item.end_time)}
           >
-            Start Lesson
+            {t('Start Lesson')}
           </Button>
         )}
         {canViewDetails && (
@@ -62,7 +64,7 @@ export const PlannedClassItem = ({
               }
             }}
           >
-            Summary
+            {t('Summary')}
           </Button>
         )}
       </div>

@@ -97,7 +97,7 @@ export const PaymentDateDetailsModal = ({ open, onOpenChange, collections }: Pro
       <DialogContent className="max-h-[86vh] max-w-2xl overflow-hidden p-0">
         <DialogHeader className="border-b px-6 py-4">
           <DialogTitle>To'lov qilgan o'quvchilar</DialogTitle>
-          <DialogDescription>Yilni tanlang - shu yildagi barcha to'lovlar korinadi. Toraytirish uchun oy va kunni ham tanlashingiz mumkin.</DialogDescription>
+          <DialogDescription>Yilni tanlang - shu yildagi barcha to'lovlar ko'rinadi. Toraytirish uchun oy va kunni ham tanlashingiz mumkin.</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-3 px-6 py-4">
@@ -156,11 +156,11 @@ export const PaymentDateDetailsModal = ({ open, onOpenChange, collections }: Pro
         <div className="max-h-[46vh] overflow-auto border-t px-6 py-4">
           {!year ? (
             <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-              Natijalarni korish uchun avval yilni tanlang.
+              Natijalarni ko'rish uchun avval yilni tanlang.
             </div>
           ) : rows.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-              Bu davrda tolov topilmadi.
+              Bu davrda to'lov topilmadi.
             </div>
           ) : (
             <Table>

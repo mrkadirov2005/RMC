@@ -2,6 +2,7 @@ import { BookOpen, ChevronDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getStatusVariant, isIncomingTransfer, isTransferredStudentStatus, INCOMING_TRANSFER_VARIANT } from '../../students/status';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherClassesStudentsTabProps {
   studentClassGroups: Array<{
@@ -21,11 +22,12 @@ export default function TeacherClassesStudentsTab({
   detailStudentsLoading,
   onToggleClassExpanded,
 }: TeacherClassesStudentsTabProps) {
+  const { t } = useLanguage();
   if (studentClassGroups.length === 0) {
     return (
       <div className="text-center py-12 text-muted-foreground">
         <BookOpen className="h-16 w-16 mx-auto opacity-30 mb-4" />
-        <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
+        <h3 className="text-lg font-semibold">{t('No classes or students assigned to this teacher')}</h3>
       </div>
     );
   }
@@ -45,20 +47,20 @@ export default function TeacherClassesStudentsTab({
               <div className="flex-grow">
                 <h3 className="text-xs font-semibold">{classItem.class_name}</h3>
                 <p className="text-[10px] text-muted-foreground">
-                  {isTeacherOwned ? 'Teacher group' : 'Group'} / Level: {classItem.level || 'N/A'}
+                  {t('{label} / Level: {level}', { label: isTeacherOwned ? t('Teacher group') : t('Group'), level: classItem.level || 'N/A' })}
                 </p>
               </div>
               <Badge variant="outline" className="bg-transparent text-xs font-semibold">
-                {classStudents.length} Students
+                {classStudents.length} {t('Students')}
               </Badge>
               <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', isExpanded && 'rotate-180')} />
             </button>
             {isExpanded && (
               <div className="border-t border-slate-200 bg-white p-2.5 dark:border-border dark:bg-card">
                 {detailStudentsLoading && classStudents.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">Loading students...</div>
+                  <div className="py-6 text-center text-sm text-muted-foreground">{t('Loading students...')}</div>
                 ) : classStudents.length === 0 ? (
-                  <div className="py-6 text-center text-sm text-muted-foreground">No students in this class</div>
+                  <div className="py-6 text-center text-sm text-muted-foreground">{t('No students in this class')}</div>
                 ) : (
                   <StudentList students={classStudents} />
                 )}
@@ -71,7 +73,9 @@ export default function TeacherClassesStudentsTab({
   );
 }
 
-const StudentList = ({ students }: { students: any[] }) => (
+const StudentList = ({ students }: { students: any[] }) => {
+  const { t } = useLanguage();
+  return (
   <div className="flex flex-col ">
     {students.map((student, index) => {
       const outgoing = isTransferredStudentStatus(student.status);
@@ -92,12 +96,12 @@ const StudentList = ({ students }: { students: any[] }) => (
           </span>
           {outgoing && (
             <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${getStatusVariant(student.status)}`}>
-              Transferred
+              {t('Transferred')}
             </span>
           )}
           {incoming && (
             <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${INCOMING_TRANSFER_VARIANT}`}>
-              New (Transferred)
+              {t('New (Transferred)')}
             </span>
           )}
         </div>
@@ -105,3 +109,4 @@ const StudentList = ({ students }: { students: any[] }) => (
     })}
   </div>
 );
+};

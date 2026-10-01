@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { PieChart } from '@/shared/components/PieChart';
 import { cn } from '@/lib/utils';
 import type { StudentChartMode, StudentStatRow } from './types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   mode: StudentChartMode;
@@ -29,6 +30,7 @@ const summarizeRows = (rows: StudentStatRow[], limit: number): StudentStatRow[] 
 };
 
 export const StudentStatsChart = ({ mode, rows, total, modalListTitle }: Props) => {
+  const { t } = useLanguage();
   const [listOpen, setListOpen] = useState(false);
   const visibleRows = rows.slice(0, 10);
   const max = Math.max(...visibleRows.map((row) => row.count), 1);
@@ -45,7 +47,7 @@ export const StudentStatsChart = ({ mode, rows, total, modalListTitle }: Props) 
       : '';
 
   if (visibleRows.length === 0) {
-    return <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-500">No data</div>;
+    return <div className="flex h-72 items-center justify-center text-sm font-semibold text-slate-500">{t('No data')}</div>;
   }
 
   if (mode === 'pie') {
@@ -75,7 +77,7 @@ export const StudentStatsChart = ({ mode, rows, total, modalListTitle }: Props) 
               className="inline-flex h-9 items-center rounded-md border border-slate-200 bg-white px-3 text-xs font-black text-slate-700 shadow-sm transition hover:border-blue-300 hover:bg-blue-50 dark:border-white/10 dark:bg-white/[0.05] dark:text-white"
             >
               <List className="mr-1.5 h-4 w-4" />
-              View all {modalListTitle.toLowerCase()} ({rows.length})
+              {t('View all')} {modalListTitle.toLowerCase()} ({rows.length})
             </button>
           </div>
           <RowsDialog open={listOpen} onOpenChange={setListOpen} title={modalListTitle} rows={rows} total={total} />

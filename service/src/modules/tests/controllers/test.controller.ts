@@ -13,11 +13,11 @@ const guardTestWrite = async (
 ) => {
   const access = await testService.checkTestWriteAccess(target, centerId, req.user);
   if (access === 'not_found') {
-    res.status(404).json({ error: target.testId != null ? 'Test not found' : 'Not found' });
+    res.status(404).json({ error: target.testId != null ? 'Test topilmadi' : 'Topilmadi' });
     return false;
   }
   if (access === 'forbidden') {
-    res.status(403).json({ error: 'Only the teacher who created this test can change it.' });
+    res.status(403).json({ error: "Testni faqat uni yaratgan o'qituvchi o'zgartira oladi." });
     return false;
   }
   return true;
@@ -31,7 +31,7 @@ const getAllTests = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch tests', details: error.message || String(error) });
+    res.status(500).json({ error: "Testlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -42,7 +42,7 @@ const getStatistics = async (req: any, res: any) => {
     res.json(await testService.getStatistics(centerId ?? undefined, req.user));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch test statistics', details: error.message || String(error) });
+    res.status(500).json({ error: "Test statistikasini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -51,9 +51,9 @@ const createShareLink = async (req: any, res: any) => {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
     const out = await testService.rotateShareToken(Number(req.params.id), centerId ?? undefined, req.user);
-    if (!out) return res.status(404).json({ error: 'Test not found' });
+    if (!out) return res.status(404).json({ error: 'Test topilmadi' });
     if (out.error === 'forbidden') {
-      return res.status(403).json({ error: 'Only the test author or a superuser can share this test.' });
+      return res.status(403).json({ error: 'Testni faqat uning muallifi yoki superuser ulasha oladi.' });
     }
     await logAudit({
       user_type: req.user?.userType || 'system',
@@ -65,10 +65,10 @@ const createShareLink = async (req: any, res: any) => {
       details: { rotated: true },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Share link ready', share_token: out.share_token });
+    res.status(201).json({ message: 'Ulashish havolasi tayyor', share_token: out.share_token });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create share link', details: error.message || String(error) });
+    res.status(500).json({ error: "Ulashish havolasini yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -77,25 +77,25 @@ const revokeShareLink = async (req: any, res: any) => {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
     const out = await testService.revokeShareToken(Number(req.params.id), centerId ?? undefined, req.user);
-    if (!out) return res.status(404).json({ error: 'Test not found' });
+    if (!out) return res.status(404).json({ error: 'Test topilmadi' });
     if (out.error === 'forbidden') {
-      return res.status(403).json({ error: 'Only the test author or a superuser can revoke this link.' });
+      return res.status(403).json({ error: 'Bu havolani faqat test muallifi yoki superuser bekor qila oladi.' });
     }
-    res.json({ message: 'Share link revoked' });
+    res.json({ message: 'Ulashish havolasi bekor qilindi' });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to revoke share link', details: error.message || String(error) });
+    res.status(500).json({ error: "Ulashish havolasini bekor qilib bo'lmadi", details: error.message || String(error) });
   }
 };
 
 const getSharedTest = async (req: any, res: any) => {
   try {
     const view = await testService.getSharedTestView(req.params.shareToken);
-    if (!view) return res.status(404).json({ error: 'This link is no longer active.' });
+    if (!view) return res.status(404).json({ error: 'Bu havola endi faol emas.' });
     res.json(view);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to open this link', details: error.message || String(error) });
+    res.status(500).json({ error: "Bu havolani ochib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -106,15 +106,15 @@ const startSharedTest = async (req: any, res: any) => {
       confirm: Boolean(req.body?.confirm),
     });
     if (out.error === 'not_found') {
-      return res.status(404).json({ error: 'This link is no longer active.' });
+      return res.status(404).json({ error: 'Bu havola endi faol emas.' });
     }
     // One message for an unknown username and for a student who was never assigned
     // this test, so the link cannot be used to find out who studies here.
     if (out.error === 'not_assigned') {
-      return res.status(403).json({ error: 'This test has not been assigned to that username.' });
+      return res.status(403).json({ error: "Bu test ko'rsatilgan foydalanuvchi nomiga biriktirilmagan." });
     }
     if (out.error === 'already_submitted') {
-      return res.status(409).json({ error: 'You have already completed this test.', attempts: out.attempts });
+      return res.status(409).json({ error: 'Siz bu testni allaqachon yakunlagansiz.', attempts: out.attempts });
     }
     if (out.needs_confirmation) {
       return res.json({ needs_confirmation: true, attempts: out.attempts });
@@ -122,7 +122,7 @@ const startSharedTest = async (req: any, res: any) => {
     res.status(201).json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to start this test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni boshlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -134,12 +134,12 @@ const getSharedSubmission = async (req: any, res: any) => {
       String(req.query.access_token || '')
     );
     if (out.error === 'not_found') {
-      return res.status(404).json({ error: 'This link is no longer active.' });
+      return res.status(404).json({ error: 'Bu havola endi faol emas.' });
     }
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to open this test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni ochib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -153,24 +153,24 @@ const submitSharedTest = async (req: any, res: any) => {
       body
     );
     if (out.error === 'not_found') {
-      return res.status(404).json({ error: 'This link is no longer active.' });
+      return res.status(404).json({ error: 'Bu havola endi faol emas.' });
     }
     if (out.error === 'already_submitted') {
-      return res.status(409).json({ error: 'This attempt has already been handed in.' });
+      return res.status(409).json({ error: 'Bu urinish allaqachon topshirilgan.' });
     }
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Those answers do not belong to this test.' });
+      return res.status(400).json({ error: 'Bu javoblar ushbu testga tegishli emas.' });
     }
     if (out.error === 'word_limit') {
-      return res.status(400).json({ error: 'One answer is over its word limit.', question_id: out.question_id });
+      return res.status(400).json({ error: "Bitta javob so'z chegarasidan oshib ketgan.", question_id: out.question_id });
     }
     if (out.error === 'required') {
-      return res.status(400).json({ error: 'Every required question needs an answer.', question_id: out.question_id });
+      return res.status(400).json({ error: 'Har bir majburiy savolga javob berilishi kerak.', question_id: out.question_id });
     }
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to hand in this test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni topshirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -179,11 +179,11 @@ const getTestById = async (req: any, res: any) => {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
     const data = await testService.getTestById(Number(req.params.id), centerId ?? undefined, req.user);
-    if (!data) return res.status(404).json({ error: 'Test not found' });
+    if (!data) return res.status(404).json({ error: 'Test topilmadi' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -209,10 +209,10 @@ const createTest = async (req: any, res: any) => {
       details: { test_name: test.test_name, test_type: test.test_type },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Test created', test, questions, passages });
+    res.status(201).json({ message: 'Test yaratildi', test, questions, passages });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -222,11 +222,11 @@ const updateTest = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { testId: Number(req.params.id) }, centerId ?? undefined))) return;
     const row = await testService.updateTest(Number(req.params.id), req.body, centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Test not found' });
-    res.json({ message: 'Test updated', test: row });
+    if (!row) return res.status(404).json({ error: 'Test topilmadi' });
+    res.json({ message: 'Test yangilandi', test: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -236,11 +236,11 @@ const deleteTest = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { testId: Number(req.params.id) }, centerId ?? undefined))) return;
     const row = await testService.deleteTest(Number(req.params.id), centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Test not found' });
-    res.json({ message: 'Test deleted', test: row });
+    if (!row) return res.status(404).json({ error: 'Test topilmadi' });
+    res.json({ message: "Test o'chirildi", test: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -250,11 +250,11 @@ const addQuestion = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { testId: Number(req.params.testId) }, centerId ?? undefined))) return;
     const row = await testService.addQuestion(Number(req.params.testId), req.body, centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Test not found' });
-    res.status(201).json({ message: 'Question added', question: row });
+    if (!row) return res.status(404).json({ error: 'Test topilmadi' });
+    res.status(201).json({ message: "Savol qo'shildi", question: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to add question', details: error.message || String(error) });
+    res.status(500).json({ error: "Savolni qo'shib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -264,11 +264,11 @@ const updateQuestion = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { questionId: Number(req.params.questionId) }, centerId ?? undefined))) return;
     const row = await testService.updateQuestion(Number(req.params.questionId), req.body, centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Question not found' });
-    res.json({ message: 'Question updated', question: row });
+    if (!row) return res.status(404).json({ error: 'Savol topilmadi' });
+    res.json({ message: 'Savol yangilandi', question: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update question', details: error.message || String(error) });
+    res.status(500).json({ error: "Savolni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -278,11 +278,11 @@ const deleteQuestion = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { questionId: Number(req.params.questionId) }, centerId ?? undefined))) return;
     const row = await testService.deleteQuestion(Number(req.params.questionId), centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Question not found' });
-    res.json({ message: 'Question deleted', question: row });
+    if (!row) return res.status(404).json({ error: 'Savol topilmadi' });
+    res.json({ message: "Savol o'chirildi", question: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete question', details: error.message || String(error) });
+    res.status(500).json({ error: "Savolni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -292,11 +292,11 @@ const addPassage = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { testId: Number(req.params.testId) }, centerId ?? undefined))) return;
     const row = await testService.addPassage(Number(req.params.testId), req.body, centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Test not found' });
-    res.status(201).json({ message: 'Passage added', passage: row });
+    if (!row) return res.status(404).json({ error: 'Test topilmadi' });
+    res.status(201).json({ message: "Matn qo'shildi", passage: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to add passage', details: error.message || String(error) });
+    res.status(500).json({ error: "Matnni qo'shib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -306,11 +306,11 @@ const updatePassage = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { passageId: Number(req.params.passageId) }, centerId ?? undefined))) return;
     const row = await testService.updatePassage(Number(req.params.passageId), req.body, centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Passage not found' });
-    res.json({ message: 'Passage updated', passage: row });
+    if (!row) return res.status(404).json({ error: 'Matn topilmadi' });
+    res.json({ message: 'Matn yangilandi', passage: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update passage', details: error.message || String(error) });
+    res.status(500).json({ error: "Matnni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -320,11 +320,11 @@ const deletePassage = async (req: any, res: any) => {
     if (centerId == null) return;
     if (!(await guardTestWrite(req, res, { passageId: Number(req.params.passageId) }, centerId ?? undefined))) return;
     const row = await testService.deletePassage(Number(req.params.passageId), centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Passage not found' });
-    res.json({ message: 'Passage deleted', passage: row });
+    if (!row) return res.status(404).json({ error: 'Matn topilmadi' });
+    res.json({ message: "Matn o'chirildi", passage: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete passage', details: error.message || String(error) });
+    res.status(500).json({ error: "Matnni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -334,26 +334,26 @@ const startTest = async (req: any, res: any) => {
     if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
+      if (!ok) return res.status(404).json({ error: 'Test topilmadi' });
     }
     const row = await testService.startTest(Number(req.params.testId), req.body, {
       ip: req.ip,
       studentId: req.user?.userType === 'student' ? req.user?.id : req.body.student_id,
     }, centerId ?? req.body.center_id, req.user);
     if (row?.error === 'validation') {
-      return res.status(400).json({ error: 'student_id is required to start a test' });
+      return res.status(400).json({ error: "Testni boshlash uchun student_id ko'rsatilishi shart" });
     }
     if (row?.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Student does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     if (row?.error === 'max_retakes') {
-      return res.status(409).json({ error: 'No attempts remaining for this test.' });
+      return res.status(409).json({ error: 'Bu test uchun urinishlar qolmagan.' });
     }
-    if (!row) return res.status(404).json({ error: 'Test not found' });
-    res.status(201).json({ message: 'Test started', submission: row });
+    if (!row) return res.status(404).json({ error: 'Test topilmadi' });
+    res.status(201).json({ message: 'Test boshlandi', submission: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to start test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni boshlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -362,32 +362,32 @@ const submitTest = async (req: any, res: any) => {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
     const submission = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
-    if (!submission) return res.status(404).json({ error: 'Submission not found' });
+    if (!submission) return res.status(404).json({ error: 'Topshirilgan javob topilmadi' });
     if (req.user?.userType === 'student') {
       if (Number(submission.student_id) !== Number(req.user?.id)) {
-        return res.status(403).json({ error: 'Access denied.' });
+        return res.status(403).json({ error: 'Kirish rad etildi.' });
       }
     } else if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(submission.student_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     } else if (req.user?.userType !== 'superuser') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await testService.submitTest(Number(req.params.submissionId), req.body, centerId ?? req.body.center_id);
     if (row?.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Submission contains records from another center.' });
+      return res.status(400).json({ error: 'Topshirilgan javobda boshqa markazga tegishli yozuvlar bor.' });
     }
     if (row?.error === 'word_limit') {
-      return res.status(400).json({ error: 'Answer exceeds the word limit.', question_id: row.question_id });
+      return res.status(400).json({ error: "Javob so'z chegarasidan oshib ketgan.", question_id: row.question_id });
     }
     if (row?.error === 'required') {
-      return res.status(400).json({ error: 'A required question has no answer.', question_id: row.question_id });
+      return res.status(400).json({ error: 'Majburiy savolga javob berilmagan.', question_id: row.question_id });
     }
-    if (!row) return res.status(404).json({ error: 'Submission not found' });
-    res.json({ message: 'Test submitted', submission: row });
+    if (!row) return res.status(404).json({ error: 'Topshirilgan javob topilmadi' });
+    res.json({ message: 'Test topshirildi', submission: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to submit test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni topshirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -397,9 +397,9 @@ const gradeSubmission = async (req: any, res: any) => {
     if (centerId == null) return;
     if (req.user?.userType === 'teacher') {
       const submission = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
-      if (!submission) return res.status(404).json({ error: 'Submission not found' });
+      if (!submission) return res.status(404).json({ error: 'Topshirilgan javob topilmadi' });
       const ok = await studentBelongsToTeacher(submission.student_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     // Who marked the paper comes from the session, not the request body: a client
     // should not be able to file a grade under somebody else's name.
@@ -409,16 +409,16 @@ const gradeSubmission = async (req: any, res: any) => {
       centerId ?? req.body.center_id
     );
     if (row?.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Submission contains records from another center.' });
+      return res.status(400).json({ error: 'Topshirilgan javobda boshqa markazga tegishli yozuvlar bor.' });
     }
     if (row?.error === 'invalid_question') {
-      return res.status(400).json({ error: 'Grade refers to a question outside this submission.', question_id: row.question_id });
+      return res.status(400).json({ error: "Baho ushbu topshiriqda mavjud bo'lmagan savolga tegishli.", question_id: row.question_id });
     }
-    if (!row) return res.status(404).json({ error: 'Submission not found' });
-    res.json({ message: 'Submission graded', submission: row });
+    if (!row) return res.status(404).json({ error: 'Topshirilgan javob topilmadi' });
+    res.json({ message: 'Topshirilgan javob baholandi', submission: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to grade submission', details: error.message || String(error) });
+    res.status(500).json({ error: "Topshirilgan javobni baholab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -428,13 +428,13 @@ const getSubmissionsByTest = async (req: any, res: any) => {
     if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
+      if (!ok) return res.status(404).json({ error: 'Test topilmadi' });
     }
     const rows = await testService.getSubmissionsByTest(Number(req.params.testId), centerId ?? req.body.center_id);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch submissions', details: error.message || String(error) });
+    res.status(500).json({ error: "Topshirilgan javoblarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -443,18 +443,18 @@ const getSubmissionDetails = async (req: any, res: any) => {
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
     const data = await testService.getSubmissionDetails(Number(req.params.submissionId), centerId ?? req.body.center_id);
-    if (!data) return res.status(404).json({ error: 'Submission not found' });
+    if (!data) return res.status(404).json({ error: 'Topshirilgan javob topilmadi' });
     if (req.user?.userType === 'student' && Number(data.student_id) !== Number(req.user?.id)) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(data.student_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch submission', details: error.message || String(error) });
+    res.status(500).json({ error: "Topshirilgan javobni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -462,11 +462,11 @@ const getSubmissionsByStudent = async (req: any, res: any) => {
   try {
     const studentId = Number(req.params.studentId);
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
@@ -474,7 +474,7 @@ const getSubmissionsByStudent = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch student submissions', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchi topshirgan javoblarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -484,13 +484,13 @@ const getTestResults = async (req: any, res: any) => {
     if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
+      if (!ok) return res.status(404).json({ error: 'Test topilmadi' });
     }
     const rows = await testService.getTestResults(Number(req.params.testId), centerId ?? req.body.center_id);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch test results', details: error.message || String(error) });
+    res.status(500).json({ error: "Test natijalarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -500,17 +500,17 @@ const getStudentResults = async (req: any, res: any) => {
     if (centerId == null) return;
     const studentId = Number(req.params.studentId);
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     const rows = await testService.getStudentResults(studentId, centerId ?? req.body.center_id);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch student results', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchi natijalarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -520,16 +520,16 @@ const assignTest = async (req: any, res: any) => {
     if (centerId == null) return;
     if (centerId) {
       const ok = await testInCenter(Number(req.params.testId), centerId);
-      if (!ok) return res.status(404).json({ error: 'Test not found' });
+      if (!ok) return res.status(404).json({ error: 'Test topilmadi' });
     }
     const rows = await testService.assignTest(Number(req.params.testId), req.body, {
       userId: req.user?.id || 0,
     }, centerId ?? req.body.center_id);
-    if (!rows) return res.status(404).json({ error: 'Test not found' });
-    res.status(201).json({ message: 'Test assigned', assignments: rows });
+    if (!rows) return res.status(404).json({ error: 'Test topilmadi' });
+    res.status(201).json({ message: 'Test biriktirildi', assignments: rows });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to assign test', details: error.message || String(error) });
+    res.status(500).json({ error: "Testni biriktirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -537,10 +537,10 @@ const getAssignedTests = async (req: any, res: any) => {
   try {
     const { type, id } = req.params;
     if (req.user?.userType === 'student' && (type !== 'student' || Number(id) !== req.user?.id)) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher' && (type !== 'teacher' || Number(id) !== req.user?.id)) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const centerId = requireTestCenterScope(req, res);
     if (centerId == null) return;
@@ -548,7 +548,7 @@ const getAssignedTests = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch assigned tests', details: error.message || String(error) });
+    res.status(500).json({ error: "Biriktirilgan testlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 

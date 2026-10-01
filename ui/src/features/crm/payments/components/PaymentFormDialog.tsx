@@ -21,6 +21,7 @@ import {
   getMonthStart,
   getSixMonthWindow,
 } from '../utils/paymentHistory';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Option = { id?: number; label: string; value: string | number };
 
@@ -97,6 +98,7 @@ export const PaymentFormDialog = ({
   disableCenterSelect = false,
   submitDisabled = false,
 }: PaymentFormDialogProps) => {
+  const { t } = useLanguage();
   const normalizedAmount = Number(formData.amount || 0);
   const isEditing = Boolean(formData.payment_id || formData.id);
   const [studentSearch, setStudentSearch] = useState('');
@@ -238,7 +240,7 @@ export const PaymentFormDialog = ({
         <form onSubmit={onSubmit} className="space-y-4 px-6 py-5">
           <div className="grid gap-3 md:grid-cols-3">
             <div className={statClass}>
-              <p className={formLabelClassName}>Student</p>
+              <p className={formLabelClassName}>{t('Student')}</p>
               <div className="mt-2 flex items-start gap-2">
                 <UserRound className="mt-0.5 h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                 <div className="min-w-0">
@@ -252,14 +254,14 @@ export const PaymentFormDialog = ({
               </div>
             </div>
             <div className={statClass}>
-              <p className={formLabelClassName}>Group</p>
+              <p className={formLabelClassName}>{t('Group')}</p>
               {studentGroupOptions.length > 1 && onStudentGroupChange ? (
                 <Select
                   value={String(formData.student_id || '')}
                   onValueChange={(value) => onStudentGroupChange(Number(value))}
                 >
                   <SelectTrigger className="mt-2 w-full border-0 bg-transparent px-0 text-sm font-semibold shadow-none focus:ring-0">
-                    <SelectValue placeholder="Choose group" />
+                    <SelectValue placeholder={t('Choose group')} />
                   </SelectTrigger>
                   <SelectContent>
                     {studentGroupOptions.map((option) => (
@@ -276,13 +278,13 @@ export const PaymentFormDialog = ({
               )}
             </div>
             <div className={statClass}>
-              <p className={formLabelClassName}>Current amount</p>
+              <p className={formLabelClassName}>{t('Current amount')}</p>
               <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
-                {normalizedAmount > 0 ? `UZS ${normalizedAmount.toLocaleString()}` : 'Set amount'}
+                {normalizedAmount > 0 ? `UZS ${normalizedAmount.toLocaleString()}` : t('Set amount')}
               </p>
               {selectedStudent?.amount ? (
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Monthly fee: UZS {Number(selectedStudent.amount).toLocaleString()}
+                  {t('Monthly fee: UZS')} {Number(selectedStudent.amount).toLocaleString()}
                 </p>
               ) : null}
             </div>
@@ -294,9 +296,9 @@ export const PaymentFormDialog = ({
                 <UserRound className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Payer details</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Payer details')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Choose the student and center scope for this payment.
+                  {t('Choose the student and center scope for this payment.')}
                 </p>
               </div>
             </div>
@@ -304,7 +306,7 @@ export const PaymentFormDialog = ({
               {showStudentSelect ? (
                 <div className="space-y-2">
                   <Label htmlFor="student_search" className={formLabelClassName}>
-                    Student <span className="ml-1 text-destructive">*</span>
+                    {t('Student')} <span className="ml-1 text-destructive">*</span>
                   </Label>
                   <div className="relative">
                     <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -327,7 +329,7 @@ export const PaymentFormDialog = ({
                           }
                         }, 120);
                       }}
-                      placeholder={isLoadingOptions ? 'Loading students...' : 'Search student by name or batch...'}
+                      placeholder={isLoadingOptions ? t('Loading students...') : t('Search student by name or batch...')}
                       className="pl-9"
                       autoComplete="off"
                       required
@@ -336,11 +338,11 @@ export const PaymentFormDialog = ({
                       <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-30 overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-950">
                         {isLoadingOptions ? (
                           <div className="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
-                            Loading students...
+                            {t('Loading students...')}
                           </div>
                         ) : filteredStudentOptions.length === 0 ? (
                           <div className="px-3 py-3 text-sm text-slate-500 dark:text-slate-400">
-                            No students found
+                            {t('No students found')}
                           </div>
                         ) : (
                           <div className="max-h-64 overflow-y-auto p-1.5">
@@ -375,7 +377,7 @@ export const PaymentFormDialog = ({
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <Label className={formLabelClassName}>Student</Label>
+                  <Label className={formLabelClassName}>{t('Student')}</Label>
                   <div className="flex min-h-10 items-center rounded-xl border border-slate-200/90 bg-white px-3 text-sm text-slate-600 shadow-sm dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-200">
                     {selectedStudent?.name || 'Student not selected'}
                   </div>
@@ -384,7 +386,7 @@ export const PaymentFormDialog = ({
 
               {showCenterSelect ? (
                 <SelectField
-                  label="Center"
+                  label={t('Center')}
                   name="center_id"
                   value={formData.center_id || ''}
                   onChange={(value) => setPaymentField(setFormData, { center_id: Number(value) })}
@@ -392,7 +394,7 @@ export const PaymentFormDialog = ({
                   isLoading={isLoadingOptions}
                   disabled={disableCenterSelect}
                   required
-                  placeholder="Select center"
+                  placeholder={t('Select center')}
                 />
               ) : null}
             </div>
@@ -402,7 +404,7 @@ export const PaymentFormDialog = ({
             <section className={sectionClass}>
               <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Payment history</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Payment history')}</h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
                     {getMonthLabel(historyMonths[0])} - {getMonthLabel(historyMonths[historyMonths.length - 1])}
                   </p>
@@ -414,7 +416,7 @@ export const PaymentFormDialog = ({
                     size="icon"
                     className="h-8 w-8"
                     onClick={() => setHistoryWindowEnd((current) => new Date(current.getFullYear(), current.getMonth() - 6, 1))}
-                    aria-label="Previous six months"
+                    aria-label={t('Previous six months')}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -425,7 +427,7 @@ export const PaymentFormDialog = ({
                     className="h-8 w-8"
                     onClick={() => setHistoryWindowEnd((current) => new Date(current.getFullYear(), current.getMonth() + 6, 1))}
                     disabled={!canMoveHistoryForward}
-                    aria-label="Next six months"
+                    aria-label={t('Next six months')}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -473,26 +475,26 @@ export const PaymentFormDialog = ({
                   {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgePercent className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Student discount</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Student discount')}</h3>
                   {discountLoading ? (
-                    <p className="mt-1 text-xs text-slate-500">Checking active discount...</p>
+                    <p className="mt-1 text-xs text-slate-500">{t('Checking active discount...')}</p>
                   ) : discountLoadFailed ? (
-                    <p className="mt-1 text-xs font-medium text-rose-600">Could not load the student's discount.</p>
+                    <p className="mt-1 text-xs font-medium text-rose-600">{t("Could not load the student's discount.")}</p>
                   ) : activeDiscount ? (
                     <div className="mt-1 space-y-1 text-xs text-emerald-800 dark:text-emerald-200">
                       <p className="font-semibold">
-                        Active {activeDiscount.discount_kind === 'monthly_discount' ? 'one-time' : 'serial'} discount applied automatically
+                        {t('Active')} {activeDiscount.discount_kind === 'monthly_discount' ? 'one-time' : 'serial'} {t('discount applied automatically')}
                       </p>
                       <p>
                         {activeDiscount.discount_type === 'percent'
                           ? `${Number(activeDiscount.value || 0)}% discount`
                           : `UZS ${Number(activeDiscount.value || 0).toLocaleString()} discount`}
-                        {' · '}Payable: UZS {finalAmount.toLocaleString()}
+                        {' · '}{t('Payable: UZS')} {finalAmount.toLocaleString()}
                       </p>
                     </div>
                   ) : (
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      This student has no active discount. You can enter a one-time discount below.
+                      {t('This student has no active discount. You can enter a one-time discount below.')}
                     </p>
                   )}
                 </div>
@@ -500,7 +502,7 @@ export const PaymentFormDialog = ({
               {!discountLoading && !discountLoadFailed ? (
                 <div className="mt-4 grid gap-3 md:grid-cols-4">
                   <SelectField
-                    label="Discount type"
+                    label={t('Discount type')}
                     name="discount_value_type"
                     value={formData.discount_value_type || 'fixed'}
                     onChange={(value) => setPaymentField(setFormData, {
@@ -514,7 +516,7 @@ export const PaymentFormDialog = ({
                     disabled={Boolean(activeDiscount)}
                   />
                   <div className="space-y-2">
-                    <Label htmlFor="discount_value" className={formLabelClassName}>Discount value</Label>
+                    <Label htmlFor="discount_value" className={formLabelClassName}>{t('Discount value')}</Label>
                     <Input
                       id="discount_value"
                       type="number"
@@ -543,11 +545,11 @@ export const PaymentFormDialog = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className={formLabelClassName}>Discount amount</Label>
+                    <Label className={formLabelClassName}>{t('Discount amount')}</Label>
                     <Input readOnly value={`UZS ${discountAmount.toLocaleString()}`} />
                   </div>
                   <div className="space-y-2">
-                    <Label className={formLabelClassName}>Final payable</Label>
+                    <Label className={formLabelClassName}>{t('Final payable')}</Label>
                     <Input readOnly value={`UZS ${finalAmount.toLocaleString()}`} />
                   </div>
                 </div>
@@ -561,15 +563,15 @@ export const PaymentFormDialog = ({
                 <CreditCard className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Payment details</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Payment details')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Keep the financial fields consistent across all payment entry points.
+                  {t('Keep the financial fields consistent across all payment entry points.')}
                 </p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="payment_date" className={formLabelClassName}>Payment date</Label>
+                <Label htmlFor="payment_date" className={formLabelClassName}>{t('Payment date')}</Label>
                 <Input
                   id="payment_date"
                   type="date"
@@ -580,7 +582,7 @@ export const PaymentFormDialog = ({
               </div>
               <div className="space-y-2">
                 <Label htmlFor="amount" className={formLabelClassName}>
-                  {hasDiscount ? 'Original payment amount' : 'Amount'}
+                  {hasDiscount ? t('Original payment amount') : t('Amount')}
                 </Label>
                 <Input
                   id="amount"
@@ -596,31 +598,31 @@ export const PaymentFormDialog = ({
                 ) : null}
               </div>
               <SelectField
-                label="Method"
+                label={t('Method')}
                 name="payment_method"
                 value={formData.payment_method || ''}
                 onChange={(value) => setPaymentField(setFormData, { payment_method: value })}
                 options={paymentMethodOptions}
                 required
-                placeholder="Select method"
+                placeholder={t('Select method')}
               />
               <SelectField
-                label="Type"
+                label={t('Type')}
                 name="payment_type"
                 value={formData.payment_type || ''}
                 onChange={(value) => setPaymentField(setFormData, { payment_type: value })}
                 options={paymentTypeOptions}
                 required
-                placeholder="Select type"
+                placeholder={t('Select type')}
               />
               <SelectField
-                label="Status"
+                label={t('Status')}
                 name="payment_status"
                 value={formData.payment_status || formData.status || ''}
                 onChange={(value) => setPaymentField(setFormData, { payment_status: value, status: value })}
                 options={paymentStatusOptions}
                 required
-                placeholder="Select status"
+                placeholder={t('Select status')}
               />
             </div>
           </section>
@@ -628,13 +630,13 @@ export const PaymentFormDialog = ({
           <section className={sectionClass}>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="notes" className={formLabelClassName}>Notes</Label>
+                <Label htmlFor="notes" className={formLabelClassName}>{t('Notes')}</Label>
                 <Textarea
                   id="notes"
                   rows={4}
                   value={formData.notes || ''}
                   onChange={(event) => setPaymentField(setFormData, { notes: event.target.value })}
-                  placeholder="Optional context about this payment..."
+                  placeholder={t('Optional context about this payment...')}
                 />
               </div>
             </div>
@@ -642,11 +644,11 @@ export const PaymentFormDialog = ({
 
           <DialogFooter className="border-t border-slate-200/80 px-0 pt-5 dark:border-slate-800">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={submitDisabled || isSubmitting} className="gap-2">
               <FileText className="h-4 w-4" />
-              {isSubmitting ? 'Saving...' : submitLabel}
+              {isSubmitting ? t('Saving...') : t(submitLabel)}
             </Button>
           </DialogFooter>
         </form>

@@ -24,6 +24,7 @@ import type { DailyIncomeRow } from './finance/FinanceDailyView';
 import { FinanceStatsView } from './finance/FinanceStatsView';
 import { FinanceTeachersView } from './finance/FinanceTeachersView';
 import { PaymentDateDetailsModal } from './finance/PaymentDateDetailsModal';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   collections: OwnerManagerStatisticsCollections;
@@ -91,6 +92,7 @@ const buildTeacherGroups = (
 };
 
 export const OwnerFinancePanel = ({ collections, loading }: Props) => {
+  const { t } = useLanguage();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
   const [financeView, setFinanceView] = useState<'statistics' | 'teachers' | 'daily'>('statistics');
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
@@ -232,7 +234,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   if (loading) {
     return (
       <div className="rounded-md border bg-white p-6 text-center text-sm font-black text-slate-500">
-        Loading finance...
+        {t('Loading finance...')}
       </div>
     );
   }
@@ -269,7 +271,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
 
         {financeView === 'teachers' && <div className="grid grid-cols-2 gap-1.5 p-2 md:grid-cols-5">
           {[
-            ['Jami tolov', formatMoney(totalCollected), 'bg-blue-600'],
+            ["Jami to'lov", formatMoney(totalCollected), 'bg-blue-600'],
             ['Maosh 20%', formatMoney(totalSalary), 'bg-emerald-600'],
             ["To'lagan", paymentStats.paidStudents, 'bg-cyan-600'],
             ['Qarzdor', paymentStats.unpaidStudents, 'bg-amber-500'],

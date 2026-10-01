@@ -16,6 +16,7 @@ import { handleApiError } from '@/utils/toast';
 import { formatTestType } from '@/features/crm/tests/testVisuals';
 import TakeTestPage, { type TakeTestTransport } from '@/features/crm/tests/TakeTestPage';
 import { sharedTestAPI, type SharedTestView } from './api/sharedTestApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Stage =
   | { step: 'loading' }
@@ -56,6 +57,7 @@ const SharedTestRunner = ({
 };
 
 export const SharedTestPage = () => {
+  const { t } = useLanguage();
   const { shareToken = '' } = useParams<{ shareToken: string }>();
   const [stage, setStage] = useState<Stage>({ step: 'loading' });
   const [username, setUsername] = useState('');
@@ -124,9 +126,9 @@ export const SharedTestPage = () => {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <FileQuestion className="h-6 w-6" />
             </div>
-            <h1 className="text-lg font-semibold text-foreground">Handed in</h1>
+            <h1 className="text-lg font-semibold text-foreground">{t('Handed in')}</h1>
             <p className="text-sm text-muted-foreground">
-              Your answers are with your teacher. You can close this page.
+              {t('Your answers are with your teacher. You can close this page.')}
             </p>
           </CardContent>
         </Card>
@@ -150,8 +152,8 @@ export const SharedTestPage = () => {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <FileQuestion className="h-6 w-6" />
             </div>
-            <h1 className="text-lg font-semibold text-foreground">This link is no longer active</h1>
-            <p className="text-sm text-muted-foreground">Ask your teacher for a new one.</p>
+            <h1 className="text-lg font-semibold text-foreground">{t('This link is no longer active')}</h1>
+            <p className="text-sm text-muted-foreground">{t('Ask your teacher for a new one.')}</p>
           </CardContent>
         </Card>
       </div>
@@ -176,11 +178,11 @@ export const SharedTestPage = () => {
             {test.duration_minutes != null && (
               <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />
-                {test.duration_minutes} min
+                {test.duration_minutes} {t('min')}
               </span>
             )}
-            {test.total_marks != null && <span>{test.total_marks} marks</span>}
-            {test.passing_marks != null && <span>Pass at {test.passing_marks}</span>}
+            {test.total_marks != null && <span>{test.total_marks} {t('marks')}</span>}
+            {test.passing_marks != null && <span>{t('Pass at {marks}', { marks: test.passing_marks })}</span>}
           </div>
 
           {test.instructions && (
@@ -189,7 +191,7 @@ export const SharedTestPage = () => {
 
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{t(error)}</AlertDescription>
             </Alert>
           )}
 
@@ -197,17 +199,16 @@ export const SharedTestPage = () => {
             <div className="space-y-3">
               <Alert>
                 <AlertDescription>
-                  You have already attempted this test {stage.attempts === 1 ? 'once' : `${stage.attempts} times`}.
-                  Starting again creates a new attempt.
+                  {stage.attempts === 1 ? t('You have already attempted this test once. Starting again creates a new attempt.') : t('You have already attempted this test {count} times. Starting again creates a new attempt.', { count: stage.attempts })}
                 </AlertDescription>
               </Alert>
               <div className="flex gap-2">
                 <Button onClick={() => start(test, true)} disabled={starting} className="flex-1">
                   {starting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Start again
+                  {t('Start again')}
                 </Button>
                 <Button variant="outline" onClick={() => setStage({ step: 'form', test })} disabled={starting}>
-                  Never mind
+                  {t('Never mind')}
                 </Button>
               </div>
             </div>
@@ -221,19 +222,19 @@ export const SharedTestPage = () => {
             >
               <div className="space-y-1.5">
                 <label htmlFor="shared-test-username" className="text-sm font-medium text-foreground">
-                  Your username
+                  {t('Your username')}
                 </label>
                 <Input
                   id="shared-test-username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   autoComplete="username"
-                  placeholder="Type the username your teacher gave you"
+                  placeholder={t('Type the username your teacher gave you')}
                 />
               </div>
               <Button type="submit" disabled={starting} className="w-full">
                 {starting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Start test
+                {t('Start test')}
               </Button>
             </form>
           )}

@@ -1010,6 +1010,7 @@ const isTopStatusVariant = (value: unknown): value is TopStatusVariant =>
 
 // Renders one global status line at the top of the viewport.
 function TopStatusLine() {
+  const { t } = useLanguage();
   const [status, setStatus] = useState<{ message: string; variant: TopStatusVariant }>({
     message: '',
     variant: 'info',
@@ -1056,7 +1057,7 @@ function TopStatusLine() {
       role={status.variant === 'error' ? 'alert' : 'status'}
       className={`fixed left-0 right-0 top-0 z-[10000] px-4 py-2 text-center text-sm font-medium shadow-sm ${topStatusClasses[status.variant]}`}
     >
-      <span className="mx-auto block max-w-screen-xl truncate">{status.message}</span>
+      <span className="mx-auto block max-w-screen-xl truncate">{t(status.message)}</span>
     </div>
   );
 }

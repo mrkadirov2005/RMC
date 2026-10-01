@@ -20,6 +20,7 @@ import { AgendaCalendarView } from './views/AgendaCalendarView';
 import { DayCalendarView } from './views/DayCalendarView';
 import { MonthCalendarView } from './views/MonthCalendarView';
 import { WeekCalendarView } from './views/WeekCalendarView';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const VIEW_KEY = 'rmc-calendar-view';
 const validView = (value: string | null): value is CalendarView => ['day', 'week', 'month', 'agenda'].includes(value || '');
@@ -46,6 +47,7 @@ const minutesBetween = (start: string, end: string) => {
 };
 
 const CalendarPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
   const classes = useAppSelector(state => state.classes.items);
@@ -171,16 +173,16 @@ const CalendarPage = () => {
   })), [conflictEventIds, workspace.events]);
 
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4 sm:px-5">
-    <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">Calendar</h1><p className="text-xs text-muted-foreground">Lessons, rooms, teachers and attendance in one schedule.</p></div></header>
+    <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">{t('Calendar')}</h1><p className="text-xs text-muted-foreground">{t('Lessons, rooms, teachers and attendance in one schedule.')}</p></div></header>
     <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
       <CalendarWorkspaceToolbar anchor={anchor} view={view} onView={setView} onMove={move} onToday={() => setAnchor(new Date())} onDate={setAnchor} />
       <CalendarWorkspaceFilters filters={filters} resources={workspace.resources} onChange={setFilters} onClear={() => setFilters(EMPTY_FILTERS)} />
       <div className="grid grid-cols-2 border-b sm:grid-cols-4">{([
         ['Lessons', counts.total, CalendarDays], ['Conducted', counts.conducted, CheckCircle2], ['Pending', counts.pending, Clock3], ['Attendance missing', counts.attendance, AlertTriangle],
       ] as const).map(([label, value, Icon]) => <div key={label} className="flex items-center gap-2 border-r px-3 py-2 last:border-r-0"><Icon className="h-4 w-4 text-muted-foreground" /><div><div className="text-lg font-bold leading-none">{value}</div><div className="mt-1 text-[11px] text-muted-foreground">{label}</div></div></div>)}</div>
-      {workspace.conflicts.length > 0 && <button type="button" onClick={() => setShowConflicts(true)} className="flex w-full items-center gap-2 border-b bg-rose-50 px-3 py-2 text-left text-xs font-medium text-rose-800 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"><AlertTriangle className="h-4 w-4" /><span className="flex-1">{workspace.conflicts.length} scheduling conflict{workspace.conflicts.length === 1 ? '' : 's'} need attention.</span><span className="underline underline-offset-2">View details</span></button>}
-      {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{workspace.error}</div>}
-      {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label="Loading calendar" className="h-7 w-7 animate-spin text-primary" /></div> : <>
+      {workspace.conflicts.length > 0 && <button type="button" onClick={() => setShowConflicts(true)} className="flex w-full items-center gap-2 border-b bg-rose-50 px-3 py-2 text-left text-xs font-medium text-rose-800 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"><AlertTriangle className="h-4 w-4" /><span className="flex-1">{t('{count} scheduling conflict(s) need attention.', { count: workspace.conflicts.length })}</span><span className="underline underline-offset-2">{t('View details')}</span></button>}
+      {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{t(workspace.error)}</div>}
+      {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label={t('Loading calendar')} className="h-7 w-7 animate-spin text-primary" /></div> : <>
         {view === 'day' && <DayCalendarView anchor={anchor} events={displayEvents} onSelect={setSelectedEvent} />}
         {view === 'week' && <WeekCalendarView anchor={anchor} events={displayEvents} rooms={calendarRooms} onSelect={setSelectedEvent} onMove={moveRecurring} canMove={canManage} />}
         {view === 'month' && <MonthCalendarView anchor={anchor} events={displayEvents} onSelect={setSelectedEvent} onDay={date => { setAnchor(date); setView('day'); }} />}
@@ -191,16 +193,16 @@ const CalendarPage = () => {
     <Dialog open={showConflicts} onOpenChange={setShowConflicts}>
       <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Scheduling conflicts</DialogTitle>
+          <DialogTitle>{t('Scheduling conflicts')}</DialogTitle>
           <DialogDescription>
-            Each entry shows the two classes that overlap and the reason for the conflict.
+            {t('Each entry shows the two classes that overlap and the reason for the conflict.')}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
           {conflictDetails.map((conflict, index) => (
             <div key={`${conflict.event_ids.join('-')}-${index}`} className="rounded-lg border border-rose-200 bg-rose-50/60 p-3 dark:border-rose-900 dark:bg-rose-950/20">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">Conflict {index + 1}</span>
+                <span className="text-xs font-semibold text-muted-foreground">{t('Conflict')} {index + 1}</span>
                 {conflict.reasons.map(reason => <Badge key={reason} variant="outline" className="border-rose-300 text-rose-700">{reason}</Badge>)}
               </div>
               <div className="grid gap-2 md:grid-cols-2">
@@ -212,7 +214,7 @@ const CalendarPage = () => {
                       {event.teacher_name && <span className="block text-xs text-muted-foreground">{event.teacher_name}</span>}
                     </span>
                   </Button>
-                )) : <p className="text-sm text-muted-foreground">The conflicting event details are outside the current loaded view.</p>}
+                )) : <p className="text-sm text-muted-foreground">{t('The conflicting event details are outside the current loaded view.')}</p>}
               </div>
             </div>
           ))}

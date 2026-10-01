@@ -228,7 +228,7 @@ const ArchivePage = () => {
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
 

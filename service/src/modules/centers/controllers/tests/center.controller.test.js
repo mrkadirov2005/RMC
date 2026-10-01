@@ -51,7 +51,7 @@ describe('centers controller', () => {
       await centerController.getAllCenters({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch centers', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -63,7 +63,7 @@ describe('centers controller', () => {
       await centerController.getCenterById({ params: { id: '9' }, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
       expect(centerService.getCenter).not.toHaveBeenCalled();
     });
 
@@ -84,7 +84,7 @@ describe('centers controller', () => {
       await centerController.getCenterById({ params: { id: '9' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -94,7 +94,7 @@ describe('centers controller', () => {
       await centerController.getCenterById({ params: { id: '9' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch center', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -117,7 +117,7 @@ describe('centers controller', () => {
       await centerController.getCenterSummaries({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch center summaries', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazlar xulosasini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -129,7 +129,7 @@ describe('centers controller', () => {
       await centerController.createCenter({ body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Admin users cannot create centers.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Adminlar markaz yarata olmaydi.' });
       expect(centerService.createCenter).not.toHaveBeenCalled();
     });
 
@@ -151,7 +151,7 @@ describe('centers controller', () => {
       await centerController.createCenter({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create center', details: 'duplicate' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni yaratib bo'lmadi", details: 'duplicate' });
     });
   });
 
@@ -164,7 +164,7 @@ describe('centers controller', () => {
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
       expect(centerService.updateCenter).not.toHaveBeenCalled();
     });
 
@@ -176,7 +176,7 @@ describe('centers controller', () => {
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
     });
 
     it('lets a center admin edit their own center', async () => {
@@ -206,7 +206,7 @@ describe('centers controller', () => {
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update center', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -218,7 +218,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Admin users cannot delete centers.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Adminlar markazni o'chira olmaydi." });
       expect(centerService.deleteCenter).not.toHaveBeenCalled();
     });
 
@@ -230,7 +230,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user }, res);
 
       expect(centerService.deleteCenter).toHaveBeenCalledWith(3, user);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Center deleted successfully', center: { center_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Markaz muvaffaqiyatli o'chirildi", center: { center_id: 3 } });
     });
 
     it('returns 404 when the center does not exist', async () => {
@@ -240,7 +240,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -250,7 +250,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete center', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

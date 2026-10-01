@@ -125,7 +125,7 @@ export const StudentPortalContent = ({
         </TodayCard>
       </SectionPanel>
 
-      {error && <Card className="border-destructive/30 bg-destructive/10"><CardContent className="py-4 text-sm text-destructive">{getErrorMessage(error)}</CardContent></Card>}
+      {error && <Card className="border-destructive/30 bg-destructive/10"><CardContent className="py-4 text-sm text-destructive">{t(getErrorMessage(error))}</CardContent></Card>}
       
       <StudentSnapshotCards student={student} teacher={teacher} classInfo={classInfo} subjects={subjects} t={t} />
       <UpcomingLists upcomingTests={upcomingTests} assignmentsDue={assignmentsDue} t={t} formatDate={formatDate} formatStatusLabel={formatStatusLabel} onTests={onTests} />

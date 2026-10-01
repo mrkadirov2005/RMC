@@ -53,7 +53,7 @@ describe('salaries controller', () => {
       await salaryController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -63,7 +63,7 @@ describe('salaries controller', () => {
       await salaryController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -94,7 +94,7 @@ describe('salaries controller', () => {
       await salaryController.getOverview({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch salary overview', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Maosh sharhini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -105,7 +105,7 @@ describe('salaries controller', () => {
       await salaryController.getTeacherDetail({ params: { teacherId: 'abc' }, query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacherId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacherId ko'rsatilishi shart." });
     });
 
     it('hides a teacher who belongs to another center', async () => {
@@ -116,7 +116,7 @@ describe('salaries controller', () => {
 
       expect(teacherInCenter).toHaveBeenCalledWith(5, 4);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found in this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazda topilmadi." });
       expect(salaryService.getTeacherDetail).not.toHaveBeenCalled();
     });
 
@@ -163,7 +163,7 @@ describe('salaries controller', () => {
       await salaryController.getTeacherDetail({ params: { teacherId: '5' }, query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi topilmadi." });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -173,7 +173,7 @@ describe('salaries controller', () => {
       await salaryController.getTeacherDetail({ params: { teacherId: '5' }, query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher salary detail', details: 'detail failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi maosh tafsilotini yuklab bo'lmadi", details: 'detail failed' });
     });
   });
 
@@ -184,7 +184,7 @@ describe('salaries controller', () => {
       await salaryController.getMyDetail({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Unable to resolve teacher id.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
     });
 
     it('reads the signed-in teacher own salary detail', async () => {
@@ -204,7 +204,7 @@ describe('salaries controller', () => {
       await salaryController.getMyDetail({ query: {}, user: { id: 7 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Salary profile not found.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Maosh profili topilmadi.' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -214,7 +214,7 @@ describe('salaries controller', () => {
       await salaryController.getMyDetail({ query: {}, user: { id: 7 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch salary detail', details: 'profile failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Maosh tafsilotini yuklab bo'lmadi", details: 'profile failed' });
     });
   });
 
@@ -226,7 +226,7 @@ describe('salaries controller', () => {
       await salaryController.markPaid({ body: { teacher_id: 5 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazga tegishli emas." });
       expect(salaryService.markPaid).not.toHaveBeenCalled();
     });
 
@@ -268,7 +268,7 @@ describe('salaries controller', () => {
       await salaryController.markPaid({ body: { teacher_id: 5 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to mark salary as paid', details: 'payment failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Maoshni to'langan deb belgilab bo'lmadi", details: 'payment failed' });
     });
   });
 
@@ -279,7 +279,7 @@ describe('salaries controller', () => {
       await salaryController.updatePatch({ params: { id: 'abc' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "id ko'rsatilishi shart." });
     });
 
     it('forwards only the editable fields', async () => {
@@ -309,7 +309,7 @@ describe('salaries controller', () => {
       await salaryController.updatePatch({ params: { id: '12' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Salary record not found.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Maosh yozuvi topilmadi.' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -319,7 +319,7 @@ describe('salaries controller', () => {
       await salaryController.updatePatch({ params: { id: '12' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update salary record', details: 'update failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Maosh yozuvini yangilab bo'lmadi", details: 'update failed' });
     });
   });
 
@@ -350,7 +350,7 @@ describe('salaries controller', () => {
       await salaryController.getMonthlySummary({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch salary monthly summary', details: 'summary failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Oylik maosh xulosasini yuklab bo'lmadi", details: 'summary failed' });
     });
   });
 });

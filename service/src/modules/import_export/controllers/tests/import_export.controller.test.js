@@ -53,7 +53,7 @@ describe('import and export controller', () => {
       await controller[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each([
@@ -66,7 +66,7 @@ describe('import and export controller', () => {
       await controller[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
 
     it.each([
@@ -91,7 +91,7 @@ describe('import and export controller', () => {
       await controller.exportEntity({ params: { entity: 'aliens' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Unsupported export entity' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu bo'limni eksport qilib bo'lmaydi" });
       expect(logAudit).not.toHaveBeenCalled();
     });
 
@@ -130,14 +130,14 @@ describe('import and export controller', () => {
       await controller.exportEntity({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to export CSV', details: 'read failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "CSV'ni eksport qilib bo'lmadi", details: 'read failed' });
     });
   });
 
   describe('importEntity', () => {
     it.each([
-      ['unsupported', { error: 'Unsupported import entity' }],
-      ['invalid_center', { error: 'CSV rows must belong to this center.' }],
+      ['unsupported', { error: "Bu bo'limni import qilib bo'lmaydi" }],
+      ['invalid_center', { error: "CSV qatorlari shu markazga tegishli bo'lishi kerak." }],
     ])('maps the %s result to a 400', async (error, payload) => {
       const res = createResponse();
       service.importEntity.mockResolvedValue({ error });
@@ -157,7 +157,7 @@ describe('import and export controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Payment row references an unknown student.',
+        error: "To'lov qatorida noma'lum o'quvchi ko'rsatilgan.",
         details: 'student 99',
         row: 4,
       });
@@ -177,7 +177,7 @@ describe('import and export controller', () => {
       expect(service.importEntity).toHaveBeenCalledWith('students', 'id,name', 5);
       expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'IMPORT', details: { rows: 12 } }));
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Imported 12 students' });
+      expect(res.json).toHaveBeenCalledWith({ message: '12 ta yozuv import qilindi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -187,13 +187,13 @@ describe('import and export controller', () => {
       await controller.importEntity({ params: { entity: 'students' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to import CSV', details: 'parse failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "CSV'ni import qilib bo'lmadi", details: 'parse failed' });
     });
   });
 
   describe('pushEntityToSheets', () => {
     it.each([
-      ['unsupported', 400, { error: 'Unsupported Google Sheets entity' }],
+      ['unsupported', 400, { error: "Bu bo'limni Google Sheets bilan ishlatib bo'lmaydi" }],
       ['missing_config', 400, { error: 'GOOGLE_APPS_SCRIPT_URL is not configured.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
@@ -212,7 +212,7 @@ describe('import and export controller', () => {
       await controller.pushEntityToSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(502);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Google Apps Script sync failed.', details: 'HTTP 500' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Google Apps Script sinxronlashi muvaffaqiyatsiz tugadi.', details: 'HTTP 500' });
     });
 
     it('surfaces an Apps Script timeout as a gateway timeout', async () => {
@@ -222,7 +222,7 @@ describe('import and export controller', () => {
       await controller.pushEntityToSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(504);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Google Apps Script did not respond in time.', details: 'after 30s' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Google Apps Script vaqtida javob bermadi.', details: 'after 30s' });
     });
 
     it('reports how many rows reached the sheet', async () => {
@@ -232,7 +232,7 @@ describe('import and export controller', () => {
       await controller.pushEntityToSheets({ params: { entity: 'students' }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'GOOGLE_SHEETS_PUSH', details: { rows: 30 } }));
-      expect(res.json).toHaveBeenCalledWith({ message: 'Updated Google Sheets with 30 students', rows: 30 });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Google Sheets 30 ta yozuv bilan yangilandi', rows: 30 });
     });
 
     it('reports an unexpected failure as a 500', async () => {
@@ -242,15 +242,15 @@ describe('import and export controller', () => {
       await controller.pushEntityToSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update Google Sheets', details: 'network down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Google Sheets'ni yangilab bo'lmadi", details: 'network down' });
     });
   });
 
   describe('pullEntityFromSheets', () => {
     it.each([
-      ['unsupported', 400, { error: 'Unsupported Google Sheets entity' }],
+      ['unsupported', 400, { error: "Bu bo'limni Google Sheets bilan ishlatib bo'lmaydi" }],
       ['missing_config', 400, { error: 'GOOGLE_APPS_SCRIPT_URL is not configured.' }],
-      ['invalid_center', 400, { error: 'Google Sheet rows must belong to this center.' }],
+      ['invalid_center', 400, { error: "Google Sheet qatorlari shu markazga tegishli bo'lishi kerak." }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       service.pullEntityFromSheets.mockResolvedValue({ error });
@@ -268,7 +268,7 @@ describe('import and export controller', () => {
       await controller.pullEntityFromSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(502);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Google Apps Script import failed.', details: 'HTTP 403' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Google Apps Script orqali import muvaffaqiyatsiz tugadi.', details: 'HTTP 403' });
     });
 
     it('surfaces an Apps Script timeout as a gateway timeout', async () => {
@@ -288,7 +288,7 @@ describe('import and export controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
-        error: 'Payment row references an unknown student.',
+        error: "To'lov qatorida noma'lum o'quvchi ko'rsatilgan.",
         details: 'student 99',
         row: 7,
       });
@@ -301,7 +301,7 @@ describe('import and export controller', () => {
       await controller.pullEntityFromSheets({ params: { entity: 'students' }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'GOOGLE_SHEETS_PULL', details: { rows: 8 } }));
-      expect(res.json).toHaveBeenCalledWith({ message: 'Imported 8 students from Google Sheets', rows: 8 });
+      expect(res.json).toHaveBeenCalledWith({ message: "Google Sheets'dan 8 ta yozuv import qilindi", rows: 8 });
     });
 
     it('reports an unexpected failure as a 500', async () => {
@@ -311,7 +311,7 @@ describe('import and export controller', () => {
       await controller.pullEntityFromSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to import from Google Sheets', details: 'network down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Google Sheets'dan import qilib bo'lmadi", details: 'network down' });
     });
   });
 });

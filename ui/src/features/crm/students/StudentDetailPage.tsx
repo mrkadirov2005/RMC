@@ -42,6 +42,7 @@ import { fetchGradesForce } from '../../../slices/gradesSlice';
 import { getListRowBackground } from '../settings/listAppearance';
 import { StudentOverviewCards } from './components/StudentOverviewCards';
 import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, getNextStudentAccountStatus, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Class {
   class_id?: number;
@@ -146,6 +147,7 @@ interface CoinTransaction {
 
 // Renders the student detail page screen.
 const StudentDetailPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -417,7 +419,7 @@ const StudentDetailPage = () => {
   if (!student) {
     return (
       <div className="p-6 text-center py-16 text-muted-foreground">
-        <h3 className="text-lg font-semibold">Student not found</h3>
+        <h3 className="text-lg font-semibold">{t('Student not found')}</h3>
       </div>
     );
   }
@@ -445,7 +447,7 @@ const StudentDetailPage = () => {
           className="h-8 w-fit rounded-lg bg-sky-600 text-xs text-white shadow-sm hover:bg-sky-700"
           onClick={() => navigate('/students')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Students
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t('Back to Students')}
         </Button>
         <Button
           size="sm"
@@ -458,13 +460,13 @@ const StudentDetailPage = () => {
           ) : (
             <KeyRound className="mr-1.5 h-3.5 w-3.5" />
           )}
-          Reset Password
+          {t('Reset Password')}
         </Button>
       </div>
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+          <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
         </Alert>
       )}
 
@@ -480,9 +482,9 @@ const StudentDetailPage = () => {
               disabled={changingStatus}
             >
               {changingStatus ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : String(student.status).toLowerCase() === 'active' ? <UserX className="mr-1.5 h-3.5 w-3.5" /> : <UserCheck className="mr-1.5 h-3.5 w-3.5" />}
-              {changingStatus ? 'Updating...' : String(student.status).toLowerCase() === 'active' ? 'Set inactive' : 'Set active'}
+              {changingStatus ? t('Updating...') : String(student.status).toLowerCase() === 'active' ? t('Set inactive') : t('Set active')}
             </Button>
-            <Button size="sm" className="h-8 text-xs" onClick={()=>setIsUpdatePassword((prev)=>!prev)}>Update student password</Button>
+            <Button size="sm" className="h-8 text-xs" onClick={()=>setIsUpdatePassword((prev)=>!prev)}>{t('Update student password')}</Button>
           </div>
 
         </CardContent>
@@ -500,7 +502,7 @@ const StudentDetailPage = () => {
             </CardHeader>
             <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
               <div className="space-y-1">
-                <Label htmlFor="student-new-password" className="text-xs">New Password</Label>
+                <Label htmlFor="student-new-password" className="text-xs">{t('New Password')}</Label>
                 <Input
                   id="student-new-password"
                   type="password"
@@ -510,13 +512,13 @@ const StudentDetailPage = () => {
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') handleSetPassword();
                   }}
-                  placeholder="Enter new password"
+                  placeholder={t('Enter new password')}
                   disabled={settingPassword}
                 />
               </div>
               <Button className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
                 {settingPassword ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
-                Update Password
+                {t('Update Password')}
               </Button>
             </CardContent>
           </Card>}
@@ -552,16 +554,16 @@ const StudentDetailPage = () => {
                   {isEditingOverview ? (
                     <>
                       <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={cancelOverviewEdit} disabled={savingOverview}>
-                        <X className="mr-1.5 h-3.5 w-3.5" /> Cancel
+                        <X className="mr-1.5 h-3.5 w-3.5" /> {t('Cancel')}
                       </Button>
                       <Button type="button" size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={saveOverview} disabled={savingOverview}>
                         {savingOverview ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
-                        {savingOverview ? 'Saving...' : 'Save changes'}
+                        {savingOverview ? t('Saving...') : t('Save changes')}
                       </Button>
                     </>
                   ) : (
                     <Button type="button" size="sm" className="h-8 bg-sky-600 text-xs text-white hover:bg-sky-700" onClick={startOverviewEdit}>
-                      <PencilLine className="mr-1.5 h-3.5 w-3.5" /> Edit information
+                      <PencilLine className="mr-1.5 h-3.5 w-3.5" /> {t('Edit information')}
                     </Button>
                   )}
                 </div>
@@ -662,33 +664,33 @@ const StudentDetailPage = () => {
               <div className="space-y-3">
                 <Card className="border-0 bg-amber-500 text-white shadow-sm">
                   <CardHeader className="flex flex-row items-center justify-between p-3">
-                    <CardTitle className="text-base">Coin Balance</CardTitle>
+                    <CardTitle className="text-base">{t('Coin Balance')}</CardTitle>
                     <Button size="sm" className="h-8 bg-white text-xs text-amber-700 hover:bg-white/90" onClick={() => setCoinDialogOpen(true)}>
-                      Update Coins
+                      {t('Update Coins')}
                     </Button>
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
                     <p className="text-2xl font-semibold">{coinBalance.toLocaleString()}</p>
-                    <p className="mt-1 text-xs text-white/80">Latest balance for this student.</p>
+                    <p className="mt-1 text-xs text-white/80">{t('Latest balance for this student.')}</p>
                   </CardContent>
                 </Card>
 
                 <Card className="border-slate-200 shadow-sm dark:border-border">
                   <CardHeader className="p-3">
-                    <CardTitle className="text-base">Transaction History</CardTitle>
+                    <CardTitle className="text-base">{t('Transaction History')}</CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
                     {coinTransactions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No coin transactions yet.</p>
+                      <p className="text-sm text-muted-foreground">{t('No coin transactions yet.')}</p>
                     ) : (
                       <Table className="text-xs">
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Delta</TableHead>
-                            <TableHead>Reason</TableHead>
-                            <TableHead>By</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead>{t('Date')}</TableHead>
+                            <TableHead>{t('Delta')}</TableHead>
+                            <TableHead>{t('Reason')}</TableHead>
+                            <TableHead>{t('By')}</TableHead>
+                            <TableHead className="text-right">{t('Action')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -737,10 +739,10 @@ const StudentDetailPage = () => {
       <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Temporary Password</DialogTitle>
+            <DialogTitle>{t('Temporary Password')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label htmlFor="student-temp-password">Share this password with the student.</Label>
+            <Label htmlFor="student-temp-password">{t('Share this password with the student.')}</Label>
             <div className="flex gap-2">
               <Input
                 id="student-temp-password"
@@ -748,12 +750,12 @@ const StudentDetailPage = () => {
                 readOnly
               />
               <Button variant="outline" onClick={handleCopyTempPassword}>
-                Copy
+                {t('Copy')}
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setResetPasswordOpen(false)}>Done</Button>
+            <Button onClick={() => setResetPasswordOpen(false)}>{t('Done')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

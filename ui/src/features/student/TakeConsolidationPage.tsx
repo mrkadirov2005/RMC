@@ -20,6 +20,7 @@ import {
   type ConsolidationTrial,
   type ConsolidationWord,
 } from './api/consolidationExerciseApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export type ExerciseContext =
   | { mode: 'public'; shareToken: string; username: string }
@@ -42,6 +43,7 @@ interface TakeConsolidationPageProps {
 type Phase = 'gate' | 'active';
 
 export const TakeConsolidationPage = ({ context, initialTrial, initialWords, violationLimit, onExit }: TakeConsolidationPageProps) => {
+  const { t } = useLanguage();
   const [trial, setTrial] = useState(initialTrial);
   const [words, setWords] = useState(initialWords);
   const [trialToken, setTrialToken] = useState<string | null>(initialTrial.access_token ?? null);
@@ -246,14 +248,14 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
         <Card className="w-full max-w-lg border-[#d8e4f1]">
           <CardContent className="space-y-5 p-8 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#16a7e2]">
-              {result.status === 'auto_submitted' ? 'Submitted automatically' : result.is_passed ? 'All correct' : 'Exercise submitted'}
+              {result.status === 'auto_submitted' ? t('Submitted automatically') : result.is_passed ? t('All correct') : t('Exercise submitted')}
             </p>
             <h1 className="text-4xl font-semibold">
               {result.correct_count ?? 0}/{result.total_words ?? words.length}
             </h1>
             {result.status === 'auto_submitted' && (
               <p className="text-sm text-red-600">
-                Your exercise was submitted automatically because you left the screen too many times.
+                {t('Your exercise was submitted automatically because you left the screen too many times.')}
               </p>
             )}
 
@@ -268,7 +270,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
                       </p>
                     </div>
                     {!item.is_correct && item.translations && (
-                      <p className="text-right text-slate-500">Accepted: {item.translations.join(', ')}</p>
+                      <p className="text-right text-slate-500">{t('Accepted:')} {item.translations.join(', ')}</p>
                     )}
                   </div>
                 ))}
@@ -277,18 +279,18 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
 
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
 
             <div className="flex justify-center gap-3 pt-2">
               <Button onClick={handleTryAgain} disabled={starting} className="bg-[#21116a] text-white hover:bg-[#160a4d]">
                 {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
-                Try Again
+                {t('Try Again')}
               </Button>
               {onExit && (
                 <Button variant="outline" onClick={onExit}>
-                  Done
+                  {t('Done')}
                 </Button>
               )}
             </div>
@@ -303,19 +305,17 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
       <main data-translation-skip className="flex min-h-screen items-center justify-center bg-[#f6fbff] px-5 py-10 text-[#21116a]">
         <Card className="w-full max-w-lg border-[#d8e4f1]">
           <CardContent className="space-y-5 p-8 text-center">
-            <h1 className="text-xl font-semibold">Ready to begin?</h1>
+            <h1 className="text-xl font-semibold">{t('Ready to begin?')}</h1>
             <p className="text-sm text-slate-600">
-              This exercise runs in a locked, full-screen mode. Leaving the screen, switching tabs, or exiting
-              fullscreen counts as a violation — after {violationLimit} violation{violationLimit === 1 ? '' : 's'} your
-              exercise will be submitted automatically with whatever you've answered so far.
+              {t("This exercise runs in a locked, full-screen mode. Leaving the screen, switching tabs, or exiting fullscreen counts as a violation — after {limit} violation(s) your exercise will be submitted automatically with whatever you've answered so far.", { limit: violationLimit })}
             </p>
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
             <Button onClick={handleStartExercise} className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
-              Start Exercise
+              {t('Start Exercise')}
             </Button>
           </CardContent>
         </Card>
@@ -335,11 +335,11 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
           <div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-500">
-                Word {index + 1} of {words.length}
+                {t('Word')} {index + 1} {t('of')} {words.length}
               </p>
               {violationCount > 0 && (
                 <p className="text-xs font-medium text-red-600">
-                  Violations: {violationCount}/{violationLimit}
+                  {t('Violations:')} {violationCount}/{violationLimit}
                 </p>
               )}
             </div>
@@ -362,19 +362,19 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleNext();
             }}
-            placeholder="Type the translation"
+            placeholder={t('Type the translation')}
             className="h-12 text-center text-lg"
           />
 
           {error && (
             <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{t(error)}</AlertDescription>
             </Alert>
           )}
 
           <Button onClick={handleNext} disabled={submitting} className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
             {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isLast ? 'Submit' : 'Next'}
+            {isLast ? t('Submit') : t('Next')}
           </Button>
         </CardContent>
       </Card>

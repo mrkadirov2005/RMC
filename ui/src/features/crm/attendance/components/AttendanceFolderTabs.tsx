@@ -20,6 +20,7 @@ import type {
   Subject,
   Teacher,
 } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AttendanceFolderTabsProps {
   activeTab: AttendanceTabType;
@@ -73,6 +74,7 @@ const AttendanceFolderTabs = ({
   getAttendanceCountForTeacher,
   getStudentIdsForTeacher,
 }: AttendanceFolderTabsProps) => {
+  const { t } = useLanguage();
   const paginatedStudents = useMemo(
     () => paginateItems(students, folderPage, folderPageSize),
     [students, folderPage, folderPageSize]
@@ -104,11 +106,11 @@ const AttendanceFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading students...</p>
+                <p className="text-muted-foreground">{t('Loading students...')}</p>
               </div>
             ) : students.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No students found</p>
+                <p className="text-muted-foreground">{t('No students found')}</p>
               </div>
             ) : (
               paginatedStudents.items.map((student) => {
@@ -134,7 +136,7 @@ const AttendanceFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
-                          <span>{presentCount}/{attendanceCount} present</span>
+                          <span>{presentCount}/{attendanceCount} {t('present')}</span>
                         </div>
                         <div className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">
                           <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
@@ -167,11 +169,11 @@ const AttendanceFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading classes...</p>
+                <p className="text-muted-foreground">{t('Loading classes...')}</p>
               </div>
             ) : classes.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No classes found</p>
+                <p className="text-muted-foreground">{t('No classes found')}</p>
               </div>
             ) : (
               paginatedClasses.items.map((cls) => {
@@ -197,7 +199,7 @@ const AttendanceFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
-                          <span>{presentCount}/{attendanceCount} present</span>
+                          <span>{presentCount}/{attendanceCount} {t('present')}</span>
                         </div>
                         <div className="rounded bg-green-100 px-1.5 py-0.5 text-green-700">
                           <span>{attendanceCount > 0 ? Math.round((presentCount / attendanceCount) * 100) : 0}%</span>
@@ -230,11 +232,11 @@ const AttendanceFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading teachers...</p>
+                <p className="text-muted-foreground">{t('Loading teachers...')}</p>
               </div>
             ) : teachers.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No teachers found</p>
+                <p className="text-muted-foreground">{t('No teachers found')}</p>
               </div>
             ) : (
               paginatedTeachers.items.map((teacher) => {
@@ -259,11 +261,11 @@ const AttendanceFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-sky-700">
                           <Users className="h-3 w-3" />
-                          <span>{getStudentIdsForTeacher(teacherId).length} students</span>
+                          <span>{getStudentIdsForTeacher(teacherId).length} {t('students')}</span>
                         </div>
                         <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />
-                          <span>{attendanceCount} records</span>
+                          <span>{attendanceCount} {t('records')}</span>
                         </div>
                       </div>
                     </CardContent>
@@ -293,11 +295,11 @@ const AttendanceFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading subjects...</p>
+                <p className="text-muted-foreground">{t('Loading subjects...')}</p>
               </div>
             ) : subjects.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No subjects found</p>
+                <p className="text-muted-foreground">{t('No subjects found')}</p>
               </div>
             ) : (
               paginatedSubjects.items.map((subject) => {
@@ -329,7 +331,7 @@ const AttendanceFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-sky-700">
                           <Users className="h-3 w-3" />
-                          <span>{classStudents.length} students</span>
+                          <span>{classStudents.length} {t('students')}</span>
                         </div>
                         <div className="flex items-center gap-1 rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700">
                           <CheckCircle className="h-3 w-3" />

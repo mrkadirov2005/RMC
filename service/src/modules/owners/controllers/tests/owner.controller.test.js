@@ -57,7 +57,7 @@ describe('owners controller registration invite-key enforcement (RMC-023)', () =
     await ownerController.register(req, res);
 
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Owner registration is not configured.' });
+    expect(res.json).toHaveBeenCalledWith({ error: "Egani ro'yxatdan o'tkazish sozlanmagan." });
     expect(ownerService.registerOwner).not.toHaveBeenCalled();
   });
 

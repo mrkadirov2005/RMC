@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { PieChart } from '@/shared/components/PieChart';
 import { formatMoney } from '@/utils/helpers';
 import type { OwnerManagerStatisticsCollections } from '../../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   collections: OwnerManagerStatisticsCollections;
@@ -100,6 +101,7 @@ const formatMonth = (value: unknown) => {
 };
 
 export const DiscountStatsPanel = ({ collections }: Props) => {
+  const { t } = useLanguage();
   const [selectedKind, setSelectedKind] = useState<DiscountKind | null>(null);
 
   const stats = useMemo(() => {
@@ -191,18 +193,18 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
       <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">Discount statistics</h3>
-            <p className="text-xs font-semibold text-slate-500">Click a discount type to view the students behind it.</p>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">{t('Discount statistics')}</h3>
+            <p className="text-xs font-semibold text-slate-500">{t('Click a discount type to view the students behind it.')}</p>
           </div>
           <div className="grid grid-cols-2 gap-2 text-right text-xs font-black">
-            <span className="rounded-md bg-blue-50 px-3 py-2 text-blue-700">Serial: {formatMoney(stats.serialTotal)}</span>
-            <span className="rounded-md bg-emerald-50 px-3 py-2 text-emerald-700">One-month: {formatMoney(stats.monthlyTotal)}</span>
+            <span className="rounded-md bg-blue-50 px-3 py-2 text-blue-700">{t('Serial:')} {formatMoney(stats.serialTotal)}</span>
+            <span className="rounded-md bg-emerald-50 px-3 py-2 text-emerald-700">{t('One-month:')} {formatMoney(stats.monthlyTotal)}</span>
           </div>
         </div>
 
         {pieRows.length === 0 ? (
           <div className="flex h-72 items-center justify-center rounded-md border border-dashed border-slate-300 text-sm font-semibold text-slate-500">
-            No discount data yet.
+            {t('No discount data yet.')}
           </div>
         ) : (
           <div className="animate-chart-open grid gap-5 lg:grid-cols-[320px_1fr]">
@@ -217,7 +219,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
                 data={pieRows.map((row) => ({ label: row.label, value: row.value, color: row.color }))}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-black uppercase text-slate-400">Total</span>
+                <span className="text-[10px] font-black uppercase text-slate-400">{t('Total')}</span>
                 <span className="text-3xl font-black text-slate-950 dark:text-white">{stats.records.length.toLocaleString()}</span>
                 <span className="text-[11px] font-bold text-slate-500">{formatMoney(stats.totalDiscount)}</span>
               </div>
@@ -238,11 +240,11 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
                     </span>
                     <span className="inline-flex items-center gap-1 text-xs font-black text-blue-700">
                       <List className="h-3.5 w-3.5" />
-                      View students
+                      {t('View students')}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-sm">
-                    <span className="rounded-md bg-white px-3 py-2 font-black text-slate-700 dark:bg-slate-950 dark:text-white">{row.value.toLocaleString()} records</span>
+                    <span className="rounded-md bg-white px-3 py-2 font-black text-slate-700 dark:bg-slate-950 dark:text-white">{row.value.toLocaleString()} {t('records')}</span>
                     <span className="rounded-md bg-white px-3 py-2 font-black text-slate-700 dark:bg-slate-950 dark:text-white">{formatMoney(row.amount)}</span>
                   </div>
                 </button>
@@ -255,7 +257,7 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
       <DiscountStudentsDialog
         open={Boolean(selectedKind)}
         onOpenChange={(open) => !open && setSelectedKind(null)}
-        title={selectedKind ? kindLabels[selectedKind] : 'Discount students'}
+        title={selectedKind ? kindLabels[selectedKind] : t('Discount students')}
         rows={selectedRows}
         serialTotal={stats.serialTotal}
         monthlyTotal={stats.monthlyTotal}
@@ -281,6 +283,7 @@ const DiscountStudentsDialog = ({
   serialTotal: number;
   monthlyTotal: number;
 }) => {
+  const { t } = useLanguage();
   const selectedTotal = rows.reduce((sum, row) => sum + row.discountAmount, 0);
 
   return (
@@ -291,32 +294,32 @@ const DiscountStudentsDialog = ({
         </DialogHeader>
 
         <div className="grid gap-2 sm:grid-cols-3">
-          <ModalStat label="Selected records" value={rows.length.toLocaleString()} />
-          <ModalStat label="Selected total" value={formatMoney(selectedTotal)} />
-          <ModalStat label="Serial / One-month" value={`${formatMoney(serialTotal)} / ${formatMoney(monthlyTotal)}`} />
+          <ModalStat label={t('Selected records')} value={rows.length.toLocaleString()} />
+          <ModalStat label={t('Selected total')} value={formatMoney(selectedTotal)} />
+          <ModalStat label={t('Serial / One-month')} value={`${formatMoney(serialTotal)} / ${formatMoney(monthlyTotal)}`} />
         </div>
 
         <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-white/10">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Group</TableHead>
-                <TableHead>Value</TableHead>
-                <TableHead>Original</TableHead>
-                <TableHead>Discount</TableHead>
-                <TableHead>Final</TableHead>
-                <TableHead>Given on</TableHead>
-                <TableHead>Applied on</TableHead>
-                <TableHead>Discount month</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead>{t('Student')}</TableHead>
+                <TableHead>{t('Group')}</TableHead>
+                <TableHead>{t('Value')}</TableHead>
+                <TableHead>{t('Original')}</TableHead>
+                <TableHead>{t('Discount')}</TableHead>
+                <TableHead>{t('Final')}</TableHead>
+                <TableHead>{t('Given on')}</TableHead>
+                <TableHead>{t('Applied on')}</TableHead>
+                <TableHead>{t('Discount month')}</TableHead>
+                <TableHead>{t('Status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={10} className="py-8 text-center text-sm font-semibold text-muted-foreground">
-                    No students found for this discount type.
+                    {t('No students found for this discount type.')}
                   </TableCell>
                 </TableRow>
               ) : (

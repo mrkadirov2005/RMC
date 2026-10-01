@@ -11,6 +11,7 @@ import { showToast } from '../../../../utils/toast';
 import { formatMoney } from '../../../../utils/helpers';
 import { PaymentFormDialog } from '../../payments/components/PaymentFormDialog';
 import { createPaymentDraft, normalizePaymentFormData } from '../../payments/utils/paymentForm';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Payment {
   payment_id?: number;
@@ -67,6 +68,7 @@ const getStatusBadgeVariant = (status: string) => {
 
 // Renders the payment section module.
 export const PaymentSection = ({ payments, student, classData, onRefresh }: PaymentSectionProps) => {
+  const { t } = useLanguage();
   const defaultCenterId = student?.center_id || 0;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -152,9 +154,9 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Payment History</CardTitle>
+        <CardTitle>{t('Payment History')}</CardTitle>
         <Button size="sm" onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" /> Add Payment
+          <Plus className="h-4 w-4 mr-2" /> {t('Add Payment')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -162,20 +164,20 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Receipt #</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Method</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Notes</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead>{t('Receipt #')}</TableHead>
+                <TableHead>{t('Amount')}</TableHead>
+                <TableHead>{t('Date')}</TableHead>
+                <TableHead>{t('Method')}</TableHead>
+                <TableHead>{t('Status')}</TableHead>
+                <TableHead>{t('Notes')}</TableHead>
+                <TableHead className="w-24">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {payments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                    No payment records
+                    {t('No payment records')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -214,8 +216,8 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
         onOpenChange={(open) => {
           if (!open) handleCloseModal();
         }}
-        title={editingId ? 'Edit Payment' : 'Add Payment'}
-        description="Manage this student payment from the same popup structure used across the CRM."
+        title={editingId ? t('Edit Payment') : t('Add Payment')}
+        description={t('Manage this student payment from the same popup structure used across the CRM.')}
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleSubmit}

@@ -14,6 +14,7 @@ import { fetchSubjects } from '../../../../slices/subjectsSlice';
 import { createGrade, deleteGrade, updateGrade } from '../../../../slices/gradesSlice';
 import { selectSubjectItems } from '../../../../store/selectors';
 import { useAppDispatch, useAppSelector } from '../../hooks';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Subject {
   subject_id?: number;
@@ -46,6 +47,7 @@ interface GradesSectionProps {
 
 // Renders the grades section module.
 export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId, centerId }: GradesSectionProps) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -139,9 +141,9 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Grades</CardTitle>
+        <CardTitle>{t('Grades')}</CardTitle>
         <Button size="sm" onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" /> Add Grade
+          <Plus className="h-4 w-4 mr-2" /> {t('Add Grade')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -149,18 +151,18 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Subject</TableHead>
-                <TableHead>Percentage</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead>Term</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead>{t('Subject')}</TableHead>
+                <TableHead>{t('Percentage')}</TableHead>
+                <TableHead>{t('Grade')}</TableHead>
+                <TableHead>{t('Term')}</TableHead>
+                <TableHead className="w-24">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {grades.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                    No grades
+                    {t('No grades')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -193,17 +195,17 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Grade' : 'Add Grade'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Grade') : t('Add Grade')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="subject">Subject *</Label>
+              <Label htmlFor="subject">{t('Subject *')}</Label>
               <Select
                 value={String(formData.subject || '')}
                 onValueChange={(value) => setFormData({ ...formData, subject: value })}
               >
                 <SelectTrigger id="subject">
-                  <SelectValue placeholder="Select subject" />
+                  <SelectValue placeholder={t('Select subject')} />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((subject) => (
@@ -215,7 +217,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="percentage">Percentage *</Label>
+              <Label htmlFor="percentage">{t('Percentage *')}</Label>
               <Input
                 id="percentage"
                 type="number"
@@ -228,10 +230,10 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="letter">Grade Letter *</Label>
+              <Label htmlFor="letter">{t('Grade Letter *')}</Label>
               <Select value={formData.grade_letter || ''} onValueChange={(value) => setFormData({ ...formData, grade_letter: value })}>
                 <SelectTrigger id="letter">
-                  <SelectValue placeholder="Select grade" />
+                  <SelectValue placeholder={t('Select grade')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="A">A</SelectItem>
@@ -243,27 +245,27 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="term">Term *</Label>
+              <Label htmlFor="term">{t('Term *')}</Label>
               <Select value={formData.term || ''} onValueChange={(value) => setFormData({ ...formData, term: value })}>
                 <SelectTrigger id="term">
-                  <SelectValue placeholder="Select term" />
+                  <SelectValue placeholder={t('Select term')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Q1">Q1</SelectItem>
                   <SelectItem value="Q2">Q2</SelectItem>
                   <SelectItem value="Q3">Q3</SelectItem>
                   <SelectItem value="Q4">Q4</SelectItem>
-                  <SelectItem value="Semester 1">Semester 1</SelectItem>
-                  <SelectItem value="Semester 2">Semester 2</SelectItem>
+                  <SelectItem value="Semester 1">{t('Semester 1')}</SelectItem>
+                  <SelectItem value="Semester 2">{t('Semester 2')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleCloseModal}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save'}
+                {loading ? t('Saving...') : t('Save')}
               </Button>
             </div>
           </form>

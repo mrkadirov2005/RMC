@@ -53,7 +53,7 @@ describe('assignments controller', () => {
       await assignmentController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -63,7 +63,7 @@ describe('assignments controller', () => {
       await assignmentController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -133,7 +133,7 @@ describe('assignments controller', () => {
       await assignmentController.getAllAssignments({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch assignments', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -155,7 +155,7 @@ describe('assignments controller', () => {
       await assignmentController.getAssignmentById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Assignment not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Vazifa topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -165,7 +165,7 @@ describe('assignments controller', () => {
       await assignmentController.getAssignmentById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch assignment', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -178,7 +178,7 @@ describe('assignments controller', () => {
 
       expect(classBelongsToTeacher).toHaveBeenCalledWith(12, 4);
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruh bu o'qituvchiga tegishli emas." });
       expect(assignmentService.createAssignment).not.toHaveBeenCalled();
     });
 
@@ -190,7 +190,7 @@ describe('assignments controller', () => {
 
       expect(classInCenter).toHaveBeenCalledWith(12, 7);
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh bu markazga tegishli emas.' });
     });
 
     it.each([[undefined], [null], ['']])('skips the class check when class_id is %p', async (classId) => {
@@ -222,7 +222,7 @@ describe('assignments controller', () => {
       await assignmentController.createAssignment({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create assignment', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -244,7 +244,7 @@ describe('assignments controller', () => {
       await assignmentController.updateAssignment({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Assignment not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Vazifa topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -254,7 +254,7 @@ describe('assignments controller', () => {
       await assignmentController.updateAssignment({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update assignment', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -266,7 +266,7 @@ describe('assignments controller', () => {
       await assignmentController.deleteAssignment({ params: { id: '3' }, user: { userType: 'teacher', id: 4 } }, res);
 
       expect(assignmentService.deleteAssignment).toHaveBeenCalledWith(3, 7, 4);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Assignment deleted successfully', assignment: { assignment_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Vazifa muvaffaqiyatli o'chirildi", assignment: { assignment_id: 3 } });
     });
 
     it('returns 404 when the assignment is out of scope', async () => {
@@ -285,7 +285,7 @@ describe('assignments controller', () => {
       await assignmentController.deleteAssignment({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete assignment', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

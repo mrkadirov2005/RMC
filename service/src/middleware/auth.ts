@@ -71,7 +71,7 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Authentication required. Please log in.' });
+    res.status(401).json({ error: 'Tizimga kirish talab qilinadi. Iltimos, tizimga kiring.' });
     return;
   }
 
@@ -92,7 +92,7 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
       const isFrozen = Boolean(rows?.[0]?.is_frozen);
       if (isFrozen) {
         res.status(423).json({
-          error: 'Student account is frozen and is currently view-only.',
+          error: "O'quvchi hisobi muzlatilgan va hozir faqat ko'rish rejimida.",
           code: 'STUDENT_ACCOUNT_FROZEN',
         });
         return;
@@ -102,12 +102,12 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
     next();
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {
-      res.status(401).json({ error: 'Token expired. Please log in again.' });
+      res.status(401).json({ error: 'Sessiya muddati tugadi. Iltimos, qaytadan tizimga kiring.' });
     } else if (err.name === 'JsonWebTokenError') {
-      res.status(401).json({ error: 'Invalid token. Please log in again.' });
+      res.status(401).json({ error: 'Sessiya yaroqsiz. Iltimos, qaytadan tizimga kiring.' });
     } else {
       console.error('Authentication middleware error:', err);
-      res.status(500).json({ error: 'Authentication check failed.' });
+      res.status(500).json({ error: "Tizimga kirish holatini tekshirib bo'lmadi." });
     }
   }
 }
@@ -123,7 +123,7 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
 function requireRole(...allowedTypes: UserType[]) {
   return (req: any, res: any, next: any): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
       return;
     }
 
@@ -134,7 +134,7 @@ function requireRole(...allowedTypes: UserType[]) {
 
     if (!allowedTypes.includes(req.user.userType)) {
       res.status(403).json({ 
-        error: 'Access denied. You do not have permission to perform this action.',
+        error: "Kirish rad etildi. Bu amalni bajarishga ruxsatingiz yo'q.",
         required: allowedTypes,
         current: req.user.userType
       });
@@ -147,7 +147,7 @@ function requireRole(...allowedTypes: UserType[]) {
 
 function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
   if (!req.user) {
-    res.status(401).json({ error: 'Authentication required.' });
+    res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
     return;
   }
 
@@ -157,7 +157,7 @@ function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
     return;
   }
 
-  res.status(403).json({ error: 'You do not have permission to permanently delete records.' });
+  res.status(403).json({ error: "Yozuvlarni butunlay o'chirishga ruxsatingiz yo'q." });
 }
 
 /**
@@ -171,7 +171,7 @@ function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
 function requireSelfOrAdmin(paramName: string, userIdField: string = 'id') {
   return (req: any, res: any, next: any): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
       return;
     }
 
@@ -190,7 +190,7 @@ function requireSelfOrAdmin(paramName: string, userIdField: string = 'id') {
 
     if (requestedId !== userId) {
       res.status(403).json({ 
-        error: 'Access denied. You can only access your own data.' 
+        error: "Kirish rad etildi. Siz faqat o'z ma'lumotlaringizga kira olasiz." 
       });
       return;
     }
@@ -210,14 +210,14 @@ module.exports = {
   requireSelfOrAdmin,
   requireOwner: (req: any, res: any, next: any) => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
       return;
     }
     if (req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner') {
       next();
       return;
     }
-    res.status(403).json({ error: 'Access denied. Owner privileges required.' });
+    res.status(403).json({ error: 'Kirish rad etildi. Ega huquqlari talab qilinadi.' });
   },
   JWT_SECRET,
   JWT_EXPIRES_IN,

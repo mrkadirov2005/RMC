@@ -217,7 +217,7 @@ const StudentsPage = () => {
             <TabsTrigger value="students">{t('Students')}</TabsTrigger>
             <TabsTrigger value="statistics">{t('Statistics')}</TabsTrigger>
             <TabsTrigger value="multi-group-students">{t('Multiple groups')}</TabsTrigger>
-            <TabsTrigger value="teachers">Teachers</TabsTrigger>
+            <TabsTrigger value="teachers">{t('Teachers')}</TabsTrigger>
           </TabsList>
           <div className="owner-primary-card flex h-10 min-w-[145px] items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 shadow-sm dark:border-border dark:bg-card">
             <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-500 dark:bg-muted">
@@ -242,7 +242,7 @@ const StudentsPage = () => {
           <div className="ml-auto flex items-center gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button type="button" variant="outline" size="icon" className="h-10 w-10" aria-label="More student actions">
+                <Button type="button" variant="outline" size="icon" className="h-10 w-10" aria-label={t('More student actions')}>
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>

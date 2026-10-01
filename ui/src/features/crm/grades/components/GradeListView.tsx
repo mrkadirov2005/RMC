@@ -24,6 +24,7 @@ import {
 import { SimplePaginationBar } from '@/components/common/SimplePaginationBar';
 import type { paginateItems } from '@/components/common/pagination';
 import type { Grade } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type PaginatedResult<T> = ReturnType<typeof paginateItems<T>>;
 
@@ -78,6 +79,7 @@ const GradeListView = ({
   getStudentName,
   getGradeBadgeClasses,
 }: GradeListViewProps) => {
+  const { t } = useLanguage();
   return (
     <>
       {/* Search and Filter Bar */}
@@ -86,7 +88,7 @@ const GradeListView = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search by student or subject..."
+            placeholder={t('Search by student or subject...')}
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-10"
@@ -108,7 +110,7 @@ const GradeListView = ({
           onClick={onToggleFilters}
         >
           <Filter className="h-4 w-4 mr-2" />
-          Filters
+          {t('Filters')}
           {hasActiveFilters && (
             <span className="ml-2 bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-xs">
               {(filterTerm ? 1 : 0) + (filterGrade ? 1 : 0)}
@@ -118,12 +120,12 @@ const GradeListView = ({
 
         {hasActiveFilters && (
           <Button variant="outline" size="sm" onClick={onClearFilters}>
-            <X className="h-4 w-4 mr-2" /> Clear All
+            <X className="h-4 w-4 mr-2" /> {t('Clear All')}
           </Button>
         )}
 
         <div className="text-sm text-muted-foreground flex items-center gap-4">
-          <span>{displayedGrades.length} grades</span>
+          <span>{t('{count} grades', { count: displayedGrades.length })}</span>
         </div>
       </div>
 
@@ -131,13 +133,13 @@ const GradeListView = ({
       {showFilters && (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg mb-6">
           <div className="space-y-2">
-            <Label>Term</Label>
+            <Label>{t('Term')}</Label>
             <Select value={filterTerm} onValueChange={onFilterTermChange}>
               <SelectTrigger>
-                <SelectValue placeholder="All Terms" />
+                <SelectValue placeholder={t('All Terms')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Terms</SelectItem>
+                <SelectItem value="">{t('All Terms')}</SelectItem>
                 {termOptions.map((opt) => (
                   <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
                 ))}
@@ -145,13 +147,13 @@ const GradeListView = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Grade Letter</Label>
+            <Label>{t('Grade Letter')}</Label>
             <Select value={filterGrade} onValueChange={onFilterGradeChange}>
               <SelectTrigger>
-                <SelectValue placeholder="All Grades" />
+                <SelectValue placeholder={t('All Grades')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Grades</SelectItem>
+                <SelectItem value="">{t('All Grades')}</SelectItem>
                 <SelectItem value="A">A</SelectItem>
                 <SelectItem value="B">B</SelectItem>
                 <SelectItem value="C">C</SelectItem>
@@ -161,18 +163,18 @@ const GradeListView = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Age Range</Label>
+            <Label>{t('Age Range')}</Label>
             <Select value={filterAgeRange} onValueChange={onFilterAgeRangeChange}>
               <SelectTrigger>
-                <SelectValue placeholder="All Ages" />
+                <SelectValue placeholder={t('All Ages')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Ages</SelectItem>
-                <SelectItem value="3-6">3-6 years</SelectItem>
-                <SelectItem value="7-10">7-10 years</SelectItem>
-                <SelectItem value="11-14">11-14 years</SelectItem>
-                <SelectItem value="15-18">15-18 years</SelectItem>
-                <SelectItem value="19-25">19-25 years</SelectItem>
+                <SelectItem value="">{t('All Ages')}</SelectItem>
+                <SelectItem value="3-6">{t('3-6 years')}</SelectItem>
+                <SelectItem value="7-10">{t('7-10 years')}</SelectItem>
+                <SelectItem value="11-14">{t('11-14 years')}</SelectItem>
+                <SelectItem value="15-18">{t('15-18 years')}</SelectItem>
+                <SelectItem value="19-25">{t('19-25 years')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -184,25 +186,25 @@ const GradeListView = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead>Marks</TableHead>
-              <TableHead>Percentage</TableHead>
-              <TableHead>Grade</TableHead>
-              <TableHead>Term</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
+              <TableHead>{t('Student')}</TableHead>
+              <TableHead>{t('Subject')}</TableHead>
+              <TableHead>{t('Marks')}</TableHead>
+              <TableHead>{t('Percentage')}</TableHead>
+              <TableHead>{t('Grade')}</TableHead>
+              <TableHead>{t('Term')}</TableHead>
+              <TableHead>{t('Year')}</TableHead>
+              <TableHead className="w-24">{t('Actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-6">Loading...</TableCell>
+                <TableCell colSpan={8} className="text-center py-6">{t('Loading...')}</TableCell>
               </TableRow>
             ) : displayedGrades.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="text-center py-6 text-muted-foreground">
-                  {hasActiveFilters ? 'No grades match your criteria' : 'No grades found'}
+                  {hasActiveFilters ? t('No grades match your criteria') : t('No grades found')}
                 </TableCell>
               </TableRow>
             ) : (

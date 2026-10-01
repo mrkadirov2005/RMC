@@ -63,7 +63,7 @@ const SalaryTeacherDetailPage = () => {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/salary')}>
         <ArrowLeft className="h-4 w-4" />
-        Back to Salaries
+        {t('Back to Salaries')}
       </Button>
 
       <PageHeader
@@ -87,7 +87,7 @@ const SalaryTeacherDetailPage = () => {
               );
             }}
           >
-            Mark {formatSalaryPeriod(currentPeriod.year, currentPeriod.month)} as Paid
+            {t('Mark {period} as Paid', { period: formatSalaryPeriod(currentPeriod.year, currentPeriod.month) })}
           </Button>
         }
       />
@@ -98,19 +98,19 @@ const SalaryTeacherDetailPage = () => {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : !detail || detail.history.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No salary history yet.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">{t('No salary history yet.')}</div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Paid?</TableHead>
-                  <TableHead>Marked By</TableHead>
-                  <TableHead>Students Paid</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('Month')}</TableHead>
+                  <TableHead>{t('Amount')}</TableHead>
+                  <TableHead>{t('Paid?')}</TableHead>
+                  <TableHead>{t('Marked By')}</TableHead>
+                  <TableHead>{t('Students Paid')}</TableHead>
+                  <TableHead>{t('Notes')}</TableHead>
+                  <TableHead className="text-right">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,9 +120,9 @@ const SalaryTeacherDetailPage = () => {
                     <TableCell>{entry.salary ? formatMoney(entry.salary.amount) : '—'}</TableCell>
                     <TableCell>
                       {entry.salary?.is_paid ? (
-                        <Badge variant="success">Paid</Badge>
+                        <Badge variant="success">{t('Paid')}</Badge>
                       ) : (
-                        <Badge variant="warning">Unpaid</Badge>
+                        <Badge variant="warning">{t('Unpaid')}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -136,7 +136,7 @@ const SalaryTeacherDetailPage = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => openMarkPaidFor(entry)}>
-                        {entry.salary?.is_paid ? 'Edit' : 'Mark Paid'}
+                        {entry.salary?.is_paid ? t('Edit') : t('Mark Paid')}
                       </Button>
                     </TableCell>
                   </TableRow>

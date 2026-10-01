@@ -26,7 +26,7 @@ describe('saved filter routes id-param validation (RMC-051)', () => {
   it('rejects a non-numeric id on PUT with 400 before reaching the controller', async () => {
     const response = await request(app).put('/saved-filters/abc').send({ name: 'x' }).expect(400);
 
-    expect(response.body.error).toBe('Validation failed');
+    expect(response.body.error).toBe("Kiritilgan ma'lumotlar noto'g'ri");
     expect(response.body.details).toEqual(
       expect.arrayContaining([expect.objectContaining({ field: 'id' })])
     );
@@ -36,7 +36,7 @@ describe('saved filter routes id-param validation (RMC-051)', () => {
   it('rejects a non-numeric id on DELETE with 400 before reaching the controller', async () => {
     const response = await request(app).delete('/saved-filters/abc').expect(400);
 
-    expect(response.body.error).toBe('Validation failed');
+    expect(response.body.error).toBe("Kiritilgan ma'lumotlar noto'g'ri");
     expect(mockControllers.deleteFilter).not.toHaveBeenCalled();
   });
 

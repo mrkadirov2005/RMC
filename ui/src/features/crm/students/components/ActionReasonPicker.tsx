@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { studentsApi } from '../api/studentsApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export type ReasonType = 'transfer' | 'delete';
 
@@ -34,6 +35,7 @@ interface Props {
 
 // Renders the action reason picker.
 export const ActionReasonPicker = ({ reasonType, open, value, customValue, onChange, onCustomChange, disabled = false }: Props) => {
+  const { t } = useLanguage();
   const [options, setOptions] = useState<Array<{ value: number; label: string }>>([]);
 
   useEffect(() => {
@@ -48,14 +50,14 @@ export const ActionReasonPicker = ({ reasonType, open, value, customValue, onCha
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={fieldId}>Reason</Label>
+      <Label htmlFor={fieldId}>{t('Reason')}</Label>
       <Select value={value} onValueChange={onChange} disabled={disabled}>
         <SelectTrigger id={fieldId}>
-          <SelectValue placeholder="Select a reason" />
+          <SelectValue placeholder={t('Select a reason')} />
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => <SelectItem key={option.value} value={String(option.value)}>{option.label}</SelectItem>)}
-          <SelectItem value={String(CUSTOM_REASON_VALUE)}>+ Add a custom reason</SelectItem>
+          <SelectItem value={String(CUSTOM_REASON_VALUE)}>{t('+ Add a custom reason')}</SelectItem>
         </SelectContent>
       </Select>
       {Number(value) === CUSTOM_REASON_VALUE && (
@@ -63,7 +65,7 @@ export const ActionReasonPicker = ({ reasonType, open, value, customValue, onCha
           value={customValue}
           onChange={(event) => onCustomChange(event.target.value)}
           disabled={disabled}
-          placeholder="Enter your own reason"
+          placeholder={t('Enter your own reason')}
         />
       )}
     </div>

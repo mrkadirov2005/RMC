@@ -86,17 +86,17 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
 
       <div className="mx-auto mb-4 flex max-w-6xl flex-col gap-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-sm font-black text-slate-900 dark:text-white">Filter by teacher</p>
+          <p className="text-sm font-black text-slate-900 dark:text-white">{t('Filter by teacher')}</p>
           <p className="text-xs font-semibold text-slate-500 dark:text-white/55">
             {selectedTeacherId === 'all' ? `${data.length} students across all teachers` : `${filteredStudents.length} students assigned to the selected teacher`}
           </p>
         </div>
         <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
           <SelectTrigger className="w-full sm:w-72">
-            <SelectValue placeholder="All teachers" />
+            <SelectValue placeholder={t('All teachers')} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All teachers</SelectItem>
+            <SelectItem value="all">{t('All teachers')}</SelectItem>
             {teachers.map((teacher) => (
               <SelectItem key={teacher.id} value={String(teacher.id)}>
                 {teacher.name}
@@ -161,6 +161,7 @@ export const StudentStatsCarousel = ({ data, collections }: Props) => {
 };
 
 const NavButton = ({ direction, onClick }: { direction: 'left' | 'right'; onClick: () => void }) => {
+  const { t } = useLanguage();
   const Icon = direction === 'left' ? ChevronLeft : ChevronRight;
   return (
     <button
@@ -170,7 +171,7 @@ const NavButton = ({ direction, onClick }: { direction: 'left' | 'right'; onClic
         'absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-cyan-300 hover:bg-cyan-50 dark:border-white/10 dark:bg-slate-950 dark:text-white',
         direction === 'left' ? 'left-2' : 'right-2'
       )}
-      aria-label={direction === 'left' ? 'Previous statistic' : 'Next statistic'}
+      aria-label={direction === 'left' ? t('Previous statistic') : t('Next statistic')}
     >
       <Icon className="h-5 w-5" />
     </button>

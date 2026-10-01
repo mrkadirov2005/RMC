@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ViewModeToggle } from '@/components/common/ViewModeToggle';
 import { useGradesPage } from './hooks/useGradesPage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const GradeFormDialog = lazy(() => import('./components/GradeFormDialog'));
 const GradesStatisticsSection = lazy(() => import('./components/GradesStatisticsSection'));
@@ -14,6 +15,7 @@ const GradeListView = lazy(() => import('./components/GradeListView'));
 
 // Renders the grades page screen.
 const GradesPage = () => {
+  const { t } = useLanguage();
   const g = useGradesPage();
 
   useEffect(() => {
@@ -29,19 +31,19 @@ const GradesPage = () => {
         <div className="flex items-center gap-4">
           {g.selectedFolder && (
             <Button variant="outline" size="sm" onClick={g.handleBackToFolders}>
-              <ArrowLeft className="h-4 w-4 mr-2" /> Back
+              <ArrowLeft className="h-4 w-4 mr-2" /> {t('Back')}
             </Button>
           )}
           <h1 className="text-2xl font-bold">
             {g.selectedFolder
               ? `Grades - ${g.selectedFolder.name}`
-              : 'Grades Management'}
+              : t('Grades Management')}
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <ViewModeToggle value={g.viewMode} onChange={g.setViewMode} />
           <Button onClick={() => g.handleOpenModal()} className="bg-gradient-to-r from-indigo-500 to-violet-600 text-white shadow-lg shadow-indigo-500/30 hover:from-indigo-600 hover:to-violet-700 border-0">
-            <Plus className="h-4 w-4 mr-2" /> Add Grade
+            <Plus className="h-4 w-4 mr-2" /> {t('Add Grade')}
           </Button>
         </div>
       </div>
@@ -52,7 +54,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <Award className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Total Grades</p>
+              <p className="text-[10px] font-bold uppercase text-white/70">{t('Total Grades')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.totalGrades}</p>
           </CardContent>
@@ -61,7 +63,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Average</p>
+              <p className="text-[10px] font-bold uppercase text-white/70">{t('Average')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.averagePercentage.toFixed(1)}%</p>
           </CardContent>
@@ -70,7 +72,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Passing</p>
+              <p className="text-[10px] font-bold uppercase text-white/70">{t('Passing')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.passingGrades}</p>
           </CardContent>
@@ -79,7 +81,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <XCircle className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Failing</p>
+              <p className="text-[10px] font-bold uppercase text-white/70">{t('Failing')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.failingGrades}</p>
           </CardContent>
@@ -88,7 +90,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Pass Rate</p>
+              <p className="text-[10px] font-bold uppercase text-white/70">{t('Pass Rate')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.passRate}%</p>
           </CardContent>
@@ -106,7 +108,7 @@ const GradesPage = () => {
                 className={`rounded-b-none ${g.activeTab === 'classes' ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white border-0 shadow-lg shadow-emerald-500/30' : ''}`}
               >
                 <BookOpen className="h-4 w-4 mr-2" />
-                By Classes
+                {t('By Classes')}
               </Button>
               <Button
                 variant={g.activeTab === 'subjects' ? 'default' : 'ghost'}
@@ -114,7 +116,7 @@ const GradesPage = () => {
                 className={`rounded-b-none ${g.activeTab === 'subjects' ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white border-0 shadow-lg shadow-cyan-500/30' : ''}`}
               >
                 <BookMarked className="h-4 w-4 mr-2" />
-                By Subjects
+                {t('By Subjects')}
               </Button>
               <Button
                 variant={g.activeTab === 'statistics' ? 'default' : 'ghost'}
@@ -122,7 +124,7 @@ const GradesPage = () => {
                 className={`rounded-b-none ${g.activeTab === 'statistics' ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-0 shadow-lg shadow-amber-500/30' : ''}`}
               >
                 <BarChart3 className="h-4 w-4 mr-2" />
-                Statistics
+                {t('Statistics')}
               </Button>
             </div>
           </div>
@@ -130,7 +132,7 @@ const GradesPage = () => {
           {/* Tab Content */}
           <div>
             {g.activeTab === 'statistics' && (
-              <Suspense fallback={<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">Loading statistics...</div>}>
+              <Suspense fallback={<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">{t('Loading statistics...')}</div>}>
                 <GradesStatisticsSection
                   gradeStatistics={g.gradeStatistics}
                   studentsCount={g.students.length}
@@ -142,7 +144,7 @@ const GradesPage = () => {
             )}
 
             {(g.activeTab === 'students' || g.activeTab === 'classes' || g.activeTab === 'teachers' || g.activeTab === 'subjects') && (
-              <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading...</div>}>
+              <Suspense fallback={<div className="text-center py-8 text-muted-foreground">{t('Loading...')}</div>}>
                 <GradesFolderTabs
                   activeTab={g.activeTab}
                   loadingData={g.loadingData}
@@ -175,7 +177,7 @@ const GradesPage = () => {
           </div>
         </>
       ) : (
-        <Suspense fallback={<div className="text-center py-8 text-muted-foreground">Loading...</div>}>
+        <Suspense fallback={<div className="text-center py-8 text-muted-foreground">{t('Loading...')}</div>}>
           <GradeListView
             loading={g.state.loading}
             searchTerm={g.searchTerm}

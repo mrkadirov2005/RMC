@@ -96,7 +96,7 @@ export const FinanceTeachersView = ({
               <span className="min-w-0">
                 <span className="block truncate font-black text-slate-950">{teacher.teacherName}</span>
                 <span className="block truncate text-[10px] font-bold text-slate-500">
-                  {teacher.classCount} guruh · {teacher.totalStudents} talaba
+                  {teacher.classCount} guruh · {teacher.totalStudents} o'quvchi
                 </span>
               </span>
               {!selectedTeacherId && (
@@ -142,7 +142,7 @@ const TeacherPaymentPie = ({ teacherName, groups }: { teacherName: string; group
     <div className="rounded-md border border-slate-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
       <div className="mb-3 text-center">
         <p className="text-base font-black text-slate-950 dark:text-white">{teacherName}</p>
-        <p className="text-xs font-semibold text-slate-500">Talabalar to'lov holati</p>
+        <p className="text-xs font-semibold text-slate-500">O'quvchilar to'lov holati</p>
       </div>
       <div className="flex justify-center">
         <PieChart
@@ -177,7 +177,7 @@ const TeacherGroupsHeader = ({
     <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
       <p className="text-sm font-black text-slate-950 dark:text-white">{selectedTeacherName}</p>
       <span className="rounded bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-600">{selectedTeacherRow.classCount} guruh</span>
-      <span className="rounded bg-cyan-100 px-2 py-1 text-[10px] font-black text-cyan-700">{selectedTeacherRow.totalStudents} talaba</span>
+      <span className="rounded bg-cyan-100 px-2 py-1 text-[10px] font-black text-cyan-700">{selectedTeacherRow.totalStudents} o'quvchi</span>
       <span className="ml-auto rounded bg-blue-100 px-2 py-1 text-[10px] font-black text-blue-700">
         Jami to'lov: {formatMoney(selectedTeacherRow.earnedAmount)}
       </span>
@@ -225,7 +225,7 @@ const SelectedGroupTable = ({ selectedGroup }: { selectedGroup: TeacherGroup }) 
         <div className="min-w-[640px]">
           <div className="flex items-center justify-start gap-5 border-b bg-slate-100 px-3 py-2 text-[11px] font-black uppercase text-slate-500">
             <span className="w-8 shrink-0">#</span>
-            <span className="w-52 shrink-0">Talaba</span>
+            <span className="w-52 shrink-0">O'quvchi</span>
             <span className="w-44 shrink-0">Guruh</span>
             <span className="w-28 shrink-0">To'lov</span>
             <span className="w-24 shrink-0">Holat</span>
@@ -266,7 +266,7 @@ const StudentPaymentRow = ({ student, groupName, index }: { student: StudentPaym
         {student.paid ? (
           <>
             <CheckCircle2 className="mr-1 h-3 w-3" />
-            Tolagan
+            To'lagan
           </>
         ) : (
           <>

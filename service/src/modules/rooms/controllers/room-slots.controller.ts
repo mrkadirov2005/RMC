@@ -4,11 +4,11 @@ const { getScopedCenterId } = require('../../../shared/tenant');
 const resolveCenter = (req: any, res: any): number | null => {
   const { centerId, isGlobal } = getScopedCenterId(req);
   if (!centerId && !isGlobal) {
-    res.status(403).json({ error: 'Center scope required.' });
+    res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     return null;
   }
   if (!centerId && isGlobal) {
-    res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     return null;
   }
   return centerId as number;
@@ -48,7 +48,7 @@ const getAvailableSlots = async (req: any, res: any) => {
     const { slot_date } = req.query;
     const centerId = resolveCenter(req, res);
     if (centerId == null) return;
-    if (!slot_date) return res.status(400).json({ error: 'Slot date is required' });
+    if (!slot_date) return res.status(400).json({ error: "Vaqt oralig'i sanasi ko'rsatilishi shart" });
 
     const slots = await roomSlotsService.getAvailableSlots(roomId, centerId, slot_date);
     res.json(slots);
@@ -101,7 +101,7 @@ const generateSlotsForDateRange = async (req: any, res: any) => {
     const { room_id, start_date, end_date, slot_configs } = req.body;
 
     const slots = await roomSlotsService.generateSlots(room_id, centerId, start_date, end_date, slot_configs);
-    res.status(201).json({ message: `Generated ${slots.length} slots`, slots });
+    res.status(201).json({ message: `${slots.length} ta vaqt oralig'i yaratildi`, slots });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -121,7 +121,7 @@ const updateSlot = async (req: any, res: any) => {
       is_available
     }, centerId);
 
-    if (!slot) return res.status(404).json({ error: 'Slot not found' });
+    if (!slot) return res.status(404).json({ error: "Vaqt oralig'i topilmadi" });
     res.json(slot);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -135,9 +135,9 @@ const deleteSlot = async (req: any, res: any) => {
     if (centerId == null) return;
 
     const slot = await roomSlotsService.removeSlot(slotId, centerId);
-    if (!slot) return res.status(404).json({ error: 'Slot not found' });
+    if (!slot) return res.status(404).json({ error: "Vaqt oralig'i topilmadi" });
 
-    res.json({ message: 'Slot deleted successfully' });
+    res.json({ message: "Vaqt oralig'i muvaffaqiyatli o'chirildi" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -217,7 +217,7 @@ const updateBooking = async (req: any, res: any) => {
       notes
     }, centerId);
 
-    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (!booking) return res.status(404).json({ error: 'Bron topilmadi' });
     res.json(booking);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -231,7 +231,7 @@ const cancelBooking = async (req: any, res: any) => {
     if (centerId == null) return;
 
     await roomSlotsService.cancelBooking(bookingId, centerId);
-    res.json({ message: 'Booking cancelled successfully' });
+    res.json({ message: 'Bron muvaffaqiyatli bekor qilindi' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

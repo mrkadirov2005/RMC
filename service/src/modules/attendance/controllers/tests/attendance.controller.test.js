@@ -38,7 +38,7 @@ describe('attendance controller / DTO validation (RMC-029, RMC-063)', () => {
 
       expect(next).not.toHaveBeenCalled();
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Validation failed' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: "Kiritilgan ma'lumotlar noto'g'ri" }));
     });
 
     it('allows updating only remarks without a status', async () => {

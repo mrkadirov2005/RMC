@@ -37,9 +37,11 @@ import {
   InsightCard,
   MetricTile,
 } from './components/CentersVisuals';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the centers page screen.
 const CentersPage = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -148,16 +150,16 @@ const CentersPage = () => {
             <div className="relative z-10">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded bg-white/10 px-2.5 py-1 text-xs font-black text-white/80">Markazlar</span>
-                <span className="rounded bg-cyan-400/15 px-2.5 py-1 text-xs font-black text-cyan-100">{state.items.length} centers</span>
+                <span className="rounded bg-cyan-400/15 px-2.5 py-1 text-xs font-black text-cyan-100">{t('{count} centers', { count: state.items.length })}</span>
               </div>
-              <h1 className="mt-4 text-3xl font-black tracking-tight">Centers Management</h1>
+              <h1 className="mt-4 text-3xl font-black tracking-tight">{t('Centers Management')}</h1>
               <p className="mt-2 max-w-2xl text-sm font-semibold text-white/65">
-                Switch active branch, compare center performance, and manage branch details from one focused workspace.
+                {t('Switch active branch, compare center performance, and manage branch details from one focused workspace.')}
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
-                <HeroSignal Icon={GraduationCap} label="Students" value={totalStudents.toLocaleString()} />
-                <HeroSignal Icon={Users} label="Teachers" value={totalTeachers.toLocaleString()} />
-                <HeroSignal Icon={Wallet} label="Collected" value={formatMoney(totalCollected)} />
+                <HeroSignal Icon={GraduationCap} label={t('Students')} value={totalStudents.toLocaleString()} />
+                <HeroSignal Icon={Users} label={t('Teachers')} value={totalTeachers.toLocaleString()} />
+                <HeroSignal Icon={Wallet} label={t('Collected')} value={formatMoney(totalCollected)} />
               </div>
             </div>
           </div>
@@ -165,27 +167,27 @@ const CentersPage = () => {
           <div className="p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-black uppercase text-slate-500">Active Branch</p>
+                <p className="text-xs font-black uppercase text-slate-500">{t('Active Branch')}</p>
                 <h2 className="mt-1 text-xl font-black text-slate-950 dark:text-white">{activeCenterLabel}</h2>
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  {activeSummary ? `${activeSummary.students} students, ${activeSummary.teachers} teachers, ${formatMoney(activeSummary.collected)} collected` : 'Pick a branch to start working.'}
+                  {activeSummary ? `${activeSummary.students} students, ${activeSummary.teachers} teachers, ${formatMoney(activeSummary.collected)} collected` : t('Pick a branch to start working.')}
                 </p>
               </div>
               <Button onClick={() => handleOpenModal()} className="bg-slate-950 text-white hover:bg-slate-800">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Center
+                {t('Add Center')}
               </Button>
             </div>
 
             <div className="mt-4">
-              <Label htmlFor="active-center-select" className="text-xs font-black uppercase text-slate-500">Switch branch</Label>
+              <Label htmlFor="active-center-select" className="text-xs font-black uppercase text-slate-500">{t('Switch branch')}</Label>
               <select
                 id="active-center-select"
                 className="mt-1 h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold dark:border-white/10 dark:bg-slate-950"
                 value={activeCenterId ?? ''}
                 onChange={(e) => handleActivateCenter(Number(e.target.value))}
               >
-                <option value="" disabled>Select branch</option>
+                <option value="" disabled>{t('Select branch')}</option>
                 {state.items.map((center) => {
                   const centerId = Number(center.center_id || center.id);
                   return (
@@ -198,23 +200,23 @@ const CentersPage = () => {
             </div>
 
             <div className="mt-4 grid gap-2 sm:grid-cols-2">
-              <InsightCard label="Top by revenue" value={topCenter?.center.center_name || 'No data'} detail={topCenter ? formatMoney(topCenter.collected) : '0'} />
-              <InsightCard label="Branches ready" value={`${totalCapacity}`} detail={metricsLoading ? 'Refreshing metrics...' : 'Available centers'} />
+              <InsightCard label={t('Top by revenue')} value={topCenter?.center.center_name || 'No data'} detail={topCenter ? formatMoney(topCenter.collected) : '0'} />
+              <InsightCard label={t('Branches ready')} value={`${totalCapacity}`} detail={metricsLoading ? t('Refreshing metrics...') : t('Available centers')} />
             </div>
           </div>
         </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
-        <MetricTile Icon={Building2} label="Centers" value={state.items.length.toLocaleString()} tone="from-blue-600 to-cyan-600" />
-        <MetricTile Icon={GraduationCap} label="Students" value={totalStudents.toLocaleString()} tone="from-emerald-600 to-teal-600" />
-        <MetricTile Icon={BookOpen} label="Groups" value={totalClasses.toLocaleString()} tone="from-violet-600 to-fuchsia-600" />
-        <MetricTile Icon={Wallet} label="Revenue" value={formatMoney(totalCollected)} tone="from-amber-500 to-orange-600" />
+        <MetricTile Icon={Building2} label={t('Centers')} value={state.items.length.toLocaleString()} tone="from-blue-600 to-cyan-600" />
+        <MetricTile Icon={GraduationCap} label={t('Students')} value={totalStudents.toLocaleString()} tone="from-emerald-600 to-teal-600" />
+        <MetricTile Icon={BookOpen} label={t('Groups')} value={totalClasses.toLocaleString()} tone="from-violet-600 to-fuchsia-600" />
+        <MetricTile Icon={Wallet} label={t('Revenue')} value={formatMoney(totalCollected)} tone="from-amber-500 to-orange-600" />
       </div>
 
       {state.error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 
@@ -223,7 +225,7 @@ const CentersPage = () => {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search centers by name, code, city, phone..."
+            placeholder={t('Search centers by name, code, city, phone...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-10"
@@ -241,7 +243,7 @@ const CentersPage = () => {
           )}
         </div>
         <span className="whitespace-nowrap rounded bg-slate-100 px-3 py-2 text-xs font-black text-slate-600 dark:bg-white/10 dark:text-white/70">
-          Showing {paginatedCenters.start}-{paginatedCenters.end} of {filteredCenters.length}
+          {t('Showing')} {paginatedCenters.start}-{paginatedCenters.end} {t('of')} {filteredCenters.length}
         </span>
       </div>
 
@@ -264,7 +266,7 @@ const CentersPage = () => {
           ))}
           {paginatedCenters.items.length === 0 && (
             <div className="rounded-lg border border-dashed border-slate-300 bg-white py-10 text-center text-sm font-semibold text-slate-500 dark:border-white/10 dark:bg-white/[0.04]">
-              No centers found.
+              {t('No centers found.')}
             </div>
           )}
         </div>
@@ -291,11 +293,11 @@ const CentersPage = () => {
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Center' : 'Add New Center'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Center') : t('Add New Center')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="center_name">Center Name *</Label>
+              <Label htmlFor="center_name">{t('Center Name *')}</Label>
               <Input
                 id="center_name"
                 required
@@ -304,7 +306,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="center_code">Center Code *</Label>
+              <Label htmlFor="center_code">{t('Center Code *')}</Label>
               <Input
                 id="center_code"
                 required
@@ -313,7 +315,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t('Email *')}</Label>
               <Input
                 id="email"
                 type="email"
@@ -323,7 +325,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone *</Label>
+              <Label htmlFor="phone">{t('Phone *')}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -333,7 +335,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="address">Address *</Label>
+              <Label htmlFor="address">{t('Address *')}</Label>
               <Input
                 id="address"
                 required
@@ -342,7 +344,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="city">City *</Label>
+              <Label htmlFor="city">{t('City *')}</Label>
               <Input
                 id="city"
                 required
@@ -351,7 +353,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="principal_name">Principal Name *</Label>
+              <Label htmlFor="principal_name">{t('Principal Name *')}</Label>
               <Input
                 id="principal_name"
                 required
@@ -362,10 +364,10 @@ const CentersPage = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={handleCloseModal}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button onClick={handleSubmit} disabled={state.loading}>
-              {state.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+              {state.loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Save')}
             </Button>
           </DialogFooter>
         </DialogContent>

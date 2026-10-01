@@ -60,7 +60,7 @@ describe('parents controller', () => {
       await parentController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createParent makes a superuser name a center', async () => {
@@ -70,7 +70,7 @@ describe('parents controller', () => {
       await parentController.createParent({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -92,7 +92,7 @@ describe('parents controller', () => {
       await parentController.getAllParents({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch parents', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ota-onalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -114,7 +114,7 @@ describe('parents controller', () => {
       await parentController.getParentById({ params: { id: '5' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Parent not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ota-ona topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -124,7 +124,7 @@ describe('parents controller', () => {
       await parentController.getParentById({ params: { id: '5' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch parent', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ota-onani yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -137,7 +137,7 @@ describe('parents controller', () => {
 
       expect(parentService.createParent).toHaveBeenCalledWith({ first_name: 'Ada', center_id: 2 });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Parent created', parent: { parent_id: 9 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Ota-ona yaratildi', parent: { parent_id: 9 } });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -147,7 +147,7 @@ describe('parents controller', () => {
       await parentController.createParent({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create parent', details: 'duplicate' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ota-onani yaratib bo'lmadi", details: 'duplicate' });
     });
   });
 
@@ -159,7 +159,7 @@ describe('parents controller', () => {
       await parentController.updateParent({ params: { id: '5' }, body: { email: 'a@b.c' }, user: {} }, res);
 
       expect(parentService.updateParent).toHaveBeenCalledWith(5, { email: 'a@b.c' }, 2);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Parent updated', parent: { parent_id: 5 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Ota-ona yangilandi', parent: { parent_id: 5 } });
     });
 
     it('returns 404 when nothing was updated', async () => {
@@ -169,7 +169,7 @@ describe('parents controller', () => {
       await parentController.updateParent({ params: { id: '5' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Parent not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ota-ona topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -179,7 +179,7 @@ describe('parents controller', () => {
       await parentController.updateParent({ params: { id: '5' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update parent', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ota-onani yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -191,7 +191,7 @@ describe('parents controller', () => {
       await parentController.deleteParent({ params: { id: '5' }, user: {} }, res);
 
       expect(parentService.deleteParent).toHaveBeenCalledWith(5, 2);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Parent deleted', parent: { parent_id: 5 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Ota-ona o'chirildi", parent: { parent_id: 5 } });
     });
 
     it('returns 404 when the parent is out of scope', async () => {
@@ -210,7 +210,7 @@ describe('parents controller', () => {
       await parentController.deleteParent({ params: { id: '5' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete parent', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ota-onani o'chirib bo'lmadi", details: 'locked' });
     });
   });
 
@@ -222,7 +222,7 @@ describe('parents controller', () => {
       await parentController.assignStudent({ body: { parent_id: 1, student_id: 2 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu markazga tegishli emas." });
     });
 
     it('confirms the assignment', async () => {
@@ -233,7 +233,7 @@ describe('parents controller', () => {
 
       expect(parentService.assignStudent).toHaveBeenCalledWith({ parent_id: 1, student_id: 2 }, 2);
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Student assigned to parent' });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'quvchi ota-onaga biriktirildi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -243,7 +243,7 @@ describe('parents controller', () => {
       await parentController.assignStudent({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to assign student', details: 'assign failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini biriktirib bo'lmadi", details: 'assign failed' });
     });
   });
 
@@ -255,7 +255,7 @@ describe('parents controller', () => {
       await parentController.parentLogin({ body: { username: 'ada', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Parent account is not active' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ota-ona hisobi faol emas' });
       expect(generateToken).not.toHaveBeenCalled();
     });
 
@@ -266,7 +266,7 @@ describe('parents controller', () => {
       await parentController.parentLogin({ body: { username: 'ghost', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues a parent token and returns a trimmed profile', async () => {
@@ -288,7 +288,7 @@ describe('parents controller', () => {
       expect(parentService.authenticate).toHaveBeenCalledWith('ada', 'pw');
       expect(generateToken).toHaveBeenCalledWith({ id: 11, email: 'ada@example.com', userType: 'parent' });
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Login successful',
+        message: 'Tizimga muvaffaqiyatli kirildi',
         token: 'signed-token',
         parent: {
           parent_id: 11,
@@ -306,17 +306,17 @@ describe('parents controller', () => {
       await parentController.parentLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
   describe('parent portal reads', () => {
     const portalHandlers = [
-      ['getMyStudents', 'getMyStudents', 'Failed to fetch parent students'],
-      ['getMyStudentPayments', 'getMyStudentPayments', 'Failed to fetch payments'],
-      ['getMyStudentAttendance', 'getMyStudentAttendance', 'Failed to fetch attendance'],
-      ['getMyStudentGrades', 'getMyStudentGrades', 'Failed to fetch grades'],
-      ['getMyStudentTests', 'getMyStudentTests', 'Failed to fetch test submissions'],
+      ['getMyStudents', 'getMyStudents', "Ota-ona o'quvchilarini yuklab bo'lmadi"],
+      ['getMyStudentPayments', 'getMyStudentPayments', "To'lovlarni yuklab bo'lmadi"],
+      ['getMyStudentAttendance', 'getMyStudentAttendance', "Davomatni yuklab bo'lmadi"],
+      ['getMyStudentGrades', 'getMyStudentGrades', "Baholarni yuklab bo'lmadi"],
+      ['getMyStudentTests', 'getMyStudentTests', "Topshirilgan testlarni yuklab bo'lmadi"],
     ];
 
     it.each(portalHandlers)('%s reads only the signed-in parent own records', async (handler, method) => {

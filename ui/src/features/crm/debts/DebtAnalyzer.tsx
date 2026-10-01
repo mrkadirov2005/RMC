@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { debtAPI } from './api';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface UnpaidMonth {
   year: number;
@@ -60,6 +61,7 @@ interface AnalysisResponse {
 
 // Renders the debt analyzer module.
 const DebtAnalyzer = () => {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
@@ -126,7 +128,7 @@ const DebtAnalyzer = () => {
     <Card className="mb-6">
       <CardContent className="pt-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Payment Analysis</h3>
+          <h3 className="text-lg font-semibold">{t('Payment Analysis')}</h3>
           <Button
             onClick={handleAnalyze}
             disabled={loading}
@@ -137,16 +139,16 @@ const DebtAnalyzer = () => {
             ) : (
               <BarChart3 className="mr-2 h-4 w-4" />
             )}
-            {loading ? 'Analyzing...' : 'Analyze Unpaid Months'}
+            {loading ? t('Analyzing...') : t('Analyze Unpaid Months')}
           </Button>
         </div>
 
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription className="flex justify-between items-center">
-              {getErrorMessage(error)}
+              {t(getErrorMessage(error))}
               <button onClick={() => setError(null)} className="text-sm underline ml-2">
-                Dismiss
+                {t('Dismiss')}
               </button>
             </AlertDescription>
           </Alert>
@@ -160,24 +162,24 @@ const DebtAnalyzer = () => {
                 <p className="text-3xl font-bold text-indigo-600">
                   {analysis.summary.total_students_analyzed}
                 </p>
-                <p className="text-sm text-muted-foreground">Students Analyzed</p>
+                <p className="text-sm text-muted-foreground">{t('Students Analyzed')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-3xl font-bold text-red-600">
                   {analysis.summary.students_with_unpaid_months}
                 </p>
-                <p className="text-sm text-muted-foreground">With Unpaid Months</p>
+                <p className="text-sm text-muted-foreground">{t('With Unpaid Months')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-3xl font-bold text-amber-600">
                   {analysis.summary.total_unpaid_instances}
                 </p>
-                <p className="text-sm text-muted-foreground">Total Unpaid Instances</p>
+                <p className="text-sm text-muted-foreground">{t('Total Unpaid Instances')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
-                <p className="text-sm text-muted-foreground">Analysis Period</p>
+                <p className="text-sm text-muted-foreground">{t('Analysis Period')}</p>
                 <p className="text-base font-semibold">
-                  {analysis.analysis_period.months_analyzed} months
+                  {t('{count} months', { count: analysis.analysis_period.months_analyzed })}
                 </p>
               </div>
             </div>
@@ -187,11 +189,11 @@ const DebtAnalyzer = () => {
               <>
                 <div className="flex justify-between items-center mb-4">
                   <p className="font-semibold">
-                    Students with Payment Issues ({analysis.results.length})
+                    {t('Students with Payment Issues ({count})', { count: analysis.results.length })}
                   </p>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={selectAllStudents}>
-                      Select All
+                      {t('Select All')}
                     </Button>
                     <Button
                       size="sm"
@@ -199,7 +201,7 @@ const DebtAnalyzer = () => {
                       disabled={selectedStudents.length === 0}
                     >
                       <Plus className="mr-1 h-4 w-4" />
-                      Generate Debts ({selectedStudents.length})
+                      {t('Generate Debts ({count})', { count: selectedStudents.length })}
                     </Button>
                   </div>
                 </div>
@@ -218,10 +220,10 @@ const DebtAnalyzer = () => {
                             }
                           />
                         </TableHead>
-                        <TableHead>Student</TableHead>
-                        <TableHead className="text-center">Unpaid Months</TableHead>
-                        <TableHead className="text-center">Total Payments</TableHead>
-                        <TableHead className="text-right">Current Debt</TableHead>
+                        <TableHead>{t('Student')}</TableHead>
+                        <TableHead className="text-center">{t('Unpaid Months')}</TableHead>
+                        <TableHead className="text-center">{t('Total Payments')}</TableHead>
+                        <TableHead className="text-right">{t('Current Debt')}</TableHead>
                         <TableHead className="w-10" />
                       </TableRow>
                     </TableHeader>
@@ -283,7 +285,7 @@ const DebtAnalyzer = () => {
                             <TableRow key={`${result.student_id}-detail`}>
                               <TableCell colSpan={6} className="py-0">
                                 <div className="p-4 bg-muted/30">
-                                  <p className="text-sm font-medium mb-2">Unpaid Months:</p>
+                                  <p className="text-sm font-medium mb-2">{t('Unpaid Months:')}</p>
                                   <div className="flex gap-2 flex-wrap">
                                     {result.unpaid_months.map((month, i) => (
                                       <Badge
@@ -308,7 +310,7 @@ const DebtAnalyzer = () => {
             ) : (
               <Alert className="border-green-200 bg-green-50 text-green-800">
                 <AlertDescription>
-                  All students have made payments for the analyzed period!
+                  {t('All students have made payments for the analyzed period!')}
                 </AlertDescription>
               </Alert>
             )}
@@ -319,13 +321,13 @@ const DebtAnalyzer = () => {
         <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Generate Debt Records</DialogTitle>
+              <DialogTitle>{t('Generate Debt Records')}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              This will create debt records for {selectedStudents.length} selected student(s).
+              {t('This will create debt records for {count} selected student(s).', { count: selectedStudents.length })}
             </p>
             <div className="mt-4 space-y-2">
-              <Label htmlFor="monthlyFee">Monthly Fee Amount</Label>
+              <Label htmlFor="monthlyFee">{t('Monthly Fee Amount')}</Label>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">UZS</span>
                 <Input
@@ -338,13 +340,13 @@ const DebtAnalyzer = () => {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 onClick={handleGenerateDebts}
                 disabled={generating || !monthlyFee}
               >
-                {generating ? 'Generating...' : 'Generate'}
+                {generating ? t('Generating...') : t('Generate')}
               </Button>
             </DialogFooter>
           </DialogContent>

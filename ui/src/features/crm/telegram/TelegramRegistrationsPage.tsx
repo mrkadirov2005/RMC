@@ -182,7 +182,7 @@ const TelegramRegistrationsPage = () => {
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
 
@@ -203,10 +203,10 @@ const TelegramRegistrationsPage = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="Imported">Imported</SelectItem>
-                <SelectItem value="Rejected">Rejected</SelectItem>
-                <SelectItem value="All">All</SelectItem>
+                <SelectItem value="Pending">{t('Pending')}</SelectItem>
+                <SelectItem value="Imported">{t('Imported')}</SelectItem>
+                <SelectItem value="Rejected">{t('Rejected')}</SelectItem>
+                <SelectItem value="All">{t('All')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

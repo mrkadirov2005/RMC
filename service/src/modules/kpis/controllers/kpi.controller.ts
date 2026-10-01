@@ -6,10 +6,10 @@ const getOverview = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const year = req.query.year ? Number(req.query.year) : undefined;
     const month = req.query.month ? Number(req.query.month) : undefined;
@@ -17,7 +17,7 @@ const getOverview = async (req: any, res: any) => {
     res.json(result);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch KPI overview', details: error.message || String(error) });
+    res.status(500).json({ error: "KPI sharhini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -25,27 +25,27 @@ const getTeacherDetail = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const teacherId = Number(req.params.teacherId);
     if (!teacherId) {
-      return res.status(400).json({ error: 'teacherId is required.' });
+      return res.status(400).json({ error: "teacherId ko'rsatilishi shart." });
     }
     if (centerId) {
       const ok = await teacherInCenter(teacherId, centerId);
-      if (!ok) return res.status(404).json({ error: 'Teacher not found in this center.' });
+      if (!ok) return res.status(404).json({ error: "O'qituvchi bu markazda topilmadi." });
     }
     const detail = await kpiService.getTeacherDetail({ teacherId, centerId: centerId ?? undefined });
     if (!detail) {
-      return res.status(404).json({ error: 'Teacher not found.' });
+      return res.status(404).json({ error: "O'qituvchi topilmadi." });
     }
     res.json(detail);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher KPI detail', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi KPI tafsilotini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -53,17 +53,17 @@ const upsert = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const effectiveCenterId = centerId ?? req.body.center_id;
 
     const teacherId = Number(req.body.teacher_id);
     if (effectiveCenterId) {
       const ok = await teacherInCenter(teacherId, effectiveCenterId);
-      if (!ok) return res.status(400).json({ error: 'Teacher does not belong to this center.' });
+      if (!ok) return res.status(400).json({ error: "O'qituvchi bu markazga tegishli emas." });
     }
 
     const record = await kpiService.upsertKpi({
@@ -79,7 +79,7 @@ const upsert = async (req: any, res: any) => {
     res.status(201).json(record);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to save KPI record', details: error.message || String(error) });
+    res.status(500).json({ error: "KPI yozuvini saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 

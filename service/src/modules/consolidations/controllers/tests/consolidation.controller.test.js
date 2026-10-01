@@ -51,11 +51,11 @@ describe('consolidation controller — access-control boundaries', () => {
       await controller.createSet(req, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('do not teach') }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('sizga tegishli emas') }));
     });
 
     it('403s before ever calling the service when center scope cannot be resolved', async () => {
-      getCenterScope.mockReturnValue({ ok: false, status: 403, body: { error: 'Center scope required.' } });
+      getCenterScope.mockReturnValue({ ok: false, status: 403, body: { error: 'Markaz tanlanishi shart.' } });
       sendScopeError.mockImplementation((res, scope) => {
         res.status(scope.status).json(scope.body);
         return true;
@@ -145,7 +145,7 @@ describe('consolidation controller — access-control boundaries', () => {
 
   describe('getOverview — center-scoped superuser dashboard', () => {
     it('403s before calling the service when center scope cannot be resolved (e.g. an owner with no center_id)', async () => {
-      getCenterScope.mockReturnValue({ ok: false, status: 400, body: { error: 'center_id is required for superuser actions.' } });
+      getCenterScope.mockReturnValue({ ok: false, status: 400, body: { error: "Bu amal uchun center_id ko'rsatilishi shart." } });
       sendScopeError.mockImplementation((res, scope) => {
         res.status(scope.status).json(scope.body);
         return true;
@@ -197,7 +197,7 @@ describe('consolidation controller — access-control boundaries', () => {
       await controller.getPublicSetView({ params: { shareToken: 'nonexistent' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Topilmadi' });
     });
 
     it('startPublicTrial rejects an unknown/mismatched username with 400, not a stack trace', async () => {

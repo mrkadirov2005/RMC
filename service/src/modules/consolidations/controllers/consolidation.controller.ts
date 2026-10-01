@@ -13,9 +13,9 @@ const createSet = async (req: any, res: any) => {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
     const result = await consolidationService.createSet(req.body, callerScope(req, scope));
-    if (result?.error === 'session_not_found') return res.status(404).json({ error: 'Session not found' });
-    if (result?.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
-    if (result?.error === 'already_exists') return res.status(409).json({ error: 'A consolidation set already exists for this session.' });
+    if (result?.error === 'session_not_found') return res.status(404).json({ error: 'Sessiya topilmadi' });
+    if (result?.error === 'forbidden') return res.status(403).json({ error: 'Bu dars sizga tegishli emas.' });
+    if (result?.error === 'already_exists') return res.status(409).json({ error: "Bu sessiya uchun mustahkamlash to'plami allaqachon mavjud." });
     await logAudit({
       user_type: req.user?.userType || 'system',
       user_id: req.user?.id || 0,
@@ -25,10 +25,10 @@ const createSet = async (req: any, res: any) => {
       details: { session_id: result.set.session_id },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Consolidation set created', set: result.set, words: result.words });
+    res.status(201).json({ message: "Mustahkamlash to'plami yaratildi", set: result.set, words: result.words });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create consolidation set', details: error.message || String(error) });
+    res.status(500).json({ error: "Mustahkamlash to'plamini yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -43,12 +43,12 @@ const getSetForTeacher = async (req: any, res: any) => {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
     const data = await consolidationService.getSetForTeacher(Number(req.params.sessionId), scope.centerId ?? undefined, callerScope(req, scope));
-    if (!data) return res.status(404).json({ error: 'No consolidation set for this session.' });
-    if (data.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
+    if (!data) return res.status(404).json({ error: "Bu dars uchun mustahkamlash to'plami yo'q." });
+    if (data.error === 'forbidden') return res.status(403).json({ error: 'Bu dars sizga tegishli emas.' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch consolidation set', details: error.message || String(error) });
+    res.status(500).json({ error: "Mustahkamlash to'plamini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -58,12 +58,12 @@ const getSetForStudentView = async (req: any, res: any) => {
     if (!scope) return;
     const studentId = Number(req.user?.id);
     const data = await consolidationService.getSetForStudentView(Number(req.params.sessionId), scope.centerId ?? undefined, studentId);
-    if (!data) return res.status(404).json({ error: 'No consolidation set for this session.' });
-    if (data.error === 'forbidden') return res.status(403).json({ error: 'You are not enrolled in this class.' });
+    if (!data) return res.status(404).json({ error: "Bu dars uchun mustahkamlash to'plami yo'q." });
+    if (data.error === 'forbidden') return res.status(403).json({ error: 'Siz bu guruhga yozilmagansiz.' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch exercise', details: error.message || String(error) });
+    res.status(500).json({ error: "Mashqni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -72,12 +72,12 @@ const getResultsDashboard = async (req: any, res: any) => {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
     const data = await consolidationService.getResultsDashboard(Number(req.params.sessionId), scope.centerId ?? undefined, callerScope(req, scope));
-    if (!data) return res.status(404).json({ error: 'No consolidation set for this session.' });
-    if (data.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
+    if (!data) return res.status(404).json({ error: "Bu dars uchun mustahkamlash to'plami yo'q." });
+    if (data.error === 'forbidden') return res.status(403).json({ error: 'Bu dars sizga tegishli emas.' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch results', details: error.message || String(error) });
+    res.status(500).json({ error: "Natijalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -92,7 +92,7 @@ const getOverview = async (req: any, res: any) => {
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch consolidations overview', details: error.message || String(error) });
+    res.status(500).json({ error: "Mustahkamlashlar sharhini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -105,35 +105,35 @@ const getTrialDetail = async (req: any, res: any) => {
       id: req.user?.id,
       centerId: scope.centerId ?? undefined,
     });
-    if (!data) return res.status(404).json({ error: 'Trial not found' });
-    if (data.error === 'forbidden') return res.status(403).json({ error: 'Access denied.' });
+    if (!data) return res.status(404).json({ error: 'Urinish topilmadi' });
+    if (data.error === 'forbidden') return res.status(403).json({ error: 'Kirish rad etildi.' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch trial', details: error.message || String(error) });
+    res.status(500).json({ error: "Urinishni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
 const startTrial = async (req: any, res: any) => {
   try {
     const result = await consolidationService.startTrial(Number(req.params.setId), Number(req.user?.id));
-    if (!result) return res.status(404).json({ error: 'Consolidation set not found' });
-    if (result.error === 'forbidden') return res.status(403).json({ error: 'You are not enrolled in this class.' });
-    res.status(201).json({ message: 'Trial started', trial: result.trial, words: result.words });
+    if (!result) return res.status(404).json({ error: "Mustahkamlash to'plami topilmadi" });
+    if (result.error === 'forbidden') return res.status(403).json({ error: 'Siz bu guruhga yozilmagansiz.' });
+    res.status(201).json({ message: 'Urinish boshlandi', trial: result.trial, words: result.words });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to start trial', details: error.message || String(error) });
+    res.status(500).json({ error: "Urinishni boshlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
 const requireOwnInProgressTrial = async (req: any, res: any) => {
   const trial = await consolidationService.getTrial(Number(req.params.trialId));
   if (!trial) {
-    res.status(404).json({ error: 'Trial not found' });
+    res.status(404).json({ error: 'Urinish topilmadi' });
     return null;
   }
   if (Number(trial.student_id) !== Number(req.user?.id)) {
-    res.status(403).json({ error: 'Access denied.' });
+    res.status(403).json({ error: 'Kirish rad etildi.' });
     return null;
   }
   return trial;
@@ -144,12 +144,12 @@ const saveAnswer = async (req: any, res: any) => {
     const trial = await requireOwnInProgressTrial(req, res);
     if (!trial) return;
     const result = await consolidationService.saveAnswer(Number(req.params.trialId), req.body.consolidation_word_id, req.body.answer ?? null, trial);
-    if (!result) return res.status(404).json({ error: 'Trial not found' });
-    if (result.error === 'not_in_progress') return res.status(409).json({ error: 'This trial is no longer in progress.' });
-    res.json({ message: 'Answer saved', answer: result });
+    if (!result) return res.status(404).json({ error: 'Urinish topilmadi' });
+    if (result.error === 'not_in_progress') return res.status(409).json({ error: 'Bu urinish endi davom etmayapti.' });
+    res.json({ message: 'Javob saqlandi', answer: result });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to save answer', details: error.message || String(error) });
+    res.status(500).json({ error: "Javobni saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -158,10 +158,10 @@ const submitTrial = async (req: any, res: any) => {
     const trial = await requireOwnInProgressTrial(req, res);
     if (!trial) return;
     const updated = await consolidationService.submitTrial(Number(req.params.trialId), trial);
-    res.json({ message: 'Trial submitted', trial: updated });
+    res.json({ message: 'Urinish topshirildi', trial: updated });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to submit trial', details: error.message || String(error) });
+    res.status(500).json({ error: "Urinishni topshirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -182,13 +182,13 @@ const updateSet = async (req: any, res: any) => {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
     const result = await consolidationService.updateSet(Number(req.params.setId), req.body, scope.centerId ?? undefined, callerScope(req, scope));
-    if (!result) return res.status(404).json({ error: 'Consolidation set not found' });
-    if (result.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
-    if (result.error === 'unknown_word') return res.status(400).json({ error: 'A submitted word does not belong to this exercise.' });
+    if (!result) return res.status(404).json({ error: "Mustahkamlash to'plami topilmadi" });
+    if (result.error === 'forbidden') return res.status(403).json({ error: 'Bu dars sizga tegishli emas.' });
+    if (result.error === 'unknown_word') return res.status(400).json({ error: "Yuborilgan so'z bu mashqqa tegishli emas." });
     res.json(result);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update consolidation set', details: error.message || String(error) });
+    res.status(500).json({ error: "Mustahkamlash to'plamini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -197,13 +197,13 @@ const deleteSet = async (req: any, res: any) => {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
     const result = await consolidationService.deleteSet(Number(req.params.setId), scope.centerId ?? undefined, callerScope(req, scope));
-    if (!result) return res.status(404).json({ error: 'Consolidation set not found' });
-    if (result.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
-    if (result.error === 'has_trials') return res.status(409).json({ error: 'Cannot delete a set with existing trials.' });
-    res.json({ message: 'Consolidation set deleted', set: result });
+    if (!result) return res.status(404).json({ error: "Mustahkamlash to'plami topilmadi" });
+    if (result.error === 'forbidden') return res.status(403).json({ error: 'Bu dars sizga tegishli emas.' });
+    if (result.error === 'has_trials') return res.status(409).json({ error: "Urinishlari mavjud to'plamni o'chirib bo'lmaydi." });
+    res.json({ message: "Mustahkamlash to'plami o'chirildi", set: result });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete consolidation set', details: error.message || String(error) });
+    res.status(500).json({ error: "Mustahkamlash to'plamini o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -212,12 +212,12 @@ const regenerateLink = async (req: any, res: any) => {
     const scope = requireConsolidationCenterScope(req, res);
     if (!scope) return;
     const result = await consolidationService.regenerateLink(Number(req.params.setId), scope.centerId ?? undefined, callerScope(req, scope));
-    if (!result) return res.status(404).json({ error: 'Consolidation set not found' });
-    if (result.error === 'forbidden') return res.status(403).json({ error: 'You do not teach this session.' });
-    res.json({ message: 'Link regenerated', set: result });
+    if (!result) return res.status(404).json({ error: "Mustahkamlash to'plami topilmadi" });
+    if (result.error === 'forbidden') return res.status(403).json({ error: 'Bu dars sizga tegishli emas.' });
+    res.json({ message: 'Havola qayta yaratildi', set: result });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to regenerate link', details: error.message || String(error) });
+    res.status(500).json({ error: "Havolani qayta yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -226,11 +226,11 @@ const regenerateLink = async (req: any, res: any) => {
 const getPublicSetView = async (req: any, res: any) => {
   try {
     const data = await consolidationService.getPublicSetView(req.params.shareToken);
-    if (!data) return res.status(404).json({ error: 'Not found' });
+    if (!data) return res.status(404).json({ error: 'Topilmadi' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(404).json({ error: 'Not found' });
+    res.status(404).json({ error: 'Topilmadi' });
   }
 };
 
@@ -241,22 +241,22 @@ const startPublicTrial = async (req: any, res: any) => {
       userAgent: req.get('user-agent') || null,
       confirm: Boolean(req.body.confirm),
     });
-    if (result.error === 'not_found') return res.status(404).json({ error: 'Not found' });
-    if (result.error === 'invalid_student') return res.status(400).json({ error: 'Invalid username.' });
+    if (result.error === 'not_found') return res.status(404).json({ error: 'Topilmadi' });
+    if (result.error === 'invalid_student') return res.status(400).json({ error: "Foydalanuvchi nomi noto'g'ri." });
     if (result.needs_confirmation) {
       return res.status(200).json({ needs_confirmation: true, existing_today: result.existing_today });
     }
-    res.status(201).json({ message: 'Trial started', trial: result.trial, words: result.words, existing_today: result.existing_today ?? null });
+    res.status(201).json({ message: 'Urinish boshlandi', trial: result.trial, words: result.words, existing_today: result.existing_today ?? null });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(404).json({ error: 'Not found' });
+    res.status(404).json({ error: 'Topilmadi' });
   }
 };
 
 const requirePublicTrialScope = async (req: any, res: any) => {
   const resolved = await consolidationService.resolveTrialForToken(req.params.shareToken, Number(req.params.trialId), req.body?.trial_token);
   if (!resolved) {
-    res.status(404).json({ error: 'Not found' });
+    res.status(404).json({ error: 'Topilmadi' });
     return null;
   }
   return resolved;
@@ -267,11 +267,11 @@ const savePublicAnswer = async (req: any, res: any) => {
     const resolved = await requirePublicTrialScope(req, res);
     if (!resolved) return;
     const result = await consolidationService.saveAnswer(Number(req.params.trialId), req.body.consolidation_word_id, req.body.answer ?? null, resolved.trial);
-    if (!result || result.error) return res.status(409).json({ error: 'This trial is no longer in progress.' });
-    res.json({ message: 'Answer saved', answer: result });
+    if (!result || result.error) return res.status(409).json({ error: 'Bu urinish endi davom etmayapti.' });
+    res.json({ message: 'Javob saqlandi', answer: result });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(404).json({ error: 'Not found' });
+    res.status(404).json({ error: 'Topilmadi' });
   }
 };
 
@@ -280,10 +280,10 @@ const submitPublicTrial = async (req: any, res: any) => {
     const resolved = await requirePublicTrialScope(req, res);
     if (!resolved) return;
     const updated = await consolidationService.submitTrial(Number(req.params.trialId), resolved.trial);
-    res.json({ message: 'Trial submitted', trial: updated });
+    res.json({ message: 'Urinish topshirildi', trial: updated });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(404).json({ error: 'Not found' });
+    res.status(404).json({ error: 'Topilmadi' });
   }
 };
 

@@ -187,7 +187,7 @@ export const ClassesMainView = ({
 
       {state.error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 
@@ -250,7 +250,7 @@ export const ClassesMainView = ({
         </Select>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0" aria-label="More group actions">
+            <Button type="button" variant="outline" size="icon" className="h-10 w-10 shrink-0" aria-label={t('More group actions')}>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>

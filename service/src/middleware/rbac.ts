@@ -6,7 +6,7 @@ export const requirePermission = (permission: string) => {
     const user = (req as any).user;
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -30,7 +30,7 @@ export const requirePermission = (permission: string) => {
       return;
     }
 
-    res.status(403).json({ error: 'Insufficient permissions' });
+    res.status(403).json({ error: 'Ruxsat yetarli emas' });
   };
 };
 
@@ -43,7 +43,7 @@ export const requirePermissions = (
     const user = (req as any).user;
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -63,7 +63,7 @@ export const requirePermissions = (
       return;
     }
 
-    res.status(403).json({ error: 'Insufficient permissions' });
+    res.status(403).json({ error: 'Ruxsat yetarli emas' });
   };
 };
 
@@ -74,7 +74,7 @@ export const requireOwnership = (resourceIdParam: string = 'id') => {
     const resourceId = req.params[resourceIdParam];
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -93,7 +93,7 @@ export const requireOwnership = (resourceIdParam: string = 'id') => {
       }
     }
 
-    res.status(403).json({ error: 'Access denied' });
+    res.status(403).json({ error: 'Kirish rad etildi' });
   };
 };
 
@@ -104,7 +104,7 @@ export const canAccessStudentData = () => {
     const studentId = req.params.studentId || req.params.id;
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -126,7 +126,7 @@ export const canAccessStudentData = () => {
       return;
     }
 
-    res.status(403).json({ error: 'Access denied' });
+    res.status(403).json({ error: 'Kirish rad etildi' });
   };
 };
 

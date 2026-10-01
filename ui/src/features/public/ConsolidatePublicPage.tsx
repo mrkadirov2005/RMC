@@ -18,6 +18,7 @@ import {
   type ConsolidationWord,
   type PublicSetView as SetView,
 } from '@/features/student/api/consolidationExerciseApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Stage =
   | { step: 'loading' }
@@ -27,6 +28,7 @@ type Stage =
   | { step: 'exercise'; username: string; trial: ConsolidationTrial; words: ConsolidationWord[]; violationLimit: number };
 
 export const ConsolidatePublicPage = () => {
+  const { t } = useLanguage();
   const { shareToken = '' } = useParams<{ shareToken: string }>();
   const [stage, setStage] = useState<Stage>({ step: 'loading' });
   const [username, setUsername] = useState('');
@@ -87,8 +89,8 @@ export const ConsolidatePublicPage = () => {
       <main data-translation-skip className="flex min-h-screen items-center justify-center bg-[#f6fbff] px-5 text-[#21116a]">
         <Card className="w-full max-w-md border-[#d8e4f1]">
           <CardContent className="space-y-2 p-8 text-center">
-            <h1 className="text-xl font-semibold">This link isn't valid</h1>
-            <p className="text-sm text-slate-500">Ask your teacher for the current link.</p>
+            <h1 className="text-xl font-semibold">{t("This link isn't valid")}</h1>
+            <p className="text-sm text-slate-500">{t('Ask your teacher for the current link.')}</p>
           </CardContent>
         </Card>
       </main>
@@ -111,17 +113,13 @@ export const ConsolidatePublicPage = () => {
       <main data-translation-skip className="flex min-h-screen items-center justify-center bg-[#f6fbff] px-5 text-[#21116a]">
         <Card className="w-full max-w-md border-[#d8e4f1]">
           <CardContent className="space-y-4 p-8 text-center">
-            <h1 className="text-lg font-semibold">Already completed today</h1>
+            <h1 className="text-lg font-semibold">{t('Already completed today')}</h1>
             <p className="text-sm text-slate-600">
-              It looks like {stage.username} already completed this today
-              {stage.existing.correct_count != null && stage.existing.total_words != null
-                ? ` (scored ${stage.existing.correct_count}/${stage.existing.total_words})`
-                : ''}
-              . Continue anyway?
+              {stage.existing.correct_count != null && stage.existing.total_words != null ? t('It looks like {username} already completed this today (scored {correct}/{total}). Continue anyway?', { username: stage.username, correct: stage.existing.correct_count, total: stage.existing.total_words }) : t('It looks like {username} already completed this today. Continue anyway?', { username: stage.username })}
             </p>
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
 
@@ -132,10 +130,10 @@ export const ConsolidatePublicPage = () => {
                 className="bg-[#21116a] text-white hover:bg-[#160a4d]"
               >
                 {starting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Continue anyway
+                {t('Continue anyway')}
               </Button>
               <Button variant="outline" disabled={starting} onClick={() => setStage({ step: 'form', data: stage.data })}>
-                Never mind
+                {t('Never mind')}
               </Button>
             </div>
           </CardContent>
@@ -153,7 +151,7 @@ export const ConsolidatePublicPage = () => {
           <div className="text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#16a7e2]">{data.class_name}</p>
             <h1 className="mt-1 text-xl font-semibold">{data.title || 'Vocabulary Exercise'}</h1>
-            <p className="mt-1 text-sm text-slate-500">Enter your username to begin</p>
+            <p className="mt-1 text-sm text-slate-500">{t('Enter your username to begin')}</p>
           </div>
 
           <form
@@ -167,19 +165,19 @@ export const ConsolidatePublicPage = () => {
               autoFocus
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Your username"
+              placeholder={t('Your username')}
               className="h-11"
             />
 
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
 
             <Button type="submit" disabled={starting} className="h-11 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
               {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Continue
+              {t('Continue')}
             </Button>
           </form>
         </CardContent>

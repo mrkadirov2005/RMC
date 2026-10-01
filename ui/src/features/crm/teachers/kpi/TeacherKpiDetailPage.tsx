@@ -64,7 +64,7 @@ const TeacherKpiDetailPage = () => {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/teachers')}>
         <ArrowLeft className="h-4 w-4" />
-        Back to Teachers
+        {t('Back to Teachers')}
       </Button>
 
       <PageHeader
@@ -77,7 +77,7 @@ const TeacherKpiDetailPage = () => {
               className="gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
               onClick={() => openDialogFor(currentMonthEntry)}
             >
-              {currentMonthEntry ? 'Edit' : 'Add'} {formatKpiPeriod(currentPeriod.year, currentPeriod.month)} KPI
+              {currentMonthEntry ? t('Edit') : t('Add')} {formatKpiPeriod(currentPeriod.year, currentPeriod.month)} KPI
             </Button>
           ) : undefined
         }
@@ -89,21 +89,21 @@ const TeacherKpiDetailPage = () => {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : !detail || detail.history.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No KPI recorded yet.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">{t('No KPI recorded yet.')}</div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Student Scores</TableHead>
-                  <TableHead>Retention</TableHead>
-                  <TableHead>Contribution</TableHead>
-                  <TableHead>Teaching Quality</TableHead>
-                  <TableHead>Final KPI</TableHead>
-                  <TableHead>Recorded By</TableHead>
-                  <TableHead>Notes</TableHead>
-                  {isOwner && <TableHead className="text-right">Actions</TableHead>}
+                  <TableHead>{t('Month')}</TableHead>
+                  <TableHead>{t('Student Scores')}</TableHead>
+                  <TableHead>{t('Retention')}</TableHead>
+                  <TableHead>{t('Contribution')}</TableHead>
+                  <TableHead>{t('Teaching Quality')}</TableHead>
+                  <TableHead>{t('Final KPI')}</TableHead>
+                  <TableHead>{t('Recorded By')}</TableHead>
+                  <TableHead>{t('Notes')}</TableHead>
+                  {isOwner && <TableHead className="text-right">{t('Actions')}</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -124,7 +124,7 @@ const TeacherKpiDetailPage = () => {
                     {isOwner && (
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" onClick={() => openDialogFor(entry)}>
-                          Edit
+                          {t('Edit')}
                         </Button>
                       </TableCell>
                     )}

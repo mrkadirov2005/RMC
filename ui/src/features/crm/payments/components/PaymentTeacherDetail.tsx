@@ -50,7 +50,7 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
         <div className="h-1 bg-gradient-to-r from-indigo-500 to-cyan-500 dark:hidden" />
         <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-sm text-muted-foreground mb-1">Teacher view</p>
+            <p className="text-sm text-muted-foreground mb-1">{t('Teacher view')}</p>
             <h2 className="text-2xl font-bold">
               {selectedFolder.name}
             </h2>
@@ -67,7 +67,7 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
               className={cn(teacherDetailView === 'groups' && 'bg-gradient-to-r from-cyan-500 to-sky-600 text-white border-0 shadow-lg shadow-cyan-500/30 hover:from-cyan-600 hover:to-sky-700')}
             >
               <Folder className="h-4 w-4 mr-2" />
-              Groups
+              {t('Groups')}
             </Button>
             <Button
               variant={teacherDetailView === 'total' ? 'default' : 'outline'}
@@ -75,7 +75,7 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
               className={cn(teacherDetailView === 'total' && 'bg-gradient-to-r from-violet-500 to-purple-600 text-white border-0 shadow-lg shadow-violet-500/30 hover:from-violet-600 hover:to-purple-700')}
             >
               <DollarSign className="h-4 w-4 mr-2" />
-              Total
+              {t('Total')}
             </Button>
           </div>
         </CardContent>
@@ -87,11 +87,11 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading groups...</p>
+                <p className="text-muted-foreground">{t('Loading groups...')}</p>
               </div>
             ) : selectedTeacherClasses.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No groups found for this teacher</p>
+                <p className="text-muted-foreground">{t('No groups found for this teacher')}</p>
               </div>
             ) : (
               paginatedSelectedTeacherClasses.items.map((cls) => {
@@ -112,7 +112,7 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
                           </div>
                           <div className="flex min-w-0 items-center gap-1.5">
                             <h3 className="w-44 truncate text-xs font-semibold">{cls.class_name}</h3>
-                            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">Level {cls.level}</span>
+                            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">{t('Level')} {cls.level}</span>
                           </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 text-right">
@@ -152,31 +152,31 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
               <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-400 via-cyan-500 to-sky-600">
                 <CardContent className="p-3">
-                  <p className="text-xs text-white/70">Groups</p>
+                  <p className="text-xs text-white/70">{t('Groups')}</p>
                   <p className="text-lg font-bold text-white">{selectedTeacherClasses.length}</p>
                 </CardContent>
               </Card>
               <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-600">
                 <CardContent className="p-3">
-                  <p className="text-xs text-white/70">Worked</p>
+                  <p className="text-xs text-white/70">{t('Worked')}</p>
                   <p className="text-lg font-bold text-white">{formatMoney(selectedTeacherStats.totalWorked)}</p>
                 </CardContent>
               </Card>
               <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-emerald-400 via-emerald-500 to-teal-600">
                 <CardContent className="p-3">
-                  <p className="text-xs text-white/70">Paid Amount</p>
+                  <p className="text-xs text-white/70">{t('Paid Amount')}</p>
                   <p className="text-lg font-bold text-white">{formatMoney(selectedTeacherStats.paidAmount)}</p>
                 </CardContent>
               </Card>
               <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-rose-400 via-rose-500 to-pink-600">
                 <CardContent className="p-3">
-                  <p className="text-xs text-white/70">Unpaid Amount</p>
+                  <p className="text-xs text-white/70">{t('Unpaid Amount')}</p>
                   <p className="text-lg font-bold text-white">{formatMoney(selectedTeacherStats.unpaidAmount)}</p>
                 </CardContent>
               </Card>
               <Card className="overflow-hidden border-0 shadow-lg bg-gradient-to-br from-amber-400 via-orange-500 to-orange-600">
                 <CardContent className="p-3">
-                  <p className="text-xs text-white/70">Students Paid</p>
+                  <p className="text-xs text-white/70">{t('Students Paid')}</p>
                   <p className="text-lg font-bold text-white">
                     {selectedTeacherStats.paidStudents}/{selectedTeacherStats.totalStudents}
                   </p>
@@ -189,12 +189,12 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
               <div className="flex flex-col gap-4">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-medium">Paid vs Unpaid</p>
-                    <p className="text-xs text-muted-foreground">Rounded payment share for this teacher</p>
+                    <p className="text-sm font-medium">{t('Paid vs Unpaid')}</p>
+                    <p className="text-xs text-muted-foreground">{t('Rounded payment share for this teacher')}</p>
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
-                    <p>{selectedTeacherProgress.paidPercent}% paid</p>
-                    <p>{selectedTeacherProgress.unpaidPercent}% unpaid</p>
+                    <p>{selectedTeacherProgress.paidPercent}{t('% paid')}</p>
+                    <p>{selectedTeacherProgress.unpaidPercent}{t('% unpaid')}</p>
                   </div>
                 </div>
 
@@ -213,13 +213,13 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/10">
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Paid amount</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">{t('Paid amount')}</p>
                     <p className="text-lg font-semibold text-emerald-700 dark:text-emerald-300">
                       {formatMoney(selectedTeacherStats.paidAmount)}
                     </p>
                   </div>
                   <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-500/10">
-                    <p className="text-xs text-rose-700 dark:text-rose-300">Unpaid amount</p>
+                    <p className="text-xs text-rose-700 dark:text-rose-300">{t('Unpaid amount')}</p>
                     <p className="text-lg font-semibold text-rose-700 dark:text-rose-300">
                       {formatMoney(selectedTeacherStats.unpaidAmount)}
                     </p>

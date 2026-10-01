@@ -158,7 +158,7 @@ router.get('/', async (req: any, res: any) => {
 
     res.json({ total, limit, skip, items });
   } catch (err: any) {
-    res.status(500).json({ error: 'Failed to fetch request logs', details: err?.message || String(err) });
+    res.status(500).json({ error: "So'rovlar jurnalini yuklab bo'lmadi", details: err?.message || String(err) });
   }
 });
 

@@ -5,18 +5,18 @@ const search = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     let entity = req.query.entity;
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (teacherId && entity && entity !== 'students') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (teacherId && !entity) {
       entity = 'students';
@@ -25,7 +25,7 @@ const search = async (req: any, res: any) => {
     res.json((out as any).results);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to search', details: error.message || String(error) });
+    res.status(500).json({ error: "Qidirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

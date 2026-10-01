@@ -62,7 +62,7 @@ describe('room slots controller', () => {
       await controller[handler]({ ...req, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(allHandlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -72,7 +72,7 @@ describe('room slots controller', () => {
       await controller[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -106,7 +106,7 @@ describe('room slots controller', () => {
       await controller.getAvailableSlots({ params: { roomId: '2' }, query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Slot date is required' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vaqt oralig'i sanasi ko'rsatilishi shart" });
       expect(service.getAvailableSlots).not.toHaveBeenCalled();
     });
 
@@ -189,7 +189,7 @@ describe('room slots controller', () => {
 
       expect(service.generateSlots).toHaveBeenCalledWith(2, 4, '2026-09-01', '2026-09-07', []);
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Generated 3 slots', slots: expect.any(Array) });
+      expect(res.json).toHaveBeenCalledWith({ message: "3 ta vaqt oralig'i yaratildi", slots: expect.any(Array) });
     });
 
     it('writes only the editable slot fields', async () => {
@@ -218,7 +218,7 @@ describe('room slots controller', () => {
       await controller.updateSlot({ params: { slotId: '5' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Slot not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vaqt oralig'i topilmadi" });
     });
 
     it('confirms a slot deletion', async () => {
@@ -228,7 +228,7 @@ describe('room slots controller', () => {
       await controller.deleteSlot({ params: { slotId: '5' }, user: admin }, res);
 
       expect(service.removeSlot).toHaveBeenCalledWith('5', 4);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Slot deleted successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Vaqt oralig'i muvaffaqiyatli o'chirildi" });
     });
 
     it('returns 404 when the slot to delete is out of scope', async () => {
@@ -331,7 +331,7 @@ describe('room slots controller', () => {
       await controller.updateBooking({ params: { bookingId: '6' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Booking not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bron topilmadi' });
     });
 
     it('confirms a cancellation', async () => {
@@ -341,7 +341,7 @@ describe('room slots controller', () => {
       await controller.cancelBooking({ params: { bookingId: '6' }, user: admin }, res);
 
       expect(service.cancelBooking).toHaveBeenCalledWith('6', 4);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Booking cancelled successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Bron muvaffaqiyatli bekor qilindi' });
     });
 
     it.each([

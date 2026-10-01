@@ -94,7 +94,7 @@ async function createApp(options: CreateAppOptions = {}) {
     max: 20,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { error: 'Too many login attempts. Please try again in a minute.' },
+    message: { error: "Kirishga juda ko'p urinish bo'ldi. Iltimos, bir daqiqadan so'ng qayta urinib ko'ring." },
   });
 
   const consolidatePublicRateLimiter = rateLimit({
@@ -102,7 +102,7 @@ async function createApp(options: CreateAppOptions = {}) {
     max: 30,
     standardHeaders: true,
     legacyHeaders: false,
-    message: { error: 'Too many requests. Please try again in a minute.' },
+    message: { error: "So'rovlar juda ko'p. Iltimos, bir daqiqadan so'ng qayta urinib ko'ring." },
   });
 
   app.use(express.json({ limit: BODY_LIMIT }));
@@ -198,7 +198,7 @@ async function createApp(options: CreateAppOptions = {}) {
       failureReason: err.message || 'Unhandled server error',
       failureDetails: process.env.NODE_ENV === 'production' ? null : err.stack || null,
     };
-    res.status(500).json({ error: 'Something went wrong!' });
+    res.status(500).json({ error: 'Kutilmagan xatolik yuz berdi!' });
   });
 
   return app;

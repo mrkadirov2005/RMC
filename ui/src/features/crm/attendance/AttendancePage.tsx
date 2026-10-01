@@ -3,6 +3,7 @@ import { CalendarCheck2, Clock3, Plus, TrendingUp, UserCheck, UserX } from 'luci
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAttendancePage } from './hooks/useAttendancePage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const AttendanceFormDialog = lazy(() => import('./components/AttendanceFormDialog'));
 const AttendanceListView = lazy(() => import('./components/AttendanceListView'));
@@ -10,6 +11,7 @@ const AttendanceListView = lazy(() => import('./components/AttendanceListView'))
 const attendancePageSizeOptions = [10, 25, 50, 100];
 
 const AttendancePage = () => {
+  const { t } = useLanguage();
   const [attendancePage, setAttendancePage] = useState(1);
   const [attendancePageSize, setAttendancePageSize] = useState(25);
   const attendance = useAttendancePage();
@@ -59,11 +61,11 @@ const AttendancePage = () => {
     <div className="container mx-auto space-y-4 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-950 dark:text-white">Attendance</h1>
-          <p className="text-sm text-muted-foreground">Review and manage every attendance record from one workspace.</p>
+          <h1 className="text-2xl font-bold text-slate-950 dark:text-white">{t('Attendance')}</h1>
+          <p className="text-sm text-muted-foreground">{t('Review and manage every attendance record from one workspace.')}</p>
         </div>
         <Button onClick={() => attendance.handleOpenModal()} className="bg-emerald-600 text-white hover:bg-emerald-700">
-          <Plus className="mr-2 h-4 w-4" /> Add attendance
+          <Plus className="mr-2 h-4 w-4" /> {t('Add attendance')}
         </Button>
       </div>
 
@@ -87,7 +89,7 @@ const AttendancePage = () => {
         </div>
       )}
 
-      <Suspense fallback={<div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">Loading attendance...</div>}>
+      <Suspense fallback={<div className="rounded-lg border p-8 text-center text-sm text-muted-foreground">{t('Loading attendance...')}</div>}>
         <AttendanceListView
           searchTerm={attendance.searchTerm}
           setSearchTerm={attendance.setSearchTerm}

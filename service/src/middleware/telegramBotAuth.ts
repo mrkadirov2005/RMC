@@ -12,7 +12,7 @@ const secretsMatch = (actual: string, expected: string) => {
 function requireTelegramBotSecret(req: any, res: any, next: any): void {
   const expected = String(process.env.TELEGRAM_BOT_SHARED_SECRET || '');
   if (!expected) {
-    res.status(503).json({ error: 'Telegram bot integration is not configured.' });
+    res.status(503).json({ error: 'Telegram bot integratsiyasi sozlanmagan.' });
     return;
   }
   const provided = String(req.headers['x-telegram-bot-secret'] || '');

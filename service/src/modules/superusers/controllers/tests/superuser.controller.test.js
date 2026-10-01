@@ -56,7 +56,7 @@ describe('superusers controller', () => {
       await superuserController.getAllSuperusers({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch superusers', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -78,7 +78,7 @@ describe('superusers controller', () => {
       await superuserController.getSuperuserById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -88,15 +88,15 @@ describe('superusers controller', () => {
       await superuserController.getSuperuserById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch superuser', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
   describe('createSuperuser', () => {
     it.each([
-      ['branch_required', 400, { error: 'Branch is required. Please select a branch first.' }],
-      ['username_taken', 400, { error: 'Username already exists' }],
-      ['forbidden_role', 403, { error: 'Only owners can assign the owner role.' }],
+      ['branch_required', 400, { error: "Filial ko'rsatilishi shart. Avval filialni tanlang." }],
+      ['username_taken', 400, { error: 'Bu foydalanuvchi nomi allaqachon mavjud' }],
+      ['forbidden_role', 403, { error: 'Ega rolini faqat egalar tayinlay oladi.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       superuserService.createSuperuser.mockResolvedValue({ error });
@@ -126,7 +126,7 @@ describe('superusers controller', () => {
       await superuserController.createSuperuser({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create superuser', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -138,7 +138,7 @@ describe('superusers controller', () => {
       await superuserController.updateSuperuser({ params: { id: '4' }, body: { role: 'owner' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only owners can assign the owner role.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ega rolini faqat egalar tayinlay oladi.' });
     });
 
     it('returns 404 when the superuser is out of scope', async () => {
@@ -148,7 +148,7 @@ describe('superusers controller', () => {
       await superuserController.updateSuperuser({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser topilmadi' });
     });
 
     it('returns the updated row', async () => {
@@ -169,7 +169,7 @@ describe('superusers controller', () => {
       await superuserController.updateSuperuser({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update superuser', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -181,7 +181,7 @@ describe('superusers controller', () => {
       await superuserController.deleteSuperuser({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only owners can delete an owner account.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ega hisobini faqat egalar o'chira oladi." });
     });
 
     it('returns 404 when the superuser is out of scope', async () => {
@@ -201,7 +201,7 @@ describe('superusers controller', () => {
       await superuserController.deleteSuperuser({ params: { id: '4' }, user }, res);
 
       expect(superuserService.deleteSuperuser).toHaveBeenCalledWith(4, user, 3);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Superuser deleted successfully', superuser: { superuser_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Superuser muvaffaqiyatli o'chirildi", superuser: { superuser_id: 4 } });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -211,14 +211,14 @@ describe('superusers controller', () => {
       await superuserController.deleteSuperuser({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete superuser', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 
   describe('login', () => {
     it.each([
-      ['locked', 403, { error: 'Account is locked' }],
-      ['inactive', 403, { error: 'Account is not active' }],
+      ['locked', 403, { error: 'Hisob bloklangan' }],
+      ['inactive', 403, { error: 'Hisob faol emas' }],
     ])('refuses a %s account', async (kind, status, payload) => {
       const res = createResponse();
       superuserService.authenticate.mockResolvedValue({ kind });
@@ -237,7 +237,7 @@ describe('superusers controller', () => {
       await superuserController.login({ body: { username: 'ghost', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues a token carrying the role and permissions, and returns no password fields', async () => {
@@ -286,7 +286,7 @@ describe('superusers controller', () => {
       await superuserController.login({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -298,7 +298,7 @@ describe('superusers controller', () => {
       await superuserController.changePassword({ params: { id: '4' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser topilmadi' });
     });
 
     it('refuses a wrong current password', async () => {
@@ -308,7 +308,7 @@ describe('superusers controller', () => {
       await superuserController.changePassword({ params: { id: '4' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Current password is incorrect' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Joriy parol noto'g'ri" });
     });
 
     it('confirms a successful change without echoing either password', async () => {
@@ -321,7 +321,7 @@ describe('superusers controller', () => {
       }, res);
 
       expect(superuserService.changePassword).toHaveBeenCalledWith(4, 'old', 'new');
-      expect(res.json).toHaveBeenCalledWith({ message: 'Password changed successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Parol muvaffaqiyatli o'zgartirildi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -331,7 +331,7 @@ describe('superusers controller', () => {
       await superuserController.changePassword({ params: { id: '4' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to change password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
     });
   });
 });

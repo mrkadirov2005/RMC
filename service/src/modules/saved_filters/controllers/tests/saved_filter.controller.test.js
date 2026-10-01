@@ -46,7 +46,7 @@ describe('saved filters controller', () => {
       await savedFilterController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Tizimga kirish talab qilinadi.' });
     });
 
     it.each(handlers)('%s refuses a request with no center scope', async (handler, req) => {
@@ -56,7 +56,7 @@ describe('saved filters controller', () => {
       await savedFilterController[handler]({ ...req, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -66,7 +66,7 @@ describe('saved filters controller', () => {
       await savedFilterController[handler]({ ...req, user: { userType: 'superuser', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -88,7 +88,7 @@ describe('saved filters controller', () => {
       await savedFilterController.getMyFilters({ query: {}, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch saved filters', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Saqlangan filtrlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -101,7 +101,7 @@ describe('saved filters controller', () => {
 
       expect(savedFilterService.create).toHaveBeenCalledWith('admin', 3, 1, { name: 'Unpaid' });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Filter saved', filter: { filter_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Filtr saqlandi', filter: { filter_id: 4 } });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -111,7 +111,7 @@ describe('saved filters controller', () => {
       await savedFilterController.createFilter({ body: {}, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to save filter', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Filtrni saqlab bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -123,7 +123,7 @@ describe('saved filters controller', () => {
       await savedFilterController.updateFilter({ params: { id: '4' }, body: { name: 'Paid' }, user: signedIn }, res);
 
       expect(savedFilterService.update).toHaveBeenCalledWith(4, 'admin', 3, 1, { name: 'Paid' });
-      expect(res.json).toHaveBeenCalledWith({ message: 'Filter updated', filter: { filter_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Filtr yangilandi', filter: { filter_id: 4 } });
     });
 
     it('returns 404 when the filter is not the caller own', async () => {
@@ -133,7 +133,7 @@ describe('saved filters controller', () => {
       await savedFilterController.updateFilter({ params: { id: '4' }, body: {}, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Filter not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Filtr topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -143,7 +143,7 @@ describe('saved filters controller', () => {
       await savedFilterController.updateFilter({ params: { id: '4' }, body: {}, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update filter', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Filtrni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -155,7 +155,7 @@ describe('saved filters controller', () => {
       await savedFilterController.deleteFilter({ params: { id: '4' }, body: {}, user: signedIn }, res);
 
       expect(savedFilterService.remove).toHaveBeenCalledWith(4, 'admin', 3, 1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Filter deleted', filter: { filter_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Filtr o'chirildi", filter: { filter_id: 4 } });
     });
 
     it('returns 404 when the filter is not the caller own', async () => {
@@ -174,7 +174,7 @@ describe('saved filters controller', () => {
       await savedFilterController.deleteFilter({ params: { id: '4' }, body: {}, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete filter', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Filtrni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

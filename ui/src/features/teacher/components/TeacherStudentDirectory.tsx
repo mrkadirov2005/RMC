@@ -436,7 +436,7 @@ export default function TeacherStudentDirectory({
                         </TableHead>
                       );
                     })}
-                    <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide">Total</TableHead>
+                    <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide">{t('Total')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>

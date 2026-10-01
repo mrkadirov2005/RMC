@@ -26,6 +26,7 @@ import { makeSelectStudentsByClassId } from '../../../store/selectors';
 import { attendanceAPI, gradeAPI } from './api';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { showToast } from '../../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const ATTENDANCE_POINTS: Record<string, number> = {
   'On time': 50,
@@ -67,6 +68,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
   selectedDate,
   onClose,
 }) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
 // Memoizes the select students by class derived value.
   const selectStudentsByClass = useMemo(makeSelectStudentsByClassId, []);
@@ -287,10 +289,10 @@ const SessionModal: React.FC<SessionModalProps> = ({
               checked={allSelected ? true : someSelected ? 'indeterminate' : false}
               onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
             />
-            {selectedCount > 0 ? `${selectedCount} selected` : 'Select students'}
+            {selectedCount > 0 ? `${selectedCount} selected` : t('Select students')}
           </label>
           <Button type="button" size="sm" variant="outline" onClick={onClear}>
-            Clear selected
+            {t('Clear selected')}
           </Button>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -394,31 +396,31 @@ const SessionModal: React.FC<SessionModalProps> = ({
       <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto p-0">
         <DialogHeader>
           <DialogTitle className="flex flex-col gap-2 border-b bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 p-5 pr-12 text-white sm:flex-row sm:items-center sm:justify-between">
-            <span className="text-xl">Take Lesson: {classData?.class_name}</span>
-            {selectedDate && <span className="text-sm font-normal text-white/70">Date: {selectedDate}</span>}
+            <span className="text-xl">{t('Take Lesson:')} {classData?.class_name}</span>
+            {selectedDate && <span className="text-sm font-normal text-white/70">{t('Date:')} {selectedDate}</span>}
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full p-5 pt-4">
           <div className="mb-4 grid gap-3 md:grid-cols-3">
             <div className={cn('rounded-lg border p-3', activeTab === 'attendance' ? 'border-emerald-300 bg-emerald-50' : 'bg-muted/30')}>
-              <p className="text-sm font-semibold">1. Attendance</p>
-              <p className="text-xs text-muted-foreground">{markedAttendanceCount}/{totalStudents} marked</p>
+              <p className="text-sm font-semibold">{t('1. Attendance')}</p>
+              <p className="text-xs text-muted-foreground">{t('{done}/{total} marked', { done: markedAttendanceCount, total: totalStudents })}</p>
             </div>
             <div className={cn('rounded-lg border p-3', activeTab === 'hometask' ? 'border-sky-300 bg-sky-50' : 'bg-muted/30')}>
-              <p className="text-sm font-semibold">2. Homework</p>
-              <p className="text-xs text-muted-foreground">{markedHomeworkCount}/{totalStudents} checked</p>
+              <p className="text-sm font-semibold">{t('2. Homework')}</p>
+              <p className="text-xs text-muted-foreground">{t('{done}/{total} checked', { done: markedHomeworkCount, total: totalStudents })}</p>
             </div>
             <div className={cn('rounded-lg border p-3', activeTab === 'activity' ? 'border-violet-300 bg-violet-50' : 'bg-muted/30')}>
-              <p className="text-sm font-semibold">3. Activity & Coins</p>
-              <p className="text-xs text-muted-foreground">{markedActivityCount}/{totalStudents} scored</p>
+              <p className="text-sm font-semibold">{t('3. Activity & Coins')}</p>
+              <p className="text-xs text-muted-foreground">{t('{done}/{total} scored', { done: markedActivityCount, total: totalStudents })}</p>
             </div>
           </div>
 
           <TabsList className="grid h-auto w-full grid-cols-3">
-            <TabsTrigger value="attendance" className="py-2">Attendance</TabsTrigger>
-            <TabsTrigger value="hometask" disabled={!allAttendanceMarked} className="py-2">Homework</TabsTrigger>
-            <TabsTrigger value="activity" disabled={!allAttendanceMarked || !allHomeworkMarked} className="py-2">Activity</TabsTrigger>
+            <TabsTrigger value="attendance" className="py-2">{t('Attendance')}</TabsTrigger>
+            <TabsTrigger value="hometask" disabled={!allAttendanceMarked} className="py-2">{t('Homework')}</TabsTrigger>
+            <TabsTrigger value="activity" disabled={!allAttendanceMarked || !allHomeworkMarked} className="py-2">{t('Activity')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="attendance" className="pt-4">
@@ -438,8 +440,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
                         onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
                       />
                     </TableHead>
-                    <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Attendance score / 50</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Student')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">{t('Attendance score / 50')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -481,7 +483,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
               <div className="flex justify-end p-4 border-t">
                 <Button onClick={goToHomework}>
                   <CheckCircle2 className="mr-2 h-4 w-4" />
-                  Complete Attendance
+                  {t('Complete Attendance')}
                 </Button>
               </div>
             </div>
@@ -505,8 +507,8 @@ const SessionModal: React.FC<SessionModalProps> = ({
                         onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
                       />
                     </TableHead>
-                    <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Homework score / 20</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Student')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">{t('Homework score / 20')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -546,10 +548,10 @@ const SessionModal: React.FC<SessionModalProps> = ({
                 </TableBody>
               </Table>
               <div className="flex justify-end p-4 border-t gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('attendance')}>Back</Button>
+                <Button variant="outline" onClick={() => setActiveTab('attendance')}>{t('Back')}</Button>
                 <Button onClick={goToActivity}>
                   <ClipboardCheck className="mr-2 h-4 w-4" />
-                  Complete Homework
+                  {t('Complete Homework')}
                 </Button>
               </div>
             </div>
@@ -573,9 +575,9 @@ const SessionModal: React.FC<SessionModalProps> = ({
                         onCheckedChange={(checked) => setAllSelections(Boolean(checked))}
                       />
                     </TableHead>
-                    <TableHead className="text-primary-foreground font-semibold">Student</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Class activity / 30</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-center">Combined Score</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Student')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">{t('Class activity / 30')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-center">{t('Combined Score')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -624,9 +626,9 @@ const SessionModal: React.FC<SessionModalProps> = ({
                 </TableBody>
               </Table>
               <div className="flex justify-end p-4 border-t gap-2">
-                <Button variant="outline" onClick={() => setActiveTab('hometask')}>Back</Button>
+                <Button variant="outline" onClick={() => setActiveTab('hometask')}>{t('Back')}</Button>
                 <Button onClick={handleSave} disabled={submitting}>
-                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><Save className="mr-2 h-4 w-4" /> Save Scores & Generate Coins</>}
+                  {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <><Save className="mr-2 h-4 w-4" /> {t('Save Scores & Generate Coins')}</>}
                 </Button>
               </div>
             </div>

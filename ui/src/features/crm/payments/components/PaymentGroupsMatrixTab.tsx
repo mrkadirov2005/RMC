@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type MonthCellState = 'full' | 'partial' | 'none';
 
@@ -79,6 +80,7 @@ const getStateTitle = (state: MonthCellState) => {
 };
 
 export const PaymentGroupsMatrixTab = () => {
+  const { t } = useLanguage();
   const [groups, setGroups] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -221,16 +223,16 @@ export const PaymentGroupsMatrixTab = () => {
         <CardContent className="space-y-3 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-bold text-slate-900 dark:text-foreground">Groups</h2>
-              <p className="text-xs text-muted-foreground">{filteredGroups.length} of {groups.length} groups</p>
+              <h2 className="text-sm font-bold text-slate-900 dark:text-foreground">{t('Groups')}</h2>
+              <p className="text-xs text-muted-foreground">{t('{shown} of {total} groups', { shown: filteredGroups.length, total: groups.length })}</p>
             </div>
             <div className="flex min-w-[280px] flex-1 items-center justify-end gap-2">
               <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>
                 <SelectTrigger className="w-[220px]">
-                  <SelectValue placeholder="Filter teacher" />
+                  <SelectValue placeholder={t('Filter teacher')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All teachers</SelectItem>
+                  <SelectItem value="all">{t('All teachers')}</SelectItem>
                   {teachers.map((teacher) => {
                     const teacherId = Number(teacher.teacher_id || teacher.id || 0);
                     if (!teacherId) return null;
@@ -247,7 +249,7 @@ export const PaymentGroupsMatrixTab = () => {
                 <Input
                   value={searchTerm}
                   onChange={(event) => setSearchTerm(event.target.value)}
-                  placeholder="Search group or teacher..."
+                  placeholder={t('Search group or teacher...')}
                   className="pl-9"
                 />
               </div>
@@ -261,11 +263,11 @@ export const PaymentGroupsMatrixTab = () => {
             {groupsLoading ? (
               <div className="flex items-center justify-center gap-2 rounded-md border border-dashed py-8 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading groups...
+                {t('Loading groups...')}
               </div>
             ) : filteredGroups.length === 0 ? (
               <div className="rounded-md border border-dashed py-8 text-center text-sm text-muted-foreground">
-                No groups found
+                {t('No groups found')}
               </div>
             ) : (
               <div className="flex min-w-max flex-nowrap gap-2">
@@ -315,13 +317,13 @@ export const PaymentGroupsMatrixTab = () => {
                 {selectedGroup?.class_name || 'Choose a group'}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {selectedGroup ? `${students.length} students / expected ${expectedAmount || 0} UZS` : 'Select a group to see monthly payment status'}
+                {selectedGroup ? `${students.length} students / expected ${expectedAmount || 0} UZS` : t('Select a group to see monthly payment status')}
               </p>
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
                 <label htmlFor="group-payment-month" className="block text-[11px] font-semibold text-muted-foreground">
-                  Select month
+                  {t('Select month')}
                 </label>
                 <Input
                   id="group-payment-month"
@@ -332,39 +334,39 @@ export const PaymentGroupsMatrixTab = () => {
                 />
               </div>
               <div className="flex flex-wrap items-center gap-2 pb-1 text-[11px] font-semibold text-muted-foreground">
-                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> Fully done</span>
-                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-400" /> Partly done</span>
-                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> None</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> {t('Fully done')}</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-400" /> {t('Partly done')}</span>
+                <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> {t('None')}</span>
               </div>
             </div>
           </div>
 
           {error && (
             <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-              {error}
+              {t(error)}
             </div>
           )}
 
           {studentsLoading ? (
             <div className="flex min-h-[360px] items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
-              Loading students and payments...
+              {t('Loading students and payments...')}
             </div>
           ) : !selectedGroup ? (
             <div className="flex min-h-[360px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-              Choose a group from the list.
+              {t('Choose a group from the list.')}
             </div>
           ) : students.length === 0 ? (
             <div className="flex min-h-[360px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-              No students found for this group.
+              {t('No students found for this group.')}
             </div>
           ) : (
             <div className="overflow-x-auto rounded-md border border-slate-200/80 dark:border-border">
               <Table className="min-w-[840px]">
                 <TableHeader>
                   <TableRow className="bg-slate-50 dark:bg-muted/40">
-                    <TableHead className="sticky left-0 z-20 w-44 bg-slate-50 text-xs dark:bg-muted/40">Student</TableHead>
-                    <TableHead className="sticky left-44 z-20 w-24 bg-slate-50 text-xs dark:bg-muted/40">Status</TableHead>
+                    <TableHead className="sticky left-0 z-20 w-44 bg-slate-50 text-xs dark:bg-muted/40">{t('Student')}</TableHead>
+                    <TableHead className="sticky left-44 z-20 w-24 bg-slate-50 text-xs dark:bg-muted/40">{t('Status')}</TableHead>
                     {months.map((month) => (
                       <TableHead key={month.key} className="w-12 px-1 text-center">
                         <div className="text-[11px] font-black text-slate-600 dark:text-muted-foreground">
@@ -393,7 +395,7 @@ export const PaymentGroupsMatrixTab = () => {
                               active ? 'bg-emerald-500 text-black shadow-emerald-200' : 'bg-orange-400 text-red-800 shadow-orange-200'
                             )}
                           >
-                            {active ? 'Aktiv' : 'Passive'}
+                            {active ? 'Aktiv' : t('Passive')}
                           </span>
                         </TableCell>
                         {months.map((month) => {

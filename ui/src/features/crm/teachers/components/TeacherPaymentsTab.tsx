@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherPaymentsTabProps {
   studentClassGroups: Array<{
@@ -29,15 +30,16 @@ export default function TeacherPaymentsTab({
   selectedPaymentMonth,
   setSelectedPaymentMonth,
 }: TeacherPaymentsTabProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
         <h3 className="flex items-center gap-2 text-base font-semibold">
           <Wallet className="h-4 w-4 text-indigo-500" />
-          Student Payments
+          {t('Student Payments')}
         </h3>
         <div className="flex items-center gap-2">
-          <Label htmlFor="payment-month" className="whitespace-nowrap text-xs font-semibold">Select Month:</Label>
+          <Label htmlFor="payment-month" className="whitespace-nowrap text-xs font-semibold">{t('Select Month:')}</Label>
           <div className="relative">
             <Input
               id="payment-month"
@@ -54,7 +56,7 @@ export default function TeacherPaymentsTab({
       {studentClassGroups.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Wallet className="h-16 w-16 mx-auto opacity-30 mb-4" />
-          <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
+          <h3 className="text-lg font-semibold">{t('No classes or students assigned to this teacher')}</h3>
         </div>
       ) : (
         <div className="space-y-3">
@@ -95,7 +97,9 @@ const PaymentGroup = ({
   students: any[];
   payments: any[];
   selectedPaymentMonth: string;
-}) => (
+}) => {
+  const { t } = useLanguage();
+  return (
   <div className="overflow-hidden rounded-lg border border-slate-200 bg-card text-card-foreground shadow-sm">
     <div className="relative border-b bg-white p-3 dark:bg-card">
       <h4 className="relative z-10 flex items-center justify-between text-sm font-bold text-foreground">
@@ -108,20 +112,20 @@ const PaymentGroup = ({
             {subtitle && <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">{subtitle}</span>}
           </span>
         </div>
-        <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{students.length} Students</Badge>
+        <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{students.length} {t('Students')}</Badge>
       </h4>
     </div>
     <div className="p-0">
       <Table className="text-xs">
         <TableHeader className="bg-muted/30">
           <TableRow className="border-b-border">
-            <TableHead className="h-8 pl-3 font-semibold text-foreground">Student</TableHead>
+            <TableHead className="h-8 pl-3 font-semibold text-foreground">{t('Student')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">No students</TableCell>
+              <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">{t('No students')}</TableCell>
             </TableRow>
           ) : (
             students.map((student, index) => (
@@ -133,6 +137,7 @@ const PaymentGroup = ({
     </div>
   </div>
 );
+};
 
 const PaymentStudentRow = ({
   index,
@@ -145,6 +150,7 @@ const PaymentStudentRow = ({
   payments: any[];
   selectedPaymentMonth: string;
 }) => {
+  const { t } = useLanguage();
   const studentId = student.student_id || student.id;
   const [year, month] = selectedPaymentMonth.split('-');
   const hasPaid = payments.some((payment) => {
@@ -163,11 +169,11 @@ const PaymentStudentRow = ({
           <div>
               {hasPaid ? (
           <Badge color='red'  className = "text-black">
-            Paid
+            {t('Paid')}
           </Badge>
         ) : (
           <Badge  className = "text-red-800">
-            Unpaid
+            {t('Unpaid')}
           </Badge>
         )}
           </div>

@@ -73,7 +73,7 @@ describe('teacher tasks controller handlers', () => {
       await controller[handler]({ ...req, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -83,15 +83,15 @@ describe('teacher tasks controller handlers', () => {
       await controller[handler]({ ...req, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
   describe('owner-only writes', () => {
     it.each([
-      ['createTeacherTask', { body: {} }, 'Only the center owner can assign tasks.'],
-      ['updateTeacherTask', { params: { id: '1' }, body: {} }, 'Only the center owner can update tasks.'],
-      ['deleteTeacherTask', { params: { id: '1' } }, 'Only the center owner can delete tasks.'],
+      ['createTeacherTask', { body: {} }, 'Vazifalarni faqat markaz egasi tayinlay oladi.'],
+      ['updateTeacherTask', { params: { id: '1' }, body: {} }, 'Vazifalarni faqat markaz egasi yangilay oladi.'],
+      ['deleteTeacherTask', { params: { id: '1' } }, "Vazifalarni faqat markaz egasi o'chira oladi."],
     ])('%s refuses a caller who is not the owner', async (handler, req, message) => {
       isGlobalUser.mockReturnValue(false);
       const res = createResponse();
@@ -166,7 +166,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getAllTeacherTasks({ query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher tasks', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifalarini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -188,7 +188,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getTeacherTaskById({ params: { id: '4' }, query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Task not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Vazifa topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -198,7 +198,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getTeacherTaskById({ params: { id: '4' }, query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher task', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -217,7 +217,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'parent' }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'assignee_type must be either "teacher" or "admin".' });
+      expect(res.json).toHaveBeenCalledWith({ error: "assignee_type qiymati \"teacher\" yoki \"admin\" bo'lishi kerak." });
     });
 
     it('requires a non-blank title', async () => {
@@ -226,7 +226,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ task_title: '   ' }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'task_title is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "task_title ko'rsatilishi shart." });
     });
 
     it('requires a teacher id when assigning to a teacher', async () => {
@@ -235,7 +235,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ teacher_id: 0 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacher_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacher_id ko'rsatilishi shart." });
     });
 
     it('refuses a teacher from another center', async () => {
@@ -245,7 +245,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body(), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazga tegishli emas." });
     });
 
     it('requires an admin id when assigning to an admin', async () => {
@@ -254,7 +254,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'admin', admin_id: 0 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'admin_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "admin_id ko'rsatilishi shart." });
     });
 
     it('refuses an admin from another center', async () => {
@@ -264,7 +264,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'admin', admin_id: 8 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Admin does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Admin bu markazga tegishli emas.' });
     });
 
     it('refuses to assign a task to the center owner', async () => {
@@ -274,7 +274,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'admin', admin_id: 8 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Cannot assign a task to the center owner.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani markaz egasiga tayinlab bo'lmaydi." });
     });
 
     it('creates a teacher task and records who assigned it', async () => {
@@ -323,7 +323,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body(), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create teacher task', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -352,7 +352,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: { assignee_type: 'parent' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'assignee_type must be either "teacher" or "admin".' });
+      expect(res.json).toHaveBeenCalledWith({ error: "assignee_type qiymati \"teacher\" yoki \"admin\" bo'lishi kerak." });
     });
 
     it('clears the admin when reassigning to a teacher', async () => {
@@ -393,7 +393,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: { assignee_type: 'teacher' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacher_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacher_id ko'rsatilishi shart." });
     });
 
     it('requires an admin id when reassigning to an admin', async () => {
@@ -402,7 +402,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: { assignee_type: 'admin' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'admin_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "admin_id ko'rsatilishi shart." });
     });
 
     it('refuses to reassign a task to the center owner', async () => {
@@ -416,7 +416,7 @@ describe('teacher tasks controller handlers', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Cannot assign a task to the center owner.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani markaz egasiga tayinlab bo'lmaydi." });
     });
 
     it('refuses a reassignment target from another center', async () => {
@@ -430,7 +430,7 @@ describe('teacher tasks controller handlers', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazga tegishli emas." });
     });
 
     it('returns 404 when the task is out of scope', async () => {
@@ -440,7 +440,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Task not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Vazifa topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -450,7 +450,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update teacher task', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -463,7 +463,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only the assigned teacher or admin can update task status.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifa holatini faqat biriktirilgan o'qituvchi yoki admin yangilay oladi." });
     });
 
     it('refuses a task assigned to somebody else', async () => {
@@ -473,7 +473,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: teacher }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'You are not the assignee of this task.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Siz bu vazifaga biriktirilmagansiz.' });
     });
 
     it('lets the assigned admin accept their own task', async () => {
@@ -498,7 +498,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: teacher }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Task not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Vazifa topilmadi' });
     });
 
     it('trims an optional note when accepting', async () => {
@@ -532,7 +532,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: teacher }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update teacher task status', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasi holatini yangilab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -564,7 +564,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getTeacherTaskStats({ query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher task stats', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifalari statistikasini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -576,7 +576,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.deleteTeacherTask({ params: { id: '4' }, user: owner }, res);
 
       expect(service.deleteTeacherTask).toHaveBeenCalledWith(4, 3);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Task deleted successfully', task: { task_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Vazifa muvaffaqiyatli o'chirildi", task: { task_id: 4 } });
     });
 
     it('returns 404 when the task is out of scope', async () => {
@@ -595,7 +595,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.deleteTeacherTask({ params: { id: '4' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete teacher task', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

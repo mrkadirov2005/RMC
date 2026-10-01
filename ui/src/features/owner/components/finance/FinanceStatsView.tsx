@@ -2,6 +2,7 @@ import { BarChart3, LineChart, PieChart as PieChartIcon } from 'lucide-react';
 import { PieChart } from '@/shared/components/PieChart';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type ChartMode = 'pie' | 'bar' | 'line';
 
@@ -92,7 +93,7 @@ export const FinanceStatsView = ({ selectedMonth, paymentStats, totalCollected, 
             <span className="flex items-center gap-2 text-sm font-bold text-slate-700"><span className="h-3 w-3 rounded-full bg-emerald-500" />To'lov qilgan</span>
             <span className="text-lg font-black text-emerald-700">{paymentStats.paidStudents} · {paymentStats.paidPercent}%</span>
           </div>
-          <p className="mt-1 text-xs text-slate-500">Oylik kutilgan to'lovini to'liq bajargan o'quvchilar. Sana boyicha korish uchun bosing.</p>
+          <p className="mt-1 text-xs text-slate-500">Oylik kutilgan to'lovini to'liq bajargan o'quvchilar. Sana bo'yicha ko'rish uchun bosing.</p>
         </button>
         <div className="rounded-lg border border-slate-200 p-4">
           <div className="flex items-center justify-between gap-3">
@@ -183,10 +184,10 @@ export const FinanceChart = ({
         </div>
         <div className="grid content-center gap-2">
           {[
-            ["To'lagan talabalar", statsPaidStudents, 'bg-emerald-100 text-emerald-700'],
-            ['Qarzdor talabalar', statsUnpaidStudents, 'bg-amber-100 text-amber-700'],
-            ['Kelgan tolov', formatMoney(statsCollected), 'bg-blue-100 text-blue-700'],
-            ['Kutilgan tolov', formatMoney(statsExpected), 'bg-slate-100 text-slate-700'],
+            ["To'lagan o'quvchilar", statsPaidStudents, 'bg-emerald-100 text-emerald-700'],
+            ["Qarzdor o'quvchilar", statsUnpaidStudents, 'bg-amber-100 text-amber-700'],
+            ["Kelgan to'lov", formatMoney(statsCollected), 'bg-blue-100 text-blue-700'],
+            ["Kutilgan to'lov", formatMoney(statsExpected), 'bg-slate-100 text-slate-700'],
           ].map(([label, value, tone]) => (
             <div key={label} className={cn('rounded px-3 py-2', tone as string)}>
               <p className="text-[10px] font-black uppercase opacity-70">{label}</p>
@@ -201,7 +202,9 @@ export const FinanceChart = ({
   </div>
 );
 
-const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => (
+const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => {
+  const { t } = useLanguage();
+  return (
   <div className="space-y-2">
     {groups.map((group) => (
       <div key={group.id} className="grid grid-cols-[130px_1fr_54px] items-center gap-2 text-xs">
@@ -213,9 +216,10 @@ const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => (
         <span className="text-right font-black text-slate-600">{group.paidPercent}%</span>
       </div>
     ))}
-    {groups.length === 0 && <div className="flex h-48 items-center justify-center text-sm font-semibold text-slate-500">No group data</div>}
+    {groups.length === 0 && <div className="flex h-48 items-center justify-center text-sm font-semibold text-slate-500">{t('No group data')}</div>}
   </div>
 );
+};
 
 const FinanceLineChart = ({ monthlyTrend, maxTrendCollected, linePoints }: { monthlyTrend: MonthlyTrend[]; maxTrendCollected: number; linePoints: string }) => (
   <div className="space-y-3">
@@ -262,9 +266,9 @@ export const FinanceRankings = ({
 }) => (
   <div className="space-y-2">
     <FinanceRanking title="Eng yaxshi to'layotgan guruhlar" tone="emerald" groups={mostPaidGroups.slice(0, 5)} value={(group) => `${group.paidPercent}%`} />
-    <FinanceRanking title="Eng kop qarzdor guruhlar" tone="amber" groups={mostUnpaidGroups.slice(0, 5)} value={(group) => `${group.unpaidCount} qarzdor`} />
+    <FinanceRanking title="Eng ko'p qarzdor guruhlar" tone="amber" groups={mostUnpaidGroups.slice(0, 5)} value={(group) => `${group.unpaidCount} qarzdor`} />
     <div className="rounded-md border border-slate-200 bg-white p-3">
-      <p className="text-xs font-black uppercase text-slate-500">Oylar boyicha umumiy tolov</p>
+      <p className="text-xs font-black uppercase text-slate-500">Oylar bo'yicha umumiy to'lov</p>
       <div className="mt-2 space-y-1.5">
         {monthlyTrend.slice(-6).map((item) => (
           <div key={item.month} className="grid grid-cols-[64px_1fr_auto] items-center gap-2 text-xs">

@@ -62,7 +62,7 @@ describe('payments controller', () => {
     await paymentController.createPayment(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Teachers cannot create payments.' });
+    expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchilar to'lov yarata olmaydi." });
   });
 
   it('checks teacher ownership when fetching student payments', async () => {

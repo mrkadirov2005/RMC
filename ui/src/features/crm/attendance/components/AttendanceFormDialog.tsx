@@ -21,6 +21,7 @@ import {
 import { compactFormControlClassName, formLabelClassName } from '@/components/ui/form-control';
 import { SelectField } from '../../students/components/SelectField';
 import type { Attendance } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AttendanceFormDialogProps {
   open: boolean;
@@ -63,6 +64,7 @@ const AttendanceFormDialog = ({
   onClose,
   onSubmit,
 }: AttendanceFormDialogProps) => {
+  const { t } = useLanguage();
   const studentLabel = getOptionLabel(studentOptions, formData.student_id);
   const teacherLabel = getOptionLabel(teacherOptions, formData.teacher_id);
   const classLabel = getOptionLabel(classOptions, formData.class_id);
@@ -78,10 +80,10 @@ const AttendanceFormDialog = ({
             </div>
             <div className="min-w-0 flex-1">
               <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-                {editingId ? 'Edit Attendance' : 'Add Attendance'}
+                {editingId ? t('Edit Attendance') : t('Add Attendance')}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                Mark attendance with a clearer, more colorful form that still keeps the workflow quick.
+                {t('Mark attendance with a clearer, more colorful form that still keeps the workflow quick.')}
               </DialogDescription>
             </div>
           </div>
@@ -90,7 +92,7 @@ const AttendanceFormDialog = ({
         <form onSubmit={onSubmit} className="space-y-4 px-6 py-5">
           <div className="grid gap-3 md:grid-cols-4">
             <div className={statClass}>
-              <p className={formLabelClassName}>Student</p>
+              <p className={formLabelClassName}>{t('Student')}</p>
               <div className="mt-2 flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
@@ -99,7 +101,7 @@ const AttendanceFormDialog = ({
               </div>
             </div>
             <div className={statClass}>
-              <p className={formLabelClassName}>Teacher</p>
+              <p className={formLabelClassName}>{t('Teacher')}</p>
               <div className="mt-2 flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-violet-600 dark:text-violet-400" />
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
@@ -108,7 +110,7 @@ const AttendanceFormDialog = ({
               </div>
             </div>
             <div className={statClass}>
-              <p className={formLabelClassName}>Class</p>
+              <p className={formLabelClassName}>{t('Class')}</p>
               <div className="mt-2 flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
@@ -117,7 +119,7 @@ const AttendanceFormDialog = ({
               </div>
             </div>
             <div className={statClass}>
-              <p className={formLabelClassName}>Status</p>
+              <p className={formLabelClassName}>{t('Status')}</p>
               <div className="mt-2 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-50">
@@ -133,45 +135,45 @@ const AttendanceFormDialog = ({
                 <UserRound className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Attendance target</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Attendance target')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Connect the attendance record to the right student, teacher, and class.
+                  {t('Connect the attendance record to the right student, teacher, and class.')}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <SelectField
-                label="Student"
+                label={t('Student')}
                 name="student_id"
                 value={formData.student_id || ''}
                 onChange={(value) => setFormData((current) => ({ ...current, student_id: Number(value) }))}
                 options={studentOptions}
                 isLoading={isLoadingOptions}
                 required
-                placeholder="Select a student"
+                placeholder={t('Select a student')}
               />
               <SelectField
-                label="Teacher"
+                label={t('Teacher')}
                 name="teacher_id"
                 value={formData.teacher_id || ''}
                 onChange={(value) => setFormData((current) => ({ ...current, teacher_id: Number(value) }))}
                 options={teacherOptions}
                 isLoading={isLoadingOptions}
                 required
-                placeholder="Select a teacher"
+                placeholder={t('Select a teacher')}
               />
               <SelectField
-                label="Class"
+                label={t('Class')}
                 name="class_id"
                 value={formData.class_id || ''}
                 onChange={(value) => setFormData((current) => ({ ...current, class_id: Number(value) }))}
                 options={classOptions}
                 isLoading={isLoadingOptions}
                 required
-                placeholder="Select a class"
+                placeholder={t('Select a class')}
               />
               <div className="space-y-2">
-                <Label htmlFor="attendance_date" className={formLabelClassName}>Attendance date</Label>
+                <Label htmlFor="attendance_date" className={formLabelClassName}>{t('Attendance date')}</Label>
                 <Input
                   type="date"
                   id="attendance_date"
@@ -189,22 +191,22 @@ const AttendanceFormDialog = ({
                 <CheckCircle2 className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Attendance result</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Attendance result')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Set the attendance status and leave a short note if anything unusual happened.
+                  {t('Set the attendance status and leave a short note if anything unusual happened.')}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="status" className={formLabelClassName}>Status</Label>
+                <Label htmlFor="status" className={formLabelClassName}>{t('Status')}</Label>
                 <Select
                   required
                   value={formData.status || 'Present'}
                   onValueChange={(value) => setFormData((current) => ({ ...current, status: value }))}
                 >
                   <SelectTrigger id="status" className={compactFormControlClassName}>
-                    <SelectValue placeholder="Select status" />
+                    <SelectValue placeholder={t('Select status')} />
                   </SelectTrigger>
                   <SelectContent>
                     {attendanceStatusOptions.map((opt) => (
@@ -216,12 +218,12 @@ const AttendanceFormDialog = ({
                 </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="remarks" className={formLabelClassName}>Remarks</Label>
+                <Label htmlFor="remarks" className={formLabelClassName}>{t('Remarks')}</Label>
                 <Textarea
                   id="remarks"
                   value={formData.remarks || ''}
                   onChange={(e) => setFormData((current) => ({ ...current, remarks: e.target.value }))}
-                  placeholder="Additional remarks..."
+                  placeholder={t('Additional remarks...')}
                 />
               </div>
             </div>
@@ -229,10 +231,10 @@ const AttendanceFormDialog = ({
 
           <DialogFooter className="border-t border-slate-200/80 px-0 pt-5 dark:border-slate-800">
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save'}
+              {loading ? t('Saving...') : t('Save')}
             </Button>
           </DialogFooter>
         </form>

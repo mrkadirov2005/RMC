@@ -5,6 +5,7 @@ import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ActionReasonPicker, isReasonReady, resolveReasonId } from './ActionReasonPicker';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   open: boolean;
@@ -16,6 +17,7 @@ interface Props {
 
 // Renders the delete student dialog.
 export const DeleteStudentDialog = ({ open, title, description, onOpenChange, onConfirm }: Props) => {
+  const { t } = useLanguage();
   const [reasonId, setReasonId] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [deleting, setDeleting] = useState(false);
@@ -56,11 +58,11 @@ export const DeleteStudentDialog = ({ open, title, description, onOpenChange, on
         />
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={deleting}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="button" variant="destructive" onClick={confirm} disabled={deleting || !isReasonReady(reasonId, customReason)}>
             <Trash2 className="mr-2 h-4 w-4" />
-            {deleting ? 'Deleting...' : 'Delete'}
+            {deleting ? t('Deleting...') : t('Delete')}
           </Button>
         </DialogFooter>
       </DialogContent>

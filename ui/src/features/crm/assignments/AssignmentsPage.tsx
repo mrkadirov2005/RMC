@@ -170,7 +170,7 @@ const AssignmentsPage = () => {
         <div className="flex items-center gap-3">
           {selectedFolder && (
             <Button variant="secondary" size="sm" onClick={handleBackToFolders} className="h-9 bg-slate-900 text-white hover:bg-slate-800">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Back
+              <ArrowLeft className="mr-1 h-4 w-4" /> {t('Back')}
             </Button>
           )}
           <div className="flex h-11 w-11 items-center justify-center rounded-md bg-gradient-to-br from-fuchsia-500 to-indigo-600 text-white shadow-lg shadow-indigo-500/25">
@@ -212,7 +212,7 @@ const AssignmentsPage = () => {
             {t('Export CSV')}
           </Button>
           <Button onClick={() => handleOpenModal()} className="h-9 bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white shadow-lg shadow-indigo-500/25 hover:from-fuchsia-700 hover:to-indigo-700">
-            <Plus className="mr-2 h-4 w-4" /> Add Assignment
+            <Plus className="mr-2 h-4 w-4" /> {t('Add Assignment')}
           </Button>
         </div>
       </div>
@@ -234,7 +234,7 @@ const AssignmentsPage = () => {
 
       {state.error && (
         <Alert variant="destructive">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 
@@ -245,7 +245,7 @@ const AssignmentsPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder={activeTab === 'classes' ? 'Search classes by name or code...' : 'Search personal tasks...'}
+                placeholder={activeTab === 'classes' ? t('Search classes by name or code...') : t('Search personal tasks...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-9 border-cyan-100 bg-cyan-50/40 pl-9 pr-8 text-sm shadow-none"
@@ -274,7 +274,7 @@ const AssignmentsPage = () => {
                 onClick={() => setActiveTab('classes')}
               >
                 <Users className="h-4 w-4" />
-                By Classes
+                {t('By Classes')}
               </button>
               <button
                 className={cn(
@@ -286,7 +286,7 @@ const AssignmentsPage = () => {
                 onClick={() => setActiveTab('personal')}
               >
                 <FileText className="h-4 w-4" />
-                Personal Tasks
+                {t('Personal Tasks')}
               </button>
             </div>
           </div>
@@ -299,11 +299,11 @@ const AssignmentsPage = () => {
                 {loadingData ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Loading classes...
+                    {t('Loading classes...')}
                   </div>
                 ) : filteredClasses.length === 0 ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
-                    {searchTerm ? 'No classes match your search' : 'No classes found'}
+                    {searchTerm ? t('No classes match your search') : t('No classes found')}
                   </div>
                 ) : (
                   paginatedClasses.items.map((cls) => {
@@ -325,7 +325,7 @@ const AssignmentsPage = () => {
                             </div>
                             <h3 className={rowNameClass}>{cls.class_name}</h3>
                             <div className={rowMetaClass}>
-                              <span className={cn(infoPillClass, 'bg-violet-600 text-white')}>Level {cls.level || '-'}</span>
+                              <span className={cn(infoPillClass, 'bg-violet-600 text-white')}>{t('Level')} {cls.level || '-'}</span>
                               <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{assignmentCount} vazifa</span>
                             </div>
                             <div className={rowStatsClass}>
@@ -370,7 +370,7 @@ const AssignmentsPage = () => {
                 {loadingData ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Loading personal tasks...
+                    {t('Loading personal tasks...')}
                   </div>
                 ) : (
                   (() => {
@@ -388,13 +388,13 @@ const AssignmentsPage = () => {
                             <div className={cn(rowIconClass, 'bg-amber-500 text-white')}>
                               <Folder className="h-3.5 w-3.5" />
                             </div>
-                            <h3 className={rowNameClass}>Personal Tasks</h3>
+                            <h3 className={rowNameClass}>{t('Personal Tasks')}</h3>
                             <div className={rowMetaClass}>
-                              <span className={cn(infoPillClass, 'bg-orange-600 text-white')}>Independent</span>
-                              <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{personalCount} task</span>
+                              <span className={cn(infoPillClass, 'bg-orange-600 text-white')}>{t('Independent')}</span>
+                              <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{t('{count} task', { count: personalCount })}</span>
                             </div>
                             <div className={rowStatsClass}>
-                              <span className={cn(infoPillClass, 'bg-emerald-600 text-white')}>{personalCompleted} done</span>
+                              <span className={cn(infoPillClass, 'bg-emerald-600 text-white')}>{t('{count} done', { count: personalCompleted })}</span>
                               <span className={cn(infoPillClass, 'bg-fuchsia-600 text-white')}>{completionPercentage.toFixed(0)}%</span>
                             </div>
                           </div>
@@ -402,7 +402,7 @@ const AssignmentsPage = () => {
                       </Card>
                     ) : (
                       <div className="col-span-full text-center py-8 text-muted-foreground">
-                        {searchTerm ? 'No personal tasks match your search' : 'No personal tasks found'}
+                        {searchTerm ? t('No personal tasks match your search') : t('No personal tasks found')}
                       </div>
                     );
                   })()
@@ -420,7 +420,7 @@ const AssignmentsPage = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder="Search by title or description..."
+                placeholder={t('Search by title or description...')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="h-9 border-fuchsia-100 bg-fuchsia-50/40 pl-9 pr-8 text-sm shadow-none"
@@ -442,7 +442,7 @@ const AssignmentsPage = () => {
               className={cn(showFilters && 'bg-gradient-to-r from-fuchsia-600 to-indigo-600 text-white')}
             >
               <Filter className="mr-1 h-4 w-4" />
-              Filters
+              {t('Filters')}
               {hasActiveFilters && (
                 <Badge variant="secondary" className="ml-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
                   {filterStatus ? 1 : 0}
@@ -452,12 +452,12 @@ const AssignmentsPage = () => {
 
             {hasActiveFilters && (
               <Button variant="ghost" size="sm" onClick={clearFilters} className="text-rose-600 hover:bg-rose-50 hover:text-rose-700">
-                <X className="mr-1 h-4 w-4" /> Clear All
+                <X className="mr-1 h-4 w-4" /> {t('Clear All')}
               </Button>
             )}
 
             <span className="text-sm text-muted-foreground ml-auto">
-              {displayedAssignments.length} assignment{displayedAssignments.length !== 1 ? 's' : ''}
+              {t('{count} assignment(s)', { count: displayedAssignments.length })}
             </span>
           </div>
 
@@ -467,13 +467,13 @@ const AssignmentsPage = () => {
               <CardContent className="py-2">
                 <div className="flex items-center gap-4">
                   <div className="space-y-1">
-                    <Label className="text-xs">Status</Label>
+                    <Label className="text-xs">{t('Status')}</Label>
                     <select
                       value={filterStatus}
                       onChange={(e) => setFilterStatus(e.target.value)}
                       className="flex h-8 w-[180px] rounded-md border border-fuchsia-100 bg-white px-3 py-1 text-xs font-semibold shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     >
-                      <option value="">All Status</option>
+                      <option value="">{t('All Status')}</option>
                       {assignmentStatusOptions.map((opt) => (
                         <option key={opt.id} value={opt.value}>{opt.label}</option>
                       ))}
@@ -491,13 +491,13 @@ const AssignmentsPage = () => {
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50 hover:bg-slate-50">
-                      <TableHead className="h-9 text-xs">Title</TableHead>
-                      <TableHead className="h-9 text-xs">Description</TableHead>
-                      <TableHead className="h-9 text-xs">Due</TableHead>
-                      <TableHead className="h-9 text-xs">Submit</TableHead>
-                      <TableHead className="h-9 text-xs">Status</TableHead>
-                      <TableHead className="h-9 text-xs">Grade</TableHead>
-                      <TableHead className="h-9 text-right text-xs">Actions</TableHead>
+                      <TableHead className="h-9 text-xs">{t('Title')}</TableHead>
+                      <TableHead className="h-9 text-xs">{t('Description')}</TableHead>
+                      <TableHead className="h-9 text-xs">{t('Due')}</TableHead>
+                      <TableHead className="h-9 text-xs">{t('Submit')}</TableHead>
+                      <TableHead className="h-9 text-xs">{t('Status')}</TableHead>
+                      <TableHead className="h-9 text-xs">{t('Grade')}</TableHead>
+                      <TableHead className="h-9 text-right text-xs">{t('Actions')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -510,7 +510,7 @@ const AssignmentsPage = () => {
                     ) : displayedAssignments.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                          {hasActiveFilters ? 'No assignments match your criteria' : 'No assignments found'}
+                          {hasActiveFilters ? t('No assignments match your criteria') : t('No assignments found')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -554,7 +554,7 @@ const AssignmentsPage = () => {
                                 size="icon"
                                 onClick={() => handleOpenModal(assignment)}
                                 className="h-7 w-7 rounded bg-sky-100 text-sky-700 hover:bg-sky-600 hover:text-white"
-                                title="Edit"
+                                title={t('Edit')}
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
@@ -563,7 +563,7 @@ const AssignmentsPage = () => {
                                 size="icon"
                                 onClick={() => handleDelete(assignment.assignment_id || assignment.id || 0)}
                                 className="h-7 w-7 rounded bg-rose-100 text-rose-700 hover:bg-rose-600 hover:text-white"
-                                title="Delete"
+                                title={t('Delete')}
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -600,11 +600,11 @@ const AssignmentsPage = () => {
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Assignment' : 'Add New Assignment'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Assignment') : t('Add New Assignment')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Title *</Label>
+              <Label>{t('Title *')}</Label>
               <Input
                 type="text"
                 required
@@ -613,7 +613,7 @@ const AssignmentsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label>Description *</Label>
+              <Label>{t('Description *')}</Label>
               <textarea
                 required
                 className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -623,16 +623,16 @@ const AssignmentsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <SelectField
-                label="Teacher (filters the class list below)"
+                label={t('Teacher (filters the class list below)')}
                 name="teacher_id"
                 value={selectedTeacherId || ''}
                 onChange={handleTeacherFilterChange}
                 options={teacherOptions}
                 isLoading={isLoadingOptions}
-                placeholder="All teachers"
+                placeholder={t('All teachers')}
               />
               <SelectField
-                label="Class (Optional - leave empty for personal task)"
+                label={t('Class (Optional - leave empty for personal task)')}
                 name="class_id"
                 value={formData.class_id || ''}
                 onChange={(value) =>
@@ -640,12 +640,12 @@ const AssignmentsPage = () => {
                 }
                 options={filteredClassOptions}
                 isLoading={isLoadingOptions}
-                placeholder="Select a class or leave empty"
+                placeholder={t('Select a class or leave empty')}
               />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Due Date *</Label>
+                <Label>{t('Due Date *')}</Label>
                 <Input
                   type="date"
                   required
@@ -654,7 +654,7 @@ const AssignmentsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Submission Date *</Label>
+                <Label>{t('Submission Date *')}</Label>
                 <Input
                   type="date"
                   required
@@ -665,7 +665,7 @@ const AssignmentsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Status *</Label>
+                <Label>{t('Status *')}</Label>
                 <select
                   required
                   value={formData.status || 'Pending'}
@@ -678,7 +678,7 @@ const AssignmentsPage = () => {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>Grade</Label>
+                <Label>{t('Grade')}</Label>
                 <Input
                   type="number"
                   step="0.1"
@@ -689,10 +689,10 @@ const AssignmentsPage = () => {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={handleCloseModal}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" disabled={state.loading}>
-                {state.loading ? 'Saving...' : 'Save'}
+                {state.loading ? t('Saving...') : t('Save')}
               </Button>
             </DialogFooter>
           </form>

@@ -49,7 +49,7 @@ describe('student coins controller', () => {
       await controller[handler]({ ...req, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -59,7 +59,7 @@ describe('student coins controller', () => {
       await controller[handler]({ ...req, user: { userType: 'superuser', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -70,7 +70,7 @@ describe('student coins controller', () => {
       await controller.getStudentCoins({ params: { id: '9' }, user: { userType: 'student', id: 4 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
       expect(studentService.getCoinSummary).not.toHaveBeenCalled();
     });
 
@@ -99,7 +99,7 @@ describe('student coins controller', () => {
       await controller.getStudentCoins({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -109,7 +109,7 @@ describe('student coins controller', () => {
       await controller.getStudentCoins({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch coins', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -168,7 +168,7 @@ describe('student coins controller', () => {
       await controller.addStudentCoins({ params: { id: '9' }, body: { amount: 500, direction: 'subtract' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Insufficient coins for this operation.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu amal uchun coinlar yetarli emas.' });
     });
 
     it('returns 404 when the service cannot find the student', async () => {
@@ -178,7 +178,7 @@ describe('student coins controller', () => {
       await controller.addStudentCoins({ params: { id: '9' }, body: { amount: 5 }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi topilmadi" });
     });
 
     it('records a null actor when the session carries none', async () => {
@@ -197,7 +197,7 @@ describe('student coins controller', () => {
       await controller.addStudentCoins({ params: { id: '9' }, body: { amount: 5 }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update coins', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni yangilab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -253,7 +253,7 @@ describe('student coins controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Insufficient coins for this operation.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu amal uchun coinlar yetarli emas.' });
     });
 
     it.each(['not_found', 'tx_not_found'])('maps the %s result to a 404', async (error) => {
@@ -267,7 +267,7 @@ describe('student coins controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Transaction not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Tranzaksiya topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -281,7 +281,7 @@ describe('student coins controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update coins', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni yangilab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -324,7 +324,7 @@ describe('student coins controller', () => {
       await controller.deleteStudentCoinTransaction({ params: { id: '9', transactionId: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Insufficient coins for this operation.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu amal uchun coinlar yetarli emas.' });
     });
 
     it.each(['not_found', 'tx_not_found'])('maps the %s result to a 404', async (error) => {
@@ -334,7 +334,7 @@ describe('student coins controller', () => {
       await controller.deleteStudentCoinTransaction({ params: { id: '9', transactionId: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Transaction not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Tranzaksiya topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -344,7 +344,7 @@ describe('student coins controller', () => {
       await controller.deleteStudentCoinTransaction({ params: { id: '9', transactionId: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete coins', details: 'delete failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni o'chirib bo'lmadi", details: 'delete failed' });
     });
   });
 });

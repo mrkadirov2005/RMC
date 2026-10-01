@@ -11,6 +11,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherAccountPasswordCardProps {
   newPassword: string;
@@ -24,17 +25,19 @@ export const TeacherAccountPasswordCard = ({
   setNewPassword,
   settingPassword,
   onSetPassword,
-}: TeacherAccountPasswordCardProps) => (
+}: TeacherAccountPasswordCardProps) => {
+  const { t } = useLanguage();
+  return (
   <Card className="rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
     <CardHeader className="p-3 pb-1">
       <CardTitle className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
         <KeyRound className="h-4 w-4" />
-        Account Password
+        {t('Account Password')}
       </CardTitle>
     </CardHeader>
     <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
       <div className="space-y-1">
-        <Label htmlFor="teacher-new-password" className="text-xs">New Password</Label>
+        <Label htmlFor="teacher-new-password" className="text-xs">{t('New Password')}</Label>
         <Input
           id="teacher-new-password"
           type="password"
@@ -44,17 +47,18 @@ export const TeacherAccountPasswordCard = ({
           onKeyDown={(event) => {
             if (event.key === 'Enter') onSetPassword();
           }}
-          placeholder="Enter new password"
+          placeholder={t('Enter new password')}
           disabled={settingPassword}
         />
       </div>
       <Button className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={onSetPassword} disabled={settingPassword || !newPassword.trim()}>
         {settingPassword ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
-        Update Password
+        {t('Update Password')}
       </Button>
     </CardContent>
   </Card>
 );
+};
 
 interface TeacherPaymentPasswordDialogProps {
   open: boolean;
@@ -76,48 +80,50 @@ export const TeacherPaymentPasswordDialog = ({
   onGeneratePassword,
   onCopyPassword,
   onSavePassword,
-}: TeacherPaymentPasswordDialogProps) => (
+}: TeacherPaymentPasswordDialogProps) => {
+  const { t } = useLanguage();
+  return (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="rounded-lg sm:max-w-md">
       <DialogHeader>
-        <DialogTitle className="text-base">Set Payment Password</DialogTitle>
+        <DialogTitle className="text-base">{t('Set Payment Password')}</DialogTitle>
       </DialogHeader>
       <div className="space-y-3">
         <Alert className="py-3">
           <AlertDescription>
-            This password is used for the teacher&apos;s separate Payments login (required to access the Payments tab).
+            {t("This password is used for the teacher's separate Payments login (required to access the Payments tab).")}
           </AlertDescription>
         </Alert>
         <div className="space-y-1">
-          <Label htmlFor="payment-password" className="text-xs">Payment Password</Label>
+          <Label htmlFor="payment-password" className="text-xs">{t('Payment Password')}</Label>
           <Input
             id="payment-password"
             type="text"
             className="h-8 text-xs"
             value={paymentTempPassword}
             onChange={(e) => setPaymentTempPassword(e.target.value)}
-            placeholder="Enter or generate a password"
+            placeholder={t('Enter or generate a password')}
             disabled={settingPaymentPassword}
           />
           <div className="flex gap-1.5">
             <Button type="button" size="sm" className="h-8 bg-amber-500 text-xs text-white hover:bg-amber-600" onClick={onGeneratePassword} disabled={settingPaymentPassword}>
-              Generate
+              {t('Generate')}
             </Button>
             <Button type="button" size="sm" className="h-8 bg-cyan-600 text-xs text-white hover:bg-cyan-700" onClick={onCopyPassword} disabled={!paymentTempPassword || settingPaymentPassword}>
-              Copy
+              {t('Copy')}
             </Button>
           </div>
         </div>
       </div>
       <DialogFooter>
         <Button size="sm" className="h-8 bg-slate-700 text-xs text-white hover:bg-slate-800" onClick={() => onOpenChange(false)} disabled={settingPaymentPassword}>
-          Cancel
+          {t('Cancel')}
         </Button>
         <Button size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={onSavePassword} disabled={settingPaymentPassword}>
           {settingPaymentPassword ? (
             <>
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-              Saving...
+              {t('Saving...')}
             </>
           ) : (
             'Save Password'
@@ -127,6 +133,7 @@ export const TeacherPaymentPasswordDialog = ({
     </DialogContent>
   </Dialog>
 );
+};
 
 interface TeacherTemporaryPasswordDialogProps {
   open: boolean;
@@ -140,24 +147,27 @@ export const TeacherTemporaryPasswordDialog = ({
   onOpenChange,
   tempPassword,
   onCopyPassword,
-}: TeacherTemporaryPasswordDialogProps) => (
+}: TeacherTemporaryPasswordDialogProps) => {
+  const { t } = useLanguage();
+  return (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent className="rounded-lg">
       <DialogHeader>
-        <DialogTitle className="text-base">Temporary Password</DialogTitle>
+        <DialogTitle className="text-base">{t('Temporary Password')}</DialogTitle>
       </DialogHeader>
       <div className="space-y-2">
-        <Label htmlFor="teacher-temp-password" className="text-xs">Share this password with the teacher.</Label>
+        <Label htmlFor="teacher-temp-password" className="text-xs">{t('Share this password with the teacher.')}</Label>
         <div className="flex gap-2">
           <Input id="teacher-temp-password" className="h-8 text-xs" value={tempPassword} readOnly />
           <Button size="sm" className="h-8 bg-cyan-600 text-xs text-white hover:bg-cyan-700" onClick={onCopyPassword}>
-            Copy
+            {t('Copy')}
           </Button>
         </div>
       </div>
       <DialogFooter>
-        <Button size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={() => onOpenChange(false)}>Done</Button>
+        <Button size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={() => onOpenChange(false)}>{t('Done')}</Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 );
+};

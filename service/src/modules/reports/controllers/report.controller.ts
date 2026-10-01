@@ -9,7 +9,7 @@ const getOverviewReport = async (req: any, res: any) => {
     const data = await reportService.overview(req.query, centerId ?? undefined);
     res.json(data);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch overview report');
+    sendError(res, error, "Umumiy hisobotni yuklab bo'lmadi");
   }
 };
 
@@ -24,7 +24,7 @@ const getPaymentsReport = async (req: any, res: any) => {
     }
     res.json(out.row);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch payments report');
+    sendError(res, error, "To'lovlar hisobotini yuklab bo'lmadi");
   }
 };
 
@@ -36,7 +36,7 @@ const getAttendanceReport = async (req: any, res: any) => {
     const rows = await reportService.attendanceReport(req.query, centerId ?? undefined);
     res.json(rows);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch attendance report');
+    sendError(res, error, "Davomat hisobotini yuklab bo'lmadi");
   }
 };
 
@@ -48,7 +48,7 @@ const getRetentionReport = async (req: any, res: any) => {
     const data = await reportService.retentionReport(req.query, centerId ?? undefined);
     res.json(data);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch retention report');
+    sendError(res, error, "Retention hisobotini yuklab bo'lmadi");
   }
 };
 

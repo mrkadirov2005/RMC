@@ -12,10 +12,10 @@ const getAllAssignments = async (req: any, res: any) => {
     const page = Number.isFinite(requestedPage) ? Math.max(requestedPage, 1) : 1;
     const classId = req.query.class_id ? Number(req.query.class_id) : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const rows = await assignmentService.getAllAssignments({
       centerId: centerId ?? undefined,
@@ -27,7 +27,7 @@ const getAllAssignments = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch assignments', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -36,19 +36,19 @@ const getAssignmentById = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const assignment = await assignmentService.getAssignmentById(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!assignment) {
-      return res.status(404).json({ error: 'Assignment not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -56,27 +56,27 @@ const createAssignment = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const classId = req.body.class_id;
     const effectiveCenterId = centerId ?? req.body.center_id;
     if (classId !== undefined && classId !== null && classId !== '') {
       if (req.user?.userType === 'teacher') {
         const ok = await classBelongsToTeacher(classId, req.user?.id);
-        if (!ok) return res.status(403).json({ error: 'Class does not belong to this teacher.' });
+        if (!ok) return res.status(403).json({ error: "Guruh bu o'qituvchiga tegishli emas." });
       } else if (effectiveCenterId) {
         const ok = await classInCenter(classId, effectiveCenterId);
-        if (!ok) return res.status(400).json({ error: 'Class does not belong to this center.' });
+        if (!ok) return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });
       }
     }
     const assignment = await assignmentService.createAssignment({ ...req.body, center_id: effectiveCenterId });
     res.status(201).json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -85,19 +85,19 @@ const updateAssignment = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const assignment = await assignmentService.updateAssignment(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
     if (!assignment) {
-      return res.status(404).json({ error: 'Assignment not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -106,19 +106,19 @@ const deleteAssignment = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const assignment = await assignmentService.deleteAssignment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!assignment) {
-      return res.status(404).json({ error: 'Assignment not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
-    res.json({ message: 'Assignment deleted successfully', assignment });
+    res.json({ message: "Vazifa muvaffaqiyatli o'chirildi", assignment });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

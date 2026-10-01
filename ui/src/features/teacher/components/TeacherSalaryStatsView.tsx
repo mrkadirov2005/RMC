@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { PieChart } from '@/shared/components/PieChart';
 import { formatMoney } from '@/utils/helpers';
 import type { SalaryTeacherDetail } from '../../crm/salary/types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherSalaryStatsViewProps {
   detail: SalaryTeacherDetail | null;
@@ -17,6 +18,7 @@ const PAID_COLOR = '#10b981';
 const UNPAID_COLOR = '#f43f5e';
 
 const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalaryStatsViewProps) => {
+  const { t } = useLanguage();
   const stats = useMemo(() => {
     const history = detail?.history || [];
     const paidEntries = history.filter((entry) => entry.salary?.is_paid);
@@ -37,8 +39,8 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
   if (!detail || stats.tracked === 0) {
     return (
       <div className="space-y-3 py-6 text-center text-sm text-muted-foreground">
-        <p>No salary records yet. Once your center marks a monthly salary as paid, statistics will show up here.</p>
-        <Button variant="outline" size="sm" onClick={onViewDetails}>View Details</Button>
+        <p>{t('No salary records yet. Once your center marks a monthly salary as paid, statistics will show up here.')}</p>
+        <Button variant="outline" size="sm" onClick={onViewDetails}>{t('View Details')}</Button>
       </div>
     );
   }
@@ -56,7 +58,7 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
         />
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-black">{stats.tracked}</span>
-          <span className="text-[10px] font-semibold uppercase text-muted-foreground">Months</span>
+          <span className="text-[10px] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
         </div>
       </div>
 
@@ -65,19 +67,19 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: PAID_COLOR }} />
-              Paid
+              {t('Paid')}
             </div>
             <p className="text-xl font-black text-emerald-600">{stats.paid}</p>
           </div>
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
               <span className="h-2 w-2 rounded-full" style={{ backgroundColor: UNPAID_COLOR }} />
-              Unpaid
+              {t('Unpaid')}
             </div>
             <p className="text-xl font-black text-rose-600">{stats.unpaid}</p>
           </div>
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-            <p className="text-[11px] font-semibold text-muted-foreground">Total Received</p>
+            <p className="text-[11px] font-semibold text-muted-foreground">{t('Total Received')}</p>
             <p className="text-xl font-black">{formatMoney(stats.totalReceived)}</p>
           </div>
         </div>
@@ -86,7 +88,7 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
           className="gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-md shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
           onClick={onViewDetails}
         >
-          View Details
+          {t('View Details')}
         </Button>
       </div>
     </div>

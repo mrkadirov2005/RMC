@@ -352,8 +352,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
         <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingLesson && setLessonPickerOpen(open)}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
-              <DialogTitle>Pick lesson actions</DialogTitle>
-              <DialogDescription>Select what you want to do in this lesson session.</DialogDescription>
+              <DialogTitle>{t('Pick lesson actions')}</DialogTitle>
+              <DialogDescription>{t('Select what you want to do in this lesson session.')}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-2">
               {lessonActionOptions.map((option) => {
@@ -384,11 +384,11 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button onClick={handleStartLesson} disabled={startingLesson} className="bg-rose-600 text-white hover:bg-rose-700">
                 {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-                Start
+                {t('Start')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -417,11 +417,11 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
             <TableHeader>
               <TableRow className="bg-muted/50">
                 <TableHead className="w-12 px-3 py-2 text-sm">№</TableHead>
-                <TableHead className="px-3 py-2 text-sm">Class name</TableHead>
-                <TableHead className="px-3 py-2 text-sm">Students</TableHead>
-                <TableHead className="px-3 py-2 text-sm">Schedule</TableHead>
-                <TableHead className="px-3 py-2 text-sm">Room</TableHead>
-                <TableHead className="px-3 py-2 text-sm">Status</TableHead>
+                <TableHead className="px-3 py-2 text-sm">{t('Class name')}</TableHead>
+                <TableHead className="px-3 py-2 text-sm">{t('Students')}</TableHead>
+                <TableHead className="px-3 py-2 text-sm">{t('Schedule')}</TableHead>
+                <TableHead className="px-3 py-2 text-sm">{t('Room')}</TableHead>
+                <TableHead className="px-3 py-2 text-sm">{t('Status')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm" />
               </TableRow>
             </TableHeader>

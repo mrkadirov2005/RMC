@@ -53,7 +53,7 @@ describe('refunds controller', () => {
       await refundController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createRefund alone makes a superuser name a center', async () => {
@@ -63,7 +63,7 @@ describe('refunds controller', () => {
       await refundController.createRefund({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       expect(refundService.create).not.toHaveBeenCalled();
     });
   });
@@ -86,7 +86,7 @@ describe('refunds controller', () => {
       await refundController.getAllRefunds({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch refunds', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishlarini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -108,7 +108,7 @@ describe('refunds controller', () => {
       await refundController.getRefundById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Refund not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -118,15 +118,15 @@ describe('refunds controller', () => {
       await refundController.getRefundById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch refund', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
   describe('createRefund', () => {
     it.each([
-      ['invalid_center', 400, { error: 'Payment does not belong to this center.' }],
-      ['payment_not_found', 404, { error: 'Payment not found' }],
-      ['refund_exceeds_payment', 400, { error: 'Refund amount exceeds the original payment amount.' }],
+      ['invalid_center', 400, { error: "To'lov bu markazga tegishli emas." }],
+      ['payment_not_found', 404, { error: "To'lov topilmadi" }],
+      ['refund_exceeds_payment', 400, { error: "Qaytariladigan summa asl to'lov summasidan oshib ketdi." }],
     ])('maps the %s result to a %d and writes no audit entry', async (error, status, payload) => {
       const res = createResponse();
       refundService.create.mockResolvedValue({ error });
@@ -159,7 +159,7 @@ describe('refunds controller', () => {
         ip_address: '10.0.0.9',
       });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Refund requested', refund: { refund_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lovni qaytarish so'rovi yuborildi", refund: { refund_id: 4 } });
     });
 
     it('attributes an unauthenticated request to the system actor', async () => {
@@ -178,7 +178,7 @@ describe('refunds controller', () => {
       await refundController.createRefund({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create refund', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -190,7 +190,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: { status: 'Approved' }, user: {} }, res);
 
       expect(refundService.update).toHaveBeenCalledWith(3, { status: 'Approved' }, 8);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Refund updated', refund: { refund_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov qaytarilishi yangilandi", refund: { refund_id: 3 } });
     });
 
     it('refuses an amount larger than the original payment', async () => {
@@ -200,7 +200,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: { amount: 999 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Refund amount exceeds the original payment amount.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qaytariladigan summa asl to'lov summasidan oshib ketdi." });
     });
 
     it('returns 404 when nothing was updated', async () => {
@@ -210,7 +210,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Refund not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -220,7 +220,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update refund', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -232,7 +232,7 @@ describe('refunds controller', () => {
       await refundController.deleteRefund({ params: { id: '3' }, user: {} }, res);
 
       expect(refundService.remove).toHaveBeenCalledWith(3, 8);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Refund deleted', refund: { refund_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov qaytarilishi o'chirildi", refund: { refund_id: 3 } });
     });
 
     it('returns 404 when the refund is out of scope', async () => {
@@ -251,7 +251,7 @@ describe('refunds controller', () => {
       await refundController.deleteRefund({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete refund', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

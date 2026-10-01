@@ -21,10 +21,12 @@ import { RoomStatisticsTab } from './components/RoomStatisticsTab';
 import { RoomManagementTab } from './components/RoomManagementTab';
 import { RoomHistoryTab } from './components/RoomHistoryTab';
 import { RoomAssignmentDialog, type RoomFormData } from './components/RoomAssignmentDialog';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const emptyForm = (): RoomFormData => ({ room_number: '', capacity: '', class_id: '', day: 'Monday', time: '09:00', end_time: '10:00' });
 
 const RoomsPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const rooms = useAppSelector((state) => state.rooms.items);
   const classes = useAppSelector((state) => state.classes.items);
@@ -102,7 +104,7 @@ const RoomsPage = () => {
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4" data-testid="rooms-workspace">
     <input ref={fileRef} type="file" accept=".csv,text/csv" className="hidden" onChange={(event) => importRooms(event.target.files?.[0])} />
     <RoomsWorkspaceHeader importing={importing} onImport={() => fileRef.current?.click()} onExport={() => exportCsvEntity('rooms', 'Rooms')} onCreate={() => openDialog()} />
-    {error && <Alert variant="destructive"><AlertDescription>{getErrorMessage(error)}</AlertDescription></Alert>}
+    {error && <Alert variant="destructive"><AlertDescription>{t(getErrorMessage(error))}</AlertDescription></Alert>}
     <Card className="overflow-hidden">
       <RoomsWorkspaceTabs active={tab} onChange={setTab} />
       {(storeLoading && !rooms.length) ? <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div> : <div role="tabpanel" id={`rooms-panel-${tab}`}>

@@ -11,7 +11,7 @@ const telegramUserIdFrom = (req: any) =>
 const sendError = (res: any, error: any) => {
   const status = Number(error?.status || 500);
   res.status(status).json({
-    error: status === 500 ? 'Failed to load Telegram student account' : error.message,
+    error: status === 500 ? "Telegram o'quvchi hisobini yuklab bo'lmadi" : error.message,
     details: status === 500 ? error.message || String(error) : undefined,
   });
 };

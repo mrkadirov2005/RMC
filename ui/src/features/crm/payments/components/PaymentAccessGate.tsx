@@ -15,9 +15,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the payment access gate module.
 export const PaymentAccessGate = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { loading, error, isAuthenticated } = useAppSelector((state) => state.paymentAccess);
   const { user } = useAppSelector((state) => state.auth);
@@ -55,35 +57,35 @@ export const PaymentAccessGate = () => {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-950 dark:text-foreground">Payment Access Required</h3>
-            <p className="text-sm text-muted-foreground">Enter your payment password provided by admin.</p>
+            <h3 className="text-lg font-semibold text-slate-950 dark:text-foreground">{t('Payment Access Required')}</h3>
+            <p className="text-sm text-muted-foreground">{t('Enter your payment password provided by admin.')}</p>
           </div>
         </div>
 
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+            <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
           </Alert>
         )}
 
         <form onSubmit={handleLogin} className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-foreground">Username</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-foreground">{t('Username')}</label>
             <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
+              placeholder={t('Username')}
               autoComplete="username"
               disabled={loading}
               className="mt-1"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-foreground">Payment Password</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-foreground">{t('Payment Password')}</label>
             <Input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Payment password"
+              placeholder={t('Payment password')}
               type="password"
               autoComplete="current-password"
               disabled={loading}
@@ -94,12 +96,12 @@ export const PaymentAccessGate = () => {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Verifying...
+                {t('Verifying...')}
               </>
             ) : (
               <>
                 <KeyRound className="w-4 h-4 mr-2" />
-                Unlock Payments
+                {t('Unlock Payments')}
               </>
             )}
           </Button>

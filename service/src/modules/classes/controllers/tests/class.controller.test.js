@@ -63,7 +63,7 @@ describe('classes controller', () => {
     await classController.getAllClasses(req, res);
 
     expect(res.status).toHaveBeenCalledWith(403);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
   });
 
   it('returns bad teacher error on invalid teacher during create', async () => {
@@ -74,7 +74,7 @@ describe('classes controller', () => {
     await classController.createClass(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found. Please provide a valid teacher_id' });
+    expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi topilmadi. Iltimos, to'g'ri teacher_id kiriting" });
   });
 
   it('returns session generation validation errors', async () => {

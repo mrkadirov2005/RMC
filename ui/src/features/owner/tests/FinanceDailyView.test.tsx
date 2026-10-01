@@ -70,7 +70,7 @@ describe('FinanceDailyView', () => {
   it('renders the empty state and no table when there are no rows', () => {
     renderView({ rows: [], monthTotal: 0, totalPaymentCount: 0, daysWithIncome: 0 });
 
-    expect(screen.getByText(/tolov topilmadi/i)).toBeInTheDocument();
+    expect(screen.getByText(/to'lov topilmadi/i)).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(screen.getByText('0 kun tushum bilan')).toBeInTheDocument();
     expect(screen.getByText("0 ta to'lov")).toBeInTheDocument();

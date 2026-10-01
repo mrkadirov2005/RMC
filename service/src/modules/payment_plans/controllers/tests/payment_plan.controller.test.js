@@ -53,7 +53,7 @@ describe('payment plans controller', () => {
       await planController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createPlan alone makes a superuser name a center', async () => {
@@ -63,7 +63,7 @@ describe('payment plans controller', () => {
       await planController.createPlan({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       expect(planService.create).not.toHaveBeenCalled();
     });
   });
@@ -86,7 +86,7 @@ describe('payment plans controller', () => {
       await planController.getAllPlans({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch payment plans', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejalarini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -108,7 +108,7 @@ describe('payment plans controller', () => {
       await planController.getPlanById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Payment plan not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -118,14 +118,14 @@ describe('payment plans controller', () => {
       await planController.getPlanById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch payment plan', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
   describe('createPlan', () => {
     it.each([
-      ['invalid_center', { error: 'Student does not belong to this center.' }],
-      ['installment_sum_mismatch', { error: 'Installment amounts must sum to total_amount.' }],
+      ['invalid_center', { error: "O'quvchi bu markazga tegishli emas." }],
+      ['installment_sum_mismatch', { error: "Bo'lib to'lash summalari total_amount ga teng bo'lishi kerak." }],
     ])('maps the %s result to a 400 and writes no audit entry', async (error, payload) => {
       const res = createResponse();
       planService.create.mockResolvedValue({ error });
@@ -158,7 +158,7 @@ describe('payment plans controller', () => {
         ip_address: '10.0.0.2',
       });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Payment plan created', plan: { plan_id: 7, total_amount: 900000 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov rejasi yaratildi", plan: { plan_id: 7, total_amount: 900000 } });
     });
 
     it('counts zero installments when the body omits them', async () => {
@@ -179,7 +179,7 @@ describe('payment plans controller', () => {
       await planController.createPlan({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create payment plan', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasini yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -191,7 +191,7 @@ describe('payment plans controller', () => {
       await planController.updatePlan({ params: { id: '3' }, body: { total_amount: 500 }, user: {} }, res);
 
       expect(planService.update).toHaveBeenCalledWith(3, { total_amount: 500 }, 5);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Payment plan updated', plan: { plan_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov rejasi yangilandi", plan: { plan_id: 3 } });
     });
 
     it('refuses installments that do not sum to the total', async () => {
@@ -201,7 +201,7 @@ describe('payment plans controller', () => {
       await planController.updatePlan({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Installment amounts must sum to total_amount.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bo'lib to'lash summalari total_amount ga teng bo'lishi kerak." });
     });
 
     it('returns 404 when nothing was updated', async () => {
@@ -211,7 +211,7 @@ describe('payment plans controller', () => {
       await planController.updatePlan({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Payment plan not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -221,7 +221,7 @@ describe('payment plans controller', () => {
       await planController.updatePlan({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update payment plan', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -233,7 +233,7 @@ describe('payment plans controller', () => {
       await planController.deletePlan({ params: { id: '3' }, user: {} }, res);
 
       expect(planService.remove).toHaveBeenCalledWith(3, 5);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Payment plan deleted', plan: { plan_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov rejasi o'chirildi", plan: { plan_id: 3 } });
     });
 
     it('returns 404 when the plan is out of scope', async () => {
@@ -252,7 +252,7 @@ describe('payment plans controller', () => {
       await planController.deletePlan({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete payment plan', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasini o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

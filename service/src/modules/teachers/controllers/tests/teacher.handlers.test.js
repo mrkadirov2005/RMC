@@ -67,7 +67,7 @@ describe('teachers controller handlers', () => {
       await controller[handler]({ ...req, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each([
@@ -80,7 +80,7 @@ describe('teachers controller handlers', () => {
       await controller[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -91,7 +91,7 @@ describe('teachers controller handlers', () => {
       await controller.getMyProfile({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Unable to resolve teacher id.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
     });
 
     it('returns 404 when the teacher record is gone', async () => {
@@ -101,7 +101,7 @@ describe('teachers controller handlers', () => {
       await controller.getMyProfile({ user: { id: 7, userType: 'teacher' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi topilmadi." });
     });
 
     it('returns a trimmed profile that carries no credentials', async () => {
@@ -134,7 +134,7 @@ describe('teachers controller handlers', () => {
       await controller.getMyProfile({ user: { id: 7 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch profile', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Profilni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -204,7 +204,7 @@ describe('teachers controller handlers', () => {
       await controller.getAllTeachers({ query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teachers', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchilarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -235,7 +235,7 @@ describe('teachers controller handlers', () => {
       await controller.getTeacherById({ params: { id: '7' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -247,7 +247,7 @@ describe('teachers controller handlers', () => {
       await controller.createTeacher({ body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Validation failed', details: ['email is invalid'] });
+      expect(res.json).toHaveBeenCalledWith({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: ['email is invalid'] });
     });
 
     it('refuses a username that is already taken', async () => {
@@ -257,7 +257,7 @@ describe('teachers controller handlers', () => {
       await controller.createTeacher({ body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Username already exists' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     });
 
     it('stamps the scoped center onto the new teacher', async () => {
@@ -278,7 +278,7 @@ describe('teachers controller handlers', () => {
       await controller.createTeacher({ body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create teacher', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchini yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -309,7 +309,7 @@ describe('teachers controller handlers', () => {
       await controller.updateTeacher({ params: { id: '7' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update teacher', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -335,7 +335,7 @@ describe('teachers controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: 'Teacher has attendance or grade records',
+        error: "O'qituvchida davomat yoki baho yozuvlari mavjud",
         reason: 'attendance',
       }));
     });
@@ -350,7 +350,7 @@ describe('teachers controller handlers', () => {
       await controller.deleteTeacher({ params: { id: '7' }, query: {}, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Teacher is assigned to active records' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: "O'qituvchi faol yozuvlarga biriktirilgan" }));
     });
 
     it('reads the force flag from the query string', async () => {
@@ -360,7 +360,7 @@ describe('teachers controller handlers', () => {
       await controller.deleteTeacher({ params: { id: '7' }, query: { force: 'TRUE' }, body: {}, user: admin }, res);
 
       expect(teacherService.deleteTeacher).toHaveBeenCalledWith(7, 3, { force: true });
-      expect(res.json).toHaveBeenCalledWith({ message: 'Teacher deleted successfully', teacher: { teacher_id: 7 }, unassigned: {} });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'qituvchi muvaffaqiyatli o'chirildi", teacher: { teacher_id: 7 }, unassigned: {} });
     });
 
     it('reads the force flag from the body when the query has none', async () => {
@@ -383,7 +383,7 @@ describe('teachers controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: 'Teacher is still referenced by other records',
+        error: "O'qituvchi boshqa yozuvlarda hali ishlatilmoqda",
       }));
     });
 
@@ -394,7 +394,7 @@ describe('teachers controller handlers', () => {
       await controller.deleteTeacher({ params: { id: '7' }, query: {}, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete teacher', details: 'boom' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchini o'chirib bo'lmadi", details: 'boom' });
     });
   });
 
@@ -414,7 +414,7 @@ describe('teachers controller handlers', () => {
 
       await controller.purgeTeacher({ params: { id: '7' }, user: admin }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Teacher permanently deleted', teacher: { teacher_id: 7 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'qituvchi butunlay o'chirildi", teacher: { teacher_id: 7 } });
     });
 
     it('explains a foreign key violation rather than returning a bare 500', async () => {
@@ -435,7 +435,7 @@ describe('teachers controller handlers', () => {
       await controller.purgeTeacher({ params: { id: '7' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to permanently delete teacher', details: 'boom' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchini butunlay o'chirib bo'lmadi", details: 'boom' });
     });
   });
 
@@ -447,7 +447,7 @@ describe('teachers controller handlers', () => {
       await controller.teacherLogin({ body: { username: 'ada', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher account is not active' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi hisobi faol emas" });
     });
 
     it('gives the same message for an unknown user and a bad password', async () => {
@@ -457,7 +457,7 @@ describe('teachers controller handlers', () => {
       await controller.teacherLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues a teacher token and returns no credentials', async () => {
@@ -489,7 +489,7 @@ describe('teachers controller handlers', () => {
       await controller.teacherLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -522,7 +522,7 @@ describe('teachers controller handlers', () => {
       await controller.setTeacherPaymentPassword({ params: { id: '7' }, body: { password: 'pw' }, user: admin }, res);
 
       expect(teacherPaymentService.setPaymentPassword).toHaveBeenCalledWith(7, 'pw', 1);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Payment access password set successfully.' });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lovlarga kirish paroli muvaffaqiyatli o'rnatildi." });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -532,7 +532,7 @@ describe('teachers controller handlers', () => {
       await controller.setTeacherPaymentPassword({ params: { id: '7' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to set payment password', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov parolini o'rnatib bo'lmadi", details: 'offline' });
     });
   });
 
@@ -544,7 +544,7 @@ describe('teachers controller handlers', () => {
       await controller.teacherPaymentLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher account is not active' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi hisobi faol emas" });
     });
 
     it('gives the same message for an unknown user and a bad password', async () => {
@@ -567,7 +567,7 @@ describe('teachers controller handlers', () => {
       await controller.teacherPaymentLogin({ body: { username: 'ada', password: 'pw' } }, res);
 
       expect(generatePaymentToken).toHaveBeenCalledWith(expect.objectContaining({ payment_access: true }));
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: 'Payment access granted', token: 'payment-token' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ message: "To'lovlarga kirishga ruxsat berildi", token: 'payment-token' }));
     });
 
     it('reports a service failure as a 500', async () => {
@@ -577,7 +577,7 @@ describe('teachers controller handlers', () => {
       await controller.teacherPaymentLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login for payment access', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lovlar bo'limiga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -589,7 +589,7 @@ describe('teachers controller handlers', () => {
       await controller.setTeacherPassword({ params: { id: '7' }, body: { username: 'ada', password: 'pw' }, user: admin }, res);
 
       expect(teacherService.setPasswordByAdmin).toHaveBeenCalledWith(7, 'ada', 'pw', 3);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Teacher password set successfully', teacher: { teacher_id: 7, username: 'ada' } });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'qituvchi paroli muvaffaqiyatli o'rnatildi", teacher: { teacher_id: 7, username: 'ada' } });
     });
 
     it('returns 404 when the teacher is out of scope', async () => {
@@ -608,7 +608,7 @@ describe('teachers controller handlers', () => {
       await controller.setTeacherPassword({ params: { id: '7' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to set password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'rnatib bo'lmadi", details: 'hash failed' });
     });
   });
 
@@ -619,7 +619,7 @@ describe('teachers controller handlers', () => {
       await controller.changeTeacherPassword({ params: { id: '9' }, body: {}, user: { userType: 'teacher', id: 7 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'You can only change your own password.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Siz faqat o'z parolingizni o'zgartira olasiz." });
       expect(teacherService.changePassword).not.toHaveBeenCalled();
     });
 
@@ -634,7 +634,7 @@ describe('teachers controller handlers', () => {
       }, res);
 
       expect(teacherService.changePassword).toHaveBeenCalledWith(7, 'old', 'new');
-      expect(res.json).toHaveBeenCalledWith({ message: 'Password changed successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Parol muvaffaqiyatli o'zgartirildi" });
     });
 
     it('returns 404 when the account does not exist', async () => {
@@ -644,7 +644,7 @@ describe('teachers controller handlers', () => {
       await controller.changeTeacherPassword({ params: { id: '7' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi topilmadi" });
     });
 
     it('refuses a wrong current password', async () => {
@@ -654,7 +654,7 @@ describe('teachers controller handlers', () => {
       await controller.changeTeacherPassword({ params: { id: '7' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Current password is incorrect' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Joriy parol noto'g'ri" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -664,7 +664,7 @@ describe('teachers controller handlers', () => {
       await controller.changeTeacherPassword({ params: { id: '7' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to change password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
     });
   });
 });

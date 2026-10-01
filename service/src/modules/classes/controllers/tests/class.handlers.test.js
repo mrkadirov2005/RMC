@@ -72,7 +72,7 @@ describe('classes controller handlers', () => {
       await controller[handler]({ ...req, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each([
@@ -87,7 +87,7 @@ describe('classes controller handlers', () => {
       await controller[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -105,7 +105,7 @@ describe('classes controller handlers', () => {
       await controller[handler]({ ...req, user: student }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
   });
 
@@ -128,7 +128,7 @@ describe('classes controller handlers', () => {
       await controller.getAllClasses({ query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch classes', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruhlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -139,7 +139,7 @@ describe('classes controller handlers', () => {
       await controller.getClassById({ params: { id: '8' }, user: student }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('lets a student read their own class', async () => {
@@ -158,7 +158,7 @@ describe('classes controller handlers', () => {
       await controller.getClassById({ params: { id: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -168,14 +168,14 @@ describe('classes controller handlers', () => {
       await controller.getClassById({ params: { id: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch class', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruhni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
   describe('createClass', () => {
     it.each([
-      ['bad_teacher', 'Teacher not found. Please provide a valid teacher_id'],
-      ['bad_subject', 'Select an available subject created for this center.'],
+      ['bad_teacher', "O'qituvchi topilmadi. Iltimos, to'g'ri teacher_id kiriting"],
+      ['bad_subject', 'Bu markaz uchun yaratilgan mavjud fanni tanlang.'],
     ])('maps the %s result to a 400', async (error, message) => {
       const res = createResponse();
       classService.createClass.mockResolvedValue({ error });
@@ -204,7 +204,7 @@ describe('classes controller handlers', () => {
       await controller.createClass({ body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create class', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruhni yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -216,7 +216,7 @@ describe('classes controller handlers', () => {
       await controller.updateClass({ params: { id: '3' }, body: { subject_id: 9 }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Select an available subject created for this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
     });
 
     it('returns the updated class', async () => {
@@ -245,7 +245,7 @@ describe('classes controller handlers', () => {
       await controller.updateClass({ params: { id: '3' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update class', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruhni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -271,7 +271,7 @@ describe('classes controller handlers', () => {
 
       await controller.deleteClass({ params: { id: '3' }, query: {}, user: admin }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class has attendance records', attendance_count: 0, attendance: [] });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruhda davomat yozuvlari mavjud', attendance_count: 0, attendance: [] });
     });
 
     it('passes the force flag through when the query asks for it', async () => {
@@ -282,7 +282,7 @@ describe('classes controller handlers', () => {
 
       expect(classService.deleteClass).toHaveBeenCalledWith(3, 4, { force: true });
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Class deleted successfully',
+        message: "Guruh muvaffaqiyatli o'chirildi",
         class: { class_id: 3 },
         deleted_session_count: 6,
       });
@@ -305,7 +305,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClass({ params: { id: '3' }, query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -315,7 +315,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClass({ params: { id: '3' }, query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete class', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruhni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 
@@ -326,7 +326,7 @@ describe('classes controller handlers', () => {
 
       await controller.purgeClass({ params: { id: '3' }, user: admin }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Class permanently deleted', class: { class_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Guruh butunlay o'chirildi", class: { class_id: 3 } });
     });
 
     it('returns 404 when no soft-deleted class matches', async () => {
@@ -336,7 +336,7 @@ describe('classes controller handlers', () => {
       await controller.purgeClass({ params: { id: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Soft-deleted class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'chirilgan guruh topilmadi" });
     });
 
     it('explains a foreign key violation rather than returning a bare 500', async () => {
@@ -350,7 +350,7 @@ describe('classes controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: 'Class is still referenced by other records',
+        error: 'Guruh boshqa yozuvlarda hali ishlatilmoqda',
         details: 'still referenced from table "sessions"',
       }));
     });
@@ -362,7 +362,7 @@ describe('classes controller handlers', () => {
       await controller.purgeClass({ params: { id: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to permanently delete class', details: 'boom' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruhni butunlay o'chirib bo'lmadi", details: 'boom' });
     });
   });
 
@@ -392,7 +392,7 @@ describe('classes controller handlers', () => {
       await controller.getClassSessions({ params: { id: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch sessions', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -430,7 +430,7 @@ describe('classes controller handlers', () => {
       await controller.getBulkClassSessions({ query: { class_ids: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch sessions', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -449,7 +449,7 @@ describe('classes controller handlers', () => {
         year: 2026,
         durationMinutes: 90,
       });
-      expect(res.json).toHaveBeenCalledWith({ message: 'Sessions generated', created: 8 });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Sessiyalar yaratildi', created: 8 });
     });
 
     it('honours an explicit duration', async () => {
@@ -466,8 +466,8 @@ describe('classes controller handlers', () => {
     });
 
     it.each([
-      ['not_found', 404, { error: 'Class not found' }],
-      ['missing_schedule', 400, { error: 'Class schedule is missing or invalid.' }],
+      ['not_found', 404, { error: 'Guruh topilmadi' }],
+      ['missing_schedule', 400, { error: "Guruh jadvali topilmadi yoki noto'g'ri." }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       sessionService.generateMonthlySessions.mockResolvedValue({ error });
@@ -485,7 +485,7 @@ describe('classes controller handlers', () => {
       await controller.generateClassSessions({ params: { id: '3' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to generate sessions', details: 'generate failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyalarni yaratib bo'lmadi", details: 'generate failed' });
     });
   });
 
@@ -508,7 +508,7 @@ describe('classes controller handlers', () => {
         centerId: 4,
         teacherId: 7,
       });
-      expect(res.json).toHaveBeenCalledWith({ message: 'Sessions deleted', deleted: 4 });
+      expect(res.json).toHaveBeenCalledWith({ message: "Sessiyalar o'chirildi", deleted: 4 });
     });
 
     it('falls back to the body when the query has no window', async () => {
@@ -535,7 +535,7 @@ describe('classes controller handlers', () => {
       await controller.deleteUpcomingClassSessions({ params: { id: '3' }, query: {}, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete sessions', details: 'delete failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyalarni o'chirib bo'lmadi", details: 'delete failed' });
     });
   });
 
@@ -546,7 +546,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClassSessionById({ params: { id: '3', sessionId: 'abc' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'sessionId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "sessionId ko'rsatilishi shart." });
     });
 
     it('deletes the single session', async () => {
@@ -556,7 +556,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClassSessionById({ params: { id: '3', sessionId: '5' }, user: teacher }, res);
 
       expect(sessionService.deleteSessionById).toHaveBeenCalledWith({ classId: 3, sessionId: 5, centerId: 4, teacherId: 7 });
-      expect(res.json).toHaveBeenCalledWith({ message: 'Session deleted', deleted: true });
+      expect(res.json).toHaveBeenCalledWith({ message: "Sessiya o'chirildi", deleted: true });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -566,7 +566,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClassSessionById({ params: { id: '3', sessionId: '5' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete session', details: 'delete failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyani o'chirib bo'lmadi", details: 'delete failed' });
     });
   });
 
@@ -577,7 +577,7 @@ describe('classes controller handlers', () => {
       await controller.purgeClassSessionById({ params: { id: '3', sessionId: 'abc' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'sessionId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "sessionId ko'rsatilishi shart." });
     });
 
     it('returns 404 when no soft-deleted session matches', async () => {
@@ -587,7 +587,7 @@ describe('classes controller handlers', () => {
       await controller.purgeClassSessionById({ params: { id: '3', sessionId: '5' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Soft-deleted session not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'chirilgan sessiya topilmadi" });
     });
 
     it('permanently removes the session', async () => {
@@ -596,7 +596,7 @@ describe('classes controller handlers', () => {
 
       await controller.purgeClassSessionById({ params: { id: '3', sessionId: '5' }, user: admin }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Session permanently deleted', deleted: true });
+      expect(res.json).toHaveBeenCalledWith({ message: "Sessiya butunlay o'chirildi", deleted: true });
     });
 
     it('explains a foreign key violation rather than returning a bare 500', async () => {
@@ -610,7 +610,7 @@ describe('classes controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: 'Session is still referenced by other records',
+        error: 'Sessiya boshqa yozuvlarda hali ishlatilmoqda',
       }));
     });
 
@@ -621,7 +621,7 @@ describe('classes controller handlers', () => {
       await controller.purgeClassSessionById({ params: { id: '3', sessionId: '5' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to permanently delete session', details: 'boom' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyani butunlay o'chirib bo'lmadi", details: 'boom' });
     });
   });
 
@@ -667,7 +667,7 @@ describe('classes controller handlers', () => {
       await controller.createClassSession({ params: { id: '3' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -677,7 +677,7 @@ describe('classes controller handlers', () => {
       await controller.createClassSession({ params: { id: '3' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create session', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sessiyani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 });

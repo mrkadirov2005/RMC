@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PieChart, type PieSlice } from '@/shared/components/PieChart';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Slide = { title: string; value: string; detail: string; data: PieSlice[] };
 
@@ -45,6 +46,7 @@ const Chart = ({ slide, compact = false }: { slide: Slide; compact?: boolean }) 
 );
 
 export const OwnerStatisticsCarousel = ({ centerLabel, students, teachers, admins, currentMonthPayments, previousMonthPayments, paidStudentsToday, paidStudentsYesterday, attendancePresent, attendanceAbsent }: Props) => {
+  const { t } = useLanguage();
   const sliderRef = useRef<HTMLDivElement>(null);
   const slides = useMemo<Slide[]>(() => {
     const paymentChange = currentMonthPayments - previousMonthPayments;
@@ -93,10 +95,10 @@ export const OwnerStatisticsCarousel = ({ centerLabel, students, teachers, admin
   return (
     <div className="space-y-2">
       <div className="flex justify-end gap-1">
-        <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Scroll statistics left" onClick={() => move(-1)}>
+        <Button variant="outline" size="icon" className="h-8 w-8" aria-label={t('Scroll statistics left')} onClick={() => move(-1)}>
           <ChevronLeft className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="icon" className="h-8 w-8" aria-label="Scroll statistics right" onClick={() => move(1)}>
+        <Button variant="outline" size="icon" className="h-8 w-8" aria-label={t('Scroll statistics right')} onClick={() => move(1)}>
           <ChevronRight className="h-4 w-4" />
         </Button>
       </div>

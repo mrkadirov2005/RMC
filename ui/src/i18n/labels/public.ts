@@ -1,0 +1,16 @@
+export const publicLabels: Record<string, string> = {
+  'Already completed today': 'Bugun allaqachon bajarilgan',
+  'Ask your teacher for a new one.': "O'qituvchingizdan yangisini so'rang.",
+  'Ask your teacher for the current link.': "O'qituvchingizdan joriy havolani so'rang.",
+  'Continue anyway': 'Baribir davom etish',
+  'Enter your username to begin': 'Boshlash uchun foydalanuvchi nomingizni kiriting',
+  'Handed in': 'Topshirildi',
+  'Never mind': 'Bekor qilish',
+  'Start again': 'Qayta boshlash',
+  'Start test': 'Testni boshlash',
+  'This link is no longer active': 'Bu havola endi faol emas',
+  "This link isn't valid": 'Bu havola yaroqsiz',
+  'You have already attempted this test': "Siz bu testni allaqachon urinib ko'rgansiz",
+  'Your answers are with your teacher. You can close this page.': "Javoblaringiz o'qituvchingizda. Bu sahifani yopishingiz mumkin.",
+  'already completed this today': 'bugun allaqachon bajarilgan',
+};

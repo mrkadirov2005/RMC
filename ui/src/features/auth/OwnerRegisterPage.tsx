@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { loginSuccess, setLoading, loginFailure } from '../../slices/authSlice';
 import { authAPI } from './api';
 import { handleApiError, showToast } from '../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Required: registration is enabled only when this is set, matching the backend's
 // OWNER_INVITE_KEY (no shared hardcoded default anymore).
@@ -33,6 +34,7 @@ const inputClass =
 
 // Renders the owner register page screen.
 export const OwnerRegisterPage = () => {
+  const { t } = useLanguage();
   const [step, setStep] = useState<'keyword' | 'form'>('keyword');
   const [keyword, setKeyword] = useState('');
   const [username, setUsername] = useState('');
@@ -120,21 +122,21 @@ export const OwnerRegisterPage = () => {
           <div className="rounded-lg bg-white p-2.5">
             <img src={logoSrc} alt="Temurbek School" className="h-12 w-auto object-contain lg:h-16" />
           </div>
-          <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">Owner setup</Badge>
+          <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">{t('Owner setup')}</Badge>
         </div>
 
         <div className="mt-8 max-w-xl lg:mt-28">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-normal sm:text-4xl lg:mt-4 lg:text-5xl">
-            Create protected owner access for the learning center.
+            {t('Create protected owner access for the learning center.')}
           </h1>
           <p className="mt-3 text-sm leading-6 text-white/75 sm:mt-5 sm:text-base sm:leading-7">
-            Owner creation is locked behind a shared keyword so daily staff accounts stay separate from system ownership.
+            {t('Owner creation is locked behind a shared keyword so daily staff accounts stay separate from system ownership.')}
           </p>
         </div>
 
         <div className="mt-8 hidden rounded-lg border border-white/15 bg-white/10 p-4 text-sm text-white/80 lg:block">
-          Use owner access only for branch oversight, global settings, and manager-level account control.
+          {t('Use owner access only for branch oversight, global settings, and manager-level account control.')}
         </div>
       </section>
 
@@ -147,7 +149,7 @@ export const OwnerRegisterPage = () => {
             className="mb-7 px-0 text-[#21116a] hover:bg-transparent hover:text-[#16a7e2]"
           >
             <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Back to owner login
+            {t('Back to owner login')}
           </Button>
 
           <div className="mb-6 h-1 w-14 rounded-full bg-[#16a7e2]" aria-hidden="true" />
@@ -157,22 +159,22 @@ export const OwnerRegisterPage = () => {
             </div>
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#16a7e2]">
-                {step === 'keyword' ? 'Keyword required' : 'Owner profile'}
+                {step === 'keyword' ? t('Keyword required') : t('Owner profile')}
               </p>
               <h2 className="mt-1 text-2xl font-semibold tracking-normal text-[#21116a]">
-                {step === 'keyword' ? 'Unlock owner registration' : 'Create owner account'}
+                {step === 'keyword' ? t('Unlock owner registration') : t('Create owner account')}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
                 {step === 'keyword'
-                  ? 'Enter the shared keyword before creating a system owner.'
-                  : 'Add the owner details that will be used for manager access.'}
+                  ? t('Enter the shared keyword before creating a system owner.')
+                  : t('Add the owner details that will be used for manager access.')}
               </p>
             </div>
           </div>
 
           {localError && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{localError}</AlertDescription>
+              <AlertDescription>{t(localError)}</AlertDescription>
             </Alert>
           )}
 
@@ -180,13 +182,13 @@ export const OwnerRegisterPage = () => {
             <div className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="owner-keyword" className="text-sm font-semibold text-[#21116a]">
-                  Owner keyword
+                  {t('Owner keyword')}
                 </label>
                 <div className="relative">
                   <KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                   <Input
                     id="owner-keyword"
-                    placeholder="Enter keyword"
+                    placeholder={t('Enter keyword')}
                     value={keyword}
                     onChange={(e) => setKeyword(e.target.value)}
                     aria-invalid={Boolean(localError)}
@@ -199,7 +201,7 @@ export const OwnerRegisterPage = () => {
                 onClick={unlock}
                 className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d] focus-visible:ring-[#16a7e2]/40"
               >
-                Continue
+                {t('Continue')}
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
@@ -208,13 +210,13 @@ export const OwnerRegisterPage = () => {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
                   <label htmlFor="owner-first-name" className="text-sm font-semibold text-[#21116a]">
-                    First name
+                    {t('First name')}
                   </label>
                   <div className="relative">
                     <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                     <Input
                       id="owner-first-name"
-                      placeholder="First name"
+                      placeholder={t('First name')}
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       required
@@ -224,13 +226,13 @@ export const OwnerRegisterPage = () => {
                 </div>
                 <div className="space-y-2">
                   <label htmlFor="owner-last-name" className="text-sm font-semibold text-[#21116a]">
-                    Last name
+                    {t('Last name')}
                   </label>
                   <div className="relative">
                     <Users className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                     <Input
                       id="owner-last-name"
-                      placeholder="Last name"
+                      placeholder={t('Last name')}
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
                       required
@@ -242,13 +244,13 @@ export const OwnerRegisterPage = () => {
 
               <div className="space-y-2">
                 <label htmlFor="owner-register-username" className="text-sm font-semibold text-[#21116a]">
-                  Username
+                  {t('Username')}
                 </label>
                 <div className="relative">
                   <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                   <Input
                     id="owner-register-username"
-                    placeholder="Username"
+                    placeholder={t('Username')}
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
@@ -259,13 +261,13 @@ export const OwnerRegisterPage = () => {
 
               <div className="space-y-2">
                 <label htmlFor="owner-email" className="text-sm font-semibold text-[#21116a]">
-                  Email
+                  {t('Email')}
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                   <Input
                     id="owner-email"
-                    placeholder="Email"
+                    placeholder={t('Email')}
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -277,13 +279,13 @@ export const OwnerRegisterPage = () => {
 
               <div className="space-y-2">
                 <label htmlFor="owner-register-password" className="text-sm font-semibold text-[#21116a]">
-                  Password
+                  {t('Password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                   <Input
                     id="owner-register-password"
-                    placeholder="Password"
+                    placeholder={t('Password')}
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -294,7 +296,7 @@ export const OwnerRegisterPage = () => {
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 rounded p-1 text-slate-500 transition-colors hover:text-[#21116a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? t('Hide password') : t('Show password')}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -303,13 +305,13 @@ export const OwnerRegisterPage = () => {
 
               <div className="space-y-2">
                 <label htmlFor="owner-confirm-password" className="text-sm font-semibold text-[#21116a]">
-                  Confirm password
+                  {t('Confirm password')}
                 </label>
                 <div className="relative">
                   <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />
                   <Input
                     id="owner-confirm-password"
-                    placeholder="Confirm password"
+                    placeholder={t('Confirm password')}
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -320,7 +322,7 @@ export const OwnerRegisterPage = () => {
                     type="button"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 rounded p-1 text-slate-500 transition-colors hover:text-[#21116a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
-                    aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
+                    aria-label={showConfirmPassword ? t('Hide password confirmation') : t('Show password confirmation')}
                   >
                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -334,11 +336,11 @@ export const OwnerRegisterPage = () => {
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating
+                    {t('Creating')}
                   </>
                 ) : (
                   <>
-                    Create Owner Account
+                    {t('Create Owner Account')}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </>
                 )}

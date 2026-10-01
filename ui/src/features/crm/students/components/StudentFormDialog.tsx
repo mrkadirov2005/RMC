@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { StudentFormFields } from './StudentFormFields';
 import type { Class, Student } from '../types';
 import { studentAPI } from '../api';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Option = { id?: number; label: string; value: string | number };
 
@@ -39,6 +40,7 @@ export const StudentFormDialog = ({
   statusOptions,
   classes,
 }: StudentFormDialogProps) => {
+  const { t } = useLanguage();
   const [acquisitionSourceOptions, setAcquisitionSourceOptions] = useState<Option[]>([]);
   useEffect(() => {
     if (!open) return;
@@ -61,10 +63,10 @@ export const StudentFormDialog = ({
             </div>
             <div className="min-w-0 flex-1">
               <DialogTitle className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-50">
-                Add Student
+                {t('Add Student')}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                Create a student from a single structured popup instead of leaving the students workspace.
+                {t('Create a student from a single structured popup instead of leaving the students workspace.')}
               </DialogDescription>
             </div>
           </div>
@@ -74,7 +76,7 @@ export const StudentFormDialog = ({
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                Class
+                {t('Class')}
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <GraduationCap className="h-4 w-4 text-sky-600 dark:text-sky-400" />
@@ -85,18 +87,18 @@ export const StudentFormDialog = ({
             </div>
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                Discount
+                {t('Discount')}
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <BadgePercent className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                 <p className="text-sm font-semibold text-slate-900 dark:text-slate-50">
-                  {formData.is_discounted ? 'Enabled' : 'Not enabled'}
+                  {formData.is_discounted ? t('Enabled') : t('Not enabled')}
                 </p>
               </div>
             </div>
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
               <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
-                Status
+                {t('Status')}
               </p>
               <div className="mt-2 flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -122,11 +124,11 @@ export const StudentFormDialog = ({
 
           <DialogFooter className="sticky bottom-0 border-t border-slate-200/80 bg-white/95 px-0 pt-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/90">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="submit" disabled={saving} className="gap-2 bg-rose-600 hover:bg-rose-700">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              {saving ? 'Saving...' : 'Save student'}
+              {saving ? t('Saving...') : t('Save student')}
             </Button>
           </DialogFooter>
         </form>

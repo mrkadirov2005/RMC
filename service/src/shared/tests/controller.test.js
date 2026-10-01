@@ -24,7 +24,7 @@ describe('shared controller helpers', () => {
 
     const scope = getCenterScope({ user: { userType: 'superuser' } });
 
-    expect(scope).toEqual({ ok: false, status: 403, body: { error: 'Center scope required.' } });
+    expect(scope).toEqual({ ok: false, status: 403, body: { error: 'Markaz tanlanishi shart.' } });
   });
 
   it('rejects global owner actions that require a concrete center', () => {
@@ -32,17 +32,17 @@ describe('shared controller helpers', () => {
 
     const scope = getCenterScope({ user: { userType: 'superuser', role: 'owner' } }, { requireConcreteCenter: true });
 
-    expect(scope).toEqual({ ok: false, status: 400, body: { error: 'center_id is required for superuser actions.' } });
+    expect(scope).toEqual({ ok: false, status: 400, body: { error: "Bu amal uchun center_id ko'rsatilishi shart." } });
   });
 
   it('sends scope errors and returns true when a response was written', () => {
     const json = jest.fn();
     const status = jest.fn(() => ({ json }));
 
-    const sent = sendScopeError({ status }, { ok: false, status: 403, body: { error: 'Center scope required.' } });
+    const sent = sendScopeError({ status }, { ok: false, status: 403, body: { error: 'Markaz tanlanishi shart.' } });
 
     expect(sent).toBe(true);
     expect(status).toHaveBeenCalledWith(403);
-    expect(json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+    expect(json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
   });
 });

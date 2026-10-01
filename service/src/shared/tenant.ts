@@ -51,7 +51,7 @@ const getScopedCenterId = (req: any) => {
 
 const requireCenterId = (res: any, centerId: number | null) => {
   if (!centerId) {
-    res.status(403).json({ error: 'Center scope required.' });
+    res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     return false;
   }
   return true;

@@ -5,11 +5,11 @@ const { logAudit } = require('../../../utils/audit');
 const resolveCenter = (req: any, res: any): number | null => {
   const { centerId, isGlobal } = getScopedCenterId(req);
   if (!centerId && !isGlobal) {
-    res.status(403).json({ error: 'Center scope required.' });
+    res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     return null;
   }
   if (!centerId && isGlobal) {
-    res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     return null;
   }
   return centerId as number;
@@ -32,7 +32,7 @@ const getRoomById = async (req: any, res: any) => {
     const centerId = resolveCenter(req, res);
     if (centerId == null) return;
     const room = await roomsService.getRoomById(id, centerId);
-    if (!room) return res.status(404).json({ error: 'Room not found' });
+    if (!room) return res.status(404).json({ error: 'Xona topilmadi' });
     res.json(room);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -45,10 +45,10 @@ const createRoom = async (req: any, res: any) => {
     if (centerId == null) return;
     const room = await roomsService.createRoom({ ...req.body, center_id: centerId });
     if (room?.error === 'bad_time_window') {
-      return res.status(400).json({ error: 'End time must be after start time.' });
+      return res.status(400).json({ error: "Tugash vaqti boshlanish vaqtidan keyin bo'lishi kerak." });
     }
     if (room?.error === 'room_unavailable') {
-      return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
+      return res.status(409).json({ error: 'Xona bu vaqtda band.', conflict: room.conflict });
     }
     await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'create', entity_type: 'room', entity_id: room?.room_id || room?.roomId || null, center_id: centerId, details: { room_name: req.body.room_number, class_id: req.body.class_id || null, capacity: req.body.capacity || null } });
     res.status(201).json(room);
@@ -64,12 +64,12 @@ const updateRoom = async (req: any, res: any) => {
     if (centerId == null) return;
     const room = await roomsService.updateRoom(id, req.body, centerId);
     if (room?.error === 'bad_time_window') {
-      return res.status(400).json({ error: 'End time must be after start time.' });
+      return res.status(400).json({ error: "Tugash vaqti boshlanish vaqtidan keyin bo'lishi kerak." });
     }
     if (room?.error === 'room_unavailable') {
-      return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
+      return res.status(409).json({ error: 'Xona bu vaqtda band.', conflict: room.conflict });
     }
-    if (!room) return res.status(404).json({ error: 'Room not found' });
+    if (!room) return res.status(404).json({ error: 'Xona topilmadi' });
     await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'update', entity_type: 'room', entity_id: Number(id), center_id: centerId, details: { room_name: req.body.room_number, class_id: req.body.class_id || null, capacity: req.body.capacity || null } });
     res.json(room);
   } catch (error: any) {
@@ -83,9 +83,9 @@ const deleteRoom = async (req: any, res: any) => {
     const centerId = resolveCenter(req, res);
     if (centerId == null) return;
     const room = await roomsService.deleteRoom(id, centerId);
-    if (!room) return res.status(404).json({ error: 'Room not found' });
+    if (!room) return res.status(404).json({ error: 'Xona topilmadi' });
     await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'delete', entity_type: 'room', entity_id: Number(id), center_id: centerId, details: { room_name: room.room_number || room.roomNumber || null } });
-    res.json({ message: 'Room deleted successfully' });
+    res.json({ message: "Xona muvaffaqiyatli o'chirildi" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

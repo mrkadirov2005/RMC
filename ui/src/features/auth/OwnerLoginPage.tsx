@@ -21,6 +21,7 @@ import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { authAPI } from './api';
 import { setAuthPersistencePreference } from '../../shared/auth/authStorage';
 import { showToast, handleApiError } from '../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const logoSrc = '/temurbek-school-logo.jpg';
 const inputClass =
@@ -28,6 +29,7 @@ const inputClass =
 
 // Renders the owner login page screen.
 export const OwnerLoginPage = () => {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -92,21 +94,21 @@ export const OwnerLoginPage = () => {
           <div className="rounded-lg bg-white p-2.5">
             <img src={logoSrc} alt="Temurbek School" className="h-12 w-auto object-contain lg:h-16" />
           </div>
-          <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">Owner access</Badge>
+          <Badge className="border-white/20 bg-white/10 text-white hover:bg-white/10">{t('Owner access')}</Badge>
         </div>
 
         <div className="mt-8 max-w-[680px] lg:mt-auto">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-normal sm:text-4xl lg:mt-4 lg:text-[3.35rem] lg:leading-[1.05] xl:text-[3.65rem]">
-            System-level access for the learning center owner.
+            {t('System-level access for the learning center owner.')}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/75 sm:mt-5 sm:text-base sm:leading-7">
-            Use this entry only for owner management, branch oversight, and global CRM settings.
+            {t('Use this entry only for owner management, branch oversight, and global CRM settings.')}
           </p>
         </div>
 
         <div className="mt-8 hidden rounded-lg border border-white/15 bg-white/10 p-4 text-sm text-white/80 lg:mt-auto lg:block xl:p-5">
-          Owner accounts can create and manage branch-level access. Keep these credentials separate from daily admin accounts.
+          {t('Owner accounts can create and manage branch-level access. Keep these credentials separate from daily admin accounts.')}
         </div>
       </section>
 
@@ -119,12 +121,12 @@ export const OwnerLoginPage = () => {
             className="mb-6 h-auto px-0 text-xs text-slate-500 hover:bg-transparent hover:text-slate-950"
           >
             <ArrowLeft className="mr-1.5 h-4 w-4" />
-            Back to admin login
+            {t('Back to admin login')}
           </Button>
 
           <div className="mb-8">
             <img src={logoSrc} alt="Temurbek School" className="mb-7 h-14 w-auto object-contain" />
-            <h1 className="text-2xl font-bold tracking-tight text-slate-950">Owner sign in</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-950">{t('Owner sign in')}</h1>
           </div>
 
           <button
@@ -132,25 +134,25 @@ export const OwnerLoginPage = () => {
             onClick={() => navigate('/owner/register')}
             className="mb-5 text-xs font-medium text-slate-500 hover:text-slate-950"
           >
-            Create owner account with keyword
+            {t('Create owner account with keyword')}
           </button>
 
           {error && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+              <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
             </Alert>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5" noValidate>
             <div className="space-y-2">
               <label htmlFor="owner-username" className="text-sm font-medium text-slate-700">
-                Username
+                {t('Username')}
               </label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="owner-username"
-                  placeholder="Enter owner username"
+                  placeholder={t('Enter owner username')}
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   required
@@ -164,13 +166,13 @@ export const OwnerLoginPage = () => {
 
             <div className="space-y-2">
               <label htmlFor="owner-password" className="text-sm font-medium text-slate-700">
-                Password
+                {t('Password')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                   id="owner-password"
-                  placeholder="Enter password"
+                  placeholder={t('Enter password')}
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -184,7 +186,7 @@ export const OwnerLoginPage = () => {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 rounded p-1 text-slate-500 transition-colors hover:text-[#21116a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? t('Hide password') : t('Show password')}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -200,14 +202,14 @@ export const OwnerLoginPage = () => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="h-4 w-4 rounded border-[#b9cee2] text-[#16a7e2] focus:ring-[#16a7e2]/30"
                 />
-                Remember me
+                {t('Remember me')}
               </label>
               <button
                 type="button"
                 onClick={handleForgotPassword}
                 className="text-sm font-semibold text-[#21116a] underline decoration-[#16a7e2]/40 underline-offset-4 transition-colors hover:text-[#16a7e2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#16a7e2]/35 xl:text-[0.95rem]"
               >
-                Forgot password?
+                {t('Forgot password?')}
               </button>
             </div>
 
@@ -219,11 +221,11 @@ export const OwnerLoginPage = () => {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in
+                  {t('Signing in')}
                 </>
               ) : (
                 <>
-                  Access Manager Panel
+                  {t('Access Manager Panel')}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

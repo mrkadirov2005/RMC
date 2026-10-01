@@ -176,7 +176,7 @@ export default function ConsolidationsOverviewPage() {
 
       {overviewError && (
         <Alert variant="destructive">
-          <AlertDescription>{overviewError}</AlertDescription>
+          <AlertDescription>{t(overviewError)}</AlertDescription>
         </Alert>
       )}
 
@@ -206,20 +206,20 @@ export default function ConsolidationsOverviewPage() {
             </DialogTitle>
           </DialogHeader>
           {drillDownRows.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No students in this bucket.</p>
+            <p className="text-sm text-muted-foreground">{t('No students in this bucket.')}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                    <th className="py-2 pr-3">Student</th>
-                    {!isTeacher && <th className="py-2 pr-3">Teacher</th>}
-                    <th className="py-2 pr-3">Class</th>
-                    <th className="py-2 pr-3">Session</th>
-                    <th className="py-2 pr-3">Set</th>
-                    <th className="py-2 pr-3">Attempts</th>
-                    <th className="py-2 pr-3">First passed on</th>
-                    <th className="py-2 pr-3">Violations</th>
+                    <th className="py-2 pr-3">{t('Student')}</th>
+                    {!isTeacher && <th className="py-2 pr-3">{t('Teacher')}</th>}
+                    <th className="py-2 pr-3">{t('Class')}</th>
+                    <th className="py-2 pr-3">{t('Session')}</th>
+                    <th className="py-2 pr-3">{t('Set')}</th>
+                    <th className="py-2 pr-3">{t('Attempts')}</th>
+                    <th className="py-2 pr-3">{t('First passed on')}</th>
+                    <th className="py-2 pr-3">{t('Violations')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -293,18 +293,18 @@ export default function ConsolidationsOverviewPage() {
               <div>
                 <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-foreground">{t('By teacher')}</h2>
                 {overview.by_teacher.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No consolidation sets created yet.</p>
+                  <p className="text-sm text-muted-foreground">{t('No consolidation sets created yet.')}</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                          {!isTeacher && <th className="py-2 pr-3">Teacher</th>}
-                          <th className="py-2 pr-3">Sets</th>
-                          <th className="py-2 pr-3">Trials</th>
-                          <th className="py-2 pr-3">Students</th>
-                          <th className="py-2 pr-3">Pass rate</th>
-                          <th className="py-2 pr-3">Violations</th>
+                          {!isTeacher && <th className="py-2 pr-3">{t('Teacher')}</th>}
+                          <th className="py-2 pr-3">{t('Sets')}</th>
+                          <th className="py-2 pr-3">{t('Trials')}</th>
+                          <th className="py-2 pr-3">{t('Students')}</th>
+                          <th className="py-2 pr-3">{t('Pass rate')}</th>
+                          <th className="py-2 pr-3">{t('Violations')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -327,23 +327,23 @@ export default function ConsolidationsOverviewPage() {
               </div>
 
               <div>
-                <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-foreground">By class / session</h2>
+                <h2 className="mb-3 text-sm font-semibold text-slate-700 dark:text-foreground">{t('By class / session')}</h2>
                 {sortedSets.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No consolidation sets created yet.</p>
+                  <p className="text-sm text-muted-foreground">{t('No consolidation sets created yet.')}</p>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                          <th className="py-2 pr-3">Class</th>
-                          <th className="py-2 pr-3">Session</th>
-                          {!isTeacher && <th className="py-2 pr-3">Teacher</th>}
-                          <th className="py-2 pr-3">Title</th>
-                          <th className="py-2 pr-3">Words</th>
-                          <th className="py-2 pr-3">Trials</th>
-                          <th className="py-2 pr-3">Students</th>
-                          <th className="py-2 pr-3">Pass rate</th>
-                          <th className="py-2 pr-3">Violations</th>
+                          <th className="py-2 pr-3">{t('Class')}</th>
+                          <th className="py-2 pr-3">{t('Session')}</th>
+                          {!isTeacher && <th className="py-2 pr-3">{t('Teacher')}</th>}
+                          <th className="py-2 pr-3">{t('Title')}</th>
+                          <th className="py-2 pr-3">{t('Words')}</th>
+                          <th className="py-2 pr-3">{t('Trials')}</th>
+                          <th className="py-2 pr-3">{t('Students')}</th>
+                          <th className="py-2 pr-3">{t('Pass rate')}</th>
+                          <th className="py-2 pr-3">{t('Violations')}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -375,15 +375,15 @@ export default function ConsolidationsOverviewPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Create or view a session's exercise</DialogTitle>
+            <DialogTitle>{t("Create or view a session's exercise")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
               {!isTeacher && <div>
-                <Label className="mb-1 block">Teacher</Label>
+                <Label className="mb-1 block">{t('Teacher')}</Label>
                 <Select value={teacherId} onValueChange={setTeacherId}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choose a teacher" />
+                    <SelectValue placeholder={t('Choose a teacher')} />
                   </SelectTrigger>
                   <SelectContent>
                     {teachers.map((teacher) => (
@@ -396,10 +396,10 @@ export default function ConsolidationsOverviewPage() {
               </div>}
 
               <div>
-                <Label className="mb-1 block">Class</Label>
+                <Label className="mb-1 block">{t('Class')}</Label>
                 <Select value={classId} onValueChange={setClassId} disabled={!teacherId || classesLoading}>
                   <SelectTrigger>
-                    <SelectValue placeholder={classesLoading ? 'Loading…' : 'Choose a class'} />
+                    <SelectValue placeholder={classesLoading ? t('Loading…') : t('Choose a class')} />
                   </SelectTrigger>
                   <SelectContent>
                     {classes.map((klass) => (
@@ -412,10 +412,10 @@ export default function ConsolidationsOverviewPage() {
               </div>
 
               <div>
-                <Label className="mb-1 block">Session</Label>
+                <Label className="mb-1 block">{t('Session')}</Label>
                 <Select value={sessionId} onValueChange={setSessionId} disabled={!classId || sessionsLoading}>
                   <SelectTrigger>
-                    <SelectValue placeholder={sessionsLoading ? 'Loading…' : 'Choose a session'} />
+                    <SelectValue placeholder={sessionsLoading ? t('Loading…') : t('Choose a session')} />
                   </SelectTrigger>
                   <SelectContent>
                     {sessions.map((session) => (

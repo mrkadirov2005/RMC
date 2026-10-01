@@ -9,19 +9,19 @@ const getMyNotifications = async (req: any, res: any) => {
     const userId = req.user?.id;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!userType || !userId) {
-      return res.status(401).json({ error: 'Authentication required.' });
+      return res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
     }
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const rows = await notificationService.listForUser(userType, userId, centerId ?? undefined);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch notifications', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -29,10 +29,10 @@ const createNotification = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await notificationService.create(req.body, centerId ?? req.body.center_id);
     if (centerId) {
@@ -42,9 +42,9 @@ const createNotification = async (req: any, res: any) => {
       if (targetType === 'student') allowed = await studentInCenter(targetId, centerId);
       else if (targetType === 'teacher') allowed = await teacherInCenter(targetId, centerId);
       else if (targetType === 'superuser') allowed = await superuserInCenter(targetId, centerId);
-      else return res.status(400).json({ error: 'Unsupported recipient type for center admin.' });
+      else return res.status(400).json({ error: "Markaz admini uchun bu qabul qiluvchi turi qo'llab-quvvatlanmaydi." });
       if (!allowed) {
-        return res.status(403).json({ error: 'Recipient does not belong to this center.' });
+        return res.status(403).json({ error: 'Qabul qiluvchi bu markazga tegishli emas.' });
       }
     }
     const { row } = out as { row: any };
@@ -58,10 +58,10 @@ const createNotification = async (req: any, res: any) => {
       details: { user_type: req.body.user_type, user_id: req.body.user_id, title: req.body.title, type: req.body.type || 'info' },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Notification created', notification: row });
+    res.status(201).json({ message: 'Bildirishnoma yaratildi', notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create notification', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -69,17 +69,17 @@ const markAsRead = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await notificationService.markAsRead(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Notification not found' });
-    res.json({ message: 'Notification marked as read', notification: row });
+    if (!row) return res.status(404).json({ error: 'Bildirishnoma topilmadi' });
+    res.json({ message: "Bildirishnoma o'qilgan deb belgilandi", notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update notification', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -87,17 +87,17 @@ const deleteNotification = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await notificationService.deleteNotification(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Notification not found' });
-    res.json({ message: 'Notification deleted', notification: row });
+    if (!row) return res.status(404).json({ error: 'Bildirishnoma topilmadi' });
+    res.json({ message: "Bildirishnoma o'chirildi", notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete notification', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

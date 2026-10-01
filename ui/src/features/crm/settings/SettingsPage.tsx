@@ -1,7 +1,7 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { Activity, CalendarDays, Clock, Coins, Globe, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { Activity, CalendarDays, Clock, Coins, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +75,7 @@ type ScoreSection = 'attendance' | 'homework' | 'activity';
 // Renders the settings page screen.
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [defaultDuration, setDefaultDuration] = useState(90);
   const [overrideDuration, setOverrideDuration] = useState<number | ''>('');
   const [calendarDefaultView, setCalendarDefaultView] = useState<'month' | 'week'>('month');
@@ -219,51 +219,15 @@ const SettingsPage = () => {
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" />
-              Save Settings
+              {t('Save Settings')}
             </Button>
             <Button variant="outline" onClick={handleResetAll}>
               <RotateCcw className="mr-2 h-4 w-4" />
-              Reset All
+              {t('Reset All')}
             </Button>
           </div>
         }
       />
-
-      <SectionPanel
-        title={
-          <span className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm">
-              <Globe className="h-4 w-4" />
-            </span>
-            {t('Language')}
-          </span>
-        }
-      >
-        <div className="space-y-3">
-          <Label>{t('Select interface language')}</Label>
-          <div className="flex gap-3">
-            {([
-              { code: 'en' as const, label: 'English', flag: '🇬🇧' },
-              { code: 'uz' as const, label: "O'zbekcha", flag: '🇺🇿' },
-            ]).map((option) => (
-              <button
-                key={option.code}
-                type="button"
-                onClick={() => { setLanguage(option.code); showToast.success(`Language changed to ${option.label}`); }}
-                className={cn(
-                  'flex items-center gap-3 rounded-xl border-2 px-5 py-3 text-sm font-semibold transition-all',
-                  language === option.code
-                    ? 'border-violet-500 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                )}
-              >
-                <span className="text-xl">{option.flag}</span>
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </SectionPanel>
 
       <SectionPanel
         title={
@@ -289,15 +253,15 @@ const SettingsPage = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionPanel
-          title={<span className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white"><Palette className="h-4 w-4" /></span>Owner panel color palette</span>}
+          title={<span className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white"><Palette className="h-4 w-4" /></span>{t('Owner panel color palette')}</span>}
         >
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.</p>
+            <p className="text-xs text-muted-foreground">{t('Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.')}</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {ownerPalettePresets.map((palette) => (
                 <button key={palette.id} type="button" onClick={async () => { const selected = saveOwnerPalette(palette); setOwnerPalette(selected); try { await settingsAPI.saveOwnerPalette(selected); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette.id === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
                   <span className="mb-2 block text-sm font-semibold">{palette.name}</span>
-                  <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title="Primary cards" /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title="Secondary tags" /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title="Tertiary cards" /></span>
+                  <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title={t('Primary cards')} /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title={t('Secondary tags')} /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title={t('Tertiary cards')} /></span>
                 </button>
               ))}
             </div>
@@ -309,7 +273,7 @@ const SettingsPage = () => {
                 </div>
               ))}
             </div>
-            <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>Save custom colors</Button>
+            <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>{t('Save custom colors')}</Button>
           </div>
         </SectionPanel>
 
@@ -319,26 +283,26 @@ const SettingsPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm">
                 <Palette className="h-4 w-4" />
               </span>
-              List row colors
+              {t('List row colors')}
             </span>
           }
         >
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="primaryRowColor">First row color</Label>
+                <Label htmlFor="primaryRowColor">{t('First row color')}</Label>
                 <Input id="primaryRowColor" type="color" value={primaryRowColor} onChange={(event) => setPrimaryRowColor(event.target.value)} className="h-11 cursor-pointer p-1" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="alternateRowColor">Alternate row color</Label>
+                <Label htmlFor="alternateRowColor">{t('Alternate row color')}</Label>
                 <Input id="alternateRowColor" type="color" value={alternateRowColor} onChange={(event) => setAlternateRowColor(event.target.value)} className="h-11 cursor-pointer p-1" />
               </div>
             </div>
             <div className="overflow-hidden rounded-lg border text-sm">
-              <div className="px-4 py-3" style={{ backgroundColor: primaryRowColor }}>Example first row</div>
-              <div className="px-4 py-3" style={{ backgroundColor: alternateRowColor }}>Example alternate row</div>
+              <div className="px-4 py-3" style={{ backgroundColor: primaryRowColor }}>{t('Example first row')}</div>
+              <div className="px-4 py-3" style={{ backgroundColor: alternateRowColor }}>{t('Example alternate row')}</div>
             </div>
-            <p className="text-xs text-muted-foreground">These colors apply to all table lists after saving and remain on this device.</p>
+            <p className="text-xs text-muted-foreground">{t('These colors apply to all table lists after saving and remain on this device.')}</p>
           </div>
         </SectionPanel>
 
@@ -348,13 +312,13 @@ const SettingsPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-sm">
                 <Timer className="h-4 w-4" />
               </span>
-              Lesson Length
+              {t('Lesson Length')}
             </span>
           }
         >
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="defaultDuration">Default lesson length (minutes)</Label>
+              <Label htmlFor="defaultDuration">{t('Default lesson length (minutes)')}</Label>
               <Input
                 id="defaultDuration"
                 type="number"
@@ -365,12 +329,12 @@ const SettingsPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="overrideDuration">Override for next generation (minutes)</Label>
+              <Label htmlFor="overrideDuration">{t('Override for next generation (minutes)')}</Label>
               <Input
                 id="overrideDuration"
                 type="number"
                 min={1}
-                placeholder="Leave empty to use default"
+                placeholder={t('Leave empty to use default')}
                 value={overrideDuration}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -378,12 +342,12 @@ const SettingsPage = () => {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Use this to temporarily override the default when generating sessions.
+                {t('Use this to temporarily override the default when generating sessions.')}
               </p>
             </div>
 
             <Button variant="outline" onClick={handleClearOverride}>
-              Clear Override
+              {t('Clear Override')}
             </Button>
           </div>
         </SectionPanel>
@@ -394,27 +358,27 @@ const SettingsPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm">
                 <CalendarDays className="h-4 w-4" />
               </span>
-              Calendar Defaults
+              {t('Calendar Defaults')}
             </span>
           }
         >
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label>Default calendar view</Label>
+              <Label>{t('Default calendar view')}</Label>
               <Select value={calendarDefaultView} onValueChange={(value) => setCalendarDefaultView(value as 'month' | 'week')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="month">Month view</SelectItem>
-                  <SelectItem value="week">Week view</SelectItem>
+                  <SelectItem value="month">{t('Month view')}</SelectItem>
+                  <SelectItem value="week">{t('Week view')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Day starts</Label>
+                <Label>{t('Day starts')}</Label>
                 <Select value={String(calendarStartHour)} onValueChange={(value) => setCalendarStartHour(Number(value))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -427,7 +391,7 @@ const SettingsPage = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Day ends</Label>
+                <Label>{t('Day ends')}</Label>
                 <Select value={String(calendarEndHour)} onValueChange={(value) => setCalendarEndHour(Number(value))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -441,17 +405,17 @@ const SettingsPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="calendarSlotDuration">Week timetable slot duration (minutes)</Label>
+              <Label htmlFor="calendarSlotDuration">{t('Week timetable slot duration (minutes)')}</Label>
               <Input id="calendarSlotDuration" type="number" min={15} max={480} step={15} value={calendarSlotDuration} onChange={(event) => setCalendarSlotDuration(Number(event.target.value))} />
-              <p className="text-xs text-muted-foreground">Controls every occupied and free row in the room timetable. Default: 120 minutes.</p>
+              <p className="text-xs text-muted-foreground">{t('Controls every occupied and free row in the room timetable. Default: 120 minutes.')}</p>
             </div>
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-4 w-4" />
-              Week view uses this time range for visible slots.
+              {t('Week view uses this time range for visible slots.')}
             </p>
             <Button variant="outline" onClick={handleResetCalendar}>
               <RotateCcw className="mr-2 h-4 w-4" />
-              Reset Calendar Defaults
+              {t('Reset Calendar Defaults')}
             </Button>
           </div>
         </SectionPanel>
@@ -463,7 +427,7 @@ const SettingsPage = () => {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-sm">
               <Coins className="h-4 w-4" />
             </span>
-            Lesson Scoring
+            {t('Lesson Scoring')}
           </span>
         }
       >
@@ -473,10 +437,10 @@ const SettingsPage = () => {
               <div className="text-sm font-semibold capitalize">{section}</div>
               <div className="overflow-x-auto rounded-lg border">
                 <div className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-muted-foreground">
-                  <span>Label</span>
-                  <span>Score</span>
-                  <span>Symbol</span>
-                  <span>Fill %</span>
+                  <span>{t('Label')}</span>
+                  <span>{t('Score')}</span>
+                  <span>{t('Symbol')}</span>
+                  <span>{t('Fill %')}</span>
                 </div>
                 {lessonScoring[section].map((option, index) => (
                   <div key={`${section}-${index}`} className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b px-3 py-2 last:border-b-0">
@@ -492,7 +456,7 @@ const SettingsPage = () => {
 
           <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
             <div className="space-y-2">
-              <Label htmlFor="stellarBonusCoins">Stellar bonus coins</Label>
+              <Label htmlFor="stellarBonusCoins">{t('Stellar bonus coins')}</Label>
               <Input
                 id="stellarBonusCoins"
                 type="number"
@@ -501,7 +465,7 @@ const SettingsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <div className="text-sm font-semibold">Coin mapping</div>
+              <div className="text-sm font-semibold">{t('Coin mapping')}</div>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {lessonScoring.coinScoreMapping.map((row, index) => (
                   <div key={`coin-${index}`} className="grid grid-cols-2 gap-2 rounded-lg border p-2">
@@ -510,7 +474,7 @@ const SettingsPage = () => {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">Each pair is score percent and coins awarded at or above that score.</p>
+              <p className="text-xs text-muted-foreground">{t('Each pair is score percent and coins awarded at or above that score.')}</p>
             </div>
           </div>
         </div>

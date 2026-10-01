@@ -15,6 +15,7 @@ import { useAppDispatch, useAppSelector } from '../../../hooks';
 import { upsertTeacherKpi, selectKpiUpsertLoading } from '@/slices/kpisSlice';
 import { computeFinalScorePreview, formatKpiPeriod, formatScore } from '../model/kpiModel';
 import type { KpiAutoScores } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AddEditKpiDialogProps {
   open: boolean;
@@ -41,6 +42,7 @@ export const AddEditKpiDialog = ({
   existingTeachingQualityScore,
   existingNotes,
 }: AddEditKpiDialogProps) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const submitting = useAppSelector(selectKpiUpsertLoading);
 
@@ -86,7 +88,7 @@ export const AddEditKpiDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Teacher KPI</DialogTitle>
+          <DialogTitle>{t('Teacher KPI')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
@@ -95,17 +97,17 @@ export const AddEditKpiDialog = ({
 
           <div className="grid grid-cols-2 gap-1.5 rounded-md border bg-muted/30 p-2.5 text-xs">
             <div>
-              <p className="text-muted-foreground">Student Scores (auto)</p>
+              <p className="text-muted-foreground">{t('Student Scores (auto)')}</p>
               <p className="font-bold text-primary">{formatScore(autoScores.student_score)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Retention (auto)</p>
+              <p className="text-muted-foreground">{t('Retention (auto)')}</p>
               <p className="font-bold text-primary">{formatScore(autoScores.retention_score)}</p>
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label>Contribution (0–100)</Label>
+            <Label>{t('Contribution (0–100)')}</Label>
             <Input
               type="number"
               min="0"
@@ -117,7 +119,7 @@ export const AddEditKpiDialog = ({
             />
           </div>
           <div className="space-y-1">
-            <Label>Teaching Quality (0–100)</Label>
+            <Label>{t('Teaching Quality (0–100)')}</Label>
             <Input
               type="number"
               min="0"
@@ -129,30 +131,30 @@ export const AddEditKpiDialog = ({
             />
           </div>
           <div className="space-y-1">
-            <Label>Notes</Label>
+            <Label>{t('Notes')}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Optional notes"
+              placeholder={t('Optional notes')}
               rows={3}
             />
           </div>
 
           {finalScorePreview !== null && (
             <div className="rounded-md border bg-primary/5 p-2.5 text-xs">
-              <p className="text-muted-foreground">Final KPI (average of all 4 categories)</p>
+              <p className="text-muted-foreground">{t('Final KPI (average of all 4 categories)')}</p>
               <p className="text-lg font-black text-primary">{formatScore(finalScorePreview)}</p>
             </div>
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('Cancel')}</Button>
           <Button
             onClick={handleSubmit}
             disabled={submitting || !isValid}
             className="gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save KPI'}
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Save KPI')}
           </Button>
         </DialogFooter>
       </DialogContent>

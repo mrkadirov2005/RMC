@@ -17,12 +17,12 @@ const rows = [
   {
     "id": "Students",
     "english": "Students",
-    "uzbek": "Oquvchilar"
+    "uzbek": "O'quvchilar"
   },
   {
     "id": "Teachers",
     "english": "Teachers",
-    "uzbek": "Oqituvchilar"
+    "uzbek": "O'qituvchilar"
   },
   {
     "id": "Classes",
@@ -57,7 +57,7 @@ const rows = [
   {
     "id": "Payments",
     "english": "Payments",
-    "uzbek": "Tolovlar"
+    "uzbek": "To'lovlar"
   },
   {
     "id": "Finance",
@@ -112,12 +112,12 @@ const rows = [
   {
     "id": "Switch to light mode",
     "english": "Switch to light mode",
-    "uzbek": "Yorug rejimga otish"
+    "uzbek": "Yorug' rejimga o'tish"
   },
   {
     "id": "Switch to dark mode",
     "english": "Switch to dark mode",
-    "uzbek": "Qorongu rejimga otish"
+    "uzbek": "Qorong'u rejimga o'tish"
   },
   {
     "id": "Open sidebar",
@@ -147,12 +147,12 @@ const rows = [
   {
     "id": "You don't have permission to access this resource.",
     "english": "You don't have permission to access this resource.",
-    "uzbek": "Bu sahifaga kirish huquqingiz yoq."
+    "uzbek": "Bu sahifaga kirish huquqingiz yo'q."
   },
   {
     "id": "Go to Dashboard",
     "english": "Go to Dashboard",
-    "uzbek": "Boshqaruv paneliga otish"
+    "uzbek": "Boshqaruv paneliga o'tish"
   },
   {
     "id": "English",
@@ -162,7 +162,7 @@ const rows = [
   {
     "id": "Uzbek",
     "english": "Uzbek",
-    "uzbek": "Ozbekcha"
+    "uzbek": "O'zbekcha"
   },
   {
     "id": "Language",
@@ -177,7 +177,7 @@ const rows = [
   {
     "id": "Add Debt",
     "english": "Add Debt",
-    "uzbek": "Qarz qoshish"
+    "uzbek": "Qarz qo'shish"
   },
   {
     "id": "Debt Records",
@@ -187,7 +187,7 @@ const rows = [
   {
     "id": "Student Name",
     "english": "Student Name",
-    "uzbek": "Oquvchi ismi"
+    "uzbek": "O'quvchi ismi"
   },
   {
     "id": "Debt Amount",
@@ -197,7 +197,7 @@ const rows = [
   {
     "id": "Paid Amount",
     "english": "Paid Amount",
-    "uzbek": "Tolangan miqdor"
+    "uzbek": "To'langan miqdor"
   },
   {
     "id": "Remaining",
@@ -232,12 +232,12 @@ const rows = [
   {
     "id": "Add New Debt",
     "english": "Add New Debt",
-    "uzbek": "Yangi qarz qoshish"
+    "uzbek": "Yangi qarz qo'shish"
   },
   {
     "id": "Student",
     "english": "Student",
-    "uzbek": "Oquvchi"
+    "uzbek": "O'quvchi"
   },
   {
     "id": "Center",
@@ -247,7 +247,7 @@ const rows = [
   {
     "id": "Select a student",
     "english": "Select a student",
-    "uzbek": "Oquvchini tanlang"
+    "uzbek": "O'quvchini tanlang"
   },
   {
     "id": "Select a center",
@@ -257,7 +257,7 @@ const rows = [
   {
     "id": "Amount Paid",
     "english": "Amount Paid",
-    "uzbek": "Tolangan miqdor"
+    "uzbek": "To'langan miqdor"
   },
   {
     "id": "Debt Date",
@@ -287,17 +287,17 @@ const rows = [
   {
     "id": "Search debts by student, amount, date, remarks...",
     "english": "Search debts by student, amount, date, remarks...",
-    "uzbek": "Qarzlarni oquvchi, miqdor, sana yoki izoh boyicha qidiring..."
+    "uzbek": "Qarzlarni o'quvchi, miqdor, sana yoki izoh bo'yicha qidiring..."
   },
   {
     "id": "Add",
     "english": "Add",
-    "uzbek": "Qoshish"
+    "uzbek": "Qo'shish"
   },
   {
     "id": "Add New",
     "english": "Add New",
-    "uzbek": "Yangi qoshish"
+    "uzbek": "Yangi qo'shish"
   },
   {
     "id": "Edit",
@@ -307,7 +307,7 @@ const rows = [
   {
     "id": "Delete",
     "english": "Delete",
-    "uzbek": "Ochirish"
+    "uzbek": "O'chirish"
   },
   {
     "id": "Clear",
@@ -367,32 +367,32 @@ const rows = [
   {
     "id": "Payment History",
     "english": "Payment History",
-    "uzbek": "Tolovlar tarixi"
+    "uzbek": "To'lovlar tarixi"
   },
   {
     "id": "Add Payment",
     "english": "Add Payment",
-    "uzbek": "Tolov qoshish"
+    "uzbek": "To'lov qo'shish"
   },
   {
     "id": "Edit Payment",
     "english": "Edit Payment",
-    "uzbek": "Tolovni tahrirlash"
+    "uzbek": "To'lovni tahrirlash"
   },
   {
     "id": "Payment Date",
     "english": "Payment Date",
-    "uzbek": "Tolov sanasi"
+    "uzbek": "To'lov sanasi"
   },
   {
     "id": "Payment Method",
     "english": "Payment Method",
-    "uzbek": "Tolov usuli"
+    "uzbek": "To'lov usuli"
   },
   {
     "id": "Payment Type",
     "english": "Payment Type",
-    "uzbek": "Tolov turi"
+    "uzbek": "To'lov turi"
   },
   {
     "id": "Receipt Number",
@@ -407,22 +407,22 @@ const rows = [
   {
     "id": "No payment records",
     "english": "No payment records",
-    "uzbek": "Tolov yozuvlari yoq"
+    "uzbek": "To'lov yozuvlari yo'q"
   },
   {
     "id": "No payments found",
     "english": "No payments found",
-    "uzbek": "Tolovlar topilmadi"
+    "uzbek": "To'lovlar topilmadi"
   },
   {
     "id": "No payments match your criteria",
     "english": "No payments match your criteria",
-    "uzbek": "Mezonlarga mos tolovlar topilmadi"
+    "uzbek": "Mezonlarga mos to'lovlar topilmadi"
   },
   {
     "id": "Search by student, receipt, reference...",
     "english": "Search by student, receipt, reference...",
-    "uzbek": "Oquvchi, kvitansiya yoki havola boyicha qidiring..."
+    "uzbek": "O'quvchi, kvitansiya yoki havola bo'yicha qidiring..."
   },
   {
     "id": "Total",
@@ -432,7 +432,7 @@ const rows = [
   {
     "id": "Collected",
     "english": "Collected",
-    "uzbek": "Yigildi"
+    "uzbek": "Yig'ildi"
   },
   {
     "id": "Expected",
@@ -447,32 +447,32 @@ const rows = [
   {
     "id": "Paid",
     "english": "Paid",
-    "uzbek": "Tolangan"
+    "uzbek": "To'langan"
   },
   {
     "id": "Still unpaid",
     "english": "Still unpaid",
-    "uzbek": "Hali tolanmagan"
+    "uzbek": "Hali to'lanmagan"
   },
   {
     "id": "Should pay",
     "english": "Should pay",
-    "uzbek": "Tolashi kerak"
+    "uzbek": "To'lashi kerak"
   },
   {
     "id": "Student Payments",
     "english": "Student Payments",
-    "uzbek": "Oquvchi tolovlari"
+    "uzbek": "O'quvchi to'lovlari"
   },
   {
     "id": "Monthly tuition",
     "english": "Monthly tuition",
-    "uzbek": "Oylik tolov"
+    "uzbek": "Oylik to'lov"
   },
   {
     "id": "Payment Amount",
     "english": "Payment Amount",
-    "uzbek": "Tolov miqdori"
+    "uzbek": "To'lov miqdori"
   },
   {
     "id": "Class Schedule",
@@ -492,7 +492,7 @@ const rows = [
   {
     "id": "Capacity",
     "english": "Capacity",
-    "uzbek": "Sigim"
+    "uzbek": "Sig'im"
   },
   {
     "id": "Room Number",
@@ -502,17 +502,17 @@ const rows = [
   {
     "id": "No data available",
     "english": "No data available",
-    "uzbek": "Malumot yoq"
+    "uzbek": "Ma'lumot yo'q"
   },
   {
     "id": "No data",
     "english": "No data",
-    "uzbek": "Malumot yoq"
+    "uzbek": "Ma'lumot yo'q"
   },
   {
     "id": "No room",
     "english": "No room",
-    "uzbek": "Xona yoq"
+    "uzbek": "Xona yo'q"
   },
   {
     "id": "No classes found",
@@ -522,12 +522,12 @@ const rows = [
   {
     "id": "No students found",
     "english": "No students found",
-    "uzbek": "Oquvchilar topilmadi"
+    "uzbek": "O'quvchilar topilmadi"
   },
   {
     "id": "No teachers found",
     "english": "No teachers found",
-    "uzbek": "Oqituvchilar topilmadi"
+    "uzbek": "O'qituvchilar topilmadi"
   },
   {
     "id": "Select currency",
@@ -542,7 +542,7 @@ const rows = [
   {
     "id": "Monthly Fee Amount",
     "english": "Monthly Fee Amount",
-    "uzbek": "Oylik tolov miqdori"
+    "uzbek": "Oylik to'lov miqdori"
   },
   {
     "id": "Generate Debt Records",
@@ -552,12 +552,12 @@ const rows = [
   {
     "id": "All students have made payments for the analyzed period!",
     "english": "All students have made payments for the analyzed period!",
-    "uzbek": "Tahlil qilingan davr uchun barcha oquvchilar tolov qilgan!"
+    "uzbek": "Tahlil qilingan davr uchun barcha o'quvchilar to'lov qilgan!"
   },
   {
     "id": "Unpaid Months:",
     "english": "Unpaid Months:",
-    "uzbek": "Tolanmagan oylar:"
+    "uzbek": "To'lanmagan oylar:"
   },
   {
     "id": "Present out of Total",
@@ -577,7 +577,7 @@ const rows = [
   {
     "id": "Average Grade",
     "english": "Average Grade",
-    "uzbek": "Ortacha baho"
+    "uzbek": "O'rtacha baho"
   },
   {
     "id": "Current month snapshot",
@@ -592,7 +592,7 @@ const rows = [
   {
     "id": "Teacher Earnings",
     "english": "Teacher Earnings",
-    "uzbek": "Oqituvchi daromadlari"
+    "uzbek": "O'qituvchi daromadlari"
   },
   {
     "id": "Earnings",
@@ -607,7 +607,7 @@ const rows = [
   {
     "id": "Top teacher",
     "english": "Top teacher",
-    "uzbek": "Eng yaxshi oqituvchi"
+    "uzbek": "Eng yaxshi o'qituvchi"
   },
   {
     "id": "Selected month",
@@ -622,22 +622,22 @@ const rows = [
   {
     "id": "Payment Trend",
     "english": "Payment Trend",
-    "uzbek": "Tolov tendensiyasi"
+    "uzbek": "To'lov tendensiyasi"
   },
   {
     "id": "Paid share",
     "english": "Paid share",
-    "uzbek": "Tolangan ulush"
+    "uzbek": "To'langan ulush"
   },
   {
     "id": "Avg paid",
     "english": "Avg paid",
-    "uzbek": "Ortacha tolov"
+    "uzbek": "O'rtacha to'lov"
   },
   {
     "id": "Students by Center",
     "english": "Students by Center",
-    "uzbek": "Markaz boyicha oquvchilar"
+    "uzbek": "Markaz bo'yicha o'quvchilar"
   },
   {
     "id": "All",
@@ -702,17 +702,17 @@ const rows = [
   {
     "id": "View details",
     "english": "View details",
-    "uzbek": "Tafsilotlarni korish"
+    "uzbek": "Tafsilotlarni ko'rish"
   },
   {
     "id": "View Details",
     "english": "View Details",
-    "uzbek": "Tafsilotlarni korish"
+    "uzbek": "Tafsilotlarni ko'rish"
   },
   {
     "id": "View Submission",
     "english": "View Submission",
-    "uzbek": "Topshiriqni korish"
+    "uzbek": "Topshiriqni ko'rish"
   },
   {
     "id": "Grade Submission",
@@ -722,7 +722,7 @@ const rows = [
   {
     "id": "Delete Test",
     "english": "Delete Test",
-    "uzbek": "Testni ochirish"
+    "uzbek": "Testni o'chirish"
   },
   {
     "id": "No tests found",
@@ -732,7 +732,7 @@ const rows = [
   {
     "id": "No submissions yet",
     "english": "No submissions yet",
-    "uzbek": "Topshiriqlar hali yoq"
+    "uzbek": "Topshiriqlar hali yo'q"
   },
   {
     "id": "No grades recorded yet",
@@ -747,17 +747,17 @@ const rows = [
   {
     "id": "No attendance records",
     "english": "No attendance records",
-    "uzbek": "Davomat yozuvlari yoq"
+    "uzbek": "Davomat yozuvlari yo'q"
   },
   {
     "id": "No test results",
     "english": "No test results",
-    "uzbek": "Test natijalari yoq"
+    "uzbek": "Test natijalari yo'q"
   },
   {
     "id": "No coin transactions yet",
     "english": "No coin transactions yet",
-    "uzbek": "Coin tranzaksiyalari hali yoq"
+    "uzbek": "Coin tranzaksiyalari hali yo'q"
   },
   {
     "id": "No activity recorded yet",
@@ -817,7 +817,7 @@ const rows = [
   {
     "id": "Search students...",
     "english": "Search students...",
-    "uzbek": "Oquvchilarni qidiring..."
+    "uzbek": "O'quvchilarni qidiring..."
   },
   {
     "id": "Search tests...",
@@ -832,27 +832,27 @@ const rows = [
   {
     "id": "Search students by name, email, or enrollment...",
     "english": "Search students by name, email, or enrollment...",
-    "uzbek": "Oquvchilarni ism, email yoki royxat raqami boyicha qidiring..."
+    "uzbek": "O'quvchilarni ism, email yoki ro'yxat raqami bo'yicha qidiring..."
   },
   {
     "id": "Search by student name...",
     "english": "Search by student name...",
-    "uzbek": "Oquvchi ismi boyicha qidiring..."
+    "uzbek": "O'quvchi ismi bo'yicha qidiring..."
   },
   {
     "id": "Search teachers by name or email...",
     "english": "Search teachers by name or email...",
-    "uzbek": "Oqituvchilarni ism yoki email boyicha qidiring..."
+    "uzbek": "O'qituvchilarni ism yoki email bo'yicha qidiring..."
   },
   {
     "id": "Search teachers by name, ID, subject, email, phone...",
     "english": "Search teachers by name, ID, subject, email, phone...",
-    "uzbek": "Oqituvchilarni ism, ID, fan, email yoki telefon boyicha qidiring..."
+    "uzbek": "O'qituvchilarni ism, ID, fan, email yoki telefon bo'yicha qidiring..."
   },
   {
     "id": "Search centers by name, code, city, phone...",
     "english": "Search centers by name, code, city, phone...",
-    "uzbek": "Markazlarni nom, kod, shahar yoki telefon boyicha qidiring..."
+    "uzbek": "Markazlarni nom, kod, shahar yoki telefon bo'yicha qidiring..."
   },
   {
     "id": "All Classes",
@@ -887,7 +887,7 @@ const rows = [
   {
     "id": "Select teacher",
     "english": "Select teacher",
-    "uzbek": "Oqituvchini tanlang"
+    "uzbek": "O'qituvchini tanlang"
   },
   {
     "id": "Select subject",
@@ -917,7 +917,7 @@ const rows = [
   {
     "id": "Class Average",
     "english": "Class Average",
-    "uzbek": "Sinf ortachasi"
+    "uzbek": "Sinf o'rtachasi"
   },
   {
     "id": "Grade Types",
@@ -927,17 +927,17 @@ const rows = [
   {
     "id": "Student Grades",
     "english": "Student Grades",
-    "uzbek": "Oquvchi baholari"
+    "uzbek": "O'quvchi baholari"
   },
   {
     "id": "Recent Activity",
     "english": "Recent Activity",
-    "uzbek": "Songgi faollik"
+    "uzbek": "So'nggi faollik"
   },
   {
     "id": "Enrollment #",
     "english": "Enrollment #",
-    "uzbek": "Royxat raqami"
+    "uzbek": "Ro'yxat raqami"
   },
   {
     "id": "Grades Count",
@@ -947,7 +947,7 @@ const rows = [
   {
     "id": "Average",
     "english": "Average",
-    "uzbek": "Ortacha"
+    "uzbek": "O'rtacha"
   },
   {
     "id": "Letter Grade",
@@ -957,7 +957,7 @@ const rows = [
   {
     "id": "Add Grade",
     "english": "Add Grade",
-    "uzbek": "Baho qoshish"
+    "uzbek": "Baho qo'shish"
   },
   {
     "id": "Grade Type",
@@ -992,27 +992,27 @@ const rows = [
   {
     "id": "Payment Status",
     "english": "Payment Status",
-    "uzbek": "Tolov holati"
+    "uzbek": "To'lov holati"
   },
   {
     "id": "No students",
     "english": "No students",
-    "uzbek": "Oquvchilar yoq"
+    "uzbek": "O'quvchilar yo'q"
   },
   {
     "id": "Teacher Profile",
     "english": "Teacher Profile",
-    "uzbek": "Oqituvchi profili"
+    "uzbek": "O'qituvchi profili"
   },
   {
     "id": "Contact Information",
     "english": "Contact Information",
-    "uzbek": "Aloqa malumotlari"
+    "uzbek": "Aloqa ma'lumotlari"
   },
   {
     "id": "Professional Details",
     "english": "Professional Details",
-    "uzbek": "Kasbiy malumotlar"
+    "uzbek": "Kasbiy ma'lumotlar"
   },
   {
     "id": "Username",
@@ -1032,7 +1032,7 @@ const rows = [
   {
     "id": "Date of Birth",
     "english": "Date of Birth",
-    "uzbek": "Tugilgan sana"
+    "uzbek": "Tug'ilgan sana"
   },
   {
     "id": "Gender",
@@ -1067,17 +1067,17 @@ const rows = [
   {
     "id": "Set Payment Password",
     "english": "Set Payment Password",
-    "uzbek": "Tolov parolini ornatish"
+    "uzbek": "To'lov parolini o'rnatish"
   },
   {
     "id": "Payment Password",
     "english": "Payment Password",
-    "uzbek": "Tolov paroli"
+    "uzbek": "To'lov paroli"
   },
   {
     "id": "Share this password with the teacher.",
     "english": "Share this password with the teacher.",
-    "uzbek": "Bu parolni oqituvchi bilan ulashing."
+    "uzbek": "Bu parolni o'qituvchi bilan ulashing."
   },
   {
     "id": "First Name",
@@ -1102,7 +1102,7 @@ const rows = [
   {
     "id": "Enter Grades for Students",
     "english": "Enter Grades for Students",
-    "uzbek": "Oquvchilar uchun baholarni kiriting"
+    "uzbek": "O'quvchilar uchun baholarni kiriting"
   },
   {
     "id": "Tests Management",
@@ -1112,7 +1112,7 @@ const rows = [
   {
     "id": "Personal Information",
     "english": "Personal Information",
-    "uzbek": "Shaxsiy malumotlar"
+    "uzbek": "Shaxsiy ma'lumotlar"
   },
   {
     "id": "Contact",
@@ -1122,7 +1122,7 @@ const rows = [
   {
     "id": "Avg. Grade",
     "english": "Avg. Grade",
-    "uzbek": "Ortacha baho"
+    "uzbek": "O'rtacha baho"
   },
   {
     "id": "Tests Taken",
@@ -1142,7 +1142,7 @@ const rows = [
   {
     "id": "Delta",
     "english": "Delta",
-    "uzbek": "Ozgarish"
+    "uzbek": "O'zgarish"
   },
   {
     "id": "Reason",
@@ -1172,7 +1172,7 @@ const rows = [
   {
     "id": "Add coins",
     "english": "Add coins",
-    "uzbek": "Coin qoshish"
+    "uzbek": "Coin qo'shish"
   },
   {
     "id": "Subtract coins",
@@ -1197,22 +1197,22 @@ const rows = [
   {
     "id": "Reason for adjustment",
     "english": "Reason for adjustment",
-    "uzbek": "Ozgarish sababi"
+    "uzbek": "O'zgarish sababi"
   },
   {
     "id": "Student Profile",
     "english": "Student Profile",
-    "uzbek": "Oquvchi profili"
+    "uzbek": "O'quvchi profili"
   },
   {
     "id": "Student Details",
     "english": "Student Details",
-    "uzbek": "Oquvchi malumotlari"
+    "uzbek": "O'quvchi ma'lumotlari"
   },
   {
     "id": "Class Snapshot",
     "english": "Class Snapshot",
-    "uzbek": "Sinf malumotlari"
+    "uzbek": "Sinf ma'lumotlari"
   },
   {
     "id": "Guardian",
@@ -1227,7 +1227,7 @@ const rows = [
   {
     "id": "Teacher",
     "english": "Teacher",
-    "uzbek": "Oqituvchi"
+    "uzbek": "O'qituvchi"
   },
   {
     "id": "Branches",
@@ -1237,7 +1237,7 @@ const rows = [
   {
     "id": "Total Students",
     "english": "Total Students",
-    "uzbek": "Jami oquvchilar"
+    "uzbek": "Jami o'quvchilar"
   },
   {
     "id": "Class Coverage",
@@ -1247,12 +1247,12 @@ const rows = [
   {
     "id": "Paid Students",
     "english": "Paid Students",
-    "uzbek": "Tolagan oquvchilar"
+    "uzbek": "To'lagan o'quvchilar"
   },
   {
     "id": "Revenue / Paid",
     "english": "Revenue / Paid",
-    "uzbek": "Daromad / toladi"
+    "uzbek": "Daromad / to'ladi"
   },
   {
     "id": "Strongest branch",
@@ -1267,12 +1267,12 @@ const rows = [
   {
     "id": "Needs attention",
     "english": "Needs attention",
-    "uzbek": "Etibor kerak"
+    "uzbek": "E'tibor kerak"
   },
   {
     "id": "Average collected",
     "english": "Average collected",
-    "uzbek": "Ortacha yigim"
+    "uzbek": "O'rtacha yig'im"
   },
   {
     "id": "Executive",
@@ -1292,7 +1292,7 @@ const rows = [
   {
     "id": "Enrollment Mix",
     "english": "Enrollment Mix",
-    "uzbek": "Royxat tarkibi"
+    "uzbek": "Ro'yxat tarkibi"
   },
   {
     "id": "6-month revenue",
@@ -1367,12 +1367,12 @@ const rows = [
   {
     "id": "Student Growth",
     "english": "Student Growth",
-    "uzbek": "Oquvchilar osishi"
+    "uzbek": "O'quvchilar o'sishi"
   },
   {
     "id": "Schools of Students",
     "english": "Schools of Students",
-    "uzbek": "Oquvchilar maktablari"
+    "uzbek": "O'quvchilar maktablari"
   },
   {
     "id": "Financial Analysis",
@@ -1382,7 +1382,7 @@ const rows = [
   {
     "id": "Collections by month segment",
     "english": "Collections by month segment",
-    "uzbek": "Oy qismlari boyicha yigim"
+    "uzbek": "Oy qismlari bo'yicha yig'im"
   },
   {
     "id": "In Progress",
@@ -1427,7 +1427,7 @@ const rows = [
   {
     "id": "No upcoming tests.",
     "english": "No upcoming tests.",
-    "uzbek": "Yaqin testlar yoq."
+    "uzbek": "Yaqin testlar yo'q."
   },
   {
     "id": "Next assignment",
@@ -1437,12 +1437,12 @@ const rows = [
   {
     "id": "No assignments due this week.",
     "english": "No assignments due this week.",
-    "uzbek": "Bu hafta topshiriladigan vazifalar yoq."
+    "uzbek": "Bu hafta topshiriladigan vazifalar yo'q."
   },
   {
     "id": "Enrollment",
     "english": "Enrollment",
-    "uzbek": "Royxat"
+    "uzbek": "Ro'yxat"
   },
   {
     "id": "Code",
@@ -1472,7 +1472,7 @@ const rows = [
   {
     "id": "Recent Grades",
     "english": "Recent Grades",
-    "uzbek": "Songgi baholar"
+    "uzbek": "So'nggi baholar"
   },
   {
     "id": "No grades posted yet.",
@@ -1482,7 +1482,7 @@ const rows = [
   {
     "id": "No class",
     "english": "No class",
-    "uzbek": "Sinf yoq"
+    "uzbek": "Sinf yo'q"
   },
   {
     "id": "Settled",
@@ -1492,7 +1492,7 @@ const rows = [
   {
     "id": "Unpaid",
     "english": "Unpaid",
-    "uzbek": "Tolanmagan"
+    "uzbek": "To'lanmagan"
   },
   {
     "id": "Classes Management",
@@ -1502,22 +1502,22 @@ const rows = [
   {
     "id": "Search classes by name, code, schedule, room...",
     "english": "Search classes by name, code, schedule, room...",
-    "uzbek": "Sinflarni nom, kod, jadval yoki xona boyicha qidiring..."
+    "uzbek": "Sinflarni nom, kod, jadval yoki xona bo'yicha qidiring..."
   },
   {
     "id": "Filter by teacher",
     "english": "Filter by teacher",
-    "uzbek": "Oqituvchi boyicha filtr"
+    "uzbek": "O'qituvchi bo'yicha filtr"
   },
   {
     "id": "All teachers",
     "english": "All teachers",
-    "uzbek": "Barcha oqituvchilar"
+    "uzbek": "Barcha o'qituvchilar"
   },
   {
     "id": "No classes match your search.",
     "english": "No classes match your search.",
-    "uzbek": "Qidiruvga mos sinflar yoq."
+    "uzbek": "Qidiruvga mos sinflar yo'q."
   },
   {
     "id": "Open class actions",
@@ -1527,12 +1527,12 @@ const rows = [
   {
     "id": "Select all visible classes",
     "english": "Select all visible classes",
-    "uzbek": "Korinayotgan barcha sinflarni tanlash"
+    "uzbek": "Ko'rinayotgan barcha sinflarni tanlash"
   },
   {
     "id": "Payment Frequency",
     "english": "Payment Frequency",
-    "uzbek": "Tolov davriyligi"
+    "uzbek": "To'lov davriyligi"
   },
   {
     "id": "Select Frequency",
@@ -1552,17 +1552,17 @@ const rows = [
   {
     "id": "Teacher (Optional)",
     "english": "Teacher (Optional)",
-    "uzbek": "Oqituvchi (ixtiyoriy)"
+    "uzbek": "O'qituvchi (ixtiyoriy)"
   },
   {
     "id": "Select Teacher",
     "english": "Select Teacher",
-    "uzbek": "Oqituvchini tanlang"
+    "uzbek": "O'qituvchini tanlang"
   },
   {
     "id": "None",
     "english": "None",
-    "uzbek": "Yoq"
+    "uzbek": "Yo'q"
   },
   {
     "id": "Attendance records found",
@@ -1572,7 +1572,7 @@ const rows = [
   {
     "id": "Student ID",
     "english": "Student ID",
-    "uzbek": "Oquvchi ID"
+    "uzbek": "O'quvchi ID"
   },
   {
     "id": "Session",
@@ -1592,22 +1592,22 @@ const rows = [
   {
     "id": "Leave empty to use default",
     "english": "Leave empty to use default",
-    "uzbek": "Standartdan foydalanish uchun bosh qoldiring"
+    "uzbek": "Standartdan foydalanish uchun bo'sh qoldiring"
   },
   {
     "id": "Default calendar view",
     "english": "Default calendar view",
-    "uzbek": "Standart taqvim korinishi"
+    "uzbek": "Standart taqvim ko'rinishi"
   },
   {
     "id": "Month view",
     "english": "Month view",
-    "uzbek": "Oy korinishi"
+    "uzbek": "Oy ko'rinishi"
   },
   {
     "id": "Week view",
     "english": "Week view",
-    "uzbek": "Hafta korinishi"
+    "uzbek": "Hafta ko'rinishi"
   },
   {
     "id": "Day starts",
@@ -1657,7 +1657,7 @@ const rows = [
   {
     "id": "No questions added yet",
     "english": "No questions added yet",
-    "uzbek": "Savollar hali qoshilmagan"
+    "uzbek": "Savollar hali qo'shilmagan"
   },
   {
     "id": "Time Taken",
@@ -1667,12 +1667,12 @@ const rows = [
   {
     "id": "Passed",
     "english": "Passed",
-    "uzbek": "Otdi"
+    "uzbek": "O'tdi"
   },
   {
     "id": "Average Score",
     "english": "Average Score",
-    "uzbek": "Ortacha ball"
+    "uzbek": "O'rtacha ball"
   },
   {
     "id": "No statistics available yet",
@@ -1697,7 +1697,7 @@ const rows = [
   {
     "id": "No Subject",
     "english": "No Subject",
-    "uzbek": "Fan yoq"
+    "uzbek": "Fan yo'q"
   },
   {
     "id": "Description",
@@ -1707,12 +1707,12 @@ const rows = [
   {
     "id": "Instructions",
     "english": "Instructions",
-    "uzbek": "Korsatmalar"
+    "uzbek": "Ko'rsatmalar"
   },
   {
     "id": "Enter instructions for students taking this test...",
     "english": "Enter instructions for students taking this test...",
-    "uzbek": "Bu testni topshiradigan oquvchilar uchun korsatmalarni kiriting..."
+    "uzbek": "Bu testni topshiradigan o'quvchilar uchun ko'rsatmalarni kiriting..."
   },
   {
     "id": "Duration (minutes)",
@@ -1722,12 +1722,12 @@ const rows = [
   {
     "id": "Passing Marks",
     "english": "Passing Marks",
-    "uzbek": "Otish balli"
+    "uzbek": "O'tish balli"
   },
   {
     "id": "Reading Passages",
     "english": "Reading Passages",
-    "uzbek": "Oqish matnlari"
+    "uzbek": "O'qish matnlari"
   },
   {
     "id": "Passage",
@@ -1752,7 +1752,7 @@ const rows = [
   {
     "id": "Medium",
     "english": "Medium",
-    "uzbek": "Ortacha"
+    "uzbek": "O'rtacha"
   },
   {
     "id": "Hard",
@@ -1797,32 +1797,32 @@ const rows = [
   {
     "id": "Select correct answer",
     "english": "Select correct answer",
-    "uzbek": "Togri javobni tanlang"
+    "uzbek": "To'g'ri javobni tanlang"
   },
   {
     "id": "True",
     "english": "True",
-    "uzbek": "Togri"
+    "uzbek": "To'g'ri"
   },
   {
     "id": "False",
     "english": "False",
-    "uzbek": "Notogri"
+    "uzbek": "Noto'g'ri"
   },
   {
     "id": "Word Limit (optional)",
     "english": "Word Limit (optional)",
-    "uzbek": "Soz chegarasi (ixtiyoriy)"
+    "uzbek": "So'z chegarasi (ixtiyoriy)"
   },
   {
     "id": "Correct Answer",
     "english": "Correct Answer",
-    "uzbek": "Togri javob"
+    "uzbek": "To'g'ri javob"
   },
   {
     "id": "Correct Answer(s) - comma separated for multiple accepted answers",
     "english": "Correct Answer(s) - comma separated for multiple accepted answers",
-    "uzbek": "Togri javob(lar) - bir nechta javob uchun vergul bilan ajrating"
+    "uzbek": "To'g'ri javob(lar) - bir nechta javob uchun vergul bilan ajrating"
   },
   {
     "id": "Explanation",
@@ -1832,7 +1832,7 @@ const rows = [
   {
     "id": "Explanation (shown after submission)",
     "english": "Explanation (shown after submission)",
-    "uzbek": "Izoh (topshirgandan keyin korsatiladi)"
+    "uzbek": "Izoh (topshirgandan keyin ko'rsatiladi)"
   },
   {
     "id": "Test Settings",
@@ -1852,7 +1852,7 @@ const rows = [
   {
     "id": "Show Results Immediately",
     "english": "Show Results Immediately",
-    "uzbek": "Natijalarni darhol korsatish"
+    "uzbek": "Natijalarni darhol ko'rsatish"
   },
   {
     "id": "Allow Retakes",
@@ -1877,12 +1877,12 @@ const rows = [
   {
     "id": "All Students",
     "english": "All Students",
-    "uzbek": "Barcha oquvchilar"
+    "uzbek": "Barcha o'quvchilar"
   },
   {
     "id": "Specific Students",
     "english": "Specific Students",
-    "uzbek": "Aniq oquvchilar"
+    "uzbek": "Aniq o'quvchilar"
   },
   {
     "id": "Specific Class",
@@ -1892,17 +1892,17 @@ const rows = [
   {
     "id": "Specific Teacher's Students",
     "english": "Specific Teacher's Students",
-    "uzbek": "Aniq oqituvchi oquvchilari"
+    "uzbek": "Aniq o'qituvchi o'quvchilari"
   },
   {
     "id": "Review your test details before creating.",
     "english": "Review your test details before creating.",
-    "uzbek": "Yaratishdan oldin test malumotlarini tekshiring."
+    "uzbek": "Yaratishdan oldin test ma'lumotlarini tekshiring."
   },
   {
     "id": "Test Information",
     "english": "Test Information",
-    "uzbek": "Test malumotlari"
+    "uzbek": "Test ma'lumotlari"
   },
   {
     "id": "Type",
@@ -1917,7 +1917,7 @@ const rows = [
   {
     "id": "Visibility",
     "english": "Visibility",
-    "uzbek": "Korinish"
+    "uzbek": "Ko'rinish"
   },
   {
     "id": "Private",
@@ -1957,7 +1957,7 @@ const rows = [
   {
     "id": "No",
     "english": "No",
-    "uzbek": "Yoq"
+    "uzbek": "Yo'q"
   },
   {
     "id": "Submission Details",
@@ -1982,7 +1982,7 @@ const rows = [
   {
     "id": "Correct",
     "english": "Correct",
-    "uzbek": "Togri"
+    "uzbek": "To'g'ri"
   },
   {
     "id": "Detailed Answers",
@@ -1997,12 +1997,12 @@ const rows = [
   {
     "id": "Student’s Answer",
     "english": "Student’s Answer",
-    "uzbek": "Oquvchi javobi"
+    "uzbek": "O'quvchi javobi"
   },
   {
     "id": "Student's Answer",
     "english": "Student's Answer",
-    "uzbek": "Oquvchi javobi"
+    "uzbek": "O'quvchi javobi"
   },
   {
     "id": "Feedback",
@@ -2017,7 +2017,7 @@ const rows = [
   {
     "id": "Not specified",
     "english": "Not specified",
-    "uzbek": "Korsatilmagan"
+    "uzbek": "Ko'rsatilmagan"
   },
   {
     "id": "Submission not found",
@@ -2027,7 +2027,7 @@ const rows = [
   {
     "id": "No answers to grade",
     "english": "No answers to grade",
-    "uzbek": "Baholash uchun javoblar yoq"
+    "uzbek": "Baholash uchun javoblar yo'q"
   },
   {
     "id": "Quick Grade",
@@ -2047,7 +2047,7 @@ const rows = [
   {
     "id": "Add feedback for this answer...",
     "english": "Add feedback for this answer...",
-    "uzbek": "Bu javob uchun fikr qoshish..."
+    "uzbek": "Bu javob uchun fikr qo'shish..."
   },
   {
     "id": "Assign Test",
@@ -2067,12 +2067,12 @@ const rows = [
   {
     "id": "By Class",
     "english": "By Class",
-    "uzbek": "Sinf boyicha"
+    "uzbek": "Sinf bo'yicha"
   },
   {
     "id": "Individual Students",
     "english": "Individual Students",
-    "uzbek": "Alohida oquvchilar"
+    "uzbek": "Alohida o'quvchilar"
   },
   {
     "id": "Mandatory",
@@ -2087,7 +2087,7 @@ const rows = [
   {
     "id": "No - Optional",
     "english": "No - Optional",
-    "uzbek": "Yoq - ixtiyoriy"
+    "uzbek": "Yo'q - ixtiyoriy"
   },
   {
     "id": "Select Classes",
@@ -2102,12 +2102,12 @@ const rows = [
   {
     "id": "Select Students",
     "english": "Select Students",
-    "uzbek": "Oquvchilarni tanlang"
+    "uzbek": "O'quvchilarni tanlang"
   },
   {
     "id": "No students available",
     "english": "No students available",
-    "uzbek": "Oquvchilar mavjud emas"
+    "uzbek": "O'quvchilar mavjud emas"
   },
   {
     "id": "Question Navigator",
@@ -2132,7 +2132,7 @@ const rows = [
   {
     "id": "Answer based on the reading passage...",
     "english": "Answer based on the reading passage...",
-    "uzbek": "Oqish matniga asoslanib javob bering..."
+    "uzbek": "O'qish matniga asoslanib javob bering..."
   },
   {
     "id": "Your time has expired. Your test will be submitted automatically.",
@@ -2192,7 +2192,7 @@ const rows = [
   {
     "id": "Filter by Day:",
     "english": "Filter by Day:",
-    "uzbek": "Kun boyicha filtr:"
+    "uzbek": "Kun bo'yicha filtr:"
   },
   {
     "id": "No records found.",
@@ -2202,7 +2202,7 @@ const rows = [
   {
     "id": "Additional remarks...",
     "english": "Additional remarks...",
-    "uzbek": "Qoshimcha izohlar..."
+    "uzbek": "Qo'shimcha izohlar..."
   },
   {
     "id": "Class",
@@ -2307,12 +2307,12 @@ const rows = [
   {
     "id": "Aborted",
     "english": "Aborted",
-    "uzbek": "Toxtatilgan"
+    "uzbek": "To'xtatilgan"
   },
   {
     "id": "Loading students...",
     "english": "Loading students...",
-    "uzbek": "Oquvchilar yuklanmoqda..."
+    "uzbek": "O'quvchilar yuklanmoqda..."
   },
   {
     "id": "Loading classes...",
@@ -2322,7 +2322,7 @@ const rows = [
   {
     "id": "Loading teachers...",
     "english": "Loading teachers...",
-    "uzbek": "Oqituvchilar yuklanmoqda..."
+    "uzbek": "O'qituvchilar yuklanmoqda..."
   },
   {
     "id": "Status *",
@@ -2357,7 +2357,7 @@ const rows = [
   {
     "id": "Select a teacher",
     "english": "Select a teacher",
-    "uzbek": "Oqituvchini tanlang"
+    "uzbek": "O'qituvchini tanlang"
   },
   {
     "id": "Amount *",
@@ -2367,22 +2367,22 @@ const rows = [
   {
     "id": "Gender Breakdown",
     "english": "Gender Breakdown",
-    "uzbek": "Jins boyicha taqsimot"
+    "uzbek": "Jins bo'yicha taqsimot"
   },
   {
     "id": "No students found for this teacher",
     "english": "No students found for this teacher",
-    "uzbek": "Bu oqituvchi uchun oquvchilar topilmadi"
+    "uzbek": "Bu o'qituvchi uchun o'quvchilar topilmadi"
   },
   {
     "id": "No classes assigned to this teacher",
     "english": "No classes assigned to this teacher",
-    "uzbek": "Bu oqituvchiga sinflar biriktirilmagan"
+    "uzbek": "Bu o'qituvchiga sinflar biriktirilmagan"
   },
   {
     "id": "Payment Date *",
     "english": "Payment Date *",
-    "uzbek": "Tolov sanasi *"
+    "uzbek": "To'lov sanasi *"
   },
   {
     "id": "Receipt Number *",
@@ -2412,7 +2412,7 @@ const rows = [
   {
     "id": "Academic Year *",
     "english": "Academic Year *",
-    "uzbek": "Oquv yili *"
+    "uzbek": "O'quv yili *"
   },
   {
     "id": "All Genders",
@@ -2477,22 +2477,22 @@ const rows = [
   {
     "id": "No students in this class",
     "english": "No students in this class",
-    "uzbek": "Bu sinfda oquvchilar yoq"
+    "uzbek": "Bu sinfda o'quvchilar yo'q"
   },
   {
     "id": "Paid Share",
     "english": "Paid Share",
-    "uzbek": "Tolangan ulush"
+    "uzbek": "To'langan ulush"
   },
   {
     "id": "Paid students",
     "english": "Paid students",
-    "uzbek": "Tolagan oquvchilar"
+    "uzbek": "To'lagan o'quvchilar"
   },
   {
     "id": "Paid vs Unpaid",
     "english": "Paid vs Unpaid",
-    "uzbek": "Tolangan va tolanmagan"
+    "uzbek": "To'langan va to'lanmagan"
   },
   {
     "id": "Parent Phone",
@@ -2502,12 +2502,12 @@ const rows = [
   {
     "id": "Payment Method *",
     "english": "Payment Method *",
-    "uzbek": "Tolov usuli *"
+    "uzbek": "To'lov usuli *"
   },
   {
     "id": "Payment Type *",
     "english": "Payment Type *",
-    "uzbek": "Tolov turi *"
+    "uzbek": "To'lov turi *"
   },
   {
     "id": "Regular Class",
@@ -2527,7 +2527,7 @@ const rows = [
   {
     "id": "Search by student or subject...",
     "english": "Search by student or subject...",
-    "uzbek": "Oquvchi yoki fan boyicha qidiring..."
+    "uzbek": "O'quvchi yoki fan bo'yicha qidiring..."
   },
   {
     "id": "Select a subject",
@@ -2582,32 +2582,32 @@ const rows = [
   {
     "id": "Unpaid Amount",
     "english": "Unpaid Amount",
-    "uzbek": "Tolanmagan miqdor"
+    "uzbek": "To'lanmagan miqdor"
   },
   {
     "id": "Unpaid students",
     "english": "Unpaid students",
-    "uzbek": "Tolamagan oquvchilar"
+    "uzbek": "To'lamagan o'quvchilar"
   },
   {
     "id": "Academic Year",
     "english": "Academic Year",
-    "uzbek": "Oquv yili"
+    "uzbek": "O'quv yili"
   },
   {
     "id": "Active and inactive student balance.",
     "english": "Active and inactive student balance.",
-    "uzbek": "Faol va nofaol oquvchilar balansi."
+    "uzbek": "Faol va nofaol o'quvchilar balansi."
   },
   {
     "id": "Active students",
     "english": "Active students",
-    "uzbek": "Faol oquvchilar"
+    "uzbek": "Faol o'quvchilar"
   },
   {
     "id": "Add any additional notes...",
     "english": "Add any additional notes...",
-    "uzbek": "Qoshimcha eslatmalarni kiriting..."
+    "uzbek": "Qo'shimcha eslatmalarni kiriting..."
   },
   {
     "id": "Add any remarks...",
@@ -2622,7 +2622,7 @@ const rows = [
   {
     "id": "Additional notes...",
     "english": "Additional notes...",
-    "uzbek": "Qoshimcha eslatmalar..."
+    "uzbek": "Qo'shimcha eslatmalar..."
   },
   {
     "id": "Address *",
@@ -2687,32 +2687,32 @@ const rows = [
   {
     "id": "Average distribution per center.",
     "english": "Average distribution per center.",
-    "uzbek": "Markazlar boyicha ortacha taqsimot."
+    "uzbek": "Markazlar bo'yicha o'rtacha taqsimot."
   },
   {
     "id": "Average Percentage",
     "english": "Average Percentage",
-    "uzbek": "Ortacha foiz"
+    "uzbek": "O'rtacha foiz"
   },
   {
     "id": "Avg duration",
     "english": "Avg duration",
-    "uzbek": "Ortacha davomiylik"
+    "uzbek": "O'rtacha davomiylik"
   },
   {
     "id": "Avg Students",
     "english": "Avg Students",
-    "uzbek": "Ortacha oquvchilar"
+    "uzbek": "O'rtacha o'quvchilar"
   },
   {
     "id": "Avg Teachers",
     "english": "Avg Teachers",
-    "uzbek": "Ortacha oqituvchilar"
+    "uzbek": "O'rtacha o'qituvchilar"
   },
   {
     "id": "Bank Transfer",
     "english": "Bank Transfer",
-    "uzbek": "Bank otkazmasi"
+    "uzbek": "Bank o'tkazmasi"
   },
   {
     "id": "Bottom 3",
@@ -2722,12 +2722,12 @@ const rows = [
   {
     "id": "Capacity *",
     "english": "Capacity *",
-    "uzbek": "Sigim *"
+    "uzbek": "Sig'im *"
   },
   {
     "id": "Capacity Health",
     "english": "Capacity Health",
-    "uzbek": "Sigim holati"
+    "uzbek": "Sig'im holati"
   },
   {
     "id": "Center Breakdown",
@@ -2747,7 +2747,7 @@ const rows = [
   {
     "id": "Choose a class from the dropdown above",
     "english": "Choose a class from the dropdown above",
-    "uzbek": "Yuqoridagi royxatdan sinfni tanlang"
+    "uzbek": "Yuqoridagi ro'yxatdan sinfni tanlang"
   },
   {
     "id": "City *",
@@ -2757,7 +2757,7 @@ const rows = [
   {
     "id": "Class (Optional - leave empty for personal task)",
     "english": "Class (Optional - leave empty for personal task)",
-    "uzbek": "Sinf (shaxsiy vazifa uchun bosh qoldiring)"
+    "uzbek": "Sinf (shaxsiy vazifa uchun bo'sh qoldiring)"
   },
   {
     "id": "Class *",
@@ -2792,7 +2792,7 @@ const rows = [
   {
     "id": "Class list",
     "english": "Class list",
-    "uzbek": "Sinf royxati"
+    "uzbek": "Sinf ro'yxati"
   },
   {
     "id": "Class Name *",
@@ -2807,7 +2807,7 @@ const rows = [
   {
     "id": "Click &quot;Add Teacher&quot; to get started",
     "english": "Click &quot;Add Teacher&quot; to get started",
-    "uzbek": "Boshlash uchun &quot;Oqituvchi qoshish&quot; tugmasini bosing"
+    "uzbek": "Boshlash uchun &quot;O'qituvchi qo'shish&quot; tugmasini bosing"
   },
   {
     "id": "Coin Balance",
@@ -2837,7 +2837,7 @@ const rows = [
   {
     "id": "Current view",
     "english": "Current view",
-    "uzbek": "Joriy korinish"
+    "uzbek": "Joriy ko'rinish"
   },
   {
     "id": "Day *",
@@ -2852,12 +2852,12 @@ const rows = [
   {
     "id": "Delete Assignment",
     "english": "Delete Assignment",
-    "uzbek": "Vazifani ochirish"
+    "uzbek": "Vazifani o'chirish"
   },
   {
     "id": "Delete session",
     "english": "Delete session",
-    "uzbek": "Sessiyani ochirish"
+    "uzbek": "Sessiyani o'chirish"
   },
   {
     "id": "Device ID",
@@ -2902,12 +2902,12 @@ const rows = [
   {
     "id": "Enrollment Health",
     "english": "Enrollment Health",
-    "uzbek": "Royxat holati"
+    "uzbek": "Ro'yxat holati"
   },
   {
     "id": "Enrollment Number",
     "english": "Enrollment Number",
-    "uzbek": "Royxat raqami"
+    "uzbek": "Ro'yxat raqami"
   },
   {
     "id": "Enter username",
@@ -2917,7 +2917,7 @@ const rows = [
   {
     "id": "Enter your payment password provided by admin.",
     "english": "Enter your payment password provided by admin.",
-    "uzbek": "Admin bergan tolov parolini kiriting."
+    "uzbek": "Admin bergan to'lov parolini kiriting."
   },
   {
     "id": "Exact status",

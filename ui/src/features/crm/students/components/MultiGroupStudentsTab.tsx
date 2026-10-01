@@ -161,7 +161,7 @@ export const MultiGroupStudentsTab = ({
   }
 
   if (error) {
-    return <Card><CardContent className="py-8 text-center text-sm text-destructive">{t('Unable to load the complete filtered student roster.')}: {error}</CardContent></Card>;
+    return <Card><CardContent className="py-8 text-center text-sm text-destructive">{t('Unable to load the complete filtered student roster.')}: {t(error)}</CardContent></Card>;
   }
 
   return (

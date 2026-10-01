@@ -23,6 +23,7 @@ import {
   TeacherTemporaryPasswordDialog,
 } from './components/TeacherPasswordControls';
 import { useTeacherDetailPage } from './hooks/useTeacherDetailPage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const TeacherInfoTab = lazy(() => import('./components/TeacherInfoTab'));
 const TeacherClassesStudentsTab = lazy(() => import('./components/TeacherClassesStudentsTab'));
@@ -30,15 +31,19 @@ const TeacherPaymentsTab = lazy(() => import('./components/TeacherPaymentsTab'))
 const TeacherTestsTabLink = lazy(() => import('./components/TeacherTestsTabLink'));
 const TeacherGradeDialog = lazy(() => import('./components/TeacherGradeDialog'));
 
-const TabLoadingState = () => (
+const TabLoadingState = () => {
+  const { t } = useLanguage();
+  return (
   <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-    Loading...
+    {t('Loading...')}
   </div>
 );
+};
 
 // Renders the teacher detail page screen.
 const TeacherDetailPage = () => {
+  const { t } = useLanguage();
   const {
     navigate,
     teacher,
@@ -104,11 +109,11 @@ const TeacherDetailPage = () => {
     return (
       <div className="p-6 text-center">
         <Alert variant="destructive">
-          <AlertDescription>Teacher not found</AlertDescription>
+          <AlertDescription>{t('Teacher not found')}</AlertDescription>
         </Alert>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/teachers')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Teachers
+          {t('Back to Teachers')}
         </Button>
       </div>
     );
@@ -124,7 +129,7 @@ const TeacherDetailPage = () => {
           onClick={() => navigate('/teachers')}
         >
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-          Back to Teachers
+          {t('Back to Teachers')}
         </Button>
         <div className="flex flex-wrap items-center gap-1.5">
           <Button
@@ -133,7 +138,7 @@ const TeacherDetailPage = () => {
             onClick={() => setIsPasswordUpdate((prev) => !prev)}
             disabled={resettingPassword}
           >
-            Update Password
+            {t('Update Password')}
           </Button>
           <Button
             size="sm"
@@ -144,7 +149,7 @@ const TeacherDetailPage = () => {
             }}
           >
             <KeyRound className="mr-1.5 h-3.5 w-3.5" />
-            Set Payment Password
+            {t('Set Payment Password')}
           </Button>
 
         </div>
@@ -152,7 +157,7 @@ const TeacherDetailPage = () => {
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+          <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
         </Alert>
       )}
 
@@ -185,23 +190,23 @@ const TeacherDetailPage = () => {
           <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-white px-2 py-2 dark:border-border dark:bg-muted/40">
             <TabsTrigger value="info" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <User className="h-3.5 w-3.5" />
-              Information
+              {t('Information')}
             </TabsTrigger>
             <TabsTrigger value="classes" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <BookOpen className="h-3.5 w-3.5" />
-              Classes & Students
+              {t('Classes & Students')}
             </TabsTrigger>
             <TabsTrigger value="assignments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <ClipboardList className="h-3.5 w-3.5" />
-              Assignments
+              {t('Assignments')}
             </TabsTrigger>
             <TabsTrigger value="tests" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <FileQuestion className="h-3.5 w-3.5" />
-              Tests
+              {t('Tests')}
             </TabsTrigger>
             <TabsTrigger value="payments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <Wallet className="h-3.5 w-3.5" />
-              Payments
+              {t('Payments')}
             </TabsTrigger>
           </TabsList>
 

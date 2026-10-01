@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/button';
 import { usePaymentsPage } from '../payments/hooks/usePaymentsPage';
 import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
 import type { DashboardScope } from './types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
+  const { t } = useLanguage();
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';
   const navigate = useNavigate();
@@ -70,11 +72,11 @@ const Dashboard = memo(() => {
     <div className="mx-auto max-w-7xl space-y-5 px-4 py-6">
       <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04] sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-600">Admin overview</p>
-          <h1 className="mt-1 text-2xl font-black text-slate-950 dark:text-white">Operations dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Monitor payments and attendance across the center.</p>
+          <p className="text-xs font-black uppercase tracking-[0.18em] text-cyan-600">{t('Admin overview')}</p>
+          <h1 className="mt-1 text-2xl font-black text-slate-950 dark:text-white">{t('Operations dashboard')}</h1>
+          <p className="mt-1 text-sm text-slate-500">{t('Monitor payments and attendance across the center.')}</p>
         </div>
-        <Button onClick={() => handleOpenModal()}><Plus className="mr-2 h-4 w-4" /> Add payment</Button>
+        <Button onClick={() => handleOpenModal()}><Plus className="mr-2 h-4 w-4" /> {t('Add payment')}</Button>
       </div>
 
       <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">
@@ -85,40 +87,40 @@ const Dashboard = memo(() => {
         ))}
       </div>
 
-      {loading ? <div className="rounded-xl border p-10 text-center text-sm text-slate-500">Loading dashboard data...</div> : activeTab === 'payments' ? (
+      {loading ? <div className="rounded-xl border p-10 text-center text-sm text-slate-500">{t('Loading dashboard data...')}</div> : activeTab === 'payments' ? (
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            <Metric icon={CircleDollarSign} label="Paid yesterday" value={paidYesterday} tone="text-amber-600 bg-amber-50" />
-            <Metric icon={CheckCircle2} label="Paid today" value={paidToday} tone="text-emerald-600 bg-emerald-50" />
-            <Metric icon={Users} label="Students this month" value={stats.totalStudents} tone="text-cyan-600 bg-cyan-50" />
+            <Metric icon={CircleDollarSign} label={t('Paid yesterday')} value={paidYesterday} tone="text-amber-600 bg-amber-50" />
+            <Metric icon={CheckCircle2} label={t('Paid today')} value={paidToday} tone="text-emerald-600 bg-emerald-50" />
+            <Metric icon={Users} label={t('Students this month')} value={stats.totalStudents} tone="text-cyan-600 bg-cyan-50" />
           </div>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <div className="mb-5 flex items-center justify-between"><div><h2 className="font-black">Monthly payment activity</h2><p className="text-sm text-slate-500">Number of completed student payments per day.</p></div><BarChart3 className="h-5 w-5 text-cyan-600" /></div>
+            <div className="mb-5 flex items-center justify-between"><div><h2 className="font-black">{t('Monthly payment activity')}</h2><p className="text-sm text-slate-500">{t('Number of completed student payments per day.')}</p></div><BarChart3 className="h-5 w-5 text-cyan-600" /></div>
             <div className="flex h-48 items-end gap-1 overflow-x-auto pb-6">{paymentDays.map((day) => <div key={day.key} className="flex min-w-[14px] flex-1 flex-col items-center justify-end gap-1"><div title={`${day.key}: ${day.count}`} className={`w-full rounded-t-sm ${day.key === todayKey ? 'bg-emerald-500' : day.key === yesterdayKey ? 'bg-amber-500' : 'bg-cyan-500/70'}`} style={{ height: `${Math.max(4, (day.count / maxPaymentCount) * 140)}px` }} /><span className="text-[9px] text-slate-400">{day.label}</span></div>)}</div>
           </section>
-          <Button variant="outline" onClick={() => navigate('/payments')}>Open payments management</Button>
+          <Button variant="outline" onClick={() => navigate('/payments')}>{t('Open payments management')}</Button>
         </div>
       ) : (
         <div className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-3">
-            <Metric icon={CalendarCheck2} label="Present or late today" value={presentToday} tone="text-emerald-600 bg-emerald-50" />
-            <Metric icon={UserRoundX} label="Absent today" value={absentToday} tone="text-rose-600 bg-rose-50" />
-            <Metric icon={Users} label="Attendance records today" value={attendanceToday.length} tone="text-cyan-600 bg-cyan-50" />
+            <Metric icon={CalendarCheck2} label={t('Present or late today')} value={presentToday} tone="text-emerald-600 bg-emerald-50" />
+            <Metric icon={UserRoundX} label={t('Absent today')} value={absentToday} tone="text-rose-600 bg-rose-50" />
+            <Metric icon={Users} label={t('Attendance records today')} value={attendanceToday.length} tone="text-cyan-600 bg-cyan-50" />
           </div>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
-            <h2 className="font-black">Attendance overview</h2>
-            <p className="mt-1 text-sm text-slate-500">Overall attendance for {today.toLocaleDateString()}.</p>
+            <h2 className="font-black">{t('Attendance overview')}</h2>
+            <p className="mt-1 text-sm text-slate-500">{t('Overall attendance for {date}.', { date: today.toLocaleDateString() })}</p>
             <div className="mt-5 h-4 overflow-hidden rounded-full bg-rose-100"><div className="h-full bg-emerald-500" style={{ width: `${attendanceToday.length ? (presentToday / attendanceToday.length) * 100 : 0}%` }} /></div>
-            <div className="mt-3 flex justify-between text-sm font-bold"><span className="text-emerald-600">{presentToday} present</span><span className="text-rose-600">{absentToday} absent</span></div>
+            <div className="mt-3 flex justify-between text-sm font-bold"><span className="text-emerald-600">{presentToday} {t('present')}</span><span className="text-rose-600">{t('{count} absent', { count: absentToday })}</span></div>
           </section>
-          <Button variant="outline" onClick={() => navigate('/attendance')}>Open attendance management</Button>
+          <Button variant="outline" onClick={() => navigate('/attendance')}>{t('Open attendance management')}</Button>
         </div>
       )}
       <PaymentFormDialog
         open={isModalOpen}
         onOpenChange={(open) => { if (!open) handleCloseModal(); }}
-        title="Add Payment"
-        description="Record a payment without leaving the dashboard."
+        title={t('Add Payment')}
+        description={t('Record a payment without leaving the dashboard.')}
         formData={formData}
         setFormData={setFormData}
         onSubmit={handleSubmit}

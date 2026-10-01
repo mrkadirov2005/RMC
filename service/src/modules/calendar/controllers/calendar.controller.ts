@@ -27,7 +27,7 @@ module.exports = {
   resources: run(service.resources),
   conflicts: run(service.conflicts),
   moveRecurring: run((centerId: number, _query: any, scope: any, req?: any) => {
-    if (req?.user?.userType === 'student') throw Object.assign(new Error('Access denied'), { status: 403 });
+    if (req?.user?.userType === 'student') throw Object.assign(new Error('Kirish rad etildi'), { status: 403 });
     return service.moveRecurring(centerId, Number(req?.params?.classId), req?.body, scope);
   }),
 };

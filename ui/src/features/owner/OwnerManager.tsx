@@ -8,9 +8,11 @@ import { OwnerManagerDialog } from './components/OwnerManagerDialog';
 import { OwnerOverviewPanel } from './components/OwnerOverviewPanel';
 import { OwnerWelcomeHero } from './components/OwnerWelcomeHero';
 import { DeleteStudentDialog } from '../crm/students/components/DeleteStudentDialog';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the owner manager module.
 const OwnerManager = memo(() => {
+  const { t } = useLanguage();
   const vm = useOwnerManager();
 
   return (
@@ -54,8 +56,8 @@ const OwnerManager = memo(() => {
 
         <DeleteStudentDialog
           open={vm.pendingStudentDelete != null}
-          title={vm.pendingStudentDelete?.hard ? 'Permanently delete student' : 'Delete student'}
-          description={vm.pendingStudentDelete?.hard ? 'Pick why this student is being removed. This cannot be undone.' : 'Pick why this student is being removed.'}
+          title={vm.pendingStudentDelete?.hard ? t('Permanently delete student') : t('Delete student')}
+          description={vm.pendingStudentDelete?.hard ? t('Pick why this student is being removed. This cannot be undone.') : t('Pick why this student is being removed.')}
           onOpenChange={(open) => (!open ? vm.setPendingStudentDelete(null) : undefined)}
           onConfirm={vm.confirmStudentDelete}
         />

@@ -255,6 +255,6 @@ describe('request log routes', () => {
 
     const response = await request(app).get('/request-logs').expect(500);
 
-    expect(response.body).toEqual({ error: 'Failed to fetch request logs', details: 'mongo down' });
+    expect(response.body).toEqual({ error: "So'rovlar jurnalini yuklab bo'lmadi", details: 'mongo down' });
   });
 });

@@ -1,11 +1,25 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { translationAPI, type TranslationRow } from './api';
+import { sharedMessageTranslations } from './sharedMessages';
+import { pageLabelTranslations } from './labels';
+import { fixUzbekSpelling } from './uzbekSpelling';
 
 export type AppLanguage = 'en' | 'uz';
+export type TranslationVars = Record<string, string | number>;
+export type TranslateFn = (value: string, vars?: TranslationVars) => string;
+
+const interpolate = (text: string, vars?: TranslationVars) =>
+  vars
+    ? text.replace(/\{(\w+)\}/g, (match, name: string) =>
+        Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match
+      )
+    : text;
 
 const LANGUAGE_STORAGE_KEY = 'crm_language';
 
 const translations: Record<string, string> = {
+  ...sharedMessageTranslations,
+  ...pageLabelTranslations,
   Dashboard: 'Boshqaruv paneli',
   'My Portal': 'Mening portalim',
   'My Tests': 'Mening testlarim',
@@ -41,8 +55,6 @@ const translations: Record<string, string> = {
   'Access Denied': 'Kirish rad etildi',
   "You don't have permission to access this resource.": "Bu sahifaga kirish huquqingiz yo'q.",
   'Go to Dashboard': "Boshqaruv paneliga o'tish",
-  English: 'Inglizcha',
-  Uzbek: "O'zbekcha",
   Language: 'Til',
   'Debts Management': 'Qarzlarni boshqarish',
   'Add Debt': "Qarz qo'shish",
@@ -410,7 +422,7 @@ const translations: Record<string, string> = {
   Session: 'Sessiya',
   'Default lesson length (minutes)': 'Standart dars davomiyligi (daqiqa)',
   'Override for next generation (minutes)': 'Keyingi yaratish uchun alohida davomiylik (daqiqa)',
-  'Leave empty to use default': 'Standartdan foydalanish uchun bosh qoldiring',
+  'Leave empty to use default': "Standartdan foydalanish uchun bo'sh qoldiring",
   'Default calendar view': "Standart taqvim ko'rinishi",
   'Month view': "Oy ko'rinishi",
   'Week view': "Hafta ko'rinishi",
@@ -437,7 +449,7 @@ const translations: Record<string, string> = {
   'Enter instructions for students taking this test...': "Bu testni topshiradigan o'quvchilar uchun ko'rsatmalarni kiriting...",
   'Duration (minutes)': 'Davomiylik (daqiqa)',
   'Passing Marks': "O'tish balli",
-  'Reading Passages': 'Oqish matnlari',
+  'Reading Passages': "O'qish matnlari",
   Passage: 'Matn',
   Title: 'Sarlavha',
   Difficulty: 'Qiyinlik',
@@ -518,7 +530,7 @@ const translations: Record<string, string> = {
   'Type your answer here...': 'Javobingizni shu yerga yozing...',
   'Write your answer here...': 'Javobingizni shu yerga yozing...',
   'Select match...': 'Moslikni tanlang...',
-  'Answer based on the reading passage...': 'Oqish matniga asoslanib javob bering...',
+  'Answer based on the reading passage...': "O'qish matniga asoslanib javob bering...",
   'Your time has expired. Your test will be submitted automatically.': 'Vaqtingiz tugadi. Test avtomatik topshiriladi.',
   Monday: 'Dushanba',
   Tuesday: 'Seshanba',
@@ -555,7 +567,7 @@ const translations: Record<string, string> = {
   Debt: 'Qarz',
   Days: 'Kunlar',
   Path: 'Yol',
-  Aborted: 'Toxtatilgan',
+  Aborted: "To'xtatilgan",
   'Loading students...': "O'quvchilar yuklanmoqda...",
   'Loading classes...': 'Sinflar yuklanmoqda...',
   'Loading teachers...': "O'qituvchilar yuklanmoqda...",
@@ -644,7 +656,7 @@ const translations: Record<string, string> = {
   'Center Name *': 'Markaz nomi *',
   'Choose a class from the dropdown above': "Yuqoridagi ro'yxatdan sinfni tanlang",
   'City *': 'Shahar *',
-  'Class (Optional - leave empty for personal task)': 'Sinf (shaxsiy vazifa uchun bosh qoldiring)',
+  'Class (Optional - leave empty for personal task)': "Sinf (shaxsiy vazifa uchun bo'sh qoldiring)",
   'Class *': 'Sinf *',
   'Class activity / 30': 'Sinf faolligi / 30',
   'Class assigned': 'Sinf biriktirilgan',
@@ -818,8 +830,8 @@ const translations: Record<string, string> = {
   Admin: 'Admin',
   'Select a branch': 'Filialni tanlang',
   'No branches available': 'Filiallar mavjud emas',
-  'Leave blank to keep current password': 'Joriy parolni saqlash uchun bosh qoldiring',
-  'Leave blank to keep the current password.': 'Joriy parolni saqlash uchun bosh qoldiring.',
+  'Leave blank to keep current password': "Joriy parolni saqlash uchun bo'sh qoldiring",
+  'Leave blank to keep the current password.': "Joriy parolni saqlash uchun bo'sh qoldiring.",
   'Save changes': "O'zgarishlarni saqlash",
   'Choose which navbar items and sections this branch admin can see.': "Bu filial admini ko'ra oladigan menyu va bo'limlarni tanlang.",
   'Create, read, update, and delete student records': "O'quvchi yozuvlarini yaratish, ko'rish, yangilash va o'chirish",
@@ -1335,7 +1347,7 @@ const translations: Record<string, string> = {
   'Monthly lesson calendar': 'Oylik dars taqvimi',
   'Loading calendar': 'Taqvim yuklanmoqda',
   'Calendar preferences reset.': 'Taqvim sozlamalari tiklandi.',
-  'Calendar start hour must be before end hour.': 'Taqvim boshlanish vaqti tugash vaqtidan oldin bolishi kerak.',
+  'Calendar start hour must be before end hour.': "Taqvim boshlanish vaqti tugash vaqtidan oldin bo'lishi kerak.",
   'Lessons': 'Darslar',
   'Lesson days': 'Dars kunlari',
   'Lesson time': 'Dars vaqti',
@@ -1516,7 +1528,7 @@ const translations: Record<string, string> = {
   'Describe what needs to be done': 'Nima qilish kerakligini yozing',
   'Dismiss error': 'Xatoni yopish',
   'Enabled': 'Yoqilgan',
-  'Not enabled': "Yo'qilgan",
+  'Not enabled': 'Yoqilgan',
   'Filtered records': 'Filtrlangan yozuvlar',
   'First name': 'Ism',
   'Last name': 'Familiya',
@@ -1606,7 +1618,7 @@ const translations: Record<string, string> = {
   'Select interface language': 'Interfeys tilini tanlang',
   'Select source': 'Manbani tanlang',
   'Select a reason': 'Sababni tanlang',
-  'Select a class or leave empty': 'Sinfni tanlang yoki bosh qoldiring',
+  'Select a class or leave empty': "Sinfni tanlang yoki bo'sh qoldiring",
   'Select Admin': 'Adminni tanlang',
   'Select Assignee Type': 'Bajaruvchi turini tanlang',
   'Select target group': 'Maqsad guruhni tanlang',
@@ -1669,7 +1681,7 @@ const translations: Record<string, string> = {
   'Date unavailable': "Sana mavjud emas",
   'School class': 'Maktab sinfi',
   'School name': 'Maktab nomi',
-  'Optional school information used for filtering and reports.': 'Filtrlash va hisobotlar uchun ishlatiladigan ixtiyoriy maktab malumotlari.',
+  'Optional school information used for filtering and reports.': "Filtrlash va hisobotlar uchun ishlatiladigan ixtiyoriy maktab ma'lumotlari.",
 
   // ── Discount ────────────────────────────────────────────────
   'Discount': 'Chegirma',
@@ -1831,8 +1843,8 @@ const translations: Record<string, string> = {
   // ── More toast messages ─────────────────────────────────────
   'Grades saved successfully': 'Baholar muvaffaqiyatli saqlandi',
   'Please select class and subject': 'Sinf va fanni tanlang',
-  'Password must be at least 6 characters.': 'Parol kamida 6 belgidan iborat bolishi kerak.',
-  'Password must be at least 6 characters': 'Parol kamida 6 belgidan iborat bolishi kerak',
+  'Password must be at least 6 characters.': "Parol kamida 6 belgidan iborat bo'lishi kerak.",
+  'Password must be at least 6 characters': "Parol kamida 6 belgidan iborat bo'lishi kerak",
   'Payment password must be at least 6 characters.': "To'lov paroli kamida 6 belgidan iborat bo'lishi kerak.",
   'Payment access password set successfully.': "To'lov paroli muvaffaqiyatli o'rnatildi.",
   'Payment password copied.': "To'lov paroli nusxalandi.",
@@ -1982,51 +1994,18 @@ const translations: Record<string, string> = {
   "Change the paper, its questions or its settings, then save.": "Testni, savollarini yoki sozlamalarini o'zgartiring, keyin saqlang.",
 };
 
-const createReverseTranslations = (translationMap: Record<string, string>, englishMap: Record<string, string>) => ({
-  ...Object.fromEntries(Object.entries(translationMap).map(([english, uzbek]) => [uzbek, english])),
-  ...Object.fromEntries(Object.entries(englishMap).map(([id, english]) => [id, english])),
-}) as Record<string, string>;
+const normalizeUzbekTranslation = fixUzbekSpelling;
 
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const buildTranslationPattern = (source: string) => {
-  const escaped = escapeRegExp(source);
-  if (/^[A-Za-z][A-Za-z\s]*[A-Za-z]$/.test(source)) {
-    return new RegExp(`\\b${escaped}\\b`, 'g');
-  }
-  return new RegExp(escaped, 'g');
-};
-
-const normalizeUzbekTranslation = (value: string) =>
-  value
-    .replace(/Tolov/g, "To'lov")
-    .replace(/tolov/g, "to'lov");
-
-const translateExact = (
-  value: string,
-  language: AppLanguage,
-  translationMap: Record<string, string>,
-  reverseTranslationMap: Record<string, string>
-) => {
+// Only text that equals a dictionary entry as a whole is replaced. Replacing single words inside longer
+// text rewrote names and notes ("Review request logs" -> "Ko'rib chiqish request logs") and blocked the page for ~1s.
+const translateExact = (value: string, translationMap: Record<string, string>) => {
   const trimmed = value.trim();
   if (!trimmed) return value;
-  const translated = language === 'uz' ? translationMap[trimmed] : reverseTranslationMap[trimmed];
-  if (translated) return value.replace(trimmed, translated);
-
-  const entries = Object.entries(language === 'uz' ? translationMap : reverseTranslationMap).sort(
-    (a, b) => b[0].length - a[0].length
-  );
-  return entries.reduce((nextValue, [source, target]) => {
-    if (source.length < 3) return nextValue;
-    return nextValue.replace(buildTranslationPattern(source), target);
-  }, value);
+  const translated = translationMap[trimmed];
+  return translated ? value.replace(trimmed, translated) : value;
 };
 
-const translateStaticDom = (
-  language: AppLanguage,
-  translationMap: Record<string, string>,
-  reverseTranslationMap: Record<string, string>
-) => {
+const translateStaticDom = (translationMap: Record<string, string>) => {
   if (typeof document === 'undefined' || !document.body) return;
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -2037,7 +2016,7 @@ const translateStaticDom = (
   textNodes.forEach((node) => {
     if (node.parentElement?.closest('[data-translation-skip]')) return;
     const currentValue = node.nodeValue || '';
-    const nextValue = translateExact(currentValue, language, translationMap, reverseTranslationMap);
+    const nextValue = translateExact(currentValue, translationMap);
     if (nextValue !== currentValue) {
       node.nodeValue = nextValue;
     }
@@ -2048,7 +2027,7 @@ const translateStaticDom = (
     ['placeholder', 'aria-label', 'title'].forEach((attribute) => {
       const value = element.getAttribute(attribute);
       if (!value) return;
-      const nextValue = translateExact(value, language, translationMap, reverseTranslationMap);
+      const nextValue = translateExact(value, translationMap);
       if (nextValue !== value) {
         element.setAttribute(attribute, nextValue);
       }
@@ -2058,9 +2037,7 @@ const translateStaticDom = (
 
 interface LanguageContextValue {
   language: AppLanguage;
-  setLanguage: (language: AppLanguage) => void;
-  toggleLanguage: () => void;
-  t: (value: string) => string;
+  t: TranslateFn;
   translations: TranslationRow[];
   refreshTranslations: () => Promise<void>;
   saveTranslation: (row: TranslationRow) => Promise<void>;
@@ -2068,14 +2045,10 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-const getInitialLanguage = (): AppLanguage => {
-  if (typeof window === 'undefined') return 'uz';
-  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  return stored === 'en' ? 'en' : 'uz';
-};
+// The interface is Uzbek only; a language saved by older versions is ignored and cleared.
+const language: AppLanguage = 'uz';
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [language, setLanguageState] = useState<AppLanguage>(getInitialLanguage);
   const [remoteTranslations, setRemoteTranslations] = useState<TranslationRow[]>([]);
 
   const refreshTranslations = useCallback(async () => {
@@ -2114,15 +2087,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }, {});
   }, [remoteTranslations]);
 
-  const databaseEnglishMap = useMemo(() => {
-    return remoteTranslations.reduce<Record<string, string>>((acc, row) => {
-      const id = row.id?.trim();
-      const english = row.english?.trim();
-      if (id && english) acc[id] = english;
-      return acc;
-    }, {});
-  }, [remoteTranslations]);
-
   const activeTranslations = useMemo(
     () => ({
       ...translations,
@@ -2131,48 +2095,37 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     [databaseTranslationMap]
   );
 
-  const activeReverseTranslations = useMemo(
-    () => createReverseTranslations(activeTranslations, databaseEnglishMap),
-    [activeTranslations, databaseEnglishMap]
-  );
-
   useEffect(() => {
     void refreshTranslations();
   }, [refreshTranslations]);
 
   useEffect(() => {
-    document.documentElement.lang = language === 'uz' ? 'uz' : 'en';
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  }, [language]);
+    document.documentElement.lang = 'uz';
+    try {
+      localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+    } catch {
+      // storage can be unavailable (private mode); nothing to clear then
+    }
+  }, []);
 
   useEffect(() => {
-    translateStaticDom(language, activeTranslations, activeReverseTranslations);
-  }, [language, activeTranslations, activeReverseTranslations]);
-
-  const setLanguage = useCallback((nextLanguage: AppLanguage) => {
-    setLanguageState(nextLanguage);
-  }, []);
-
-  const toggleLanguage = useCallback(() => {
-    setLanguageState((current) => (current === 'en' ? 'uz' : 'en'));
-  }, []);
+    translateStaticDom(activeTranslations);
+  }, [activeTranslations]);
 
   const t = useCallback(
-    (value: string) => (language === 'uz' ? activeTranslations[value] || value : databaseEnglishMap[value] || value),
-    [language, activeTranslations, databaseEnglishMap]
+    (value: string, vars?: TranslationVars) => interpolate(activeTranslations[value] || value, vars),
+    [activeTranslations]
   );
 
   const contextValue = useMemo(
     () => ({
       language,
       translations: remoteTranslations,
-      setLanguage,
-      toggleLanguage,
       t,
       refreshTranslations,
       saveTranslation,
     }),
-    [language, setLanguage, toggleLanguage, t, remoteTranslations, refreshTranslations, saveTranslation]
+    [t, remoteTranslations, refreshTranslations, saveTranslation]
   );
 
   return <LanguageContext.Provider value={contextValue}>{children}</LanguageContext.Provider>;

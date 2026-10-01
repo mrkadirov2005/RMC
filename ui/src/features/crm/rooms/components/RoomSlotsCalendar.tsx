@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { showToast } from '@/utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface RoomSlotsCalendarProps {
   roomId: number;
@@ -33,6 +34,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
   centerId,
   roomNumber,
 }) => {
+  const { t } = useLanguage();
   const { slots, bookings, loading, fetchSlots, fetchBookings, createSlot, bookSlot, cancelBooking } = useRoomSlots(roomId, centerId);
   
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -145,7 +147,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Room {roomNumber} - Slots Schedule
+            {t('Room')} {roomNumber} {t('- Slots Schedule')}
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button
@@ -171,7 +173,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
       
       <CardContent>
         {loading ? (
-          <div className="text-center py-8">Loading...</div>
+          <div className="text-center py-8">{t('Loading...')}</div>
         ) : (
           <>
             {/* Calendar Grid */}
@@ -209,12 +211,12 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
                       <div className="text-xs space-y-0.5">
                         {daySlots.length > 0 && (
                           <Badge variant={daySlots.some(s => s.is_available) ? 'secondary' : 'destructive'} className="text-xs">
-                            {daySlots.filter(s => s.is_available).length} available
+                            {t('{count} available', { count: daySlots.filter(s => s.is_available).length })}
                           </Badge>
                         )}
                         {dayBookings.length > 0 && (
                           <Badge variant="outline" className="text-xs">
-                            {dayBookings.length} booked
+                            {t('{count} booked', { count: dayBookings.length })}
                           </Badge>
                         )}
                       </div>
@@ -228,12 +230,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
             {selectedDate && getDateSlots(parseInt(selectedDate.split('-')[2])) && (
               <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">
-                  Slots for {new Date(selectedDate).toLocaleDateString('default', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {t('Slots for {date}', { date: new Date(selectedDate).toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) })}
                 </h3>
                 
                 <div className="space-y-2 max-h-64 overflow-y-auto">
@@ -254,12 +251,12 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
                             </div>
                             {booking && (
                               <div className="text-xs text-gray-600">
-                                Booked by: {booking.class_name}
+                                {t('Booked by:')} {booking.class_name}
                               </div>
                             )}
                           </div>
                           <Badge variant={booking ? 'destructive' : 'success'}>
-                            {booking ? 'Booked' : 'Available'}
+                            {booking ? t('Booked') : t('Available')}
                           </Badge>
                         </div>
                         
@@ -300,16 +297,16 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
       <Dialog open={showCreateSlot} onOpenChange={setShowCreateSlot}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Create New Slot</DialogTitle>
+            <DialogTitle>{t('Create New Slot')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
-              <Label>Date</Label>
+              <Label>{t('Date')}</Label>
               <Input value={selectedDate || ''} disabled />
             </div>
             <div>
-              <Label>Start Time</Label>
+              <Label>{t('Start Time')}</Label>
               <Input
                 type="time"
                 value={newSlotTime.start}
@@ -317,7 +314,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
               />
             </div>
             <div>
-              <Label>End Time</Label>
+              <Label>{t('End Time')}</Label>
               <Input
                 type="time"
                 value={newSlotTime.end}
@@ -328,10 +325,10 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateSlot(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button onClick={handleCreateSlot}>
-              Create Slot
+              {t('Create Slot')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -341,15 +338,15 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
       <Dialog open={showBookSlot} onOpenChange={setShowBookSlot}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Book Room Slot</DialogTitle>
+            <DialogTitle>{t('Book Room Slot')}</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4">
             <div>
-              <Label>Class</Label>
+              <Label>{t('Class')}</Label>
               <Select value={bookingClassId} onValueChange={setBookingClassId}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a class" />
+                  <SelectValue placeholder={t('Select a class')} />
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map(cls => (
@@ -364,10 +361,10 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowBookSlot(false)}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button onClick={handleBookSlot}>
-              Book Slot
+              {t('Book Slot')}
             </Button>
           </DialogFooter>
         </DialogContent>

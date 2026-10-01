@@ -3,6 +3,7 @@ import { AlertCircle, CheckCircle2, Circle, MinusCircle, Star, TrendingUp } from
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const stepToneClasses = {
   emerald: 'border-emerald-300 bg-emerald-50',
@@ -158,10 +159,12 @@ export const ScoreTable = ({
   onToggleStellar?: (studentId: number) => void;
   stellarBonusCoins?: number;
   action: ReactNode;
-}) => (
+}) => {
+  const { t } = useLanguage();
+  return (
   <div className="overflow-x-auto rounded-lg border">
     <div className="flex items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
-      <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">Fill all</span>
+      <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">{t('Fill all')}</span>
       {options.map((option) => {
         const tone = optionToneClasses[option.tone];
         return (
@@ -183,21 +186,21 @@ export const ScoreTable = ({
     <Table>
       <TableHeader>
         <TableRow className="bg-primary">
-          <TableHead className="h-10 w-[180px] min-w-[180px] px-3 text-xs font-semibold text-primary-foreground">Student</TableHead>
+          <TableHead className="h-10 w-[180px] min-w-[180px] px-3 text-xs font-semibold text-primary-foreground">{t('Student')}</TableHead>
           {options.map((option) => (
             <TableHead key={option.label} className="h-9 w-[72px] min-w-[72px] px-1 text-center text-[11px] font-semibold text-primary-foreground">
               <span className="block truncate">{option.label}</span>
-              <span className="block text-[10px] font-medium text-primary-foreground/80">{option.score} points</span>
+              <span className="block text-[10px] font-medium text-primary-foreground/80">{t('{count} points', { count: option.score })}</span>
             </TableHead>
           ))}
-          {getTotalScore && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">Combined Score</TableHead>}
-          {onToggleStellar && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">Stellar</TableHead>}
+          {getTotalScore && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Combined Score')}</TableHead>}
+          {onToggleStellar && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Stellar')}</TableHead>}
         </TableRow>
       </TableHeader>
       <TableBody>
         {students.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
+            <TableCell colSpan={options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1} className="py-10 text-center text-muted-foreground">{t('No students found for this class.')}</TableCell>
           </TableRow>
         ) : students.map((student) => {
           const studentId = getStudentId(student);
@@ -217,7 +220,7 @@ export const ScoreTable = ({
                     <button
                       type="button"
                       disabled={!enabled}
-                      aria-label={`${option.label} ${option.score} points`}
+                      aria-label={`${option.label} ${t('{count} points', { count: option.score })}`}
                       className={cn(
                         'mx-auto flex h-7 w-12 items-center justify-center gap-1 rounded-full border px-0.5 shadow-sm transition disabled:pointer-events-none',
                         isSelected ? `${tone.active} ring-2 ring-offset-1 ring-offset-background` : tone.idle,
@@ -261,6 +264,7 @@ export const ScoreTable = ({
     <div className="flex justify-end gap-2 border-t p-3">{action}</div>
   </div>
 );
+};
 
 export const ManualPointsTable = ({
   students,
@@ -276,10 +280,12 @@ export const ManualPointsTable = ({
   onFillAll: (value: string) => void;
   getTotalScore: (studentId: number) => number;
   action: ReactNode;
-}) => (
+}) => {
+  const { t } = useLanguage();
+  return (
   <div className="overflow-x-auto rounded-lg border">
     <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
-      <span className="text-xs font-semibold text-muted-foreground">Fill all points</span>
+      <span className="text-xs font-semibold text-muted-foreground">{t('Fill all points')}</span>
       {[0, 5, 10, 20, 50, 100].map((value) => (
         <button
           key={value}
@@ -294,16 +300,16 @@ export const ManualPointsTable = ({
     <Table>
       <TableHeader>
         <TableRow className="bg-primary">
-          <TableHead className="h-10 w-[220px] min-w-[220px] px-3 text-xs font-semibold text-primary-foreground">Student</TableHead>
-          <TableHead className="h-10 w-[160px] min-w-[160px] px-3 text-center text-xs font-semibold text-primary-foreground">Manual Points</TableHead>
-          <TableHead className="h-10 w-[140px] min-w-[140px] px-3 text-center text-xs font-semibold text-primary-foreground">Status</TableHead>
-          <TableHead className="h-10 px-3 text-center text-xs font-semibold text-primary-foreground">Combined Score</TableHead>
+          <TableHead className="h-10 w-[220px] min-w-[220px] px-3 text-xs font-semibold text-primary-foreground">{t('Student')}</TableHead>
+          <TableHead className="h-10 w-[160px] min-w-[160px] px-3 text-center text-xs font-semibold text-primary-foreground">{t('Manual Points')}</TableHead>
+          <TableHead className="h-10 w-[140px] min-w-[140px] px-3 text-center text-xs font-semibold text-primary-foreground">{t('Status')}</TableHead>
+          <TableHead className="h-10 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Combined Score')}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {students.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students found for this class.</TableCell>
+            <TableCell colSpan={4} className="py-10 text-center text-muted-foreground">{t('No students found for this class.')}</TableCell>
           </TableRow>
         ) : students.map((student) => {
           const studentId = getStudentId(student);
@@ -343,3 +349,4 @@ export const ManualPointsTable = ({
     <div className="flex justify-end gap-2 border-t p-3">{action}</div>
   </div>
 );
+};
