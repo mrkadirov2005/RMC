@@ -1,4 +1,5 @@
 import { BookOpen, CalendarDays, DollarSign, Loader2, UserRound } from 'lucide-react';
+import type { TranslateFn } from '@/i18n/LanguageContext';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,7 +29,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface ClassDialogsProps {
-  t: (key: string) => string;
+  t: TranslateFn;
   isModalOpen: boolean;
   editingId: number | null;
   formData: any;
@@ -302,7 +303,14 @@ export const ClassDialogs = ({
         </DialogHeader>
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            The class{deleteTarget?.name ? ` "${deleteTarget.name}"` : ''} has {deleteAttendance.length} attendance record(s). Deleting anyway will remove those records and the class.
+            {deleteTarget?.name
+              ? t('The class "{name}" has {count} attendance record(s). Deleting anyway will remove those records and the class.', {
+                  name: deleteTarget.name,
+                  count: deleteAttendance.length,
+                })
+              : t('The class has {count} attendance record(s). Deleting anyway will remove those records and the class.', {
+                  count: deleteAttendance.length,
+                })}
           </p>
           <div className="overflow-hidden rounded-md border">
             <Table>

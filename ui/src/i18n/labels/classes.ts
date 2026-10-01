@@ -67,4 +67,6 @@ export const classesLabels: Record<string, string> = {
   '· violation limit': '· qoidabuzarliklar limiti',
   '— Main word': "— Asosiy so'z",
   '— the student left the exercise screen, switched tabs, or exited fullscreen during this attempt': "— o'quvchi bu urinish davomida mashq ekranini tark etdi, boshqa varaqqa o'tdi yoki to'liq ekrandan chiqdi",
+  'The class "{name}" has {count} attendance record(s). Deleting anyway will remove those records and the class.': "\"{name}\" guruhida {count} ta davomat yozuvi bor. Baribir o'chirsangiz, bu yozuvlar va guruh o'chiriladi.",
+  'The class has {count} attendance record(s). Deleting anyway will remove those records and the class.': "Guruhda {count} ta davomat yozuvi bor. Baribir o'chirsangiz, bu yozuvlar va guruh o'chiriladi.",
 };

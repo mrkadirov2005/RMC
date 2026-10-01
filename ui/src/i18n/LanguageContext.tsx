@@ -4,6 +4,15 @@ import { sharedMessageTranslations } from './sharedMessages';
 import { pageLabelTranslations } from './labels';
 
 export type AppLanguage = 'en' | 'uz';
+export type TranslationVars = Record<string, string | number>;
+export type TranslateFn = (value: string, vars?: TranslationVars) => string;
+
+const interpolate = (text: string, vars?: TranslationVars) =>
+  vars
+    ? text.replace(/\{(\w+)\}/g, (match, name: string) =>
+        Object.prototype.hasOwnProperty.call(vars, name) ? String(vars[name]) : match
+      )
+    : text;
 
 const LANGUAGE_STORAGE_KEY = 'crm_language';
 
@@ -2064,7 +2073,7 @@ interface LanguageContextValue {
   language: AppLanguage;
   setLanguage: (language: AppLanguage) => void;
   toggleLanguage: () => void;
-  t: (value: string) => string;
+  t: TranslateFn;
   translations: TranslationRow[];
   refreshTranslations: () => Promise<void>;
   saveTranslation: (row: TranslationRow) => Promise<void>;
@@ -2162,7 +2171,8 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   }, []);
 
   const t = useCallback(
-    (value: string) => (language === 'uz' ? activeTranslations[value] || value : databaseEnglishMap[value] || value),
+    (value: string, vars?: TranslationVars) =>
+      interpolate(language === 'uz' ? activeTranslations[value] || value : databaseEnglishMap[value] || value, vars),
     [language, activeTranslations, databaseEnglishMap]
   );
 
