@@ -271,7 +271,7 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
 
         {financeView === 'teachers' && <div className="grid grid-cols-2 gap-1.5 p-2 md:grid-cols-5">
           {[
-            ['Jami tolov', formatMoney(totalCollected), 'bg-blue-600'],
+            ["Jami to'lov", formatMoney(totalCollected), 'bg-blue-600'],
             ['Maosh 20%', formatMoney(totalSalary), 'bg-emerald-600'],
             ["To'lagan", paymentStats.paidStudents, 'bg-cyan-600'],
             ['Qarzdor', paymentStats.unpaidStudents, 'bg-amber-500'],

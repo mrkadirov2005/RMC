@@ -36,7 +36,7 @@ export const FinanceDailyView = ({ selectedMonth, rows, monthTotal, totalPayment
 
     {rows.length === 0 ? (
       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        Bu oyda tolov topilmadi.
+        Bu oyda to'lov topilmadi.
       </div>
     ) : (
       <div className="overflow-auto">

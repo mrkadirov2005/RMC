@@ -54,8 +54,6 @@ const translations: Record<string, string> = {
   'Access Denied': 'Kirish rad etildi',
   "You don't have permission to access this resource.": "Bu sahifaga kirish huquqingiz yo'q.",
   'Go to Dashboard': "Boshqaruv paneliga o'tish",
-  English: 'Inglizcha',
-  Uzbek: "O'zbekcha",
   Language: 'Til',
   'Debts Management': 'Qarzlarni boshqarish',
   'Add Debt': "Qarz qo'shish",
@@ -450,7 +448,7 @@ const translations: Record<string, string> = {
   'Enter instructions for students taking this test...': "Bu testni topshiradigan o'quvchilar uchun ko'rsatmalarni kiriting...",
   'Duration (minutes)': 'Davomiylik (daqiqa)',
   'Passing Marks': "O'tish balli",
-  'Reading Passages': 'Oqish matnlari',
+  'Reading Passages': "O'qish matnlari",
   Passage: 'Matn',
   Title: 'Sarlavha',
   Difficulty: 'Qiyinlik',
@@ -531,7 +529,7 @@ const translations: Record<string, string> = {
   'Type your answer here...': 'Javobingizni shu yerga yozing...',
   'Write your answer here...': 'Javobingizni shu yerga yozing...',
   'Select match...': 'Moslikni tanlang...',
-  'Answer based on the reading passage...': 'Oqish matniga asoslanib javob bering...',
+  'Answer based on the reading passage...': "O'qish matniga asoslanib javob bering...",
   'Your time has expired. Your test will be submitted automatically.': 'Vaqtingiz tugadi. Test avtomatik topshiriladi.',
   Monday: 'Dushanba',
   Tuesday: 'Seshanba',
@@ -1682,7 +1680,7 @@ const translations: Record<string, string> = {
   'Date unavailable': "Sana mavjud emas",
   'School class': 'Maktab sinfi',
   'School name': 'Maktab nomi',
-  'Optional school information used for filtering and reports.': 'Filtrlash va hisobotlar uchun ishlatiladigan ixtiyoriy maktab malumotlari.',
+  'Optional school information used for filtering and reports.': "Filtrlash va hisobotlar uchun ishlatiladigan ixtiyoriy maktab ma'lumotlari.",
 
   // ── Discount ────────────────────────────────────────────────
   'Discount': 'Chegirma',
@@ -1995,11 +1993,6 @@ const translations: Record<string, string> = {
   "Change the paper, its questions or its settings, then save.": "Testni, savollarini yoki sozlamalarini o'zgartiring, keyin saqlang.",
 };
 
-const createReverseTranslations = (translationMap: Record<string, string>, englishMap: Record<string, string>) => ({
-  ...Object.fromEntries(Object.entries(translationMap).map(([english, uzbek]) => [uzbek, english])),
-  ...Object.fromEntries(Object.entries(englishMap).map(([id, english]) => [id, english])),
-}) as Record<string, string>;
-
 const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const buildTranslationPattern = (source: string) => {
@@ -2015,31 +2008,20 @@ const normalizeUzbekTranslation = (value: string) =>
     .replace(/Tolov/g, "To'lov")
     .replace(/tolov/g, "to'lov");
 
-const translateExact = (
-  value: string,
-  language: AppLanguage,
-  translationMap: Record<string, string>,
-  reverseTranslationMap: Record<string, string>
-) => {
+const translateExact = (value: string, translationMap: Record<string, string>) => {
   const trimmed = value.trim();
   if (!trimmed) return value;
-  const translated = language === 'uz' ? translationMap[trimmed] : reverseTranslationMap[trimmed];
+  const translated = translationMap[trimmed];
   if (translated) return value.replace(trimmed, translated);
 
-  const entries = Object.entries(language === 'uz' ? translationMap : reverseTranslationMap).sort(
-    (a, b) => b[0].length - a[0].length
-  );
+  const entries = Object.entries(translationMap).sort((a, b) => b[0].length - a[0].length);
   return entries.reduce((nextValue, [source, target]) => {
     if (source.length < 3) return nextValue;
     return nextValue.replace(buildTranslationPattern(source), target);
   }, value);
 };
 
-const translateStaticDom = (
-  language: AppLanguage,
-  translationMap: Record<string, string>,
-  reverseTranslationMap: Record<string, string>
-) => {
+const translateStaticDom = (translationMap: Record<string, string>) => {
   if (typeof document === 'undefined' || !document.body) return;
 
   const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
@@ -2050,7 +2032,7 @@ const translateStaticDom = (
   textNodes.forEach((node) => {
     if (node.parentElement?.closest('[data-translation-skip]')) return;
     const currentValue = node.nodeValue || '';
-    const nextValue = translateExact(currentValue, language, translationMap, reverseTranslationMap);
+    const nextValue = translateExact(currentValue, translationMap);
     if (nextValue !== currentValue) {
       node.nodeValue = nextValue;
     }
@@ -2061,7 +2043,7 @@ const translateStaticDom = (
     ['placeholder', 'aria-label', 'title'].forEach((attribute) => {
       const value = element.getAttribute(attribute);
       if (!value) return;
-      const nextValue = translateExact(value, language, translationMap, reverseTranslationMap);
+      const nextValue = translateExact(value, translationMap);
       if (nextValue !== value) {
         element.setAttribute(attribute, nextValue);
       }
@@ -2071,8 +2053,6 @@ const translateStaticDom = (
 
 interface LanguageContextValue {
   language: AppLanguage;
-  setLanguage: (language: AppLanguage) => void;
-  toggleLanguage: () => void;
   t: TranslateFn;
   translations: TranslationRow[];
   refreshTranslations: () => Promise<void>;
@@ -2081,14 +2061,10 @@ interface LanguageContextValue {
 
 const LanguageContext = createContext<LanguageContextValue | undefined>(undefined);
 
-const getInitialLanguage = (): AppLanguage => {
-  if (typeof window === 'undefined') return 'uz';
-  const stored = localStorage.getItem(LANGUAGE_STORAGE_KEY);
-  return stored === 'en' ? 'en' : 'uz';
-};
+// The interface is Uzbek only; a language saved by older versions is ignored and cleared.
+const language: AppLanguage = 'uz';
 
 export const LanguageProvider = ({ children }: { children: React.ReactNode }) => {
-  const [language, setLanguageState] = useState<AppLanguage>(getInitialLanguage);
   const [remoteTranslations, setRemoteTranslations] = useState<TranslationRow[]>([]);
 
   const refreshTranslations = useCallback(async () => {
@@ -2127,15 +2103,6 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     }, {});
   }, [remoteTranslations]);
 
-  const databaseEnglishMap = useMemo(() => {
-    return remoteTranslations.reduce<Record<string, string>>((acc, row) => {
-      const id = row.id?.trim();
-      const english = row.english?.trim();
-      if (id && english) acc[id] = english;
-      return acc;
-    }, {});
-  }, [remoteTranslations]);
-
   const activeTranslations = useMemo(
     () => ({
       ...translations,
@@ -2144,49 +2111,37 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     [databaseTranslationMap]
   );
 
-  const activeReverseTranslations = useMemo(
-    () => createReverseTranslations(activeTranslations, databaseEnglishMap),
-    [activeTranslations, databaseEnglishMap]
-  );
-
   useEffect(() => {
     void refreshTranslations();
   }, [refreshTranslations]);
 
   useEffect(() => {
-    document.documentElement.lang = language === 'uz' ? 'uz' : 'en';
-    localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  }, [language]);
+    document.documentElement.lang = 'uz';
+    try {
+      localStorage.removeItem(LANGUAGE_STORAGE_KEY);
+    } catch {
+      // storage can be unavailable (private mode); nothing to clear then
+    }
+  }, []);
 
   useEffect(() => {
-    translateStaticDom(language, activeTranslations, activeReverseTranslations);
-  }, [language, activeTranslations, activeReverseTranslations]);
-
-  const setLanguage = useCallback((nextLanguage: AppLanguage) => {
-    setLanguageState(nextLanguage);
-  }, []);
-
-  const toggleLanguage = useCallback(() => {
-    setLanguageState((current) => (current === 'en' ? 'uz' : 'en'));
-  }, []);
+    translateStaticDom(activeTranslations);
+  }, [activeTranslations]);
 
   const t = useCallback(
-    (value: string, vars?: TranslationVars) =>
-      interpolate(language === 'uz' ? activeTranslations[value] || value : databaseEnglishMap[value] || value, vars),
-    [language, activeTranslations, databaseEnglishMap]
+    (value: string, vars?: TranslationVars) => interpolate(activeTranslations[value] || value, vars),
+    [activeTranslations]
   );
 
   const contextValue = useMemo(
     () => ({
       language,
       translations: remoteTranslations,
-      setLanguage,
-      toggleLanguage,
       t,
       refreshTranslations,
       saveTranslation,
     }),
-    [language, setLanguage, toggleLanguage, t, remoteTranslations, refreshTranslations, saveTranslation]
+    [t, remoteTranslations, refreshTranslations, saveTranslation]
   );
 
   return <LanguageContext.Provider value={contextValue}>{children}</LanguageContext.Provider>;

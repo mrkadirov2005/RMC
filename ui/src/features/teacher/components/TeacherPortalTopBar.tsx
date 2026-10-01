@@ -1,4 +1,4 @@
-import { Languages, LogOut, Moon, Sun } from 'lucide-react';
+import { LogOut, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAppDispatch } from '../../crm/hooks';
 import { logout } from '../../../slices/authSlice';
@@ -10,7 +10,7 @@ import { useThemeMode } from '../../../theme/ThemeContext';
 export default function TeacherPortalTopBar() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const { toggleTheme, isDark } = useThemeMode();
 
   const handleLogout = () => {
@@ -23,28 +23,6 @@ export default function TeacherPortalTopBar() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
        
         <div className="flex flex-wrap items-center gap-2">
-          <div className="inline-flex items-center rounded-xl   ">
-            <Button
-              type="button"
-              size="sm"
-              variant={language === 'uz' ? 'default' : 'ghost'}
-              onClick={() => setLanguage('uz')}
-              className='border-none'
-            >
-              <Languages className="mr-1.5 h-3.5 w-3.5" />
-              UZ
-            </Button>
-            <Button
-              type="button"
-              size="sm"
-              variant={language === 'en' ? 'default' : 'ghost'}
-              className="h-8 px-3 text-xs font-semibold"
-              onClick={() => setLanguage('en')}
-            >
-              EN
-            </Button>
-          </div>
-
           <Button
             type="button"
             variant="default"

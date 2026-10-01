@@ -315,7 +315,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
     if (!set) return;
     setCreateError('');
     const cleaned = cleanDraftWords(draftWords);
-    if ('error' in cleaned) {
+    if (cleaned.error) {
       setCreateError(cleaned.error);
       return;
     }
@@ -349,7 +349,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
   const handleCreate = async () => {
     setCreateError('');
     const cleaned = cleanDraftWords(draftWords);
-    if ('error' in cleaned) {
+    if (cleaned.error) {
       setCreateError(cleaned.error);
       return;
     }

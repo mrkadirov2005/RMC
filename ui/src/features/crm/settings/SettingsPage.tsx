@@ -1,7 +1,7 @@
 // Page component for the settings screen in the crm feature.
 
 import { useEffect, useState } from 'react';
-import { Activity, CalendarDays, Clock, Coins, Globe, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer } from 'lucide-react';
+import { Activity, CalendarDays, Clock, Coins, Palette, RotateCcw, Save, Server, Settings as SettingsIcon, Timer } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,7 +75,7 @@ type ScoreSection = 'attendance' | 'homework' | 'activity';
 // Renders the settings page screen.
 const SettingsPage = () => {
   const navigate = useNavigate();
-  const { language, setLanguage, t } = useLanguage();
+  const { t } = useLanguage();
   const [defaultDuration, setDefaultDuration] = useState(90);
   const [overrideDuration, setOverrideDuration] = useState<number | ''>('');
   const [calendarDefaultView, setCalendarDefaultView] = useState<'month' | 'week'>('month');
@@ -228,42 +228,6 @@ const SettingsPage = () => {
           </div>
         }
       />
-
-      <SectionPanel
-        title={
-          <span className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 text-white shadow-sm">
-              <Globe className="h-4 w-4" />
-            </span>
-            {t('Language')}
-          </span>
-        }
-      >
-        <div className="space-y-3">
-          <Label>{t('Select interface language')}</Label>
-          <div className="flex gap-3">
-            {([
-              { code: 'en' as const, label: 'English', flag: '🇬🇧' },
-              { code: 'uz' as const, label: "O'zbekcha", flag: '🇺🇿' },
-            ]).map((option) => (
-              <button
-                key={option.code}
-                type="button"
-                onClick={() => { setLanguage(option.code); showToast.success(`Language changed to ${option.label}`); }}
-                className={cn(
-                  'flex items-center gap-3 rounded-xl border-2 px-5 py-3 text-sm font-semibold transition-all',
-                  language === option.code
-                    ? 'border-violet-500 bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30'
-                    : 'border-slate-200 bg-white text-slate-700 hover:border-violet-300 hover:shadow-md dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200'
-                )}
-              >
-                <span className="text-xl">{option.flag}</span>
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </SectionPanel>
 
       <SectionPanel
         title={

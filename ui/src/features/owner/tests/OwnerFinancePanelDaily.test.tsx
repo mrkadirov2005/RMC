@@ -69,7 +69,7 @@ describe('OwnerFinancePanel daily tab', () => {
 
     expect(screen.getByText('Kunlik tushum')).toBeInTheDocument();
     expect(screen.queryByText(/Umumiy oylik to'lov statistikasi/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Talabalar to'lov holati/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/O'quvchilar to'lov holati/)).not.toBeInTheDocument();
   });
 
   it('keeps the teachers-only header strip and card grid hidden on the daily tab', async () => {
@@ -79,7 +79,7 @@ describe('OwnerFinancePanel daily tab', () => {
     await user.click(dailyTab());
 
     expect(screen.queryAllByText(/o'qituvchi$/)).toHaveLength(0);
-    expect(screen.queryByText('Jami tolov')).not.toBeInTheDocument();
+    expect(screen.queryByText("Jami to'lov")).not.toBeInTheDocument();
     expect(screen.queryByText('Maosh 20%')).not.toBeInTheDocument();
     expect(screen.queryByText('Qarzdor')).not.toBeInTheDocument();
   });
@@ -134,7 +134,7 @@ describe('OwnerFinancePanel daily tab', () => {
       target: { value: '2026-10' },
     });
 
-    expect(screen.getByText(/tolov topilmadi/i)).toBeInTheDocument();
+    expect(screen.getByText(/to'lov topilmadi/i)).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
 
@@ -159,7 +159,7 @@ describe('OwnerFinancePanel daily tab', () => {
 
     expect(screen.queryByText('Kunlik tushum')).not.toBeInTheDocument();
     expect(screen.getAllByText(/o'qituvchi$/).length).toBeGreaterThan(0);
-    expect(screen.getByText('Jami tolov')).toBeInTheDocument();
+    expect(screen.getByText("Jami to'lov")).toBeInTheDocument();
     expect(screen.getByText('Maosh 20%')).toBeInTheDocument();
     expect(screen.getByText('Qarzdor')).toBeInTheDocument();
   });
@@ -170,7 +170,7 @@ describe('OwnerFinancePanel daily tab', () => {
 
     await user.click(dailyTab());
 
-    expect(screen.getByText(/tolov topilmadi/i)).toBeInTheDocument();
+    expect(screen.getByText(/to'lov topilmadi/i)).toBeInTheDocument();
     expect(screen.getByText('0 kun tushum bilan')).toBeInTheDocument();
   });
 });
