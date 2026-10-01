@@ -3,6 +3,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Option { id?: number; label: string; value: string | number }
 interface Props {
@@ -66,7 +67,9 @@ export const StudentsFilterPanel = ({
   subjectOptions,
   levelOptions,
   addressOptions,
-}: Props) => !open ? null : (
+}: Props) => {
+  const { t } = useLanguage();
+  return ( !open ? null : (
   <Card className="mb-5 overflow-hidden border-cyan-100 bg-gradient-to-br from-white via-cyan-50/50 to-amber-50/35 shadow-[0_16px_45px_-34px_rgba(15,23,42,0.55)] dark:border-border dark:bg-card dark:bg-none dark:shadow-sm">
     <div className="h-1 bg-gradient-to-r from-cyan-500 via-emerald-500 to-amber-400 dark:hidden" />
     <CardContent className="py-4">
@@ -118,7 +121,7 @@ export const StudentsFilterPanel = ({
             <SelectTrigger><SelectValue placeholder="Hamma darajalar" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Hamma darajalar</SelectItem>
-              {levelOptions.map((item) => <SelectItem key={item} value={String(item)}>Level {item}</SelectItem>)}
+              {levelOptions.map((item) => <SelectItem key={item} value={String(item)}>{t('Level')} {item}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -145,21 +148,21 @@ export const StudentsFilterPanel = ({
           </Select>
         </div>
         <div>
-          <Label className="mb-1.5 block text-xs font-semibold">Gender</Label>
+          <Label className="mb-1.5 block text-xs font-semibold">{t('Gender')}</Label>
           <Select value={gender || 'all'} onValueChange={(v) => onGender(normalizeValue(v))}>
-            <SelectTrigger><SelectValue placeholder="All Genders" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('All Genders')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Genders</SelectItem>
+              <SelectItem value="all">{t('All Genders')}</SelectItem>
               {genderOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label className="mb-1.5 block text-xs font-semibold">Status</Label>
+          <Label className="mb-1.5 block text-xs font-semibold">{t('Status')}</Label>
           <Select value={status || 'all'} onValueChange={(v) => onStatus(normalizeValue(v))}>
-            <SelectTrigger><SelectValue placeholder="All Statuses" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('All Statuses')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">{t('All Statuses')}</SelectItem>
               {statusOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -167,4 +170,5 @@ export const StudentsFilterPanel = ({
       </div>
     </CardContent>
   </Card>
-);
+));
+};

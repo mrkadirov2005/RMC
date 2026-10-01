@@ -2,6 +2,7 @@ import { BarChart3, LineChart, PieChart as PieChartIcon } from 'lucide-react';
 import { PieChart } from '@/shared/components/PieChart';
 import { cn } from '@/lib/utils';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type ChartMode = 'pie' | 'bar' | 'line';
 
@@ -201,7 +202,9 @@ export const FinanceChart = ({
   </div>
 );
 
-const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => (
+const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => {
+  const { t } = useLanguage();
+  return (
   <div className="space-y-2">
     {groups.map((group) => (
       <div key={group.id} className="grid grid-cols-[130px_1fr_54px] items-center gap-2 text-xs">
@@ -213,9 +216,10 @@ const FinanceBarChart = ({ groups }: { groups: TeacherGroup[] }) => (
         <span className="text-right font-black text-slate-600">{group.paidPercent}%</span>
       </div>
     ))}
-    {groups.length === 0 && <div className="flex h-48 items-center justify-center text-sm font-semibold text-slate-500">No group data</div>}
+    {groups.length === 0 && <div className="flex h-48 items-center justify-center text-sm font-semibold text-slate-500">{t('No group data')}</div>}
   </div>
 );
+};
 
 const FinanceLineChart = ({ monthlyTrend, maxTrendCollected, linePoints }: { monthlyTrend: MonthlyTrend[]; maxTrendCollected: number; linePoints: string }) => (
   <div className="space-y-3">

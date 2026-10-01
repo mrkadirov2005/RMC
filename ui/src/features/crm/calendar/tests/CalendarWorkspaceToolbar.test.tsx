@@ -2,6 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { CalendarWorkspaceToolbar } from '../components/CalendarWorkspaceToolbar';
 
+vi.mock('@/i18n/LanguageContext', () => ({
+  useLanguage: () => ({ t: (value: string) => value }),
+}));
+
 describe('CalendarWorkspaceToolbar', () => {
   it('exposes navigation and view state through accessible controls', () => {
     const onView = vi.fn();

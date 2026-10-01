@@ -31,12 +31,15 @@ const TeacherPaymentsTab = lazy(() => import('./components/TeacherPaymentsTab'))
 const TeacherTestsTabLink = lazy(() => import('./components/TeacherTestsTabLink'));
 const TeacherGradeDialog = lazy(() => import('./components/TeacherGradeDialog'));
 
-const TabLoadingState = () => (
+const TabLoadingState = () => {
+  const { t } = useLanguage();
+  return (
   <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-    Loading...
+    {t('Loading...')}
   </div>
 );
+};
 
 // Renders the teacher detail page screen.
 const TeacherDetailPage = () => {

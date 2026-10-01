@@ -648,7 +648,7 @@ export const PaymentFormDialog = ({
             </Button>
             <Button type="submit" disabled={submitDisabled || isSubmitting} className="gap-2">
               <FileText className="h-4 w-4" />
-              {isSubmitting ? t('Saving...') : submitLabel}
+              {isSubmitting ? t('Saving...') : t(submitLabel)}
             </Button>
           </DialogFooter>
         </form>

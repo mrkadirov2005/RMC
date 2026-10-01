@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { getMonthKey, monthLabel, shiftMonth } from '../utils/date';
 import { getCombinedLessonPoints, getPointTone } from '../utils/points';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type StudentRow = {
   student_id?: number;
@@ -45,7 +46,9 @@ export const ClassMonthlyPointsView = ({
   pointsLoading,
   studentRows,
   monthlyPointsBySessionStudent,
-}: ClassMonthlyPointsViewProps) => (
+}: ClassMonthlyPointsViewProps) => {
+  const { t } = useLanguage();
+  return (
   <div className="space-y-3">
     <div className="flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/60 p-3 dark:border-violet-900/60 dark:bg-violet-950/25 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
@@ -53,9 +56,9 @@ export const ClassMonthlyPointsView = ({
           <PencilLine className="h-4 w-4" />
         </div>
         <div>
-          <p className="text-sm font-bold text-slate-950 dark:text-slate-100">Monthly points</p>
+          <p className="text-sm font-bold text-slate-950 dark:text-slate-100">{t('Monthly points')}</p>
           <p className="text-xs text-muted-foreground">
-            {monthLabel(pointsMonth || getMonthKey())} lessons from {scheduleDays.length ? scheduleDays.join(', ') : 'class settings'}
+            {monthLabel(pointsMonth || getMonthKey())} lessons from {scheduleDays.length ? scheduleDays.join(', ') : t('class settings')}
           </p>
         </div>
       </div>
@@ -77,54 +80,54 @@ export const ClassMonthlyPointsView = ({
 
     <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-4">
       <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <p className="text-[11px] font-semibold text-muted-foreground">Lesson days</p>
+        <p className="text-[11px] font-semibold text-muted-foreground">{t('Lesson days')}</p>
         <p className="text-base font-black text-slate-950 dark:text-slate-100">{monthlyLessonDays.length}</p>
       </div>
       <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <p className="text-[11px] font-semibold text-muted-foreground">Filled</p>
+        <p className="text-[11px] font-semibold text-muted-foreground">{t('Filled')}</p>
         <p className="text-base font-black text-emerald-700 dark:text-emerald-400">{monthlyPointStats.filled}/{monthlyPointStats.cells}</p>
       </div>
       <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <p className="text-[11px] font-semibold text-muted-foreground">Missing</p>
+        <p className="text-[11px] font-semibold text-muted-foreground">{t('Missing')}</p>
         <p className="text-base font-black text-rose-700 dark:text-rose-400">{monthlyPointStats.missing}</p>
       </div>
       <div className="flex items-center justify-between rounded-md border bg-white px-2.5 py-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
-        <p className="text-[11px] font-semibold text-muted-foreground">Average</p>
+        <p className="text-[11px] font-semibold text-muted-foreground">{t('Average')}</p>
         <p className="text-base font-black text-violet-700 dark:text-violet-400">{monthlyPointStats.average}</p>
       </div>
     </div>
 
     {scheduleDays.length === 0 ? (
       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        No class weekdays are configured in class settings.
+        {t('No class weekdays are configured in class settings.')}
       </div>
     ) : monthlyLessonDays.length === 0 ? (
       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        No scheduled lesson days found for this month.
+        {t('No scheduled lesson days found for this month.')}
       </div>
     ) : (
       <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm dark:border-slate-700 dark:bg-slate-950">
         <Table className="text-xs">
           <TableHeader className="bg-slate-50/95 dark:bg-slate-900">
             <TableRow>
-              <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] bg-slate-50 px-2 text-[11px] font-bold uppercase tracking-wide dark:bg-slate-900 dark:text-slate-300">Student</TableHead>
+              <TableHead className="sticky left-0 z-10 h-9 min-w-[164px] bg-slate-50 px-2 text-[11px] font-bold uppercase tracking-wide dark:bg-slate-900 dark:text-slate-300">{t('Student')}</TableHead>
               {monthlyLessonDays.map((day) => (
                 <TableHead key={day.dateKey} className="h-9 min-w-[70px] px-1 text-center dark:text-slate-300">
                   <div className="flex items-center justify-center gap-1 leading-none">
                     <span className="text-xs font-black">{day.day}</span>
                     <span className="text-[9px] font-bold uppercase text-muted-foreground">{day.dayName.slice(0, 2)}</span>
-                    {!day.session ? <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title="No session" /> : null}
+                    {!day.session ? <span className="h-1.5 w-1.5 rounded-full bg-amber-500" title={t('No session')} /> : null}
                   </div>
                 </TableHead>
               ))}
-              <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide dark:text-slate-300">Total</TableHead>
+              <TableHead className="h-9 min-w-[64px] px-1 text-center text-[11px] font-bold uppercase tracking-wide dark:text-slate-300">{t('Total')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pointsLoading ? (
               <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground"><Loader2 className="mx-auto h-6 w-6 animate-spin" /></TableCell></TableRow>
             ) : studentRows.length === 0 ? (
-              <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={monthlyLessonDays.length + 2} className="py-10 text-center text-muted-foreground">{t('No students enrolled.')}</TableCell></TableRow>
             ) : studentRows.map((student, index) => {
               const studentId = Number(student.student_id || student.id || 0);
               let studentTotal = 0;
@@ -171,3 +174,4 @@ export const ClassMonthlyPointsView = ({
     )}
   </div>
 );
+};

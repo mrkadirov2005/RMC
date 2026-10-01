@@ -96,7 +96,9 @@ const WordDraftEditor = ({
   onUpdateTranslation,
   onDeleteTranslation,
   onViolationLimitChange,
-}: WordDraftEditorProps) => (
+}: WordDraftEditorProps) => {
+  const { t } = useLanguage();
+  return (
   <>
     <div className="space-y-3">
       {draftWords.map((word, index) => (
@@ -104,11 +106,11 @@ const WordDraftEditor = ({
           <CardContent className="space-y-3 pt-6">
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
-                <Label>Word {index + 1} — Main word</Label>
+                <Label>{t('Word')} {index + 1} {t('— Main word')}</Label>
                 <Input
                   value={word.main_word}
                   onChange={(e) => onUpdateWord(word.id, { main_word: e.target.value })}
-                  placeholder="e.g. salom"
+                  placeholder={t('e.g. salom')}
                   className="mt-1"
                 />
               </div>
@@ -117,28 +119,28 @@ const WordDraftEditor = ({
                   className="mt-6 rounded p-2 text-red-500 hover:bg-red-50"
                   type="button"
                   onClick={() => onDeleteWord(word.id)}
-                  aria-label="Remove word"
+                  aria-label={t('Remove word')}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
               )}
             </div>
             <div>
-              <Label className="mb-1 block">Accepted translations</Label>
+              <Label className="mb-1 block">{t('Accepted translations')}</Label>
               <div className="space-y-2">
                 {word.translations.map((translation, tIndex) => (
                   <div key={tIndex} className="flex items-center gap-2">
                     <Input
                       value={translation}
                       onChange={(e) => onUpdateTranslation(word.id, tIndex, e.target.value)}
-                      placeholder="e.g. hello"
+                      placeholder={t('e.g. hello')}
                     />
                     {word.translations.length > 1 && (
                       <button
                         className="rounded p-2 text-red-500 hover:bg-red-50"
                         type="button"
                         onClick={() => onDeleteTranslation(word.id, tIndex)}
-                        aria-label="Remove translation"
+                        aria-label={t('Remove translation')}
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -149,7 +151,7 @@ const WordDraftEditor = ({
               {word.translations.length < MAX_TRANSLATIONS && (
                 <Button type="button" variant="ghost" size="sm" className="mt-2" onClick={() => onAddTranslation(word.id)}>
                   <Plus className="mr-1 h-3.5 w-3.5" />
-                  Add another accepted translation
+                  {t('Add another accepted translation')}
                 </Button>
               )}
             </div>
@@ -161,12 +163,12 @@ const WordDraftEditor = ({
     {draftWords.length < MAX_WORDS && (
       <Button type="button" variant="outline" onClick={onAddWord}>
         <Plus className="mr-2 h-4 w-4" />
-        Add word
+        {t('Add word')}
       </Button>
     )}
 
     <div className="w-40">
-      <Label htmlFor="violation_limit">Violation limit</Label>
+      <Label htmlFor="violation_limit">{t('Violation limit')}</Label>
       <Input
         id="violation_limit"
         type="number"
@@ -175,10 +177,11 @@ const WordDraftEditor = ({
         onChange={(e) => onViolationLimitChange(Math.max(1, parseInt(e.target.value, 10) || 1))}
         className="mt-1"
       />
-      <p className="mt-1 text-xs text-muted-foreground">Lockdown violations allowed before auto-submit.</p>
+      <p className="mt-1 text-xs text-muted-foreground">{t('Lockdown violations allowed before auto-submit.')}</p>
     </div>
   </>
 );
+};
 
 interface ConsolidationTabProps {
   sessionId: number;

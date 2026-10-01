@@ -73,7 +73,9 @@ export default function TeacherClassesStudentsTab({
   );
 }
 
-const StudentList = ({ students }: { students: any[] }) => (
+const StudentList = ({ students }: { students: any[] }) => {
+  const { t } = useLanguage();
+  return (
   <div className="flex flex-col ">
     {students.map((student, index) => {
       const outgoing = isTransferredStudentStatus(student.status);
@@ -94,12 +96,12 @@ const StudentList = ({ students }: { students: any[] }) => (
           </span>
           {outgoing && (
             <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${getStatusVariant(student.status)}`}>
-              Transferred
+              {t('Transferred')}
             </span>
           )}
           {incoming && (
             <span className={`ml-auto mr-2 shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${INCOMING_TRANSFER_VARIANT}`}>
-              New (Transferred)
+              {t('New (Transferred)')}
             </span>
           )}
         </div>
@@ -107,3 +109,4 @@ const StudentList = ({ students }: { students: any[] }) => (
     })}
   </div>
 );
+};

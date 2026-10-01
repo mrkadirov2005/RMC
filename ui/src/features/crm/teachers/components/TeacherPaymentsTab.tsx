@@ -97,7 +97,9 @@ const PaymentGroup = ({
   students: any[];
   payments: any[];
   selectedPaymentMonth: string;
-}) => (
+}) => {
+  const { t } = useLanguage();
+  return (
   <div className="overflow-hidden rounded-lg border border-slate-200 bg-card text-card-foreground shadow-sm">
     <div className="relative border-b bg-white p-3 dark:bg-card">
       <h4 className="relative z-10 flex items-center justify-between text-sm font-bold text-foreground">
@@ -110,20 +112,20 @@ const PaymentGroup = ({
             {subtitle && <span className="ml-2 hidden text-xs font-normal text-muted-foreground sm:inline">{subtitle}</span>}
           </span>
         </div>
-        <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{students.length} Students</Badge>
+        <Badge className="border-0 bg-emerald-600 text-xs text-white hover:bg-emerald-600">{students.length} {t('Students')}</Badge>
       </h4>
     </div>
     <div className="p-0">
       <Table className="text-xs">
         <TableHeader className="bg-muted/30">
           <TableRow className="border-b-border">
-            <TableHead className="h-8 pl-3 font-semibold text-foreground">Student</TableHead>
+            <TableHead className="h-8 pl-3 font-semibold text-foreground">{t('Student')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {students.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">No students</TableCell>
+              <TableCell colSpan={3} className="py-6 text-center text-muted-foreground">{t('No students')}</TableCell>
             </TableRow>
           ) : (
             students.map((student, index) => (
@@ -135,6 +137,7 @@ const PaymentGroup = ({
     </div>
   </div>
 );
+};
 
 const PaymentStudentRow = ({
   index,
