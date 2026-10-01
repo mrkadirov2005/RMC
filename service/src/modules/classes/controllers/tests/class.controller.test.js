@@ -74,7 +74,7 @@ describe('classes controller', () => {
     await classController.createClass(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found. Please provide a valid teacher_id' });
+    expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi topilmadi. Iltimos, to'g'ri teacher_id kiriting" });
   });
 
   it('returns session generation validation errors', async () => {

@@ -106,7 +106,7 @@ describe('room slots controller', () => {
       await controller.getAvailableSlots({ params: { roomId: '2' }, query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Slot date is required' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vaqt oralig'i sanasi ko'rsatilishi shart" });
       expect(service.getAvailableSlots).not.toHaveBeenCalled();
     });
 
@@ -341,7 +341,7 @@ describe('room slots controller', () => {
       await controller.cancelBooking({ params: { bookingId: '6' }, user: admin }, res);
 
       expect(service.cancelBooking).toHaveBeenCalledWith('6', 4);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Booking cancelled successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Bron muvaffaqiyatli bekor qilindi' });
     });
 
     it.each([

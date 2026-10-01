@@ -63,7 +63,7 @@ const createGrade = async (req: any, res: any) => {
     }
     const out = await gradeService.createGrade(requestBody, centerId ?? requestBody.center_id);
     if (out && out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Student or class does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi yoki guruh bu markazga tegishli emas." });
     }
     res.status(201).json(out);
   } catch (error: any) {
@@ -149,13 +149,13 @@ const createBulkGrades = async (req: any, res: any) => {
       for (const g of grades) {
         const ok = await studentBelongsToTeacher(g.student_id, req.user?.id);
         if (!ok) {
-          return res.status(403).json({ error: 'One or more students do not belong to this teacher.' });
+          return res.status(403).json({ error: "Bir yoki bir nechta o'quvchi bu o'qituvchiga tegishli emas." });
         }
       }
     }
     const results = await gradeService.createBulk(grades, centerId ?? req.body.center_id);
     if (results.some((row: any) => row && row.error === 'invalid_center')) {
-      return res.status(400).json({ error: 'One or more grades do not belong to this center.' });
+      return res.status(400).json({ error: 'Bir yoki bir nechta baho bu markazga tegishli emas.' });
     }
     res.status(201).json({ message: `${results.length} grades created successfully`, grades: results });
   } catch (error: any) {
@@ -187,7 +187,7 @@ const upsertSessionScores = async (req: any, res: any) => {
     }
     const out = await gradeService.upsertSessionScores(req.body, centerId ?? req.body.center_id);
     if (out && out.error === 'session_id_required') {
-      return res.status(400).json({ error: 'session_id is required.' });
+      return res.status(400).json({ error: "session_id ko'rsatilishi shart." });
     }
     res.json(out);
   } catch (error: any) {
@@ -206,15 +206,15 @@ const saveSessionWorkflow = async (req: any, res: any) => {
       const records = Array.isArray(req.body?.records) ? req.body.records : [];
       for (const record of records) {
         const ok = await studentBelongsToTeacher(Number(record.student_id), req.user?.id);
-        if (!ok) return res.status(403).json({ error: 'One or more students do not belong to this teacher.' });
+        if (!ok) return res.status(403).json({ error: "Bir yoki bir nechta o'quvchi bu o'qituvchiga tegishli emas." });
       }
     }
     const out = await gradeService.saveSessionWorkflow(req.body, centerId ?? req.body.center_id);
     if (out && out.error === 'invalid_payload') {
-      return res.status(400).json({ error: 'Invalid session workflow payload.' });
+      return res.status(400).json({ error: "Dars jarayoni ma'lumotlari noto'g'ri." });
     }
     if (out && out.error === 'multiple_stellar_students') {
-      return res.status(400).json({ error: 'Only one stellar student can be selected per lesson.' });
+      return res.status(400).json({ error: "Bitta darsda faqat bitta a'lochi o'quvchi tanlanishi mumkin." });
     }
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });

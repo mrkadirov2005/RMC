@@ -30,10 +30,10 @@ describe('room insights service', () => {
   });
 
   test.each([
-    [{ date: '08/10/2026', start: '09:00', end: '10:00' }, /date must use YYYY-MM-DD/],
-    [{ date: '2026-08-10', start: '9:00', end: '10:00' }, /start must use HH:mm/],
-    [{ date: '2026-08-10', start: '10:00', end: '10:00' }, /end must be after start/],
-    [{ date: '2026-08-10', start: '11:00', end: '10:00' }, /end must be after start/],
+    [{ date: '08/10/2026', start: '09:00', end: '10:00' }, /date YYYY-MM-DD formatida/],
+    [{ date: '2026-08-10', start: '9:00', end: '10:00' }, /start HH:mm formatida/],
+    [{ date: '2026-08-10', start: '10:00', end: '10:00' }, /end qiymati start dan keyin/],
+    [{ date: '2026-08-10', start: '11:00', end: '10:00' }, /end qiymati start dan keyin/],
   ])('rejects an invalid availability interval %#', (query, message) => {
     expect(() => service.getAvailability(4, query)).toThrow(message);
     expect(repository.availability).not.toHaveBeenCalled();
@@ -75,7 +75,7 @@ describe('room insights service', () => {
 
   test('validates report ranges before requesting utilization', async () => {
     expect(() => service.getReport(4, { from: '2026-08-31', to: '2026-08-01' }))
-      .toThrow('to must be on or after from');
+      .toThrow("to qiymati from qiymatiga teng yoki undan keyin bo'lishi kerak");
     expect(repository.utilization).not.toHaveBeenCalled();
 
     repository.utilization.mockResolvedValue([{ room_id: 1, utilization_percent: '25.0' }]);
@@ -84,9 +84,9 @@ describe('room insights service', () => {
   });
 
   test('rejects invalid physical-room metadata before persistence', () => {
-    expect(() => service.updatePhysicalRoom(1, 4, { capacity: 0 })).toThrow('capacity must be a positive integer');
-    expect(() => service.updatePhysicalRoom(1, 4, { features: 'projector' })).toThrow('features must be an array');
-    expect(() => service.updatePhysicalRoom(1, 4, { status: 'booked' })).toThrow('status must be active, inactive, or maintenance');
+    expect(() => service.updatePhysicalRoom(1, 4, { capacity: 0 })).toThrow("capacity musbat butun son bo'lishi kerak");
+    expect(() => service.updatePhysicalRoom(1, 4, { features: 'projector' })).toThrow("features massiv bo'lishi kerak");
+    expect(() => service.updatePhysicalRoom(1, 4, { status: 'booked' })).toThrow("status active, inactive yoki maintenance bo'lishi kerak");
     expect(repository.updatePhysicalRoom).not.toHaveBeenCalled();
   });
 
@@ -97,7 +97,7 @@ describe('room insights service', () => {
   });
 
   test('rejects an invalid physical room id before deletion', () => {
-    expect(() => service.deletePhysicalRoom(0, 4)).toThrow('room id must be a positive integer');
+    expect(() => service.deletePhysicalRoom(0, 4)).toThrow("Xona id si musbat butun son bo'lishi kerak");
     expect(repository.deletePhysicalRoom).not.toHaveBeenCalled();
   });
 });

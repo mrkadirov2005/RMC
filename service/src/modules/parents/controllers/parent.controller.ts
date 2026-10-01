@@ -87,7 +87,7 @@ const assignStudent = async (req: any, res: any) => {
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
-    res.status(201).json({ message: 'Student assigned to parent' });
+    res.status(201).json({ message: "O'quvchi ota-onaga biriktirildi" });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'quvchini biriktirib bo'lmadi", details: error.message || String(error) });
@@ -99,7 +99,7 @@ const parentLogin = async (req: any, res: any) => {
     const { username, password } = req.body;
     const result = await parentService.authenticate(username, password);
     if (result.kind === 'inactive') {
-      return res.status(403).json({ error: 'Parent account is not active' });
+      return res.status(403).json({ error: 'Ota-ona hisobi faol emas' });
     }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });

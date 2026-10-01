@@ -32,11 +32,11 @@ const getTeacherDetail = async (req: any, res: any) => {
     }
     const teacherId = Number(req.params.teacherId);
     if (!teacherId) {
-      return res.status(400).json({ error: 'teacherId is required.' });
+      return res.status(400).json({ error: "teacherId ko'rsatilishi shart." });
     }
     if (centerId) {
       const ok = await teacherInCenter(teacherId, centerId);
-      if (!ok) return res.status(404).json({ error: 'Teacher not found in this center.' });
+      if (!ok) return res.status(404).json({ error: "O'qituvchi bu markazda topilmadi." });
     }
     const detail = await kpiService.getTeacherDetail({ teacherId, centerId: centerId ?? undefined });
     if (!detail) {

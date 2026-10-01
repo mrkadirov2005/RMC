@@ -66,7 +66,7 @@ const createAssignment = async (req: any, res: any) => {
     if (classId !== undefined && classId !== null && classId !== '') {
       if (req.user?.userType === 'teacher') {
         const ok = await classBelongsToTeacher(classId, req.user?.id);
-        if (!ok) return res.status(403).json({ error: 'Class does not belong to this teacher.' });
+        if (!ok) return res.status(403).json({ error: "Guruh bu o'qituvchiga tegishli emas." });
       } else if (effectiveCenterId) {
         const ok = await classInCenter(classId, effectiveCenterId);
         if (!ok) return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });

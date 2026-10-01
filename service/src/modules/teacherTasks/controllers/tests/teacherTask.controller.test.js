@@ -60,7 +60,7 @@ describe('teacher tasks controller status state machine (accept/reject/done)', (
     await teacherTaskController.updateTeacherTaskStatus(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'action must be one of "accept", "reject", or "done".' });
+    expect(res.json).toHaveBeenCalledWith({ error: "action qiymati \"accept\", \"reject\" yoki \"done\" dan biri bo'lishi kerak." });
     expect(teacherTaskService.getTeacherTaskById).not.toHaveBeenCalled();
   });
 
@@ -71,7 +71,7 @@ describe('teacher tasks controller status state machine (accept/reject/done)', (
     await teacherTaskController.updateTeacherTaskStatus(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'A reason is required to reject a task.' });
+    expect(res.json).toHaveBeenCalledWith({ error: "Vazifani rad etish uchun sabab ko'rsatilishi shart." });
   });
 
   test('accept succeeds from pending and moves the task to accepted', async () => {
@@ -213,7 +213,7 @@ describe('teacher tasks controller deadline validation (RMC-025)', () => {
     await teacherTaskController.createTeacherTask(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'deadline must be a valid date.' });
+    expect(res.json).toHaveBeenCalledWith({ error: "deadline to'g'ri sana bo'lishi kerak." });
     expect(teacherTaskService.createTeacherTask).not.toHaveBeenCalled();
   });
 

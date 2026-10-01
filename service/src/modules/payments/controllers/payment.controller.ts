@@ -72,7 +72,7 @@ const getPaymentById = async (req: any, res: any) => {
 const createPayment = async (req: any, res: any) => {
   try {
     if (req.user?.userType === 'teacher') {
-      return res.status(403).json({ error: 'Teachers cannot create payments.' });
+      return res.status(403).json({ error: "O'qituvchilar to'lov yarata olmaydi." });
     }
     const scope = getCenterScope(req, { requireConcreteCenter: true });
     if (sendScopeError(res, scope)) return;
@@ -86,7 +86,7 @@ const createPayment = async (req: any, res: any) => {
 const updatePayment = async (req: any, res: any) => {
   try {
     if (req.user?.userType === 'teacher') {
-      return res.status(403).json({ error: 'Teachers cannot update payments.' });
+      return res.status(403).json({ error: "O'qituvchilar to'lovni yangilay olmaydi." });
     }
     const scope = getCenterScope(req);
     if (sendScopeError(res, scope)) return;
@@ -126,7 +126,7 @@ const getPaymentsByStudent = async (req: any, res: any) => {
 const deletePayment = async (req: any, res: any) => {
   try {
     if (req.user?.userType === 'teacher') {
-      return res.status(403).json({ error: 'Teachers cannot delete payments.' });
+      return res.status(403).json({ error: "O'qituvchilar to'lovni o'chira olmaydi." });
     }
     const scope = getCenterScope(req);
     if (sendScopeError(res, scope)) return;
@@ -142,7 +142,7 @@ const deletePayment = async (req: any, res: any) => {
 const purgePayment = async (req: any, res: any) => {
   try {
     if (req.user?.userType === 'teacher') {
-      return res.status(403).json({ error: 'Teachers cannot permanently delete payments.' });
+      return res.status(403).json({ error: "O'qituvchilar to'lovni butunlay o'chira olmaydi." });
     }
     const scope = getCenterScope(req);
     if (sendScopeError(res, scope)) return;

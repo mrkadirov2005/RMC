@@ -37,7 +37,7 @@ const getCenterSummaries = async (req: any, res: any) => {
 const createCenter = async (req: any, res: any) => {
   try {
     if (isCenterAdmin(req.user)) {
-      return res.status(403).json({ error: 'Admin users cannot create centers.' });
+      return res.status(403).json({ error: 'Adminlar markaz yarata olmaydi.' });
     }
     res.status(201).json(await centerService.createCenter(req.body));
   } catch (error: any) {
@@ -68,7 +68,7 @@ const updateCenter = async (req: any, res: any) => {
 const deleteCenter = async (req: any, res: any) => {
   try {
     if (isCenterAdmin(req.user)) {
-      return res.status(403).json({ error: 'Admin users cannot delete centers.' });
+      return res.status(403).json({ error: "Adminlar markazni o'chira olmaydi." });
     }
     const row = await centerService.deleteCenter(Number(req.params.id), req.user);
     if (!row) return res.status(404).json({ error: 'Markaz topilmadi' });

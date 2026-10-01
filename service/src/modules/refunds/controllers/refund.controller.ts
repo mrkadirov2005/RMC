@@ -41,13 +41,13 @@ const createRefund = async (req: any, res: any) => {
     }
     const out = await refundService.create(req.body, centerId ?? undefined);
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Payment does not belong to this center.' });
+      return res.status(400).json({ error: "To'lov bu markazga tegishli emas." });
     }
     if (out.error === 'payment_not_found') {
       return res.status(404).json({ error: "To'lov topilmadi" });
     }
     if (out.error === 'refund_exceeds_payment') {
-      return res.status(400).json({ error: 'Refund amount exceeds the original payment amount.' });
+      return res.status(400).json({ error: "Qaytariladigan summa asl to'lov summasidan oshib ketdi." });
     }
     const { row } = out as { row: any };
     await logAudit({
@@ -60,7 +60,7 @@ const createRefund = async (req: any, res: any) => {
       details: { payment_id: req.body.payment_id, amount: req.body.amount },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Refund requested', refund: row });
+    res.status(201).json({ message: "To'lovni qaytarish so'rovi yuborildi", refund: row });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "To'lov qaytarilishini yaratib bo'lmadi", details: error.message || String(error) });
@@ -76,7 +76,7 @@ const updateRefund = async (req: any, res: any) => {
     const row = await refundService.update(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "To'lov qaytarilishi topilmadi" });
     if ((row as any).error === 'refund_exceeds_payment') {
-      return res.status(400).json({ error: 'Refund amount exceeds the original payment amount.' });
+      return res.status(400).json({ error: "Qaytariladigan summa asl to'lov summasidan oshib ketdi." });
     }
     res.json({ message: "To'lov qaytarilishi yangilandi", refund: row });
   } catch (error: any) {

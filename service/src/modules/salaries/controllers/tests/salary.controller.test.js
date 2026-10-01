@@ -105,7 +105,7 @@ describe('salaries controller', () => {
       await salaryController.getTeacherDetail({ params: { teacherId: 'abc' }, query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacherId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacherId ko'rsatilishi shart." });
     });
 
     it('hides a teacher who belongs to another center', async () => {
@@ -116,7 +116,7 @@ describe('salaries controller', () => {
 
       expect(teacherInCenter).toHaveBeenCalledWith(5, 4);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found in this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazda topilmadi." });
       expect(salaryService.getTeacherDetail).not.toHaveBeenCalled();
     });
 
@@ -184,7 +184,7 @@ describe('salaries controller', () => {
       await salaryController.getMyDetail({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Unable to resolve teacher id.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
     });
 
     it('reads the signed-in teacher own salary detail', async () => {
@@ -279,7 +279,7 @@ describe('salaries controller', () => {
       await salaryController.updatePatch({ params: { id: 'abc' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "id ko'rsatilishi shart." });
     });
 
     it('forwards only the editable fields', async () => {

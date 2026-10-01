@@ -76,7 +76,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
 
     const expectedKey = resolveOwnerInviteKey();
     // if (!expectedKey) {
-    //   return res.status(500).json({ error: 'Owner registration is not configured.' });
+    //   return res.status(500).json({ error: "Egani ro'yxatdan o'tkazish sozlanmagan." });
     // }
     // TODO Warning: this block above is temporarily disabled with this comment and needs to be re-enabled after setup
     // if (String(validation.data.invite_key || '').trim() !== expectedKey) {
@@ -99,7 +99,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
     });
 
     res.status(201).json({
-      message: 'Owner account created successfully',
+      message: 'Ega hisobi muvaffaqiyatli yaratildi',
       token,
       owner: {
         owner_id: owner.owner_id,
@@ -153,10 +153,10 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
     const { username, password } = validation.data;
     const result = await ownerService.authenticate(username, password);
     if (result.kind === 'locked') {
-      return res.status(403).json({ error: 'Account is locked' });
+      return res.status(403).json({ error: 'Hisob bloklangan' });
     }
     if (result.kind === 'inactive') {
-      return res.status(403).json({ error: 'Account is not active' });
+      return res.status(403).json({ error: 'Hisob faol emas' });
     }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });

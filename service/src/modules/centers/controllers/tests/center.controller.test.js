@@ -129,7 +129,7 @@ describe('centers controller', () => {
       await centerController.createCenter({ body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Admin users cannot create centers.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Adminlar markaz yarata olmaydi.' });
       expect(centerService.createCenter).not.toHaveBeenCalled();
     });
 
@@ -218,7 +218,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Admin users cannot delete centers.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Adminlar markazni o'chira olmaydi." });
       expect(centerService.deleteCenter).not.toHaveBeenCalled();
     });
 

@@ -167,7 +167,7 @@ describe('attendance controller', () => {
       await attendanceController.createAttendance({ body: { student_id: 2 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher ID is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi ID si ko'rsatilishi shart." });
       expect(attendanceService.create).not.toHaveBeenCalled();
     });
 

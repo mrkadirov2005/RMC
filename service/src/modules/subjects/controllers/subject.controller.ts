@@ -73,10 +73,10 @@ const createSubject = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });
     }
     if (out && out.error === 'forbidden') {
-      return res.status(403).json({ error: 'Class does not belong to this teacher.' });
+      return res.status(403).json({ error: "Guruh bu o'qituvchiga tegishli emas." });
     }
     if (out && out.error === 'class_subject_exists') {
-      return res.status(409).json({ message: 'This class already has an assigned subject.' });
+      return res.status(409).json({ message: 'Bu guruhga allaqachon fan biriktirilgan.' });
     }
     res.status(201).json(out);
   } catch (error: any) {
@@ -100,10 +100,10 @@ const updateSubject = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });
     }
     if (row && row.error === 'forbidden') {
-      return res.status(403).json({ error: 'Class does not belong to this teacher.' });
+      return res.status(403).json({ error: "Guruh bu o'qituvchiga tegishli emas." });
     }
     if (row && row.error === 'class_subject_exists') {
-      return res.status(409).json({ message: 'This class already has an assigned subject.' });
+      return res.status(409).json({ message: 'Bu guruhga allaqachon fan biriktirilgan.' });
     }
     if (!row) return res.status(404).json({ error: 'Fan topilmadi' });
     res.json(row);

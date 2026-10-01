@@ -233,7 +233,7 @@ describe('parents controller', () => {
 
       expect(parentService.assignStudent).toHaveBeenCalledWith({ parent_id: 1, student_id: 2 }, 2);
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Student assigned to parent' });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'quvchi ota-onaga biriktirildi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -255,7 +255,7 @@ describe('parents controller', () => {
       await parentController.parentLogin({ body: { username: 'ada', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Parent account is not active' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ota-ona hisobi faol emas' });
       expect(generateToken).not.toHaveBeenCalled();
     });
 

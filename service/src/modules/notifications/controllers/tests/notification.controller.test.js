@@ -132,7 +132,7 @@ describe('notifications controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Unsupported recipient type for center admin.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markaz admini uchun bu qabul qiluvchi turi qo'llab-quvvatlanmaydi." });
       expect(logAudit).not.toHaveBeenCalled();
     });
 
@@ -147,7 +147,7 @@ describe('notifications controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Recipient does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Qabul qiluvchi bu markazga tegishli emas.' });
       expect(logAudit).not.toHaveBeenCalled();
     });
 
@@ -209,7 +209,7 @@ describe('notifications controller', () => {
       await notificationController.markAsRead({ params: { id: '6' }, user: { userType: 'teacher', id: 5 } }, res);
 
       expect(notificationService.markAsRead).toHaveBeenCalledWith(6, 'teacher', 5, 2);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Notification marked as read', notification: { notification_id: 6 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Bildirishnoma o'qilgan deb belgilandi", notification: { notification_id: 6 } });
     });
 
     it('returns 404 when the notification is not the caller own', async () => {

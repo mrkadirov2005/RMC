@@ -31,8 +31,8 @@ describe('calendar service', () => {
 
   test.each([
     [{ from: '', to: '2026-08-10' }, /YYYY-MM-DD/],
-    [{ from: '2026-08-11', to: '2026-08-10' }, /on or after/],
-    [{ from: '2026-01-01', to: '2026-04-01' }, /62 days/],
+    [{ from: '2026-08-11', to: '2026-08-10' }, /teng yoki undan keyin/],
+    [{ from: '2026-01-01', to: '2026-04-01' }, /62 kundan/],
   ])('rejects an unsafe event range %#', async (query, error) => {
     await expect(service.events(2, query)).rejects.toThrow(error);
     expect(repository.datedSessions).not.toHaveBeenCalled();

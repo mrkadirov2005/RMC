@@ -45,10 +45,10 @@ const createRoom = async (req: any, res: any) => {
     if (centerId == null) return;
     const room = await roomsService.createRoom({ ...req.body, center_id: centerId });
     if (room?.error === 'bad_time_window') {
-      return res.status(400).json({ error: 'End time must be after start time.' });
+      return res.status(400).json({ error: "Tugash vaqti boshlanish vaqtidan keyin bo'lishi kerak." });
     }
     if (room?.error === 'room_unavailable') {
-      return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
+      return res.status(409).json({ error: 'Xona bu vaqtda band.', conflict: room.conflict });
     }
     await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'create', entity_type: 'room', entity_id: room?.room_id || room?.roomId || null, center_id: centerId, details: { room_name: req.body.room_number, class_id: req.body.class_id || null, capacity: req.body.capacity || null } });
     res.status(201).json(room);
@@ -64,10 +64,10 @@ const updateRoom = async (req: any, res: any) => {
     if (centerId == null) return;
     const room = await roomsService.updateRoom(id, req.body, centerId);
     if (room?.error === 'bad_time_window') {
-      return res.status(400).json({ error: 'End time must be after start time.' });
+      return res.status(400).json({ error: "Tugash vaqti boshlanish vaqtidan keyin bo'lishi kerak." });
     }
     if (room?.error === 'room_unavailable') {
-      return res.status(409).json({ error: 'Room is not available for this time.', conflict: room.conflict });
+      return res.status(409).json({ error: 'Xona bu vaqtda band.', conflict: room.conflict });
     }
     if (!room) return res.status(404).json({ error: 'Xona topilmadi' });
     await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'update', entity_type: 'room', entity_id: Number(id), center_id: centerId, details: { room_name: req.body.room_number, class_id: req.body.class_id || null, capacity: req.body.capacity || null } });

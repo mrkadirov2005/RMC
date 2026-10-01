@@ -44,7 +44,7 @@ const createPlan = async (req: any, res: any) => {
       return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     if (out.error === 'installment_sum_mismatch') {
-      return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
+      return res.status(400).json({ error: "Bo'lib to'lash summalari total_amount ga teng bo'lishi kerak." });
     }
     const { plan } = out as { plan: any };
     await logAudit({
@@ -73,7 +73,7 @@ const updatePlan = async (req: any, res: any) => {
     const row = await paymentPlanService.update(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "To'lov rejasi topilmadi" });
     if ((row as any).error === 'installment_sum_mismatch') {
-      return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
+      return res.status(400).json({ error: "Bo'lib to'lash summalari total_amount ga teng bo'lishi kerak." });
     }
     res.json({ message: "To'lov rejasi yangilandi", plan: row });
   } catch (error: any) {

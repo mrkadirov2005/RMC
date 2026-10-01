@@ -13,7 +13,7 @@ const guardTestWrite = async (
 ) => {
   const access = await testService.checkTestWriteAccess(target, centerId, req.user);
   if (access === 'not_found') {
-    res.status(404).json({ error: target.testId != null ? 'Test not found' : 'Not found' });
+    res.status(404).json({ error: target.testId != null ? 'Test topilmadi' : 'Topilmadi' });
     return false;
   }
   if (access === 'forbidden') {

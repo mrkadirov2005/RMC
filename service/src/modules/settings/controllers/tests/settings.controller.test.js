@@ -56,7 +56,7 @@ describe('settings controller', () => {
       await settingsController.saveLessonScoring({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for settings.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sozlamalar uchun center_id ko'rsatilishi shart." });
     });
 
     it.each([
@@ -69,7 +69,7 @@ describe('settings controller', () => {
       await settingsController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for palette settings.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Rang palitrasi sozlamalari uchun center_id ko'rsatilishi shart." });
     });
 
     it.each([

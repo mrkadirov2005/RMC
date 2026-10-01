@@ -185,8 +185,8 @@ describe('subjects controller', () => {
 
     it.each([
       ['invalid_center', 400, { error: 'Guruh bu markazga tegishli emas.' }],
-      ['forbidden', 403, { error: 'Class does not belong to this teacher.' }],
-      ['class_subject_exists', 409, { message: 'This class already has an assigned subject.' }],
+      ['forbidden', 403, { error: "Guruh bu o'qituvchiga tegishli emas." }],
+      ['class_subject_exists', 409, { message: 'Bu guruhga allaqachon fan biriktirilgan.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       subjectService.createSubject.mockResolvedValue({ error });
@@ -221,8 +221,8 @@ describe('subjects controller', () => {
 
     it.each([
       ['invalid_center', 400, { error: 'Guruh bu markazga tegishli emas.' }],
-      ['forbidden', 403, { error: 'Class does not belong to this teacher.' }],
-      ['class_subject_exists', 409, { message: 'This class already has an assigned subject.' }],
+      ['forbidden', 403, { error: "Guruh bu o'qituvchiga tegishli emas." }],
+      ['class_subject_exists', 409, { message: 'Bu guruhga allaqachon fan biriktirilgan.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       subjectService.updateSubject.mockResolvedValue({ error });

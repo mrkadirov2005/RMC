@@ -32,11 +32,11 @@ const getTeacherDetail = async (req: any, res: any) => {
     }
     const teacherId = Number(req.params.teacherId);
     if (!teacherId) {
-      return res.status(400).json({ error: 'teacherId is required.' });
+      return res.status(400).json({ error: "teacherId ko'rsatilishi shart." });
     }
     if (centerId) {
       const ok = await teacherInCenter(teacherId, centerId);
-      if (!ok) return res.status(404).json({ error: 'Teacher not found in this center.' });
+      if (!ok) return res.status(404).json({ error: "O'qituvchi bu markazda topilmadi." });
     }
     const requestedMonths = Number(req.query.months || 6);
     const months = Number.isFinite(requestedMonths) ? Math.min(Math.max(requestedMonths, 1), 24) : 6;
@@ -55,7 +55,7 @@ const getMyDetail = async (req: any, res: any) => {
   try {
     const teacherId = Number(req.user?.id);
     if (!teacherId) {
-      return res.status(400).json({ error: 'Unable to resolve teacher id.' });
+      return res.status(400).json({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
     }
     const { centerId } = getScopedCenterId(req);
     const requestedMonths = Number(req.query.months || 6);
@@ -116,7 +116,7 @@ const updatePatch = async (req: any, res: any) => {
     }
     const id = Number(req.params.id);
     if (!id) {
-      return res.status(400).json({ error: 'id is required.' });
+      return res.status(400).json({ error: "id ko'rsatilishi shart." });
     }
 
     const record = await salaryService.updateSalaryRecord({

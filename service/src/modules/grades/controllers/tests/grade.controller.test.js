@@ -201,7 +201,7 @@ describe('grades controller', () => {
       await gradeController.createGrade({ body: { student_id: 2 }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student or class does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi yoki guruh bu markazga tegishli emas." });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -329,7 +329,7 @@ describe('grades controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'One or more students do not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bir yoki bir nechta o'quvchi bu o'qituvchiga tegishli emas." });
       expect(gradeService.createBulk).not.toHaveBeenCalled();
     });
 
@@ -340,7 +340,7 @@ describe('grades controller', () => {
       await gradeController.createBulkGrades({ body: { grades: [{ student_id: 1 }] }, user: { userType: 'admin' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'One or more grades do not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bir yoki bir nechta baho bu markazga tegishli emas.' });
     });
 
     it('reports how many grades were created', async () => {
@@ -397,7 +397,7 @@ describe('grades controller', () => {
       await gradeController.upsertSessionScores({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'session_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "session_id ko'rsatilishi shart." });
     });
 
     it('returns the upsert result', async () => {
@@ -447,8 +447,8 @@ describe('grades controller', () => {
     });
 
     it.each([
-      ['invalid_payload', 'Invalid session workflow payload.'],
-      ['multiple_stellar_students', 'Only one stellar student can be selected per lesson.'],
+      ['invalid_payload', "Dars jarayoni ma'lumotlari noto'g'ri."],
+      ['multiple_stellar_students', "Bitta darsda faqat bitta a'lochi o'quvchi tanlanishi mumkin."],
       ['invalid_center', 'Guruh bu markazga tegishli emas.'],
     ])('maps the %s result to a 400', async (error, message) => {
       const res = createResponse();

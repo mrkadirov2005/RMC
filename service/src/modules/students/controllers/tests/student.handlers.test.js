@@ -76,7 +76,7 @@ describe('students controller handlers', () => {
       await controller.createAcquisitionSource({ body: { source_name: '   ' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'source_name is required' });
+      expect(res.json).toHaveBeenCalledWith({ error: "source_name ko'rsatilishi shart" });
       expect(studentService.createAcquisitionSource).not.toHaveBeenCalled();
     });
 
@@ -117,7 +117,7 @@ describe('students controller handlers', () => {
       await controller.getActionReasons({ query: { type: 'archive' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'type must be transfer or delete' });
+      expect(res.json).toHaveBeenCalledWith({ error: "type qiymati transfer yoki delete bo'lishi kerak" });
     });
 
     it('reports a read failure as a 500', async () => {
@@ -136,7 +136,7 @@ describe('students controller handlers', () => {
       await controller.createActionReason({ body: { reason_type: 'archive', reason_name: 'Moved' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'reason_type must be transfer or delete' });
+      expect(res.json).toHaveBeenCalledWith({ error: "reason_type qiymati transfer yoki delete bo'lishi kerak" });
     });
 
     it('requires a non-blank reason name', async () => {
@@ -145,7 +145,7 @@ describe('students controller handlers', () => {
       await controller.createActionReason({ body: { reason_type: 'delete', reason_name: '  ' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'reason_name is required' });
+      expect(res.json).toHaveBeenCalledWith({ error: "reason_name ko'rsatilishi shart" });
     });
 
     it('trims the reason name before storing it', async () => {
@@ -339,7 +339,7 @@ describe('students controller handlers', () => {
       await controller.createStudent({ body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Enrollment number already exists' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: "Ro'yxat raqami allaqachon mavjud" }));
     });
 
     it('reports any other database failure as a 500', async () => {
@@ -511,8 +511,8 @@ describe('students controller handlers', () => {
 
     it.each([
       ['not_found', 404, { error: "O'quvchi topilmadi" }],
-      ['target_class_not_found', 404, { error: 'Target class not found' }],
-      ['same_class', 400, { error: 'Student is already in this class' }],
+      ['target_class_not_found', 404, { error: 'Maqsadli guruh topilmadi' }],
+      ['same_class', 400, { error: "O'quvchi allaqachon shu guruhda" }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       studentService.transferStudent.mockResolvedValue({ error });
@@ -539,7 +539,7 @@ describe('students controller handlers', () => {
       expect(studentService.transferStudent).toHaveBeenCalledWith(9, 3, 4, 2, 7);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Student transferred successfully',
+        message: "O'quvchi muvaffaqiyatli ko'chirildi",
         transferred_student: { transfer_id: 1 },
         student: { student_id: 9, class_id: 3 },
       });
@@ -564,7 +564,7 @@ describe('students controller handlers', () => {
       await controller.studentLogin({ body: { username: 'ada', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student account is not active' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi hisobi faol emas" });
       expect(generateToken).not.toHaveBeenCalled();
     });
 
@@ -655,7 +655,7 @@ describe('students controller handlers', () => {
 
       expect(studentService.setPasswordByAdmin).toHaveBeenCalledWith(9, 'ada', 'pw', 2);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Student password set successfully',
+        message: "O'quvchi paroli muvaffaqiyatli o'rnatildi",
         student: { student_id: 9, username: 'ada' },
       });
     });

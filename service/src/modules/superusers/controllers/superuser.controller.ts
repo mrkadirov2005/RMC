@@ -30,13 +30,13 @@ const createSuperuser = async (req: any, res: any) => {
     const { centerId } = getScopedCenterId(req);
     const out = await superuserService.createSuperuser(req.body, req.user, centerId);
     if (out.error === 'branch_required') {
-      return res.status(400).json({ error: 'Branch is required. Please select a branch first.' });
+      return res.status(400).json({ error: "Filial ko'rsatilishi shart. Avval filialni tanlang." });
     }
     if (out.error === 'username_taken') {
       return res.status(400).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     }
     if (out.error === 'forbidden_role') {
-      return res.status(403).json({ error: 'Only owners can assign the owner role.' });
+      return res.status(403).json({ error: 'Ega rolini faqat egalar tayinlay oladi.' });
     }
     res.status(201).json((out as any).row);
   } catch (error: any) {
@@ -51,7 +51,7 @@ const updateSuperuser = async (req: any, res: any) => {
     const { centerId } = getScopedCenterId(req);
     const out = await superuserService.updateSuperuser(requestedId, req.body, req.user, centerId);
     if (out.error === 'forbidden_role') {
-      return res.status(403).json({ error: 'Only owners can assign the owner role.' });
+      return res.status(403).json({ error: 'Ega rolini faqat egalar tayinlay oladi.' });
     }
     if (!out.row) return res.status(404).json({ error: 'Superuser topilmadi' });
     res.json(out.row);
@@ -67,7 +67,7 @@ const deleteSuperuser = async (req: any, res: any) => {
     const { centerId } = getScopedCenterId(req);
     const out = await superuserService.deleteSuperuser(requestedId, req.user, centerId);
     if (out.error === 'forbidden_role') {
-      return res.status(403).json({ error: 'Only owners can delete an owner account.' });
+      return res.status(403).json({ error: "Ega hisobini faqat egalar o'chira oladi." });
     }
     if (!out.row) return res.status(404).json({ error: 'Superuser topilmadi' });
     res.json({ message: "Superuser muvaffaqiyatli o'chirildi", superuser: out.row });
@@ -82,10 +82,10 @@ const login = async (req: any, res: any) => {
     const { username, password } = req.body;
     const result = await superuserService.authenticate(username, password);
     if (result.kind === 'locked') {
-      return res.status(403).json({ error: 'Account is locked' });
+      return res.status(403).json({ error: 'Hisob bloklangan' });
     }
     if (result.kind === 'inactive') {
-      return res.status(403).json({ error: 'Account is not active' });
+      return res.status(403).json({ error: 'Hisob faol emas' });
     }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });

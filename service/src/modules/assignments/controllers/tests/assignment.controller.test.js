@@ -178,7 +178,7 @@ describe('assignments controller', () => {
 
       expect(classBelongsToTeacher).toHaveBeenCalledWith(12, 4);
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruh bu o'qituvchiga tegishli emas." });
       expect(assignmentService.createAssignment).not.toHaveBeenCalled();
     });
 

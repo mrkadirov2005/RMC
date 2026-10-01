@@ -94,9 +94,9 @@ describe('superusers controller', () => {
 
   describe('createSuperuser', () => {
     it.each([
-      ['branch_required', 400, { error: 'Branch is required. Please select a branch first.' }],
+      ['branch_required', 400, { error: "Filial ko'rsatilishi shart. Avval filialni tanlang." }],
       ['username_taken', 400, { error: 'Bu foydalanuvchi nomi allaqachon mavjud' }],
-      ['forbidden_role', 403, { error: 'Only owners can assign the owner role.' }],
+      ['forbidden_role', 403, { error: 'Ega rolini faqat egalar tayinlay oladi.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       superuserService.createSuperuser.mockResolvedValue({ error });
@@ -138,7 +138,7 @@ describe('superusers controller', () => {
       await superuserController.updateSuperuser({ params: { id: '4' }, body: { role: 'owner' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only owners can assign the owner role.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ega rolini faqat egalar tayinlay oladi.' });
     });
 
     it('returns 404 when the superuser is out of scope', async () => {
@@ -181,7 +181,7 @@ describe('superusers controller', () => {
       await superuserController.deleteSuperuser({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only owners can delete an owner account.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ega hisobini faqat egalar o'chira oladi." });
     });
 
     it('returns 404 when the superuser is out of scope', async () => {
@@ -217,8 +217,8 @@ describe('superusers controller', () => {
 
   describe('login', () => {
     it.each([
-      ['locked', 403, { error: 'Account is locked' }],
-      ['inactive', 403, { error: 'Account is not active' }],
+      ['locked', 403, { error: 'Hisob bloklangan' }],
+      ['inactive', 403, { error: 'Hisob faol emas' }],
     ])('refuses a %s account', async (kind, status, payload) => {
       const res = createResponse();
       superuserService.authenticate.mockResolvedValue({ kind });

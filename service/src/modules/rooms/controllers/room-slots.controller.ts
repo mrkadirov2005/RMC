@@ -48,7 +48,7 @@ const getAvailableSlots = async (req: any, res: any) => {
     const { slot_date } = req.query;
     const centerId = resolveCenter(req, res);
     if (centerId == null) return;
-    if (!slot_date) return res.status(400).json({ error: 'Slot date is required' });
+    if (!slot_date) return res.status(400).json({ error: "Vaqt oralig'i sanasi ko'rsatilishi shart" });
 
     const slots = await roomSlotsService.getAvailableSlots(roomId, centerId, slot_date);
     res.json(slots);
@@ -231,7 +231,7 @@ const cancelBooking = async (req: any, res: any) => {
     if (centerId == null) return;
 
     await roomSlotsService.cancelBooking(bookingId, centerId);
-    res.json({ message: 'Booking cancelled successfully' });
+    res.json({ message: 'Bron muvaffaqiyatli bekor qilindi' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

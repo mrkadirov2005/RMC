@@ -12,7 +12,7 @@ const getAcquisitionSources = async (_req: any, res: any) => {
 const createAcquisitionSource = async (req: any, res: any) => {
   try {
     const name = String(req.body?.source_name || '').trim();
-    if (!name) return res.status(400).json({ error: 'source_name is required' });
+    if (!name) return res.status(400).json({ error: "source_name ko'rsatilishi shart" });
     res.status(201).json(await studentService.createAcquisitionSource(name));
   } catch (error: any) { res.status(500).json({ error: "Manbani yaratib bo'lmadi", details: error.message }); }
 };
@@ -20,7 +20,7 @@ const createAcquisitionSource = async (req: any, res: any) => {
 const getActionReasons = async (req: any, res: any) => {
   try {
     const reasonType = String(req.query?.type || '').trim();
-    if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: 'type must be transfer or delete' });
+    if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: "type qiymati transfer yoki delete bo'lishi kerak" });
     res.json(await studentService.listActionReasons(reasonType));
   } catch (error: any) { res.status(500).json({ error: "Sabablarni yuklab bo'lmadi", details: error.message }); }
 };
@@ -29,8 +29,8 @@ const createActionReason = async (req: any, res: any) => {
   try {
     const reasonType = String(req.body?.reason_type || '').trim();
     const name = String(req.body?.reason_name || '').trim();
-    if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: 'reason_type must be transfer or delete' });
-    if (!name) return res.status(400).json({ error: 'reason_name is required' });
+    if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: "reason_type qiymati transfer yoki delete bo'lishi kerak" });
+    if (!name) return res.status(400).json({ error: "reason_name ko'rsatilishi shart" });
     res.status(201).json(await studentService.createActionReason(reasonType, name));
   } catch (error: any) { res.status(500).json({ error: "Sababni yaratib bo'lmadi", details: error.message }); }
 };
@@ -135,10 +135,10 @@ const createStudent = async (req: any, res: any) => {
     if (error.code === '23505') {
       // PostgreSQL unique_violation error code
       if (error.constraint === 'students_username_key' || error.message?.includes('username')) {
-        return res.status(409).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud', message: 'A student with this username already exists. Please choose a different username.' });
+        return res.status(409).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud', message: "Bunday foydalanuvchi nomiga ega o'quvchi allaqachon mavjud. Iltimos, boshqa foydalanuvchi nomini tanlang." });
       }
       if (error.constraint === 'students_enrollment_number_key' || error.message?.includes('enrollment')) {
-        return res.status(409).json({ error: 'Enrollment number already exists', message: 'A student with this enrollment number already exists. Please choose a different number.' });
+        return res.status(409).json({ error: "Ro'yxat raqami allaqachon mavjud", message: "Bu ro'yxat raqamiga ega o'quvchi allaqachon mavjud. Iltimos, boshqa raqam tanlang." });
       }
     }
     
@@ -236,11 +236,11 @@ const transferStudent = async (req: any, res: any) => {
     );
 
     if (result?.error === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
-    if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Target class not found' });
-    if (result?.error === 'same_class') return res.status(400).json({ error: 'Student is already in this class' });
+    if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Maqsadli guruh topilmadi' });
+    if (result?.error === 'same_class') return res.status(400).json({ error: "O'quvchi allaqachon shu guruhda" });
 
     res.status(201).json({
-      message: 'Student transferred successfully',
+      message: "O'quvchi muvaffaqiyatli ko'chirildi",
       transferred_student: result.transferred,
       student: result.student,
     });
@@ -255,7 +255,7 @@ const studentLogin = async (req: any, res: any) => {
     const { username, password } = req.body;
     const result = await studentService.authenticate(username, password);
     if (result.kind === 'inactive') {
-      return res.status(403).json({ error: 'Student account is not active' });
+      return res.status(403).json({ error: "O'quvchi hisobi faol emas" });
     }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
@@ -300,7 +300,7 @@ const setStudentPassword = async (req: any, res: any) => {
     }
     const row = await studentService.setPasswordByAdmin(Number(req.params.id), username, password, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
-    res.json({ message: 'Student password set successfully', student: row });
+    res.json({ message: "O'quvchi paroli muvaffaqiyatli o'rnatildi", student: row });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Parolni o'rnatib bo'lmadi", details: error.message || String(error) });

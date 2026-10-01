@@ -75,7 +75,7 @@ const getTeacherTaskById = async (req: any, res: any) => {
 const createTeacherTask = async (req: any, res: any) => {
   try {
     if (!isGlobalUser(req.user)) {
-      return res.status(403).json({ error: 'Only the center owner can assign tasks.' });
+      return res.status(403).json({ error: 'Vazifalarni faqat markaz egasi tayinlay oladi.' });
     }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
@@ -88,13 +88,13 @@ const createTeacherTask = async (req: any, res: any) => {
 
     const assigneeType = req.body.assignee_type;
     if (assigneeType !== 'teacher' && assigneeType !== 'admin') {
-      return res.status(400).json({ error: 'assignee_type must be either "teacher" or "admin".' });
+      return res.status(400).json({ error: "assignee_type qiymati \"teacher\" yoki \"admin\" bo'lishi kerak." });
     }
     if (!req.body.task_title || !String(req.body.task_title).trim()) {
-      return res.status(400).json({ error: 'task_title is required.' });
+      return res.status(400).json({ error: "task_title ko'rsatilishi shart." });
     }
     if (!teacherTaskService.isValidDeadline(req.body.deadline)) {
-      return res.status(400).json({ error: 'deadline must be a valid date.' });
+      return res.status(400).json({ error: "deadline to'g'ri sana bo'lishi kerak." });
     }
 
     let teacherId: number | undefined;
@@ -103,7 +103,7 @@ const createTeacherTask = async (req: any, res: any) => {
     if (assigneeType === 'teacher') {
       teacherId = Number(req.body.teacher_id);
       if (!teacherId) {
-        return res.status(400).json({ error: 'teacher_id is required.' });
+        return res.status(400).json({ error: "teacher_id ko'rsatilishi shart." });
       }
       if (effectiveCenterId) {
         const ok = await teacherInCenter(teacherId, effectiveCenterId);
@@ -112,15 +112,15 @@ const createTeacherTask = async (req: any, res: any) => {
     } else {
       adminId = Number(req.body.admin_id);
       if (!adminId) {
-        return res.status(400).json({ error: 'admin_id is required.' });
+        return res.status(400).json({ error: "admin_id ko'rsatilishi shart." });
       }
       if (effectiveCenterId) {
         const ok = await superuserInCenter(adminId, effectiveCenterId);
-        if (!ok) return res.status(400).json({ error: 'Admin does not belong to this center.' });
+        if (!ok) return res.status(400).json({ error: 'Admin bu markazga tegishli emas.' });
       }
       const admin = await superuserService.getSuperuser(adminId, effectiveCenterId);
       if (admin && String(admin.role || '').toLowerCase() === 'owner') {
-        return res.status(400).json({ error: 'Cannot assign a task to the center owner.' });
+        return res.status(400).json({ error: "Vazifani markaz egasiga tayinlab bo'lmaydi." });
       }
     }
 
@@ -142,7 +142,7 @@ const createTeacherTask = async (req: any, res: any) => {
 const updateTeacherTask = async (req: any, res: any) => {
   try {
     if (!isGlobalUser(req.user)) {
-      return res.status(403).json({ error: 'Only the center owner can update tasks.' });
+      return res.status(403).json({ error: 'Vazifalarni faqat markaz egasi yangilay oladi.' });
     }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
@@ -154,7 +154,7 @@ const updateTeacherTask = async (req: any, res: any) => {
     const effectiveCenterId = centerId ?? req.body.center_id;
 
     if (!teacherTaskService.isValidDeadline(req.body.deadline)) {
-      return res.status(400).json({ error: 'deadline must be a valid date.' });
+      return res.status(400).json({ error: "deadline to'g'ri sana bo'lishi kerak." });
     }
 
     const payload: any = {
@@ -166,12 +166,12 @@ const updateTeacherTask = async (req: any, res: any) => {
     if (req.body.assignee_type !== undefined) {
       const assigneeType = req.body.assignee_type;
       if (assigneeType !== 'teacher' && assigneeType !== 'admin') {
-        return res.status(400).json({ error: 'assignee_type must be either "teacher" or "admin".' });
+        return res.status(400).json({ error: "assignee_type qiymati \"teacher\" yoki \"admin\" bo'lishi kerak." });
       }
       if (assigneeType === 'teacher') {
         const teacherId = Number(req.body.teacher_id);
         if (!teacherId) {
-          return res.status(400).json({ error: 'teacher_id is required.' });
+          return res.status(400).json({ error: "teacher_id ko'rsatilishi shart." });
         }
         if (effectiveCenterId) {
           const ok = await teacherInCenter(teacherId, effectiveCenterId);
@@ -183,15 +183,15 @@ const updateTeacherTask = async (req: any, res: any) => {
       } else {
         const adminId = Number(req.body.admin_id);
         if (!adminId) {
-          return res.status(400).json({ error: 'admin_id is required.' });
+          return res.status(400).json({ error: "admin_id ko'rsatilishi shart." });
         }
         if (effectiveCenterId) {
           const ok = await superuserInCenter(adminId, effectiveCenterId);
-          if (!ok) return res.status(400).json({ error: 'Admin does not belong to this center.' });
+          if (!ok) return res.status(400).json({ error: 'Admin bu markazga tegishli emas.' });
         }
         const admin = await superuserService.getSuperuser(adminId, effectiveCenterId);
         if (admin && String(admin.role || '').toLowerCase() === 'owner') {
-          return res.status(400).json({ error: 'Cannot assign a task to the center owner.' });
+          return res.status(400).json({ error: "Vazifani markaz egasiga tayinlab bo'lmaydi." });
         }
         payload.assignee_type = assigneeType;
         payload.admin_id = adminId;
@@ -223,16 +223,16 @@ const updateTeacherTaskStatus = async (req: any, res: any) => {
     const action = req.body.action;
     const transition = STATUS_TRANSITIONS[action];
     if (!transition) {
-      return res.status(400).json({ error: 'action must be one of "accept", "reject", or "done".' });
+      return res.status(400).json({ error: "action qiymati \"accept\", \"reject\" yoki \"done\" dan biri bo'lishi kerak." });
     }
     if (action === 'reject' && (!req.body.reason || !String(req.body.reason).trim())) {
-      return res.status(400).json({ error: 'A reason is required to reject a task.' });
+      return res.status(400).json({ error: "Vazifani rad etish uchun sabab ko'rsatilishi shart." });
     }
 
     const isTeacher = req.user?.userType === 'teacher';
     const isAdmin = isCenterAdmin(req.user);
     if (!isTeacher && !isAdmin) {
-      return res.status(403).json({ error: 'Only the assigned teacher or admin can update task status.' });
+      return res.status(403).json({ error: "Vazifa holatini faqat biriktirilgan o'qituvchi yoki admin yangilay oladi." });
     }
 
     const taskId = Number(req.params.id);
@@ -250,7 +250,7 @@ const updateTeacherTaskStatus = async (req: any, res: any) => {
       ? existing.assignee_type === 'teacher' && Number(existing.teacher_id) === Number(req.user.id)
       : existing.assignee_type === 'admin' && Number(existing.admin_id) === Number(req.user.id);
     if (!belongsToCaller) {
-      return res.status(403).json({ error: 'You are not the assignee of this task.' });
+      return res.status(403).json({ error: 'Siz bu vazifaga biriktirilmagansiz.' });
     }
 
     if (existing.status !== transition.from) {
@@ -310,7 +310,7 @@ const getTeacherTaskStats = async (req: any, res: any) => {
 const deleteTeacherTask = async (req: any, res: any) => {
   try {
     if (!isGlobalUser(req.user)) {
-      return res.status(403).json({ error: 'Only the center owner can delete tasks.' });
+      return res.status(403).json({ error: "Vazifalarni faqat markaz egasi o'chira oladi." });
     }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {

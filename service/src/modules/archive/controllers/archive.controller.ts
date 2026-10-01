@@ -25,7 +25,7 @@ const restoreArchiveItem = async (req: any, res: any) => {
     const id = Number(req.params.id);
     const result = await archiveService.restoreArchiveItem(entity, id, centerId ?? undefined);
     if (result?.error === 'invalid_entity') {
-      return res.status(400).json({ error: 'Invalid archive entity.' });
+      return res.status(400).json({ error: "Arxiv turi noto'g'ri." });
     }
     if (!result?.row) {
       return res.status(404).json({ error: 'Arxivlangan yozuv topilmadi.' });
@@ -35,7 +35,7 @@ const restoreArchiveItem = async (req: any, res: any) => {
     console.error('Database error:', error);
     if (error?.code === '23505') {
       return res.status(409).json({
-        error: 'Record cannot be restored because an active record already uses the same unique value.',
+        error: "Yozuvni tiklab bo'lmaydi: faol yozuv allaqachon xuddi shu noyob qiymatdan foydalanmoqda.",
         details: error.detail,
       });
     }
@@ -53,7 +53,7 @@ const purgeArchiveItem = async (req: any, res: any) => {
     const id = Number(req.params.id);
     const result = await archiveService.purgeArchiveItem(entity, id, centerId ?? undefined);
     if (result?.error === 'invalid_entity') {
-      return res.status(400).json({ error: 'Invalid archive entity.' });
+      return res.status(400).json({ error: "Arxiv turi noto'g'ri." });
     }
     if (!result?.row) {
       return res.status(404).json({ error: 'Arxivlangan yozuv topilmadi.' });
@@ -64,7 +64,7 @@ const purgeArchiveItem = async (req: any, res: any) => {
     if (error?.code === '23503') {
       return res.status(409).json({
         error: 'Yozuv boshqa yozuvlarda hali ishlatilmoqda.',
-        message: 'Restore or reassign related records before permanently deleting this item.',
+        message: "Bu elementni butunlay o'chirishdan oldin bog'liq yozuvlarni tiklang yoki boshqasiga o'tkazing.",
         details: error.detail,
       });
     }

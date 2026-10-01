@@ -27,7 +27,7 @@ const getMyProfile = async (req: any, res: any) => {
   try {
     const teacherId = Number(req.user?.id);
     if (!teacherId) {
-      return res.status(400).json({ error: 'Unable to resolve teacher id.' });
+      return res.status(400).json({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
     }
     const { centerId } = getScopedCenterId(req);
     const teacher = await teacherService.getTeacher(teacherId, centerId ?? undefined);
@@ -126,16 +126,16 @@ const deleteTeacher = async (req: any, res: any) => {
     if (result?.kind === 'not_found') return res.status(404).json({ error: "O'qituvchi topilmadi", message: "O'qituvchi topilmadi" });
     if (result?.kind === 'blocked') {
       return res.status(409).json({
-        error: 'Teacher has attendance or grade records',
-        message: 'Teacher cannot be deleted because attendance or grade records still reference this teacher.',
+        error: "O'qituvchida davomat yoki baho yozuvlari mavjud",
+        message: "O'qituvchini o'chirib bo'lmaydi: davomat yoki baho yozuvlari hali ham unga bog'langan.",
         reason: result.reason,
         dependencies: result.dependencies,
       });
     }
     if (result?.kind === 'has_dependencies') {
       return res.status(409).json({
-        error: 'Teacher is assigned to active records',
-        message: 'Teacher is assigned to classes, students, subjects, assignments, or sessions. Reassign them first or retry with force=true to unassign them.',
+        error: "O'qituvchi faol yozuvlarga biriktirilgan",
+        message: "O'qituvchi guruhlar, o'quvchilar, fanlar, vazifalar yoki sessiyalarga biriktirilgan. Avval ularni boshqasiga o'tkazing yoki force=true bilan qayta urinib, biriktirishni bekor qiling.",
         dependencies: result.dependencies,
       });
     }
@@ -145,7 +145,7 @@ const deleteTeacher = async (req: any, res: any) => {
     if (error?.code === '23503') {
       return res.status(409).json({
         error: "O'qituvchi boshqa yozuvlarda hali ishlatilmoqda",
-        message: 'Teacher is still referenced by other records. Reassign related records before deleting.',
+        message: "O'qituvchi boshqa yozuvlarda hali ishlatilmoqda. O'chirishdan oldin bog'liq yozuvlarni boshqasiga o'tkazing.",
         details: error.detail,
       });
     }
@@ -169,7 +169,7 @@ const purgeTeacher = async (req: any, res: any) => {
     if (error?.code === '23503') {
       return res.status(409).json({
         error: "O'qituvchi boshqa yozuvlarda hali ishlatilmoqda",
-        message: 'Reassign related records before permanently deleting this teacher.',
+        message: "Bu o'qituvchini butunlay o'chirishdan oldin bog'liq yozuvlarni boshqasiga o'tkazing.",
         details: error.detail,
       });
     }
@@ -182,7 +182,7 @@ const teacherLogin = async (req: any, res: any) => {
     const { username, password } = req.body;
     const result = await teacherService.authenticate(username, password);
     if (result.kind === 'inactive') {
-      return res.status(403).json({ error: 'Teacher account is not active' });
+      return res.status(403).json({ error: "O'qituvchi hisobi faol emas" });
     }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
@@ -225,7 +225,7 @@ const setTeacherPaymentPassword = async (req: any, res: any) => {
     if (!teacher) return res.status(404).json({ error: "O'qituvchi topilmadi" });
     const row = await teacherPaymentService.setPaymentPassword(Number(req.params.id), password, req.user?.id);
     if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
-    res.json({ message: 'Payment access password set successfully.' });
+    res.json({ message: "To'lovlarga kirish paroli muvaffaqiyatli o'rnatildi." });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "To'lov parolini o'rnatib bo'lmadi", details: error.message || String(error) });
@@ -237,7 +237,7 @@ const teacherPaymentLogin = async (req: any, res: any) => {
     const { username, password } = req.body;
     const result = await teacherPaymentService.authenticatePaymentAccess(username, password);
     if (result.kind === 'inactive') {
-      return res.status(403).json({ error: 'Teacher account is not active' });
+      return res.status(403).json({ error: "O'qituvchi hisobi faol emas" });
     }
     if (result.kind !== 'ok') {
       return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
@@ -251,7 +251,7 @@ const teacherPaymentLogin = async (req: any, res: any) => {
       payment_access: true,
     });
     res.json({
-      message: 'Payment access granted',
+      message: "To'lovlarga kirishga ruxsat berildi",
       token,
       teacher: {
         teacher_id: teacher.teacher_id,
@@ -276,7 +276,7 @@ const setTeacherPassword = async (req: any, res: any) => {
     }
     const row = await teacherService.setPasswordByAdmin(Number(req.params.id), username, password, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
-    res.json({ message: 'Teacher password set successfully', teacher: row });
+    res.json({ message: "O'qituvchi paroli muvaffaqiyatli o'rnatildi", teacher: row });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Parolni o'rnatib bo'lmadi", details: error.message || String(error) });
@@ -286,7 +286,7 @@ const setTeacherPassword = async (req: any, res: any) => {
 const changeTeacherPassword = async (req: any, res: any) => {
   try {
     if (req.user?.userType === 'teacher' && Number(req.user.id) !== Number(req.params.id)) {
-      return res.status(403).json({ error: 'You can only change your own password.' });
+      return res.status(403).json({ error: "Siz faqat o'z parolingizni o'zgartira olasiz." });
     }
     const { old_password, new_password } = req.body;
     const out = await teacherService.changePassword(Number(req.params.id), old_password, new_password);

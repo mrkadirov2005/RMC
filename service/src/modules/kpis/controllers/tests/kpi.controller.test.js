@@ -101,7 +101,7 @@ describe('KPIs controller', () => {
       await kpiController.getTeacherDetail({ params: { teacherId: 'abc' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacherId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacherId ko'rsatilishi shart." });
     });
 
     it('hides a teacher who belongs to another center', async () => {
@@ -112,7 +112,7 @@ describe('KPIs controller', () => {
 
       expect(teacherInCenter).toHaveBeenCalledWith(5, 2);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found in this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazda topilmadi." });
       expect(kpiService.getTeacherDetail).not.toHaveBeenCalled();
     });
 

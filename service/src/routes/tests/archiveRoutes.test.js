@@ -33,7 +33,7 @@ describe('archive routes purge permission (RMC-015/RMC-048)', () => {
 
     const response = await request(app).delete('/archive/students/1/purge').expect(403);
 
-    expect(response.body).toEqual({ error: 'You do not have permission to permanently delete records.' });
+    expect(response.body).toEqual({ error: "Yozuvlarni butunlay o'chirishga ruxsatingiz yo'q." });
     expect(mockControllers.purgeArchiveItem).not.toHaveBeenCalled();
   });
 

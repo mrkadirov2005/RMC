@@ -15,10 +15,10 @@ const parseOptionalId = (value: unknown, name: string) => {
 const validateRange = (fromValue: unknown, toValue: unknown) => {
   const from = String(fromValue || '');
   const to = String(toValue || '');
-  if (!ISO_DATE.test(from) || !ISO_DATE.test(to)) throw bad('from and to must use YYYY-MM-DD format');
-  if (to < from) throw bad('to must be on or after from');
+  if (!ISO_DATE.test(from) || !ISO_DATE.test(to)) throw bad("from va to YYYY-MM-DD formatida bo'lishi kerak");
+  if (to < from) throw bad("to qiymati from qiymatiga teng yoki undan keyin bo'lishi kerak");
   const days = Math.floor((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86400000) + 1;
-  if (days > 62) throw bad('Calendar ranges are limited to 62 days');
+  if (days > 62) throw bad("Taqvim oralig'i 62 kundan oshmasligi kerak");
   return { from, to, days };
 };
 const cleanTime = (value: unknown) => String(value || '').slice(0, 8);
@@ -77,8 +77,8 @@ const events = async (centerId: number, query: CalendarQuery, scope: CalendarSco
   const roomId = parseOptionalId(query.room_id, 'room_id');
   const status = query.status == null || query.status === '' ? undefined : String(query.status);
   const source = query.source == null || query.source === '' ? undefined : String(query.source);
-  if (status && !allowedStatuses.has(status)) throw bad('status must be planned, ready, in_progress, or conducted');
-  if (source && !allowedSources.has(source)) throw bad('source must be recurring, booking, or session');
+  if (status && !allowedStatuses.has(status)) throw bad("status planned, ready, in_progress yoki conducted bo'lishi kerak");
+  if (source && !allowedSources.has(source)) throw bad("source recurring, booking yoki session bo'lishi kerak");
   const teacherId = scope.teacherId ?? requestedTeacherId;
   if (scope.classIds && classId && !scope.classIds.includes(classId)) return [];
 
@@ -260,28 +260,28 @@ const patternDays: Record<string, string[]> = {
   sun: ['Sunday'],
 };
 const moveRecurring = async (centerId: number, classId: number, body: any, scope: CalendarScope = {}) => {
-  if (!Number.isInteger(classId) || classId <= 0) throw bad('class id must be a positive integer');
-  if (scope.classIds && !scope.classIds.includes(classId)) throw Object.assign(new Error('Access denied'), { status: 403 });
+  if (!Number.isInteger(classId) || classId <= 0) throw bad("Guruh id si musbat butun son bo'lishi kerak");
+  if (scope.classIds && !scope.classIds.includes(classId)) throw Object.assign(new Error('Kirish rad etildi'), { status: 403 });
   const days = patternDays[String(body.pattern || '')];
-  if (!days) throw bad('pattern must be mwf, tts, or sun');
+  if (!days) throw bad("pattern mwf, tts yoki sun bo'lishi kerak");
   const roomName = String(body.room_name || '').trim();
   const start = String(body.start_time || '').slice(0, 5);
   const end = String(body.end_time || '').slice(0, 5);
-  if (!roomName || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end) || end <= start) throw bad('valid room_name, start_time, and end_time are required');
+  if (!roomName || !/^([01]\d|2[0-3]):[0-5]\d$/.test(start) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(end) || end <= start) throw bad("To'g'ri room_name, start_time va end_time ko'rsatilishi shart");
   const rooms = await roomInsights.getPhysicalRooms(centerId);
   const room = rooms.find((item: any) => roomKey(item.name) === roomKey(roomName) && String(item.status || 'active').toLowerCase() === 'active');
-  if (!room) throw Object.assign(new Error('The destination room is not active or does not exist.'), { status: 409 });
+  if (!room) throw Object.assign(new Error('Maqsadli xona faol emas yoki mavjud emas.'), { status: 409 });
   const definitions = (await repository.recurringDefinitions(centerId, {})).map(parseDefinition).filter(Boolean);
   const current = definitions.find((item: any) => Number(item.class_id) === classId);
-  if (!current) throw Object.assign(new Error('Group schedule not found.'), { status: 404 });
-  if (scope.teacherId && Number(current.teacher_id) !== Number(scope.teacherId)) throw Object.assign(new Error('Access denied'), { status: 403 });
+  if (!current) throw Object.assign(new Error('Guruh jadvali topilmadi.'), { status: 404 });
+  if (scope.teacherId && Number(current.teacher_id) !== Number(scope.teacherId)) throw Object.assign(new Error('Kirish rad etildi'), { status: 403 });
   const conflict = definitions.find((item: any) => Number(item.class_id) !== classId
     && roomKey(item.room_name) === roomKey(room.name)
     && item.days.some((day: string) => days.map(normalizeDay).includes(day))
     && cleanTime(start) < cleanTime(item.end_time) && cleanTime(end) > cleanTime(item.start_time));
-  if (conflict) throw Object.assign(new Error(`${room.name} is already booked by ${conflict.class_name} at ${conflict.start_time}–${conflict.end_time}.`), { status: 409 });
+  if (conflict) throw Object.assign(new Error(`${room.name} xonasi ${conflict.start_time}–${conflict.end_time} oralig'ida ${conflict.class_name} guruhi tomonidan band qilingan.`), { status: 409 });
   const row = await repository.updateRecurringSchedule(centerId, classId, JSON.stringify({ days, time: start, endTime: end }), room.name);
-  if (!row) throw Object.assign(new Error('Group not found.'), { status: 404 });
+  if (!row) throw Object.assign(new Error('Guruh topilmadi.'), { status: 404 });
   return row;
 };
 

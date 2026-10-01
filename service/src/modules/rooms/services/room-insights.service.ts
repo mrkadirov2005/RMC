@@ -4,12 +4,12 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const parseId = (value: any) => value == null || value === '' ? undefined : Number(value);
 const requireDate = (value: any, name: string) => {
-  if (!ISO_DATE.test(String(value || ''))) throw Object.assign(new Error(`${name} must use YYYY-MM-DD format`), { status: 400 });
+  if (!ISO_DATE.test(String(value || ''))) throw Object.assign(new Error(`${name} YYYY-MM-DD formatida bo'lishi kerak`), { status: 400 });
   return String(value);
 };
 const requireTime = (value: any, name: string) => {
   const normalized = String(value || '').substring(0, 5);
-  if (!TIME.test(normalized)) throw Object.assign(new Error(`${name} must use HH:mm format`), { status: 400 });
+  if (!TIME.test(normalized)) throw Object.assign(new Error(`${name} HH:mm formatida bo'lishi kerak`), { status: 400 });
   return normalized;
 };
 
@@ -24,7 +24,7 @@ const getAvailability = (centerId: number, query: any) => {
   const date = requireDate(query.date, 'date');
   const start = requireTime(query.start, 'start');
   const end = requireTime(query.end, 'end');
-  if (end <= start) throw Object.assign(new Error('end must be after start'), { status: 400 });
+  if (end <= start) throw Object.assign(new Error("end qiymati start dan keyin bo'lishi kerak"), { status: 400 });
   return repository.availability(centerId, date, start, end);
 };
 
@@ -60,24 +60,24 @@ const groupSchedule = async (centerId: number, query: any, key: 'teacher' | 'sub
 
 const getReport = (centerId: number, query: any) => {
   const from = requireDate(query.from, 'from'); const to = requireDate(query.to, 'to');
-  if (to < from) throw Object.assign(new Error('to must be on or after from'), { status: 400 });
+  if (to < from) throw Object.assign(new Error("to qiymati from qiymatiga teng yoki undan keyin bo'lishi kerak"), { status: 400 });
   return repository.utilization(centerId, from, to);
 };
 
 const updatePhysicalRoom = (id: number, centerId: number, data: any) => {
   if (data.capacity != null && (!Number.isInteger(Number(data.capacity)) || Number(data.capacity) <= 0))
-    throw Object.assign(new Error('capacity must be a positive integer'), { status: 400 });
+    throw Object.assign(new Error("capacity musbat butun son bo'lishi kerak"), { status: 400 });
   if (data.features != null && !Array.isArray(data.features))
-    throw Object.assign(new Error('features must be an array'), { status: 400 });
+    throw Object.assign(new Error("features massiv bo'lishi kerak"), { status: 400 });
   if (data.status != null && !['active', 'inactive', 'maintenance'].includes(String(data.status).toLowerCase()))
-    throw Object.assign(new Error('status must be active, inactive, or maintenance'), { status: 400 });
+    throw Object.assign(new Error("status active, inactive yoki maintenance bo'lishi kerak"), { status: 400 });
   if (data.operating_start_time) requireTime(data.operating_start_time, 'operating_start_time');
   if (data.operating_end_time) requireTime(data.operating_end_time, 'operating_end_time');
   return repository.updatePhysicalRoom(id, centerId, data);
 };
 
 const deletePhysicalRoom = (id: number, centerId: number) => {
-  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error('room id must be a positive integer'), { status: 400 });
+  if (!Number.isInteger(id) || id <= 0) throw Object.assign(new Error("Xona id si musbat butun son bo'lishi kerak"), { status: 400 });
   return repository.deletePhysicalRoom(id, centerId);
 };
 

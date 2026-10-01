@@ -42,9 +42,9 @@ const createNotification = async (req: any, res: any) => {
       if (targetType === 'student') allowed = await studentInCenter(targetId, centerId);
       else if (targetType === 'teacher') allowed = await teacherInCenter(targetId, centerId);
       else if (targetType === 'superuser') allowed = await superuserInCenter(targetId, centerId);
-      else return res.status(400).json({ error: 'Unsupported recipient type for center admin.' });
+      else return res.status(400).json({ error: "Markaz admini uchun bu qabul qiluvchi turi qo'llab-quvvatlanmaydi." });
       if (!allowed) {
-        return res.status(403).json({ error: 'Recipient does not belong to this center.' });
+        return res.status(403).json({ error: 'Qabul qiluvchi bu markazga tegishli emas.' });
       }
     }
     const { row } = out as { row: any };
@@ -76,7 +76,7 @@ const markAsRead = async (req: any, res: any) => {
     }
     const row = await notificationService.markAsRead(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Bildirishnoma topilmadi' });
-    res.json({ message: 'Notification marked as read', notification: row });
+    res.json({ message: "Bildirishnoma o'qilgan deb belgilandi", notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Bildirishnomani yangilab bo'lmadi", details: error.message || String(error) });

@@ -19,14 +19,14 @@ const statusSchema = z
   .trim()
   .min(1, 'Status is required')
   .transform((value) => normalizeStatus(value))
-  .refine((value) => value !== null, { message: 'Invalid status' });
+  .refine((value) => value !== null, { message: "Holat noto'g'ri" });
 
 const optionalStatusSchema = z
   .string()
   .trim()
   .min(1)
   .transform((value) => normalizeStatus(value))
-  .refine((value) => value === null || ownerStatuses.includes(value as any), { message: 'Invalid status' })
+  .refine((value) => value === null || ownerStatuses.includes(value as any), { message: "Holat noto'g'ri" })
   .optional();
 
 const createOwnerDtoSchema = z.object({

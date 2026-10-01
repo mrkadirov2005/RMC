@@ -71,12 +71,12 @@ describe('authentication middleware', () => {
   test('rejects invalid and expired tokens with distinct messages', async () => {
     const invalidRes = response();
     await requireAuth({ headers: { authorization: 'Bearer invalid' }, method: 'GET' }, invalidRes, jest.fn());
-    expect(invalidRes.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('Invalid') }));
+    expect(invalidRes.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('yaroqsiz') }));
 
     const expired = jwt.sign({ id: 1, userType: 'student' }, require('../auth').JWT_SECRET, { expiresIn: -1 });
     const expiredRes = response();
     await requireAuth({ headers: { authorization: `Bearer ${expired}` }, method: 'GET' }, expiredRes, jest.fn());
-    expect(expiredRes.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('expired') }));
+    expect(expiredRes.json).toHaveBeenCalledWith(expect.objectContaining({ error: expect.stringContaining('muddati tugadi') }));
   });
 
   test('attaches a valid user and permits reads without a frozen lookup', async () => {

@@ -89,9 +89,9 @@ describe('teacher tasks controller handlers', () => {
 
   describe('owner-only writes', () => {
     it.each([
-      ['createTeacherTask', { body: {} }, 'Only the center owner can assign tasks.'],
-      ['updateTeacherTask', { params: { id: '1' }, body: {} }, 'Only the center owner can update tasks.'],
-      ['deleteTeacherTask', { params: { id: '1' } }, 'Only the center owner can delete tasks.'],
+      ['createTeacherTask', { body: {} }, 'Vazifalarni faqat markaz egasi tayinlay oladi.'],
+      ['updateTeacherTask', { params: { id: '1' }, body: {} }, 'Vazifalarni faqat markaz egasi yangilay oladi.'],
+      ['deleteTeacherTask', { params: { id: '1' } }, "Vazifalarni faqat markaz egasi o'chira oladi."],
     ])('%s refuses a caller who is not the owner', async (handler, req, message) => {
       isGlobalUser.mockReturnValue(false);
       const res = createResponse();
@@ -217,7 +217,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'parent' }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'assignee_type must be either "teacher" or "admin".' });
+      expect(res.json).toHaveBeenCalledWith({ error: "assignee_type qiymati \"teacher\" yoki \"admin\" bo'lishi kerak." });
     });
 
     it('requires a non-blank title', async () => {
@@ -226,7 +226,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ task_title: '   ' }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'task_title is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "task_title ko'rsatilishi shart." });
     });
 
     it('requires a teacher id when assigning to a teacher', async () => {
@@ -235,7 +235,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ teacher_id: 0 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacher_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacher_id ko'rsatilishi shart." });
     });
 
     it('refuses a teacher from another center', async () => {
@@ -254,7 +254,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'admin', admin_id: 0 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'admin_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "admin_id ko'rsatilishi shart." });
     });
 
     it('refuses an admin from another center', async () => {
@@ -264,7 +264,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'admin', admin_id: 8 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Admin does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Admin bu markazga tegishli emas.' });
     });
 
     it('refuses to assign a task to the center owner', async () => {
@@ -274,7 +274,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body({ assignee_type: 'admin', admin_id: 8 }), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Cannot assign a task to the center owner.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani markaz egasiga tayinlab bo'lmaydi." });
     });
 
     it('creates a teacher task and records who assigned it', async () => {
@@ -352,7 +352,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: { assignee_type: 'parent' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'assignee_type must be either "teacher" or "admin".' });
+      expect(res.json).toHaveBeenCalledWith({ error: "assignee_type qiymati \"teacher\" yoki \"admin\" bo'lishi kerak." });
     });
 
     it('clears the admin when reassigning to a teacher', async () => {
@@ -393,7 +393,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: { assignee_type: 'teacher' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'teacher_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "teacher_id ko'rsatilishi shart." });
     });
 
     it('requires an admin id when reassigning to an admin', async () => {
@@ -402,7 +402,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: { assignee_type: 'admin' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'admin_id is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "admin_id ko'rsatilishi shart." });
     });
 
     it('refuses to reassign a task to the center owner', async () => {
@@ -416,7 +416,7 @@ describe('teacher tasks controller handlers', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Cannot assign a task to the center owner.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifani markaz egasiga tayinlab bo'lmaydi." });
     });
 
     it('refuses a reassignment target from another center', async () => {
@@ -463,7 +463,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only the assigned teacher or admin can update task status.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vazifa holatini faqat biriktirilgan o'qituvchi yoki admin yangilay oladi." });
     });
 
     it('refuses a task assigned to somebody else', async () => {
@@ -473,7 +473,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: teacher }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'You are not the assignee of this task.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Siz bu vazifaga biriktirilmagansiz.' });
     });
 
     it('lets the assigned admin accept their own task', async () => {

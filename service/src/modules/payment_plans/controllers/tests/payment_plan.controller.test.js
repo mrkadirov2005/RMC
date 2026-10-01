@@ -125,7 +125,7 @@ describe('payment plans controller', () => {
   describe('createPlan', () => {
     it.each([
       ['invalid_center', { error: "O'quvchi bu markazga tegishli emas." }],
-      ['installment_sum_mismatch', { error: 'Installment amounts must sum to total_amount.' }],
+      ['installment_sum_mismatch', { error: "Bo'lib to'lash summalari total_amount ga teng bo'lishi kerak." }],
     ])('maps the %s result to a 400 and writes no audit entry', async (error, payload) => {
       const res = createResponse();
       planService.create.mockResolvedValue({ error });
@@ -201,7 +201,7 @@ describe('payment plans controller', () => {
       await planController.updatePlan({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Installment amounts must sum to total_amount.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bo'lib to'lash summalari total_amount ga teng bo'lishi kerak." });
     });
 
     it('returns 404 when nothing was updated', async () => {

@@ -58,7 +58,7 @@ const createAttendance = async (req: any, res: any) => {
         requestBody.teacher_id = req.user.id;
         console.log(`Using authenticated user ID ${req.user.id} as teacher_id`);
       } else {
-        return res.status(400).json({ error: 'Teacher ID is required.' });
+        return res.status(400).json({ error: "O'qituvchi ID si ko'rsatilishi shart." });
       }
     }
     

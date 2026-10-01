@@ -124,9 +124,9 @@ describe('refunds controller', () => {
 
   describe('createRefund', () => {
     it.each([
-      ['invalid_center', 400, { error: 'Payment does not belong to this center.' }],
+      ['invalid_center', 400, { error: "To'lov bu markazga tegishli emas." }],
       ['payment_not_found', 404, { error: "To'lov topilmadi" }],
-      ['refund_exceeds_payment', 400, { error: 'Refund amount exceeds the original payment amount.' }],
+      ['refund_exceeds_payment', 400, { error: "Qaytariladigan summa asl to'lov summasidan oshib ketdi." }],
     ])('maps the %s result to a %d and writes no audit entry', async (error, status, payload) => {
       const res = createResponse();
       refundService.create.mockResolvedValue({ error });
@@ -159,7 +159,7 @@ describe('refunds controller', () => {
         ip_address: '10.0.0.9',
       });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Refund requested', refund: { refund_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lovni qaytarish so'rovi yuborildi", refund: { refund_id: 4 } });
     });
 
     it('attributes an unauthenticated request to the system actor', async () => {
@@ -200,7 +200,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: { amount: 999 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Refund amount exceeds the original payment amount.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qaytariladigan summa asl to'lov summasidan oshib ketdi." });
     });
 
     it('returns 404 when nothing was updated', async () => {

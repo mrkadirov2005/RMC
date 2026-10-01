@@ -292,8 +292,8 @@ describe('owners controller handlers', () => {
     });
 
     it.each([
-      ['locked', 'Account is locked'],
-      ['inactive', 'Account is not active'],
+      ['locked', 'Hisob bloklangan'],
+      ['inactive', 'Hisob faol emas'],
     ])('refuses a %s account', async (kind, message) => {
       const res = createResponse();
       ownerService.authenticate.mockResolvedValue({ kind });

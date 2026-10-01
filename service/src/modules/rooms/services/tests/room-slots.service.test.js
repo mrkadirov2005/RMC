@@ -56,7 +56,7 @@ describe('room slot service', () => {
   });
 
   test('does not mutate slot state when cancellation target is absent', async () => {
-    repository.cancelBookingAtomic.mockRejectedValue(new Error('Booking not found'));
-    await expect(service.cancelBooking(7, 2)).rejects.toThrow('Booking not found');
+    repository.cancelBookingAtomic.mockRejectedValue(new Error('Bron topilmadi'));
+    await expect(service.cancelBooking(7, 2)).rejects.toThrow('Bron topilmadi');
   });
 });

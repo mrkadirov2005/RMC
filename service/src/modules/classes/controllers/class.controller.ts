@@ -54,10 +54,10 @@ const createClass = async (req: any, res: any) => {
     }
     const out = await classService.createClass(req.body, centerId ?? undefined);
     if (out && 'error' in out && out.error === 'bad_teacher') {
-      return res.status(400).json({ error: 'Teacher not found. Please provide a valid teacher_id' });
+      return res.status(400).json({ error: "O'qituvchi topilmadi. Iltimos, to'g'ri teacher_id kiriting" });
     }
     if (out && 'error' in out && out.error === 'bad_subject') {
-      return res.status(400).json({ error: 'Select an available subject created for this center.' });
+      return res.status(400).json({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
     }
     res.status(201).json((out as any).row);
   } catch (error: any) {
@@ -74,7 +74,7 @@ const updateClass = async (req: any, res: any) => {
     }
     const row = await classService.updateClass(Number(req.params.id), req.body, centerId ?? undefined);
     if (row && row.error === 'bad_subject') {
-      return res.status(400).json({ error: 'Select an available subject created for this center.' });
+      return res.status(400).json({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
     }
     if (!row) return res.status(404).json({ error: 'Guruh topilmadi' });
     res.json(row);
@@ -107,7 +107,7 @@ const deleteClass = async (req: any, res: any) => {
           }))
         : [];
       return res.status(409).json({
-        error: 'Class has attendance records',
+        error: 'Guruhda davomat yozuvlari mavjud',
         attendance_count: attendance.length,
         attendance,
       });
@@ -221,7 +221,7 @@ const generateClassSessions = async (req: any, res: any) => {
       return res.status(404).json({ error: 'Guruh topilmadi' });
     }
     if (out && out.error === 'missing_schedule') {
-      return res.status(400).json({ error: 'Class schedule is missing or invalid.' });
+      return res.status(400).json({ error: "Guruh jadvali topilmadi yoki noto'g'ri." });
     }
 
     res.json({ message: 'Sessiyalar yaratildi', ...out });
@@ -280,7 +280,7 @@ const deleteClassSessionById = async (req: any, res: any) => {
     const classId = Number(req.params.id);
     const sessionId = Number(req.params.sessionId);
     if (!Number.isFinite(sessionId)) {
-      return res.status(400).json({ error: 'sessionId is required.' });
+      return res.status(400).json({ error: "sessionId ko'rsatilishi shart." });
     }
 
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
@@ -314,7 +314,7 @@ const purgeClassSessionById = async (req: any, res: any) => {
     const classId = Number(req.params.id);
     const sessionId = Number(req.params.sessionId);
     if (!Number.isFinite(sessionId)) {
-      return res.status(400).json({ error: 'sessionId is required.' });
+      return res.status(400).json({ error: "sessionId ko'rsatilishi shart." });
     }
 
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
@@ -356,13 +356,13 @@ const updateClassSession = async (req: any, res: any) => {
     const classId = Number(req.params.id);
     const sessionId = Number(req.params.sessionId);
     if (!Number.isFinite(sessionId)) {
-      return res.status(400).json({ error: 'sessionId is required.' });
+      return res.status(400).json({ error: "sessionId ko'rsatilishi shart." });
     }
 
     const startTime = String(req.body.start_time || '').slice(0, 5);
     const endTime = String(req.body.end_time || '').slice(0, 5);
     if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(startTime) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(endTime) || endTime <= startTime) {
-      return res.status(400).json({ error: 'A valid start_time and end_time (with end after start) are required.' });
+      return res.status(400).json({ error: "To'g'ri start_time va end_time ko'rsatilishi shart (tugash vaqti boshlanishdan keyin bo'lishi kerak)." });
     }
 
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;

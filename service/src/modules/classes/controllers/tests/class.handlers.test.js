@@ -174,8 +174,8 @@ describe('classes controller handlers', () => {
 
   describe('createClass', () => {
     it.each([
-      ['bad_teacher', 'Teacher not found. Please provide a valid teacher_id'],
-      ['bad_subject', 'Select an available subject created for this center.'],
+      ['bad_teacher', "O'qituvchi topilmadi. Iltimos, to'g'ri teacher_id kiriting"],
+      ['bad_subject', 'Bu markaz uchun yaratilgan mavjud fanni tanlang.'],
     ])('maps the %s result to a 400', async (error, message) => {
       const res = createResponse();
       classService.createClass.mockResolvedValue({ error });
@@ -216,7 +216,7 @@ describe('classes controller handlers', () => {
       await controller.updateClass({ params: { id: '3' }, body: { subject_id: 9 }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Select an available subject created for this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu markaz uchun yaratilgan mavjud fanni tanlang.' });
     });
 
     it('returns the updated class', async () => {
@@ -271,7 +271,7 @@ describe('classes controller handlers', () => {
 
       await controller.deleteClass({ params: { id: '3' }, query: {}, user: admin }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class has attendance records', attendance_count: 0, attendance: [] });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruhda davomat yozuvlari mavjud', attendance_count: 0, attendance: [] });
     });
 
     it('passes the force flag through when the query asks for it', async () => {
@@ -467,7 +467,7 @@ describe('classes controller handlers', () => {
 
     it.each([
       ['not_found', 404, { error: 'Guruh topilmadi' }],
-      ['missing_schedule', 400, { error: 'Class schedule is missing or invalid.' }],
+      ['missing_schedule', 400, { error: "Guruh jadvali topilmadi yoki noto'g'ri." }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       sessionService.generateMonthlySessions.mockResolvedValue({ error });
@@ -546,7 +546,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClassSessionById({ params: { id: '3', sessionId: 'abc' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'sessionId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "sessionId ko'rsatilishi shart." });
     });
 
     it('deletes the single session', async () => {
@@ -577,7 +577,7 @@ describe('classes controller handlers', () => {
       await controller.purgeClassSessionById({ params: { id: '3', sessionId: 'abc' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'sessionId is required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "sessionId ko'rsatilishi shart." });
     });
 
     it('returns 404 when no soft-deleted session matches', async () => {

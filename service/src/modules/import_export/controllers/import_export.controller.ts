@@ -11,7 +11,7 @@ const exportEntity = async (req: any, res: any) => {
     }
     const out = await importExportService.exportEntity(entity, centerId ?? undefined);
     if (out.error === 'unsupported') {
-      return res.status(400).json({ error: 'Unsupported export entity' });
+      return res.status(400).json({ error: "Bu bo'limni eksport qilib bo'lmaydi" });
     }
     const { csv, rows } = out as { csv: string; rows: number; entity: string };
     await logAudit({
@@ -45,13 +45,13 @@ const importEntity = async (req: any, res: any) => {
     }
     const out = await importExportService.importEntity(entity, csv, centerId ?? undefined);
     if (out.error === 'unsupported') {
-      return res.status(400).json({ error: 'Unsupported import entity' });
+      return res.status(400).json({ error: "Bu bo'limni import qilib bo'lmaydi" });
     }
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'CSV rows must belong to this center.' });
+      return res.status(400).json({ error: "CSV qatorlari shu markazga tegishli bo'lishi kerak." });
     }
     if (out.error === 'missing_student') {
-      return res.status(400).json({ error: 'Payment row references an unknown student.', details: out.details, row: out.row });
+      return res.status(400).json({ error: "To'lov qatorida noma'lum o'quvchi ko'rsatilgan.", details: out.details, row: out.row });
     }
     const { created } = out as { created: number; entity: string };
     await logAudit({
@@ -79,16 +79,16 @@ const pushEntityToSheets = async (req: any, res: any) => {
     }
     const out = await importExportService.pushEntityToSheets(entity, centerId ?? undefined);
     if (out.error === 'unsupported') {
-      return res.status(400).json({ error: 'Unsupported Google Sheets entity' });
+      return res.status(400).json({ error: "Bu bo'limni Google Sheets bilan ishlatib bo'lmaydi" });
     }
     if (out.error === 'missing_config') {
       return res.status(400).json({ error: 'GOOGLE_APPS_SCRIPT_URL is not configured.' });
     }
     if (out.error === 'apps_script_failed') {
-      return res.status(502).json({ error: 'Google Apps Script sync failed.', details: out.details });
+      return res.status(502).json({ error: 'Google Apps Script sinxronlashi muvaffaqiyatsiz tugadi.', details: out.details });
     }
     if (out.error === 'apps_script_timeout') {
-      return res.status(504).json({ error: 'Google Apps Script did not respond in time.', details: out.details });
+      return res.status(504).json({ error: 'Google Apps Script vaqtida javob bermadi.', details: out.details });
     }
     const { rows } = out as { rows: number; entity: string };
     await logAudit({
@@ -119,22 +119,22 @@ const pullEntityFromSheets = async (req: any, res: any) => {
     }
     const out = await importExportService.pullEntityFromSheets(entity, centerId ?? undefined);
     if (out.error === 'unsupported') {
-      return res.status(400).json({ error: 'Unsupported Google Sheets entity' });
+      return res.status(400).json({ error: "Bu bo'limni Google Sheets bilan ishlatib bo'lmaydi" });
     }
     if (out.error === 'missing_config') {
       return res.status(400).json({ error: 'GOOGLE_APPS_SCRIPT_URL is not configured.' });
     }
     if (out.error === 'apps_script_failed') {
-      return res.status(502).json({ error: 'Google Apps Script import failed.', details: out.details });
+      return res.status(502).json({ error: 'Google Apps Script orqali import muvaffaqiyatsiz tugadi.', details: out.details });
     }
     if (out.error === 'apps_script_timeout') {
-      return res.status(504).json({ error: 'Google Apps Script did not respond in time.', details: out.details });
+      return res.status(504).json({ error: 'Google Apps Script vaqtida javob bermadi.', details: out.details });
     }
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Google Sheet rows must belong to this center.' });
+      return res.status(400).json({ error: "Google Sheet qatorlari shu markazga tegishli bo'lishi kerak." });
     }
     if (out.error === 'missing_student') {
-      return res.status(400).json({ error: 'Payment row references an unknown student.', details: out.details, row: out.row });
+      return res.status(400).json({ error: "To'lov qatorida noma'lum o'quvchi ko'rsatilgan.", details: out.details, row: out.row });
     }
     const { rows } = out as { rows: number; entity: string };
     await logAudit({
