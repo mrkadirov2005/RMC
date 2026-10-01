@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useTeacherKpiOverview } from './hooks/useTeacherKpiOverview';
 import { formatKpiPeriod, formatScore, monthInputValue, parseMonthInputValue, teacherFullName } from './model/kpiModel';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export const TeachersKpiTab = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { year, month, setPeriod, search, setSearch, loading, rows } = useTeacherKpiOverview();
 
@@ -18,7 +20,7 @@ export const TeachersKpiTab = () => {
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search teachers..."
+            placeholder={t('Search teachers...')}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="h-8 pl-8 pr-8 text-xs"
@@ -47,14 +49,14 @@ export const TeachersKpiTab = () => {
             <Loader2 className="w-10 h-10 animate-spin text-indigo-500" />
           </div>
         ) : rows.length === 0 ? (
-          <div className="py-16 text-center text-sm text-muted-foreground">No teachers found</div>
+          <div className="py-16 text-center text-sm text-muted-foreground">{t('No teachers found')}</div>
         ) : (
           <Table className="text-xs">
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
-                <TableHead className="h-8 px-2">Teacher</TableHead>
+                <TableHead className="h-8 px-2">{t('Teacher')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">Student Scores</TableHead>
-                <TableHead className="h-8 px-2 text-right">Retention</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Retention')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">Contribution</TableHead>
                 <TableHead className="h-8 px-2 text-right">Teaching Quality</TableHead>
                 <TableHead className="h-8 px-2 text-right">Final KPI</TableHead>

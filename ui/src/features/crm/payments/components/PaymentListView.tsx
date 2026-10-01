@@ -143,15 +143,15 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           <CardContent className="space-y-4 p-4">
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
               <div className="rounded-lg bg-gradient-to-r from-emerald-500 to-teal-500 px-3 py-2 text-white">
-                <p className="text-[11px] text-white/70">Students shown</p>
-                <p className="text-base font-bold">{groupStudentRows.length} · {paidCount} paid</p>
+                <p className="text-[11px] text-white/70">{t('Students shown')}</p>
+                <p className="text-base font-bold">{groupStudentRows.length} · {paidCount} {t('paid')}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-r from-blue-500 to-indigo-500 px-3 py-2 text-white">
-                <p className="text-[11px] text-white/70">Collected</p>
+                <p className="text-[11px] text-white/70">{t('Collected')}</p>
                 <p className="text-base font-bold">{formatAmount(totalPaid)}</p>
               </div>
               <div className="rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 px-3 py-2 text-white">
-                <p className="text-[11px] text-white/70">Remaining</p>
+                <p className="text-[11px] text-white/70">{t('Remaining')}</p>
                 <p className="text-base font-bold">{formatAmount(totalRemaining)}</p>
               </div>
             </div>
@@ -170,7 +170,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                 <Input
                   value={searchTerm}
                   onChange={(event) => dispatch(setPaymentsSearchTerm(event.target.value))}
-                  placeholder="Search students in this group..."
+                  placeholder={t('Search students in this group...')}
                   className="pl-10"
                 />
               </div>
@@ -178,7 +178,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
               <Select value={groupPaymentFilter} onValueChange={(value) => setGroupPaymentFilter(value as 'all' | 'paid' | 'unpaid')}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All students</SelectItem>
+                  <SelectItem value="all">{t('All students')}</SelectItem>
                   <SelectItem value="paid">Payment done</SelectItem>
                   <SelectItem value="unpaid">Payment undone</SelectItem>
                 </SelectContent>
@@ -191,17 +191,17 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           <Table className={GROUP_PAYMENT_TABLE_CLASS}>
             <TableHeader>
               <TableRow>
-                <TableHead>No</TableHead>
-                <TableHead>Student</TableHead>
-                <TableHead className="text-center">Payments</TableHead>
+                <TableHead>{t('No')}</TableHead>
+                <TableHead>{t('Student')}</TableHead>
+                <TableHead className="text-center">{t('Payments')}</TableHead>
                 <TableHead>Payment date</TableHead>
-                <TableHead className="text-right">Remaining</TableHead>
-                <TableHead className="text-right">Paid</TableHead>
+                <TableHead className="text-right">{t('Remaining')}</TableHead>
+                <TableHead className="text-right">{t('Paid')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {state.loading ? (
-                <TableRow><TableCell colSpan={6} className="py-8  text-center">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="py-8  text-center">{t('Loading...')}</TableCell></TableRow>
               ) : groupStudentRows.length === 0 ? (
                 <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
               ) : groupStudentRows.map((row, index) => (
@@ -213,7 +213,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                     {row.discountAmount > 0 && (
                       <Badge variant="outline" className="mt-0.5 h-5 gap-1 px-1.5 text-[10px] border-violet-200 bg-violet-50 text-violet-700">
                         <BadgePercent className="h-3 w-3" />
-                        Discount {formatAmount(row.discountAmount)}
+                        {t('Discount')} {formatAmount(row.discountAmount)}
                       </Badge>
                     )}
                   </TableCell>
@@ -243,7 +243,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
         <Dialog open={Boolean(paymentHistoryRow)} onOpenChange={(open) => !open && setPaymentHistoryRow(null)}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Payment history</DialogTitle>
+              <DialogTitle>{t('Payment history')}</DialogTitle>
               <DialogDescription>
                 {paymentHistoryRow?.name} · {groupPaymentMonth}
               </DialogDescription>
@@ -262,7 +262,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                       </span>
                       <div>
                         <p className="text-sm font-semibold">
-                          {payment.payment_date ? new Date(`${String(payment.payment_date).slice(0, 10)}T00:00:00`).toLocaleDateString() : 'Date unavailable'}
+                          {payment.payment_date ? new Date(`${String(payment.payment_date).slice(0, 10)}T00:00:00`).toLocaleDateString() : t('Date unavailable')}
                         </p>
                         <p className="text-xs text-muted-foreground">{payment.payment_method || 'Payment'}</p>
                       </div>

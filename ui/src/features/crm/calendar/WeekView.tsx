@@ -14,6 +14,7 @@ import {
   parseTimeToMinutes,
   toLocalDateKey,
 } from './utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface WeekViewProps {
   weekDays: CalendarDay[];
@@ -106,6 +107,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
   onOpenSessionModal,
   schedule = [],
 }) => {
+  const { t } = useLanguage();
   const [selectedSlot, setSelectedSlot] = useState<SelectedSlot | null>(null);
 
   const fallbackDurationMinutes = getConfiguredLessonDurationMinutes();
@@ -375,11 +377,11 @@ export const WeekView: React.FC<WeekViewProps> = ({
           <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-border dark:bg-muted/30">
-                <p className="text-xs font-bold uppercase text-muted-foreground">Teacher</p>
+                <p className="text-xs font-bold uppercase text-muted-foreground">{t('Teacher')}</p>
                 <p className="mt-1 font-black text-slate-950 dark:text-card-foreground">{activeTeacherName}</p>
               </div>
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-border dark:bg-muted/30">
-                <p className="text-xs font-bold uppercase text-muted-foreground">Students</p>
+                <p className="text-xs font-bold uppercase text-muted-foreground">{t('Students')}</p>
                 <p className="mt-1 font-black text-slate-950 dark:text-card-foreground">
                   {getStudentCount(activeClassId)}
                   {activeClass?.capacity ? ` / ${activeClass.capacity}` : ''}
@@ -393,7 +395,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
               </div>
               <div className={cn('rounded-lg border p-3 text-sm', activeSession ? 'border-emerald-200 bg-emerald-50 text-emerald-950' : 'border-amber-200 bg-amber-50 text-amber-950')}>
                 <p className="text-xs font-bold uppercase opacity-70">Lesson status</p>
-                <p className="mt-1 font-black">{activeSession ? 'Conducted' : 'Not conducted yet'}</p>
+                <p className="mt-1 font-black">{activeSession ? t('Conducted') : t('Not conducted yet')}</p>
               </div>
             </div>
 

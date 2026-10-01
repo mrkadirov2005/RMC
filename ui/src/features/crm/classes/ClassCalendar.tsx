@@ -3,6 +3,7 @@
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Schedule {
   days: string[];
@@ -15,6 +16,7 @@ interface ClassCalendarProps {
 
 // Renders the class calendar module.
 const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
+  const { t } = useLanguage();
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const today = new Date();
   const currentMonth = today.getMonth();
@@ -74,7 +76,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
       {/* Schedule Summary */}
       <div className="p-4 bg-muted rounded-lg">
         <div className="space-y-2">
-          <h3 className="font-bold text-base">Class Schedule</h3>
+          <h3 className="font-bold text-base">{t('Class Schedule')}</h3>
           {schedule.days && schedule.days.length > 0 ? (
             <div className="space-y-2">
               <div className="flex gap-2 flex-wrap">
@@ -174,11 +176,11 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
       <div className="flex gap-4 justify-center mt-4">
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded bg-primary" />
-          <span className="text-xs">Class Day</span>
+          <span className="text-xs">{t('Class Day')}</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="w-4 h-4 rounded border-3 border-secondary bg-white" />
-          <span className="text-xs">Today</span>
+          <span className="text-xs">{t('Today')}</span>
         </div>
       </div>
     </div>

@@ -57,8 +57,8 @@ export const PaymentAccessGate = () => {
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-slate-950 dark:text-foreground">Payment Access Required</h3>
-            <p className="text-sm text-muted-foreground">Enter your payment password provided by admin.</p>
+            <h3 className="text-lg font-semibold text-slate-950 dark:text-foreground">{t('Payment Access Required')}</h3>
+            <p className="text-sm text-muted-foreground">{t('Enter your payment password provided by admin.')}</p>
           </div>
         </div>
 
@@ -70,22 +70,22 @@ export const PaymentAccessGate = () => {
 
         <form onSubmit={handleLogin} className="space-y-3">
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-foreground">Username</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-foreground">{t('Username')}</label>
             <Input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username"
+              placeholder={t('Username')}
               autoComplete="username"
               disabled={loading}
               className="mt-1"
             />
           </div>
           <div>
-            <label className="text-sm font-medium text-slate-700 dark:text-foreground">Payment Password</label>
+            <label className="text-sm font-medium text-slate-700 dark:text-foreground">{t('Payment Password')}</label>
             <Input
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Payment password"
+              placeholder={t('Payment password')}
               type="password"
               autoComplete="current-password"
               disabled={loading}

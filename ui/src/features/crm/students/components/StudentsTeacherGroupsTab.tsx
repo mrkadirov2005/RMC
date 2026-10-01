@@ -11,6 +11,7 @@ import type { ViewMode } from '@/components/common/ViewModeToggle';
 import { StudentsTableView } from './StudentsTableView';
 import type { Class, Student } from '../types';
 import { getGroupWeekdays } from '@/shared/groupLabel';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Option {
   id?: number;
@@ -170,6 +171,7 @@ export const StudentsTeacherGroupsTab = ({
   onDeleteGroups,
   onTeacherSummaryChange,
 }: Props) => {
+  const { t } = useLanguage();
   const [selectedTeacherId, setSelectedTeacherId] = useState<number | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
   const [targetTeachers, setTargetTeachers] = useState<Record<number, string>>({});
@@ -533,7 +535,7 @@ export const StudentsTeacherGroupsTab = ({
             Back to teachers
           </Button>
           <div className="text-xs text-muted-foreground">
-            {selectedTeacher.name} · {teacherStudentTotal.toLocaleString()} students
+            {selectedTeacher.name} · {teacherStudentTotal.toLocaleString()} {t('students')}
           </div>
         </div>
 
@@ -546,28 +548,28 @@ export const StudentsTeacherGroupsTab = ({
               onKeyDown={(event) => {
                 if (event.key === 'Enter') applySearch();
               }}
-              placeholder="Search groups or students..."
+              placeholder={t('Search groups or students...')}
               className="h-8 pl-8 text-xs"
             />
           </div>
           <Button type="button" size="sm" className="h-8 gap-1.5 bg-sky-600 px-3 text-xs text-white hover:bg-sky-700" onClick={applySearch}>
             <Search className="h-3.5 w-3.5" />
-            Search
+            {t('Search')}
           </Button>
           {searchQuery && (
             <Button type="button" size="sm" className="h-8 gap-1.5 bg-rose-600 px-3 text-xs text-white hover:bg-rose-700" onClick={clearSearch}>
               <X className="h-3.5 w-3.5" />
-              Clear
+              {t('Clear')}
             </Button>
           )}
         </div>
 
         {selectedClassIds.size > 0 && (
           <div className="flex flex-col gap-2 rounded-lg border border-sky-100 bg-sky-50/80 p-2 text-sm dark:border-border dark:bg-muted/40 sm:flex-row sm:items-center">
-            <span className="font-medium">{selectedClassIds.size} selected</span>
+            <span className="font-medium">{selectedClassIds.size} {t('selected')}</span>
             <Select value={bulkTargetTeacherId} onValueChange={setBulkTargetTeacherId} disabled={bulkSaving}>
               <SelectTrigger className="h-8 bg-white text-xs dark:bg-background sm:ml-auto sm:w-[240px]">
-                <SelectValue placeholder="Transfer selected to..." />
+                <SelectValue placeholder={t('Transfer selected to...')} />
               </SelectTrigger>
               <SelectContent>
                 {teachers
@@ -581,16 +583,16 @@ export const StudentsTeacherGroupsTab = ({
             </Select>
             <Button type="button" size="sm" className="h-8 gap-1.5 bg-sky-600 px-3 text-xs text-white hover:bg-sky-700" onClick={transferSelectedGroups} disabled={bulkSaving || !bulkTargetTeacherId}>
               {bulkSaving && bulkTargetTeacherId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
-              Transfer
+              {t('Transfer')}
             </Button>
             {onDeleteGroups && (
               <Button type="button" size="sm" className="h-8 gap-1.5 bg-rose-600 px-3 text-xs text-white hover:bg-rose-700" onClick={deleteSelectedGroups} disabled={bulkSaving}>
                 {bulkSaving && !bulkTargetTeacherId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                Delete
+                {t('Delete')}
               </Button>
             )}
             <Button type="button" variant="outline" size="sm" className="h-8 text-xs" onClick={() => setSelectedClassIds(new Set())} disabled={bulkSaving}>
-              Clear
+              {t('Clear')}
             </Button>
           </div>
         )}
@@ -605,7 +607,7 @@ export const StudentsTeacherGroupsTab = ({
         ) : selectedTeacherClasses.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center text-sm text-muted-foreground">
-              {searchQuery ? 'No groups or students match this search.' : 'No groups assigned to this teacher.'}
+              {searchQuery ? t('No groups or students match this search.') : t('No groups assigned to this teacher.')}
             </CardContent>
           </Card>
         ) : (
@@ -619,12 +621,12 @@ export const StudentsTeacherGroupsTab = ({
                     if (input) input.indeterminate = selectedVisibleClassCount > 0 && !allVisibleClassesSelected;
                   }}
                   onChange={(event) => toggleAllVisibleClasses(event.target.checked)}
-                  aria-label="Select all visible groups"
+                  aria-label={t('Select all visible groups')}
                   className="h-3.5 w-3.5"
                 />
               </span>
-              <span>Group</span>
-              <span className="text-center">Students</span>
+              <span>{t('Group')}</span>
+              <span className="text-center">{t('Students')}</span>
               <span className="text-right">Teacher transfer</span>
             </div>
             {selectedTeacherClasses.map(({ cls, classId, teacherId, studentCount }, index) => (
@@ -651,7 +653,7 @@ export const StudentsTeacherGroupsTab = ({
                 </div>
 
                 <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openClass(classId)}>
-                  {studentCount} students
+                  {studentCount} {t('students')}
                 </button>
 
                 <div className="flex flex-col gap-1.5 sm:flex-row" onClick={(event) => event.stopPropagation()}>
@@ -661,7 +663,7 @@ export const StudentsTeacherGroupsTab = ({
                     disabled={savingClassId === classId}
                   >
                     <SelectTrigger className="h-6 bg-white px-2 text-[11px] dark:bg-background">
-                      <SelectValue placeholder="Transfer teacher" />
+                      <SelectValue placeholder={t('Transfer teacher')} />
                     </SelectTrigger>
                     <SelectContent>
                       {teachers
@@ -675,7 +677,7 @@ export const StudentsTeacherGroupsTab = ({
                   </Select>
                   <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-2 text-[11px] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => saveTransfer(classId)} disabled={!targetTeachers[classId] || savingClassId === classId}>
                     {savingClassId === classId ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ArrowRightLeft className="h-3.5 w-3.5" />}
-                    Transfer
+                    {t('Transfer')}
                   </Button>
                 </div>
               </div>
@@ -711,12 +713,12 @@ export const StudentsTeacherGroupsTab = ({
         </div>
         <Button type="button" size="sm" className="h-8 gap-1.5 bg-sky-600 px-3 text-xs text-white hover:bg-sky-700" onClick={applySearch}>
           <Search className="h-3.5 w-3.5" />
-          Search
+          {t('Search')}
         </Button>
         {searchQuery && (
           <Button type="button" size="sm" className="h-8 gap-1.5 bg-rose-600 px-3 text-xs text-white hover:bg-rose-700" onClick={clearSearch}>
             <X className="h-3.5 w-3.5" />
-            Clear
+            {t('Clear')}
           </Button>
         )}
         <span className="text-xs text-muted-foreground sm:ml-auto">{filteredTeachers.length} teachers</span>
@@ -724,10 +726,10 @@ export const StudentsTeacherGroupsTab = ({
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <div className="grid grid-cols-[minmax(0,1fr)_80px_90px_70px] items-center gap-2 border-b bg-slate-50 px-3 py-1.5 text-[11px] font-bold uppercase text-muted-foreground dark:bg-muted/40">
-          <span>Teacher</span>
-          <span className="text-center">Groups</span>
-          <span className="text-center">Students</span>
-          <span className="text-right">Open</span>
+          <span>{t('Teacher')}</span>
+          <span className="text-center">{t('Groups')}</span>
+          <span className="text-center">{t('Students')}</span>
+          <span className="text-right">{t('Open')}</span>
         </div>
         {filteredTeachers.length === 0 ? (
           <div className="px-3 py-8 text-center text-sm text-muted-foreground">No teachers, groups, or students match this search.</div>
@@ -752,10 +754,10 @@ export const StudentsTeacherGroupsTab = ({
                   {groupCount} groups
                 </button>
                 <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
-                  {studentCount} students
+                  {studentCount} {t('students')}
                 </button>
                 <Button type="button" size="sm" variant="ghost" className="h-6 gap-1 bg-transparent px-1.5 text-[11px] text-slate-700 hover:bg-transparent hover:text-sky-700" onClick={() => openTeacher(teacher.id)}>
-                  Open
+                  {t('Open')}
                   <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>

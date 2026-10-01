@@ -33,6 +33,7 @@ import { fetchAttendance, fetchAttendanceForce } from '../../../slices/attendanc
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { makeSelectStudentsByClassId, selectSubjectOptions } from '../../../store/selectors';
 import ClassCalendar from './ClassCalendar';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Class {
   class_id?: number;
@@ -104,6 +105,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
   sessionId,
   onClose,
 }) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 // Memoizes the select students by class derived value.
@@ -386,11 +388,11 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
         <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
           <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="info">Info</TabsTrigger>
-            <TabsTrigger value="students">Students</TabsTrigger>
-            <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            <TabsTrigger value="grades">Exam Grades</TabsTrigger>
-            <TabsTrigger value="tests">Tests</TabsTrigger>
-            <TabsTrigger value="calendar">Calendar</TabsTrigger>
+            <TabsTrigger value="students">{t('Students')}</TabsTrigger>
+            <TabsTrigger value="attendance">{t('Attendance')}</TabsTrigger>
+            <TabsTrigger value="grades">{t('Exam Grades')}</TabsTrigger>
+            <TabsTrigger value="tests">{t('Tests')}</TabsTrigger>
+            <TabsTrigger value="calendar">{t('Calendar')}</TabsTrigger>
           </TabsList>
 
           {/* Tab 1: Class Info */}
@@ -398,24 +400,24 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-muted-foreground">Class Code</p>
+                  <p className="text-sm text-muted-foreground">{t('Class Code')}</p>
                   <p className="font-semibold">{classData.class_code}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Level</p>
+                  <p className="text-sm text-muted-foreground">{t('Level')}</p>
                   <p className="font-semibold">{classData.level}</p>
                 </div>
               
                 <div>
-                  <p className="text-sm text-muted-foreground">Capacity</p>
-                  <p className="font-semibold">{classData.capacity} students</p>
+                  <p className="text-sm text-muted-foreground">{t('Capacity')}</p>
+                  <p className="font-semibold">{classData.capacity} {t('students')}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Room Number</p>
+                  <p className="text-sm text-muted-foreground">{t('Room Number')}</p>
                   <p className="font-semibold">{classData.room_number || 'Not specified'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Payment Amount</p>
+                  <p className="text-sm text-muted-foreground">{t('Payment Amount')}</p>
                   <p className="font-semibold">
                     {formatMoney(classData.payment_amount)} ({classData.payment_frequency})
                   </p>
@@ -424,11 +426,11 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
 
               {/* Schedule Info */}
               <div className="p-4 bg-muted rounded-lg mt-4">
-                <h3 className="font-bold mb-2">Class Schedule</h3>
+                <h3 className="font-bold mb-2">{t('Class Schedule')}</h3>
                 {parsedSchedule.days && parsedSchedule.days.length > 0 ? (
                   <div className="space-y-1">
                     <p className="text-sm">
-                      <strong>Days:</strong> {parsedSchedule.days.join(', ')}
+                      <strong>{t('Days:')}</strong> {parsedSchedule.days.join(', ')}
                     </p>
                     <p className="text-sm">
                       <strong>Time:</strong> {parsedSchedule.time}
@@ -475,7 +477,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                       </span>
                       {isTransferred && (
                         <Badge variant="outline" className="border-amber-300 text-amber-700">
-                          Transferred
+                          {t('Transferred')}
                         </Badge>
                       )}
                     </div>
@@ -492,8 +494,8 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-primary">
-                      <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
-                      <TableHead className="text-primary-foreground font-semibold text-center">Attendance Status</TableHead>
+                      <TableHead className="text-primary-foreground font-semibold">{t('Student Name')}</TableHead>
+                      <TableHead className="text-primary-foreground font-semibold text-center">{t('Attendance Status')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -532,7 +534,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 
                 <div className="flex justify-end p-4 border-t">
                   <Button onClick={handleMarkAttendance} disabled={submitting}>
-                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Save Attendance'}
+                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : t('Save Attendance')}
                   </Button>
                 </div>
               </div>
@@ -560,14 +562,14 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 {/* Grade Settings Row */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="space-y-1">
-                    <Label htmlFor="grade_subject">Subject *</Label>
+                    <Label htmlFor="grade_subject">{t('Subject *')}</Label>
                     <select
                       id="grade_subject"
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                       value={gradeSubject}
                       onChange={(e) => setGradeSubject(e.target.value)}
                     >
-                      <option value="">Select Subject</option>
+                      <option value="">{t('Select Subject')}</option>
                       {subjectOptions.map((opt) => (
                         <option key={opt.id} value={opt.label}>
                           {opt.label}
@@ -576,7 +578,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="total_marks">Total Marks</Label>
+                    <Label htmlFor="total_marks">{t('Total Marks')}</Label>
                     <Input
                       id="total_marks"
                       type="number"
@@ -586,7 +588,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="academic_year">Academic Year</Label>
+                    <Label htmlFor="academic_year">{t('Academic Year')}</Label>
                     <Input
                       id="academic_year"
                       type="number"
@@ -595,7 +597,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="term">Term</Label>
+                    <Label htmlFor="term">{t('Term')}</Label>
                     <select
                       id="term"
                       className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -615,12 +617,12 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                     <TableHeader>
                       <TableRow className="bg-primary">
                         <TableHead className="text-primary-foreground font-semibold">#</TableHead>
-                        <TableHead className="text-primary-foreground font-semibold">Student Name</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold">{t('Student Name')}</TableHead>
                         <TableHead className="text-primary-foreground font-semibold text-center">
                           Marks (/{gradeTotalMarks})
                         </TableHead>
-                        <TableHead className="text-primary-foreground font-semibold text-center">Percentage</TableHead>
-                        <TableHead className="text-primary-foreground font-semibold text-center">Grade</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold text-center">{t('Percentage')}</TableHead>
+                        <TableHead className="text-primary-foreground font-semibold text-center">{t('Grade')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -680,7 +682,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 {/* Summary & Submit */}
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-muted-foreground">
-                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} of {activeStudents.length} students graded
+                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} {t('of')} {activeStudents.length} students graded
                   </p>
                   <Button
                     size="lg"
@@ -688,7 +690,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                     onClick={handleSubmitBulkGrades}
                     disabled={submittingGrades || activeStudents.length === 0}
                   >
-                    {submittingGrades ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Submit All Grades'}
+                    {submittingGrades ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Submit All Grades')}
                   </Button>
                 </div>
               </div>
@@ -701,11 +703,11 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
               <Table>
                 <TableHeader>
                   <TableRow className="bg-primary">
-                    <TableHead className="text-primary-foreground font-semibold">Test</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold">Type</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold">Due Date</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold">Status</TableHead>
-                    <TableHead className="text-primary-foreground font-semibold text-right">Actions</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Test')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Type')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Due Date')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold">{t('Status')}</TableHead>
+                    <TableHead className="text-primary-foreground font-semibold text-right">{t('Actions')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -714,7 +716,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                       <TableCell colSpan={5} className="py-10 text-center text-muted-foreground">
                         <div className="flex flex-col items-center gap-2">
                           <FileQuestion className="h-8 w-8 text-muted-foreground/60" />
-                          <span>No tests assigned to this class.</span>
+                          <span>{t('No tests assigned to this class.')}</span>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -725,14 +727,14 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                         <TableCell>
                           <p className="font-semibold">{test.test_name || 'Untitled test'}</p>
                           <p className="text-xs text-muted-foreground">
-                            {test.duration_minutes ? `${test.duration_minutes} min` : 'No duration'}
+                            {test.duration_minutes ? `${test.duration_minutes} min` : t('No duration')}
                             {' · '}
-                            {test.total_marks ?? '-'} marks
+                            {test.total_marks ?? '-'} {t('marks')}
                           </p>
                         </TableCell>
                         <TableCell>{test.test_type || '-'}</TableCell>
                         <TableCell>{test.due_date ? new Date(test.due_date).toLocaleDateString() : '-'}</TableCell>
-                        <TableCell>{test.is_active === false ? 'Inactive' : test.is_mandatory ? 'Mandatory' : 'Optional'}</TableCell>
+                        <TableCell>{test.is_active === false ? t('Inactive') : test.is_mandatory ? t('Mandatory') : t('Optional')}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="outline"
@@ -744,7 +746,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                               navigate(`/tests/${testId}`);
                             }}
                           >
-                            Open
+                            {t('Open')}
                           </Button>
                         </TableCell>
                       </TableRow>

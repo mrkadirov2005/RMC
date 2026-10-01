@@ -11,6 +11,7 @@ import { attendanceAPI, classAPI } from '../api';
 import { getResolvedCenterId } from '../../../shared/auth/centerScope';
 import { useAppSelector } from '../../crm/hooks';
 import { showToast } from '../../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type SectionKey = 'students' | 'attendance' | 'points' | 'payments';
 type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
@@ -101,6 +102,7 @@ const OverallStatisticsTab = ({
   grades = [],
   payments = [],
 }: OverallStatisticsTabProps) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { user } = useAppSelector((state) => state.auth);
   const [activeSection, setActiveSection] = useState<SectionKey>('students');
@@ -592,7 +594,7 @@ const OverallStatisticsTab = ({
             </div>
           </div>
           <div className="mt-4 space-y-2 border-t border-slate-200 pt-3 dark:border-white/10">
-            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">Groups</div>
+            <div className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">{t('Groups')}</div>
             {studentGroups.length > 0 ? studentGroups.map((group) => (
               <button
                 key={group.id}
@@ -628,7 +630,7 @@ const OverallStatisticsTab = ({
                   disabled={startingClassId !== null}
                   onClick={() => void openLessonPicker(lesson)}
                 >
-                  {startingClassId === lesson.classId ? 'Starting...' : 'Start lesson'}
+                  {startingClassId === lesson.classId ? t('Starting...') : 'Start lesson'}
                 </Button>
               </div>
             </div>
@@ -653,7 +655,7 @@ const OverallStatisticsTab = ({
                     size="icon"
                     onClick={() => setLessonCalendarMonth((month) => new Date(month.getFullYear(), month.getMonth() - 1, 1))}
                     disabled={startingClassId !== null}
-                    aria-label="Previous month"
+                    aria-label={t('Previous month')}
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -664,7 +666,7 @@ const OverallStatisticsTab = ({
                     size="icon"
                     onClick={() => setLessonCalendarMonth((month) => new Date(month.getFullYear(), month.getMonth() + 1, 1))}
                     disabled={startingClassId !== null}
-                    aria-label="Next month"
+                    aria-label={t('Next month')}
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
@@ -743,10 +745,10 @@ const OverallStatisticsTab = ({
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" disabled={startingClassId !== null} onClick={() => setLessonPickerOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="button" disabled={startingClassId !== null} onClick={() => void startNextLesson()}>
-                {startingClassId !== null ? 'Starting...' : 'Start session'}
+                {startingClassId !== null ? t('Starting...') : 'Start session'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -757,7 +759,7 @@ const OverallStatisticsTab = ({
           <DialogHeader>
             <div className="flex items-start justify-between gap-4">
               <div>
-                <DialogTitle className="flex items-center gap-2">{selectedGroup ? selectedGroup.label : 'Group'} <span className="text-sm font-normal text-slate-500">students</span></DialogTitle>
+                <DialogTitle className="flex items-center gap-2">{selectedGroup ? selectedGroup.label : t('Group')} <span className="text-sm font-normal text-slate-500">{t('students')}</span></DialogTitle>
                 <DialogDescription className="mt-1">{selectedGroup ? `${studentsInSelectedGroup.length} students` : ''}</DialogDescription>
               </div>
               <div className="min-w-[220px]">
@@ -794,7 +796,7 @@ const OverallStatisticsTab = ({
 
           <DialogFooter>
             <div className="w-full flex justify-end">
-              <Button variant="ghost" onClick={() => { setSelectedGroup(null); setGroupSearch(''); }}>Close</Button>
+              <Button variant="ghost" onClick={() => { setSelectedGroup(null); setGroupSearch(''); }}>{t('Close')}</Button>
             </div>
           </DialogFooter>
         </DialogContent>

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { statusTone, type CalendarEvent } from '../calendarWorkspace';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Props {
   event: CalendarEvent | null;
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onStart, onOpen, onDelete, onUpdateTime }: Props) => {
+  const { t } = useLanguage();
   const [editingTime, setEditingTime] = useState(false);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -55,10 +57,10 @@ export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onSt
                   <span className="text-muted-foreground">–</span>
                   <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} className="h-8 w-[110px]" />
                   <Button size="sm" className="h-8" disabled={savingTime || !startTime || !endTime || endTime <= startTime} onClick={saveTime}>
-                    {savingTime ? 'Saving...' : 'Save'}
+                    {savingTime ? t('Saving...') : t('Save')}
                   </Button>
                   <Button size="sm" variant="outline" className="h-8" disabled={savingTime} onClick={() => { setEditingTime(false); setStartTime(event.start_time?.slice(0, 5) || ''); setEndTime(event.end_time?.slice(0, 5) || ''); }}>
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                 </dd>
               ) : (
@@ -71,17 +73,17 @@ export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onSt
                   )}
                 </dd>
               )}
-              <dt className="text-muted-foreground">Teacher</dt><dd>{event.teacher_name || 'Unassigned'}</dd>
-              <dt className="text-muted-foreground">Subject</dt><dd>{event.subject_name || 'Unassigned'}</dd>
-              <dt className="text-muted-foreground">Room</dt><dd>{event.room_name || 'Unassigned'}</dd>
-              {event.attendance && <><dt className="text-muted-foreground">Attendance</dt><dd>{event.attendance.present} present · {event.attendance.absent} absent · {event.attendance.unmarked} unmarked</dd></>}
+              <dt className="text-muted-foreground">{t('Teacher')}</dt><dd>{event.teacher_name || 'Unassigned'}</dd>
+              <dt className="text-muted-foreground">{t('Subject')}</dt><dd>{event.subject_name || 'Unassigned'}</dd>
+              <dt className="text-muted-foreground">{t('Room')}</dt><dd>{event.room_name || 'Unassigned'}</dd>
+              {event.attendance && <><dt className="text-muted-foreground">{t('Attendance')}</dt><dd>{event.attendance.present} present · {event.attendance.absent} absent · {event.attendance.unmarked} unmarked</dd></>}
             </dl>
             {canManage && (
               <div className="flex justify-end gap-2">
                 {event.source === 'recurring' ? <Button onClick={() => onStart(event)}>Start lesson</Button> : (
                   <>
                     <Button onClick={() => onOpen(event)}>Open lesson</Button>
-                    {canDelete && <Button variant="destructive" onClick={() => onDelete(event)}>Delete session</Button>}
+                    {canDelete && <Button variant="destructive" onClick={() => onDelete(event)}>{t('Delete session')}</Button>}
                   </>
                 )}
               </div>

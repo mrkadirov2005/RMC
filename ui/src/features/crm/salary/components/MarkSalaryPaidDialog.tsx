@@ -23,6 +23,7 @@ import { markSalaryPaid, selectSalaryMarkPaidLoading } from '@/slices/salariesSl
 import { formatSalaryPeriod } from '../model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
 import type { SalaryStudentStats } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const PAYMENT_METHODS = ['Cash', 'Bank Transfer', 'Card', 'Other'];
 
@@ -51,6 +52,7 @@ export const MarkSalaryPaidDialog = ({
   existingPaymentMethod,
   existingNotes,
 }: MarkSalaryPaidDialogProps) => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const submitting = useAppSelector(selectSalaryMarkPaidLoading);
 
@@ -90,7 +92,7 @@ export const MarkSalaryPaidDialog = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Mark Salary as Paid</DialogTitle>
+          <DialogTitle>{t('Mark Salary as Paid')}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <p className="text-sm text-muted-foreground">
@@ -99,7 +101,7 @@ export const MarkSalaryPaidDialog = ({
 
           <div className="grid grid-cols-2 gap-1.5 rounded-md border bg-muted/30 p-2.5 text-xs sm:grid-cols-4">
             <div>
-              <p className="text-muted-foreground">Students Paid</p>
+              <p className="text-muted-foreground">{t('Students Paid')}</p>
               <p className="font-bold text-emerald-600">{studentStats.paid_students}</p>
             </div>
             <div>
@@ -111,13 +113,13 @@ export const MarkSalaryPaidDialog = ({
               <p className="font-bold text-primary">{studentStats.paid_percent}%</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Collected</p>
+              <p className="text-muted-foreground">{t('Collected')}</p>
               <p className="font-bold">{formatMoney(studentStats.collected_amount)}</p>
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label>Total Amount</Label>
+            <Label>{t('Total Amount')}</Label>
             <Input
               type="number"
               min="0"
@@ -131,10 +133,10 @@ export const MarkSalaryPaidDialog = ({
             </p>
           </div>
           <div className="space-y-1">
-            <Label>Payment Method</Label>
+            <Label>{t('Payment Method')}</Label>
             <Select value={paymentMethod} onValueChange={setPaymentMethod}>
               <SelectTrigger>
-                <SelectValue placeholder="Select payment method" />
+                <SelectValue placeholder={t('Select payment method')} />
               </SelectTrigger>
               <SelectContent>
                 {PAYMENT_METHODS.map((method) => (
@@ -144,23 +146,23 @@ export const MarkSalaryPaidDialog = ({
             </Select>
           </div>
           <div className="space-y-1">
-            <Label>Notes</Label>
+            <Label>{t('Notes')}</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Optional notes"
+              placeholder={t('Optional notes')}
               rows={3}
             />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>{t('Cancel')}</Button>
           <Button
             onClick={handleSubmit}
             disabled={submitting || !isValid}
             className="gap-2 border-0 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-500/30 hover:from-emerald-600 hover:via-emerald-700 hover:to-teal-700"
           >
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Mark as Paid'}
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : t('Mark as Paid')}
           </Button>
         </DialogFooter>
       </DialogContent>

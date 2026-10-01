@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { RoomFilters } from '../components/RoomFilters';
 
+vi.mock('@/i18n/LanguageContext', () => ({
+  useLanguage: () => ({ t: (value: string) => value }),
+}));
+
 const filters = {
   date: '2026-08-10',
   start: '09:00',

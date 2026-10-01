@@ -3,6 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ClassItem, SessionItem } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SessionListItemProps {
   cls: ClassItem;
@@ -36,6 +37,7 @@ export const SessionListItem = ({
   onOpenDetails,
   index,
 }: SessionListItemProps) => {
+  const { t } = useLanguage();
   const classId = Number(cls.class_id || cls.id);
   const attendanceKey = `${classId}|${selectedDay}`;
   const attendanceCounts = session?.session_id
@@ -85,7 +87,7 @@ export const SessionListItem = ({
             className="text-rose-600 hover:text-rose-700"
             onClick={() => onDeleteSession(classId, session.session_id)}
           >
-            Delete
+            {t('Delete')}
           </Button>
         )}
         {canViewDetails && (

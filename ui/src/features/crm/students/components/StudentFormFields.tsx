@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import type { Class, Student } from '../types';
 import { SelectField } from './SelectField';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Option { id?: number; label: string; value: string | number }
 interface Props { formData: Partial<Student>; setFormData: (value: Partial<Student>) => void; centerOptions: Option[]; classOptions: Option[]; teacherOptions: Option[]; classes?: Class[]; acquisitionSourceOptions?: Option[]; genderOptions: Option[]; statusOptions: Option[]; showCenterField?: boolean }
@@ -104,6 +105,7 @@ const TextField = ({
 export const StudentFormFields = ({ formData, setFormData, centerOptions, classOptions, teacherOptions, classes = [], acquisitionSourceOptions = [
   { label: 'Advertisement', value: 1 }, { label: 'Teacher referral', value: 2 }, { label: 'Student or parent referral', value: 3 }, { label: 'Social media', value: 4 }, { label: 'Walk-in', value: 5 }, { label: 'Other', value: 6 },
 ], genderOptions, statusOptions, showCenterField = true }: Props) => {
+  const { t } = useLanguage();
   const selectedTeacherId = Number(formData.teacher_id) || 0;
   const classesByTeacher = useMemo(() => {
     const map = new Map<number, number>();
@@ -130,47 +132,47 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
   return (
     <div className="space-y-4">
       <FormSection
-        title="Profile"
-        detail="Core identity and parent contact details."
+        title={t('Profile')}
+        detail={t('Core identity and parent contact details.')}
         icon={<UserRound className="h-5 w-5" />}
         tone="sky"
       >
-        <TextField label="First name" value={formData.first_name} onChange={(value) => setFormData({ ...formData, first_name: value })} required />
-        <TextField label="Last name" value={formData.last_name} onChange={(value) => setFormData({ ...formData, last_name: value })} required />
-        <TextField label="Phone" value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} required />
-        <TextField label="Date of birth" type="date" value={formData.date_of_birth} onChange={(value) => setFormData({ ...formData, date_of_birth: value })} required />
+        <TextField label={t('First name')} value={formData.first_name} onChange={(value) => setFormData({ ...formData, first_name: value })} required />
+        <TextField label={t('Last name')} value={formData.last_name} onChange={(value) => setFormData({ ...formData, last_name: value })} required />
+        <TextField label={t('Phone')} value={formData.phone} onChange={(value) => setFormData({ ...formData, phone: value })} required />
+        <TextField label={t('Date of birth')} type="date" value={formData.date_of_birth} onChange={(value) => setFormData({ ...formData, date_of_birth: value })} required />
         <div className={fieldClass}>
-          <SelectField compact label="Gender" name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder="Select gender" />
+          <SelectField compact label={t('Gender')} name="gender" value={formData.gender || ''} onChange={(value) => setFormData({ ...formData, gender: value })} options={genderOptions} placeholder={t('Select gender')} />
         </div>
         <div className={fieldClass}>
-          <SelectField compact label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder="Select status" />
+          <SelectField compact label={t('Status')} name="status" value={formData.status || ''} onChange={(value) => setFormData({ ...formData, status: value })} options={statusOptions} placeholder={t('Select status')} />
         </div>
       </FormSection>
 
-      <FormSection title="How they found us" detail="Track the channel or person who introduced this student." icon={<Megaphone className="h-5 w-5" />} tone="amber">
+      <FormSection title={t('How they found us')} detail={t('Track the channel or person who introduced this student.')} icon={<Megaphone className="h-5 w-5" />} tone="amber">
         <div className={fieldClass}>
-          <SelectField compact label="Source" name="acquisition_source_id" value={formData.acquisition_source_id || ''} onChange={(value) => setFormData({ ...formData, acquisition_source_id: Number(value), referred_by_teacher_id: Number(value) === 2 ? formData.referred_by_teacher_id : undefined })} options={[...acquisitionSourceOptions, { label: '+ Add a custom source', value: -1 }]} placeholder="Select source" />
+          <SelectField compact label={t('Source')} name="acquisition_source_id" value={formData.acquisition_source_id || ''} onChange={(value) => setFormData({ ...formData, acquisition_source_id: Number(value), referred_by_teacher_id: Number(value) === 2 ? formData.referred_by_teacher_id : undefined })} options={[...acquisitionSourceOptions, { label: '+ Add a custom source', value: -1 }]} placeholder={t('Select source')} />
         </div>
-        {Number(formData.acquisition_source_id) === -1 && <TextField label="New source name" value={formData.custom_acquisition_source || ''} onChange={(value) => setFormData({ ...formData, custom_acquisition_source: value })} required placeholder="Enter your own source" />}
-        {Number(formData.acquisition_source_id) === 2 && <div className={fieldClass}><SelectField compact label="Referring teacher" name="referred_by_teacher_id" value={formData.referred_by_teacher_id || ''} onChange={(value) => setFormData({ ...formData, referred_by_teacher_id: Number(value) })} options={teacherOptions} placeholder="Select teacher" /></div>}
-        <TextField label="Source details" value={formData.acquisition_detail || ''} onChange={(value) => setFormData({ ...formData, acquisition_detail: value })} placeholder="Campaign, person name, platform, or note" />
+        {Number(formData.acquisition_source_id) === -1 && <TextField label={t('New source name')} value={formData.custom_acquisition_source || ''} onChange={(value) => setFormData({ ...formData, custom_acquisition_source: value })} required placeholder={t('Enter your own source')} />}
+        {Number(formData.acquisition_source_id) === 2 && <div className={fieldClass}><SelectField compact label={t('Referring teacher')} name="referred_by_teacher_id" value={formData.referred_by_teacher_id || ''} onChange={(value) => setFormData({ ...formData, referred_by_teacher_id: Number(value) })} options={teacherOptions} placeholder={t('Select teacher')} /></div>}
+        <TextField label={t('Source details')} value={formData.acquisition_detail || ''} onChange={(value) => setFormData({ ...formData, acquisition_detail: value })} placeholder={t('Campaign, person name, platform, or note')} />
       </FormSection>
 
       <FormSection
-        title="Placement"
+        title={t('Placement')}
         detail="Pick the teacher first, then choose one of their groups."
         icon={<GraduationCap className="h-5 w-5" />}
         tone="emerald"
       >
         {showCenterField && (
           <div className={fieldClass}>
-            <SelectField compact label="Center" name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder="Select center" />
+            <SelectField compact label={t('Center')} name="center_id" value={formData.center_id || ''} onChange={(value) => setFormData({ ...formData, center_id: Number(value) })} options={centerOptions} placeholder={t('Select center')} />
           </div>
         )}
         <div className={fieldClass}>
           <SelectField
             compact
-            label="Teacher"
+            label={t('Teacher')}
             name="teacher_id"
             value={formData.teacher_id || ''}
             onChange={(value) => {
@@ -179,41 +181,41 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
               setFormData({ ...formData, teacher_id: teacherId, class_id: classStillValid ? formData.class_id : undefined });
             }}
             options={teacherOptions}
-            placeholder="Select teacher"
+            placeholder={t('Select teacher')}
           />
         </div>
         <div className={fieldClass}>
           <SelectField
             compact
-            label="Class"
+            label={t('Class')}
             name="class_id"
             value={formData.class_id || ''}
             onChange={(value) => setFormData({ ...formData, class_id: Number(value) })}
             options={classOptionsForTeacher}
-            placeholder={selectedTeacherId ? 'Select class' : 'Select a teacher first'}
+            placeholder={selectedTeacherId ? t('Select class') : 'Select a teacher first'}
             disabled={!selectedTeacherId}
           />
         </div>
       </FormSection>
 
       <FormSection
-        title="School"
-        detail="Optional school information used for filtering and reports."
+        title={t('School')}
+        detail={t('Optional school information used for filtering and reports.')}
         icon={<Building2 className="h-5 w-5" />}
         tone="amber"
       >
-        <TextField label="School" value={formData.school_name || ''} onChange={(value) => setFormData({ ...formData, school_name: value })} placeholder="School name" />
-        <TextField label="School class" value={formData.school_class || ''} onChange={(value) => setFormData({ ...formData, school_class: value })} placeholder="Example: 7" />
+        <TextField label={t('School')} value={formData.school_name || ''} onChange={(value) => setFormData({ ...formData, school_name: value })} placeholder={t('School name')} />
+        <TextField label={t('School class')} value={formData.school_class || ''} onChange={(value) => setFormData({ ...formData, school_class: value })} placeholder={t('Example: 7')} />
       </FormSection>
 
       <FormSection
-        title="Account"
-        detail="Login credentials are optional because the platform can generate identity data."
+        title={t('Account')}
+        detail={t('Login credentials are optional because the platform can generate identity data.')}
         icon={<KeyRound className="h-5 w-5" />}
         tone="fuchsia"
       >
-        <TextField label="Username" value={formData.username} onChange={(value) => setFormData({ ...formData, username: value })} placeholder="Auto-generated if empty" />
-        <TextField label="Password" type="password" value={formData.password} onChange={(value) => setFormData({ ...formData, password: value })} placeholder="Auto-generated if empty" />
+        <TextField label={t('Username')} value={formData.username} onChange={(value) => setFormData({ ...formData, username: value })} placeholder={t('Auto-generated if empty')} />
+        <TextField label={t('Password')} type="password" value={formData.password} onChange={(value) => setFormData({ ...formData, password: value })} placeholder={t('Auto-generated if empty')} />
       </FormSection>
 
       <section className="overflow-hidden rounded-lg border border-rose-200 bg-rose-50 shadow-sm">
@@ -223,7 +225,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
               <BadgePercent className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold leading-tight">Discount</h3>
+              <h3 className="text-sm font-bold leading-tight">{t('Discount')}</h3>
               <p className="text-[11px] leading-snug text-white/85">Choose serial or one-time tuition discount.</p>
             </div>
           </div>
@@ -236,7 +238,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
           <div className="grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-5">
             <SelectField
               compact
-              label="Discount kind"
+              label={t('Discount kind')}
               name="discount_kind"
               value={formData.discount_kind || 'serial_discount'}
               onChange={(value) => setFormData({ ...formData, discount_kind: value as 'serial_discount' | 'monthly_discount' })}
@@ -247,7 +249,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             />
             <SelectField
               compact
-              label="Discount type"
+              label={t('Discount type')}
               name="discount_value_type"
               value={formData.discount_value_type || 'fixed'}
               onChange={(value) => setFormData({ ...formData, discount_value_type: value as 'percent' | 'fixed' })}
@@ -256,11 +258,11 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
                 { label: 'Percent', value: 'percent' },
               ]}
             />
-            <TextField label="Current price" type="number" value={formData.discount_original_price} onChange={(value) => setFormData({ ...formData, discount_original_price: Number(value) })} />
-            <TextField label="Discount value" type="number" value={formData.discount_value} onChange={(value) => setFormData({ ...formData, discount_value: Number(value) })} />
-            <TextField label="Final price" value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} readOnly />
+            <TextField label={t('Current price')} type="number" value={formData.discount_original_price} onChange={(value) => setFormData({ ...formData, discount_original_price: Number(value) })} />
+            <TextField label={t('Discount value')} type="number" value={formData.discount_value} onChange={(value) => setFormData({ ...formData, discount_value: Number(value) })} />
+            <TextField label={t('Final price')} value={discountOriginalPrice > 0 ? finalPrice.toFixed(2) : ''} readOnly />
             <div className="sm:col-span-2 lg:col-span-5">
-              <TextField label="Reason" value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder="Reason for discount" />
+              <TextField label={t('Reason')} value={formData.discount_reason} onChange={(value) => setFormData({ ...formData, discount_reason: value })} placeholder={t('Reason for discount')} />
             </div>
           </div>
         )}

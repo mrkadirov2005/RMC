@@ -404,7 +404,7 @@ export default function SessionWorkflowPage() {
       <div className="space-y-4 p-4">
         <Button variant="outline" onClick={() => navigate(backPath)}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to class
+          {t('Back to class')}
         </Button>
         <Alert variant="destructive">
           <AlertDescription>{t(error)}</AlertDescription>
@@ -419,7 +419,7 @@ export default function SessionWorkflowPage() {
         <div className="min-w-0">
           <Button variant="outline" size="sm" className="mb-3 h-8 text-xs" onClick={() => navigate(backPath)}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-            {searchParams.get('from') === 'teacher' ? 'Back to teacher portal' : 'Back to class'}
+            {searchParams.get('from') === 'teacher' ? t('Back to teacher portal') : t('Back to class')}
           </Button>
           <h1 className="truncate text-xl font-bold text-slate-950 dark:text-foreground">{classData?.class_name || 'Lesson workflow'}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
@@ -435,7 +435,7 @@ export default function SessionWorkflowPage() {
             </label>
             <span>{session?.start_time || '-'}</span>
             <span>/</span>
-            <span>{students.length} students</span>
+            <span>{students.length} {t('students')}</span>
             <span>/</span>
             <span>{shouldAwardCoins ? 'coins on' : 'coins off'}</span>
             {switchingDate && <Loader2 className="h-4 w-4 animate-spin text-violet-600" />}
@@ -443,7 +443,7 @@ export default function SessionWorkflowPage() {
         </div>
         <Button className="h-9 bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveSession} disabled={submitting || students.length === 0}>
           {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          {shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}
+          {shouldAwardCoins ? 'Save Scores & Coins' : t('Save Scores')}
         </Button>
       </div>
 
@@ -484,7 +484,7 @@ export default function SessionWorkflowPage() {
                 values={attendance}
                 onToggle={(studentId, value) => toggleMapValue(setAttendance, studentId, value)}
                 onFillAll={(value) => fillMapValue(setAttendance, value)}
-                action={<><Button variant="outline" onClick={() => navigate(backPath)}>Cancel</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? 'Complete Attendance' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => navigate(backPath)}>{t('Cancel')}</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? t('Complete Attendance') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
@@ -496,7 +496,7 @@ export default function SessionWorkflowPage() {
                 isEnabled={(studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
                 onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId)))}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? 'Complete Homework' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? t('Complete Homework') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
@@ -512,7 +512,7 @@ export default function SessionWorkflowPage() {
                 stellarStudentId={shouldAwardCoins ? stellarStudentId : null}
                 onToggleStellar={shouldAwardCoins ? (studentId) => setStellarStudentId((current) => current === studentId ? null : studentId) : undefined}
                 stellarBonusCoins={scoringSettings.stellarBonusCoins}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? 'Complete Activity' : shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? t('Complete Activity') : shouldAwardCoins ? 'Save Scores & Coins' : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
@@ -523,7 +523,7 @@ export default function SessionWorkflowPage() {
                 onChange={setPointScore}
                 onFillAll={fillPointScores}
                 getTotalScore={getTotalScore}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>Back</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? 'Save Scores & Coins' : 'Save Scores'}</Button></>}
+                action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? 'Save Scores & Coins' : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 

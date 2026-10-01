@@ -146,7 +146,7 @@ const TeacherDetailPage = () => {
             }}
           >
             <KeyRound className="mr-1.5 h-3.5 w-3.5" />
-            Set Payment Password
+            {t('Set Payment Password')}
           </Button>
 
         </div>
@@ -195,15 +195,15 @@ const TeacherDetailPage = () => {
             </TabsTrigger>
             <TabsTrigger value="assignments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <ClipboardList className="h-3.5 w-3.5" />
-              Assignments
+              {t('Assignments')}
             </TabsTrigger>
             <TabsTrigger value="tests" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <FileQuestion className="h-3.5 w-3.5" />
-              Tests
+              {t('Tests')}
             </TabsTrigger>
             <TabsTrigger value="payments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <Wallet className="h-3.5 w-3.5" />
-              Payments
+              {t('Payments')}
             </TabsTrigger>
           </TabsList>
 

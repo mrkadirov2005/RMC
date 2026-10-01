@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherPaymentsTabProps {
   studentClassGroups: Array<{
@@ -29,15 +30,16 @@ export default function TeacherPaymentsTab({
   selectedPaymentMonth,
   setSelectedPaymentMonth,
 }: TeacherPaymentsTabProps) {
+  const { t } = useLanguage();
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
         <h3 className="flex items-center gap-2 text-base font-semibold">
           <Wallet className="h-4 w-4 text-indigo-500" />
-          Student Payments
+          {t('Student Payments')}
         </h3>
         <div className="flex items-center gap-2">
-          <Label htmlFor="payment-month" className="whitespace-nowrap text-xs font-semibold">Select Month:</Label>
+          <Label htmlFor="payment-month" className="whitespace-nowrap text-xs font-semibold">{t('Select Month:')}</Label>
           <div className="relative">
             <Input
               id="payment-month"
@@ -145,6 +147,7 @@ const PaymentStudentRow = ({
   payments: any[];
   selectedPaymentMonth: string;
 }) => {
+  const { t } = useLanguage();
   const studentId = student.student_id || student.id;
   const [year, month] = selectedPaymentMonth.split('-');
   const hasPaid = payments.some((payment) => {
@@ -163,11 +166,11 @@ const PaymentStudentRow = ({
           <div>
               {hasPaid ? (
           <Badge color='red'  className = "text-black">
-            Paid
+            {t('Paid')}
           </Badge>
         ) : (
           <Badge  className = "text-red-800">
-            Unpaid
+            {t('Unpaid')}
           </Badge>
         )}
           </div>

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import type { ClassItem, CalendarDay, SessionItem } from './types';
 import { weekDays } from '@/features/crm/classes/queries';
 import { getCalendarGroupColorTheme, isWithinScheduleRange, normalizeWeekdayName } from './utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface MonthViewProps {
   weeks: CalendarDay[][];
@@ -42,6 +43,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
   onDeleteSession,
   schedule = [],
 }) => {
+  const { t } = useLanguage();
 
   return (
     <>
@@ -109,7 +111,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                           key={`recurring-${day.isoDate}-${idx}`}
                           className="rounded-md border border-amber-200 bg-amber-50/80 px-2 py-1 text-[0.6rem] font-medium leading-tight text-amber-900 shadow-sm dark:bg-amber-500/10 dark:text-amber-300"
                         >
-                          <div className="font-bold">Regular Class</div>
+                          <div className="font-bold">{t('Regular Class')}</div>
                           <div>{item.time}{item.end_time ? ` - ${String(item.end_time).substring(0, 5)}` : ''} - {item.room_number}</div>
                         </div>
                       ))}
@@ -148,7 +150,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                                   onDeleteSession(classId, session.session_id);
                                 }}
                                 className="absolute top-1 right-1 text-[0.6rem] text-rose-600 hover:text-rose-700"
-                                title="Delete session"
+                                title={t('Delete session')}
                               >
                                 <CalendarX className="h-3 w-3" />
                               </button>

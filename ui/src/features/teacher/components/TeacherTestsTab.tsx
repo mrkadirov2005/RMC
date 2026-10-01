@@ -330,7 +330,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
                 <div className="flex gap-4 mt-3">
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <Timer className="h-4 w-4" />
-                    {test.duration_minutes} min
+                    {test.duration_minutes} {t('min')}
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground">
                     <CheckCircle className="h-4 w-4" />

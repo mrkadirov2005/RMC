@@ -170,7 +170,7 @@ const CentersBreakdown = ({ data, cross }: { data: any[]; cross: { students: num
 
   return (
     <div className="grid gap-4 xl:grid-cols-2">
-      <ProgressBreakdown title="Resource Distribution" description="Students, teachers, and classes across all centers." items={items} total={total} />
+      <ProgressBreakdown title={t('Resource Distribution')} description={t('Students, teachers, and classes across all centers.')} items={items} total={total} />
       <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
         <CardHeader className="pb-2">
           <CardTitle className="text-base text-slate-900 dark:text-white">{t('Per-Center Averages')}</CardTitle>
@@ -211,7 +211,7 @@ const SuperuserBreakdown = ({ data }: { data: any[] }) => {
 
   return (
     <div className="grid gap-4 xl:grid-cols-2">
-      <ProgressBreakdown title="Status Breakdown" description="Admin accounts by current status." items={statusItems} total={total} />
+      <ProgressBreakdown title={t('Status Breakdown')} description={t('Admin accounts by current status.')} items={statusItems} total={total} />
       <Card className="border-slate-200/60 bg-white/80 shadow-lg shadow-slate-200/40 backdrop-blur dark:border-white/10 dark:bg-white/[0.04] dark:shadow-black/10">
         <CardHeader className="pb-2">
           <CardTitle className="text-base text-slate-900 dark:text-white">{t('Top Permissions')}</CardTitle>

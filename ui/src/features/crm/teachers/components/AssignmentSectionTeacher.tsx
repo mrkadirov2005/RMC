@@ -12,6 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { assignmentAPI } from '../api';
 import { showToast } from '../../../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Assignment {
   assignment_id?: number;
@@ -46,6 +47,7 @@ const getStatusBadgeVariant = (status: string) => {
 
 // Renders the assignment section teacher module.
 export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: AssignmentSectionTeacherProps) => {
+  const { t } = useLanguage();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<Assignment>>({
@@ -120,9 +122,9 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-        <CardTitle>Assignments</CardTitle>
+        <CardTitle>{t('Assignments')}</CardTitle>
         <Button size="sm" onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" /> Add Assignment
+          <Plus className="h-4 w-4 mr-2" /> {t('Add Assignment')}
         </Button>
       </CardHeader>
       <CardContent>
@@ -130,11 +132,11 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Assignment Name</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Grade</TableHead>
-                <TableHead className="w-24">Actions</TableHead>
+                <TableHead>{t('Assignment Name')}</TableHead>
+                <TableHead>{t('Due Date')}</TableHead>
+                <TableHead>{t('Status')}</TableHead>
+                <TableHead>{t('Grade')}</TableHead>
+                <TableHead className="w-24">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -176,11 +178,11 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editingId ? 'Edit Assignment' : 'Add Assignment to Teacher'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Assignment') : t('Add Assignment to Teacher')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="assignment_title">Assignment Name *</Label>
+              <Label htmlFor="assignment_title">{t('Assignment Name *')}</Label>
               <Input
                 id="assignment_title"
                 type="text"
@@ -190,7 +192,7 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="due_date">Due Date *</Label>
+              <Label htmlFor="due_date">{t('Due Date *')}</Label>
               <Input
                 id="due_date"
                 type="date"
@@ -200,20 +202,20 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
+              <Label htmlFor="status">{t('Status *')}</Label>
               <Select value={formData.status || 'Pending'} onValueChange={(value) => setFormData({ ...formData, status: value })}>
                 <SelectTrigger id="status">
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder={t('Select status')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Pending">Pending</SelectItem>
-                  <SelectItem value="Submitted">Submitted</SelectItem>
-                  <SelectItem value="Graded">Graded</SelectItem>
+                  <SelectItem value="Pending">{t('Pending')}</SelectItem>
+                  <SelectItem value="Submitted">{t('Submitted')}</SelectItem>
+                  <SelectItem value="Graded">{t('Graded')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="grade">Grade</Label>
+              <Label htmlFor="grade">{t('Grade')}</Label>
               <Input
                 id="grade"
                 type="number"
@@ -224,10 +226,10 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
             </div>
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={handleCloseModal}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" disabled={loading}>
-                {loading ? 'Saving...' : 'Save'}
+                {loading ? t('Saving...') : t('Save')}
               </Button>
             </div>
           </form>

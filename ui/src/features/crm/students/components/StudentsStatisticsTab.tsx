@@ -253,10 +253,10 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
       ) : (
       <>
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="Total students" value={total} sub={`${activeCount} active`} icon={Users} color="bg-blue-600" />
-        <MetricCard label="Teacher assigned" value={`${percent(assignedTeacherCount, total)}%`} sub={`${assignedTeacherCount} students`} icon={UserCheck} color="bg-emerald-600" />
-        <MetricCard label="Class assigned" value={`${percent(assignedClassCount, total)}%`} sub={`${assignedClassCount} students`} icon={GraduationCap} color="bg-amber-500" />
-        <MetricCard label="Coins total" value={coinsTotal.toLocaleString()} sub={`${withCoinsCount} students with coins`} icon={Coins} color="bg-fuchsia-600" />
+        <MetricCard label={t('Total students')} value={total} sub={`${activeCount} active`} icon={Users} color="bg-blue-600" />
+        <MetricCard label={t('Teacher assigned')} value={`${percent(assignedTeacherCount, total)}%`} sub={`${assignedTeacherCount} students`} icon={UserCheck} color="bg-emerald-600" />
+        <MetricCard label={t('Class assigned')} value={`${percent(assignedClassCount, total)}%`} sub={`${assignedClassCount} students`} icon={GraduationCap} color="bg-amber-500" />
+        <MetricCard label={t('Coins total')} value={coinsTotal.toLocaleString()} sub={`${withCoinsCount} students with coins`} icon={Coins} color="bg-fuchsia-600" />
       </div>
 
       <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -267,10 +267,10 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
               <p className="text-xs text-muted-foreground">Assignment, status, and coin readiness across the current scope.</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
-              <ProgressRow label="Active students" value={activeCount} total={total} color="bg-blue-600" />
-              <ProgressRow label="Teacher assigned" value={assignedTeacherCount} total={total} color="bg-emerald-600" />
-              <ProgressRow label="Class assigned" value={assignedClassCount} total={total} color="bg-amber-500" />
-              <ProgressRow label="Has coin balance" value={withCoinsCount} total={total} color="bg-fuchsia-600" />
+              <ProgressRow label={t('Active students')} value={activeCount} total={total} color="bg-blue-600" />
+              <ProgressRow label={t('Teacher assigned')} value={assignedTeacherCount} total={total} color="bg-emerald-600" />
+              <ProgressRow label={t('Class assigned')} value={assignedClassCount} total={total} color="bg-amber-500" />
+              <ProgressRow label={t('Has coin balance')} value={withCoinsCount} total={total} color="bg-fuchsia-600" />
             </div>
           </CardContent>
         </Card>
@@ -279,7 +279,7 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
           <CardContent className="p-3">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-[11px] font-bold uppercase text-white/75">Top teacher</p>
+                <p className="text-[11px] font-bold uppercase text-white/75">{t('Top teacher')}</p>
                 <h3 className="mt-1 text-lg font-extrabold">{topTeacher?.name || 'No assignments yet'}</h3>
                 <p className="mt-1 text-xs font-medium text-white/85">{topTeacher?.count || 0} assigned students</p>
               </div>
@@ -292,10 +292,10 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
       </div>
 
       <div className="grid gap-3 xl:grid-cols-2">
-        <CountList title="Status breakdown" icon={ShieldCheck} rows={statusRows} total={total} color="bg-blue-600" empty="No statuses found." />
-        <CountList title="Gender breakdown" icon={VenusAndMars} rows={genderRows} total={total} color="bg-emerald-600" empty="No gender data found." />
-        <CountList title="Top schools" icon={School} rows={schoolRows} total={total} color="bg-amber-500" empty="No school data found." />
-        <CountList title="Top groups" icon={BookOpen} rows={classRows} total={total} color="bg-fuchsia-600" empty="No group data found." />
+        <CountList title={t('Status breakdown')} icon={ShieldCheck} rows={statusRows} total={total} color="bg-blue-600" empty="No statuses found." />
+        <CountList title={t('Gender breakdown')} icon={VenusAndMars} rows={genderRows} total={total} color="bg-emerald-600" empty="No gender data found." />
+        <CountList title={t('Top schools')} icon={School} rows={schoolRows} total={total} color="bg-amber-500" empty="No school data found." />
+        <CountList title={t('Top groups')} icon={BookOpen} rows={classRows} total={total} color="bg-fuchsia-600" empty="No group data found." />
       </div>
 
       <Card className="border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
@@ -310,9 +310,9 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
           <Table className="text-xs">
             <TableHeader>
               <TableRow>
-                <TableHead className="h-8 px-3 text-xs">Teacher</TableHead>
-                <TableHead className="h-8 px-3 text-xs">Coverage</TableHead>
-                <TableHead className="h-8 px-3 text-right text-xs">Students</TableHead>
+                <TableHead className="h-8 px-3 text-xs">{t('Teacher')}</TableHead>
+                <TableHead className="h-8 px-3 text-xs">{t('Coverage')}</TableHead>
+                <TableHead className="h-8 px-3 text-right text-xs">{t('Students')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

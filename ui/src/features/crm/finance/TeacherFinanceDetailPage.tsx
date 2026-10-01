@@ -13,6 +13,7 @@ import { fetchTeachers as fetchTeachersThunk } from '@/slices/teachersSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Class {
   class_id?: number;
@@ -51,6 +52,7 @@ interface Payment {
 
 // Renders the teacher finance detail page screen.
 const TeacherFinanceDetailPage: React.FC = () => {
+  const { t } = useLanguage();
   const { teacherId } = useParams();
   const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
@@ -187,14 +189,14 @@ const TeacherFinanceDetailPage: React.FC = () => {
       {/* Total Earnings Card */}
       <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
         <CardHeader>
-          <CardTitle className="text-green-700 dark:text-green-400">Total Earnings This Month</CardTitle>
+          <CardTitle className="text-green-700 dark:text-green-400">{t('Total Earnings This Month')}</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-4xl font-bold text-green-600 dark:text-green-400">
             {/* {Number(paymentData.totalEarnings.split(".")[0])} */}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Across {Object.keys(paymentData.classPayments).length} classes
+            Across {Object.keys(paymentData.classPayments).length} {t('classes')}
           </p>
         </CardContent>
       </Card>
@@ -215,7 +217,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
             <div className="grid grid-cols-3 gap-4">
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Class Earnings</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('Class Earnings')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-green-600 dark:text-green-400">
@@ -225,7 +227,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Paid Students</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('Paid Students')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-blue-600">
@@ -235,7 +237,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
               </Card>
               <Card>
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Outstanding</CardTitle>
+                  <CardTitle className="text-sm font-medium">{t('Outstanding')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-orange-600">
@@ -248,7 +250,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
             {/* Students List */}
             <Card>
               <CardHeader>
-                <CardTitle className="dark:text-white">Student Payments</CardTitle>
+                <CardTitle className="dark:text-white">{t('Student Payments')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">

@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAppDispatch, useAppSelector } from '../hooks';
 import { fetchTeachers } from '@/slices/teachersSlice';
 import { PaginationBar, defaultCardPageSizeOptions, paginateItems } from '@/components/common/PaginationBar';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Teacher {
   teacher_id?: number;
@@ -24,6 +25,7 @@ interface Teacher {
 
 // Renders the finance page screen.
 const FinancePage: React.FC = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -82,7 +84,7 @@ const FinancePage: React.FC = () => {
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 dark:text-gray-500" />
           <Input
-            placeholder="Search teachers by name or email..."
+            placeholder={t('Search teachers by name or email...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 bg-white dark:bg-slate-950 text-black dark:text-white border-gray-300 dark:border-slate-700"
@@ -95,8 +97,8 @@ const FinancePage: React.FC = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Teacher</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>{t('Teacher')}</TableHead>
+                <TableHead className="text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -161,7 +163,7 @@ const FinancePage: React.FC = () => {
 
       {filteredTeachers.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500 dark:text-gray-400 text-lg">No teachers found</p>
+          <p className="text-gray-500 dark:text-gray-400 text-lg">{t('No teachers found')}</p>
         </div>
       )}
 

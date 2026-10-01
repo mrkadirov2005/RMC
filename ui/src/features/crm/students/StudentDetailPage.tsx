@@ -482,7 +482,7 @@ const StudentDetailPage = () => {
               disabled={changingStatus}
             >
               {changingStatus ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : String(student.status).toLowerCase() === 'active' ? <UserX className="mr-1.5 h-3.5 w-3.5" /> : <UserCheck className="mr-1.5 h-3.5 w-3.5" />}
-              {changingStatus ? 'Updating...' : String(student.status).toLowerCase() === 'active' ? 'Set inactive' : 'Set active'}
+              {changingStatus ? t('Updating...') : String(student.status).toLowerCase() === 'active' ? t('Set inactive') : t('Set active')}
             </Button>
             <Button size="sm" className="h-8 text-xs" onClick={()=>setIsUpdatePassword((prev)=>!prev)}>Update student password</Button>
           </div>
@@ -502,7 +502,7 @@ const StudentDetailPage = () => {
             </CardHeader>
             <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
               <div className="space-y-1">
-                <Label htmlFor="student-new-password" className="text-xs">New Password</Label>
+                <Label htmlFor="student-new-password" className="text-xs">{t('New Password')}</Label>
                 <Input
                   id="student-new-password"
                   type="password"
@@ -512,7 +512,7 @@ const StudentDetailPage = () => {
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') handleSetPassword();
                   }}
-                  placeholder="Enter new password"
+                  placeholder={t('Enter new password')}
                   disabled={settingPassword}
                 />
               </div>
@@ -554,11 +554,11 @@ const StudentDetailPage = () => {
                   {isEditingOverview ? (
                     <>
                       <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={cancelOverviewEdit} disabled={savingOverview}>
-                        <X className="mr-1.5 h-3.5 w-3.5" /> Cancel
+                        <X className="mr-1.5 h-3.5 w-3.5" /> {t('Cancel')}
                       </Button>
                       <Button type="button" size="sm" className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={saveOverview} disabled={savingOverview}>
                         {savingOverview ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Save className="mr-1.5 h-3.5 w-3.5" />}
-                        {savingOverview ? 'Saving...' : 'Save changes'}
+                        {savingOverview ? t('Saving...') : t('Save changes')}
                       </Button>
                     </>
                   ) : (
@@ -664,9 +664,9 @@ const StudentDetailPage = () => {
               <div className="space-y-3">
                 <Card className="border-0 bg-amber-500 text-white shadow-sm">
                   <CardHeader className="flex flex-row items-center justify-between p-3">
-                    <CardTitle className="text-base">Coin Balance</CardTitle>
+                    <CardTitle className="text-base">{t('Coin Balance')}</CardTitle>
                     <Button size="sm" className="h-8 bg-white text-xs text-amber-700 hover:bg-white/90" onClick={() => setCoinDialogOpen(true)}>
-                      Update Coins
+                      {t('Update Coins')}
                     </Button>
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
@@ -686,11 +686,11 @@ const StudentDetailPage = () => {
                       <Table className="text-xs">
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Delta</TableHead>
-                            <TableHead>Reason</TableHead>
-                            <TableHead>By</TableHead>
-                            <TableHead className="text-right">Action</TableHead>
+                            <TableHead>{t('Date')}</TableHead>
+                            <TableHead>{t('Delta')}</TableHead>
+                            <TableHead>{t('Reason')}</TableHead>
+                            <TableHead>{t('By')}</TableHead>
+                            <TableHead className="text-right">{t('Action')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -739,7 +739,7 @@ const StudentDetailPage = () => {
       <Dialog open={resetPasswordOpen} onOpenChange={setResetPasswordOpen}>
         <DialogContent className="rounded-2xl">
           <DialogHeader>
-            <DialogTitle>Temporary Password</DialogTitle>
+            <DialogTitle>{t('Temporary Password')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <Label htmlFor="student-temp-password">Share this password with the student.</Label>
@@ -750,12 +750,12 @@ const StudentDetailPage = () => {
                 readOnly
               />
               <Button variant="outline" onClick={handleCopyTempPassword}>
-                Copy
+                {t('Copy')}
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={() => setResetPasswordOpen(false)}>Done</Button>
+            <Button onClick={() => setResetPasswordOpen(false)}>{t('Done')}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -13,6 +13,7 @@ import {
 import { formatSalaryPeriod } from '../../crm/salary/model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
 import type { SalaryTeacherDetail } from '../../crm/salary/types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherSalaryTabProps {
   detail: SalaryTeacherDetail | null;
@@ -20,6 +21,7 @@ interface TeacherSalaryTabProps {
 }
 
 const TeacherSalaryTab = ({ detail, loading }: TeacherSalaryTabProps) => {
+  const { t } = useLanguage();
   if (loading && !detail) {
     return (
       <div className="flex justify-center py-10">
@@ -41,10 +43,10 @@ const TeacherSalaryTab = ({ detail, loading }: TeacherSalaryTabProps) => {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Month</TableHead>
-            <TableHead>Amount</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Notes</TableHead>
+            <TableHead>{t('Month')}</TableHead>
+            <TableHead>{t('Amount')}</TableHead>
+            <TableHead>{t('Status')}</TableHead>
+            <TableHead>{t('Notes')}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -54,7 +56,7 @@ const TeacherSalaryTab = ({ detail, loading }: TeacherSalaryTabProps) => {
               <TableCell>{entry.salary ? formatMoney(entry.salary.amount) : '—'}</TableCell>
               <TableCell>
                 {entry.salary?.is_paid ? (
-                  <Badge variant="success">Paid</Badge>
+                  <Badge variant="success">{t('Paid')}</Badge>
                 ) : (
                   <Badge variant="warning">Not yet paid</Badge>
                 )}

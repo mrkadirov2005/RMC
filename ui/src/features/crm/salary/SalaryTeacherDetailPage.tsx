@@ -104,13 +104,13 @@ const SalaryTeacherDetailPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Month</TableHead>
-                  <TableHead>Amount</TableHead>
+                  <TableHead>{t('Month')}</TableHead>
+                  <TableHead>{t('Amount')}</TableHead>
                   <TableHead>Paid?</TableHead>
-                  <TableHead>Marked By</TableHead>
-                  <TableHead>Students Paid</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('Marked By')}</TableHead>
+                  <TableHead>{t('Students Paid')}</TableHead>
+                  <TableHead>{t('Notes')}</TableHead>
+                  <TableHead className="text-right">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,9 +120,9 @@ const SalaryTeacherDetailPage = () => {
                     <TableCell>{entry.salary ? formatMoney(entry.salary.amount) : '—'}</TableCell>
                     <TableCell>
                       {entry.salary?.is_paid ? (
-                        <Badge variant="success">Paid</Badge>
+                        <Badge variant="success">{t('Paid')}</Badge>
                       ) : (
-                        <Badge variant="warning">Unpaid</Badge>
+                        <Badge variant="warning">{t('Unpaid')}</Badge>
                       )}
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
@@ -136,7 +136,7 @@ const SalaryTeacherDetailPage = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="sm" onClick={() => openMarkPaidFor(entry)}>
-                        {entry.salary?.is_paid ? 'Edit' : 'Mark Paid'}
+                        {entry.salary?.is_paid ? t('Edit') : t('Mark Paid')}
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -25,6 +25,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherGradeDialogProps {
   open: boolean;
@@ -65,6 +66,7 @@ export default function TeacherGradeDialog({
   onSaveGrades,
   getGradeBadgeClasses,
 }: TeacherGradeDialogProps) {
+  const { t } = useLanguage();
   return (
     <Dialog open={open} onOpenChange={(nextOpen) => { if (!nextOpen) onClose(); else onOpenChange(nextOpen); }}>
       <DialogContent className="max-h-[88vh] max-w-3xl overflow-y-auto rounded-lg p-0">
@@ -82,10 +84,10 @@ export default function TeacherGradeDialog({
         <div className="p-4">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="space-y-1">
-              <Label className="text-xs">Select Class</Label>
+              <Label className="text-xs">{t('Select Class')}</Label>
               <Select value={String(selectedClassId || '')} onValueChange={(value) => onClassSelect(Number(value))}>
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select class" />
+                  <SelectValue placeholder={t('Select class')} />
                 </SelectTrigger>
                 <SelectContent>
                   {classes.map((cls) => (
@@ -97,10 +99,10 @@ export default function TeacherGradeDialog({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Select Subject</Label>
+              <Label className="text-xs">{t('Select Subject')}</Label>
               <Select value={String(selectedSubjectId || '')} onValueChange={(value) => setSelectedSubjectId(Number(value))}>
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select subject" />
+                  <SelectValue placeholder={t('Select subject')} />
                 </SelectTrigger>
                 <SelectContent>
                   {subjects.map((subject) => (
@@ -115,15 +117,15 @@ export default function TeacherGradeDialog({
               <Label className="text-xs">Select Term</Label>
               <Select value={selectedTerm} onValueChange={setSelectedTerm}>
                 <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Select term" />
+                  <SelectValue placeholder={t('Select term')} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Q1">Q1</SelectItem>
                   <SelectItem value="Q2">Q2</SelectItem>
                   <SelectItem value="Q3">Q3</SelectItem>
                   <SelectItem value="Q4">Q4</SelectItem>
-                  <SelectItem value="Semester 1">Semester 1</SelectItem>
-                  <SelectItem value="Semester 2">Semester 2</SelectItem>
+                  <SelectItem value="Semester 1">{t('Semester 1')}</SelectItem>
+                  <SelectItem value="Semester 2">{t('Semester 2')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -131,15 +133,15 @@ export default function TeacherGradeDialog({
 
           {selectedClassId && gradeEntries.length > 0 && (
             <div className="mt-4">
-              <h3 className="mb-2 text-sm font-semibold">Enter Grades for Students</h3>
+              <h3 className="mb-2 text-sm font-semibold">{t('Enter Grades for Students')}</h3>
               <div className="overflow-hidden rounded-lg border">
                 <Table className="text-xs">
                   <TableHeader>
                     <TableRow className="bg-slate-50">
-                      <TableHead className="h-8 font-semibold">Enrollment #</TableHead>
-                      <TableHead className="h-8 font-semibold">Student Name</TableHead>
-                      <TableHead className="h-8 font-semibold">Percentage</TableHead>
-                      <TableHead className="h-8 font-semibold">Grade</TableHead>
+                      <TableHead className="h-8 font-semibold">{t('Enrollment #')}</TableHead>
+                      <TableHead className="h-8 font-semibold">{t('Student Name')}</TableHead>
+                      <TableHead className="h-8 font-semibold">{t('Percentage')}</TableHead>
+                      <TableHead className="h-8 font-semibold">{t('Grade')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -176,7 +178,7 @@ export default function TeacherGradeDialog({
 
         <DialogFooter className="p-4 pt-0">
           <Button size="sm" className="h-8 rounded-lg bg-slate-700 text-xs text-white hover:bg-slate-800" onClick={onClose}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button
             size="sm"
@@ -184,7 +186,7 @@ export default function TeacherGradeDialog({
             onClick={onSaveGrades}
             disabled={isSavingGrades || !selectedClassId || !selectedSubjectId || gradeEntries.length === 0}
           >
-            {isSavingGrades ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save Grades'}
+            {isSavingGrades ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('Save Grades')}
           </Button>
         </DialogFooter>
       </DialogContent>

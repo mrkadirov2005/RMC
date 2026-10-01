@@ -178,10 +178,10 @@ export const SharedTestPage = () => {
             {test.duration_minutes != null && (
               <span className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4" />
-                {test.duration_minutes} min
+                {test.duration_minutes} {t('min')}
               </span>
             )}
-            {test.total_marks != null && <span>{test.total_marks} marks</span>}
+            {test.total_marks != null && <span>{test.total_marks} {t('marks')}</span>}
             {test.passing_marks != null && <span>Pass at {test.passing_marks}</span>}
           </div>
 
@@ -223,14 +223,14 @@ export const SharedTestPage = () => {
             >
               <div className="space-y-1.5">
                 <label htmlFor="shared-test-username" className="text-sm font-medium text-foreground">
-                  Your username
+                  {t('Your username')}
                 </label>
                 <Input
                   id="shared-test-username"
                   value={username}
                   onChange={(event) => setUsername(event.target.value)}
                   autoComplete="username"
-                  placeholder="Type the username your teacher gave you"
+                  placeholder={t('Type the username your teacher gave you')}
                 />
               </div>
               <Button type="submit" disabled={starting} className="w-full">

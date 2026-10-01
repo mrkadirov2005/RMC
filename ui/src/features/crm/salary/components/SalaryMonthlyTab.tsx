@@ -18,6 +18,7 @@ import {
 import { useSalaryTeacherDetail } from '../hooks/useSalaryTeacherDetail';
 import { formatSalaryPeriod, teacherFullName } from '../model/salaryModel';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const BAR_GRADIENTS = [
   'linear-gradient(180deg, #34d399, #0d9488)',
@@ -32,6 +33,7 @@ const PAID_COLOR = '#10b981';
 const UNPAID_COLOR = '#f43f5e';
 
 export const SalaryMonthlyTab = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const monthlySummary = useAppSelector(selectSalaryMonthlySummary);
   const monthlySummaryLoading = useAppSelector(selectSalaryMonthlySummaryLoading);
@@ -95,13 +97,13 @@ export const SalaryMonthlyTab = () => {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search teachers..."
+                placeholder={t('Search teachers...')}
                 className="h-8 pl-8 text-xs"
               />
             </div>
             <div className="max-h-[320px] space-y-1 overflow-y-auto">
               {filteredTeachers.length === 0 ? (
-                <p className="py-6 text-center text-xs text-muted-foreground">No teachers found</p>
+                <p className="py-6 text-center text-xs text-muted-foreground">{t('No teachers found')}</p>
               ) : (
                 filteredTeachers.map((teacher) => {
                   const id = Number(teacher.teacher_id || teacher.id);

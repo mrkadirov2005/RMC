@@ -15,6 +15,7 @@
 // matching this app's class-based dark mode.
 import { AlertTriangle } from 'lucide-react';
 import type { ConsolidationEffectiveness, ConsolidationOutcomeBucket } from '../classes/api/consolidationApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export type EffectivenessBarKey = ConsolidationOutcomeBucket | 'had_violations';
 
@@ -43,6 +44,7 @@ interface EffectivenessChartProps {
 }
 
 export default function EffectivenessChart({ effectiveness, totalAttempts, selected, onSelect }: EffectivenessChartProps) {
+  const { t } = useLanguage();
   if (totalAttempts === 0) {
     return <p className="py-8 text-center text-sm text-muted-foreground">No attempts recorded yet.</p>;
   }
@@ -138,7 +140,7 @@ export default function EffectivenessChart({ effectiveness, totalAttempts, selec
           }`}
         >
           <AlertTriangle className="h-4 w-4 shrink-0 text-amber-500" />
-          <span className="flex-1 text-muted-foreground">Had lockdown violations</span>
+          <span className="flex-1 text-muted-foreground">{t('Had lockdown violations')}</span>
           <span className="font-semibold tabular-nums text-foreground">{effectiveness.had_violations}</span>
         </button>
         <p className="px-2 text-xs text-muted-foreground">

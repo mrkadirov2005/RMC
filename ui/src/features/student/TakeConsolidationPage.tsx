@@ -248,7 +248,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
         <Card className="w-full max-w-lg border-[#d8e4f1]">
           <CardContent className="space-y-5 p-8 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-[#16a7e2]">
-              {result.status === 'auto_submitted' ? 'Submitted automatically' : result.is_passed ? 'All correct' : 'Exercise submitted'}
+              {result.status === 'auto_submitted' ? t('Submitted automatically') : result.is_passed ? t('All correct') : t('Exercise submitted')}
             </p>
             <h1 className="text-4xl font-semibold">
               {result.correct_count ?? 0}/{result.total_words ?? words.length}
@@ -290,7 +290,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
               </Button>
               {onExit && (
                 <Button variant="outline" onClick={onExit}>
-                  Done
+                  {t('Done')}
                 </Button>
               )}
             </div>
@@ -337,7 +337,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
           <div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-500">
-                Word {index + 1} of {words.length}
+                Word {index + 1} {t('of')} {words.length}
               </p>
               {violationCount > 0 && (
                 <p className="text-xs font-medium text-red-600">
@@ -364,7 +364,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleNext();
             }}
-            placeholder="Type the translation"
+            placeholder={t('Type the translation')}
             className="h-12 text-center text-lg"
           />
 
@@ -376,7 +376,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
 
           <Button onClick={handleNext} disabled={submitting} className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
             {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            {isLast ? 'Submit' : 'Next'}
+            {isLast ? t('Submit') : t('Next')}
           </Button>
         </CardContent>
       </Card>

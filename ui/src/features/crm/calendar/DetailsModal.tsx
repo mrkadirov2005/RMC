@@ -7,6 +7,7 @@ import { Loader2 } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import type { ClassItem, AttendanceItem, GradeItem, StudentItem } from './types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DetailModalProps {
   open: boolean;
@@ -34,6 +35,7 @@ export const DetailsModal = ({
   user,
   onOpenChange,
 }: DetailModalProps) => {
+  const { t } = useLanguage();
 // Handles attendance summary.
   const attendanceSummary = (() => {
     const presentIds = new Set<number>();
@@ -116,7 +118,7 @@ export const DetailsModal = ({
             {!isStudent && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">Attendance Summary</CardTitle>
+                  <CardTitle className="text-base">{t('Attendance Summary')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-3 text-sm">
@@ -127,7 +129,7 @@ export const DetailsModal = ({
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">Present</p>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">{t('Present')}</p>
                       <div className="space-y-1">
                         {lessonStudents
                           .filter((s) => attendanceSummary.presentIds.has(Number(s.student_id || s.id)))
@@ -140,7 +142,7 @@ export const DetailsModal = ({
                                   </span>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  {student.username ? `@${student.username}` : 'No username'}
+                                  {student.username ? `@${student.username}` : t('No username')}
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -151,7 +153,7 @@ export const DetailsModal = ({
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-muted-foreground mb-2">Absent</p>
+                      <p className="text-xs font-semibold text-muted-foreground mb-2">{t('Absent')}</p>
                       <div className="space-y-1">
                         {lessonStudents
                           .filter((s) => attendanceSummary.absentIds.has(Number(s.student_id || s.id)))
@@ -164,7 +166,7 @@ export const DetailsModal = ({
                                   </span>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  {student.username ? `@${student.username}` : 'No username'}
+                                  {student.username ? `@${student.username}` : t('No username')}
                                 </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
@@ -182,7 +184,7 @@ export const DetailsModal = ({
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">
-                  {isStudent ? 'Your Grades' : 'Grades Summary'}
+                  {isStudent ? t('Your Grades') : t('Grades Summary')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -213,7 +215,7 @@ export const DetailsModal = ({
                     )}
                     {!isStudent && gradeSummary.bottomThree.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">Bottom 3</p>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">{t('Bottom 3')}</p>
                         <div className="space-y-1">
                           {gradeSummary.bottomThree.map((row) => {
                             const student = studentById.get(row.studentId);

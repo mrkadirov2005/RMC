@@ -19,6 +19,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { showToast } from '@/utils/toast';
 import { Calendar, Loader2 } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface RoomSlotsGeneratorProps {
   roomId: number;
@@ -38,6 +39,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
   centerId,
   onSlotsGenerated,
 }) => {
+  const { t } = useLanguage();
   const [showGenerator, setShowGenerator] = useState(false);
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -143,14 +145,14 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
       <Dialog open={showGenerator} onOpenChange={setShowGenerator}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Generate Room Slots</DialogTitle>
+            <DialogTitle>{t('Generate Room Slots')}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-6">
             {/* Date Range */}
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="start-date">Start Date</Label>
+                <Label htmlFor="start-date">{t('Start Date')}</Label>
                 <Input
                   id="start-date"
                   type="date"
@@ -159,7 +161,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="end-date">End Date</Label>
+                <Label htmlFor="end-date">{t('End Date')}</Label>
                 <Input
                   id="end-date"
                   type="date"
@@ -172,7 +174,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
             {/* Time Range */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="start-time">Start Time</Label>
+                <Label htmlFor="start-time">{t('Start Time')}</Label>
                 <Input
                   id="start-time"
                   type="time"
@@ -181,7 +183,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="end-time">End Time</Label>
+                <Label htmlFor="end-time">{t('End Time')}</Label>
                 <Input
                   id="end-time"
                   type="time"
@@ -190,7 +192,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="duration">Slot Duration (min)</Label>
+                <Label htmlFor="duration">{t('Slot Duration (min)')}</Label>
                 <Select value={slotDuration} onValueChange={setSlotDuration}>
                   <SelectTrigger id="duration">
                     <SelectValue />
@@ -209,7 +211,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
 
             {/* Days Selection */}
             <div>
-              <Label>Days of Week</Label>
+              <Label>{t('Days of Week')}</Label>
               <div className="grid grid-cols-2 gap-4 mt-2">
                 {DAYS_OF_WEEK.map(day => (
                   <div key={day} className="flex items-center space-x-2">
@@ -239,7 +241,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
                 Time: <strong>{startTime}</strong> - <strong>{endTime}</strong> ({slotDuration} min intervals)
               </p>
               <p className="text-sm text-gray-600 mt-2">
-                Days: <strong>{selectedDays.join(', ')}</strong>
+                {t('Days:')} <strong>{selectedDays.join(', ')}</strong>
               </p>
               <div className="mt-3 text-sm">
                 <p className="font-medium">Sample slots for a single day:</p>
@@ -263,7 +265,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowGenerator(false)} disabled={loading}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button onClick={handleGenerateSlots} disabled={loading}>
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

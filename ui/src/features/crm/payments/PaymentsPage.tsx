@@ -131,7 +131,7 @@ const PaymentsPage = () => {
           <>
             {selectedFolder && (
               <Button variant="outline" size="sm" onClick={handleBackToFolders}>
-                <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                <ArrowLeft className="mr-2 h-4 w-4" /> {t('Back')}
               </Button>
             )}
             <ViewModeToggle value={viewMode} onChange={setViewMode} />
@@ -163,7 +163,7 @@ const PaymentsPage = () => {
         }
         primaryAction={!isTeacher ? (
           <Button onClick={() => handleOpenModal()}>
-            <Plus className="mr-2 h-4 w-4" /> Add Payment
+            <Plus className="mr-2 h-4 w-4" /> {t('Add Payment')}
           </Button>
         ) : undefined}
       />
@@ -171,7 +171,7 @@ const PaymentsPage = () => {
       {isTeacher && (
         <Alert className="mb-4">
           <AlertDescription>
-            Teacher view is limited to payment status only.
+            {t('Teacher view is limited to payment status only.')}
           </AlertDescription>
         </Alert>
       )}
@@ -197,8 +197,8 @@ const PaymentsPage = () => {
           onOpenChange={(open) => {
             if (!open) handleCloseModal();
           }}
-          title={formData.payment_id || formData.id ? 'Edit Payment' : 'Add Payment'}
-          description="Create or update a payment from one structured modal instead of leaving the page."
+          title={formData.payment_id || formData.id ? t('Edit Payment') : t('Add Payment')}
+          description={t('Create or update a payment from one structured modal instead of leaving the page.')}
           formData={formData}
           setFormData={setFormData}
           onSubmit={handleSubmit}

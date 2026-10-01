@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { compactFormControlClassName, formLabelClassName } from '@/components/ui/form-control';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SelectFieldProps {
   label: string;
@@ -37,6 +38,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
   placeholder = 'Select an option',
   compact = false,
 }) => {
+  const { t } = useLanguage();
   return (
     <div className={compact ? 'space-y-1' : 'space-y-2'}>
       <Label htmlFor={name} className={compact ? formLabelClassName : undefined}>
@@ -50,7 +52,7 @@ export const SelectField: React.FC<SelectFieldProps> = ({
         required={required}
       >
         <SelectTrigger className={compact ? compactFormControlClassName : undefined}>
-          <SelectValue placeholder={isLoading ? 'Loading...' : placeholder} />
+          <SelectValue placeholder={isLoading ? t('Loading...') : placeholder} />
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (

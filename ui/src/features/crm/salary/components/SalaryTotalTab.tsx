@@ -3,6 +3,7 @@
 import { PieChart } from '@/shared/components/PieChart';
 import { formatMoney } from '@/utils/helpers';
 import { formatSalaryPeriod } from '../model/salaryModel';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface SalaryTotalTabSummary {
   teacherCount: number;
@@ -21,6 +22,7 @@ const PAID_COLOR = '#10b981';
 const UNPAID_COLOR = '#f43f5e';
 
 export const SalaryTotalTab = ({ year, month, summary }: SalaryTotalTabProps) => {
+  const { t } = useLanguage();
   const { teacherCount, paidCount, unpaidCount, totalPaidAmount } = summary;
   const paidPercent = teacherCount > 0 ? Math.round((paidCount / teacherCount) * 100) : 0;
 
@@ -45,26 +47,26 @@ export const SalaryTotalTab = ({ year, month, summary }: SalaryTotalTabProps) =>
             />
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-3xl font-black">{teacherCount}</span>
-              <span className="text-[11px] font-semibold uppercase text-muted-foreground">Teachers</span>
+              <span className="text-[11px] font-semibold uppercase text-muted-foreground">{t('Teachers')}</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-              <p className="text-[11px] font-semibold text-muted-foreground">Teachers</p>
+              <p className="text-[11px] font-semibold text-muted-foreground">{t('Teachers')}</p>
               <p className="text-xl font-black text-primary">{teacherCount}</p>
             </div>
             <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: PAID_COLOR }} />
-                Paid
+                {t('Paid')}
               </div>
               <p className="text-xl font-black text-emerald-600">{paidCount}</p>
             </div>
             <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
               <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: UNPAID_COLOR }} />
-                Unpaid
+                {t('Unpaid')}
               </div>
               <p className="text-xl font-black text-rose-600">{unpaidCount}</p>
             </div>
@@ -73,7 +75,7 @@ export const SalaryTotalTab = ({ year, month, summary }: SalaryTotalTabProps) =>
               <p className="text-xl font-black">{formatMoney(totalPaidAmount)}</p>
             </div>
             <div className="col-span-2 rounded-md border bg-card px-3 py-2.5 shadow-sm sm:col-span-4">
-              <p className="text-[11px] font-semibold text-muted-foreground">Paid Share</p>
+              <p className="text-[11px] font-semibold text-muted-foreground">{t('Paid Share')}</p>
               <div className="mt-1 h-3 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-500"

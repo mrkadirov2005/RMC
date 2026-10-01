@@ -10,6 +10,7 @@ import { useMySalaryDetail } from '../hooks/useMySalaryDetail';
 import TeacherSalaryStatsView from './TeacherSalaryStatsView';
 import TeacherSalaryTab from './TeacherSalaryTab';
 import { showToast } from '@/utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherProfileTabProps {
   teacherId?: number | string;
@@ -26,6 +27,7 @@ interface TeacherProfile {
 }
 
 const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
+  const { t } = useLanguage();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [salaryView, setSalaryView] = useState<'stats' | 'details'>('stats');
@@ -126,7 +128,7 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
             <Input id="teacher-old-pw" type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} autoComplete="current-password" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="teacher-new-pw" className="text-xs">New password</Label>
+            <Label htmlFor="teacher-new-pw" className="text-xs">{t('New password')}</Label>
             <Input id="teacher-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
           </div>
           <div className="space-y-1.5">
@@ -141,7 +143,7 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
             disabled={changing || !oldPw || !newPw || !confirmPw}
           >
             {changing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
-            {changing ? 'Saving...' : 'Update password'}
+            {changing ? t('Saving...') : t('Update password')}
           </Button>
         </div>
       </div>

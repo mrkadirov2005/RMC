@@ -550,10 +550,10 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
           <div className="flex gap-2">
             <Button type="submit" disabled={savingEdit}>
               {savingEdit ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Save changes
+              {t('Save changes')}
             </Button>
             <Button type="button" variant="outline" onClick={cancelEditing} disabled={savingEdit}>
-              Cancel
+              {t('Cancel')}
             </Button>
           </div>
         </form>
@@ -598,7 +598,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
               </Button>
               <Button variant="destructive" size="sm" onClick={handleDeleteSet} disabled={deleting}>
                 {deleting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
-                Delete
+                {t('Delete')}
               </Button>
             </div>
           </div>
@@ -624,15 +624,15 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
           ) : (
             <>
               <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-foreground">
-                {results.summary.submitted} of {results.summary.total} students submitted
+                {results.summary.submitted} {t('of')} {results.summary.total} students submitted
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b text-left text-xs uppercase text-muted-foreground">
-                      <th className="py-2 pr-3">Student</th>
-                      <th className="py-2 pr-3">Submitted</th>
-                      <th className="py-2 pr-3">Trials</th>
+                      <th className="py-2 pr-3">{t('Student')}</th>
+                      <th className="py-2 pr-3">{t('Submitted')}</th>
+                      <th className="py-2 pr-3">{t('Trials')}</th>
                       <th className="py-2 pr-3">Best</th>
                       <th className="py-2 pr-3">Latest violations</th>
                       <th className="py-2 pr-3" />
@@ -646,7 +646,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                           onClick={() => toggleStudentRow(row.student_id, row.latest_trial)}
                         >
                           <td className="py-2 pr-3 font-medium">{row.first_name} {row.last_name}</td>
-                          <td className="py-2 pr-3">{row.submitted ? 'Yes' : 'No'}</td>
+                          <td className="py-2 pr-3">{row.submitted ? t('Yes') : t('No')}</td>
                           <td className="py-2 pr-3">{row.trial_count}</td>
                           <td className="py-2 pr-3">{formatScore(row.best_trial)}</td>
                           <td className="py-2 pr-3"><ViolationsCell trial={row.latest_trial} /></td>

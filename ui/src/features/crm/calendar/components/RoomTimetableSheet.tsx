@@ -36,7 +36,7 @@ export const RoomTimetableSheet = ({ events, roomNames, onSelect, onMove, canMov
                 </tr>
                 <tr className="bg-yellow-200 text-slate-950 dark:bg-yellow-700 dark:text-white">
                   {band.map((room, index) => <Fragment key={room}>
-                    <th className="border border-slate-500 px-1 py-1 font-black uppercase">{index === 0 ? 'School' : ''}</th>
+                    <th className="border border-slate-500 px-1 py-1 font-black uppercase">{index === 0 ? t('School') : ''}</th>
                     <th className="border border-slate-500 px-2 py-1 text-center font-black">{room}</th>
                   </Fragment>)}
                 </tr>
@@ -65,7 +65,7 @@ export const RoomTimetableSheet = ({ events, roomNames, onSelect, onMove, canMov
                           {roomEvents.length > 0 ? <div className="flex min-w-0 gap-0.5">
                             {roomEvents.map(item => {
                               const movable = canMove && item.status !== 'conducted' && item.status !== 'in_progress';
-                              return <button key={item.event_id} type="button" draggable={movable} onDragStart={(dragEvent) => { dragEvent.dataTransfer.effectAllowed = 'move'; dragEvent.dataTransfer.setData('text/calendar-event', item.event_id); }} data-testid={`calendar-event-${item.event_id}`} onClick={() => onSelect(item)} title={item.conflict ? 'Scheduling conflict: fix the time or move this class to another room' : movable ? 'Drag to a free room slot to move this lesson' : undefined} className={`min-w-0 flex-1 px-1.5 py-1 text-left font-semibold hover:bg-yellow-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-yellow-950/40 ${item.conflict ? 'rounded border border-red-500 bg-red-100 text-red-950 dark:bg-red-950/70 dark:text-red-100' : ''} ${item.status === 'conducted' ? 'text-emerald-700 dark:text-emerald-300' : ''} ${movable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
+                              return <button key={item.event_id} type="button" draggable={movable} onDragStart={(dragEvent) => { dragEvent.dataTransfer.effectAllowed = 'move'; dragEvent.dataTransfer.setData('text/calendar-event', item.event_id); }} data-testid={`calendar-event-${item.event_id}`} onClick={() => onSelect(item)} title={item.conflict ? 'Scheduling conflict: fix the time or move this class to another room' : movable ? t('Drag to a free room slot to move this lesson') : undefined} className={`min-w-0 flex-1 px-1.5 py-1 text-left font-semibold hover:bg-yellow-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary dark:hover:bg-yellow-950/40 ${item.conflict ? 'rounded border border-red-500 bg-red-100 text-red-950 dark:bg-red-950/70 dark:text-red-100' : ''} ${item.status === 'conducted' ? 'text-emerald-700 dark:text-emerald-300' : ''} ${movable ? 'cursor-grab active:cursor-grabbing' : ''}`}>
                                 <span className="block truncate">{item.class_name}{item.teacher_name ? ` (${item.teacher_name})` : ''}</span>
                               </button>;
                             })}

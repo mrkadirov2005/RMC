@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import type { RootState } from '../../store';
 import { fetchStudentDashboard } from '../../slices/studentDashboardSlice';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface StudentProfile {
   id?: number;
@@ -46,6 +47,7 @@ interface ClassInfo {
 
 // Renders the student profile page screen.
 const StudentProfilePage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state: RootState) => state.auth);
   const { data: dashboardData, loading } = useAppSelector((state) => state.studentDashboard);
@@ -90,9 +92,9 @@ const StudentProfilePage = () => {
               <h1 className="text-3xl font-bold">
                 {user?.first_name} {user?.last_name}
               </h1>
-              <p className="text-white/90">Student Profile</p>
+              <p className="text-white/90">{t('Student Profile')}</p>
               <div className="flex flex-wrap gap-2 mt-2">
-                <Badge className="bg-white/20 text-white border-none hover:bg-white/30">Student</Badge>
+                <Badge className="bg-white/20 text-white border-none hover:bg-white/30">{t('Student')}</Badge>
                 {student?.status && (
                   <Badge className="bg-white/10 text-white border-none hover:bg-white/20">
                     {student.status}
@@ -112,7 +114,7 @@ const StudentProfilePage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Student Details</CardTitle>
+            <CardTitle>{t('Student Details')}</CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="flex items-center gap-2">
@@ -159,7 +161,7 @@ const StudentProfilePage = () => {
 
         <Card>
           <CardHeader>
-            <CardTitle>Class Snapshot</CardTitle>
+            <CardTitle>{t('Class Snapshot')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center gap-2">
@@ -169,13 +171,13 @@ const StudentProfilePage = () => {
             {classInfo?.class_code && (
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{classInfo.class_code}</Badge>
-                {classInfo.level !== undefined && <span>Level {classInfo.level}</span>}
+                {classInfo.level !== undefined && <span>{t('Level')} {classInfo.level}</span>}
               </div>
             )}
             {classInfo?.room_number && (
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4 text-muted-foreground" />
-                <span>Room {classInfo.room_number}</span>
+                <span>{t('Room')} {classInfo.room_number}</span>
               </div>
             )}
             {teacher?.first_name && (

@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { Button } from '../../../components/ui/button';
 import { WifiOff, ServerCrash } from 'lucide-react';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type ServiceUnavailableVariant = 'offline' | 'backend-unreachable';
 
@@ -26,6 +27,7 @@ const variantContent: Record<ServiceUnavailableVariant, { title: string; message
 
 // Renders the service unavailable page screen.
 export const ServiceUnavailablePage = ({ variant, onRetry }: ServiceUnavailablePageProps) => {
+  const { t } = useLanguage();
   const { title, message, icon } = variantContent[variant];
 
   return (
@@ -37,7 +39,7 @@ export const ServiceUnavailablePage = ({ variant, onRetry }: ServiceUnavailableP
       </div>
       {onRetry ? (
         <Button onClick={onRetry} variant="secondary">
-          Try again
+          {t('Try again')}
         </Button>
       ) : null}
     </div>

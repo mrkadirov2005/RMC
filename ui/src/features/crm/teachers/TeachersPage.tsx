@@ -148,11 +148,11 @@ const TeachersPage = () => {
     <div className="flex flex-wrap justify-end gap-1.5">
       <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs text-slate-700" onClick={() => navigate(getTeacherProfilePath(teacher))}>
         <Eye className="h-3.5 w-3.5" />
-        Profile
+        {t('Profile')}
       </Button>
       <Button type="button" size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs text-slate-700" onClick={() => handleOpenModal(teacher)}>
         <Pencil className="h-3.5 w-3.5" />
-        Edit
+        {t('Edit')}
       </Button>
       <Button
         type="button"
@@ -162,7 +162,7 @@ const TeachersPage = () => {
         onClick={() => handleDelete(teacher.teacher_id || teacher.id || 0)}
       >
         <Trash2 className="h-3.5 w-3.5" />
-        Delete
+        {t('Delete')}
       </Button>
     </div>
   );
@@ -229,7 +229,7 @@ const TeachersPage = () => {
         <TabsList className="h-auto gap-1 rounded-lg bg-slate-100 p-1 dark:bg-muted/40">
           <TabsTrigger value="teachers" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
             <Users className="h-3.5 w-3.5" />
-            Teachers
+            {t('Teachers')}
           </TabsTrigger>
           <TabsTrigger value="kpi" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
             <Target className="h-3.5 w-3.5" />
@@ -237,7 +237,7 @@ const TeachersPage = () => {
           </TabsTrigger>
           <TabsTrigger value="statistics" className="gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-background">
             <LineChart className="h-3.5 w-3.5" />
-            Statistics
+            {t('Statistics')}
           </TabsTrigger>
         </TabsList>
       </Tabs>
@@ -264,7 +264,7 @@ const TeachersPage = () => {
           <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search teachers by name, ID, subject, email, phone..."
+            placeholder={t('Search teachers by name, ID, subject, email, phone...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="h-8 border-white/80 bg-white/90 pl-8 pr-8 text-xs shadow-sm dark:border-input dark:bg-background dark:shadow-none"
@@ -294,7 +294,7 @@ const TeachersPage = () => {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}><Plus className={headerActionIconClass} />Add Teacher</Button>
+        <Button size="sm" onClick={() => handleOpenModal()} className={`${headerActionClass} bg-rose-600 hover:bg-rose-700`}><Plus className={headerActionIconClass} />{t('Add Teacher')}</Button>
       </PageToolbar>
 
       {state.loading ? (
@@ -304,27 +304,27 @@ const TeachersPage = () => {
       ) : state.items.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
-          <h3 className="text-lg font-semibold">No teachers found</h3>
-          <p className="text-sm">Click &quot;Add Teacher&quot; to get started</p>
+          <h3 className="text-lg font-semibold">{t('No teachers found')}</h3>
+          <p className="text-sm">{t('Click "Add Teacher" to get started')}</p>
         </div>
       ) : visibleTeachers.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground">
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
-          <h3 className="text-lg font-semibold">No teachers match your search</h3>
+          <h3 className="text-lg font-semibold">{t('No teachers match your search')}</h3>
           <p className="text-sm">Try a different name, ID, email, or specialization</p>
         </div>
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
           {selectedTeacherIds.size > 0 && (
             <div className="flex items-center justify-between border-b bg-slate-50 px-3 py-2 text-xs dark:bg-muted/50">
-              <span className="font-semibold">{selectedTeacherIds.size} selected</span>
+              <span className="font-semibold">{selectedTeacherIds.size} {t('selected')}</span>
               <div className="flex items-center gap-1.5">
                 <Button type="button" size="sm" className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700" onClick={handleBulkDeleteTeachers}>
                   <Trash2 className="h-3.5 w-3.5" />
-                  Delete
+                  {t('Delete')}
                 </Button>
                 <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={clearTeacherSelection}>
-                  Clear
+                  {t('Clear')}
                 </Button>
               </div>
             </div>
@@ -340,15 +340,15 @@ const TeachersPage = () => {
                       if (input) input.indeterminate = selectedVisibleTeacherCount > 0 && !allVisibleTeachersSelected;
                     }}
                     onChange={(event) => toggleAllVisibleTeachers(event.target.checked)}
-                    aria-label="Select all visible teachers"
+                    aria-label={t('Select all visible teachers')}
                     className="h-4 w-4"
                   />
                 </TableHead>
                 <TableHead className="h-8 w-12 px-2">#</TableHead>
-                <TableHead className="h-8 px-2">Teacher</TableHead>
-                <TableHead className="h-8 px-2 text-right">Students</TableHead>
+                <TableHead className="h-8 px-2">{t('Teacher')}</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Students')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">Share</TableHead>
-                <TableHead className="h-8 px-2 text-right">Actions</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -401,14 +401,14 @@ const TeachersPage = () => {
         <>
           {selectedTeacherIds.size > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm dark:border-border dark:bg-card">
-              <span className="font-semibold">{selectedTeacherIds.size} selected</span>
+              <span className="font-semibold">{selectedTeacherIds.size} {t('selected')}</span>
               <div className="flex items-center gap-1.5">
                 <Button type="button" size="sm" className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700" onClick={handleBulkDeleteTeachers}>
                   <Trash2 className="h-3.5 w-3.5" />
-                  Delete
+                  {t('Delete')}
                 </Button>
                 <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={clearTeacherSelection}>
-                  Clear
+                  {t('Clear')}
                 </Button>
               </div>
             </div>
@@ -445,7 +445,7 @@ const TeachersPage = () => {
                     </div>
                   </div>
                   <div className="mt-2 flex items-center gap-1.5 text-[11px]">
-                    <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} students</span>
+                    <span className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 font-semibold text-white">{Number(teacher.student_count || 0)} {t('students')}</span>
                     <span className="owner-secondary-tag rounded-md bg-fuchsia-600 px-2 py-1 font-semibold text-white">{Number(teacher.salary_percentage ?? 50)}%</span>
                   </div>
                   <div className="mt-2 border-t pt-2" onClick={(event) => event.stopPropagation()}>
@@ -460,14 +460,14 @@ const TeachersPage = () => {
         <>
           {selectedTeacherIds.size > 0 && (
             <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm dark:border-border dark:bg-card">
-              <span className="font-semibold">{selectedTeacherIds.size} selected</span>
+              <span className="font-semibold">{selectedTeacherIds.size} {t('selected')}</span>
               <div className="flex items-center gap-1.5">
                 <Button type="button" size="sm" className="h-7 gap-1 bg-rose-600 px-2 text-xs text-white hover:bg-rose-700" onClick={handleBulkDeleteTeachers}>
                   <Trash2 className="h-3.5 w-3.5" />
-                  Delete
+                  {t('Delete')}
                 </Button>
                 <Button type="button" size="sm" className="h-7 bg-slate-700 px-2 text-xs text-white hover:bg-slate-800" onClick={clearTeacherSelection}>
-                  Clear
+                  {t('Clear')}
                 </Button>
               </div>
             </div>
@@ -511,11 +511,11 @@ const TeachersPage = () => {
                   </p>
                   <div className="owner-secondary-tag mt-2 rounded-lg bg-emerald-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.student_count || 0)}</p>
-                    <p className="text-[11px] text-white/80">Students</p>
+                    <p className="text-[11px] text-white/80">{t('Students')}</p>
                   </div>
                   <div className="owner-secondary-tag mt-2 rounded-lg bg-fuchsia-600 p-2 text-center text-xs text-white shadow-sm">
                     <p className="font-bold">{Number(teacher.salary_percentage ?? 50)}%</p>
-                    <p className="text-[11px] text-white/80">Teacher share</p>
+                    <p className="text-[11px] text-white/80">{t('Teacher share')}</p>
                   </div>
                 </CardContent>
 
@@ -552,7 +552,7 @@ const TeachersPage = () => {
           <DialogHeader className="bg-fuchsia-600 px-4 py-3">
             <div className="flex justify-between items-center">
               <DialogTitle className="text-base font-semibold text-white">
-                {editingId ? 'Edit Teacher' : 'Add New Teacher'}
+                {editingId ? t('Edit Teacher') : t('Add New Teacher')}
               </DialogTitle>
               <button onClick={handleCloseModal} className="text-white hover:text-white/80 transition-colors">
                 <X className="h-5 w-5" />
@@ -563,39 +563,39 @@ const TeachersPage = () => {
             <div className="p-4">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1">
-                  <Label htmlFor="first_name" className="text-xs">First Name</Label>
+                  <Label htmlFor="first_name" className="text-xs">{t('First Name')}</Label>
                   <Input id="first_name" className="h-8 text-xs" required value={formData.first_name || ''} onChange={(e) => handleFirstNameChange(e.target.value)} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="last_name" className="text-xs">Last Name</Label>
+                  <Label htmlFor="last_name" className="text-xs">{t('Last Name')}</Label>
                   <Input id="last_name" className="h-8 text-xs" required value={formData.last_name || ''} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} />
                 </div>
                 {editingId && (
                   <>
                     <div className="space-y-1">
-                      <Label htmlFor="employee_id" className="text-xs">Employee ID</Label>
+                      <Label htmlFor="employee_id" className="text-xs">{t('Employee ID')}</Label>
                       <Input id="employee_id" className="h-8 text-xs" value={formData.employee_id || ''} readOnly />
                     </div>
                     <div className="space-y-1">
-                      <Label htmlFor="email" className="text-xs">Email</Label>
+                      <Label htmlFor="email" className="text-xs">{t('Email')}</Label>
                       <Input id="email" className="h-8 text-xs" type="email" value={formData.email || ''} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                     </div>
                   </>
                 )}
                 <div className="space-y-1">
-                  <Label htmlFor="phone" className="text-xs">Phone</Label>
+                  <Label htmlFor="phone" className="text-xs">{t('Phone')}</Label>
                   <Input id="phone" className="h-8 text-xs" required value={formData.phone || ''} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="date_of_birth" className="text-xs">Date of Birth</Label>
+                  <Label htmlFor="date_of_birth" className="text-xs">{t('Date of Birth')}</Label>
                   <Input id="date_of_birth" className="h-8 text-xs" type="date" required value={formData.date_of_birth || ''} onChange={(e) => setFormData({ ...formData, date_of_birth: e.target.value })} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="qualification" className="text-xs">Qualification</Label>
+                  <Label htmlFor="qualification" className="text-xs">{t('Qualification')}</Label>
                   <Input id="qualification" className="h-8 text-xs" required value={formData.qualification || ''} onChange={(e) => setFormData({ ...formData, qualification: e.target.value })} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="specialization" className="text-xs">Specialization</Label>
+                  <Label htmlFor="specialization" className="text-xs">{t('Specialization')}</Label>
                   <Input id="specialization" className="h-8 text-xs" required value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} />
                 </div>
                 <div className="space-y-1">
@@ -613,7 +613,7 @@ const TeachersPage = () => {
                   />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="gender" className="text-xs">Gender</Label>
+                  <Label htmlFor="gender" className="text-xs">{t('Gender')}</Label>
                   <Select value={formData.gender || 'Male'} onValueChange={(val) => setFormData({ ...formData, gender: val })}>
                     <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent>{genderOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
@@ -621,7 +621,7 @@ const TeachersPage = () => {
                 </div>
                 {editingId && (
                   <div className="space-y-1">
-                    <Label htmlFor="status" className="text-xs">Status</Label>
+                    <Label htmlFor="status" className="text-xs">{t('Status')}</Label>
                     <Select value={formData.status || 'Active'} onValueChange={(val) => setFormData({ ...formData, status: val })}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>{teacherStatusOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
@@ -630,7 +630,7 @@ const TeachersPage = () => {
                 )}
                 {isOwner && (
                   <div className="space-y-1 sm:col-span-2">
-                    <Label htmlFor="center" className="text-xs">Center</Label>
+                    <Label htmlFor="center" className="text-xs">{t('Center')}</Label>
                     <Select value={String(formData.center_id || '')} onValueChange={(val) => setFormData({ ...formData, center_id: Number(val) })}>
                       <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>{centerOptions.map((opt) => <SelectItem key={opt.id} value={String(opt.value)}>{opt.label}</SelectItem>)}</SelectContent>
@@ -638,13 +638,13 @@ const TeachersPage = () => {
                   </div>
                 )}
                 <div className="space-y-1">
-                  <Label htmlFor="username" className="text-xs">Username</Label>
+                  <Label htmlFor="username" className="text-xs">{t('Username')}</Label>
                   <Input id="username" className="h-8 text-xs" required value={formData.username || ''} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
                 </div>
                 {!editingId && (
                   <>
                     <div className="space-y-1">
-                      <Label htmlFor="password" className="text-xs">Password</Label>
+                      <Label htmlFor="password" className="text-xs">{t('Password')}</Label>
                       <Input id="password" className="h-8 text-xs" type="password" required value={formData.password || ''} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                     </div>
                   </>
@@ -653,10 +653,10 @@ const TeachersPage = () => {
             </div>
             <DialogFooter className="px-4 py-3">
               <Button type="button" size="sm" className="h-8 rounded-lg bg-slate-700 px-3 text-xs text-white hover:bg-slate-800" onClick={handleCloseModal}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button type="submit" size="sm" disabled={state.loading} className="h-8 rounded-lg bg-fuchsia-600 px-5 text-xs text-white hover:bg-fuchsia-700">
-                {state.loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+                {state.loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('Save')}
               </Button>
             </DialogFooter>
           </form>

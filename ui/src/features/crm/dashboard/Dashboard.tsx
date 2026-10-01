@@ -9,9 +9,11 @@ import { Button } from '@/components/ui/button';
 import { usePaymentsPage } from '../payments/hooks/usePaymentsPage';
 import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
 import type { DashboardScope } from './types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
+  const { t } = useLanguage();
   const { user } = useAppSelector((state) => state.auth);
   const role = user?.userType || 'superuser';
   const navigate = useNavigate();
@@ -109,7 +111,7 @@ const Dashboard = memo(() => {
             <h2 className="font-black">Attendance overview</h2>
             <p className="mt-1 text-sm text-slate-500">Overall attendance for {today.toLocaleDateString()}.</p>
             <div className="mt-5 h-4 overflow-hidden rounded-full bg-rose-100"><div className="h-full bg-emerald-500" style={{ width: `${attendanceToday.length ? (presentToday / attendanceToday.length) * 100 : 0}%` }} /></div>
-            <div className="mt-3 flex justify-between text-sm font-bold"><span className="text-emerald-600">{presentToday} present</span><span className="text-rose-600">{absentToday} absent</span></div>
+            <div className="mt-3 flex justify-between text-sm font-bold"><span className="text-emerald-600">{presentToday} {t('present')}</span><span className="text-rose-600">{absentToday} absent</span></div>
           </section>
           <Button variant="outline" onClick={() => navigate('/attendance')}>Open attendance management</Button>
         </div>
@@ -117,7 +119,7 @@ const Dashboard = memo(() => {
       <PaymentFormDialog
         open={isModalOpen}
         onOpenChange={(open) => { if (!open) handleCloseModal(); }}
-        title="Add Payment"
+        title={t('Add Payment')}
         description="Record a payment without leaving the dashboard."
         formData={formData}
         setFormData={setFormData}

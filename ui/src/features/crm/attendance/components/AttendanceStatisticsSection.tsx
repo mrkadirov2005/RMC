@@ -1,4 +1,5 @@
-interface AttendanceStatisticsSectionProps {
+
+import { useLanguage } from '@/i18n/LanguageContext';interface AttendanceStatisticsSectionProps {
   attendanceStatistics: {
     totalRecords: number;
     uniqueStudents: number;
@@ -17,6 +18,7 @@ const AttendanceStatisticsSection = ({
   teachersCount,
   subjectsCount,
 }: AttendanceStatisticsSectionProps) => {
+  const { t } = useLanguage();
   const segmentCardTone: Record<string, string> = {
     Present: 'border-emerald-200 bg-emerald-50/80',
     Late: 'border-amber-200 bg-amber-50/80',
@@ -43,15 +45,15 @@ const AttendanceStatisticsSection = ({
             <p className="mt-2 text-2xl font-black text-white">{attendanceStatistics.uniqueStudents}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 p-4 shadow-lg shadow-emerald-500/20">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/70">Total Classes</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/70">{t('Total Classes')}</p>
             <p className="mt-2 text-2xl font-black text-white">{classesCount}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 p-4 shadow-lg shadow-violet-500/20">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/70">Total Teachers</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/70">{t('Total Teachers')}</p>
             <p className="mt-2 text-2xl font-black text-white">{teachersCount}</p>
           </div>
           <div className="rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 p-4 shadow-lg shadow-amber-500/20">
-            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/70">Total Subjects</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.12em] text-white/70">{t('Total Subjects')}</p>
             <p className="mt-2 text-2xl font-black text-white">{subjectsCount}</p>
           </div>
         </div>
@@ -98,11 +100,11 @@ const AttendanceStatisticsSection = ({
         <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-black">Attendance Mix</p>
+              <p className="text-sm font-black">{t('Attendance Mix')}</p>
               <p className="text-xs text-muted-foreground">Relative share of attendance statuses.</p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
-              <p>{attendanceStatistics.counts.present} present</p>
+              <p>{attendanceStatistics.counts.present} {t('present')}</p>
               <p>{attendanceStatistics.counts.late} late</p>
               <p>{attendanceStatistics.counts.absent} absent</p>
             </div>

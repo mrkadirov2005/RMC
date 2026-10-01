@@ -128,7 +128,7 @@ const DebtAnalyzer = () => {
     <Card className="mb-6">
       <CardContent className="pt-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">Payment Analysis</h3>
+          <h3 className="text-lg font-semibold">{t('Payment Analysis')}</h3>
           <Button
             onClick={handleAnalyze}
             disabled={loading}
@@ -139,7 +139,7 @@ const DebtAnalyzer = () => {
             ) : (
               <BarChart3 className="mr-2 h-4 w-4" />
             )}
-            {loading ? 'Analyzing...' : 'Analyze Unpaid Months'}
+            {loading ? t('Analyzing...') : t('Analyze Unpaid Months')}
           </Button>
         </div>
 
@@ -177,7 +177,7 @@ const DebtAnalyzer = () => {
                 <p className="text-sm text-muted-foreground">Total Unpaid Instances</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
-                <p className="text-sm text-muted-foreground">Analysis Period</p>
+                <p className="text-sm text-muted-foreground">{t('Analysis Period')}</p>
                 <p className="text-base font-semibold">
                   {analysis.analysis_period.months_analyzed} months
                 </p>
@@ -193,7 +193,7 @@ const DebtAnalyzer = () => {
                   </p>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={selectAllStudents}>
-                      Select All
+                      {t('Select All')}
                     </Button>
                     <Button
                       size="sm"
@@ -220,10 +220,10 @@ const DebtAnalyzer = () => {
                             }
                           />
                         </TableHead>
-                        <TableHead>Student</TableHead>
+                        <TableHead>{t('Student')}</TableHead>
                         <TableHead className="text-center">Unpaid Months</TableHead>
                         <TableHead className="text-center">Total Payments</TableHead>
-                        <TableHead className="text-right">Current Debt</TableHead>
+                        <TableHead className="text-right">{t('Current Debt')}</TableHead>
                         <TableHead className="w-10" />
                       </TableRow>
                     </TableHeader>
@@ -285,7 +285,7 @@ const DebtAnalyzer = () => {
                             <TableRow key={`${result.student_id}-detail`}>
                               <TableCell colSpan={6} className="py-0">
                                 <div className="p-4 bg-muted/30">
-                                  <p className="text-sm font-medium mb-2">Unpaid Months:</p>
+                                  <p className="text-sm font-medium mb-2">{t('Unpaid Months:')}</p>
                                   <div className="flex gap-2 flex-wrap">
                                     {result.unpaid_months.map((month, i) => (
                                       <Badge
@@ -310,7 +310,7 @@ const DebtAnalyzer = () => {
             ) : (
               <Alert className="border-green-200 bg-green-50 text-green-800">
                 <AlertDescription>
-                  All students have made payments for the analyzed period!
+                  {t('All students have made payments for the analyzed period!')}
                 </AlertDescription>
               </Alert>
             )}
@@ -321,13 +321,13 @@ const DebtAnalyzer = () => {
         <Dialog open={generateDialogOpen} onOpenChange={setGenerateDialogOpen}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Generate Debt Records</DialogTitle>
+              <DialogTitle>{t('Generate Debt Records')}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
               This will create debt records for {selectedStudents.length} selected student(s).
             </p>
             <div className="mt-4 space-y-2">
-              <Label htmlFor="monthlyFee">Monthly Fee Amount</Label>
+              <Label htmlFor="monthlyFee">{t('Monthly Fee Amount')}</Label>
               <div className="flex items-center gap-2">
                 <span className="text-muted-foreground">UZS</span>
                 <Input
@@ -340,13 +340,13 @@ const DebtAnalyzer = () => {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setGenerateDialogOpen(false)}>
-                Cancel
+                {t('Cancel')}
               </Button>
               <Button
                 onClick={handleGenerateDebts}
                 disabled={generating || !monthlyFee}
               >
-                {generating ? 'Generating...' : 'Generate'}
+                {generating ? t('Generating...') : t('Generate')}
               </Button>
             </DialogFooter>
           </DialogContent>

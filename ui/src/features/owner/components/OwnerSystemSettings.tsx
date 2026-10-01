@@ -130,7 +130,7 @@ export const OwnerSystemSettings = () => {
                 onClick={() => setResetTarget(target)}
               >
                 <DatabaseZap className="h-4 w-4" />
-                Clear {target.label}
+                {t('Clear')} {target.label}
               </Button>
             ))}
           </div>
@@ -183,7 +183,7 @@ export const OwnerSystemSettings = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-500" />
-              Clear {resetTarget?.label} table
+              {t('Clear')} {resetTarget?.label} table
             </DialogTitle>
           </DialogHeader>
 
@@ -196,7 +196,7 @@ export const OwnerSystemSettings = () => {
             </Alert>
             <div className="space-y-2">
               <Label htmlFor="reset-confirmation">
-                Type <span className="font-semibold text-foreground">{RESET_CONFIRMATION}</span>
+                {t('Type')} <span className="font-semibold text-foreground">{RESET_CONFIRMATION}</span>
               </Label>
               <Input
                 id="reset-confirmation"
@@ -214,7 +214,7 @@ export const OwnerSystemSettings = () => {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeReset} disabled={resetSubmitting}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button
               type="button"
@@ -222,7 +222,7 @@ export const OwnerSystemSettings = () => {
               onClick={resetTable}
               disabled={resetSubmitting || resetConfirmation !== RESET_CONFIRMATION}
             >
-              {resetSubmitting ? 'Clearing...' : `Clear ${resetTarget?.label || 'table'}`}
+              {resetSubmitting ? t('Clearing...') : `Clear ${resetTarget?.label || 'table'}`}
             </Button>
           </DialogFooter>
         </DialogContent>

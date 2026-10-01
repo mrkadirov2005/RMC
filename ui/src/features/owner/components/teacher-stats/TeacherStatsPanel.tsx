@@ -95,10 +95,10 @@ export const TeacherStatsPanel = ({ data, collections }: Props) => {
 
       <div className="mx-auto max-w-6xl rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
         <div className="mb-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
-          <Insight label="Group Coverage" value={`${analytics.coveredTeachers}/${data.length}`} detail={`${average(analytics.totalGroups, data.length)} avg groups`} />
-          <Insight label="Student Load" value={analytics.totalStudents.toLocaleString()} detail={`${Math.round(average(analytics.totalStudents, data.length))} avg students`} />
-          <Insight label="Paid Students" value={analytics.paidStudents.toLocaleString()} detail={`${analytics.unpaidStudents} unpaid`} />
-          <Insight label="Specializations" value={analytics.specializations.toLocaleString()} detail={`${analytics.totalGroups} groups`} />
+          <Insight label={t('Group Coverage')} value={`${analytics.coveredTeachers}/${data.length}`} detail={`${average(analytics.totalGroups, data.length)} avg groups`} />
+          <Insight label={t('Student Load')} value={analytics.totalStudents.toLocaleString()} detail={`${Math.round(average(analytics.totalStudents, data.length))} avg students`} />
+          <Insight label={t('Paid Students')} value={analytics.paidStudents.toLocaleString()} detail={`${analytics.unpaidStudents} unpaid`} />
+          <Insight label={t('Specializations')} value={analytics.specializations.toLocaleString()} detail={`${analytics.totalGroups} groups`} />
         </div>
 
         <div className="mb-3 flex flex-wrap items-center gap-2">
@@ -243,6 +243,7 @@ const Insight = ({ label, value, detail }: { label: string; value: string | numb
 };
 
 const NavButton = ({ direction, onClick }: { direction: 'left' | 'right'; onClick: () => void }) => {
+  const { t } = useLanguage();
   const Icon = direction === 'left' ? ChevronLeft : ChevronRight;
   return (
     <button
@@ -252,7 +253,7 @@ const NavButton = ({ direction, onClick }: { direction: 'left' | 'right'; onClic
         'absolute top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 dark:border-white/10 dark:bg-slate-950 dark:text-white',
         direction === 'left' ? 'left-2' : 'right-2'
       )}
-      aria-label={direction === 'left' ? 'Previous statistic' : 'Next statistic'}
+      aria-label={direction === 'left' ? t('Previous statistic') : t('Next statistic')}
     >
       <Icon className="h-5 w-5" />
     </button>

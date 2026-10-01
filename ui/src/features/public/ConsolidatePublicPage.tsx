@@ -169,7 +169,7 @@ export const ConsolidatePublicPage = () => {
               autoFocus
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="Your username"
+              placeholder={t('Your username')}
               className="h-11"
             />
 
@@ -181,7 +181,7 @@ export const ConsolidatePublicPage = () => {
 
             <Button type="submit" disabled={starting} className="h-11 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
               {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Continue
+              {t('Continue')}
             </Button>
           </form>
         </CardContent>

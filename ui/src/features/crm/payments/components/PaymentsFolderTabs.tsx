@@ -411,10 +411,10 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Teacher</TableHead>
+                      <TableHead>{t('Teacher')}</TableHead>
                       <TableHead>Last-Month Salary</TableHead>
                       <TableHead>Paid?</TableHead>
-                      <TableHead>Students Paid</TableHead>
+                      <TableHead>{t('Students Paid')}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -428,7 +428,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                     ) : salaryOverview.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                          No teachers found
+                          {t('No teachers found')}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -446,9 +446,9 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                           </TableCell>
                           <TableCell>
                             {row.salary?.is_paid ? (
-                              <Badge variant="success">Paid</Badge>
+                              <Badge variant="success">{t('Paid')}</Badge>
                             ) : (
-                              <Badge variant="warning">Unpaid</Badge>
+                              <Badge variant="warning">{t('Unpaid')}</Badge>
                             )}
                           </TableCell>
                           <TableCell>{formatStudentPaidShare(row.student_stats)}</TableCell>
@@ -467,6 +467,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
 };
 
 const GroupPaymentsOverview = ({ hook }: PaymentsFolderTabsProps) => {
+  const { t } = useLanguage();
   const [teacherId, setTeacherId] = useState('all');
   const [groupId, setGroupId] = useState('');
   const availableGroups = useMemo(
@@ -484,7 +485,7 @@ const GroupPaymentsOverview = ({ hook }: PaymentsFolderTabsProps) => {
         <CardContent className="p-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
-              <p className="text-xs font-bold text-muted-foreground">Teacher</p>
+              <p className="text-xs font-bold text-muted-foreground">{t('Teacher')}</p>
               <Select
                 value={teacherId}
                 onValueChange={(value) => {
@@ -492,9 +493,9 @@ const GroupPaymentsOverview = ({ hook }: PaymentsFolderTabsProps) => {
                   setGroupId('');
                 }}
               >
-                <SelectTrigger><SelectValue placeholder="Choose teacher" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('Choose teacher')} /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All teachers</SelectItem>
+                  <SelectItem value="all">{t('All teachers')}</SelectItem>
                   {hook.teachers.map((teacher) => {
                     const id = Number(teacher.teacher_id || teacher.id || 0);
                     return id ? (
@@ -507,9 +508,9 @@ const GroupPaymentsOverview = ({ hook }: PaymentsFolderTabsProps) => {
               </Select>
             </div>
             <div className="space-y-2">
-              <p className="text-xs font-bold text-muted-foreground">Group</p>
+              <p className="text-xs font-bold text-muted-foreground">{t('Group')}</p>
               <Select value={groupId} onValueChange={setGroupId}>
-                <SelectTrigger><SelectValue placeholder="Choose group" /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder={t('Choose group')} /></SelectTrigger>
                 <SelectContent>
                   {availableGroups.map((group) => {
                     const id = Number(group.class_id || group.id || 0);
@@ -526,7 +527,7 @@ const GroupPaymentsOverview = ({ hook }: PaymentsFolderTabsProps) => {
         <PaymentListView hook={{ ...hook, selectedFolder }} />
       ) : (
         <div className="flex min-h-64 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-          Choose a teacher and group to see every student's payment status.
+          {t("Choose a teacher and group to see every student's payment status.")}
         </div>
       )}
     </div>

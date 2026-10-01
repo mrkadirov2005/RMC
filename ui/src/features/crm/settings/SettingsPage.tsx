@@ -297,7 +297,7 @@ const SettingsPage = () => {
               {ownerPalettePresets.map((palette) => (
                 <button key={palette.id} type="button" onClick={async () => { const selected = saveOwnerPalette(palette); setOwnerPalette(selected); try { await settingsAPI.saveOwnerPalette(selected); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette.id === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
                   <span className="mb-2 block text-sm font-semibold">{palette.name}</span>
-                  <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title="Primary cards" /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title="Secondary tags" /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title="Tertiary cards" /></span>
+                  <span className="flex gap-2"><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.primary }} title={t('Primary cards')} /><span className="h-8 flex-1 rounded" style={{ backgroundColor: palette.secondary }} title={t('Secondary tags')} /><span className="h-8 flex-1 rounded border" style={{ backgroundColor: palette.tertiary }} title={t('Tertiary cards')} /></span>
                 </button>
               ))}
             </div>
@@ -354,7 +354,7 @@ const SettingsPage = () => {
         >
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="defaultDuration">Default lesson length (minutes)</Label>
+              <Label htmlFor="defaultDuration">{t('Default lesson length (minutes)')}</Label>
               <Input
                 id="defaultDuration"
                 type="number"
@@ -365,12 +365,12 @@ const SettingsPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="overrideDuration">Override for next generation (minutes)</Label>
+              <Label htmlFor="overrideDuration">{t('Override for next generation (minutes)')}</Label>
               <Input
                 id="overrideDuration"
                 type="number"
                 min={1}
-                placeholder="Leave empty to use default"
+                placeholder={t('Leave empty to use default')}
                 value={overrideDuration}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -400,21 +400,21 @@ const SettingsPage = () => {
         >
           <div className="space-y-5">
             <div className="space-y-2">
-              <Label>Default calendar view</Label>
+              <Label>{t('Default calendar view')}</Label>
               <Select value={calendarDefaultView} onValueChange={(value) => setCalendarDefaultView(value as 'month' | 'week')}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="month">Month view</SelectItem>
-                  <SelectItem value="week">Week view</SelectItem>
+                  <SelectItem value="month">{t('Month view')}</SelectItem>
+                  <SelectItem value="week">{t('Week view')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2">
-                <Label>Day starts</Label>
+                <Label>{t('Day starts')}</Label>
                 <Select value={String(calendarStartHour)} onValueChange={(value) => setCalendarStartHour(Number(value))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -427,7 +427,7 @@ const SettingsPage = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Day ends</Label>
+                <Label>{t('Day ends')}</Label>
                 <Select value={String(calendarEndHour)} onValueChange={(value) => setCalendarEndHour(Number(value))}>
                   <SelectTrigger>
                     <SelectValue />
@@ -474,7 +474,7 @@ const SettingsPage = () => {
               <div className="overflow-x-auto rounded-lg border">
                 <div className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-muted-foreground">
                   <span>Label</span>
-                  <span>Score</span>
+                  <span>{t('Score')}</span>
                   <span>Symbol</span>
                   <span>Fill %</span>
                 </div>

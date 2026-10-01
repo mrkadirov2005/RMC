@@ -7,6 +7,7 @@ import { BarChart } from '@/shared/components/BarChart';
 import { LineChart } from '@/shared/components/LineChart';
 import { Timeline } from '@/shared/components/Timeline';
 import { useTeacherStatistics } from './useTeacherStatistics';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface TeacherStatisticsTabProps {
   teacherId?: number;
@@ -17,12 +18,13 @@ interface TeacherStatisticsTabProps {
 }
 
 const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers = [] }: TeacherStatisticsTabProps) => {
+  const { t } = useLanguage();
   const stats = useTeacherStatistics(teacherId, classes, students, teachers);
 
   return (
     <div className="rounded-3xl border border-slate-200 bg-white/90 p-4 shadow-sm dark:border-white/10 dark:bg-slate-950/20">
       <div className="mb-4">
-        <h3 className="text-base font-black text-slate-900 dark:text-white">Lesson statistics</h3>
+        <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Lesson statistics')}</h3>
         <p className="text-xs text-muted-foreground">
           See how each lesson has gone based on the score points added to students.
         </p>
@@ -31,11 +33,11 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
       <div className="mb-4 flex flex-col gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-slate-900/40">
         <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           <CalendarRange className="h-3.5 w-3.5" />
-          Date range
+          {t('Date range')}
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <Label className="mb-1 text-[10px] uppercase text-muted-foreground">From</Label>
+            <Label className="mb-1 text-[10px] uppercase text-muted-foreground">{t('From')}</Label>
             <Input
               type="date"
               value={stats.dateRange.start}
@@ -47,7 +49,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
             />
           </div>
           <div>
-            <Label className="mb-1 text-[10px] uppercase text-muted-foreground">To</Label>
+            <Label className="mb-1 text-[10px] uppercase text-muted-foreground">{t('To')}</Label>
             <Input
               type="date"
               value={stats.dateRange.end}
@@ -90,7 +92,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           onClick={() => stats.setGroupsOpen((open: boolean) => !open)}
         >
           <Users className="h-3.5 w-3.5" />
-          {stats.isGlobalMode ? 'Browse' : 'Classes'}
+          {stats.isGlobalMode ? t('Browse') : t('Classes')}
           {stats.isGlobalMode && stats.scope === 'center' ? (
             <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">Whole center</span>
           ) : stats.isGlobalMode && stats.selectedTeacher ? (
@@ -107,7 +109,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           <div className="min-w-[200px]">
             <Select value={stats.selectedStudentId} onValueChange={stats.setSelectedStudentId}>
               <SelectTrigger className="h-9 text-xs">
-                <SelectValue placeholder="All students" />
+                <SelectValue placeholder={t('All students')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All students (class average)</SelectItem>
@@ -146,7 +148,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           <button
             type="button"
             onClick={() => stats.setChartType('line')}
-            aria-label="Line chart"
+            aria-label={t('Line chart')}
             className={`rounded-full p-1.5 transition ${
               stats.chartType === 'line' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
             }`}
@@ -156,7 +158,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           <button
             type="button"
             onClick={() => stats.setChartType('bar')}
-            aria-label="Bar chart"
+            aria-label={t('Bar chart')}
             className={`rounded-full p-1.5 transition ${
               stats.chartType === 'bar' ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
             }`}
@@ -209,7 +211,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           <aside className="w-72 shrink-0 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-white/10 dark:bg-slate-950/40">
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-black uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {stats.isGlobalMode && stats.panelTeacherId ? stats.selectedTeacher?.label || 'Classes' : stats.isGlobalMode ? 'Browse' : 'Groups'}
+                {stats.isGlobalMode && stats.panelTeacherId ? stats.selectedTeacher?.label || 'Classes' : stats.isGlobalMode ? t('Browse') : t('Groups')}
               </span>
               <button type="button" onClick={() => stats.setGroupsOpen(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
                 <X className="h-4 w-4" />
@@ -235,7 +237,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                 </button>
 
                 <div className="my-1 border-t border-slate-200 dark:border-white/10" />
-                <div className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">By teacher</div>
+                <div className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">{t('By teacher')}</div>
 
                 {stats.teacherOptions.length === 0 ? (
                   <div className="py-6 text-center text-xs text-muted-foreground">No teachers with classes found.</div>

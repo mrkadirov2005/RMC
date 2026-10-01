@@ -260,7 +260,7 @@ const ClassDetailPage = () => {
               onClick={() => navigate('/classes')}
             >
               <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-              Back
+              {t('Back')}
             </Button>
               <h1 className="truncate text-xl font-bold text-slate-950 dark:text-card-foreground">{className}</h1>
                 <span data-class-detail-schedule="true" className="owner-secondary-tag rounded-md bg-emerald-600 px-2 py-1 text-white">{scheduleText}</span>
@@ -271,7 +271,7 @@ const ClassDetailPage = () => {
             className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
           >
             {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-            Start Lesson
+            {t('Start Lesson')}
           </Button>
         </div>
       </div>
@@ -279,7 +279,7 @@ const ClassDetailPage = () => {
       <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingLesson && setLessonPickerOpen(open)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Pick lesson actions</DialogTitle>
+            <DialogTitle>{t('Pick lesson actions')}</DialogTitle>
             <DialogDescription>Select what you want to do in this lesson session.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
@@ -310,7 +310,7 @@ const ClassDetailPage = () => {
             })}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>Cancel</Button>
+            <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>{t('Cancel')}</Button>
             <Button onClick={handleStartLesson} disabled={startingLesson} className="bg-rose-600 text-white hover:bg-rose-700">
               {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
               Start
@@ -321,7 +321,7 @@ const ClassDetailPage = () => {
 
       <DeleteStudentDialog
         open={deleteStudentTarget != null}
-        title="Delete student"
+        title={t('Delete student')}
         description={`Pick why ${[deleteStudentTarget?.first_name, deleteStudentTarget?.last_name].filter(Boolean).join(' ') || 'this student'} is being removed.`}
         onOpenChange={(open) => (!open ? setDeleteStudentTarget(null) : undefined)}
         onConfirm={handleDeleteStudent}
@@ -360,19 +360,19 @@ const ClassDetailPage = () => {
 
       <Tabs defaultValue={DEFAULT_CLASS_DETAIL_TAB} className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
         <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b bg-slate-50 p-2 dark:bg-muted/40">
-          <TabsTrigger value="overview" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Overview</TabsTrigger>
-          <TabsTrigger value="students" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Students</TabsTrigger>
-          <TabsTrigger value="subjects" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Subjects</TabsTrigger>
-          <TabsTrigger value="points" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Points</TabsTrigger>
-          <TabsTrigger value="tests" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Tests</TabsTrigger>
-          <TabsTrigger value="sessions" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>Sessions</TabsTrigger>
+          <TabsTrigger value="overview" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-emerald-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Overview')}</TabsTrigger>
+          <TabsTrigger value="students" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-blue-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Students')}</TabsTrigger>
+          <TabsTrigger value="subjects" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-amber-500 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Subjects')}</TabsTrigger>
+          <TabsTrigger value="points" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-violet-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Points')}</TabsTrigger>
+          <TabsTrigger value="tests" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-fuchsia-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Tests')}</TabsTrigger>
+          <TabsTrigger value="sessions" className={`h-8 rounded-md px-3 text-xs font-semibold data-[state=active]:bg-rose-600 data-[state=active]:text-white ${CLASS_DETAIL_TAB_THEME_CLASS}`}>{t('Sessions')}</TabsTrigger>
         </TabsList>
 
         <div className="p-3">
           <TabsContent value="overview" className="mt-0">
             <div className="overflow-hidden rounded-md border border-slate-200 dark:border-border">
               <div className="flex items-center justify-between border-b bg-slate-50 px-3 py-2 dark:bg-muted/40">
-                <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">General information</h2>
+                <h2 className="text-sm font-bold text-slate-950 dark:text-card-foreground">{t('General information')}</h2>
                 <Button
                   type="button"
                   size="sm"
@@ -404,7 +404,7 @@ const ClassDetailPage = () => {
                           onClick={handleOpenClassEditor}
                         >
                           {item.label === 'Teacher' ? <UserCog className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-                          {item.label === 'Teacher' ? (classData?.teacher_id ? 'Change' : 'Assign') : 'Edit'}
+                          {item.label === 'Teacher' ? (classData?.teacher_id ? t('Change') : t('Assign')) : t('Edit')}
                         </Button>
                       )}
                     </dd>
@@ -418,16 +418,16 @@ const ClassDetailPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className="text-right">{t('Actions')}</TableHead>
+                  <TableHead>{t('Phone')}</TableHead>
+                  <TableHead className="text-right">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {studentRows.length === 0 ? (
-                  <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">No students enrolled.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={4} className="py-10 text-center text-muted-foreground">{t('No students enrolled.')}</TableCell></TableRow>
                 ) : studentRows.map((student, index) => {
                   const isTransferred = isTransferredStudentStatus(student.status);
                   const isIncoming = !isTransferred && isIncomingTransfer(student);
@@ -458,7 +458,7 @@ const ClassDetailPage = () => {
                             ? `${INCOMING_TRANSFER_VARIANT} hover:bg-emerald-100 dark:hover:bg-emerald-950/60`
                             : 'bg-emerald-600 text-black hover:bg-emerald-600 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-700'
                       }>
-                        {isTransferred ? 'Transferred' : isIncoming ? 'New (Transferred)' : student.status || '-'}
+                        {isTransferred ? t('Transferred') : isIncoming ? 'New (Transferred)' : student.status || '-'}
                       </Badge>
                     </TableCell>
                     <TableCell>{student.phone || '-'}</TableCell>
@@ -473,7 +473,7 @@ const ClassDetailPage = () => {
                           aria-label={`Edit ${student.first_name || ''} ${student.last_name || ''}`.trim()}
                         >
                           <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                          Edit
+                          {t('Edit')}
                         </Button>
                         <Button
                           type="button"
@@ -485,7 +485,7 @@ const ClassDetailPage = () => {
                           aria-label={`Delete ${student.first_name || ''} ${student.last_name || ''}`.trim()}
                         >
                           {deletingStudentId === getClassStudentId(student) ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
-                          Delete
+                          {t('Delete')}
                         </Button>
                       </div>
                     </TableCell>
@@ -526,12 +526,12 @@ const ClassDetailPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Test</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Marks</TableHead>
-                  <TableHead>Due Date</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>{t('Test')}</TableHead>
+                  <TableHead>{t('Type')}</TableHead>
+                  <TableHead>{t('Marks')}</TableHead>
+                  <TableHead>{t('Due Date')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className="text-right">{t('Actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -540,7 +540,7 @@ const ClassDetailPage = () => {
                     <TableCell colSpan={6} className="py-10 text-center text-muted-foreground">
                       <div className="flex flex-col items-center gap-2">
                         <FileQuestion className="h-8 w-8 text-muted-foreground/60" />
-                        <span>No tests assigned to this class.</span>
+                        <span>{t('No tests assigned to this class.')}</span>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -553,8 +553,8 @@ const ClassDetailPage = () => {
                           <p className="font-semibold">{test.test_name || 'Untitled test'}</p>
                           {test.description && <p className="line-clamp-2 text-xs text-muted-foreground">{test.description}</p>}
                           <div className="flex flex-wrap gap-1">
-                            {test.duration_minutes ? <Badge variant="outline">{test.duration_minutes} min</Badge> : null}
-                            {test.is_mandatory ? <Badge variant="secondary">Mandatory</Badge> : <Badge variant="outline">Optional</Badge>}
+                            {test.duration_minutes ? <Badge variant="outline">{test.duration_minutes} {t('min')}</Badge> : null}
+                            {test.is_mandatory ? <Badge variant="secondary">{t('Mandatory')}</Badge> : <Badge variant="outline">{t('Optional')}</Badge>}
                           </div>
                         </div>
                       </TableCell>
@@ -566,12 +566,12 @@ const ClassDetailPage = () => {
                       <TableCell>{test.due_date ? new Date(test.due_date).toLocaleDateString() : '-'}</TableCell>
                       <TableCell>
                         <Badge variant={test.is_active === false ? 'outline' : 'secondary'}>
-                          {test.is_active === false ? 'Inactive' : 'Active'}
+                          {test.is_active === false ? t('Inactive') : t('Active')}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="outline" size="sm" onClick={() => testId && navigate(`/tests/${testId}`)} disabled={!testId}>
-                          Open
+                          {t('Open')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -585,10 +585,10 @@ const ClassDetailPage = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
+                  <TableHead>{t('Date')}</TableHead>
                   <TableHead>Start</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('Duration')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -604,7 +604,7 @@ const ClassDetailPage = () => {
                       <div className="flex justify-end gap-2">
                         <Button variant="outline" size="sm" onClick={() => openSessionWorkflow(session)}>
                           <PlayCircle className="mr-2 h-4 w-4" />
-                          Open
+                          {t('Open')}
                         </Button>
                         <button
                           type="button"
@@ -612,8 +612,8 @@ const ClassDetailPage = () => {
                           style={{ backgroundColor: '#dc2626', borderColor: '#dc2626', color: '#ffffff', opacity: 1 }}
                           onClick={() => void handleDeleteSession(session)}
                           disabled={deletingSessionId === Number(session.session_id || session.id)}
-                          aria-label={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : 'Delete session'}
-                          title={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : 'Delete session'}
+                          aria-label={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : t('Delete session')}
+                          title={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : t('Delete session')}
                         >
                           <Trash2 className="h-4 w-4" stroke="#ffffff" color="#ffffff" />
                         </button>

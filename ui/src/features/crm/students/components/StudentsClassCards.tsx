@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import type { ViewMode } from '@/components/common/ViewModeToggle';
 import type { Class, Student } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Handles to id.
 const toId = (value: unknown) => {
@@ -22,6 +23,7 @@ interface Props {
 
 // Renders the students class cards module.
 export const StudentsClassCards = ({ classes, students, onClassClick, viewMode = 'list' }: Props) => {
+  const { t } = useLanguage();
   const getStudentCount = (cls: Class, variant: 'default' | 'unassigned' = 'default') => {
     const classId = cls.class_id || cls.id || 0;
     return variant === 'unassigned'
@@ -39,11 +41,11 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Class</TableHead>
-              <TableHead>Code</TableHead>
-              <TableHead>Level</TableHead>
-              <TableHead>Capacity</TableHead>
-              <TableHead className="text-right">Students</TableHead>
+              <TableHead>{t('Class')}</TableHead>
+              <TableHead>{t('Code')}</TableHead>
+              <TableHead>{t('Level')}</TableHead>
+              <TableHead>{t('Capacity')}</TableHead>
+              <TableHead className="text-right">{t('Students')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -53,7 +55,7 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
                 <TableRow key={classId} className="cursor-pointer" onClick={() => onClassClick(cls)}>
                   <TableCell className="font-medium">{cls.class_name}</TableCell>
                   <TableCell className="font-mono text-sm text-muted-foreground">{cls.class_code}</TableCell>
-                  <TableCell>Level {cls.level}</TableCell>
+                  <TableCell>{t('Level')} {cls.level}</TableCell>
                   <TableCell>{cls.capacity}</TableCell>
                   <TableCell className="text-right">{getStudentCount(cls)}</TableCell>
                 </TableRow>
@@ -61,7 +63,7 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
             })}
             {hasUnassigned && (
               <TableRow className="cursor-pointer" onClick={() => onClassClick(unassignedClass)}>
-                <TableCell className="font-medium">Unassigned</TableCell>
+                <TableCell className="font-medium">{t('Unassigned')}</TableCell>
                 <TableCell className="font-mono text-sm text-muted-foreground">N/A</TableCell>
                 <TableCell>-</TableCell>
                 <TableCell>-</TableCell>
@@ -110,14 +112,14 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
             <Icon className="h-10 w-10" />
             <div>
               <h3 className="text-lg font-semibold">{cls.class_name}</h3>
-              <span className="text-xs opacity-80">{variant === 'unassigned' ? 'No Class' : cls.class_code}</span>
+              <span className="text-xs opacity-80">{variant === 'unassigned' ? t('No Class') : cls.class_code}</span>
             </div>
           </div>
           <div className="flex items-center gap-2 mt-4 p-2.5 bg-white/20 rounded-lg">
             <Users className="h-4 w-4" />
-            <span className="font-medium text-sm">{studentCount} {studentCount === 1 ? 'Student' : 'Students'}</span>
+            <span className="font-medium text-sm">{studentCount} {studentCount === 1 ? t('Student') : t('Students')}</span>
           </div>
-          {variant !== 'unassigned' && <p className="text-xs opacity-80 mt-2">Level {cls.level} &bull; Capacity: {cls.capacity}</p>}
+          {variant !== 'unassigned' && <p className="text-xs opacity-80 mt-2">{t('Level')} {cls.level} &bull; Capacity: {cls.capacity}</p>}
         </div>
       </Card>
     );

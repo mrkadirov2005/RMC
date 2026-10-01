@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { SimplePaginationBar } from '@/components/common/SimplePaginationBar';
 import type { paginateItems } from '@/components/common/pagination';
 import type { Teacher, Class, Student, Subject, FolderType } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type PaginatedResult<T> = ReturnType<typeof paginateItems<T>>;
 
@@ -69,6 +70,7 @@ const GradesFolderTabs = ({
   getStudentIdsForTeacher,
   getGradeColor,
 }: GradesFolderTabsProps) => {
+  const { t } = useLanguage();
   const handlePageSizeChange = (pageSize: number) => {
     setFolderPageSize(pageSize);
     setFolderPage(1);
@@ -83,11 +85,11 @@ const GradesFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading students...</p>
+                <p className="text-muted-foreground">{t('Loading students...')}</p>
               </div>
             ) : students.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No students found</p>
+                <p className="text-muted-foreground">{t('No students found')}</p>
               </div>
             ) : (
               paginatedStudents.items.map((student) => {
@@ -146,11 +148,11 @@ const GradesFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading classes...</p>
+                <p className="text-muted-foreground">{t('Loading classes...')}</p>
               </div>
             ) : classes.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No classes found</p>
+                <p className="text-muted-foreground">{t('No classes found')}</p>
               </div>
             ) : (
               paginatedClasses.items.map((cls) => {
@@ -209,11 +211,11 @@ const GradesFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading teachers...</p>
+                <p className="text-muted-foreground">{t('Loading teachers...')}</p>
               </div>
             ) : teachers.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No teachers found</p>
+                <p className="text-muted-foreground">{t('No teachers found')}</p>
               </div>
             ) : (
               paginatedTeachers.items.map((teacher) => {
@@ -238,7 +240,7 @@ const GradesFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-sky-700">
                           <Users className="h-3 w-3" />
-                          <span>{getStudentIdsForTeacher(teacherId).length} students</span>
+                          <span>{getStudentIdsForTeacher(teacherId).length} {t('students')}</span>
                         </div>
                         <div className="flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">
                           <BookOpen className="h-3 w-3" />
@@ -276,7 +278,7 @@ const GradesFolderTabs = ({
               </div>
             ) : subjects.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No subjects found</p>
+                <p className="text-muted-foreground">{t('No subjects found')}</p>
               </div>
             ) : (
               paginatedSubjects.items.map((subject) => {
@@ -310,7 +312,7 @@ const GradesFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-sky-100 px-1.5 py-0.5 text-sky-700">
                           <Users className="h-3 w-3" />
-                          <span>{classStudents.length} students</span>
+                          <span>{classStudents.length} {t('students')}</span>
                         </div>
                         <div className="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700" style={{ color: getGradeColor('A') }}>
                           <span>{avgPercent.toFixed(1)}%</span>

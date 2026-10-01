@@ -20,6 +20,7 @@ import { formatGroupLabel } from '@/shared/groupLabel';
 import { getStatusVariant, isTransferredStudentStatus, isIncomingTransfer, INCOMING_TRANSFER_VARIANT } from '../status';
 import { ActionReasonPicker, isReasonReady, resolveReasonId } from './ActionReasonPicker';
 import { DeleteStudentDialog } from './DeleteStudentDialog';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type TeacherOption = {
   id?: string | number;
@@ -55,6 +56,7 @@ const PasswordResetDialog = ({
   onOpenChange: (open: boolean) => void;
   onPasswordUpdate?: (student: Student, password: string) => Promise<void> | void;
 }) => {
+  const { t } = useLanguage();
   const [value, setValue] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -79,13 +81,13 @@ const PasswordResetDialog = ({
     <Dialog open={student != null} onOpenChange={(open) => (!open && !saving ? onOpenChange(false) : undefined)}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Reset password</DialogTitle>
+          <DialogTitle>{t('Reset password')}</DialogTitle>
           <DialogDescription>
             {student ? `Set a new login password for ${student.first_name} ${student.last_name}.` : ''}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
-          <Label htmlFor="reset-password">New password</Label>
+          <Label htmlFor="reset-password">{t('New password')}</Label>
           <div className="relative">
             <KeyRound className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -97,7 +99,7 @@ const PasswordResetDialog = ({
                 if (event.key === 'Enter') save();
               }}
               disabled={saving}
-              placeholder="New password"
+              placeholder={t('New password')}
               autoComplete="new-password"
               className="pl-8"
             />
@@ -105,10 +107,10 @@ const PasswordResetDialog = ({
         </div>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button type="button" onClick={save} disabled={saving || !value.trim()}>
-            {saving ? 'Saving...' : 'Save password'}
+            {saving ? t('Saving...') : 'Save password'}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -135,6 +137,7 @@ export const StudentsTableView = ({
   viewMode = 'list',
   startIndex = 0,
 }: Props) => {
+  const { t } = useLanguage();
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [transferStudent, setTransferStudent] = useState<Student | null>(null);
@@ -262,15 +265,15 @@ export const StudentsTableView = ({
   const renderTransferredChip = (student: Student) => {
     if (isTransferredStudentStatus(student.status)) {
       return (
-        <span className={`${chipClass} border ${getStatusVariant(student.status)}`} title="Transferred out of this group">
+        <span className={`${chipClass} border ${getStatusVariant(student.status)}`} title={t('Transferred out of this group')}>
           <ArrowRightLeft className="h-3 w-3" />
-          Transferred
+          {t('Transferred')}
         </span>
       );
     }
     if (isIncomingTransfer(student)) {
       return (
-        <span className={`${chipClass} border ${INCOMING_TRANSFER_VARIANT}`} title="Transferred into this group">
+        <span className={`${chipClass} border ${INCOMING_TRANSFER_VARIANT}`} title={t('Transferred into this group')}>
           <ArrowRightLeft className="h-3 w-3" />
           New (Transferred)
         </span>
@@ -321,31 +324,31 @@ export const StudentsTableView = ({
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuItem onClick={() => openCoins(student)}>
           <Coins className={actionIconClass} />
-          Coins
+          {t('Coins')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onView(student.student_id || student.id || 0)}>
           <Info className={actionIconClass} />
-          View
+          {t('View')}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onEdit(student)}>
           <Pencil className={actionIconClass} />
-          Edit
+          {t('Edit')}
         </DropdownMenuItem>
         {onTransfer && (
           <DropdownMenuItem onClick={() => openTransfer(student)}>
             <ArrowRightLeft className={actionIconClass} />
-            Transfer
+            {t('Transfer')}
           </DropdownMenuItem>
         )}
         {onPasswordUpdate && (
           <DropdownMenuItem onClick={() => setPasswordTarget(student)}>
             <KeyRound className={actionIconClass} />
-            Reset password
+            {t('Reset password')}
           </DropdownMenuItem>
         )}
         <DropdownMenuItem className="text-rose-600 focus:text-rose-700" onClick={() => setDeleteTarget({ ids: [student.student_id || student.id || 0], bulk: false })}>
           <Trash2 className={actionIconClass} />
-          Delete
+          {t('Delete')}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -366,7 +369,7 @@ export const StudentsTableView = ({
       <Dialog open={transferStudent != null || bulkTransferOpen} onOpenChange={(open) => (!open ? closeTransfer() : undefined)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{bulkTransferOpen ? `Transfer ${selectedIds.size} students` : 'Transfer student'}</DialogTitle>
+            <DialogTitle>{bulkTransferOpen ? `Transfer ${selectedIds.size} students` : t('Transfer student')}</DialogTitle>
             <DialogDescription>
               {bulkTransferOpen ? 'Move the selected students into another teacher’s group.' : 'Move this student into another group. The current group keeps a transferred record, and a new active student record is created in the target group.'}
             </DialogDescription>
@@ -391,7 +394,7 @@ export const StudentsTableView = ({
                 disabled={transferring}
               >
                 <SelectTrigger id="target-teacher">
-                  <SelectValue placeholder="Select target teacher" />
+                  <SelectValue placeholder={t('Select target teacher')} />
                 </SelectTrigger>
                 <SelectContent>
                   {teacherOptions
@@ -407,7 +410,7 @@ export const StudentsTableView = ({
               <Label htmlFor="target-class">New group</Label>
               <Select value={targetClassId} onValueChange={setTargetClassId} disabled={transferring || !targetTeacherId}>
                 <SelectTrigger id="target-class">
-                  <SelectValue placeholder={targetTeacherId ? 'Select target group' : 'Choose a teacher first'} />
+                  <SelectValue placeholder={targetTeacherId ? t('Select target group') : t('Choose a teacher first')} />
                 </SelectTrigger>
                 <SelectContent>
                   {classOptions
@@ -436,19 +439,19 @@ export const StudentsTableView = ({
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeTransfer} disabled={transferring}>
-              Cancel
+              {t('Cancel')}
             </Button>
             <Button type="button" onClick={submitTransfer} disabled={transferring || !targetClassId || !isReasonReady(transferReasonId, transferCustomReason)}>
               <ArrowRightLeft className="mr-2 h-4 w-4" />
-              {transferring ? 'Transferring...' : 'Transfer'}
+              {transferring ? t('Transferring...') : t('Transfer')}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
       <DeleteStudentDialog
         open={deleteTarget != null}
-        title={deleteTarget?.bulk ? `Delete ${deleteTarget.ids.length} students` : 'Delete student'}
-        description={deleteTarget?.bulk ? 'Pick why these students are being removed. This applies to every selected student.' : 'Pick why this student is being removed.'}
+        title={deleteTarget?.bulk ? `Delete ${deleteTarget.ids.length} students` : t('Delete student')}
+        description={deleteTarget?.bulk ? 'Pick why these students are being removed. This applies to every selected student.' : t('Pick why this student is being removed.')}
         onOpenChange={(open) => (!open ? setDeleteTarget(null) : undefined)}
         onConfirm={confirmDelete}
       />
@@ -465,28 +468,28 @@ export const StudentsTableView = ({
       <>
         {selectedIds.size > 0 && (
           <div className="flex items-center justify-between rounded-lg border border-sky-100 bg-white px-3 py-2 text-sm shadow-sm dark:border-border dark:bg-card">
-            <span className="font-medium">{selectedIds.size} selected</span>
+            <span className="font-medium">{selectedIds.size} {t('selected')}</span>
             <div className="flex items-center gap-2">
               {onTransfer && (
                 <Button type="button" variant="outline" size="sm" onClick={openBulkTransfer}>
                   <ArrowRightLeft className="mr-2 h-4 w-4" />
-                  Transfer
+                  {t('Transfer')}
                 </Button>
               )}
               {onBulkDelete && (
                 <Button type="button" variant="outline" size="sm" onClick={deleteSelected}>
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete
+                  {t('Delete')}
                 </Button>
               )}
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={clearSelection}>
-                Clear
+                {t('Clear')}
               </Button>
             </div>
           </div>
         )}
         {loading ? (
-          <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center">Loading...</CardContent></Card>
+          <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center">{t('Loading...')}</CardContent></Card>
         ) : students.length === 0 ? (
           <Card className="border-sky-100 bg-white shadow-sm dark:border-border dark:bg-card"><CardContent className="py-12 text-center text-muted-foreground">{emptyText}</CardContent></Card>
         ) : (
@@ -581,22 +584,22 @@ export const StudentsTableView = ({
     <Card className="overflow-hidden border-slate-200/80 bg-white shadow-[0_18px_50px_-38px_rgba(15,23,42,0.6)] dark:border-border dark:bg-card dark:shadow-sm">
       {selectedIds.size > 0 && (
         <div className="flex items-center justify-between border-b bg-sky-50/70 px-3 py-1.5 text-xs dark:bg-muted/50">
-          <span className="font-medium">{selectedIds.size} selected</span>
+          <span className="font-medium">{selectedIds.size} {t('selected')}</span>
           <div className="flex items-center gap-2">
             {onTransfer && (
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={openBulkTransfer}>
                 <ArrowRightLeft className="mr-1.5 h-3.5 w-3.5" />
-                Transfer
+                {t('Transfer')}
               </Button>
             )}
             {onBulkDelete && (
               <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={deleteSelected}>
                 <Trash2 className="mr-1.5 h-3.5 w-3.5" />
-                Delete
+                {t('Delete')}
               </Button>
             )}
             <Button type="button" variant="outline" size="sm" className="h-7 text-xs" onClick={clearSelection}>
-              Clear
+              {t('Clear')}
             </Button>
           </div>
         </div>
@@ -612,19 +615,19 @@ export const StudentsTableView = ({
                   if (input) input.indeterminate = selectedVisibleCount > 0 && !allVisibleSelected;
                 }}
                 onChange={(event) => toggleAllVisible(event.target.checked)}
-                aria-label="Select all visible students"
+                aria-label={t('Select all visible students')}
                 className="h-3.5 w-3.5"
               />
             </TableHead>
             <TableHead className="h-8 w-12 px-2 text-xs">#</TableHead>
-            <TableHead className="h-8 px-2 text-xs">Name</TableHead>
-            {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Group</TableHead>}
-            {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">Teacher</TableHead>}
-            <TableHead className="h-8 px-2 text-xs">School</TableHead>
-            <TableHead className="h-8 px-2 text-xs">School class</TableHead>
-            <TableHead className="h-8 px-2 text-xs">Phone</TableHead>
-            <TableHead className="h-8 px-2 text-xs">Age</TableHead>
-            {showMonthlyPaymentStatus && <TableHead className="h-8 px-2 text-xs">This month</TableHead>}
+            <TableHead className="h-8 px-2 text-xs">{t('Name')}</TableHead>
+            {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">{t('Group')}</TableHead>}
+            {!hideTeacherGroup && <TableHead className="h-8 px-2 text-xs">{t('Teacher')}</TableHead>}
+            <TableHead className="h-8 px-2 text-xs">{t('School')}</TableHead>
+            <TableHead className="h-8 px-2 text-xs">{t('School class')}</TableHead>
+            <TableHead className="h-8 px-2 text-xs">{t('Phone')}</TableHead>
+            <TableHead className="h-8 px-2 text-xs">{t('Age')}</TableHead>
+            {showMonthlyPaymentStatus && <TableHead className="h-8 px-2 text-xs">{t('This month')}</TableHead>}
             <TableHead className="h-8 px-2 text-right text-xs"></TableHead>
           </TableRow>
         </TableHeader>
@@ -632,7 +635,7 @@ export const StudentsTableView = ({
           {loading ? (
             <TableRow>
               <TableCell colSpan={(hideTeacherGroup ? 8 : 10) + (showMonthlyPaymentStatus ? 1 : 0)} className="py-8 text-center">
-                Loading...
+                {t('Loading...')}
               </TableCell>
             </TableRow>
           ) : students.length === 0 ? (

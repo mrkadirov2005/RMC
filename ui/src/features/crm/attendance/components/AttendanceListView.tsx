@@ -29,6 +29,7 @@ import { SimplePaginationBar } from '@/components/common/SimplePaginationBar';
 import { paginateItems } from '@/components/common/pagination';
 import { useMemo } from 'react';
 import type { Attendance, Class, Student, Teacher } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface AttendanceListViewProps {
   searchTerm: string;
@@ -97,6 +98,7 @@ const AttendanceListView = ({
   handleDelete,
   attendanceStatusOptions,
 }: AttendanceListViewProps) => {
+  const { t } = useLanguage();
   const paginatedAttendance = useMemo(
     () => paginateItems(displayedAttendance, attendancePage, attendancePageSize),
     [displayedAttendance, attendancePage, attendancePageSize]
@@ -114,7 +116,7 @@ const AttendanceListView = ({
       <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-border dark:bg-card">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-bold">Filters</h2>
+            <h2 className="text-sm font-bold">{t('Filters')}</h2>
             <p className="text-xs text-muted-foreground">Narrow the records without leaving this page.</p>
           </div>
           {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters}><X className="mr-1 h-4 w-4" />Reset filters</Button>}
@@ -124,7 +126,7 @@ const AttendanceListView = ({
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search by student name..."
+            placeholder={t('Search by student name...')}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
@@ -145,9 +147,9 @@ const AttendanceListView = ({
             setFilterClassId('');
             setFilterStudentId('');
           }}>
-            <SelectTrigger><SelectValue placeholder="All teachers" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('All teachers')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All teachers</SelectItem>
+              <SelectItem value="all">{t('All teachers')}</SelectItem>
               {teachers.map((teacher) => {
                 const id = Number(teacher.teacher_id || teacher.id);
                 return <SelectItem key={id} value={String(id)}>{teacher.first_name} {teacher.last_name}</SelectItem>;
@@ -155,9 +157,9 @@ const AttendanceListView = ({
             </SelectContent>
           </Select>
           <Select value={filterClassId || 'all'} onValueChange={(value) => { setFilterClassId(value === 'all' ? '' : value); setFilterStudentId(''); }}>
-            <SelectTrigger><SelectValue placeholder="All groups" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('All groups')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All groups</SelectItem>
+              <SelectItem value="all">{t('All groups')}</SelectItem>
               {classes.filter((item) => !filterTeacherId || Number(item.teacher_id || 0) === Number(filterTeacherId)).map((item) => {
                 const id = Number(item.class_id || item.id);
                 return <SelectItem key={id} value={String(id)}>{item.class_name}</SelectItem>;
@@ -165,9 +167,9 @@ const AttendanceListView = ({
             </SelectContent>
           </Select>
           <Select value={filterStudentId || 'all'} onValueChange={(value) => setFilterStudentId(value === 'all' ? '' : value)}>
-            <SelectTrigger><SelectValue placeholder="All students" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder={t('All students')} /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All students</SelectItem>
+              <SelectItem value="all">{t('All students')}</SelectItem>
               {filteredStudents.map((student) => {
                 const id = Number(student.student_id || student.id);
                 return <SelectItem key={id} value={String(id)}>{student.first_name} {student.last_name}</SelectItem>;
@@ -176,10 +178,10 @@ const AttendanceListView = ({
           </Select>
           <Select value={filterStatus || 'all'} onValueChange={(value) => setFilterStatus(value === 'all' ? '' : value)}>
               <SelectTrigger>
-                <SelectValue placeholder="All Status" />
+                <SelectValue placeholder={t('All Status')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="all">{t('All statuses')}</SelectItem>
                 {attendanceStatusOptions.map((opt) => (
                   <SelectItem key={opt.id} value={opt.value}>{opt.label}</SelectItem>
                 ))}
@@ -191,7 +193,7 @@ const AttendanceListView = ({
           </div>
             <Select value={filterAgeRange || 'all'} onValueChange={(value) => setFilterAgeRange(value === 'all' ? '' : value)}>
               <SelectTrigger>
-                <SelectValue placeholder="All Ages" />
+                <SelectValue placeholder={t('All Ages')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All ages</SelectItem>
@@ -202,7 +204,7 @@ const AttendanceListView = ({
                 <SelectItem value="19-25">19-25 years</SelectItem>
               </SelectContent>
             </Select>
-          <div className="flex items-center justify-end text-sm font-semibold text-muted-foreground">{displayedAttendance.length} records</div>
+          <div className="flex items-center justify-end text-sm font-semibold text-muted-foreground">{displayedAttendance.length} {t('records')}</div>
         </div>
       </div>
 
@@ -211,24 +213,24 @@ const AttendanceListView = ({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Student</TableHead>
-              <TableHead>Group</TableHead>
-              <TableHead>Teacher</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Remarks</TableHead>
-              <TableHead className="w-24">Actions</TableHead>
+              <TableHead>{t('Student')}</TableHead>
+              <TableHead>{t('Group')}</TableHead>
+              <TableHead>{t('Teacher')}</TableHead>
+              <TableHead>{t('Date')}</TableHead>
+              <TableHead>{t('Status')}</TableHead>
+              <TableHead>{t('Remarks')}</TableHead>
+              <TableHead className="w-24">{t('Actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {stateLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-6">Loading...</TableCell>
+                <TableCell colSpan={7} className="text-center py-6">{t('Loading...')}</TableCell>
               </TableRow>
             ) : displayedAttendance.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-6 text-muted-foreground">
-                  {hasActiveFilters ? 'No attendance records match your criteria' : 'No attendance records found'}
+                  {hasActiveFilters ? t('No attendance records match your criteria') : t('No attendance records found')}
                 </TableCell>
               </TableRow>
             ) : (

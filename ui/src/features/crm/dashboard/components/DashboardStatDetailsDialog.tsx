@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/table';
 import type { DashboardCollections, DashboardRecord, DashboardStatCard } from '../types';
 import { formatMoney } from '@/utils/helpers';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DashboardStatDetailsDialogProps {
   card: DashboardStatCard | null;
@@ -130,6 +131,7 @@ export const DashboardStatDetailsDialog = ({
   open,
   onOpenChange,
 }: DashboardStatDetailsDialogProps) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const studentMap = useMemo(() => {
     const map = new Map<number, DashboardRecord>();
@@ -301,11 +303,11 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead className="text-right">Classes</TableHead>
-                  <TableHead>Class list</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead className="text-right">{t('Classes')}</TableHead>
+                  <TableHead>{t('Class list')}</TableHead>
                   <TableHead className="text-right">Matching rows</TableHead>
-                  <TableHead className="text-right">Profile</TableHead>
+                  <TableHead className="text-right">{t('Profile')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -321,7 +323,7 @@ export const DashboardStatDetailsDialog = ({
                       <TableCell className="text-right">
                         {firstStudent && (
                           <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={(event) => { event.stopPropagation(); goToStudent(firstStudent); }}>
-                            Open
+                            {t('Open')}
                             <ArrowUpRight className="h-4 w-4" />
                           </Button>
                         )}
@@ -335,8 +337,8 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>School</TableHead>
-                  <TableHead className="text-right">Students</TableHead>
+                  <TableHead>{t('School')}</TableHead>
+                  <TableHead className="text-right">{t('Students')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -352,12 +354,12 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead className="text-right">Expected</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Remaining</TableHead>
-                  <TableHead className="text-right">Profile</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Class')}</TableHead>
+                  <TableHead className="text-right">{t('Expected')}</TableHead>
+                  <TableHead className="text-right">{t('Paid')}</TableHead>
+                  <TableHead className="text-right">{t('Remaining')}</TableHead>
+                  <TableHead className="text-right">{t('Profile')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -377,7 +379,7 @@ export const DashboardStatDetailsDialog = ({
                     <TableCell className="text-right text-rose-700 dark:text-rose-300">{formatMoney(row.remaining)}</TableCell>
                     <TableCell className="text-right">
                       <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={(event) => { event.stopPropagation(); goToStudent(row.student); }}>
-                        Open
+                        {t('Open')}
                         <ArrowUpRight className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -389,11 +391,11 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Date')}</TableHead>
+                  <TableHead>{t('Type')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className="text-right">{t('Amount')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -420,12 +422,12 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Due date</TableHead>
-                  <TableHead className="text-right">Debt</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="text-right">Profile</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Due date')}</TableHead>
+                  <TableHead className="text-right">{t('Debt')}</TableHead>
+                  <TableHead className="text-right">{t('Paid')}</TableHead>
+                  <TableHead className="text-right">{t('Balance')}</TableHead>
+                  <TableHead className="text-right">{t('Profile')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -446,7 +448,7 @@ export const DashboardStatDetailsDialog = ({
                       <TableCell className="text-right">
                         {student && (
                           <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={(event) => { event.stopPropagation(); goToStudent(student); }}>
-                            Open
+                            {t('Open')}
                             <ArrowUpRight className="h-4 w-4" />
                           </Button>
                         )}
@@ -460,10 +462,10 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Teacher</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Profile</TableHead>
+                  <TableHead>{t('Teacher')}</TableHead>
+                  <TableHead>{t('Contact')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className="text-right">{t('Profile')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -476,7 +478,7 @@ export const DashboardStatDetailsDialog = ({
                       <TableCell>{getString(teacher, 'status') || '-'}</TableCell>
                       <TableCell className="text-right">
                         <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={(event) => { event.stopPropagation(); goToTeacher(teacher); }}>
-                          Open
+                          {t('Open')}
                           <ArrowUpRight className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -489,11 +491,11 @@ export const DashboardStatDetailsDialog = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>Class</TableHead>
-                  <TableHead>School</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Profile</TableHead>
+                  <TableHead>{t('Student')}</TableHead>
+                  <TableHead>{t('Class')}</TableHead>
+                  <TableHead>{t('School')}</TableHead>
+                  <TableHead>{t('Status')}</TableHead>
+                  <TableHead className="text-right">{t('Profile')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -508,7 +510,7 @@ export const DashboardStatDetailsDialog = ({
                       <TableCell>{getString(student, 'status') || '-'}</TableCell>
                       <TableCell className="text-right">
                         <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={(event) => { event.stopPropagation(); goToStudent(student); }}>
-                          Open
+                          {t('Open')}
                           <ArrowUpRight className="h-4 w-4" />
                         </Button>
                       </TableCell>

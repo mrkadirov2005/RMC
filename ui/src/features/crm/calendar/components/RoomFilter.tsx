@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface RoomFilterProps {
   selectedRoom: string;
@@ -22,6 +23,7 @@ export const RoomFilter = ({
   setSelectedRoom,
   uniqueRoomNumbers,
 }: RoomFilterProps) => {
+  const { t } = useLanguage();
   return (
     <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg border border-sky-100 bg-gradient-to-r from-white via-sky-50/60 to-emerald-50/40 p-4 shadow-sm dark:border-border dark:bg-card dark:bg-none dark:shadow-none">
       <div className="flex items-center gap-2">
@@ -32,10 +34,10 @@ export const RoomFilter = ({
       </div>
       <Select value={selectedRoom} onValueChange={setSelectedRoom}>
         <SelectTrigger className="w-[200px] border-white/80 bg-white/90 shadow-sm dark:border-input dark:bg-background dark:shadow-none">
-          <SelectValue placeholder="All Rooms" />
+          <SelectValue placeholder={t('All Rooms')} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All Rooms</SelectItem>
+          <SelectItem value="all">{t('All Rooms')}</SelectItem>
           {uniqueRoomNumbers.map((num) => (
             <SelectItem key={num} value={num}>
               {num}

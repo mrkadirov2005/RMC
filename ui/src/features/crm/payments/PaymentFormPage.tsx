@@ -448,7 +448,7 @@ const PaymentFormPage = () => {
               <div className="grid gap-4 p-4 md:grid-cols-2">
                 {isOwner && isEditing && (
                   <SelectField
-                    label="Center"
+                    label={t('Center')}
                     name="center_id"
                     value={formData.center_id || ''}
                     onChange={(value) => setFormData((current) => ({ ...current, center_id: Number(value) }))}
@@ -540,7 +540,7 @@ const PaymentFormPage = () => {
                           size="sm"
                           className="h-7 w-7 p-0"
                           onClick={() => setHistoryWindowEnd((current) => addMonths(current, -6))}
-                          aria-label="Previous six months"
+                          aria-label={t('Previous six months')}
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -551,7 +551,7 @@ const PaymentFormPage = () => {
                           className="h-7 w-7 p-0"
                           onClick={() => setHistoryWindowEnd((current) => addMonths(current, 6))}
                           disabled={!canMoveHistoryForward}
-                          aria-label="Next six months"
+                          aria-label={t('Next six months')}
                         >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
@@ -638,13 +638,13 @@ const PaymentFormPage = () => {
             <section className="rounded-lg border border-sky-200 bg-sky-50/80 p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <Label className="text-sm font-bold text-sky-900">Discount</Label>
+                  <Label className="text-sm font-bold text-sky-900">{t('Discount')}</Label>
                   <p className="text-xs text-sky-700">
                     {loadingDiscount
-                      ? 'Checking active discounts...'
+                      ? t('Checking active discounts...')
                       : activeDiscount
-                        ? `${activeDiscount.discount_kind === 'monthly_discount' ? 'One-month' : 'Serial'} discount is applied automatically.`
-                        : 'Use a monthly discount only for this payment.'}
+                        ? `${activeDiscount.discount_kind === 'monthly_discount' ? 'One-month' : t('Serial')} discount is applied automatically.`
+                        : t('Use a monthly discount only for this payment.')}
                   </p>
                 </div>
                 {formData.discount_kind === 'serial_discount' ? (
@@ -653,7 +653,7 @@ const PaymentFormPage = () => {
                   </Button>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-sky-800">Monthly</span>
+                    <span className="text-xs font-semibold text-sky-800">{t('Monthly')}</span>
                     <Switch
                       checked={formData.discount_kind === 'monthly_discount'}
                       onCheckedChange={(checked) =>
@@ -673,7 +673,7 @@ const PaymentFormPage = () => {
               {formData.discount_kind && (
                 <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-4">
                   <SelectField
-                    label="Discount type"
+                    label={t('Discount type')}
                     name="discount_value_type"
                     value={formData.discount_value_type || 'fixed'}
                     onChange={(value) =>
@@ -685,7 +685,7 @@ const PaymentFormPage = () => {
                     ]}
                   />
                   <div className="space-y-2">
-                    <Label>Discount value</Label>
+                    <Label>{t('Discount value')}</Label>
                     <Input
                       type="number"
                       min="0"
@@ -718,7 +718,7 @@ const PaymentFormPage = () => {
               <div className="grid gap-4 p-4 md:grid-cols-2">
                 <SelectField label={t('Payment Method')} name="payment_method" value={formData.payment_method || ''} onChange={(value) => setFormData((current) => ({ ...current, payment_method: value }))} options={paymentMethodOptions} required placeholder={t('Select method')} />
                 <SelectField label={t('Payment Type')} name="payment_type" value={formData.payment_type || ''} onChange={(value) => setFormData((current) => ({ ...current, payment_type: value }))} options={paymentTypeOptions} required placeholder={t('Select type')} />
-                <SelectField label="Status" name="status" value={formData.status || ''} onChange={(value) => setFormData((current) => ({ ...current, status: value }))} options={paymentStatusOptions} required placeholder={t('Select status')} />
+                <SelectField label={t('Status')} name="status" value={formData.status || ''} onChange={(value) => setFormData((current) => ({ ...current, status: value }))} options={paymentStatusOptions} required placeholder={t('Select status')} />
                 <div className="space-y-2">
                   <Label htmlFor="receipt_number">{t('Receipt Number')} *</Label>
                   <Input id="receipt_number" required value={formData.receipt_number || ''} onChange={(e) => setFormData((current) => ({ ...current, receipt_number: e.target.value }))} />
