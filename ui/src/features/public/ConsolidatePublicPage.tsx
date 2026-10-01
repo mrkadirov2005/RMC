@@ -18,6 +18,7 @@ import {
   type ConsolidationWord,
   type PublicSetView as SetView,
 } from '@/features/student/api/consolidationExerciseApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Stage =
   | { step: 'loading' }
@@ -27,6 +28,7 @@ type Stage =
   | { step: 'exercise'; username: string; trial: ConsolidationTrial; words: ConsolidationWord[]; violationLimit: number };
 
 export const ConsolidatePublicPage = () => {
+  const { t } = useLanguage();
   const { shareToken = '' } = useParams<{ shareToken: string }>();
   const [stage, setStage] = useState<Stage>({ step: 'loading' });
   const [username, setUsername] = useState('');
@@ -121,7 +123,7 @@ export const ConsolidatePublicPage = () => {
             </p>
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
 
@@ -173,7 +175,7 @@ export const ConsolidatePublicPage = () => {
 
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
 

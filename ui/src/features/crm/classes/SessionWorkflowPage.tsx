@@ -22,6 +22,7 @@ import {
 } from './sessionWorkflowModel';
 import { sessionWorkflowApi } from './api/sessionWorkflowApi';
 import ConsolidationTab from './components/ConsolidationTab';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const toPointMap = (options: ScoreOption[]) => toWorkflowPointMap(options);
 
@@ -48,6 +49,7 @@ const getStudentId = getWorkflowStudentId;
 const toDateKey = (value?: string) => (value ? new Date(value).toISOString().split('T')[0] : '');
 
 export default function SessionWorkflowPage() {
+  const { t } = useLanguage();
   const { classId, sessionId } = useParams<{ classId: string; sessionId: string }>();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -405,7 +407,7 @@ export default function SessionWorkflowPage() {
           Back to class
         </Button>
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       </div>
     );

@@ -278,7 +278,7 @@ const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
 
         {error ? (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-8 text-center text-sm font-semibold text-amber-800 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-200">
-            {error}
+            {t(error)}
           </div>
         ) : loading ? (
           <div className="flex justify-center rounded-lg border border-slate-200 bg-white py-12 dark:border-white/10 dark:bg-white/[0.04]">

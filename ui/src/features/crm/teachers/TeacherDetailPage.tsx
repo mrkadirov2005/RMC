@@ -23,6 +23,7 @@ import {
   TeacherTemporaryPasswordDialog,
 } from './components/TeacherPasswordControls';
 import { useTeacherDetailPage } from './hooks/useTeacherDetailPage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const TeacherInfoTab = lazy(() => import('./components/TeacherInfoTab'));
 const TeacherClassesStudentsTab = lazy(() => import('./components/TeacherClassesStudentsTab'));
@@ -39,6 +40,7 @@ const TabLoadingState = () => (
 
 // Renders the teacher detail page screen.
 const TeacherDetailPage = () => {
+  const { t } = useLanguage();
   const {
     navigate,
     teacher,
@@ -152,7 +154,7 @@ const TeacherDetailPage = () => {
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+          <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
         </Alert>
       )}
 

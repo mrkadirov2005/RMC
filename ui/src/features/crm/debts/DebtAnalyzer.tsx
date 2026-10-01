@@ -27,6 +27,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { debtAPI } from './api';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface UnpaidMonth {
   year: number;
@@ -60,6 +61,7 @@ interface AnalysisResponse {
 
 // Renders the debt analyzer module.
 const DebtAnalyzer = () => {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
@@ -144,7 +146,7 @@ const DebtAnalyzer = () => {
         {error && (
           <Alert variant="destructive" className="mb-4">
             <AlertDescription className="flex justify-between items-center">
-              {getErrorMessage(error)}
+              {t(getErrorMessage(error))}
               <button onClick={() => setError(null)} className="text-sm underline ml-2">
                 Dismiss
               </button>

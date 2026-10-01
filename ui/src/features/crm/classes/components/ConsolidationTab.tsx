@@ -15,6 +15,7 @@ import {
   type ConsolidationTrial,
   type ConsolidationWord,
 } from '../api/consolidationApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface DraftWord {
   id: string;
@@ -187,6 +188,7 @@ interface ConsolidationTabProps {
 }
 
 export default function ConsolidationTab({ sessionId, onChanged }: ConsolidationTabProps) {
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [set, setSet] = useState<ConsolidationSet | null>(null);
@@ -458,7 +460,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>{error}</AlertDescription>
+        <AlertDescription>{t(error)}</AlertDescription>
       </Alert>
     );
   }
@@ -474,7 +476,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
 
         {createError && (
           <Alert variant="destructive">
-            <AlertDescription>{createError}</AlertDescription>
+            <AlertDescription>{t(createError)}</AlertDescription>
           </Alert>
         )}
 
@@ -522,7 +524,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
 
         {createError && (
           <Alert variant="destructive">
-            <AlertDescription>{createError}</AlertDescription>
+            <AlertDescription>{t(createError)}</AlertDescription>
           </Alert>
         )}
 

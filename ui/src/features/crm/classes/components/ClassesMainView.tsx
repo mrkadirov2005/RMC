@@ -187,7 +187,7 @@ export const ClassesMainView = ({
 
       {state.error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 

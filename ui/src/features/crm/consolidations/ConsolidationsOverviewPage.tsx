@@ -176,7 +176,7 @@ export default function ConsolidationsOverviewPage() {
 
       {overviewError && (
         <Alert variant="destructive">
-          <AlertDescription>{overviewError}</AlertDescription>
+          <AlertDescription>{t(overviewError)}</AlertDescription>
         </Alert>
       )}
 

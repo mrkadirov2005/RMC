@@ -263,7 +263,7 @@ const TeacherTestsTab = ({ teacherId, onRefresh }: TeacherTestsTabProps) => {
 
       {error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+          <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
         </Alert>
       )}
 

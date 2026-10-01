@@ -23,6 +23,7 @@ import { useAppDispatch, useAppSelector } from '../crm/hooks';
 import { loginSuccess, setLoading, loginFailure } from '../../slices/authSlice';
 import { authAPI } from './api';
 import { handleApiError, showToast } from '../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Required: registration is enabled only when this is set, matching the backend's
 // OWNER_INVITE_KEY (no shared hardcoded default anymore).
@@ -33,6 +34,7 @@ const inputClass =
 
 // Renders the owner register page screen.
 export const OwnerRegisterPage = () => {
+  const { t } = useLanguage();
   const [step, setStep] = useState<'keyword' | 'form'>('keyword');
   const [keyword, setKeyword] = useState('');
   const [username, setUsername] = useState('');
@@ -172,7 +174,7 @@ export const OwnerRegisterPage = () => {
 
           {localError && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{localError}</AlertDescription>
+              <AlertDescription>{t(localError)}</AlertDescription>
             </Alert>
           )}
 

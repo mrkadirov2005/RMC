@@ -20,6 +20,7 @@ import { AgendaCalendarView } from './views/AgendaCalendarView';
 import { DayCalendarView } from './views/DayCalendarView';
 import { MonthCalendarView } from './views/MonthCalendarView';
 import { WeekCalendarView } from './views/WeekCalendarView';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const VIEW_KEY = 'rmc-calendar-view';
 const validView = (value: string | null): value is CalendarView => ['day', 'week', 'month', 'agenda'].includes(value || '');
@@ -46,6 +47,7 @@ const minutesBetween = (start: string, end: string) => {
 };
 
 const CalendarPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector(state => state.auth);
   const classes = useAppSelector(state => state.classes.items);
@@ -179,7 +181,7 @@ const CalendarPage = () => {
         ['Lessons', counts.total, CalendarDays], ['Conducted', counts.conducted, CheckCircle2], ['Pending', counts.pending, Clock3], ['Attendance missing', counts.attendance, AlertTriangle],
       ] as const).map(([label, value, Icon]) => <div key={label} className="flex items-center gap-2 border-r px-3 py-2 last:border-r-0"><Icon className="h-4 w-4 text-muted-foreground" /><div><div className="text-lg font-bold leading-none">{value}</div><div className="mt-1 text-[11px] text-muted-foreground">{label}</div></div></div>)}</div>
       {workspace.conflicts.length > 0 && <button type="button" onClick={() => setShowConflicts(true)} className="flex w-full items-center gap-2 border-b bg-rose-50 px-3 py-2 text-left text-xs font-medium text-rose-800 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-200 dark:hover:bg-rose-950/70"><AlertTriangle className="h-4 w-4" /><span className="flex-1">{workspace.conflicts.length} scheduling conflict{workspace.conflicts.length === 1 ? '' : 's'} need attention.</span><span className="underline underline-offset-2">View details</span></button>}
-      {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{workspace.error}</div>}
+      {workspace.error && <div role="alert" className="border-b bg-destructive/10 p-3 text-sm text-destructive">{t(workspace.error)}</div>}
       {workspace.loading ? <div className="grid min-h-[420px] place-items-center"><Loader2 aria-label="Loading calendar" className="h-7 w-7 animate-spin text-primary" /></div> : <>
         {view === 'day' && <DayCalendarView anchor={anchor} events={displayEvents} onSelect={setSelectedEvent} />}
         {view === 'week' && <WeekCalendarView anchor={anchor} events={displayEvents} rooms={calendarRooms} onSelect={setSelectedEvent} onMove={moveRecurring} canMove={canManage} />}

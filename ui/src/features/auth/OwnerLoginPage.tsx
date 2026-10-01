@@ -21,6 +21,7 @@ import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { authAPI } from './api';
 import { setAuthPersistencePreference } from '../../shared/auth/authStorage';
 import { showToast, handleApiError } from '../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const logoSrc = '/temurbek-school-logo.jpg';
 const inputClass =
@@ -28,6 +29,7 @@ const inputClass =
 
 // Renders the owner login page screen.
 export const OwnerLoginPage = () => {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -137,7 +139,7 @@ export const OwnerLoginPage = () => {
 
           {error && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+              <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
             </Alert>
           )}
 

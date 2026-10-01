@@ -24,6 +24,7 @@ import { setLoading, loginSuccess, loginFailure } from '../../slices/authSlice';
 import { authAPI } from './api';
 import { setAuthPersistencePreference } from '../../shared/auth/authStorage';
 import { showToast, handleApiError } from '../../utils/toast';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface LoginPageProps {
   userType: 'superuser' | 'teacher' | 'student';
@@ -79,6 +80,7 @@ const inputClass =
 
 // Renders the login page screen.
 export const LoginPage = ({ userType }: LoginPageProps) => {
+  const { t } = useLanguage();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -225,7 +227,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
 
           {error && (
             <Alert variant="destructive" className="mb-5 border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+              <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
             </Alert>
           )}
 

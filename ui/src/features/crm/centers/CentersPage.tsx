@@ -37,9 +37,11 @@ import {
   InsightCard,
   MetricTile,
 } from './components/CentersVisuals';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the centers page screen.
 const CentersPage = () => {
+  const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -214,7 +216,7 @@ const CentersPage = () => {
 
       {state.error && (
         <Alert variant="destructive" className="mb-4">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 

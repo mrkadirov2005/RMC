@@ -15,9 +15,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 // Renders the payment access gate module.
 export const PaymentAccessGate = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { loading, error, isAuthenticated } = useAppSelector((state) => state.paymentAccess);
   const { user } = useAppSelector((state) => state.auth);
@@ -62,7 +64,7 @@ export const PaymentAccessGate = () => {
 
         {error && (
           <Alert variant="destructive" className="mb-4">
-            <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+            <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
           </Alert>
         )}
 

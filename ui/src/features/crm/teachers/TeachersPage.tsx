@@ -255,7 +255,7 @@ const TeachersPage = () => {
 
       {state.error && (
         <Alert variant="destructive" className="mb-6">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 

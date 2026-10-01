@@ -20,6 +20,7 @@ import {
   type ConsolidationTrial,
   type ConsolidationWord,
 } from './api/consolidationExerciseApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export type ExerciseContext =
   | { mode: 'public'; shareToken: string; username: string }
@@ -42,6 +43,7 @@ interface TakeConsolidationPageProps {
 type Phase = 'gate' | 'active';
 
 export const TakeConsolidationPage = ({ context, initialTrial, initialWords, violationLimit, onExit }: TakeConsolidationPageProps) => {
+  const { t } = useLanguage();
   const [trial, setTrial] = useState(initialTrial);
   const [words, setWords] = useState(initialWords);
   const [trialToken, setTrialToken] = useState<string | null>(initialTrial.access_token ?? null);
@@ -277,7 +279,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
 
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
 
@@ -311,7 +313,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
             </p>
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{t(error)}</AlertDescription>
               </Alert>
             )}
             <Button onClick={handleStartExercise} className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
@@ -368,7 +370,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
 
           {error && (
             <Alert variant="destructive" className="border-red-200 bg-red-50 text-red-800">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{t(error)}</AlertDescription>
             </Alert>
           )}
 

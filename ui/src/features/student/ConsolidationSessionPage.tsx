@@ -11,8 +11,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { handleApiError } from '@/utils/toast';
 import { TakeConsolidationPage } from './TakeConsolidationPage';
 import { consolidationPortalAPI, type ConsolidationTrial, type ConsolidationWord, type StudentSetView } from './api/consolidationExerciseApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export const ConsolidationSessionPage = () => {
+  const { t } = useLanguage();
   const { sessionId = '' } = useParams<{ sessionId: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -77,7 +79,7 @@ export const ConsolidationSessionPage = () => {
         <CardContent className="space-y-4 p-8 text-center">
           {error && (
             <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{t(error)}</AlertDescription>
             </Alert>
           )}
           {data && (

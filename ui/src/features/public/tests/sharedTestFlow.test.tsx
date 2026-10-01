@@ -20,6 +20,9 @@ vi.mock('@/utils/toast', () => ({
 vi.mock('@/features/crm/tests/TakeTestPage', () => ({
   default: () => <div>take test screen</div>,
 }));
+vi.mock('@/i18n/LanguageContext', () => ({
+  useLanguage: () => ({ t: (value: string) => value }),
+}));
 
 import { SharedTestPage } from '../SharedTestPage';
 

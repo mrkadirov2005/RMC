@@ -42,6 +42,7 @@ import { fetchGradesForce } from '../../../slices/gradesSlice';
 import { getListRowBackground } from '../settings/listAppearance';
 import { StudentOverviewCards } from './components/StudentOverviewCards';
 import { buildStudentOverviewRows, buildStudentOverviewUpdate, createStudentOverviewDraft, getNextStudentAccountStatus, splitStudentOverviewRows, STUDENT_OVERVIEW_EDIT_FIELDS, type StudentOverviewDraft } from './studentOverview';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Class {
   class_id?: number;
@@ -146,6 +147,7 @@ interface CoinTransaction {
 
 // Renders the student detail page screen.
 const StudentDetailPage = () => {
+  const { t } = useLanguage();
   const dispatch = useAppDispatch();
   const { studentId } = useParams<{ studentId: string }>();
   const navigate = useNavigate();
@@ -464,7 +466,7 @@ const StudentDetailPage = () => {
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+          <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
         </Alert>
       )}
 

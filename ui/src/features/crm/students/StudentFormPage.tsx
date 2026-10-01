@@ -120,7 +120,7 @@ const StudentFormPage = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {(error || options.state.error) && (
           <Alert variant="destructive">
-            <AlertDescription>{getErrorMessage(error || options.state.error)}</AlertDescription>
+            <AlertDescription>{t(getErrorMessage(error || options.state.error))}</AlertDescription>
           </Alert>
         )}
 

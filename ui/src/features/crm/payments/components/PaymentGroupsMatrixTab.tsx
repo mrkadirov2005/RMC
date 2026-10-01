@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { cn } from '@/lib/utils';
 import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type MonthCellState = 'full' | 'partial' | 'none';
 
@@ -79,6 +80,7 @@ const getStateTitle = (state: MonthCellState) => {
 };
 
 export const PaymentGroupsMatrixTab = () => {
+  const { t } = useLanguage();
   const [groups, setGroups] = useState<Class[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
@@ -341,7 +343,7 @@ export const PaymentGroupsMatrixTab = () => {
 
           {error && (
             <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700">
-              {error}
+              {t(error)}
             </div>
           )}
 

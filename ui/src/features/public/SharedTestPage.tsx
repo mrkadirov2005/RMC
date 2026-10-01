@@ -16,6 +16,7 @@ import { handleApiError } from '@/utils/toast';
 import { formatTestType } from '@/features/crm/tests/testVisuals';
 import TakeTestPage, { type TakeTestTransport } from '@/features/crm/tests/TakeTestPage';
 import { sharedTestAPI, type SharedTestView } from './api/sharedTestApi';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type Stage =
   | { step: 'loading' }
@@ -56,6 +57,7 @@ const SharedTestRunner = ({
 };
 
 export const SharedTestPage = () => {
+  const { t } = useLanguage();
   const { shareToken = '' } = useParams<{ shareToken: string }>();
   const [stage, setStage] = useState<Stage>({ step: 'loading' });
   const [username, setUsername] = useState('');
@@ -189,7 +191,7 @@ export const SharedTestPage = () => {
 
           {error && (
             <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>{t(error)}</AlertDescription>
             </Alert>
           )}
 

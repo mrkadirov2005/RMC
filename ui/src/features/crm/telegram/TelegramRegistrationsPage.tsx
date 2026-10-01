@@ -182,7 +182,7 @@ const TelegramRegistrationsPage = () => {
 
       {error && (
         <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription>{t(error)}</AlertDescription>
         </Alert>
       )}
 

@@ -423,7 +423,7 @@ const PaymentFormPage = () => {
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <Alert variant="destructive">
-            <AlertDescription>{getErrorMessage(error)}</AlertDescription>
+            <AlertDescription>{t(getErrorMessage(error))}</AlertDescription>
           </Alert>
         )}
 

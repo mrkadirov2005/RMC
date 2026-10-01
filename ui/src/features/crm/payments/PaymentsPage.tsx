@@ -178,7 +178,7 @@ const PaymentsPage = () => {
 
       {state.error && (
         <Alert className="mb-4">
-          <AlertDescription>{state.error}</AlertDescription>
+          <AlertDescription>{t(state.error)}</AlertDescription>
         </Alert>
       )}
 
