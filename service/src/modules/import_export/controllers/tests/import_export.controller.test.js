@@ -177,7 +177,7 @@ describe('import and export controller', () => {
       expect(service.importEntity).toHaveBeenCalledWith('students', 'id,name', 5);
       expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'IMPORT', details: { rows: 12 } }));
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Imported 12 students' });
+      expect(res.json).toHaveBeenCalledWith({ message: '12 ta yozuv import qilindi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -232,7 +232,7 @@ describe('import and export controller', () => {
       await controller.pushEntityToSheets({ params: { entity: 'students' }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'GOOGLE_SHEETS_PUSH', details: { rows: 30 } }));
-      expect(res.json).toHaveBeenCalledWith({ message: 'Updated Google Sheets with 30 students', rows: 30 });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Google Sheets 30 ta yozuv bilan yangilandi', rows: 30 });
     });
 
     it('reports an unexpected failure as a 500', async () => {
@@ -301,7 +301,7 @@ describe('import and export controller', () => {
       await controller.pullEntityFromSheets({ params: { entity: 'students' }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(logAudit).toHaveBeenCalledWith(expect.objectContaining({ action: 'GOOGLE_SHEETS_PULL', details: { rows: 8 } }));
-      expect(res.json).toHaveBeenCalledWith({ message: 'Imported 8 students from Google Sheets', rows: 8 });
+      expect(res.json).toHaveBeenCalledWith({ message: "Google Sheets'dan 8 ta yozuv import qilindi", rows: 8 });
     });
 
     it('reports an unexpected failure as a 500', async () => {

@@ -255,7 +255,7 @@ const updateTeacherTaskStatus = async (req: any, res: any) => {
 
     if (existing.status !== transition.from) {
       return res.status(409).json({
-        error: `Cannot ${action} a task that is currently "${existing.status}". Expected status "${transition.from}".`,
+        error: `Vazifani "${action}" qilib bo'lmaydi: hozirgi holati "${existing.status}", kutilgan holat "${transition.from}".`,
       });
     }
 

@@ -347,7 +347,7 @@ describe('debts controller', () => {
       expect(debtService.generateDebtsFromAnalysis).toHaveBeenCalledWith([1, 2], 300000, 3, 'Term 1', 6);
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Created 2 debt records',
+        message: '2 ta qarz yozuvi yaratildi',
         debts: [{ debt_id: 1 }, { debt_id: 2 }],
       });
     });

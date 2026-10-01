@@ -64,7 +64,7 @@ describe('tests controller statistics and share links', () => {
       await controller.getStatistics({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch test statistics', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Test statistikasini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -86,7 +86,7 @@ describe('tests controller statistics and share links', () => {
       await controller.createShareLink({ params: { id: '7' }, user: { userType: 'teacher', id: 9 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Only the test author or a superuser can share this test.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Testni faqat uning muallifi yoki superuser ulasha oladi.' });
       expect(logAudit).not.toHaveBeenCalled();
     });
 
@@ -102,7 +102,7 @@ describe('tests controller statistics and share links', () => {
         entity_id: 7,
       }));
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Share link ready', share_token: 'fresh-token' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Ulashish havolasi tayyor', share_token: 'fresh-token' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -112,7 +112,7 @@ describe('tests controller statistics and share links', () => {
       await controller.createShareLink({ params: { id: '7' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create share link', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ulashish havolasini yaratib bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -141,7 +141,7 @@ describe('tests controller statistics and share links', () => {
 
       await controller.revokeShareLink({ params: { id: '7' }, user: {} }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Share link revoked' });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Ulashish havolasi bekor qilindi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -151,7 +151,7 @@ describe('tests controller statistics and share links', () => {
       await controller.revokeShareLink({ params: { id: '7' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to revoke share link', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Ulashish havolasini bekor qilib bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -219,7 +219,7 @@ describe('tests controller statistics and share links', () => {
       await controller.startSharedTest({ params: { shareToken: 'token-abc' }, body: { username: 'ghost' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'This test has not been assigned to that username.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu test ko'rsatilgan foydalanuvchi nomiga biriktirilmagan." });
     });
 
     it('reports an exhausted attempt allowance as a conflict', async () => {
@@ -229,7 +229,7 @@ describe('tests controller statistics and share links', () => {
       await controller.startSharedTest({ params: { shareToken: 'token-abc' }, body: { username: 'ada' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(409);
-      expect(res.json).toHaveBeenCalledWith({ error: 'You have already completed this test.', attempts: 1 });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Siz bu testni allaqachon yakunlagansiz.', attempts: 1 });
     });
 
     it('passes the repeat-attempt nudge back without creating anything', async () => {

@@ -157,7 +157,7 @@ const createBulkGrades = async (req: any, res: any) => {
     if (results.some((row: any) => row && row.error === 'invalid_center')) {
       return res.status(400).json({ error: 'Bir yoki bir nechta baho bu markazga tegishli emas.' });
     }
-    res.status(201).json({ message: `${results.length} grades created successfully`, grades: results });
+    res.status(201).json({ message: `${results.length} ta baho muvaffaqiyatli yaratildi`, grades: results });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "Baholarni ommaviy yaratib bo'lmadi", details: error.message || String(error) });

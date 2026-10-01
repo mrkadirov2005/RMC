@@ -118,7 +118,7 @@ const generateDebtsFromAnalysis = async (req: any, res: any) => {
     if (!centerId && isGlobal) return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     const { createdDebts } = await debtService.generateDebtsFromAnalysis(student_ids, monthly_fee, centerId ?? undefined, remarks, teacherId);
     res.status(201).json({
-      message: `Created ${createdDebts.length} debt records`,
+      message: `${createdDebts.length} ta qarz yozuvi yaratildi`,
       debts: createdDebts,
     });
   } catch (error: any) {

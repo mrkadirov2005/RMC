@@ -163,7 +163,7 @@ describe('teacher tasks controller status state machine (accept/reject/done)', (
 
     expect(res.status).toHaveBeenCalledWith(409);
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      error: expect.stringContaining('Expected status "accepted"'),
+      error: expect.stringContaining('kutilgan holat "accepted"'),
     }));
   });
 

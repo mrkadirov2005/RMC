@@ -63,7 +63,7 @@ const importEntity = async (req: any, res: any) => {
       details: { rows: created },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: `Imported ${created} ${entity}` });
+    res.status(201).json({ message: `${created} ta yozuv import qilindi` });
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "CSV'ni import qilib bo'lmadi", details: error.message || String(error) });
@@ -100,7 +100,7 @@ const pushEntityToSheets = async (req: any, res: any) => {
       details: { rows },
       ip_address: req.ip,
     });
-    res.json({ message: `Updated Google Sheets with ${rows} ${entity}`, rows });
+    res.json({ message: `Google Sheets ${rows} ta yozuv bilan yangilandi`, rows });
   } catch (error: any) {
     console.error('Google Sheets push error:', error);
     res.status(500).json({ error: "Google Sheets'ni yangilab bo'lmadi", details: error.message || String(error) });
@@ -146,7 +146,7 @@ const pullEntityFromSheets = async (req: any, res: any) => {
       details: { rows },
       ip_address: req.ip,
     });
-    res.json({ message: `Imported ${rows} ${entity} from Google Sheets`, rows });
+    res.json({ message: `Google Sheets'dan ${rows} ta yozuv import qilindi`, rows });
   } catch (error: any) {
     console.error('Google Sheets pull error:', error);
     res.status(500).json({ error: "Google Sheets'dan import qilib bo'lmadi", details: error.message || String(error) });

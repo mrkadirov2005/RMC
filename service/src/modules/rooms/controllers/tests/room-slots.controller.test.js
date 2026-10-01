@@ -189,7 +189,7 @@ describe('room slots controller', () => {
 
       expect(service.generateSlots).toHaveBeenCalledWith(2, 4, '2026-09-01', '2026-09-07', []);
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Generated 3 slots', slots: expect.any(Array) });
+      expect(res.json).toHaveBeenCalledWith({ message: "3 ta vaqt oralig'i yaratildi", slots: expect.any(Array) });
     });
 
     it('writes only the editable slot fields', async () => {

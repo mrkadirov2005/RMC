@@ -101,7 +101,7 @@ const generateSlotsForDateRange = async (req: any, res: any) => {
     const { room_id, start_date, end_date, slot_configs } = req.body;
 
     const slots = await roomSlotsService.generateSlots(room_id, centerId, start_date, end_date, slot_configs);
-    res.status(201).json({ message: `Generated ${slots.length} slots`, slots });
+    res.status(201).json({ message: `${slots.length} ta vaqt oralig'i yaratildi`, slots });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -9,7 +9,7 @@ const bad = (message: string) => Object.assign(new Error(message), { status: 400
 const parseOptionalId = (value: unknown, name: string) => {
   if (value == null || value === '') return undefined;
   const id = Number(value);
-  if (!Number.isInteger(id) || id <= 0) throw bad(`${name} must be a positive integer`);
+  if (!Number.isInteger(id) || id <= 0) throw bad(`${name} musbat butun son bo'lishi kerak`);
   return id;
 };
 const validateRange = (fromValue: unknown, toValue: unknown) => {

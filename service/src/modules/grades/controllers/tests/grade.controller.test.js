@@ -351,7 +351,7 @@ describe('grades controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        message: '2 grades created successfully',
+        message: '2 ta baho muvaffaqiyatli yaratildi',
         grades: [{ grade_id: 1 }, { grade_id: 2 }],
       });
     });
