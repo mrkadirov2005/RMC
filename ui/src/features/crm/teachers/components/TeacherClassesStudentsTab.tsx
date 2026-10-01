@@ -47,7 +47,7 @@ export default function TeacherClassesStudentsTab({
               <div className="flex-grow">
                 <h3 className="text-xs font-semibold">{classItem.class_name}</h3>
                 <p className="text-[10px] text-muted-foreground">
-                  {isTeacherOwned ? t('Teacher group') : t('Group')} / Level: {classItem.level || 'N/A'}
+                  {t('{label} / Level: {level}', { label: isTeacherOwned ? t('Teacher group') : t('Group'), level: classItem.level || 'N/A' })}
                 </p>
               </div>
               <Badge variant="outline" className="bg-transparent text-xs font-semibold">

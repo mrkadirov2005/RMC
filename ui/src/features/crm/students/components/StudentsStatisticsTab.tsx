@@ -305,7 +305,7 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
               <h3 className="text-sm font-bold text-slate-950 dark:text-foreground">{t('Teacher leaderboard')}</h3>
               <p className="text-xs text-muted-foreground">{t('Students assigned per teacher.')}</p>
             </div>
-            <div className="rounded-lg bg-blue-600 px-2 py-1.5 text-xs font-bold text-white">{teacherRows.length} teachers</div>
+            <div className="rounded-lg bg-blue-600 px-2 py-1.5 text-xs font-bold text-white">{t('{count} teachers', { count: teacherRows.length })}</div>
           </div>
           <Table className="text-xs">
             <TableHeader>

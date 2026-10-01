@@ -619,7 +619,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                         <TableHead className="text-primary-foreground font-semibold">#</TableHead>
                         <TableHead className="text-primary-foreground font-semibold">{t('Student Name')}</TableHead>
                         <TableHead className="text-primary-foreground font-semibold text-center">
-                          Marks (/{gradeTotalMarks})
+                          {t('Marks (/{total})', { total: gradeTotalMarks })}
                         </TableHead>
                         <TableHead className="text-primary-foreground font-semibold text-center">{t('Percentage')}</TableHead>
                         <TableHead className="text-primary-foreground font-semibold text-center">{t('Grade')}</TableHead>

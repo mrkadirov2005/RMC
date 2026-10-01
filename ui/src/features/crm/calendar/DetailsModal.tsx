@@ -194,7 +194,7 @@ export const DetailsModal = ({
                   <>
                     {!isStudent && gradeSummary.topTwo.length > 0 && (
                       <div>
-                        <p className="text-xs font-semibold text-muted-foreground mb-2">Top 2</p>
+                        <p className="text-xs font-semibold text-muted-foreground mb-2">{t('Top 2')}</p>
                         <div className="space-y-1">
                           {gradeSummary.topTwo.map((row) => {
                             const student = studentById.get(row.studentId);

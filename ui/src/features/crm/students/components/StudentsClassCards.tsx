@@ -94,7 +94,7 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
             <Icon className="h-8 w-8 shrink-0 text-primary" />
             <div className="min-w-0 flex-1">
               <h3 className="truncate font-semibold">{cls.class_name}</h3>
-              <p className="truncate text-sm text-muted-foreground">{cls.class_code} &bull; Level {cls.level}</p>
+              <p className="truncate text-sm text-muted-foreground">{t('{code} • Level {level}', { code: cls.class_code, level: cls.level })}</p>
             </div>
             <div className="flex items-center gap-2 text-sm font-medium">
               <Users className="h-4 w-4" />
@@ -119,7 +119,7 @@ export const StudentsClassCards = ({ classes, students, onClassClick, viewMode =
             <Users className="h-4 w-4" />
             <span className="font-medium text-sm">{studentCount} {studentCount === 1 ? t('Student') : t('Students')}</span>
           </div>
-          {variant !== 'unassigned' && <p className="text-xs opacity-80 mt-2">{t('Level')} {cls.level} &bull; Capacity: {cls.capacity}</p>}
+          {variant !== 'unassigned' && <p className="text-xs opacity-80 mt-2">{t('Level {level} • Capacity: {capacity}', { level: cls.level, capacity: cls.capacity })}</p>}
         </div>
       </Card>
     );

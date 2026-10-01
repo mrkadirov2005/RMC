@@ -104,7 +104,7 @@ const SalaryPage = () => {
 
           <SectionPanel contentClassName="p-0">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
-              <h3 className="text-sm font-bold">All teachers ({totalRows})</h3>
+              <h3 className="text-sm font-bold">{t('All teachers ({count})', { count: totalRows })}</h3>
               <div className="relative w-full max-w-xs">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input

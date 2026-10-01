@@ -391,10 +391,10 @@ const AssignmentsPage = () => {
                             <h3 className={rowNameClass}>{t('Personal Tasks')}</h3>
                             <div className={rowMetaClass}>
                               <span className={cn(infoPillClass, 'bg-orange-600 text-white')}>{t('Independent')}</span>
-                              <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{personalCount} task</span>
+                              <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{t('{count} task', { count: personalCount })}</span>
                             </div>
                             <div className={rowStatsClass}>
-                              <span className={cn(infoPillClass, 'bg-emerald-600 text-white')}>{personalCompleted} done</span>
+                              <span className={cn(infoPillClass, 'bg-emerald-600 text-white')}>{t('{count} done', { count: personalCompleted })}</span>
                               <span className={cn(infoPillClass, 'bg-fuchsia-600 text-white')}>{completionPercentage.toFixed(0)}%</span>
                             </div>
                           </div>
@@ -457,7 +457,7 @@ const AssignmentsPage = () => {
             )}
 
             <span className="text-sm text-muted-foreground ml-auto">
-              {displayedAssignments.length} assignment{displayedAssignments.length !== 1 ? 's' : ''}
+              {t('{count} assignment(s)', { count: displayedAssignments.length })}
             </span>
           </div>
 

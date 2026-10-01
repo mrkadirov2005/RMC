@@ -190,7 +190,7 @@ export const ScoreTable = ({
           {options.map((option) => (
             <TableHead key={option.label} className="h-9 w-[72px] min-w-[72px] px-1 text-center text-[11px] font-semibold text-primary-foreground">
               <span className="block truncate">{option.label}</span>
-              <span className="block text-[10px] font-medium text-primary-foreground/80">{option.score} points</span>
+              <span className="block text-[10px] font-medium text-primary-foreground/80">{t('{count} points', { count: option.score })}</span>
             </TableHead>
           ))}
           {getTotalScore && <TableHead className="h-9 px-3 text-center text-xs font-semibold text-primary-foreground">{t('Combined Score')}</TableHead>}
@@ -220,7 +220,7 @@ export const ScoreTable = ({
                     <button
                       type="button"
                       disabled={!enabled}
-                      aria-label={`${option.label} ${option.score} points`}
+                      aria-label={`${option.label} ${t('{count} points', { count: option.score })}`}
                       className={cn(
                         'mx-auto flex h-7 w-12 items-center justify-center gap-1 rounded-full border px-0.5 shadow-sm transition disabled:pointer-events-none',
                         isSelected ? `${tone.active} ring-2 ring-offset-1 ring-offset-background` : tone.idle,

@@ -1,5 +1,6 @@
+import { useLanguage } from '@/i18n/LanguageContext';
 
-import { useLanguage } from '@/i18n/LanguageContext';interface GradesStatisticsSectionProps {
+interface GradesStatisticsSectionProps {
   gradeStatistics: {
     totalGrades: number;
     averagePercentage: number;
@@ -108,8 +109,8 @@ const GradesStatisticsSection = ({
               <p className="text-xs text-muted-foreground">{t('Relative share of grade letters.')}</p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
-              <p>{gradeStatistics.passingGrades} passing</p>
-              <p>{gradeStatistics.failingGrades} failing</p>
+              <p>{t('{count} passing', { count: gradeStatistics.passingGrades })}</p>
+              <p>{t('{count} failing', { count: gradeStatistics.failingGrades })}</p>
             </div>
           </div>
 

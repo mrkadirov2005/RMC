@@ -150,7 +150,7 @@ const CentersPage = () => {
             <div className="relative z-10">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded bg-white/10 px-2.5 py-1 text-xs font-black text-white/80">Markazlar</span>
-                <span className="rounded bg-cyan-400/15 px-2.5 py-1 text-xs font-black text-cyan-100">{state.items.length} centers</span>
+                <span className="rounded bg-cyan-400/15 px-2.5 py-1 text-xs font-black text-cyan-100">{t('{count} centers', { count: state.items.length })}</span>
               </div>
               <h1 className="mt-4 text-3xl font-black tracking-tight">{t('Centers Management')}</h1>
               <p className="mt-2 max-w-2xl text-sm font-semibold text-white/65">

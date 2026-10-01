@@ -1,5 +1,6 @@
+import { useLanguage } from '@/i18n/LanguageContext';
 
-import { useLanguage } from '@/i18n/LanguageContext';interface AttendanceStatisticsSectionProps {
+interface AttendanceStatisticsSectionProps {
   attendanceStatistics: {
     totalRecords: number;
     uniqueStudents: number;
@@ -105,8 +106,8 @@ const AttendanceStatisticsSection = ({
             </div>
             <div className="text-right text-xs text-muted-foreground">
               <p>{attendanceStatistics.counts.present} {t('present')}</p>
-              <p>{attendanceStatistics.counts.late} late</p>
-              <p>{attendanceStatistics.counts.absent} absent</p>
+              <p>{t('{count} late', { count: attendanceStatistics.counts.late })}</p>
+              <p>{t('{count} absent', { count: attendanceStatistics.counts.absent })}</p>
             </div>
           </div>
 

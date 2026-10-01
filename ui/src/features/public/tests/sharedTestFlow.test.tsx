@@ -21,7 +21,10 @@ vi.mock('@/features/crm/tests/TakeTestPage', () => ({
   default: () => <div>take test screen</div>,
 }));
 vi.mock('@/i18n/LanguageContext', () => ({
-  useLanguage: () => ({ t: (value: string) => value }),
+  useLanguage: () => ({
+    t: (value: string, vars?: Record<string, string | number>) =>
+      vars ? value.replace(/\{(\w+)\}/g, (match, name) => (name in vars ? String(vars[name]) : match)) : value,
+  }),
 }));
 
 import { SharedTestPage } from '../SharedTestPage';

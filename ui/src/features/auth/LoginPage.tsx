@@ -313,7 +313,7 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
                 </>
               ) : (
                 <>
-                  Continue to {config.title}
+                  {t('Continue to {title}', { title: config.title })}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

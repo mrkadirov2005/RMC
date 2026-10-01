@@ -1,7 +1,13 @@
 // Source file for the rbac area in the crm feature.
 
 import type { ComponentType, ReactNode } from 'react';
+import { useLanguage } from '@/i18n/LanguageContext';
 import { useEnhancedRBAC } from './useEnhancedRBAC';
+
+const AccessDenied = () => {
+  const { t } = useLanguage();
+  return <div>{t('Access Denied')}</div>;
+};
 
 interface PermissionGuardProps {
   children: ReactNode;
@@ -65,7 +71,7 @@ export const withPermissionGuard = (
     <PermissionGuard 
       permissions={requiredPermissions} 
       requireAll={requireAll}
-      fallback={<div>Access Denied</div>}
+      fallback={<AccessDenied />}
     >
       <Component {...props} />
     </PermissionGuard>

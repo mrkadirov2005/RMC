@@ -182,7 +182,7 @@ export const SharedTestPage = () => {
               </span>
             )}
             {test.total_marks != null && <span>{test.total_marks} {t('marks')}</span>}
-            {test.passing_marks != null && <span>Pass at {test.passing_marks}</span>}
+            {test.passing_marks != null && <span>{t('Pass at {marks}', { marks: test.passing_marks })}</span>}
           </div>
 
           {test.instructions && (
@@ -199,8 +199,7 @@ export const SharedTestPage = () => {
             <div className="space-y-3">
               <Alert>
                 <AlertDescription>
-                  {t('You have already attempted this test')} {stage.attempts === 1 ? 'once' : `${stage.attempts} times`}.
-                  Starting again creates a new attempt.
+                  {stage.attempts === 1 ? t('You have already attempted this test once. Starting again creates a new attempt.') : t('You have already attempted this test {count} times. Starting again creates a new attempt.', { count: stage.attempts })}
                 </AlertDescription>
               </Alert>
               <div className="flex gap-2">

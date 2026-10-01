@@ -405,15 +405,15 @@ const SessionModal: React.FC<SessionModalProps> = ({
           <div className="mb-4 grid gap-3 md:grid-cols-3">
             <div className={cn('rounded-lg border p-3', activeTab === 'attendance' ? 'border-emerald-300 bg-emerald-50' : 'bg-muted/30')}>
               <p className="text-sm font-semibold">{t('1. Attendance')}</p>
-              <p className="text-xs text-muted-foreground">{markedAttendanceCount}/{totalStudents} marked</p>
+              <p className="text-xs text-muted-foreground">{t('{done}/{total} marked', { done: markedAttendanceCount, total: totalStudents })}</p>
             </div>
             <div className={cn('rounded-lg border p-3', activeTab === 'hometask' ? 'border-sky-300 bg-sky-50' : 'bg-muted/30')}>
               <p className="text-sm font-semibold">{t('2. Homework')}</p>
-              <p className="text-xs text-muted-foreground">{markedHomeworkCount}/{totalStudents} checked</p>
+              <p className="text-xs text-muted-foreground">{t('{done}/{total} checked', { done: markedHomeworkCount, total: totalStudents })}</p>
             </div>
             <div className={cn('rounded-lg border p-3', activeTab === 'activity' ? 'border-violet-300 bg-violet-50' : 'bg-muted/30')}>
               <p className="text-sm font-semibold">{t('3. Activity & Coins')}</p>
-              <p className="text-xs text-muted-foreground">{markedActivityCount}/{totalStudents} scored</p>
+              <p className="text-xs text-muted-foreground">{t('{done}/{total} scored', { done: markedActivityCount, total: totalStudents })}</p>
             </div>
           </div>
 

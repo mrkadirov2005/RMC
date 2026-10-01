@@ -545,7 +545,7 @@ export const StudentsTableView = ({
                           <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
                           <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
                           <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
-                          <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
+                          <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{t('{count} age', { count: getAge(student) })}</span>
                           {showMonthlyPaymentStatus && renderPaymentChip(student)}
                         </div>
                       </div>
@@ -562,7 +562,7 @@ export const StudentsTableView = ({
                         <span className={`${chipClass} bg-amber-100 text-amber-800`}><School className="h-3 w-3" />{getSchoolName(student)}</span>
                         <span className={`${chipClass} bg-slate-100 text-slate-800`}><GraduationCap className="h-3 w-3" />{getSchoolClass(student)}</span>
                         <span className={`${chipClass} bg-rose-100 text-rose-800`}><Phone className="h-3 w-3" />{getPhone(student)}</span>
-                        <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{getAge(student)} age</span>
+                        <span className={`${chipClass} bg-emerald-100 text-emerald-800`}>{t('{count} age', { count: getAge(student) })}</span>
                         {showMonthlyPaymentStatus && renderPaymentChip(student)}
                       </div>
                     </div>

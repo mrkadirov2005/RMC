@@ -76,7 +76,7 @@ export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onSt
               <dt className="text-muted-foreground">{t('Teacher')}</dt><dd>{event.teacher_name || 'Unassigned'}</dd>
               <dt className="text-muted-foreground">{t('Subject')}</dt><dd>{event.subject_name || 'Unassigned'}</dd>
               <dt className="text-muted-foreground">{t('Room')}</dt><dd>{event.room_name || 'Unassigned'}</dd>
-              {event.attendance && <><dt className="text-muted-foreground">{t('Attendance')}</dt><dd>{event.attendance.present} {t('present ·')} {event.attendance.absent} {t('absent ·')} {event.attendance.unmarked} unmarked</dd></>}
+              {event.attendance && <><dt className="text-muted-foreground">{t('Attendance')}</dt><dd>{event.attendance.present} {t('present ·')} {event.attendance.absent} {t('absent ·')} {t('{count} unmarked', { count: event.attendance.unmarked })}</dd></>}
             </dl>
             {canManage && (
               <div className="flex justify-end gap-2">

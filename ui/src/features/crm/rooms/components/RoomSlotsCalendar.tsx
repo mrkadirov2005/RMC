@@ -211,12 +211,12 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
                       <div className="text-xs space-y-0.5">
                         {daySlots.length > 0 && (
                           <Badge variant={daySlots.some(s => s.is_available) ? 'secondary' : 'destructive'} className="text-xs">
-                            {daySlots.filter(s => s.is_available).length} available
+                            {t('{count} available', { count: daySlots.filter(s => s.is_available).length })}
                           </Badge>
                         )}
                         {dayBookings.length > 0 && (
                           <Badge variant="outline" className="text-xs">
-                            {dayBookings.length} booked
+                            {t('{count} booked', { count: dayBookings.length })}
                           </Badge>
                         )}
                       </div>
@@ -230,12 +230,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
             {selectedDate && getDateSlots(parseInt(selectedDate.split('-')[2])) && (
               <div className="border-t pt-6">
                 <h3 className="font-semibold mb-4">
-                  Slots for {new Date(selectedDate).toLocaleDateString('default', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
+                  {t('Slots for {date}', { date: new Date(selectedDate).toLocaleDateString('default', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) })}
                 </h3>
                 
                 <div className="space-y-2 max-h-64 overflow-y-auto">

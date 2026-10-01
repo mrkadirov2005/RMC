@@ -196,7 +196,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
             {/* {Number(paymentData.totalEarnings.split(".")[0])} */}
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-            Across {Object.keys(paymentData.classPayments).length} {t('classes')}
+            {t('Across {count} classes', { count: Object.keys(paymentData.classPayments).length })}
           </p>
         </CardContent>
       </Card>

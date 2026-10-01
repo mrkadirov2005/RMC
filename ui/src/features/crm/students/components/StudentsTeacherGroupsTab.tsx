@@ -721,7 +721,7 @@ export const StudentsTeacherGroupsTab = ({
             {t('Clear')}
           </Button>
         )}
-        <span className="text-xs text-muted-foreground sm:ml-auto">{filteredTeachers.length} teachers</span>
+        <span className="text-xs text-muted-foreground sm:ml-auto">{t('{count} teachers', { count: filteredTeachers.length })}</span>
       </div>
 
       <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
@@ -751,7 +751,7 @@ export const StudentsTeacherGroupsTab = ({
                   </div>
                 </div>
                 <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
-                  {groupCount} groups
+                  {t('{count} groups', { count: groupCount })}
                 </button>
                 <button type="button" className="w-fit px-2 py-1 text-[11px] font-bold text-slate-700 hover:text-sky-700 dark:text-slate-200 lg:mx-auto" onClick={() => openTeacher(teacher.id)}>
                   {studentCount} {t('students')}

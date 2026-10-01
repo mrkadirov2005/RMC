@@ -235,10 +235,10 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
             <div className="bg-gray-50 p-4 rounded">
               <h4 className="font-semibold mb-2">{t('Preview')}</h4>
               <p className="text-sm text-gray-600">
-                Creating slots from <strong>{startDate}</strong> to <strong>{endDate}</strong>
+                {t('Creating slots from {startDate} to {endDate}', { startDate, endDate })}
               </p>
               <p className="text-sm text-gray-600">
-                {t('Time:')} <strong>{startTime}</strong> - <strong>{endTime}</strong> ({slotDuration} min intervals)
+                {t('Time:')} <strong>{startTime}</strong> - <strong>{endTime}</strong> {t('({minutes} min intervals)', { minutes: slotDuration })}
               </p>
               <p className="text-sm text-gray-600 mt-2">
                 {t('Days:')} <strong>{selectedDays.join(', ')}</strong>
@@ -255,7 +255,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
                     ))}
                   {generateTimeSlots(startTime, endTime, parseInt(slotDuration)).length > 5 && (
                     <span className="text-xs text-gray-500">
-                      +{generateTimeSlots(startTime, endTime, parseInt(slotDuration)).length - 5} more
+                      {t('+{count} more', { count: generateTimeSlots(startTime, endTime, parseInt(slotDuration)).length - 5 })}
                     </span>
                   )}
                 </div>

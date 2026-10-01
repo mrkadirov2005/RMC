@@ -115,11 +115,7 @@ export const ConsolidatePublicPage = () => {
           <CardContent className="space-y-4 p-8 text-center">
             <h1 className="text-lg font-semibold">{t('Already completed today')}</h1>
             <p className="text-sm text-slate-600">
-              It looks like {stage.username} {t('already completed this today')}
-              {stage.existing.correct_count != null && stage.existing.total_words != null
-                ? ` (scored ${stage.existing.correct_count}/${stage.existing.total_words})`
-                : ''}
-              . Continue anyway?
+              {stage.existing.correct_count != null && stage.existing.total_words != null ? t('It looks like {username} already completed this today (scored {correct}/{total}). Continue anyway?', { username: stage.username, correct: stage.existing.correct_count, total: stage.existing.total_words }) : t('It looks like {username} already completed this today. Continue anyway?', { username: stage.username })}
             </p>
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">

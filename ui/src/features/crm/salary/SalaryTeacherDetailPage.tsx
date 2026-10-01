@@ -87,7 +87,7 @@ const SalaryTeacherDetailPage = () => {
               );
             }}
           >
-            Mark {formatSalaryPeriod(currentPeriod.year, currentPeriod.month)} as Paid
+            {t('Mark {period} as Paid', { period: formatSalaryPeriod(currentPeriod.year, currentPeriod.month) })}
           </Button>
         }
       />

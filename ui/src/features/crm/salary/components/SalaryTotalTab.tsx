@@ -29,7 +29,7 @@ export const SalaryTotalTab = ({ year, month, summary }: SalaryTotalTabProps) =>
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Salary status for <span className="font-semibold text-foreground">{formatSalaryPeriod(year, month)}</span>
+        {t('Salary status for {period}', { period: formatSalaryPeriod(year, month) })}
       </p>
 
       {teacherCount === 0 ? (

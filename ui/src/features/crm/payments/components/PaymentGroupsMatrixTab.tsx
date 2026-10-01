@@ -224,7 +224,7 @@ export const PaymentGroupsMatrixTab = () => {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-sm font-bold text-slate-900 dark:text-foreground">{t('Groups')}</h2>
-              <p className="text-xs text-muted-foreground">{filteredGroups.length} {t('of')} {groups.length} groups</p>
+              <p className="text-xs text-muted-foreground">{t('{shown} of {total} groups', { shown: filteredGroups.length, total: groups.length })}</p>
             </div>
             <div className="flex min-w-[280px] flex-1 items-center justify-end gap-2">
               <Select value={selectedTeacherId} onValueChange={setSelectedTeacherId}>

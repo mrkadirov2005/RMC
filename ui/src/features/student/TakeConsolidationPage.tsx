@@ -307,9 +307,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
           <CardContent className="space-y-5 p-8 text-center">
             <h1 className="text-xl font-semibold">{t('Ready to begin?')}</h1>
             <p className="text-sm text-slate-600">
-              This exercise runs in a locked, full-screen mode. Leaving the screen, switching tabs, or exiting
-              fullscreen counts as a violation — after {violationLimit} violation{violationLimit === 1 ? '' : 's'} your
-              exercise will be submitted automatically with whatever you've answered so far.
+              {t("This exercise runs in a locked, full-screen mode. Leaving the screen, switching tabs, or exiting fullscreen counts as a violation — after {limit} violation(s) your exercise will be submitted automatically with whatever you've answered so far.", { limit: violationLimit })}
             </p>
             {error && (
               <Alert variant="destructive" className="border-red-200 bg-red-50 text-left text-red-800">

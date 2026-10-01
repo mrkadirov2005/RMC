@@ -642,7 +642,7 @@ const OverallStatisticsTab = ({
             <DialogHeader>
               <DialogTitle>{t('Pick lesson session')}</DialogTitle>
               <DialogDescription>
-                Choose the date and what you want to record for {selectedLesson?.label || 'this group'}.
+                {t('Choose the date and what you want to record for {lesson}.', { lesson: selectedLesson?.label || t('this group') })}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
@@ -806,7 +806,7 @@ const OverallStatisticsTab = ({
       <div className="mt-5 flex items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 dark:border-white/10 dark:bg-slate-900/40">
         <div className="flex items-center gap-2 text-sm font-bold text-slate-700 dark:text-slate-200">
           <BarChart3 className="h-4 w-4 text-blue-600" />
-          {selectedSection.label} overview
+          {t('{name} overview', { name: selectedSection.label })}
         </div>
         <div className="text-sm font-black text-slate-900 dark:text-white">{selectedSection.total}</div>
       </div>

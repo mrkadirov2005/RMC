@@ -195,7 +195,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                     )}
                 </span>
                 <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
-                  {stats.lessonCount} lesson{stats.lessonCount === 1 ? '' : 's'}
+                  {t('{count} lesson(s)', { count: stats.lessonCount })}
                 </span>
               </div>
               {stats.chartType === 'line' ? (

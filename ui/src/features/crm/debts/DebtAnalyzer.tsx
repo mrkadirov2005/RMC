@@ -179,7 +179,7 @@ const DebtAnalyzer = () => {
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-sm text-muted-foreground">{t('Analysis Period')}</p>
                 <p className="text-base font-semibold">
-                  {analysis.analysis_period.months_analyzed} months
+                  {t('{count} months', { count: analysis.analysis_period.months_analyzed })}
                 </p>
               </div>
             </div>
@@ -189,7 +189,7 @@ const DebtAnalyzer = () => {
               <>
                 <div className="flex justify-between items-center mb-4">
                   <p className="font-semibold">
-                    Students with Payment Issues ({analysis.results.length})
+                    {t('Students with Payment Issues ({count})', { count: analysis.results.length })}
                   </p>
                   <div className="flex gap-2">
                     <Button variant="ghost" size="sm" onClick={selectAllStudents}>
@@ -201,7 +201,7 @@ const DebtAnalyzer = () => {
                       disabled={selectedStudents.length === 0}
                     >
                       <Plus className="mr-1 h-4 w-4" />
-                      Generate Debts ({selectedStudents.length})
+                      {t('Generate Debts ({count})', { count: selectedStudents.length })}
                     </Button>
                   </div>
                 </div>
@@ -324,7 +324,7 @@ const DebtAnalyzer = () => {
               <DialogTitle>{t('Generate Debt Records')}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              This will create debt records for {selectedStudents.length} {t('selected student(s).')}
+              {t('This will create debt records for {count} selected student(s).', { count: selectedStudents.length })}
             </p>
             <div className="mt-4 space-y-2">
               <Label htmlFor="monthlyFee">{t('Monthly Fee Amount')}</Label>

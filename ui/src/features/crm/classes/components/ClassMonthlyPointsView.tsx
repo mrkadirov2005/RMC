@@ -58,7 +58,7 @@ export const ClassMonthlyPointsView = ({
         <div>
           <p className="text-sm font-bold text-slate-950 dark:text-slate-100">{t('Monthly points')}</p>
           <p className="text-xs text-muted-foreground">
-            {monthLabel(pointsMonth || getMonthKey())} lessons from {scheduleDays.length ? scheduleDays.join(', ') : t('class settings')}
+            {t('{month} lessons from {source}', { month: monthLabel(pointsMonth || getMonthKey()), source: scheduleDays.length ? scheduleDays.join(', ') : t('class settings') })}
           </p>
         </div>
       </div>

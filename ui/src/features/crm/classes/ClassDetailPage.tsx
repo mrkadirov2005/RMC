@@ -561,7 +561,7 @@ const ClassDetailPage = () => {
                       <TableCell>{test.test_type || '-'}</TableCell>
                       <TableCell>
                         {test.total_marks ?? '-'}
-                        {test.passing_marks ? <span className="text-xs text-muted-foreground"> / pass {test.passing_marks}</span> : null}
+                        {test.passing_marks ? <span className="text-xs text-muted-foreground"> {t('/ pass {marks}', { marks: test.passing_marks })}</span> : null}
                       </TableCell>
                       <TableCell>{test.due_date ? new Date(test.due_date).toLocaleDateString() : '-'}</TableCell>
                       <TableCell>

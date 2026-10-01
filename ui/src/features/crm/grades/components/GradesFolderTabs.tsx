@@ -115,7 +115,7 @@ const GradesFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">
                           <BookOpen className="h-3 w-3" />
-                          <span>{gradeCount} grades</span>
+                          <span>{t('{count} grades', { count: gradeCount })}</span>
                         </div>
                         <div className="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700" style={{ color: getGradeColor('A') }}>
                           <span>{avgPercentage.toFixed(1)}%</span>
@@ -178,7 +178,7 @@ const GradesFolderTabs = ({
                       <div className={rowStatsClass}>
                         <div className="flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">
                           <BookOpen className="h-3 w-3" />
-                          <span>{gradeCount} grades</span>
+                          <span>{t('{count} grades', { count: gradeCount })}</span>
                         </div>
                         <div className="rounded bg-emerald-100 px-1.5 py-0.5 text-emerald-700" style={{ color: getGradeColor('A') }}>
                           <span>{avgPercentage.toFixed(1)}%</span>
@@ -244,7 +244,7 @@ const GradesFolderTabs = ({
                         </div>
                         <div className="flex items-center gap-1 rounded bg-blue-100 px-1.5 py-0.5 text-blue-700">
                           <BookOpen className="h-3 w-3" />
-                          <span>{gradeCount} grades</span>
+                          <span>{t('{count} grades', { count: gradeCount })}</span>
                         </div>
                       </div>
                     </CardContent>

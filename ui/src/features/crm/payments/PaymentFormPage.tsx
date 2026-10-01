@@ -614,7 +614,7 @@ const PaymentFormPage = () => {
                     />
                     {selectedClass?.payment_amount != null && (
                       <p className="text-xs text-muted-foreground">
-                        Filled from {selectedClass.class_name || 'selected group'} monthly fee. You can edit it for this payment.
+                        {t('Filled from {group} monthly fee. You can edit it for this payment.', { group: selectedClass.class_name || t('selected group') })}
                       </p>
                     )}
                   </div>

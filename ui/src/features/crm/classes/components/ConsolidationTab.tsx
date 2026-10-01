@@ -591,7 +591,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
             {t("Share this link in the class group chat. Students pick their name — no login required. Anyone holding the link can submit under any enrolled student's name, so treat submissions from this link as a soft signal, not a verified identity (rows below flag exactly which trials came through the link).")}
           </p>
           <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-            <div className="text-xs text-muted-foreground">{words.length} word{words.length === 1 ? '' : 's'} {t('· violation limit')} {set.violation_limit}</div>
+            <div className="text-xs text-muted-foreground">{t('{count} word(s) · violation limit {limit}', { count: words.length, limit: set.violation_limit })}</div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={startEditing}>
                 <Pencil className="mr-1.5 h-3.5 w-3.5" />
@@ -669,7 +669,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                                   {trialDetail.trial.violation_count > 0 && (
                                     <Alert variant="destructive" className="border-red-200 bg-red-50 py-2">
                                       <AlertDescription className="text-xs">
-                                        {trialDetail.trial.violation_count} lockdown violation{trialDetail.trial.violation_count === 1 ? '' : 's'} {t('— the student left the exercise screen, switched tabs, or exited fullscreen during this attempt')}
+                                        {t('{count} lockdown violation(s) — the student left the exercise screen, switched tabs, or exited fullscreen during this attempt', { count: trialDetail.trial.violation_count })}
                                         {trialDetail.trial.status === 'auto_submitted' ? ', which auto-submitted the trial.' : '.'}
                                       </AlertDescription>
                                     </Alert>
@@ -682,14 +682,14 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                                           {word.student_answer || '(blank)'}
                                         </span>
                                         {!word.is_correct && (
-                                          <span className="text-muted-foreground">accepted: {word.translations.join(', ')}</span>
+                                          <span className="text-muted-foreground">{t('accepted: {list}', { list: word.translations.join(', ') })}</span>
                                         )}
                                       </li>
                                     ))}
                                   </ul>
                                   {trialDetail.trial.via_share_link && (
                                     <p className="text-xs text-muted-foreground">
-                                      Started via share link — IP {trialDetail.trial.ip_address || 'unknown'}, device {trialDetail.trial.user_agent || 'unknown'}.
+                                      {t('Started via share link — IP {ip}, device {device}.', { ip: trialDetail.trial.ip_address || 'unknown', device: trialDetail.trial.user_agent || 'unknown' })}
                                     </p>
                                   )}
                                 </div>

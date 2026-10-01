@@ -85,7 +85,7 @@ export const ConsolidationSessionPage = () => {
           {data && (
             <>
               <h1 className="text-xl font-semibold">{data.title || 'Vocabulary Exercise'}</h1>
-              <p className="text-sm text-slate-500">{data.words.length} words</p>
+              <p className="text-sm text-slate-500">{t('{count} words', { count: data.words.length })}</p>
               <Button onClick={start} disabled={starting} className="h-11 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
                 {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                 {t('Start Exercise')}

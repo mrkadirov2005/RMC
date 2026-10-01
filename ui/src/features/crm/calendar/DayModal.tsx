@@ -69,7 +69,7 @@ export const DayModal = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Sessions for {selectedDay}</DialogTitle>
+          <DialogTitle>{t('Sessions for {day}', { day: selectedDay })}</DialogTitle>
         </DialogHeader>
         {selectedDayEvents.length === 0 && plannedClasses.length === 0 ? (
           <p className="text-sm text-muted-foreground">{t('No sessions or planned classes for this day.')}</p>

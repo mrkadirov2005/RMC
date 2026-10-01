@@ -125,7 +125,7 @@ const GradeListView = ({
         )}
 
         <div className="text-sm text-muted-foreground flex items-center gap-4">
-          <span>{displayedGrades.length} grades</span>
+          <span>{t('{count} grades', { count: displayedGrades.length })}</span>
         </div>
       </div>
 

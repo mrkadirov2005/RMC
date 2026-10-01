@@ -109,9 +109,9 @@ const Dashboard = memo(() => {
           </div>
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.04]">
             <h2 className="font-black">{t('Attendance overview')}</h2>
-            <p className="mt-1 text-sm text-slate-500">Overall attendance for {today.toLocaleDateString()}.</p>
+            <p className="mt-1 text-sm text-slate-500">{t('Overall attendance for {date}.', { date: today.toLocaleDateString() })}</p>
             <div className="mt-5 h-4 overflow-hidden rounded-full bg-rose-100"><div className="h-full bg-emerald-500" style={{ width: `${attendanceToday.length ? (presentToday / attendanceToday.length) * 100 : 0}%` }} /></div>
-            <div className="mt-3 flex justify-between text-sm font-bold"><span className="text-emerald-600">{presentToday} {t('present')}</span><span className="text-rose-600">{absentToday} absent</span></div>
+            <div className="mt-3 flex justify-between text-sm font-bold"><span className="text-emerald-600">{presentToday} {t('present')}</span><span className="text-rose-600">{t('{count} absent', { count: absentToday })}</span></div>
           </section>
           <Button variant="outline" onClick={() => navigate('/attendance')}>{t('Open attendance management')}</Button>
         </div>
