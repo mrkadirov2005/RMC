@@ -32,7 +32,7 @@ const getMyProfile = async (req: any, res: any) => {
     const { centerId } = getScopedCenterId(req);
     const teacher = await teacherService.getTeacher(teacherId, centerId ?? undefined);
     if (!teacher) {
-      return res.status(404).json({ error: 'Teacher not found.' });
+      return res.status(404).json({ error: "O'qituvchi topilmadi." });
     }
     res.json({
       teacher_id: teacher.teacher_id,
@@ -69,7 +69,7 @@ const getTeacherById = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
     const row = await teacherService.getTeacher(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Teacher not found' });
+    if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -81,17 +81,17 @@ const createTeacher = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await teacherService.createTeacher({ ...req.body, center_id: centerId });
     if (out.error === 'validation') {
-      return res.status(400).json({ error: 'Validation failed', details: out.details });
+      return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: out.details });
     }
     if (out.error === 'username_taken') {
-      return res.status(400).json({ error: 'Username already exists' });
+      return res.status(400).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     }
     res.status(201).json((out as any).row);
   } catch (error: any) {
@@ -104,10 +104,10 @@ const updateTeacher = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await teacherService.updateTeacher(Number(req.params.id), req.body, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Teacher not found' });
+    if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -119,11 +119,11 @@ const deleteTeacher = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const force = String(req.query.force || req.body?.force || '').toLowerCase() === 'true';
     const result = await teacherService.deleteTeacher(Number(req.params.id), centerId ?? undefined, { force });
-    if (result?.kind === 'not_found') return res.status(404).json({ error: 'Teacher not found', message: 'Teacher not found' });
+    if (result?.kind === 'not_found') return res.status(404).json({ error: "O'qituvchi topilmadi", message: "O'qituvchi topilmadi" });
     if (result?.kind === 'blocked') {
       return res.status(409).json({
         error: 'Teacher has attendance or grade records',
@@ -157,7 +157,7 @@ const purgeTeacher = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const result = await teacherService.purgeTeacher(Number(req.params.id), centerId ?? undefined);
     if (result?.kind === 'not_found') {
@@ -185,7 +185,7 @@ const teacherLogin = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Teacher account is not active' });
     }
     if (result.kind !== 'ok') {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { teacher } = result;
     const token = generateToken({
@@ -195,7 +195,7 @@ const teacherLogin = async (req: any, res: any) => {
       center_id: teacher.center_id,
     });
     res.json({
-      message: 'Login successful',
+      message: 'Tizimga muvaffaqiyatli kirildi',
       token,
       teacher: {
         teacher_id: teacher.teacher_id,
@@ -207,7 +207,7 @@ const teacherLogin = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to login', details: error.message || String(error) });
+    res.status(500).json({ error: "Tizimga kirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -216,15 +216,15 @@ const setTeacherPaymentPassword = async (req: any, res: any) => {
     const { password } = req.body;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const teacher = await teacherService.getTeacher(Number(req.params.id), centerId ?? undefined);
-    if (!teacher) return res.status(404).json({ error: 'Teacher not found' });
+    if (!teacher) return res.status(404).json({ error: "O'qituvchi topilmadi" });
     const row = await teacherPaymentService.setPaymentPassword(Number(req.params.id), password, req.user?.id);
-    if (!row) return res.status(404).json({ error: 'Teacher not found' });
+    if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
     res.json({ message: 'Payment access password set successfully.' });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -240,7 +240,7 @@ const teacherPaymentLogin = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Teacher account is not active' });
     }
     if (result.kind !== 'ok') {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { teacher } = result;
     const token = generatePaymentToken({
@@ -272,10 +272,10 @@ const setTeacherPassword = async (req: any, res: any) => {
     const { username, password } = req.body;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await teacherService.setPasswordByAdmin(Number(req.params.id), username, password, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Teacher not found' });
+    if (!row) return res.status(404).json({ error: "O'qituvchi topilmadi" });
     res.json({ message: 'Teacher password set successfully', teacher: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -291,13 +291,13 @@ const changeTeacherPassword = async (req: any, res: any) => {
     const { old_password, new_password } = req.body;
     const out = await teacherService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
-      if (out.reason === 'not_found') return res.status(404).json({ error: 'Teacher not found' });
-      return res.status(401).json({ error: 'Current password is incorrect' });
+      if (out.reason === 'not_found') return res.status(404).json({ error: "O'qituvchi topilmadi" });
+      return res.status(401).json({ error: "Joriy parol noto'g'ri" });
     }
-    res.json({ message: 'Password changed successfully' });
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to change password', details: error.message || String(error) });
+    res.status(500).json({ error: "Parolni o'zgartirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

@@ -7,7 +7,7 @@ const getAllInvoices = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const rows = await invoiceService.listInvoices(req.query, centerId ?? undefined);
     res.json(rows);
@@ -21,10 +21,10 @@ const getInvoiceById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const data = await invoiceService.getInvoiceWithItems(Number(req.params.id), centerId ?? undefined);
-    if (!data) return res.status(404).json({ error: 'Invoice not found' });
+    if (!data) return res.status(404).json({ error: 'Hisob-faktura topilmadi' });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -36,13 +36,13 @@ const createInvoice = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (!(await studentInCenter(Number(req.body.student_id), centerId ?? 0))) {
-      return res.status(400).json({ error: 'Student does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     const out = await invoiceService.createInvoice(req.body, centerId ?? undefined);
     const { invoice } = out as { invoice: any };
@@ -67,10 +67,10 @@ const updateInvoice = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await invoiceService.updateInvoice(Number(req.params.id), req.body, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Invoice not found' });
+    if (!row) return res.status(404).json({ error: 'Hisob-faktura topilmadi' });
     res.json({ message: 'Invoice updated', invoice: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -82,10 +82,10 @@ const deleteInvoice = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await invoiceService.deleteInvoice(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Invoice not found' });
+    if (!row) return res.status(404).json({ error: 'Hisob-faktura topilmadi' });
     res.json({ message: 'Invoice deleted', invoice: row });
   } catch (error: any) {
     console.error('Database error:', error);

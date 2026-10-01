@@ -6,7 +6,7 @@ const getAllParents = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     res.json(await parentService.listParents(centerId ?? undefined));
   } catch (error: any) {
@@ -19,10 +19,10 @@ const getParentById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await parentService.getParent(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Parent not found' });
+    if (!row) return res.status(404).json({ error: 'Ota-ona topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -34,10 +34,10 @@ const createParent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await parentService.createParent({ ...req.body, center_id: centerId });
     res.status(201).json({ message: 'Parent created', parent: (out as any).row });
@@ -51,10 +51,10 @@ const updateParent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await parentService.updateParent(Number(req.params.id), req.body, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Parent not found' });
+    if (!row) return res.status(404).json({ error: 'Ota-ona topilmadi' });
     res.json({ message: 'Parent updated', parent: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -66,10 +66,10 @@ const deleteParent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await parentService.deleteParent(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Parent not found' });
+    if (!row) return res.status(404).json({ error: 'Ota-ona topilmadi' });
     res.json({ message: 'Parent deleted', parent: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -81,11 +81,11 @@ const assignStudent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const out = await parentService.assignStudent(req.body, centerId ?? undefined);
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Student does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     res.status(201).json({ message: 'Student assigned to parent' });
   } catch (error: any) {
@@ -102,7 +102,7 @@ const parentLogin = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Parent account is not active' });
     }
     if (result.kind !== 'ok') {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { parent } = result;
     const token = generateToken({
@@ -111,7 +111,7 @@ const parentLogin = async (req: any, res: any) => {
       userType: 'parent',
     });
     res.json({
-      message: 'Login successful',
+      message: 'Tizimga muvaffaqiyatli kirildi',
       token,
       parent: {
         parent_id: parent.parent_id,
@@ -122,7 +122,7 @@ const parentLogin = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to login', details: error.message || String(error) });
+    res.status(500).json({ error: "Tizimga kirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -152,7 +152,7 @@ const getMyStudentAttendance = async (req: any, res: any) => {
     res.json(await parentService.getMyStudentAttendance(parentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
+    res.status(500).json({ error: "Davomatni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -162,7 +162,7 @@ const getMyStudentGrades = async (req: any, res: any) => {
     res.json(await parentService.getMyStudentGrades(parentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch grades', details: error.message || String(error) });
+    res.status(500).json({ error: "Baholarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 

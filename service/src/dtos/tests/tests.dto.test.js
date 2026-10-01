@@ -30,7 +30,7 @@ describe('PassageDto validation (RMC-031)', () => {
 
     expect(next).not.toHaveBeenCalled();
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Validation failed' }));
+    expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: "Kiritilgan ma'lumotlar noto'g'ri" }));
   });
 
   it('rejects a passage body with an empty title', async () => {

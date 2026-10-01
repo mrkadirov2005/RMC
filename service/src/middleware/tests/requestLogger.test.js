@@ -113,13 +113,13 @@ describe('request logger middleware', () => {
 
     requestLogger(req, res, jest.fn());
     res.statusCode = 400;
-    res.json({ error: 'Validation failed', details: { field: 'email' } });
+    res.json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: { field: 'email' } });
     res.emit('finish');
     await flush();
 
     expect(lastDoc()).toMatchObject({
       success: false,
-      failureReason: 'Validation failed',
+      failureReason: "Kiritilgan ma'lumotlar noto'g'ri",
       failureDetails: '{"field":"email"}',
     });
   });

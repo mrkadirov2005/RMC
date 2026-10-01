@@ -5,7 +5,7 @@ const getArchive = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const archive = await archiveService.listArchive(centerId ?? undefined);
     res.json(archive);
@@ -19,7 +19,7 @@ const restoreArchiveItem = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const entity = String(req.params.entity || '');
     const id = Number(req.params.id);
@@ -47,7 +47,7 @@ const purgeArchiveItem = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const entity = String(req.params.entity || '');
     const id = Number(req.params.id);

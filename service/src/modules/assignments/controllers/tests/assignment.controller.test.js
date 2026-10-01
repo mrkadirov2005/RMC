@@ -53,7 +53,7 @@ describe('assignments controller', () => {
       await assignmentController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -63,7 +63,7 @@ describe('assignments controller', () => {
       await assignmentController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -190,7 +190,7 @@ describe('assignments controller', () => {
 
       expect(classInCenter).toHaveBeenCalledWith(12, 7);
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh bu markazga tegishli emas.' });
     });
 
     it.each([[undefined], [null], ['']])('skips the class check when class_id is %p', async (classId) => {

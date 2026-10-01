@@ -14,10 +14,10 @@ const getCenterById = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
     if (isCenterAdmin(req.user) && Number(req.user?.center_id) !== requestedId) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await centerService.getCenter(requestedId, req.user);
-    if (!row) return res.status(404).json({ error: 'Center not found' });
+    if (!row) return res.status(404).json({ error: 'Markaz topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -52,12 +52,12 @@ const updateCenter = async (req: any, res: any) => {
     if (isCenterAdmin(req.user)) {
       const existing = await centerService.getCenter(requestedId);
       if (existing && Number(existing.center_id) !== Number(req.user?.center_id)) {
-        return res.status(403).json({ error: 'Center scope required.' });
+        return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
       }
-      if (!existing) return res.status(404).json({ error: 'Center not found' });
+      if (!existing) return res.status(404).json({ error: 'Markaz topilmadi' });
     }
     const row = await centerService.updateCenter(requestedId, req.body, req.user);
-    if (!row) return res.status(404).json({ error: 'Center not found' });
+    if (!row) return res.status(404).json({ error: 'Markaz topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -71,7 +71,7 @@ const deleteCenter = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Admin users cannot delete centers.' });
     }
     const row = await centerService.deleteCenter(Number(req.params.id), req.user);
-    if (!row) return res.status(404).json({ error: 'Center not found' });
+    if (!row) return res.status(404).json({ error: 'Markaz topilmadi' });
     res.json({ message: 'Center deleted successfully', center: row });
   } catch (error: any) {
     console.error('Database error:', error);

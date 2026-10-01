@@ -9,13 +9,13 @@ const getMyNotifications = async (req: any, res: any) => {
     const userId = req.user?.id;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!userType || !userId) {
-      return res.status(401).json({ error: 'Authentication required.' });
+      return res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
     }
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const rows = await notificationService.listForUser(userType, userId, centerId ?? undefined);
     res.json(rows);
@@ -29,10 +29,10 @@ const createNotification = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await notificationService.create(req.body, centerId ?? req.body.center_id);
     if (centerId) {
@@ -69,10 +69,10 @@ const markAsRead = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await notificationService.markAsRead(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Notification not found' });
@@ -87,10 +87,10 @@ const deleteNotification = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await notificationService.deleteNotification(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Notification not found' });

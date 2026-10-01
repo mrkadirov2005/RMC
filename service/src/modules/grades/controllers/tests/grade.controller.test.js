@@ -62,7 +62,7 @@ describe('grades controller', () => {
       await gradeController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     const superuserHandlers = handlers.filter(([name]) => !['getGradesBySession', 'upsertSessionScores', 'saveSessionWorkflow'].includes(name));
@@ -74,7 +74,7 @@ describe('grades controller', () => {
       await gradeController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -105,7 +105,7 @@ describe('grades controller', () => {
       await gradeController.getAllGrades({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch grades', details: 'connection lost' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Baholarni yuklab bo'lmadi", details: 'connection lost' });
     });
   });
 
@@ -118,7 +118,7 @@ describe('grades controller', () => {
 
       expect(gradeService.getGrade).toHaveBeenCalledWith(5, 7, undefined);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Grade not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Baho topilmadi' });
     });
 
     it('stops a student reading another student grade', async () => {
@@ -128,7 +128,7 @@ describe('grades controller', () => {
       await gradeController.getGradeById({ params: { id: '5' }, user: { userType: 'student', id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('returns the student own grade', async () => {
@@ -179,7 +179,7 @@ describe('grades controller', () => {
 
       expect(studentBelongsToTeacher).toHaveBeenCalledWith(2, 4);
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
       expect(gradeService.createGrade).not.toHaveBeenCalled();
     });
 
@@ -263,7 +263,7 @@ describe('grades controller', () => {
       await gradeController.getGradesByStudent({ params: { studentId: '2' }, user: { userType: 'teacher', id: 4 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     });
 
     it('returns the records for an allowed teacher', async () => {
@@ -284,7 +284,7 @@ describe('grades controller', () => {
       await gradeController.getGradesByStudent({ params: { studentId: '2' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch grades', details: 'down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Baholarni yuklab bo'lmadi", details: 'down' });
     });
   });
 
@@ -385,7 +385,7 @@ describe('grades controller', () => {
       await gradeController.getGradesBySession({ params: { sessionId: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch grades', details: 'missing session' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Baholarni yuklab bo'lmadi", details: 'missing session' });
     });
   });
 
@@ -449,7 +449,7 @@ describe('grades controller', () => {
     it.each([
       ['invalid_payload', 'Invalid session workflow payload.'],
       ['multiple_stellar_students', 'Only one stellar student can be selected per lesson.'],
-      ['invalid_center', 'Class does not belong to this center.'],
+      ['invalid_center', 'Guruh bu markazga tegishli emas.'],
     ])('maps the %s result to a 400', async (error, message) => {
       const res = createResponse();
       gradeService.saveSessionWorkflow.mockResolvedValue({ error });

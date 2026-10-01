@@ -5,7 +5,7 @@ const getAuditLogs = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const rows = await auditLogService.listLogs(req.query, centerId ?? undefined);
     res.json(rows);

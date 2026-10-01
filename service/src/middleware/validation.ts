@@ -54,7 +54,7 @@ const validateInput =
 
     if (errors.length > 0) {
       return res.status(400).json({
-        error: 'Validation failed',
+        error: "Kiritilgan ma'lumotlar noto'g'ri",
         details: toValidationErrors(errors),
       });
     }

@@ -47,10 +47,10 @@ const getAllStudents = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (hasStudentListParams(req.query)) {
       const result = await studentService.listStudentsPaginated(parseStudentListQuery(req.query), centerId ?? undefined, teacherId);
@@ -69,13 +69,13 @@ const getStudentById = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student' && Number(req.params.id) !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await studentService.getStudent(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Student not found' });
+    if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -99,10 +99,10 @@ const getClassStudentsWithTransfers = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student' && Number(req.params.classId) !== Number(req.user?.class_id)) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const rows = await studentService.listClassStudentsWithTransfers(Number(req.params.classId), centerId ?? undefined, teacherId);
     res.json(rows);
@@ -116,10 +116,10 @@ const createStudent = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const payload = { ...req.body, center_id: centerId };
     if (req.user?.userType === 'teacher') {
@@ -135,7 +135,7 @@ const createStudent = async (req: any, res: any) => {
     if (error.code === '23505') {
       // PostgreSQL unique_violation error code
       if (error.constraint === 'students_username_key' || error.message?.includes('username')) {
-        return res.status(409).json({ error: 'Username already exists', message: 'A student with this username already exists. Please choose a different username.' });
+        return res.status(409).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud', message: 'A student with this username already exists. Please choose a different username.' });
       }
       if (error.constraint === 'students_enrollment_number_key' || error.message?.includes('enrollment')) {
         return res.status(409).json({ error: 'Enrollment number already exists', message: 'A student with this enrollment number already exists. Please choose a different number.' });
@@ -151,10 +151,10 @@ const updateStudent = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student' && Number(req.params.id) !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const payload = { ...req.body };
     if (req.user?.userType === 'teacher') {
@@ -163,7 +163,7 @@ const updateStudent = async (req: any, res: any) => {
       delete payload.teacher_id;
     }
     const row = await studentService.updateStudent(Number(req.params.id), payload, centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Student not found' });
+    if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -176,13 +176,13 @@ const deleteStudent = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await studentService.deleteStudent(Number(req.params.id), Number(req.body.reason_id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Student not found' });
+    if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
     res.json({ message: 'Student deleted successfully', student: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -195,10 +195,10 @@ const purgeStudent = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await studentService.purgeStudent(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Soft-deleted student not found' });
@@ -221,10 +221,10 @@ const transferStudent = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const result = await studentService.transferStudent(
@@ -235,7 +235,7 @@ const transferStudent = async (req: any, res: any) => {
       teacherId
     );
 
-    if (result?.error === 'not_found') return res.status(404).json({ error: 'Student not found' });
+    if (result?.error === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
     if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Target class not found' });
     if (result?.error === 'same_class') return res.status(400).json({ error: 'Student is already in this class' });
 
@@ -258,7 +258,7 @@ const studentLogin = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Student account is not active' });
     }
     if (result.kind !== 'ok') {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { student } = result;
     const token = generateToken({
@@ -270,7 +270,7 @@ const studentLogin = async (req: any, res: any) => {
       is_frozen: Boolean(student.is_frozen),
     });
     res.json({
-      message: 'Login successful',
+      message: 'Tizimga muvaffaqiyatli kirildi',
       token,
       student: {
         student_id: student.student_id,
@@ -284,7 +284,7 @@ const studentLogin = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to login', details: error.message || String(error) });
+    res.status(500).json({ error: "Tizimga kirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -293,13 +293,13 @@ const setStudentPassword = async (req: any, res: any) => {
     const { username, password } = req.body;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'teacher' || req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await studentService.setPasswordByAdmin(Number(req.params.id), username, password, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Student not found' });
+    if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
     res.json({ message: 'Student password set successfully', student: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -311,20 +311,20 @@ const changeStudentPassword = async (req: any, res: any) => {
   try {
     const { old_password, new_password } = req.body;
     if (req.user?.userType === 'teacher') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'student' && Number(req.params.id) !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const out = await studentService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
-      if (out.reason === 'not_found') return res.status(404).json({ error: 'Student not found' });
-      return res.status(401).json({ error: 'Current password is incorrect' });
+      if (out.reason === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
+      return res.status(401).json({ error: "Joriy parol noto'g'ri" });
     }
-    res.json({ message: 'Password changed successfully' });
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to change password', details: error.message || String(error) });
+    res.status(500).json({ error: "Parolni o'zgartirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

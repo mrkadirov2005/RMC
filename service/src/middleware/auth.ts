@@ -123,7 +123,7 @@ async function requireAuth(req: any, res: any, next: any): Promise<void> {
 function requireRole(...allowedTypes: UserType[]) {
   return (req: any, res: any, next: any): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
       return;
     }
 
@@ -147,7 +147,7 @@ function requireRole(...allowedTypes: UserType[]) {
 
 function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
   if (!req.user) {
-    res.status(401).json({ error: 'Authentication required.' });
+    res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
     return;
   }
 
@@ -171,7 +171,7 @@ function requireMuzaffarHardDelete(req: any, res: any, next: any): void {
 function requireSelfOrAdmin(paramName: string, userIdField: string = 'id') {
   return (req: any, res: any, next: any): void => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
       return;
     }
 
@@ -210,7 +210,7 @@ module.exports = {
   requireSelfOrAdmin,
   requireOwner: (req: any, res: any, next: any) => {
     if (!req.user) {
-      res.status(401).json({ error: 'Authentication required.' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi.' });
       return;
     }
     if (req.user.userType === 'superuser' && String(req.user.role || '').toLowerCase() === 'owner') {

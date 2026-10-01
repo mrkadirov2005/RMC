@@ -27,7 +27,7 @@ const getDashboardData = async (req: any, res: any) => {
 
     // Fetch initial student data to get class_id if not in token
     const student = await studentService.getStudent(studentId, centerId);
-    if (!student) return res.status(404).json({ error: 'Student not found' });
+    if (!student) return res.status(404).json({ error: "O'quvchi topilmadi" });
 
     const classId = student.class_id;
     const teacherId = student.teacher_id;

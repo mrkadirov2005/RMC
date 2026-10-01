@@ -13,10 +13,10 @@ const getTeacherScope = (req: any) => (req.user?.userType === 'teacher' ? Number
 const getCenterScope = (req: any, options: ScopeOptions = {}): ScopeResult => {
   const { centerId, isGlobal } = getScopedCenterId(req);
   if (!centerId && !isGlobal) {
-    return { ok: false, status: 403, body: { error: 'Center scope required.' } };
+    return { ok: false, status: 403, body: { error: 'Markaz tanlanishi shart.' } };
   }
   if (options.requireConcreteCenter && !centerId && isGlobal) {
-    return { ok: false, status: 400, body: { error: 'center_id is required for superuser actions.' } };
+    return { ok: false, status: 400, body: { error: "Bu amal uchun center_id ko'rsatilishi shart." } };
   }
   return { ok: true, centerId, isGlobal, teacherId: getTeacherScope(req) };
 };

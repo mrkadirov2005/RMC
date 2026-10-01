@@ -176,7 +176,7 @@ describe('students controller handlers', () => {
       await controller.getAllStudents({ query: {}, user: { userType: 'student', id: 9 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('falls back to the unpaginated listing when the query carries no list parameters', async () => {
@@ -209,7 +209,7 @@ describe('students controller handlers', () => {
       await controller.getStudentById({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('stops a student reading another student profile', async () => {
@@ -218,7 +218,7 @@ describe('students controller handlers', () => {
       await controller.getStudentById({ params: { id: '9' }, user: { userType: 'student', id: 4 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('lets a student read their own profile', async () => {
@@ -237,7 +237,7 @@ describe('students controller handlers', () => {
       await controller.getStudentById({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -292,7 +292,7 @@ describe('students controller handlers', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('lets a student read their own class', async () => {
@@ -326,7 +326,7 @@ describe('students controller handlers', () => {
       await controller.createStudent({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
 
     it('reports a duplicate enrollment number as a conflict', async () => {
@@ -387,7 +387,7 @@ describe('students controller handlers', () => {
       await controller.updateStudent({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -510,7 +510,7 @@ describe('students controller handlers', () => {
     });
 
     it.each([
-      ['not_found', 404, { error: 'Student not found' }],
+      ['not_found', 404, { error: "O'quvchi topilmadi" }],
       ['target_class_not_found', 404, { error: 'Target class not found' }],
       ['same_class', 400, { error: 'Student is already in this class' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
@@ -575,7 +575,7 @@ describe('students controller handlers', () => {
       await controller.studentLogin({ body: { username: 'ghost', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues a token carrying the class, center and freeze state, and returns no hash', async () => {
@@ -618,7 +618,7 @@ describe('students controller handlers', () => {
       await controller.studentLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -630,7 +630,7 @@ describe('students controller handlers', () => {
       await controller.setStudentPassword({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(['teacher', 'student'])('refuses a %s setting a password for somebody else', async (userType) => {
@@ -639,7 +639,7 @@ describe('students controller handlers', () => {
       await controller.setStudentPassword({ params: { id: '9' }, body: {}, user: { userType, id: 9 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
       expect(studentService.setPasswordByAdmin).not.toHaveBeenCalled();
     });
 
@@ -667,7 +667,7 @@ describe('students controller handlers', () => {
       await controller.setStudentPassword({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -697,7 +697,7 @@ describe('students controller handlers', () => {
       await controller.changeStudentPassword({ params: { id: '9' }, body: {}, user: { userType: 'student', id: 4 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('returns 404 when the account does not exist', async () => {
@@ -707,7 +707,7 @@ describe('students controller handlers', () => {
       await controller.changeStudentPassword({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi topilmadi" });
     });
 
     it('refuses a wrong current password', async () => {
@@ -717,7 +717,7 @@ describe('students controller handlers', () => {
       await controller.changeStudentPassword({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Current password is incorrect' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Joriy parol noto'g'ri" });
     });
 
     it('lets a student change their own password', async () => {
@@ -731,7 +731,7 @@ describe('students controller handlers', () => {
       }, res);
 
       expect(studentService.changePassword).toHaveBeenCalledWith(9, 'old', 'new');
-      expect(res.json).toHaveBeenCalledWith({ message: 'Password changed successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Parol muvaffaqiyatli o'zgartirildi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -741,7 +741,7 @@ describe('students controller handlers', () => {
       await controller.changeStudentPassword({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to change password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
     });
   });
 });

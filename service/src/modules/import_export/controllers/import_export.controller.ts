@@ -7,7 +7,7 @@ const exportEntity = async (req: any, res: any) => {
     const { entity } = req.params;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const out = await importExportService.exportEntity(entity, centerId ?? undefined);
     if (out.error === 'unsupported') {
@@ -38,10 +38,10 @@ const importEntity = async (req: any, res: any) => {
     const { csv } = req.body;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await importExportService.importEntity(entity, csv, centerId ?? undefined);
     if (out.error === 'unsupported') {
@@ -75,7 +75,7 @@ const pushEntityToSheets = async (req: any, res: any) => {
     const { entity } = req.params;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const out = await importExportService.pushEntityToSheets(entity, centerId ?? undefined);
     if (out.error === 'unsupported') {
@@ -112,10 +112,10 @@ const pullEntityFromSheets = async (req: any, res: any) => {
     const { entity } = req.params;
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await importExportService.pullEntityFromSheets(entity, centerId ?? undefined);
     if (out.error === 'unsupported') {

@@ -60,7 +60,7 @@ describe('debts controller', () => {
       await debtController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each([
@@ -73,7 +73,7 @@ describe('debts controller', () => {
       await debtController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -117,7 +117,7 @@ describe('debts controller', () => {
 
       expect(debtService.getDebt).toHaveBeenCalledWith(4, 3, undefined);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Debt not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Qarz topilmadi' });
     });
 
     it('stops a student reading another student debt', async () => {
@@ -127,7 +127,7 @@ describe('debts controller', () => {
       await debtController.getDebtById({ params: { id: '4' }, user: { userType: 'student', id: 9 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('returns the student own debt', async () => {
@@ -170,7 +170,7 @@ describe('debts controller', () => {
 
       expect(studentBelongsToTeacher).toHaveBeenCalledWith(2, 6);
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
       expect(debtService.createDebt).not.toHaveBeenCalled();
     });
 
@@ -213,7 +213,7 @@ describe('debts controller', () => {
       await debtController.updateDebt({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Debt not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Qarz topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -244,7 +244,7 @@ describe('debts controller', () => {
       await debtController.getDebtsByStudent({ params: { studentId: '2' }, user: { userType: 'teacher', id: 6 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     });
 
     it('returns the debts for an allowed teacher', async () => {
@@ -380,7 +380,7 @@ describe('debts controller', () => {
       await debtController.getPaymentSummary({ params: { studentId: '2' }, user: { userType: 'teacher', id: 6 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     });
 
     it('returns the summary for an allowed teacher', async () => {

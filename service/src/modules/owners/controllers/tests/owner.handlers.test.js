@@ -88,7 +88,7 @@ describe('owners controller handlers', () => {
       await controller.getOwnerById({ params: { id: '1' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Owner not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ega topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -117,7 +117,7 @@ describe('owners controller handlers', () => {
       await controller.createOwner({ body: { username: '' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: 'Validation failed' }));
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ error: "Kiritilgan ma'lumotlar noto'g'ri" }));
       expect(ownerService.createOwner).not.toHaveBeenCalled();
     });
 
@@ -128,7 +128,7 @@ describe('owners controller handlers', () => {
       await controller.createOwner({ body: validBody }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Username already exists' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     });
 
     it('returns the created owner row', async () => {
@@ -179,7 +179,7 @@ describe('owners controller handlers', () => {
       await controller.register({ body: validBody() }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Username already exists' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     });
 
     it('signs the new owner in and returns no password fields', async () => {
@@ -235,7 +235,7 @@ describe('owners controller handlers', () => {
       await controller.updateOwner({ params: { id: '1' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Owner not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ega topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -312,7 +312,7 @@ describe('owners controller handlers', () => {
       await controller.login({ body: credentials }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues an owner token carrying the hard-delete permission', async () => {
@@ -335,7 +335,7 @@ describe('owners controller handlers', () => {
       await controller.login({ body: credentials }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -358,7 +358,7 @@ describe('owners controller handlers', () => {
       await controller.changePassword({ params: { id: '1' }, body }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Owner not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ega topilmadi' });
     });
 
     it('refuses a wrong current password', async () => {
@@ -368,7 +368,7 @@ describe('owners controller handlers', () => {
       await controller.changePassword({ params: { id: '1' }, body }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Current password is incorrect' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Joriy parol noto'g'ri" });
     });
 
     it('confirms a successful change without echoing either password', async () => {
@@ -378,7 +378,7 @@ describe('owners controller handlers', () => {
       await controller.changePassword({ params: { id: '1' }, body }, res);
 
       expect(ownerService.changePassword).toHaveBeenCalledWith(1, body.old_password, body.new_password);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Password changed successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Parol muvaffaqiyatli o'zgartirildi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -388,7 +388,7 @@ describe('owners controller handlers', () => {
       await controller.changePassword({ params: { id: '1' }, body }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to change password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
     });
   });
 });

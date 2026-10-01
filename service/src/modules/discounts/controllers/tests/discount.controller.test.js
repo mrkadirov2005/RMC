@@ -57,7 +57,7 @@ describe('discounts controller', () => {
       await discountController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createDiscount alone makes a superuser name a center', async () => {
@@ -67,7 +67,7 @@ describe('discounts controller', () => {
       await discountController.createDiscount({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       expect(discountService.create).not.toHaveBeenCalled();
     });
 
@@ -122,7 +122,7 @@ describe('discounts controller', () => {
       await discountController.getDiscountById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Discount not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Chegirma topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -207,7 +207,7 @@ describe('discounts controller', () => {
       await discountController.createDiscount({ body: { student_id: 2 }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu markazga tegishli emas." });
       expect(logAudit).not.toHaveBeenCalled();
     });
 
@@ -277,7 +277,7 @@ describe('discounts controller', () => {
       await discountController.updateDiscount({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Discount not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Chegirma topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {

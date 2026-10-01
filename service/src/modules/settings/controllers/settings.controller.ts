@@ -5,7 +5,7 @@ const getLessonScoring = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     res.json(await settingsService.getLessonScoring(centerId ?? undefined));
   } catch (error: any) {
@@ -17,7 +17,7 @@ const saveLessonScoring = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
       return res.status(400).json({ error: 'center_id is required for settings.' });
@@ -31,7 +31,7 @@ const saveLessonScoring = async (req: any, res: any) => {
 const getOwnerPalette = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     if (!centerId) return res.status(400).json({ error: 'center_id is required for palette settings.' });
     res.json({ palette: await settingsService.getOwnerPalette(centerId) });
   } catch (error: any) {
@@ -42,7 +42,7 @@ const getOwnerPalette = async (req: any, res: any) => {
 const saveOwnerPalette = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     if (!centerId) return res.status(400).json({ error: 'center_id is required for palette settings.' });
     const palette = await settingsService.saveOwnerPalette(req.body?.palette, centerId);
     res.json({ palette });
@@ -54,7 +54,7 @@ const saveOwnerPalette = async (req: any, res: any) => {
 const getVisualOverrides = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
-    if (!centerId) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     res.json(await settingsService.getVisualOverrides(centerId));
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to fetch visual overrides', details: error.message || String(error) });
@@ -64,7 +64,7 @@ const getVisualOverrides = async (req: any, res: any) => {
 const saveVisualOverrides = async (req: any, res: any) => {
   try {
     const { centerId } = getScopedCenterId(req);
-    if (!centerId) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     res.json(await settingsService.saveVisualOverrides(req.body?.overrides, centerId));
   } catch (error: any) {
     res.status(500).json({ error: 'Failed to save visual overrides', details: error.message || String(error) });

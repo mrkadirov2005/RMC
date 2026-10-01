@@ -53,7 +53,7 @@ describe('refunds controller', () => {
       await refundController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createRefund alone makes a superuser name a center', async () => {
@@ -63,7 +63,7 @@ describe('refunds controller', () => {
       await refundController.createRefund({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       expect(refundService.create).not.toHaveBeenCalled();
     });
   });
@@ -125,7 +125,7 @@ describe('refunds controller', () => {
   describe('createRefund', () => {
     it.each([
       ['invalid_center', 400, { error: 'Payment does not belong to this center.' }],
-      ['payment_not_found', 404, { error: 'Payment not found' }],
+      ['payment_not_found', 404, { error: "To'lov topilmadi" }],
       ['refund_exceeds_payment', 400, { error: 'Refund amount exceeds the original payment amount.' }],
     ])('maps the %s result to a %d and writes no audit entry', async (error, status, payload) => {
       const res = createResponse();

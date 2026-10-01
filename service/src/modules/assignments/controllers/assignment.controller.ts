@@ -12,10 +12,10 @@ const getAllAssignments = async (req: any, res: any) => {
     const page = Number.isFinite(requestedPage) ? Math.max(requestedPage, 1) : 1;
     const classId = req.query.class_id ? Number(req.query.class_id) : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const rows = await assignmentService.getAllAssignments({
       centerId: centerId ?? undefined,
@@ -36,10 +36,10 @@ const getAssignmentById = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const assignment = await assignmentService.getAssignmentById(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!assignment) {
@@ -56,10 +56,10 @@ const createAssignment = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const classId = req.body.class_id;
     const effectiveCenterId = centerId ?? req.body.center_id;
@@ -69,7 +69,7 @@ const createAssignment = async (req: any, res: any) => {
         if (!ok) return res.status(403).json({ error: 'Class does not belong to this teacher.' });
       } else if (effectiveCenterId) {
         const ok = await classInCenter(classId, effectiveCenterId);
-        if (!ok) return res.status(400).json({ error: 'Class does not belong to this center.' });
+        if (!ok) return res.status(400).json({ error: 'Guruh bu markazga tegishli emas.' });
       }
     }
     const assignment = await assignmentService.createAssignment({ ...req.body, center_id: effectiveCenterId });
@@ -85,10 +85,10 @@ const updateAssignment = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const assignment = await assignmentService.updateAssignment(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
     if (!assignment) {
@@ -106,10 +106,10 @@ const deleteAssignment = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const assignment = await assignmentService.deleteAssignment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!assignment) {

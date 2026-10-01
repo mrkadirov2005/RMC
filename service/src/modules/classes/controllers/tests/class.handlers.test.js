@@ -72,7 +72,7 @@ describe('classes controller handlers', () => {
       await controller[handler]({ ...req, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each([
@@ -87,7 +87,7 @@ describe('classes controller handlers', () => {
       await controller[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -105,7 +105,7 @@ describe('classes controller handlers', () => {
       await controller[handler]({ ...req, user: student }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
   });
 
@@ -139,7 +139,7 @@ describe('classes controller handlers', () => {
       await controller.getClassById({ params: { id: '8' }, user: student }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('lets a student read their own class', async () => {
@@ -158,7 +158,7 @@ describe('classes controller handlers', () => {
       await controller.getClassById({ params: { id: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -305,7 +305,7 @@ describe('classes controller handlers', () => {
       await controller.deleteClass({ params: { id: '3' }, query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -466,7 +466,7 @@ describe('classes controller handlers', () => {
     });
 
     it.each([
-      ['not_found', 404, { error: 'Class not found' }],
+      ['not_found', 404, { error: 'Guruh topilmadi' }],
       ['missing_schedule', 400, { error: 'Class schedule is missing or invalid.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
@@ -667,7 +667,7 @@ describe('classes controller handlers', () => {
       await controller.createClassSession({ params: { id: '3' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Class not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Guruh topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {

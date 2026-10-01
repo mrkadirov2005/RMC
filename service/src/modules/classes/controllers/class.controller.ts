@@ -8,10 +8,10 @@ const getAllClasses = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (hasClassListParams(req.query)) {
       const result = await classService.listClassesPaginated(parseClassListQuery(req.query), centerId ?? undefined, teacherId);
@@ -29,13 +29,13 @@ const getClassById = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student' && Number(req.params.id) !== Number(req.user?.class_id)) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await classService.getClass(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Class not found' });
+    if (!row) return res.status(404).json({ error: 'Guruh topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -47,10 +47,10 @@ const createClass = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await classService.createClass(req.body, centerId ?? undefined);
     if (out && 'error' in out && out.error === 'bad_teacher') {
@@ -70,13 +70,13 @@ const updateClass = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await classService.updateClass(Number(req.params.id), req.body, centerId ?? undefined);
     if (row && row.error === 'bad_subject') {
       return res.status(400).json({ error: 'Select an available subject created for this center.' });
     }
-    if (!row) return res.status(404).json({ error: 'Class not found' });
+    if (!row) return res.status(404).json({ error: 'Guruh topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -88,7 +88,7 @@ const deleteClass = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const force = String(req.query.force || '').toLowerCase() === 'true';
     const result = await classService.deleteClass(Number(req.params.id), centerId ?? undefined, { force });
@@ -113,7 +113,7 @@ const deleteClass = async (req: any, res: any) => {
       });
     }
 
-    if (!result?.row) return res.status(404).json({ error: 'Class not found' });
+    if (!result?.row) return res.status(404).json({ error: 'Guruh topilmadi' });
     res.json({
       message: 'Class deleted successfully',
       class: result.row,
@@ -129,7 +129,7 @@ const purgeClass = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const result = await classService.purgeClass(Number(req.params.id), centerId ?? undefined);
     if (!result?.row) return res.status(404).json({ error: 'Soft-deleted class not found' });
@@ -152,10 +152,10 @@ const getClassSessions = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student' && Number(req.params.id) !== Number(req.user?.class_id)) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const classId = Number(req.params.id);
     res.json(await sessionService.listByClass(classId, centerId ?? undefined, teacherId));
@@ -170,10 +170,10 @@ const getBulkClassSessions = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const classIds = String(req.query.class_ids || '')
@@ -196,10 +196,10 @@ const generateClassSessions = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const classId = Number(req.params.id);
@@ -218,7 +218,7 @@ const generateClassSessions = async (req: any, res: any) => {
     });
 
     if (out && out.error === 'not_found') {
-      return res.status(404).json({ error: 'Class not found' });
+      return res.status(404).json({ error: 'Guruh topilmadi' });
     }
     if (out && out.error === 'missing_schedule') {
       return res.status(400).json({ error: 'Class schedule is missing or invalid.' });
@@ -235,13 +235,13 @@ const deleteUpcomingClassSessions = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const classId = Number(req.params.id);
@@ -268,13 +268,13 @@ const deleteClassSessionById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const classId = Number(req.params.id);
@@ -302,13 +302,13 @@ const purgeClassSessionById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const classId = Number(req.params.id);
@@ -344,13 +344,13 @@ const updateClassSession = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const classId = Number(req.params.id);
@@ -390,7 +390,7 @@ const createClassSession = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const classId = Number(req.params.id);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : req.body.teacher_id;
@@ -405,7 +405,7 @@ const createClassSession = async (req: any, res: any) => {
     });
 
     if (session && (session as any).error === 'not_found') {
-      return res.status(404).json({ error: 'Class not found' });
+      return res.status(404).json({ error: 'Guruh topilmadi' });
     }
 
     res.status(201).json(session);

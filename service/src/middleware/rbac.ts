@@ -6,7 +6,7 @@ export const requirePermission = (permission: string) => {
     const user = (req as any).user;
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -43,7 +43,7 @@ export const requirePermissions = (
     const user = (req as any).user;
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -74,7 +74,7 @@ export const requireOwnership = (resourceIdParam: string = 'id') => {
     const resourceId = req.params[resourceIdParam];
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 
@@ -104,7 +104,7 @@ export const canAccessStudentData = () => {
     const studentId = req.params.studentId || req.params.id;
     
     if (!user) {
-      res.status(401).json({ error: 'Authentication required' });
+      res.status(401).json({ error: 'Tizimga kirish talab qilinadi' });
       return;
     }
 

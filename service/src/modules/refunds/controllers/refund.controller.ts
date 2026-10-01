@@ -6,7 +6,7 @@ const getAllRefunds = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     res.json(await refundService.list(req.query, centerId ?? undefined));
   } catch (error: any) {
@@ -19,7 +19,7 @@ const getRefundById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await refundService.getById(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Refund not found' });
@@ -34,17 +34,17 @@ const createRefund = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await refundService.create(req.body, centerId ?? undefined);
     if (out.error === 'invalid_center') {
       return res.status(400).json({ error: 'Payment does not belong to this center.' });
     }
     if (out.error === 'payment_not_found') {
-      return res.status(404).json({ error: 'Payment not found' });
+      return res.status(404).json({ error: "To'lov topilmadi" });
     }
     if (out.error === 'refund_exceeds_payment') {
       return res.status(400).json({ error: 'Refund amount exceeds the original payment amount.' });
@@ -71,7 +71,7 @@ const updateRefund = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await refundService.update(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Refund not found' });
@@ -89,7 +89,7 @@ const deleteRefund = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await refundService.remove(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Refund not found' });

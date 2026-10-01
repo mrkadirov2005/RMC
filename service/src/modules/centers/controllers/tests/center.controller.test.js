@@ -63,7 +63,7 @@ describe('centers controller', () => {
       await centerController.getCenterById({ params: { id: '9' }, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
       expect(centerService.getCenter).not.toHaveBeenCalled();
     });
 
@@ -84,7 +84,7 @@ describe('centers controller', () => {
       await centerController.getCenterById({ params: { id: '9' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -164,7 +164,7 @@ describe('centers controller', () => {
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
       expect(centerService.updateCenter).not.toHaveBeenCalled();
     });
 
@@ -176,7 +176,7 @@ describe('centers controller', () => {
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
     });
 
     it('lets a center admin edit their own center', async () => {
@@ -240,7 +240,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {

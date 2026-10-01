@@ -4,7 +4,7 @@ const { getCenterScope, sendError, sendScopeError } = require('../../../shared/c
 
 const ensurePaymentAccess = (req: any, res: any) => {
   if (req.user?.userType === 'student') {
-    res.status(403).json({ error: 'Access denied.' });
+    res.status(403).json({ error: 'Kirish rad etildi.' });
     return false;
   }
   return true;
@@ -56,9 +56,9 @@ const getPaymentById = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId, teacherId } = scope;
     const row = await paymentService.getPayment(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Payment not found' });
+    if (!row) return res.status(404).json({ error: "To'lov topilmadi" });
     if (req.user?.userType === 'student' && row.student_id !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       return res.json(toTeacherPaymentView(row));
@@ -92,7 +92,7 @@ const updatePayment = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId, teacherId } = scope;
     const row = await paymentService.updatePayment(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Payment not found' });
+    if (!row) return res.status(404).json({ error: "To'lov topilmadi" });
     res.json(row);
   } catch (error: any) {
     sendError(res, error, 'Failed to update payment');
@@ -107,11 +107,11 @@ const getPaymentsByStudent = async (req: any, res: any) => {
     const { centerId, teacherId } = scope;
     const studentId = Number(req.params.studentId);
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     const rows = await paymentService.listByStudent(studentId, centerId ?? undefined, teacherId);
     if (req.user?.userType === 'teacher') {
@@ -132,7 +132,7 @@ const deletePayment = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId, teacherId } = scope;
     const row = await paymentService.deletePayment(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Payment not found' });
+    if (!row) return res.status(404).json({ error: "To'lov topilmadi" });
     res.json({ message: 'Payment deleted successfully', payment: row });
   } catch (error: any) {
     sendError(res, error, 'Failed to delete payment');

@@ -53,7 +53,7 @@ describe('payment plans controller', () => {
       await planController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createPlan alone makes a superuser name a center', async () => {
@@ -63,7 +63,7 @@ describe('payment plans controller', () => {
       await planController.createPlan({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       expect(planService.create).not.toHaveBeenCalled();
     });
   });
@@ -108,7 +108,7 @@ describe('payment plans controller', () => {
       await planController.getPlanById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Payment plan not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -124,7 +124,7 @@ describe('payment plans controller', () => {
 
   describe('createPlan', () => {
     it.each([
-      ['invalid_center', { error: 'Student does not belong to this center.' }],
+      ['invalid_center', { error: "O'quvchi bu markazga tegishli emas." }],
       ['installment_sum_mismatch', { error: 'Installment amounts must sum to total_amount.' }],
     ])('maps the %s result to a 400 and writes no audit entry', async (error, payload) => {
       const res = createResponse();
@@ -211,7 +211,7 @@ describe('payment plans controller', () => {
       await planController.updatePlan({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Payment plan not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov rejasi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {

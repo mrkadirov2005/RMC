@@ -7,15 +7,15 @@ const getAllAttendance = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     res.json(await attendanceService.list(centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
+    res.status(500).json({ error: "Davomatni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -24,20 +24,20 @@ const getAttendanceById = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await attendanceService.getById(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Attendance not found' });
     if (req.user?.userType === 'student' && row.student_id !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
+    res.status(500).json({ error: "Davomatni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -45,10 +45,10 @@ const createAttendance = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     
     // Use authenticated user's ID if teacher_id is missing or invalid
@@ -64,11 +64,11 @@ const createAttendance = async (req: any, res: any) => {
     
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(requestBody.student_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     const out = await attendanceService.create(requestBody, centerId ?? requestBody.center_id);
     if (out && out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Student does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     res.status(201).json(out);
   } catch (error: any) {
@@ -82,10 +82,10 @@ const updateAttendance = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await attendanceService.update(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Attendance not found' });
@@ -101,23 +101,23 @@ const getAttendanceByStudent = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const studentId = Number(req.params.studentId);
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     res.json(await attendanceService.byStudent(studentId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
+    res.status(500).json({ error: "Davomatni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -126,15 +126,15 @@ const getAttendanceByClass = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     res.json(await attendanceService.byClass(Number(req.params.classId), centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
+    res.status(500).json({ error: "Davomatni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -143,12 +143,12 @@ const getAttendanceBySession = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     res.json(await attendanceService.bySession(Number(req.params.sessionId), centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch attendance', details: error.message || String(error) });
+    res.status(500).json({ error: "Davomatni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -157,10 +157,10 @@ const deleteAttendance = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await attendanceService.remove(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Attendance record not found' });

@@ -6,10 +6,10 @@ const getOverview = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const year = req.query.year ? Number(req.query.year) : undefined;
     const month = req.query.month ? Number(req.query.month) : undefined;
@@ -25,10 +25,10 @@ const getTeacherDetail = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const teacherId = Number(req.params.teacherId);
     if (!teacherId) {
@@ -40,7 +40,7 @@ const getTeacherDetail = async (req: any, res: any) => {
     }
     const detail = await kpiService.getTeacherDetail({ teacherId, centerId: centerId ?? undefined });
     if (!detail) {
-      return res.status(404).json({ error: 'Teacher not found.' });
+      return res.status(404).json({ error: "O'qituvchi topilmadi." });
     }
     res.json(detail);
   } catch (error: any) {
@@ -53,17 +53,17 @@ const upsert = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const effectiveCenterId = centerId ?? req.body.center_id;
 
     const teacherId = Number(req.body.teacher_id);
     if (effectiveCenterId) {
       const ok = await teacherInCenter(teacherId, effectiveCenterId);
-      if (!ok) return res.status(400).json({ error: 'Teacher does not belong to this center.' });
+      if (!ok) return res.status(400).json({ error: "O'qituvchi bu markazga tegishli emas." });
     }
 
     const record = await kpiService.upsertKpi({

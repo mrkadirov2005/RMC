@@ -53,7 +53,7 @@ describe('salaries controller', () => {
       await salaryController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -63,7 +63,7 @@ describe('salaries controller', () => {
       await salaryController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -163,7 +163,7 @@ describe('salaries controller', () => {
       await salaryController.getTeacherDetail({ params: { teacherId: '5' }, query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher not found.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi topilmadi." });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -226,7 +226,7 @@ describe('salaries controller', () => {
       await salaryController.markPaid({ body: { teacher_id: 5 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Teacher does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi bu markazga tegishli emas." });
       expect(salaryService.markPaid).not.toHaveBeenCalled();
     });
 

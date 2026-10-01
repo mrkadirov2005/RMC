@@ -17,7 +17,7 @@ const getSuperuserById = async (req: any, res: any) => {
     const requestedId = Number(req.params.id);
     const { centerId } = getScopedCenterId(req);
     const row = await superuserService.getSuperuser(requestedId, centerId);
-    if (!row) return res.status(404).json({ error: 'Superuser not found' });
+    if (!row) return res.status(404).json({ error: 'Superuser topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -33,7 +33,7 @@ const createSuperuser = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Branch is required. Please select a branch first.' });
     }
     if (out.error === 'username_taken') {
-      return res.status(400).json({ error: 'Username already exists' });
+      return res.status(400).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     }
     if (out.error === 'forbidden_role') {
       return res.status(403).json({ error: 'Only owners can assign the owner role.' });
@@ -53,7 +53,7 @@ const updateSuperuser = async (req: any, res: any) => {
     if (out.error === 'forbidden_role') {
       return res.status(403).json({ error: 'Only owners can assign the owner role.' });
     }
-    if (!out.row) return res.status(404).json({ error: 'Superuser not found' });
+    if (!out.row) return res.status(404).json({ error: 'Superuser topilmadi' });
     res.json(out.row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -69,7 +69,7 @@ const deleteSuperuser = async (req: any, res: any) => {
     if (out.error === 'forbidden_role') {
       return res.status(403).json({ error: 'Only owners can delete an owner account.' });
     }
-    if (!out.row) return res.status(404).json({ error: 'Superuser not found' });
+    if (!out.row) return res.status(404).json({ error: 'Superuser topilmadi' });
     res.json({ message: 'Superuser deleted successfully', superuser: out.row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -88,7 +88,7 @@ const login = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Account is not active' });
     }
     if (result.kind !== 'ok') {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { superuser } = result;
     const token = generateToken({
@@ -103,7 +103,7 @@ const login = async (req: any, res: any) => {
       can_hard_delete: Boolean(superuser.can_hard_delete),
     });
     res.json({
-      message: 'Login successful',
+      message: 'Tizimga muvaffaqiyatli kirildi',
       token,
       superuser: {
         superuser_id: superuser.superuser_id,
@@ -120,7 +120,7 @@ const login = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to login', details: error.message || String(error) });
+    res.status(500).json({ error: "Tizimga kirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -129,13 +129,13 @@ const changePassword = async (req: any, res: any) => {
     const { old_password, new_password } = req.body;
     const out = await superuserService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
-      if (out.reason === 'not_found') return res.status(404).json({ error: 'Superuser not found' });
-      return res.status(401).json({ error: 'Current password is incorrect' });
+      if (out.reason === 'not_found') return res.status(404).json({ error: 'Superuser topilmadi' });
+      return res.status(401).json({ error: "Joriy parol noto'g'ri" });
     }
-    res.json({ message: 'Password changed successfully' });
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to change password', details: error.message || String(error) });
+    res.status(500).json({ error: "Parolni o'zgartirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

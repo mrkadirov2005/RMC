@@ -78,7 +78,7 @@ describe('teachers controller', () => {
     await teacherController.createTeacher(req, res);
 
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(res.json).toHaveBeenCalledWith({ error: 'Username already exists' });
+    expect(res.json).toHaveBeenCalledWith({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
   });
 
   it('returns login token for active teacher credentials', async () => {
@@ -92,7 +92,7 @@ describe('teachers controller', () => {
     await teacherController.teacherLogin(req, res);
 
     expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-      message: 'Login successful',
+      message: 'Tizimga muvaffaqiyatli kirildi',
       token: 'teacher-token',
       teacher: expect.objectContaining({ teacher_id: 2 }),
     }));

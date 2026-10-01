@@ -6,7 +6,7 @@ const getAllPlans = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     res.json(await paymentPlanService.list(req.query, centerId ?? undefined));
   } catch (error: any) {
@@ -19,10 +19,10 @@ const getPlanById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const data = await paymentPlanService.getWithInstallments(Number(req.params.id), centerId ?? undefined);
-    if (!data) return res.status(404).json({ error: 'Payment plan not found' });
+    if (!data) return res.status(404).json({ error: "To'lov rejasi topilmadi" });
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -34,14 +34,14 @@ const createPlan = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await paymentPlanService.create(req.body, centerId ?? undefined);
     if (out.error === 'invalid_center') {
-      return res.status(400).json({ error: 'Student does not belong to this center.' });
+      return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     if (out.error === 'installment_sum_mismatch') {
       return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
@@ -68,10 +68,10 @@ const updatePlan = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await paymentPlanService.update(Number(req.params.id), req.body, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Payment plan not found' });
+    if (!row) return res.status(404).json({ error: "To'lov rejasi topilmadi" });
     if ((row as any).error === 'installment_sum_mismatch') {
       return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
     }
@@ -86,10 +86,10 @@ const deletePlan = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await paymentPlanService.remove(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Payment plan not found' });
+    if (!row) return res.status(404).json({ error: "To'lov rejasi topilmadi" });
     res.json({ message: 'Payment plan deleted', plan: row });
   } catch (error: any) {
     console.error('Database error:', error);

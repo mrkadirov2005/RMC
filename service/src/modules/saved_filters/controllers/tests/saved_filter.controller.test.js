@@ -46,7 +46,7 @@ describe('saved filters controller', () => {
       await savedFilterController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Authentication required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Tizimga kirish talab qilinadi.' });
     });
 
     it.each(handlers)('%s refuses a request with no center scope', async (handler, req) => {
@@ -56,7 +56,7 @@ describe('saved filters controller', () => {
       await savedFilterController[handler]({ ...req, user: signedIn }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers)('%s makes a superuser name a center', async (handler, req) => {
@@ -66,7 +66,7 @@ describe('saved filters controller', () => {
       await savedFilterController[handler]({ ...req, user: { userType: 'superuser', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 

@@ -5,7 +5,7 @@ const listRegistrations = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const status = String(req.query.status || '').trim() || undefined;
     const rows = await service.listRegistrations(centerId ?? undefined, status);
@@ -20,7 +20,7 @@ const convertRegistration = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const assignData = {
       class_id: req.body?.class_id ? Number(req.body.class_id) : undefined,
@@ -47,7 +47,7 @@ const rejectRegistration = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await service.rejectRegistration(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Registration not found' });

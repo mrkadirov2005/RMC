@@ -60,7 +60,7 @@ describe('parents controller', () => {
       await parentController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createParent makes a superuser name a center', async () => {
@@ -70,7 +70,7 @@ describe('parents controller', () => {
       await parentController.createParent({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     });
   });
 
@@ -114,7 +114,7 @@ describe('parents controller', () => {
       await parentController.getParentById({ params: { id: '5' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Parent not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ota-ona topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -169,7 +169,7 @@ describe('parents controller', () => {
       await parentController.updateParent({ params: { id: '5' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Parent not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Ota-ona topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -222,7 +222,7 @@ describe('parents controller', () => {
       await parentController.assignStudent({ body: { parent_id: 1, student_id: 2 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu markazga tegishli emas." });
     });
 
     it('confirms the assignment', async () => {
@@ -266,7 +266,7 @@ describe('parents controller', () => {
       await parentController.parentLogin({ body: { username: 'ghost', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues a parent token and returns a trimmed profile', async () => {
@@ -288,7 +288,7 @@ describe('parents controller', () => {
       expect(parentService.authenticate).toHaveBeenCalledWith('ada', 'pw');
       expect(generateToken).toHaveBeenCalledWith({ id: 11, email: 'ada@example.com', userType: 'parent' });
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Login successful',
+        message: 'Tizimga muvaffaqiyatli kirildi',
         token: 'signed-token',
         parent: {
           parent_id: 11,
@@ -306,7 +306,7 @@ describe('parents controller', () => {
       await parentController.parentLogin({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -314,8 +314,8 @@ describe('parents controller', () => {
     const portalHandlers = [
       ['getMyStudents', 'getMyStudents', 'Failed to fetch parent students'],
       ['getMyStudentPayments', 'getMyStudentPayments', 'Failed to fetch payments'],
-      ['getMyStudentAttendance', 'getMyStudentAttendance', 'Failed to fetch attendance'],
-      ['getMyStudentGrades', 'getMyStudentGrades', 'Failed to fetch grades'],
+      ['getMyStudentAttendance', 'getMyStudentAttendance', "Davomatni yuklab bo'lmadi"],
+      ['getMyStudentGrades', 'getMyStudentGrades', "Baholarni yuklab bo'lmadi"],
       ['getMyStudentTests', 'getMyStudentTests', 'Failed to fetch test submissions'],
     ];
 

@@ -78,7 +78,7 @@ describe('superusers controller', () => {
       await superuserController.getSuperuserById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -95,7 +95,7 @@ describe('superusers controller', () => {
   describe('createSuperuser', () => {
     it.each([
       ['branch_required', 400, { error: 'Branch is required. Please select a branch first.' }],
-      ['username_taken', 400, { error: 'Username already exists' }],
+      ['username_taken', 400, { error: 'Bu foydalanuvchi nomi allaqachon mavjud' }],
       ['forbidden_role', 403, { error: 'Only owners can assign the owner role.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
@@ -148,7 +148,7 @@ describe('superusers controller', () => {
       await superuserController.updateSuperuser({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser topilmadi' });
     });
 
     it('returns the updated row', async () => {
@@ -237,7 +237,7 @@ describe('superusers controller', () => {
       await superuserController.login({ body: { username: 'ghost', password: 'pw' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invalid username or password' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     });
 
     it('issues a token carrying the role and permissions, and returns no password fields', async () => {
@@ -286,7 +286,7 @@ describe('superusers controller', () => {
       await superuserController.login({ body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to login', details: 'auth down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Tizimga kirib bo'lmadi", details: 'auth down' });
     });
   });
 
@@ -298,7 +298,7 @@ describe('superusers controller', () => {
       await superuserController.changePassword({ params: { id: '4' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Superuser topilmadi' });
     });
 
     it('refuses a wrong current password', async () => {
@@ -308,7 +308,7 @@ describe('superusers controller', () => {
       await superuserController.changePassword({ params: { id: '4' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(401);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Current password is incorrect' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Joriy parol noto'g'ri" });
     });
 
     it('confirms a successful change without echoing either password', async () => {
@@ -321,7 +321,7 @@ describe('superusers controller', () => {
       }, res);
 
       expect(superuserService.changePassword).toHaveBeenCalledWith(4, 'old', 'new');
-      expect(res.json).toHaveBeenCalledWith({ message: 'Password changed successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Parol muvaffaqiyatli o'zgartirildi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -331,7 +331,7 @@ describe('superusers controller', () => {
       await superuserController.changePassword({ params: { id: '4' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to change password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
     });
   });
 });

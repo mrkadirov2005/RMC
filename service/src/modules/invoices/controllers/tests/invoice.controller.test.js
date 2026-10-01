@@ -59,7 +59,7 @@ describe('invoices controller', () => {
       await invoiceController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it('createInvoice alone makes a superuser name a center', async () => {
@@ -69,7 +69,7 @@ describe('invoices controller', () => {
       await invoiceController.createInvoice({ body: {}, user: { userType: 'superuser' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       expect(invoiceService.createInvoice).not.toHaveBeenCalled();
     });
   });
@@ -114,7 +114,7 @@ describe('invoices controller', () => {
       await invoiceController.getInvoiceById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invoice not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Hisob-faktura topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -137,7 +137,7 @@ describe('invoices controller', () => {
 
       expect(studentInCenter).toHaveBeenCalledWith(2, 6);
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu markazga tegishli emas." });
       expect(invoiceService.createInvoice).not.toHaveBeenCalled();
     });
 
@@ -199,7 +199,7 @@ describe('invoices controller', () => {
       await invoiceController.updateInvoice({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Invoice not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Hisob-faktura topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {

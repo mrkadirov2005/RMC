@@ -6,7 +6,7 @@ const getAllDebts = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     res.json(await debtService.listDebts(centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
@@ -18,11 +18,11 @@ const getDebtById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     const row = await debtService.getDebt(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Debt not found' });
+    if (!row) return res.status(404).json({ error: 'Qarz topilmadi' });
     if (req.user?.userType === 'student' && row.student_id !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     res.json(row);
   } catch (error: any) {
@@ -34,11 +34,11 @@ const getDebtById = async (req: any, res: any) => {
 const createDebt = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    if (!centerId && isGlobal) return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(req.body.student_id, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     res.status(201).json(await debtService.createDebt({ ...req.body, center_id: centerId }));
   } catch (error: any) {
@@ -51,9 +51,9 @@ const updateDebt = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     const row = await debtService.updateDebt(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Debt not found' });
+    if (!row) return res.status(404).json({ error: 'Qarz topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -66,13 +66,13 @@ const getDebtsByStudent = async (req: any, res: any) => {
     const studentId = Number(req.params.studentId);
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     res.json(await debtService.listByStudent(studentId, centerId ?? undefined, teacherId));
   } catch (error: any) {
@@ -85,9 +85,9 @@ const deleteDebt = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     const row = await debtService.deleteDebt(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Debt not found' });
+    if (!row) return res.status(404).json({ error: 'Qarz topilmadi' });
     res.json({ message: 'Debt deleted successfully', debt: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -100,7 +100,7 @@ const analyzeUnpaidMonths = async (req: any, res: any) => {
     const { centerId, isGlobal } = getScopedCenterId(req);
     const { start_date, end_date } = req.query;
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     const data = await debtService.analyzeUnpaidMonths(String(centerId ?? ''), start_date, end_date, teacherId);
     res.json(data);
   } catch (error: any) {
@@ -114,8 +114,8 @@ const generateDebtsFromAnalysis = async (req: any, res: any) => {
     const { student_ids, monthly_fee, remarks } = req.body;
     const { centerId, isGlobal } = getScopedCenterId(req);
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
-    if (!centerId && isGlobal) return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    if (!centerId && isGlobal) return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     const { createdDebts } = await debtService.generateDebtsFromAnalysis(student_ids, monthly_fee, centerId ?? undefined, remarks, teacherId);
     res.status(201).json({
       message: `Created ${createdDebts.length} debt records`,
@@ -131,13 +131,13 @@ const getPaymentSummary = async (req: any, res: any) => {
   try {
     const studentId = Number(req.params.studentId);
     const { centerId, isGlobal } = getScopedCenterId(req);
-    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Center scope required.' });
+    if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     if (req.user?.userType === 'teacher') {
       const ok = await studentBelongsToTeacher(studentId, req.user?.id);
-      if (!ok) return res.status(403).json({ error: 'Student does not belong to this teacher.' });
+      if (!ok) return res.status(403).json({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     }
     res.json(await debtService.getPaymentSummary(studentId));
   } catch (error: any) {

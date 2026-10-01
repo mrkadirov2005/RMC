@@ -163,7 +163,7 @@ describe('tests controller statistics and share links', () => {
       await controller.getSharedTest({ params: { shareToken: 'nope' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'This link is no longer active.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bu havola endi faol emas.' });
     });
 
     it('returns the cover details', async () => {

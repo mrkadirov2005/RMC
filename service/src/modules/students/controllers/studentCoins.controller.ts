@@ -7,16 +7,16 @@ const getStudentCoins = async (req: any, res: any) => {
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     const studentId = Number(req.params.id);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student' && studentId !== req.user?.id) {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const summary = await studentService.getCoinSummary(studentId, centerId ?? undefined, teacherId);
-    if (!summary) return res.status(404).json({ error: 'Student not found' });
+    if (!summary) return res.status(404).json({ error: "O'quvchi topilmadi" });
     res.json(summary);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -30,13 +30,13 @@ const addStudentCoins = async (req: any, res: any) => {
     const teacherId = req.user?.userType === 'teacher' ? req.user?.id : undefined;
     const studentId = Number(req.params.id);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const rawAmount = Number(req.body?.amount);
@@ -45,14 +45,14 @@ const addStudentCoins = async (req: any, res: any) => {
     const reason = req.body?.reason ? String(req.body.reason) : null;
 
     const scopedStudent = await studentService.getStudent(studentId, centerId ?? undefined, teacherId);
-    if (!scopedStudent) return res.status(404).json({ error: 'Student not found' });
+    if (!scopedStudent) return res.status(404).json({ error: "O'quvchi topilmadi" });
 
     const out = await studentService.addCoins(studentId, delta, reason, req.user?.id ?? null, req.user?.userType ?? null);
     if (out.error === 'insufficient') {
-      return res.status(400).json({ error: 'Insufficient coins for this operation.' });
+      return res.status(400).json({ error: 'Bu amal uchun coinlar yetarli emas.' });
     }
     if (out.error === 'not_found') {
-      return res.status(404).json({ error: 'Student not found' });
+      return res.status(404).json({ error: "O'quvchi topilmadi" });
     }
     res.json(out);
   } catch (error: any) {
@@ -68,13 +68,13 @@ const updateStudentCoinTransaction = async (req: any, res: any) => {
     const studentId = Number(req.params.id);
     const transactionId = Number(req.params.transactionId);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const rawAmount = Number(req.body?.amount);
@@ -83,11 +83,11 @@ const updateStudentCoinTransaction = async (req: any, res: any) => {
     const reason = req.body?.reason ? String(req.body.reason) : null;
 
     const scopedStudent = await studentService.getStudent(studentId, centerId ?? undefined, teacherId);
-    if (!scopedStudent) return res.status(404).json({ error: 'Student not found' });
+    if (!scopedStudent) return res.status(404).json({ error: "O'quvchi topilmadi" });
 
     const out = await studentService.updateCoinTransaction(studentId, transactionId, delta, reason);
     if (out.error === 'insufficient') {
-      return res.status(400).json({ error: 'Insufficient coins for this operation.' });
+      return res.status(400).json({ error: 'Bu amal uchun coinlar yetarli emas.' });
     }
     if (out.error === 'not_found' || out.error === 'tx_not_found') {
       return res.status(404).json({ error: 'Transaction not found' });
@@ -106,21 +106,21 @@ const deleteStudentCoinTransaction = async (req: any, res: any) => {
     const studentId = Number(req.params.id);
     const transactionId = Number(req.params.transactionId);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     if (req.user?.userType === 'student') {
-      return res.status(403).json({ error: 'Access denied.' });
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
 
     const scopedStudent = await studentService.getStudent(studentId, centerId ?? undefined, teacherId);
-    if (!scopedStudent) return res.status(404).json({ error: 'Student not found' });
+    if (!scopedStudent) return res.status(404).json({ error: "O'quvchi topilmadi" });
 
     const out = await studentService.deleteCoinTransaction(studentId, transactionId);
     if (out.error === 'insufficient') {
-      return res.status(400).json({ error: 'Insufficient coins for this operation.' });
+      return res.status(400).json({ error: 'Bu amal uchun coinlar yetarli emas.' });
     }
     if (out.error === 'not_found' || out.error === 'tx_not_found') {
       return res.status(404).json({ error: 'Transaction not found' });

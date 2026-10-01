@@ -42,7 +42,7 @@ const getAllOwners = async (_req: Request, res: Response) => {
 const getOwnerById = async (req: Request<IdParams>, res: Response) => {
   try {
     const row = await ownerService.getOwner(Number(req.params.id));
-    if (!row) return res.status(404).json({ error: 'Owner not found' });
+    if (!row) return res.status(404).json({ error: 'Ega topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -54,11 +54,11 @@ const createOwner = async (req: Request<unknown, unknown, CreateOwnerDto>, res: 
   try {
     const validation = createOwnerDtoSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parseValidationError(validation.error) });
+      return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
     }
     const out = await ownerService.createOwner(validation.data);
     if (out.error === 'username_taken') {
-      return res.status(400).json({ error: 'Username already exists' });
+      return res.status(400).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     }
     res.status(201).json((out as any).row);
   } catch (error: any) {
@@ -71,7 +71,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
   try {
     const validation = registerOwnerDtoSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parseValidationError(validation.error) });
+      return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
     }
 
     const expectedKey = resolveOwnerInviteKey();
@@ -85,7 +85,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
 
     const out = await ownerService.registerOwner(validation.data);
     if (out.error === 'username_taken') {
-      return res.status(400).json({ error: 'Username already exists' });
+      return res.status(400).json({ error: 'Bu foydalanuvchi nomi allaqachon mavjud' });
     }
 
     const owner = (out as any).row;
@@ -122,10 +122,10 @@ const updateOwner = async (req: Request<IdParams, unknown, UpdateOwnerDto>, res:
   try {
     const validation = updateOwnerDtoSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parseValidationError(validation.error) });
+      return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
     }
     const row = await ownerService.updateOwner(Number(req.params.id), validation.data);
-    if (!row) return res.status(404).json({ error: 'Owner not found' });
+    if (!row) return res.status(404).json({ error: 'Ega topilmadi' });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
@@ -136,7 +136,7 @@ const updateOwner = async (req: Request<IdParams, unknown, UpdateOwnerDto>, res:
 const deleteOwner = async (req: Request<IdParams>, res: Response) => {
   try {
     const row = await ownerService.deleteOwner(Number(req.params.id));
-    if (!row) return res.status(404).json({ error: 'Owner not found' });
+    if (!row) return res.status(404).json({ error: 'Ega topilmadi' });
     res.json({ message: 'Owner deleted successfully', owner: row });
   } catch (error: any) {
     console.error('Database error:', error);
@@ -148,7 +148,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
   try {
     const validation = loginOwnerDtoSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parseValidationError(validation.error) });
+      return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
     }
     const { username, password } = validation.data;
     const result = await ownerService.authenticate(username, password);
@@ -159,7 +159,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
       return res.status(403).json({ error: 'Account is not active' });
     }
     if (result.kind !== 'ok') {
-      return res.status(401).json({ error: 'Invalid username or password' });
+      return res.status(401).json({ error: "Foydalanuvchi nomi yoki parol noto'g'ri" });
     }
     const { owner } = result;
     const token = generateToken({
@@ -171,7 +171,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
       can_hard_delete: Boolean(owner.can_hard_delete),
     });
     res.json({
-      message: 'Login successful',
+      message: 'Tizimga muvaffaqiyatli kirildi',
       token,
       owner: {
         owner_id: owner.owner_id,
@@ -186,7 +186,7 @@ const login = async (req: Request<unknown, unknown, LoginOwnerDto>, res: Respons
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to login', details: error.message || String(error) });
+    res.status(500).json({ error: "Tizimga kirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -194,18 +194,18 @@ const changePassword = async (req: Request<IdParams, unknown, ChangeOwnerPasswor
   try {
     const validation = changeOwnerPasswordDtoSchema.safeParse(req.body);
     if (!validation.success) {
-      return res.status(400).json({ error: 'Validation failed', details: parseValidationError(validation.error) });
+      return res.status(400).json({ error: "Kiritilgan ma'lumotlar noto'g'ri", details: parseValidationError(validation.error) });
     }
     const { old_password, new_password } = validation.data;
     const out = await ownerService.changePassword(Number(req.params.id), old_password, new_password);
     if (!out.ok) {
-      if (out.reason === 'not_found') return res.status(404).json({ error: 'Owner not found' });
-      return res.status(401).json({ error: 'Current password is incorrect' });
+      if (out.reason === 'not_found') return res.status(404).json({ error: 'Ega topilmadi' });
+      return res.status(401).json({ error: "Joriy parol noto'g'ri" });
     }
-    res.json({ message: 'Password changed successfully' });
+    res.json({ message: "Parol muvaffaqiyatli o'zgartirildi" });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to change password', details: error.message || String(error) });
+    res.status(500).json({ error: "Parolni o'zgartirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

@@ -49,7 +49,7 @@ describe('subjects controller', () => {
       await subjectController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers.filter(([name]) => name !== 'getSubjectsByClass'))(
@@ -61,7 +61,7 @@ describe('subjects controller', () => {
         await subjectController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+        expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       },
     );
   });
@@ -73,7 +73,7 @@ describe('subjects controller', () => {
       await subjectController.getAllSubjects({ user: { userType: 'student', id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
       expect(subjectService.listSubjects).not.toHaveBeenCalled();
     });
 
@@ -116,7 +116,7 @@ describe('subjects controller', () => {
       await subjectController.getSubjectById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Subject not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Fan topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -137,7 +137,7 @@ describe('subjects controller', () => {
       await subjectController.getSubjectsByClass({ params: { classId: '2' }, user: { userType: 'student', id: 3, class_id: 9 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
       expect(subjectService.listByClass).not.toHaveBeenCalled();
     });
 
@@ -184,7 +184,7 @@ describe('subjects controller', () => {
     });
 
     it.each([
-      ['invalid_center', 400, { error: 'Class does not belong to this center.' }],
+      ['invalid_center', 400, { error: 'Guruh bu markazga tegishli emas.' }],
       ['forbidden', 403, { error: 'Class does not belong to this teacher.' }],
       ['class_subject_exists', 409, { message: 'This class already has an assigned subject.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
@@ -220,7 +220,7 @@ describe('subjects controller', () => {
     });
 
     it.each([
-      ['invalid_center', 400, { error: 'Class does not belong to this center.' }],
+      ['invalid_center', 400, { error: 'Guruh bu markazga tegishli emas.' }],
       ['forbidden', 403, { error: 'Class does not belong to this teacher.' }],
       ['class_subject_exists', 409, { message: 'This class already has an assigned subject.' }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
@@ -240,7 +240,7 @@ describe('subjects controller', () => {
       await subjectController.updateSubject({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Subject not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Fan topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {

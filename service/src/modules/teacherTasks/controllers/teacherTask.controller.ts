@@ -13,10 +13,10 @@ const getAllTeacherTasks = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const isTeacher = req.user?.userType === 'teacher';
     const isAdmin = isCenterAdmin(req.user);
@@ -48,10 +48,10 @@ const getTeacherTaskById = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const isTeacher = req.user?.userType === 'teacher';
     const isAdmin = isCenterAdmin(req.user);
@@ -63,7 +63,7 @@ const getTeacherTaskById = async (req: any, res: any) => {
       : (!isTeacher && !isAdmin && req.query.admin_id ? Number(req.query.admin_id) : undefined);
     const task = await teacherTaskService.getTeacherTaskById(Number(req.params.id), centerId ?? undefined, teacherId, adminId);
     if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json(task);
   } catch (error: any) {
@@ -79,10 +79,10 @@ const createTeacherTask = async (req: any, res: any) => {
     }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const effectiveCenterId = centerId ?? req.body.center_id;
 
@@ -107,7 +107,7 @@ const createTeacherTask = async (req: any, res: any) => {
       }
       if (effectiveCenterId) {
         const ok = await teacherInCenter(teacherId, effectiveCenterId);
-        if (!ok) return res.status(400).json({ error: 'Teacher does not belong to this center.' });
+        if (!ok) return res.status(400).json({ error: "O'qituvchi bu markazga tegishli emas." });
       }
     } else {
       adminId = Number(req.body.admin_id);
@@ -146,10 +146,10 @@ const updateTeacherTask = async (req: any, res: any) => {
     }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const effectiveCenterId = centerId ?? req.body.center_id;
 
@@ -175,7 +175,7 @@ const updateTeacherTask = async (req: any, res: any) => {
         }
         if (effectiveCenterId) {
           const ok = await teacherInCenter(teacherId, effectiveCenterId);
-          if (!ok) return res.status(400).json({ error: 'Teacher does not belong to this center.' });
+          if (!ok) return res.status(400).json({ error: "O'qituvchi bu markazga tegishli emas." });
         }
         payload.assignee_type = assigneeType;
         payload.teacher_id = teacherId;
@@ -201,7 +201,7 @@ const updateTeacherTask = async (req: any, res: any) => {
 
     const task = await teacherTaskService.updateTeacherTask(Number(req.params.id), payload, centerId ?? undefined);
     if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json(task);
   } catch (error: any) {
@@ -214,10 +214,10 @@ const updateTeacherTaskStatus = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
 
     const action = req.body.action;
@@ -243,7 +243,7 @@ const updateTeacherTaskStatus = async (req: any, res: any) => {
       isAdmin ? Number(req.user.id) : undefined
     );
     if (!existing) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
 
     const belongsToCaller = isTeacher
@@ -282,10 +282,10 @@ const getTeacherTaskStats = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const isTeacher = req.user?.userType === 'teacher';
     const isAdmin = isCenterAdmin(req.user);
@@ -314,14 +314,14 @@ const deleteTeacherTask = async (req: any, res: any) => {
     }
     const { centerId, isGlobal } = getScopedCenterId(req);
     if (!centerId && !isGlobal) {
-      return res.status(403).json({ error: 'Center scope required.' });
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     if (!centerId && isGlobal) {
-      return res.status(400).json({ error: 'center_id is required for superuser actions.' });
+      return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const task = await teacherTaskService.deleteTeacherTask(Number(req.params.id), centerId ?? undefined);
     if (!task) {
-      return res.status(404).json({ error: 'Task not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json({ message: 'Task deleted successfully', task });
   } catch (error: any) {

@@ -5,11 +5,11 @@ const { logAudit } = require('../../../utils/audit');
 const resolveCenter = (req: any, res: any): number | null => {
   const { centerId, isGlobal } = getScopedCenterId(req);
   if (!centerId && !isGlobal) {
-    res.status(403).json({ error: 'Center scope required.' });
+    res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     return null;
   }
   if (!centerId && isGlobal) {
-    res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     return null;
   }
   return centerId as number;
@@ -20,7 +20,7 @@ const handle = (operation: (req: any, centerId: number) => Promise<any>) => asyn
     const centerId = resolveCenter(req, res);
     if (centerId == null) return;
     const result = await operation(req, centerId);
-    if (result == null) return res.status(404).json({ error: 'Room not found' });
+    if (result == null) return res.status(404).json({ error: 'Xona topilmadi' });
     res.json(result);
   } catch (error: any) {
     res.status(error.status || 500).json({ error: error.message });

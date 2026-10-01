@@ -4,11 +4,11 @@ const { getScopedCenterId } = require('../../../shared/tenant');
 const resolveCenter = (req: any, res: any): number | null => {
   const { centerId, isGlobal } = getScopedCenterId(req);
   if (!centerId && !isGlobal) {
-    res.status(403).json({ error: 'Center scope required.' });
+    res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     return null;
   }
   if (!centerId && isGlobal) {
-    res.status(400).json({ error: 'center_id is required for superuser actions.' });
+    res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     return null;
   }
   return centerId as number;

@@ -60,7 +60,7 @@ describe('attendance controller', () => {
       await attendanceController[handler]({ ...req, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Center scope required.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Markaz tanlanishi shart.' });
     });
 
     it.each(handlers.filter(([name]) => name !== 'getAttendanceBySession'))(
@@ -72,7 +72,7 @@ describe('attendance controller', () => {
         await attendanceController[handler]({ ...req, user: { userType: 'superuser' } }, res);
 
         expect(res.status).toHaveBeenCalledWith(400);
-        expect(res.json).toHaveBeenCalledWith({ error: 'center_id is required for superuser actions.' });
+        expect(res.json).toHaveBeenCalledWith({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
       },
     );
   });
@@ -104,7 +104,7 @@ describe('attendance controller', () => {
       await attendanceController.getAllAttendance({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch attendance', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -127,7 +127,7 @@ describe('attendance controller', () => {
       await attendanceController.getAttendanceById({ params: { id: '8' }, user: { userType: 'student', id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Access denied.' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Kirish rad etildi.' });
     });
 
     it('returns the student own record', async () => {
@@ -146,7 +146,7 @@ describe('attendance controller', () => {
       await attendanceController.getAttendanceById({ params: { id: '8' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch attendance', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -188,7 +188,7 @@ describe('attendance controller', () => {
 
       expect(studentBelongsToTeacher).toHaveBeenCalledWith(2, 4);
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
       expect(attendanceService.create).not.toHaveBeenCalled();
     });
 
@@ -210,7 +210,7 @@ describe('attendance controller', () => {
       await attendanceController.createAttendance({ body: { student_id: 2 }, user: { userType: 'admin', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(400);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this center.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu markazga tegishli emas." });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -273,7 +273,7 @@ describe('attendance controller', () => {
       await attendanceController.getAttendanceByStudent({ params: { studentId: '2' }, user: { userType: 'teacher', id: 4 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(403);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Student does not belong to this teacher.' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchi bu o'qituvchiga tegishli emas." });
     });
 
     it('returns the records for an allowed teacher', async () => {
@@ -294,7 +294,7 @@ describe('attendance controller', () => {
       await attendanceController.getAttendanceByStudent({ params: { studentId: '2' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch attendance', details: 'lookup failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yuklab bo'lmadi", details: 'lookup failed' });
     });
   });
 
@@ -316,7 +316,7 @@ describe('attendance controller', () => {
       await attendanceController.getAttendanceByClass({ params: { classId: '6' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch attendance', details: 'no class' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yuklab bo'lmadi", details: 'no class' });
     });
   });
 
@@ -338,7 +338,7 @@ describe('attendance controller', () => {
       await attendanceController.getAttendanceBySession({ params: { sessionId: '7' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch attendance', details: 'no session' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yuklab bo'lmadi", details: 'no session' });
     });
   });
 
