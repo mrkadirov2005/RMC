@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { translationAPI, type TranslationRow } from './api';
 import { sharedMessageTranslations } from './sharedMessages';
 import { pageLabelTranslations } from './labels';
+import { fixUzbekSpelling } from './uzbekSpelling';
 
 export type AppLanguage = 'en' | 'uz';
 export type TranslationVars = Record<string, string | number>;
@@ -421,7 +422,7 @@ const translations: Record<string, string> = {
   Session: 'Sessiya',
   'Default lesson length (minutes)': 'Standart dars davomiyligi (daqiqa)',
   'Override for next generation (minutes)': 'Keyingi yaratish uchun alohida davomiylik (daqiqa)',
-  'Leave empty to use default': 'Standartdan foydalanish uchun bosh qoldiring',
+  'Leave empty to use default': "Standartdan foydalanish uchun bo'sh qoldiring",
   'Default calendar view': "Standart taqvim ko'rinishi",
   'Month view': "Oy ko'rinishi",
   'Week view': "Hafta ko'rinishi",
@@ -566,7 +567,7 @@ const translations: Record<string, string> = {
   Debt: 'Qarz',
   Days: 'Kunlar',
   Path: 'Yol',
-  Aborted: 'Toxtatilgan',
+  Aborted: "To'xtatilgan",
   'Loading students...': "O'quvchilar yuklanmoqda...",
   'Loading classes...': 'Sinflar yuklanmoqda...',
   'Loading teachers...': "O'qituvchilar yuklanmoqda...",
@@ -655,7 +656,7 @@ const translations: Record<string, string> = {
   'Center Name *': 'Markaz nomi *',
   'Choose a class from the dropdown above': "Yuqoridagi ro'yxatdan sinfni tanlang",
   'City *': 'Shahar *',
-  'Class (Optional - leave empty for personal task)': 'Sinf (shaxsiy vazifa uchun bosh qoldiring)',
+  'Class (Optional - leave empty for personal task)': "Sinf (shaxsiy vazifa uchun bo'sh qoldiring)",
   'Class *': 'Sinf *',
   'Class activity / 30': 'Sinf faolligi / 30',
   'Class assigned': 'Sinf biriktirilgan',
@@ -829,8 +830,8 @@ const translations: Record<string, string> = {
   Admin: 'Admin',
   'Select a branch': 'Filialni tanlang',
   'No branches available': 'Filiallar mavjud emas',
-  'Leave blank to keep current password': 'Joriy parolni saqlash uchun bosh qoldiring',
-  'Leave blank to keep the current password.': 'Joriy parolni saqlash uchun bosh qoldiring.',
+  'Leave blank to keep current password': "Joriy parolni saqlash uchun bo'sh qoldiring",
+  'Leave blank to keep the current password.': "Joriy parolni saqlash uchun bo'sh qoldiring.",
   'Save changes': "O'zgarishlarni saqlash",
   'Choose which navbar items and sections this branch admin can see.': "Bu filial admini ko'ra oladigan menyu va bo'limlarni tanlang.",
   'Create, read, update, and delete student records': "O'quvchi yozuvlarini yaratish, ko'rish, yangilash va o'chirish",
@@ -1346,7 +1347,7 @@ const translations: Record<string, string> = {
   'Monthly lesson calendar': 'Oylik dars taqvimi',
   'Loading calendar': 'Taqvim yuklanmoqda',
   'Calendar preferences reset.': 'Taqvim sozlamalari tiklandi.',
-  'Calendar start hour must be before end hour.': 'Taqvim boshlanish vaqti tugash vaqtidan oldin bolishi kerak.',
+  'Calendar start hour must be before end hour.': "Taqvim boshlanish vaqti tugash vaqtidan oldin bo'lishi kerak.",
   'Lessons': 'Darslar',
   'Lesson days': 'Dars kunlari',
   'Lesson time': 'Dars vaqti',
@@ -1527,7 +1528,7 @@ const translations: Record<string, string> = {
   'Describe what needs to be done': 'Nima qilish kerakligini yozing',
   'Dismiss error': 'Xatoni yopish',
   'Enabled': 'Yoqilgan',
-  'Not enabled': "Yo'qilgan",
+  'Not enabled': 'Yoqilgan',
   'Filtered records': 'Filtrlangan yozuvlar',
   'First name': 'Ism',
   'Last name': 'Familiya',
@@ -1617,7 +1618,7 @@ const translations: Record<string, string> = {
   'Select interface language': 'Interfeys tilini tanlang',
   'Select source': 'Manbani tanlang',
   'Select a reason': 'Sababni tanlang',
-  'Select a class or leave empty': 'Sinfni tanlang yoki bosh qoldiring',
+  'Select a class or leave empty': "Sinfni tanlang yoki bo'sh qoldiring",
   'Select Admin': 'Adminni tanlang',
   'Select Assignee Type': 'Bajaruvchi turini tanlang',
   'Select target group': 'Maqsad guruhni tanlang',
@@ -1842,8 +1843,8 @@ const translations: Record<string, string> = {
   // ── More toast messages ─────────────────────────────────────
   'Grades saved successfully': 'Baholar muvaffaqiyatli saqlandi',
   'Please select class and subject': 'Sinf va fanni tanlang',
-  'Password must be at least 6 characters.': 'Parol kamida 6 belgidan iborat bolishi kerak.',
-  'Password must be at least 6 characters': 'Parol kamida 6 belgidan iborat bolishi kerak',
+  'Password must be at least 6 characters.': "Parol kamida 6 belgidan iborat bo'lishi kerak.",
+  'Password must be at least 6 characters': "Parol kamida 6 belgidan iborat bo'lishi kerak",
   'Payment password must be at least 6 characters.': "To'lov paroli kamida 6 belgidan iborat bo'lishi kerak.",
   'Payment access password set successfully.': "To'lov paroli muvaffaqiyatli o'rnatildi.",
   'Payment password copied.': "To'lov paroli nusxalandi.",
@@ -2003,10 +2004,7 @@ const buildTranslationPattern = (source: string) => {
   return new RegExp(escaped, 'g');
 };
 
-const normalizeUzbekTranslation = (value: string) =>
-  value
-    .replace(/Tolov/g, "To'lov")
-    .replace(/tolov/g, "to'lov");
+const normalizeUzbekTranslation = fixUzbekSpelling;
 
 const translateExact = (value: string, translationMap: Record<string, string>) => {
   const trimmed = value.trim();
