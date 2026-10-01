@@ -12,7 +12,7 @@ const getAllTranslations = async (req: any, res: any) => {
 const getTranslationById = async (req: any, res: any) => {
   try {
     const row = await translationService.getTranslation(req.params.id);
-    if (!row) return res.status(404).json({ error: 'Translation not found' });
+    if (!row) return res.status(404).json({ error: 'Tarjima topilmadi' });
     res.json(row);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -41,8 +41,8 @@ const saveTranslations = async (req: any, res: any) => {
 const deleteTranslation = async (req: any, res: any) => {
   try {
     const row = await translationService.deleteTranslation(req.params.id);
-    if (!row) return res.status(404).json({ error: 'Translation not found' });
-    res.json({ message: 'Translation deleted successfully' });
+    if (!row) return res.status(404).json({ error: 'Tarjima topilmadi' });
+    res.json({ message: "Tarjima muvaffaqiyatli o'chirildi" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

@@ -90,7 +90,7 @@ describe('KPIs controller', () => {
       await kpiController.getOverview({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch KPI overview', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "KPI sharhini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -143,7 +143,7 @@ describe('KPIs controller', () => {
       await kpiController.getTeacherDetail({ params: { teacherId: '5' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher KPI detail', details: 'detail failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi KPI tafsilotini yuklab bo'lmadi", details: 'detail failed' });
     });
   });
 
@@ -197,7 +197,7 @@ describe('KPIs controller', () => {
       await kpiController.upsert({ body: { teacher_id: 5 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to save KPI record', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "KPI yozuvini saqlab bo'lmadi", details: 'write failed' });
     });
   });
 });

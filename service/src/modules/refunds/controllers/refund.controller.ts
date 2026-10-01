@@ -11,7 +11,7 @@ const getAllRefunds = async (req: any, res: any) => {
     res.json(await refundService.list(req.query, centerId ?? undefined));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch refunds', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov qaytarilishlarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -22,11 +22,11 @@ const getRefundById = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await refundService.getById(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Refund not found' });
+    if (!row) return res.status(404).json({ error: "To'lov qaytarilishi topilmadi" });
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch refund', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov qaytarilishini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -63,7 +63,7 @@ const createRefund = async (req: any, res: any) => {
     res.status(201).json({ message: 'Refund requested', refund: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create refund', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov qaytarilishini yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -74,14 +74,14 @@ const updateRefund = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await refundService.update(Number(req.params.id), req.body, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Refund not found' });
+    if (!row) return res.status(404).json({ error: "To'lov qaytarilishi topilmadi" });
     if ((row as any).error === 'refund_exceeds_payment') {
       return res.status(400).json({ error: 'Refund amount exceeds the original payment amount.' });
     }
-    res.json({ message: 'Refund updated', refund: row });
+    res.json({ message: "To'lov qaytarilishi yangilandi", refund: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update refund', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov qaytarilishini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -92,11 +92,11 @@ const deleteRefund = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await refundService.remove(Number(req.params.id), centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Refund not found' });
-    res.json({ message: 'Refund deleted', refund: row });
+    if (!row) return res.status(404).json({ error: "To'lov qaytarilishi topilmadi" });
+    res.json({ message: "To'lov qaytarilishi o'chirildi", refund: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete refund', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov qaytarilishini o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

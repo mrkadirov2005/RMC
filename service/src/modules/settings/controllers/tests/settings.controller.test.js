@@ -114,7 +114,7 @@ describe('settings controller', () => {
       await settingsController.getLessonScoring({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch lesson scoring settings', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Dars baholash sozlamalarini yuklab bo'lmadi", details: 'offline' });
     });
 
     it('reports a save failure as a 500', async () => {
@@ -124,7 +124,7 @@ describe('settings controller', () => {
       await settingsController.saveLessonScoring({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to save lesson scoring settings', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Dars baholash sozlamalarini saqlab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -165,7 +165,7 @@ describe('settings controller', () => {
       await settingsController.getOwnerPalette({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch owner palette', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Rang palitrasini yuklab bo'lmadi", details: 'offline' });
     });
 
     it('reports a save failure as a 500', async () => {
@@ -175,7 +175,7 @@ describe('settings controller', () => {
       await settingsController.saveOwnerPalette({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to save owner palette', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Rang palitrasini saqlab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -207,7 +207,7 @@ describe('settings controller', () => {
       await settingsController.getVisualOverrides({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch visual overrides', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vizual o'zgartirishlarni yuklab bo'lmadi", details: 'offline' });
     });
 
     it('reports a save failure as a 500', async () => {
@@ -217,7 +217,7 @@ describe('settings controller', () => {
       await settingsController.saveVisualOverrides({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to save visual overrides', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vizual o'zgartirishlarni saqlab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -249,7 +249,7 @@ describe('settings controller', () => {
       await settingsController.getSidebarOrder({ user: { userType: 'teacher', id: 7 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch sidebar order', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Yon panel tartibini yuklab bo'lmadi", details: 'offline' });
     });
 
     it('reports a save failure as a 500', async () => {
@@ -259,7 +259,7 @@ describe('settings controller', () => {
       await settingsController.saveSidebarOrder({ user: { userType: 'teacher', id: 7 }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to save sidebar order', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Yon panel tartibini saqlab bo'lmadi", details: 'write failed' });
     });
   });
 });

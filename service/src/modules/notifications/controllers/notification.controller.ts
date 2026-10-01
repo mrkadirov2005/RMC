@@ -21,7 +21,7 @@ const getMyNotifications = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch notifications', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -58,10 +58,10 @@ const createNotification = async (req: any, res: any) => {
       details: { user_type: req.body.user_type, user_id: req.body.user_id, title: req.body.title, type: req.body.type || 'info' },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Notification created', notification: row });
+    res.status(201).json({ message: 'Bildirishnoma yaratildi', notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create notification', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -75,11 +75,11 @@ const markAsRead = async (req: any, res: any) => {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await notificationService.markAsRead(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Notification not found' });
+    if (!row) return res.status(404).json({ error: 'Bildirishnoma topilmadi' });
     res.json({ message: 'Notification marked as read', notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update notification', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -93,11 +93,11 @@ const deleteNotification = async (req: any, res: any) => {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await notificationService.deleteNotification(Number(req.params.id), req.user?.userType, req.user?.id, centerId ?? undefined);
-    if (!row) return res.status(404).json({ error: 'Notification not found' });
-    res.json({ message: 'Notification deleted', notification: row });
+    if (!row) return res.status(404).json({ error: 'Bildirishnoma topilmadi' });
+    res.json({ message: "Bildirishnoma o'chirildi", notification: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete notification', details: error.message || String(error) });
+    res.status(500).json({ error: "Bildirishnomani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

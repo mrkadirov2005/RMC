@@ -99,7 +99,7 @@ describe('notifications controller', () => {
       await notificationController.getMyNotifications({ user: { userType: 'teacher', id: 5 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch notifications', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bildirishnomalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -172,7 +172,7 @@ describe('notifications controller', () => {
         details: { user_type: 'student', user_id: 4, title: 'Fees due', type: 'warning' },
         ip_address: '10.0.0.5',
       });
-      expect(res.json).toHaveBeenCalledWith({ message: 'Notification created', notification: { notification_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Bildirishnoma yaratildi', notification: { notification_id: 3 } });
     });
 
     it('defaults the audited notification type to info', async () => {
@@ -197,7 +197,7 @@ describe('notifications controller', () => {
       await notificationController.createNotification({ body: {}, user: { userType: 'admin', id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create notification', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bildirishnomani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -219,7 +219,7 @@ describe('notifications controller', () => {
       await notificationController.markAsRead({ params: { id: '6' }, user: { userType: 'teacher', id: 5 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Notification not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bildirishnoma topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -229,7 +229,7 @@ describe('notifications controller', () => {
       await notificationController.markAsRead({ params: { id: '6' }, user: { userType: 'teacher', id: 5 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update notification', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bildirishnomani yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -241,7 +241,7 @@ describe('notifications controller', () => {
       await notificationController.deleteNotification({ params: { id: '6' }, user: { userType: 'teacher', id: 5 } }, res);
 
       expect(notificationService.deleteNotification).toHaveBeenCalledWith(6, 'teacher', 5, 2);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Notification deleted', notification: { notification_id: 6 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Bildirishnoma o'chirildi", notification: { notification_id: 6 } });
     });
 
     it('returns 404 when the notification is not the caller own', async () => {
@@ -260,7 +260,7 @@ describe('notifications controller', () => {
       await notificationController.deleteNotification({ params: { id: '6' }, user: { userType: 'teacher', id: 5 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete notification', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Bildirishnomani o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

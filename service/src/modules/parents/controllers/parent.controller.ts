@@ -11,7 +11,7 @@ const getAllParents = async (req: any, res: any) => {
     res.json(await parentService.listParents(centerId ?? undefined));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch parents', details: error.message || String(error) });
+    res.status(500).json({ error: "Ota-onalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -26,7 +26,7 @@ const getParentById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch parent', details: error.message || String(error) });
+    res.status(500).json({ error: "Ota-onani yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -40,10 +40,10 @@ const createParent = async (req: any, res: any) => {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await parentService.createParent({ ...req.body, center_id: centerId });
-    res.status(201).json({ message: 'Parent created', parent: (out as any).row });
+    res.status(201).json({ message: 'Ota-ona yaratildi', parent: (out as any).row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create parent', details: error.message || String(error) });
+    res.status(500).json({ error: "Ota-onani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -55,10 +55,10 @@ const updateParent = async (req: any, res: any) => {
     }
     const row = await parentService.updateParent(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Ota-ona topilmadi' });
-    res.json({ message: 'Parent updated', parent: row });
+    res.json({ message: 'Ota-ona yangilandi', parent: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update parent', details: error.message || String(error) });
+    res.status(500).json({ error: "Ota-onani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -70,10 +70,10 @@ const deleteParent = async (req: any, res: any) => {
     }
     const row = await parentService.deleteParent(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Ota-ona topilmadi' });
-    res.json({ message: 'Parent deleted', parent: row });
+    res.json({ message: "Ota-ona o'chirildi", parent: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete parent', details: error.message || String(error) });
+    res.status(500).json({ error: "Ota-onani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -90,7 +90,7 @@ const assignStudent = async (req: any, res: any) => {
     res.status(201).json({ message: 'Student assigned to parent' });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to assign student', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini biriktirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -132,7 +132,7 @@ const getMyStudents = async (req: any, res: any) => {
     res.json(await parentService.getMyStudents(parentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch parent students', details: error.message || String(error) });
+    res.status(500).json({ error: "Ota-ona o'quvchilarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -142,7 +142,7 @@ const getMyStudentPayments = async (req: any, res: any) => {
     res.json(await parentService.getMyStudentPayments(parentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch payments', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lovlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -172,7 +172,7 @@ const getMyStudentTests = async (req: any, res: any) => {
     res.json(await parentService.getMyStudentTests(parentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch test submissions', details: error.message || String(error) });
+    res.status(500).json({ error: "Topshirilgan testlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 

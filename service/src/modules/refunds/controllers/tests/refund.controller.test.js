@@ -86,7 +86,7 @@ describe('refunds controller', () => {
       await refundController.getAllRefunds({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch refunds', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishlarini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -108,7 +108,7 @@ describe('refunds controller', () => {
       await refundController.getRefundById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Refund not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -118,7 +118,7 @@ describe('refunds controller', () => {
       await refundController.getRefundById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch refund', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -178,7 +178,7 @@ describe('refunds controller', () => {
       await refundController.createRefund({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create refund', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -190,7 +190,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: { status: 'Approved' }, user: {} }, res);
 
       expect(refundService.update).toHaveBeenCalledWith(3, { status: 'Approved' }, 8);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Refund updated', refund: { refund_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov qaytarilishi yangilandi", refund: { refund_id: 3 } });
     });
 
     it('refuses an amount larger than the original payment', async () => {
@@ -210,7 +210,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Refund not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishi topilmadi" });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -220,7 +220,7 @@ describe('refunds controller', () => {
       await refundController.updateRefund({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update refund', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -232,7 +232,7 @@ describe('refunds controller', () => {
       await refundController.deleteRefund({ params: { id: '3' }, user: {} }, res);
 
       expect(refundService.remove).toHaveBeenCalledWith(3, 8);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Refund deleted', refund: { refund_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "To'lov qaytarilishi o'chirildi", refund: { refund_id: 3 } });
     });
 
     it('returns 404 when the refund is out of scope', async () => {
@@ -251,7 +251,7 @@ describe('refunds controller', () => {
       await refundController.deleteRefund({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete refund', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lov qaytarilishini o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

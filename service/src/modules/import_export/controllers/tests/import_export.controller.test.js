@@ -130,7 +130,7 @@ describe('import and export controller', () => {
       await controller.exportEntity({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to export CSV', details: 'read failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "CSV'ni eksport qilib bo'lmadi", details: 'read failed' });
     });
   });
 
@@ -187,7 +187,7 @@ describe('import and export controller', () => {
       await controller.importEntity({ params: { entity: 'students' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to import CSV', details: 'parse failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "CSV'ni import qilib bo'lmadi", details: 'parse failed' });
     });
   });
 
@@ -242,7 +242,7 @@ describe('import and export controller', () => {
       await controller.pushEntityToSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update Google Sheets', details: 'network down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Google Sheets'ni yangilab bo'lmadi", details: 'network down' });
     });
   });
 
@@ -311,7 +311,7 @@ describe('import and export controller', () => {
       await controller.pullEntityFromSheets({ params: { entity: 'students' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to import from Google Sheets', details: 'network down' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Google Sheets'dan import qilib bo'lmadi", details: 'network down' });
     });
   });
 });

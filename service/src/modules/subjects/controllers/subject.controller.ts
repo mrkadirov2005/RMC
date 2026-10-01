@@ -17,7 +17,7 @@ const getAllSubjects = async (req: any, res: any) => {
     res.json(await subjectService.listSubjects(centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch subjects' });
+    res.status(500).json({ error: "Fanlarni yuklab bo'lmadi" });
   }
 };
 
@@ -36,7 +36,7 @@ const getSubjectById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch subject', details: error.message || String(error) });
+    res.status(500).json({ error: "Fanni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -54,7 +54,7 @@ const getSubjectsByClass = async (req: any, res: any) => {
     res.json(await subjectService.listByClass(classId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch subjects' });
+    res.status(500).json({ error: "Fanlarni yuklab bo'lmadi" });
   }
 };
 
@@ -81,7 +81,7 @@ const createSubject = async (req: any, res: any) => {
     res.status(201).json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create subject', details: error.message || String(error) });
+    res.status(500).json({ error: "Fanni yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -109,7 +109,7 @@ const updateSubject = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update subject', details: error.message || String(error) });
+    res.status(500).json({ error: "Fanni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -125,10 +125,10 @@ const deleteSubject = async (req: any, res: any) => {
     }
     const row = await subjectService.deleteSubject(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Fan topilmadi' });
-    res.json({ message: 'Subject deleted successfully', subject: row });
+    res.json({ message: "Fan muvaffaqiyatli o'chirildi", subject: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete subject', details: error.message || String(error) });
+    res.status(500).json({ error: "Fanni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

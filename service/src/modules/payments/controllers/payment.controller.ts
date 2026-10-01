@@ -45,7 +45,7 @@ const getAllPayments = async (req: any, res: any) => {
     }
     res.json(rows);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch payments');
+    sendError(res, error, "To'lovlarni yuklab bo'lmadi");
   }
 };
 
@@ -65,7 +65,7 @@ const getPaymentById = async (req: any, res: any) => {
     }
     res.json(row);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch payment');
+    sendError(res, error, "To'lovni yuklab bo'lmadi");
   }
 };
 
@@ -79,7 +79,7 @@ const createPayment = async (req: any, res: any) => {
     const { centerId } = scope;
     res.status(201).json(await paymentService.createPayment(req.body, centerId ?? undefined));
   } catch (error: any) {
-    sendError(res, error, 'Failed to create payment');
+    sendError(res, error, "To'lovni yaratib bo'lmadi");
   }
 };
 
@@ -95,7 +95,7 @@ const updatePayment = async (req: any, res: any) => {
     if (!row) return res.status(404).json({ error: "To'lov topilmadi" });
     res.json(row);
   } catch (error: any) {
-    sendError(res, error, 'Failed to update payment');
+    sendError(res, error, "To'lovni yangilab bo'lmadi");
   }
 };
 
@@ -119,7 +119,7 @@ const getPaymentsByStudent = async (req: any, res: any) => {
     }
     res.json(rows);
   } catch (error: any) {
-    sendError(res, error, 'Failed to fetch payments');
+    sendError(res, error, "To'lovlarni yuklab bo'lmadi");
   }
 };
 
@@ -133,9 +133,9 @@ const deletePayment = async (req: any, res: any) => {
     const { centerId, teacherId } = scope;
     const row = await paymentService.deletePayment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: "To'lov topilmadi" });
-    res.json({ message: 'Payment deleted successfully', payment: row });
+    res.json({ message: "To'lov muvaffaqiyatli o'chirildi", payment: row });
   } catch (error: any) {
-    sendError(res, error, 'Failed to delete payment');
+    sendError(res, error, "To'lovni o'chirib bo'lmadi");
   }
 };
 
@@ -148,18 +148,18 @@ const purgePayment = async (req: any, res: any) => {
     if (sendScopeError(res, scope)) return;
     const { centerId, teacherId } = scope;
     const row = await paymentService.purgePayment(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Soft-deleted payment not found' });
-    res.json({ message: 'Payment permanently deleted', payment: row });
+    if (!row) return res.status(404).json({ error: "O'chirilgan to'lov topilmadi" });
+    res.json({ message: "To'lov butunlay o'chirildi", payment: row });
   } catch (error: any) {
     console.error('Database error:', error);
     if (error?.code === '23503') {
       return res.status(409).json({
-        error: 'Payment is still referenced by other records',
-        message: 'Delete or reassign related records before permanently deleting this payment.',
+        error: "To'lov boshqa yozuvlarda hali ishlatilmoqda",
+        message: "Bu yozuvni butunlay o'chirishdan oldin bog'liq yozuvlarni o'chiring yoki boshqasiga o'tkazing.",
         details: error.detail,
       });
     }
-    sendError(res, error, 'Failed to permanently delete payment');
+    sendError(res, error, "To'lovni butunlay o'chirib bo'lmadi");
   }
 };
 

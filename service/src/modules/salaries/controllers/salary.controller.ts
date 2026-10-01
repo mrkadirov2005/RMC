@@ -17,7 +17,7 @@ const getOverview = async (req: any, res: any) => {
     res.json(result);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch salary overview', details: error.message || String(error) });
+    res.status(500).json({ error: "Maosh sharhini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -47,7 +47,7 @@ const getTeacherDetail = async (req: any, res: any) => {
     res.json(detail);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher salary detail', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi maosh tafsilotini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -62,12 +62,12 @@ const getMyDetail = async (req: any, res: any) => {
     const months = Number.isFinite(requestedMonths) ? Math.min(Math.max(requestedMonths, 1), 24) : 6;
     const detail = await salaryService.getTeacherDetail({ teacherId, centerId: centerId ?? undefined, months });
     if (!detail) {
-      return res.status(404).json({ error: 'Salary profile not found.' });
+      return res.status(404).json({ error: 'Maosh profili topilmadi.' });
     }
     res.json(detail);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch salary detail', details: error.message || String(error) });
+    res.status(500).json({ error: "Maosh tafsilotini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -101,7 +101,7 @@ const markPaid = async (req: any, res: any) => {
     res.status(201).json(record);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to mark salary as paid', details: error.message || String(error) });
+    res.status(500).json({ error: "Maoshni to'langan deb belgilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -131,12 +131,12 @@ const updatePatch = async (req: any, res: any) => {
       actingUser: req.user,
     });
     if (!record) {
-      return res.status(404).json({ error: 'Salary record not found.' });
+      return res.status(404).json({ error: 'Maosh yozuvi topilmadi.' });
     }
     res.json(record);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update salary record', details: error.message || String(error) });
+    res.status(500).json({ error: "Maosh yozuvini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -155,7 +155,7 @@ const getMonthlySummary = async (req: any, res: any) => {
     res.json(result);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch salary monthly summary', details: error.message || String(error) });
+    res.status(500).json({ error: "Oylik maosh xulosasini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 

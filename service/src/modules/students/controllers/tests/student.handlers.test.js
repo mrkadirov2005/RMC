@@ -67,7 +67,7 @@ describe('students controller handlers', () => {
       await controller.getAcquisitionSources({}, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch acquisition sources', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Manbalarni yuklab bo'lmadi", details: 'offline' });
     });
 
     it('requires a non-blank source name', async () => {
@@ -97,7 +97,7 @@ describe('students controller handlers', () => {
       await controller.createAcquisitionSource({ body: { source_name: 'Instagram' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create acquisition source', details: 'duplicate' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Manbani yaratib bo'lmadi", details: 'duplicate' });
     });
   });
 
@@ -127,7 +127,7 @@ describe('students controller handlers', () => {
       await controller.getActionReasons({ query: { type: 'delete' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch action reasons', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sabablarni yuklab bo'lmadi", details: 'offline' });
     });
 
     it('refuses an unknown reason type on create', async () => {
@@ -165,7 +165,7 @@ describe('students controller handlers', () => {
       await controller.createActionReason({ body: { reason_type: 'transfer', reason_name: 'Moved' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create action reason', details: 'duplicate' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Sababni yaratib bo'lmadi", details: 'duplicate' });
     });
   });
 
@@ -197,7 +197,7 @@ describe('students controller handlers', () => {
       await controller.getAllStudents({ query: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch students', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchilarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -247,7 +247,7 @@ describe('students controller handlers', () => {
       await controller.getStudentById({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch student', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -269,7 +269,7 @@ describe('students controller handlers', () => {
       await controller.getDeletedStudents({ user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch deleted students', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'chirilgan o'quvchilarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -314,7 +314,7 @@ describe('students controller handlers', () => {
       await controller.getClassStudentsWithTransfers({ params: { classId: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch class students', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Guruh o'quvchilarini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -349,7 +349,7 @@ describe('students controller handlers', () => {
       await controller.createStudent({ body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create student', message: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini yaratib bo'lmadi", message: 'insert failed' });
     });
   });
 
@@ -397,7 +397,7 @@ describe('students controller handlers', () => {
       await controller.updateStudent({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update student', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -422,7 +422,7 @@ describe('students controller handlers', () => {
       }, res);
 
       expect(studentService.deleteStudent).toHaveBeenCalledWith(9, 4, 2, 7);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Student deleted successfully', student: { student_id: 9 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'quvchi muvaffaqiyatli o'chirildi", student: { student_id: 9 } });
     });
 
     it('returns 404 when the student is out of scope', async () => {
@@ -441,7 +441,7 @@ describe('students controller handlers', () => {
       await controller.deleteStudent({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete student', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini o'chirib bo'lmadi", details: 'locked' });
     });
   });
 
@@ -460,7 +460,7 @@ describe('students controller handlers', () => {
 
       await controller.purgeStudent({ params: { id: '9' }, user: admin }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Student permanently deleted', student: { student_id: 9 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "O'quvchi butunlay o'chirildi", student: { student_id: 9 } });
     });
 
     it('returns 404 when no soft-deleted student matches', async () => {
@@ -470,7 +470,7 @@ describe('students controller handlers', () => {
       await controller.purgeStudent({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Soft-deleted student not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'chirilgan o'quvchi topilmadi" });
     });
 
     it('explains a foreign key violation rather than returning a bare 500', async () => {
@@ -484,7 +484,7 @@ describe('students controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(409);
       expect(res.json).toHaveBeenCalledWith(expect.objectContaining({
-        error: 'Student is still referenced by other records',
+        error: "O'quvchi boshqa yozuvlarda hali ishlatilmoqda",
         details: 'still referenced from table "payments"',
       }));
     });
@@ -496,7 +496,7 @@ describe('students controller handlers', () => {
       await controller.purgeStudent({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to permanently delete student', details: 'boom' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini butunlay o'chirib bo'lmadi", details: 'boom' });
     });
   });
 
@@ -552,7 +552,7 @@ describe('students controller handlers', () => {
       await controller.transferStudent({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to transfer student', details: 'transfer failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'quvchini ko'chirib bo'lmadi", details: 'transfer failed' });
     });
   });
 
@@ -677,7 +677,7 @@ describe('students controller handlers', () => {
       await controller.setStudentPassword({ params: { id: '9' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to set password', details: 'hash failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'rnatib bo'lmadi", details: 'hash failed' });
     });
   });
 

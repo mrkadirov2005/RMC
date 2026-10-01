@@ -11,7 +11,7 @@ const getArchive = async (req: any, res: any) => {
     res.json(archive);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch archive', details: error.message || String(error) });
+    res.status(500).json({ error: "Arxivni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -28,9 +28,9 @@ const restoreArchiveItem = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Invalid archive entity.' });
     }
     if (!result?.row) {
-      return res.status(404).json({ error: 'Archived record not found.' });
+      return res.status(404).json({ error: 'Arxivlangan yozuv topilmadi.' });
     }
-    res.json({ message: 'Record restored successfully.', record: result.row });
+    res.json({ message: 'Yozuv muvaffaqiyatli tiklandi.', record: result.row });
   } catch (error: any) {
     console.error('Database error:', error);
     if (error?.code === '23505') {
@@ -39,7 +39,7 @@ const restoreArchiveItem = async (req: any, res: any) => {
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to restore archive item', details: error.message || String(error) });
+    res.status(500).json({ error: "Arxiv elementini tiklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -56,19 +56,19 @@ const purgeArchiveItem = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Invalid archive entity.' });
     }
     if (!result?.row) {
-      return res.status(404).json({ error: 'Archived record not found.' });
+      return res.status(404).json({ error: 'Arxivlangan yozuv topilmadi.' });
     }
-    res.json({ message: 'Record permanently deleted.', record: result.row });
+    res.json({ message: "Yozuv butunlay o'chirildi.", record: result.row });
   } catch (error: any) {
     console.error('Database error:', error);
     if (error?.code === '23503') {
       return res.status(409).json({
-        error: 'Record is still referenced by other records.',
+        error: 'Yozuv boshqa yozuvlarda hali ishlatilmoqda.',
         message: 'Restore or reassign related records before permanently deleting this item.',
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to permanently delete archive item', details: error.message || String(error) });
+    res.status(500).json({ error: "Arxiv elementini butunlay o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

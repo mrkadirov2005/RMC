@@ -35,7 +35,7 @@ const getAllOwners = async (_req: Request, res: Response) => {
     res.json(await ownerService.listOwners());
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch owners', details: error.message || String(error) });
+    res.status(500).json({ error: "Egalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -46,7 +46,7 @@ const getOwnerById = async (req: Request<IdParams>, res: Response) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch owner', details: error.message || String(error) });
+    res.status(500).json({ error: "Egani yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -63,7 +63,7 @@ const createOwner = async (req: Request<unknown, unknown, CreateOwnerDto>, res: 
     res.status(201).json((out as any).row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create owner', details: error.message || String(error) });
+    res.status(500).json({ error: "Egani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -114,7 +114,7 @@ const register = async (req: Request<unknown, unknown, RegisterOwnerDto>, res: R
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create owner', details: error.message || String(error) });
+    res.status(500).json({ error: "Egani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -129,7 +129,7 @@ const updateOwner = async (req: Request<IdParams, unknown, UpdateOwnerDto>, res:
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update owner', details: error.message || String(error) });
+    res.status(500).json({ error: "Egani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -137,10 +137,10 @@ const deleteOwner = async (req: Request<IdParams>, res: Response) => {
   try {
     const row = await ownerService.deleteOwner(Number(req.params.id));
     if (!row) return res.status(404).json({ error: 'Ega topilmadi' });
-    res.json({ message: 'Owner deleted successfully', owner: row });
+    res.json({ message: "Ega muvaffaqiyatli o'chirildi", owner: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete owner', details: error.message || String(error) });
+    res.status(500).json({ error: "Egani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

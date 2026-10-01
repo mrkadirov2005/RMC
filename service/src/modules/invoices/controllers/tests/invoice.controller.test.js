@@ -92,7 +92,7 @@ describe('invoices controller', () => {
       await invoiceController.getAllInvoices({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch invoices', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Hisob-fakturalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -124,7 +124,7 @@ describe('invoices controller', () => {
       await invoiceController.getInvoiceById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch invoice', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Hisob-fakturani yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -165,7 +165,7 @@ describe('invoices controller', () => {
       });
       expect(res.status).toHaveBeenCalledWith(201);
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Invoice created',
+        message: 'Hisob-faktura yaratildi',
         invoice: { invoice_id: 9, invoice_number: 'INV-0009', total: 750000 },
       });
     });
@@ -177,7 +177,7 @@ describe('invoices controller', () => {
       await invoiceController.createInvoice({ body: { student_id: 2 }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create invoice', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Hisob-fakturani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -189,7 +189,7 @@ describe('invoices controller', () => {
       await invoiceController.updateInvoice({ params: { id: '3' }, body: { status: 'Paid' }, user: {} }, res);
 
       expect(invoiceService.updateInvoice).toHaveBeenCalledWith(3, { status: 'Paid' }, 6);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Invoice updated', invoice: { invoice_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Hisob-faktura yangilandi', invoice: { invoice_id: 3 } });
     });
 
     it('returns 404 when nothing was updated', async () => {
@@ -209,7 +209,7 @@ describe('invoices controller', () => {
       await invoiceController.updateInvoice({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update invoice', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Hisob-fakturani yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -221,7 +221,7 @@ describe('invoices controller', () => {
       await invoiceController.deleteInvoice({ params: { id: '3' }, user: {} }, res);
 
       expect(invoiceService.deleteInvoice).toHaveBeenCalledWith(3, 6);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Invoice deleted', invoice: { invoice_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Hisob-faktura o'chirildi", invoice: { invoice_id: 3 } });
     });
 
     it('returns 404 when the invoice is out of scope', async () => {
@@ -240,7 +240,7 @@ describe('invoices controller', () => {
       await invoiceController.deleteInvoice({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete invoice', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Hisob-fakturani o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

@@ -11,7 +11,7 @@ const getAuditLogs = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch audit logs', details: error.message || String(error) });
+    res.status(500).json({ error: "Audit jurnalini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 

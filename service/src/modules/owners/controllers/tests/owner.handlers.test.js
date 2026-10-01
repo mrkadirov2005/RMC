@@ -66,7 +66,7 @@ describe('owners controller handlers', () => {
       await controller.getAllOwners({}, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch owners', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Egalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -98,7 +98,7 @@ describe('owners controller handlers', () => {
       await controller.getOwnerById({ params: { id: '1' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch owner', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Egani yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -148,7 +148,7 @@ describe('owners controller handlers', () => {
       await controller.createOwner({ body: validBody }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create owner', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Egani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -204,7 +204,7 @@ describe('owners controller handlers', () => {
       await controller.register({ body: validBody() }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create owner', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Egani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -245,7 +245,7 @@ describe('owners controller handlers', () => {
       await controller.updateOwner({ params: { id: '1' }, body: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update owner', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Egani yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -256,7 +256,7 @@ describe('owners controller handlers', () => {
 
       await controller.deleteOwner({ params: { id: '1' } }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Owner deleted successfully', owner: { owner_id: 1 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Ega muvaffaqiyatli o'chirildi", owner: { owner_id: 1 } });
     });
 
     it('returns 404 when the owner does not exist', async () => {
@@ -275,7 +275,7 @@ describe('owners controller handlers', () => {
       await controller.deleteOwner({ params: { id: '1' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete owner', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Egani o'chirib bo'lmadi", details: 'locked' });
     });
   });
 

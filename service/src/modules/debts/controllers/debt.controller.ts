@@ -10,7 +10,7 @@ const getAllDebts = async (req: any, res: any) => {
     res.json(await debtService.listDebts(centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch debts', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -27,7 +27,7 @@ const getDebtById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch debt', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -43,7 +43,7 @@ const createDebt = async (req: any, res: any) => {
     res.status(201).json(await debtService.createDebt({ ...req.body, center_id: centerId }));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create debt', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzni yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -57,7 +57,7 @@ const updateDebt = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update debt', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -77,7 +77,7 @@ const getDebtsByStudent = async (req: any, res: any) => {
     res.json(await debtService.listByStudent(studentId, centerId ?? undefined, teacherId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch debts', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -88,10 +88,10 @@ const deleteDebt = async (req: any, res: any) => {
     if (!centerId && !isGlobal) return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     const row = await debtService.deleteDebt(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Qarz topilmadi' });
-    res.json({ message: 'Debt deleted successfully', debt: row });
+    res.json({ message: "Qarz muvaffaqiyatli o'chirildi", debt: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete debt', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -105,7 +105,7 @@ const analyzeUnpaidMonths = async (req: any, res: any) => {
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to analyze unpaid months', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lanmagan oylarni tahlil qilib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -123,7 +123,7 @@ const generateDebtsFromAnalysis = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to generate debts', details: error.message || String(error) });
+    res.status(500).json({ error: "Qarzlarni yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -142,7 +142,7 @@ const getPaymentSummary = async (req: any, res: any) => {
     res.json(await debtService.getPaymentSummary(studentId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to get payment summary', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lovlar xulosasini olib bo'lmadi", details: error.message || String(error) });
   }
 };
 

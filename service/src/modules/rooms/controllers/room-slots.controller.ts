@@ -121,7 +121,7 @@ const updateSlot = async (req: any, res: any) => {
       is_available
     }, centerId);
 
-    if (!slot) return res.status(404).json({ error: 'Slot not found' });
+    if (!slot) return res.status(404).json({ error: "Vaqt oralig'i topilmadi" });
     res.json(slot);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -135,9 +135,9 @@ const deleteSlot = async (req: any, res: any) => {
     if (centerId == null) return;
 
     const slot = await roomSlotsService.removeSlot(slotId, centerId);
-    if (!slot) return res.status(404).json({ error: 'Slot not found' });
+    if (!slot) return res.status(404).json({ error: "Vaqt oralig'i topilmadi" });
 
-    res.json({ message: 'Slot deleted successfully' });
+    res.json({ message: "Vaqt oralig'i muvaffaqiyatli o'chirildi" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -217,7 +217,7 @@ const updateBooking = async (req: any, res: any) => {
       notes
     }, centerId);
 
-    if (!booking) return res.status(404).json({ error: 'Booking not found' });
+    if (!booking) return res.status(404).json({ error: 'Bron topilmadi' });
     res.json(booking);
   } catch (error: any) {
     res.status(500).json({ error: error.message });

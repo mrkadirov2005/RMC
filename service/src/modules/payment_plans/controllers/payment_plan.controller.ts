@@ -11,7 +11,7 @@ const getAllPlans = async (req: any, res: any) => {
     res.json(await paymentPlanService.list(req.query, centerId ?? undefined));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch payment plans', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov rejalarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -26,7 +26,7 @@ const getPlanById = async (req: any, res: any) => {
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch payment plan', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov rejasini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -57,10 +57,10 @@ const createPlan = async (req: any, res: any) => {
       details: { total_amount: plan.total_amount, installments_count: req.body.installments?.length || 0 },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Payment plan created', plan });
+    res.status(201).json({ message: "To'lov rejasi yaratildi", plan });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create payment plan', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov rejasini yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -75,10 +75,10 @@ const updatePlan = async (req: any, res: any) => {
     if ((row as any).error === 'installment_sum_mismatch') {
       return res.status(400).json({ error: 'Installment amounts must sum to total_amount.' });
     }
-    res.json({ message: 'Payment plan updated', plan: row });
+    res.json({ message: "To'lov rejasi yangilandi", plan: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update payment plan', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov rejasini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -90,10 +90,10 @@ const deletePlan = async (req: any, res: any) => {
     }
     const row = await paymentPlanService.remove(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: "To'lov rejasi topilmadi" });
-    res.json({ message: 'Payment plan deleted', plan: row });
+    res.json({ message: "To'lov rejasi o'chirildi", plan: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete payment plan', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov rejasini o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

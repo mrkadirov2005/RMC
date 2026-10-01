@@ -117,7 +117,7 @@ describe('attendance controller', () => {
 
       expect(attendanceService.getById).toHaveBeenCalledWith(8, 5, undefined);
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Attendance not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Davomat topilmadi' });
     });
 
     it('stops a student reading another student record', async () => {
@@ -220,7 +220,7 @@ describe('attendance controller', () => {
       await attendanceController.createAttendance({ body: { student_id: 2 }, user: { id: 1 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create attendance', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -242,7 +242,7 @@ describe('attendance controller', () => {
       await attendanceController.updateAttendance({ params: { id: '8' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Attendance not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Davomat topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -252,7 +252,7 @@ describe('attendance controller', () => {
       await attendanceController.updateAttendance({ params: { id: '8' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update attendance', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -350,7 +350,7 @@ describe('attendance controller', () => {
       await attendanceController.deleteAttendance({ params: { id: '8' }, user: {} }, res);
 
       expect(res.json).toHaveBeenCalledWith({
-        message: 'Attendance record deleted successfully',
+        message: "Davomat yozuvi muvaffaqiyatli o'chirildi",
         attendance: { attendance_id: 8 },
       });
     });
@@ -362,7 +362,7 @@ describe('attendance controller', () => {
       await attendanceController.deleteAttendance({ params: { id: '8' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Attendance record not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Davomat yozuvi topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -372,7 +372,7 @@ describe('attendance controller', () => {
       await attendanceController.deleteAttendance({ params: { id: '8' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete attendance', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Davomatni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

@@ -13,7 +13,7 @@ const getAllInvoices = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch invoices', details: error.message || String(error) });
+    res.status(500).json({ error: "Hisob-fakturalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -28,7 +28,7 @@ const getInvoiceById = async (req: any, res: any) => {
     res.json(data);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch invoice', details: error.message || String(error) });
+    res.status(500).json({ error: "Hisob-fakturani yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -56,10 +56,10 @@ const createInvoice = async (req: any, res: any) => {
       details: { invoice_number: invoice.invoice_number, total: invoice.total },
       ip_address: req.ip,
     });
-    res.status(201).json({ message: 'Invoice created', invoice });
+    res.status(201).json({ message: 'Hisob-faktura yaratildi', invoice });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create invoice', details: error.message || String(error) });
+    res.status(500).json({ error: "Hisob-fakturani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -71,10 +71,10 @@ const updateInvoice = async (req: any, res: any) => {
     }
     const row = await invoiceService.updateInvoice(Number(req.params.id), req.body, centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Hisob-faktura topilmadi' });
-    res.json({ message: 'Invoice updated', invoice: row });
+    res.json({ message: 'Hisob-faktura yangilandi', invoice: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update invoice', details: error.message || String(error) });
+    res.status(500).json({ error: "Hisob-fakturani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -86,10 +86,10 @@ const deleteInvoice = async (req: any, res: any) => {
     }
     const row = await invoiceService.deleteInvoice(Number(req.params.id), centerId ?? undefined);
     if (!row) return res.status(404).json({ error: 'Hisob-faktura topilmadi' });
-    res.json({ message: 'Invoice deleted', invoice: row });
+    res.json({ message: "Hisob-faktura o'chirildi", invoice: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete invoice', details: error.message || String(error) });
+    res.status(500).json({ error: "Hisob-fakturani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

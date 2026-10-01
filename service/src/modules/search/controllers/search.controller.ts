@@ -25,7 +25,7 @@ const search = async (req: any, res: any) => {
     res.json((out as any).results);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to search', details: error.message || String(error) });
+    res.status(500).json({ error: "Qidirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

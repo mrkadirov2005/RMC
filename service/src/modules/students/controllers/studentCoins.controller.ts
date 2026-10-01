@@ -20,7 +20,7 @@ const getStudentCoins = async (req: any, res: any) => {
     res.json(summary);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch coins', details: error.message || String(error) });
+    res.status(500).json({ error: "Coinlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -57,7 +57,7 @@ const addStudentCoins = async (req: any, res: any) => {
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update coins', details: error.message || String(error) });
+    res.status(500).json({ error: "Coinlarni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -90,12 +90,12 @@ const updateStudentCoinTransaction = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Bu amal uchun coinlar yetarli emas.' });
     }
     if (out.error === 'not_found' || out.error === 'tx_not_found') {
-      return res.status(404).json({ error: 'Transaction not found' });
+      return res.status(404).json({ error: 'Tranzaksiya topilmadi' });
     }
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update coins', details: error.message || String(error) });
+    res.status(500).json({ error: "Coinlarni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -123,12 +123,12 @@ const deleteStudentCoinTransaction = async (req: any, res: any) => {
       return res.status(400).json({ error: 'Bu amal uchun coinlar yetarli emas.' });
     }
     if (out.error === 'not_found' || out.error === 'tx_not_found') {
-      return res.status(404).json({ error: 'Transaction not found' });
+      return res.status(404).json({ error: 'Tranzaksiya topilmadi' });
     }
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete coins', details: error.message || String(error) });
+    res.status(500).json({ error: "Coinlarni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

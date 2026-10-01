@@ -109,7 +109,7 @@ describe('student coins controller', () => {
       await controller.getStudentCoins({ params: { id: '9' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch coins', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -197,7 +197,7 @@ describe('student coins controller', () => {
       await controller.addStudentCoins({ params: { id: '9' }, body: { amount: 5 }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update coins', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni yangilab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -267,7 +267,7 @@ describe('student coins controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Transaction not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Tranzaksiya topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -281,7 +281,7 @@ describe('student coins controller', () => {
       }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update coins', details: 'write failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni yangilab bo'lmadi", details: 'write failed' });
     });
   });
 
@@ -334,7 +334,7 @@ describe('student coins controller', () => {
       await controller.deleteStudentCoinTransaction({ params: { id: '9', transactionId: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Transaction not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Tranzaksiya topilmadi' });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -344,7 +344,7 @@ describe('student coins controller', () => {
       await controller.deleteStudentCoinTransaction({ params: { id: '9', transactionId: '3' }, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete coins', details: 'delete failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Coinlarni o'chirib bo'lmadi", details: 'delete failed' });
     });
   });
 });

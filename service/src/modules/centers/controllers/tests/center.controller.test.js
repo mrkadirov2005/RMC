@@ -51,7 +51,7 @@ describe('centers controller', () => {
       await centerController.getAllCenters({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch centers', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -94,7 +94,7 @@ describe('centers controller', () => {
       await centerController.getCenterById({ params: { id: '9' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch center', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -117,7 +117,7 @@ describe('centers controller', () => {
       await centerController.getCenterSummaries({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch center summaries', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazlar xulosasini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -151,7 +151,7 @@ describe('centers controller', () => {
       await centerController.createCenter({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create center', details: 'duplicate' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni yaratib bo'lmadi", details: 'duplicate' });
     });
   });
 
@@ -206,7 +206,7 @@ describe('centers controller', () => {
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update center', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -230,7 +230,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user }, res);
 
       expect(centerService.deleteCenter).toHaveBeenCalledWith(3, user);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Center deleted successfully', center: { center_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Markaz muvaffaqiyatli o'chirildi", center: { center_id: 3 } });
     });
 
     it('returns 404 when the center does not exist', async () => {
@@ -250,7 +250,7 @@ describe('centers controller', () => {
       await centerController.deleteCenter({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete center', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Markazni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

@@ -94,7 +94,7 @@ describe('subjects controller', () => {
       await subjectController.getAllSubjects({ user: { userType: 'admin' } }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch subjects' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Fanlarni yuklab bo'lmadi" });
     });
   });
 
@@ -126,7 +126,7 @@ describe('subjects controller', () => {
       await subjectController.getSubjectById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch subject', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Fanni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -167,7 +167,7 @@ describe('subjects controller', () => {
       await subjectController.getSubjectsByClass({ params: { classId: '2' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch subjects' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Fanlarni yuklab bo'lmadi" });
     });
   });
 
@@ -204,7 +204,7 @@ describe('subjects controller', () => {
       await subjectController.createSubject({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create subject', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Fanni yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -250,7 +250,7 @@ describe('subjects controller', () => {
       await subjectController.updateSubject({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update subject', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Fanni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -262,7 +262,7 @@ describe('subjects controller', () => {
       await subjectController.deleteSubject({ params: { id: '4' }, user: { userType: 'teacher', id: 8 } }, res);
 
       expect(subjectService.deleteSubject).toHaveBeenCalledWith(4, 6, 8);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Subject deleted successfully', subject: { subject_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Fan muvaffaqiyatli o'chirildi", subject: { subject_id: 4 } });
     });
 
     it('returns 404 when the subject is out of scope', async () => {
@@ -281,7 +281,7 @@ describe('subjects controller', () => {
       await subjectController.deleteSubject({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete subject', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Fanni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

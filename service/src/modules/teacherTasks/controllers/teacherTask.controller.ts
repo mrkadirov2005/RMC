@@ -40,7 +40,7 @@ const getAllTeacherTasks = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher tasks', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifalarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -68,7 +68,7 @@ const getTeacherTaskById = async (req: any, res: any) => {
     res.json(task);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher task', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifasini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -135,7 +135,7 @@ const createTeacherTask = async (req: any, res: any) => {
     res.status(201).json(task);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create teacher task', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifasini yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -206,7 +206,7 @@ const updateTeacherTask = async (req: any, res: any) => {
     res.json(task);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update teacher task', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifasini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -274,7 +274,7 @@ const updateTeacherTaskStatus = async (req: any, res: any) => {
     res.json(task);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update teacher task status', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifasi holatini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -303,7 +303,7 @@ const getTeacherTaskStats = async (req: any, res: any) => {
     res.json(stats);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher task stats', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifalari statistikasini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -323,10 +323,10 @@ const deleteTeacherTask = async (req: any, res: any) => {
     if (!task) {
       return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
-    res.json({ message: 'Task deleted successfully', task });
+    res.json({ message: "Vazifa muvaffaqiyatli o'chirildi", task });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete teacher task', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi vazifasini o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

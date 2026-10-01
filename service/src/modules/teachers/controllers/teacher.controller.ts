@@ -46,7 +46,7 @@ const getMyProfile = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch profile', details: error.message || String(error) });
+    res.status(500).json({ error: "Profilni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -61,7 +61,7 @@ const getAllTeachers = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teachers', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchilarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -73,7 +73,7 @@ const getTeacherById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -96,7 +96,7 @@ const createTeacher = async (req: any, res: any) => {
     res.status(201).json((out as any).row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create teacher', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchini yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -111,7 +111,7 @@ const updateTeacher = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update teacher', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -139,17 +139,17 @@ const deleteTeacher = async (req: any, res: any) => {
         dependencies: result.dependencies,
       });
     }
-    res.json({ message: 'Teacher deleted successfully', teacher: result.row, unassigned: result.dependencies });
+    res.json({ message: "O'qituvchi muvaffaqiyatli o'chirildi", teacher: result.row, unassigned: result.dependencies });
   } catch (error: any) {
     console.error('Database error:', error);
     if (error?.code === '23503') {
       return res.status(409).json({
-        error: 'Teacher is still referenced by other records',
+        error: "O'qituvchi boshqa yozuvlarda hali ishlatilmoqda",
         message: 'Teacher is still referenced by other records. Reassign related records before deleting.',
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to delete teacher', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchini o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -161,19 +161,19 @@ const purgeTeacher = async (req: any, res: any) => {
     }
     const result = await teacherService.purgeTeacher(Number(req.params.id), centerId ?? undefined);
     if (result?.kind === 'not_found') {
-      return res.status(404).json({ error: 'Soft-deleted teacher not found', message: 'Soft-deleted teacher not found' });
+      return res.status(404).json({ error: "O'chirilgan o'qituvchi topilmadi", message: "O'chirilgan o'qituvchi topilmadi" });
     }
-    res.json({ message: 'Teacher permanently deleted', teacher: result.row });
+    res.json({ message: "O'qituvchi butunlay o'chirildi", teacher: result.row });
   } catch (error: any) {
     console.error('Database error:', error);
     if (error?.code === '23503') {
       return res.status(409).json({
-        error: 'Teacher is still referenced by other records',
+        error: "O'qituvchi boshqa yozuvlarda hali ishlatilmoqda",
         message: 'Reassign related records before permanently deleting this teacher.',
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to permanently delete teacher', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchini butunlay o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -228,7 +228,7 @@ const setTeacherPaymentPassword = async (req: any, res: any) => {
     res.json({ message: 'Payment access password set successfully.' });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to set payment password', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lov parolini o'rnatib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -263,7 +263,7 @@ const teacherPaymentLogin = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to login for payment access', details: error.message || String(error) });
+    res.status(500).json({ error: "To'lovlar bo'limiga kirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -279,7 +279,7 @@ const setTeacherPassword = async (req: any, res: any) => {
     res.json({ message: 'Teacher password set successfully', teacher: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to set password', details: error.message || String(error) });
+    res.status(500).json({ error: "Parolni o'rnatib bo'lmadi", details: error.message || String(error) });
   }
 };
 

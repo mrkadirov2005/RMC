@@ -81,7 +81,7 @@ const getDashboardData = async (req: any, res: any) => {
 
   } catch (error: any) {
     console.error('Error in getDashboardData:', error);
-    res.status(500).json({ error: 'Failed to fetch dashboard data' });
+    res.status(500).json({ error: "Boshqaruv paneli ma'lumotlarini yuklab bo'lmadi" });
   }
 };
 
@@ -130,7 +130,7 @@ const getMySchedule = async (req: any, res: any) => {
     res.json(schedule);
   } catch (error: any) {
     console.error('Error in getMySchedule:', error);
-    res.status(500).json({ error: 'Failed to fetch schedule' });
+    res.status(500).json({ error: "Jadvalni yuklab bo'lmadi" });
   }
 };
 

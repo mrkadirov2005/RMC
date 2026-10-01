@@ -8,7 +8,7 @@ const getAllSuperusers = async (req: any, res: any) => {
     res.json(await superuserService.listSuperusers(centerId));
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch superusers', details: error.message || String(error) });
+    res.status(500).json({ error: "Superuserlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -21,7 +21,7 @@ const getSuperuserById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch superuser', details: error.message || String(error) });
+    res.status(500).json({ error: "Superuserni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -41,7 +41,7 @@ const createSuperuser = async (req: any, res: any) => {
     res.status(201).json((out as any).row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create superuser', details: error.message || String(error) });
+    res.status(500).json({ error: "Superuserni yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -57,7 +57,7 @@ const updateSuperuser = async (req: any, res: any) => {
     res.json(out.row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update superuser', details: error.message || String(error) });
+    res.status(500).json({ error: "Superuserni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -70,10 +70,10 @@ const deleteSuperuser = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Only owners can delete an owner account.' });
     }
     if (!out.row) return res.status(404).json({ error: 'Superuser topilmadi' });
-    res.json({ message: 'Superuser deleted successfully', superuser: out.row });
+    res.json({ message: "Superuser muvaffaqiyatli o'chirildi", superuser: out.row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete superuser', details: error.message || String(error) });
+    res.status(500).json({ error: "Superuserni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

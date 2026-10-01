@@ -166,7 +166,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getAllTeacherTasks({ query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher tasks', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifalarini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -198,7 +198,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getTeacherTaskById({ params: { id: '4' }, query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher task', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -323,7 +323,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.createTeacherTask({ body: body(), user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create teacher task', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -450,7 +450,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTask({ params: { id: '4' }, body: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update teacher task', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -532,7 +532,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.updateTeacherTaskStatus({ params: { id: '4' }, body: { action: 'accept' }, user: teacher }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update teacher task status', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasi holatini yangilab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -564,7 +564,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.getTeacherTaskStats({ query: {}, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch teacher task stats', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifalari statistikasini yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -576,7 +576,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.deleteTeacherTask({ params: { id: '4' }, user: owner }, res);
 
       expect(service.deleteTeacherTask).toHaveBeenCalledWith(4, 3);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Task deleted successfully', task: { task_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Vazifa muvaffaqiyatli o'chirildi", task: { task_id: 4 } });
     });
 
     it('returns 404 when the task is out of scope', async () => {
@@ -595,7 +595,7 @@ describe('teacher tasks controller handlers', () => {
       await controller.deleteTeacherTask({ params: { id: '4' }, user: owner }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete teacher task', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchi vazifasini o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

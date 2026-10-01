@@ -17,7 +17,7 @@ const getOverview = async (req: any, res: any) => {
     res.json(result);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch KPI overview', details: error.message || String(error) });
+    res.status(500).json({ error: "KPI sharhini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -45,7 +45,7 @@ const getTeacherDetail = async (req: any, res: any) => {
     res.json(detail);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch teacher KPI detail', details: error.message || String(error) });
+    res.status(500).json({ error: "O'qituvchi KPI tafsilotini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -79,7 +79,7 @@ const upsert = async (req: any, res: any) => {
     res.status(201).json(record);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to save KPI record', details: error.message || String(error) });
+    res.status(500).json({ error: "KPI yozuvini saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 

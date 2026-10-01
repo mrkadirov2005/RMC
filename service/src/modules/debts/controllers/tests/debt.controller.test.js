@@ -104,7 +104,7 @@ describe('debts controller', () => {
       await debtController.getAllDebts({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch debts', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -146,7 +146,7 @@ describe('debts controller', () => {
       await debtController.getDebtById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch debt', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -191,7 +191,7 @@ describe('debts controller', () => {
       await debtController.createDebt({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create debt', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzni yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -223,7 +223,7 @@ describe('debts controller', () => {
       await debtController.updateDebt({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update debt', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -265,7 +265,7 @@ describe('debts controller', () => {
       await debtController.getDebtsByStudent({ params: { studentId: '2' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch debts', details: 'lookup failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzlarni yuklab bo'lmadi", details: 'lookup failed' });
     });
   });
 
@@ -276,7 +276,7 @@ describe('debts controller', () => {
 
       await debtController.deleteDebt({ params: { id: '4' }, user: {} }, res);
 
-      expect(res.json).toHaveBeenCalledWith({ message: 'Debt deleted successfully', debt: { debt_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Qarz muvaffaqiyatli o'chirildi", debt: { debt_id: 4 } });
     });
 
     it('returns 404 when the debt is out of scope', async () => {
@@ -295,7 +295,7 @@ describe('debts controller', () => {
       await debtController.deleteDebt({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete debt', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 
@@ -330,7 +330,7 @@ describe('debts controller', () => {
       await debtController.analyzeUnpaidMonths({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to analyze unpaid months', details: 'analysis failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lanmagan oylarni tahlil qilib bo'lmadi", details: 'analysis failed' });
     });
   });
 
@@ -359,7 +359,7 @@ describe('debts controller', () => {
       await debtController.generateDebtsFromAnalysis({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to generate debts', details: 'generation failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Qarzlarni yaratib bo'lmadi", details: 'generation failed' });
     });
   });
 
@@ -401,7 +401,7 @@ describe('debts controller', () => {
       await debtController.getPaymentSummary({ params: { studentId: '2' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to get payment summary', details: 'summary failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "To'lovlar xulosasini olib bo'lmadi", details: 'summary failed' });
     });
   });
 });

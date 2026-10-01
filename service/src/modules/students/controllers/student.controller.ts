@@ -6,7 +6,7 @@ const studentCoinsController = require('./studentCoins.controller');
 
 const getAcquisitionSources = async (_req: any, res: any) => {
   try { res.json(await studentService.listAcquisitionSources()); }
-  catch (error: any) { res.status(500).json({ error: 'Failed to fetch acquisition sources', details: error.message }); }
+  catch (error: any) { res.status(500).json({ error: "Manbalarni yuklab bo'lmadi", details: error.message }); }
 };
 
 const createAcquisitionSource = async (req: any, res: any) => {
@@ -14,7 +14,7 @@ const createAcquisitionSource = async (req: any, res: any) => {
     const name = String(req.body?.source_name || '').trim();
     if (!name) return res.status(400).json({ error: 'source_name is required' });
     res.status(201).json(await studentService.createAcquisitionSource(name));
-  } catch (error: any) { res.status(500).json({ error: 'Failed to create acquisition source', details: error.message }); }
+  } catch (error: any) { res.status(500).json({ error: "Manbani yaratib bo'lmadi", details: error.message }); }
 };
 
 const getActionReasons = async (req: any, res: any) => {
@@ -22,7 +22,7 @@ const getActionReasons = async (req: any, res: any) => {
     const reasonType = String(req.query?.type || '').trim();
     if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: 'type must be transfer or delete' });
     res.json(await studentService.listActionReasons(reasonType));
-  } catch (error: any) { res.status(500).json({ error: 'Failed to fetch action reasons', details: error.message }); }
+  } catch (error: any) { res.status(500).json({ error: "Sabablarni yuklab bo'lmadi", details: error.message }); }
 };
 
 const createActionReason = async (req: any, res: any) => {
@@ -32,7 +32,7 @@ const createActionReason = async (req: any, res: any) => {
     if (reasonType !== 'transfer' && reasonType !== 'delete') return res.status(400).json({ error: 'reason_type must be transfer or delete' });
     if (!name) return res.status(400).json({ error: 'reason_name is required' });
     res.status(201).json(await studentService.createActionReason(reasonType, name));
-  } catch (error: any) { res.status(500).json({ error: 'Failed to create action reason', details: error.message }); }
+  } catch (error: any) { res.status(500).json({ error: "Sababni yaratib bo'lmadi", details: error.message }); }
 };
 
 const getAllStudents = async (req: any, res: any) => {
@@ -60,7 +60,7 @@ const getAllStudents = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch students', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchilarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -79,7 +79,7 @@ const getStudentById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch student', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -90,7 +90,7 @@ const getDeletedStudents = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch deleted students', details: error.message || String(error) });
+    res.status(500).json({ error: "O'chirilgan o'quvchilarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -108,7 +108,7 @@ const getClassStudentsWithTransfers = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch class students', details: error.message || String(error) });
+    res.status(500).json({ error: "Guruh o'quvchilarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -142,7 +142,7 @@ const createStudent = async (req: any, res: any) => {
       }
     }
     
-    res.status(500).json({ error: 'Failed to create student', message: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini yaratib bo'lmadi", message: error.message || String(error) });
   }
 };
 
@@ -167,7 +167,7 @@ const updateStudent = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update student', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -183,10 +183,10 @@ const deleteStudent = async (req: any, res: any) => {
     }
     const row = await studentService.deleteStudent(Number(req.params.id), Number(req.body.reason_id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: "O'quvchi topilmadi" });
-    res.json({ message: 'Student deleted successfully', student: row });
+    res.json({ message: "O'quvchi muvaffaqiyatli o'chirildi", student: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete student', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -201,18 +201,18 @@ const purgeStudent = async (req: any, res: any) => {
       return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
     const row = await studentService.purgeStudent(Number(req.params.id), centerId ?? undefined, teacherId);
-    if (!row) return res.status(404).json({ error: 'Soft-deleted student not found' });
-    res.json({ message: 'Student permanently deleted', student: row });
+    if (!row) return res.status(404).json({ error: "O'chirilgan o'quvchi topilmadi" });
+    res.json({ message: "O'quvchi butunlay o'chirildi", student: row });
   } catch (error: any) {
     console.error('Database error:', error);
     if (error?.code === '23503') {
       return res.status(409).json({
-        error: 'Student is still referenced by other records',
-        message: 'Delete or reassign related records before permanently deleting this student.',
+        error: "O'quvchi boshqa yozuvlarda hali ishlatilmoqda",
+        message: "Bu yozuvni butunlay o'chirishdan oldin bog'liq yozuvlarni o'chiring yoki boshqasiga o'tkazing.",
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to permanently delete student', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini butunlay o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -246,7 +246,7 @@ const transferStudent = async (req: any, res: any) => {
     });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to transfer student', details: error.message || String(error) });
+    res.status(500).json({ error: "O'quvchini ko'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -303,7 +303,7 @@ const setStudentPassword = async (req: any, res: any) => {
     res.json({ message: 'Student password set successfully', student: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to set password', details: error.message || String(error) });
+    res.status(500).json({ error: "Parolni o'rnatib bo'lmadi", details: error.message || String(error) });
   }
 };
 

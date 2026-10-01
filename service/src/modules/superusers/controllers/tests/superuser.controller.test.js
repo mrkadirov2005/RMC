@@ -56,7 +56,7 @@ describe('superusers controller', () => {
       await superuserController.getAllSuperusers({ user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch superusers', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserlarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -88,7 +88,7 @@ describe('superusers controller', () => {
       await superuserController.getSuperuserById({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch superuser', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -126,7 +126,7 @@ describe('superusers controller', () => {
       await superuserController.createSuperuser({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create superuser', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -169,7 +169,7 @@ describe('superusers controller', () => {
       await superuserController.updateSuperuser({ params: { id: '4' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update superuser', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -201,7 +201,7 @@ describe('superusers controller', () => {
       await superuserController.deleteSuperuser({ params: { id: '4' }, user }, res);
 
       expect(superuserService.deleteSuperuser).toHaveBeenCalledWith(4, user, 3);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Superuser deleted successfully', superuser: { superuser_id: 4 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Superuser muvaffaqiyatli o'chirildi", superuser: { superuser_id: 4 } });
     });
 
     it('reports a service failure as a 500', async () => {
@@ -211,7 +211,7 @@ describe('superusers controller', () => {
       await superuserController.deleteSuperuser({ params: { id: '4' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete superuser', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Superuserni o'chirib bo'lmadi", details: 'locked' });
     });
   });
 

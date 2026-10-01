@@ -12,7 +12,7 @@ const listRegistrations = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch Telegram registrations', details: error.message || String(error) });
+    res.status(500).json({ error: "Telegram arizalarini yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -39,7 +39,7 @@ const convertRegistration = async (req: any, res: any) => {
         details: error.detail,
       });
     }
-    res.status(500).json({ error: 'Failed to import Telegram registration', details: error.message || String(error) });
+    res.status(500).json({ error: "Telegram arizasini import qilib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -54,7 +54,7 @@ const rejectRegistration = async (req: any, res: any) => {
     res.json({ message: 'Registration rejected', registration: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to reject Telegram registration', details: error.message || String(error) });
+    res.status(500).json({ error: "Telegram arizasini rad etib bo'lmadi", details: error.message || String(error) });
   }
 };
 

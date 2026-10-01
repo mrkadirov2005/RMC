@@ -38,7 +38,7 @@ const getGradeById = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch grade', details: error.message || String(error) });
+    res.status(500).json({ error: "Bahoni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -68,7 +68,7 @@ const createGrade = async (req: any, res: any) => {
     res.status(201).json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create grade', details: error.message || String(error) });
+    res.status(500).json({ error: "Bahoni yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -87,7 +87,7 @@ const updateGrade = async (req: any, res: any) => {
     res.json(row);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update grade', details: error.message || String(error) });
+    res.status(500).json({ error: "Bahoni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -128,10 +128,10 @@ const deleteGrade = async (req: any, res: any) => {
     }
     const row = await gradeService.deleteGrade(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!row) return res.status(404).json({ error: 'Baho topilmadi' });
-    res.json({ message: 'Grade deleted successfully', grade: row });
+    res.json({ message: "Baho muvaffaqiyatli o'chirildi", grade: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete grade', details: error.message || String(error) });
+    res.status(500).json({ error: "Bahoni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -160,7 +160,7 @@ const createBulkGrades = async (req: any, res: any) => {
     res.status(201).json({ message: `${results.length} grades created successfully`, grades: results });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create bulk grades', details: error.message || String(error) });
+    res.status(500).json({ error: "Baholarni ommaviy yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -192,7 +192,7 @@ const upsertSessionScores = async (req: any, res: any) => {
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to upsert session scores', details: error.message || String(error) });
+    res.status(500).json({ error: "Dars ballarini saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -222,7 +222,7 @@ const saveSessionWorkflow = async (req: any, res: any) => {
     res.json(out);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to save session workflow', details: error.message || String(error) });
+    res.status(500).json({ error: "Dars jarayonini saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 

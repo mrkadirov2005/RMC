@@ -218,7 +218,7 @@ describe('room slots controller', () => {
       await controller.updateSlot({ params: { slotId: '5' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Slot not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Vaqt oralig'i topilmadi" });
     });
 
     it('confirms a slot deletion', async () => {
@@ -228,7 +228,7 @@ describe('room slots controller', () => {
       await controller.deleteSlot({ params: { slotId: '5' }, user: admin }, res);
 
       expect(service.removeSlot).toHaveBeenCalledWith('5', 4);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Slot deleted successfully' });
+      expect(res.json).toHaveBeenCalledWith({ message: "Vaqt oralig'i muvaffaqiyatli o'chirildi" });
     });
 
     it('returns 404 when the slot to delete is out of scope', async () => {
@@ -331,7 +331,7 @@ describe('room slots controller', () => {
       await controller.updateBooking({ params: { bookingId: '6' }, body: {}, user: admin }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Booking not found' });
+      expect(res.json).toHaveBeenCalledWith({ error: 'Bron topilmadi' });
     });
 
     it('confirms a cancellation', async () => {

@@ -85,7 +85,7 @@ const deleteRoom = async (req: any, res: any) => {
     const room = await roomsService.deleteRoom(id, centerId);
     if (!room) return res.status(404).json({ error: 'Xona topilmadi' });
     await logAudit({ user_type: req.user.userType, user_id: Number(req.user.id), action: 'delete', entity_type: 'room', entity_id: Number(id), center_id: centerId, details: { room_name: room.room_number || room.roomNumber || null } });
-    res.json({ message: 'Room deleted successfully' });
+    res.json({ message: "Xona muvaffaqiyatli o'chirildi" });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

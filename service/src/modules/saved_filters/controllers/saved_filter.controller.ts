@@ -19,7 +19,7 @@ const getMyFilters = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch saved filters', details: error.message || String(error) });
+    res.status(500).json({ error: "Saqlangan filtrlarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -38,10 +38,10 @@ const createFilter = async (req: any, res: any) => {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const out = await savedFilterService.create(userType, userId, centerId ?? req.body.center_id, req.body);
-    res.status(201).json({ message: 'Filter saved', filter: (out as any).row });
+    res.status(201).json({ message: 'Filtr saqlandi', filter: (out as any).row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to save filter', details: error.message || String(error) });
+    res.status(500).json({ error: "Filtrni saqlab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -60,11 +60,11 @@ const updateFilter = async (req: any, res: any) => {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await savedFilterService.update(Number(req.params.id), userType, userId, centerId ?? req.body.center_id, req.body);
-    if (!row) return res.status(404).json({ error: 'Filter not found' });
-    res.json({ message: 'Filter updated', filter: row });
+    if (!row) return res.status(404).json({ error: 'Filtr topilmadi' });
+    res.json({ message: 'Filtr yangilandi', filter: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update filter', details: error.message || String(error) });
+    res.status(500).json({ error: "Filtrni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -83,11 +83,11 @@ const deleteFilter = async (req: any, res: any) => {
       return res.status(400).json({ error: "Bu amal uchun center_id ko'rsatilishi shart." });
     }
     const row = await savedFilterService.remove(Number(req.params.id), userType, userId, centerId ?? req.body.center_id);
-    if (!row) return res.status(404).json({ error: 'Filter not found' });
-    res.json({ message: 'Filter deleted', filter: row });
+    if (!row) return res.status(404).json({ error: 'Filtr topilmadi' });
+    res.json({ message: "Filtr o'chirildi", filter: row });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete filter', details: error.message || String(error) });
+    res.status(500).json({ error: "Filtrni o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

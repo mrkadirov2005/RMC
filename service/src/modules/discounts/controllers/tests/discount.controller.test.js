@@ -100,7 +100,7 @@ describe('discounts controller', () => {
       await discountController.getAllDiscounts({ query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch discounts', details: 'offline' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Chegirmalarni yuklab bo'lmadi", details: 'offline' });
     });
   });
 
@@ -132,7 +132,7 @@ describe('discounts controller', () => {
       await discountController.getDiscountById({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch discount', details: 'bad id' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Chegirmani yuklab bo'lmadi", details: 'bad id' });
     });
   });
 
@@ -163,7 +163,7 @@ describe('discounts controller', () => {
       await discountController.getActiveSerialDiscountByStudent({ params: { studentId: '2' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch active discount', details: 'lookup failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Faol chegirmani yuklab bo'lmadi", details: 'lookup failed' });
     });
   });
 
@@ -195,7 +195,7 @@ describe('discounts controller', () => {
       await discountController.getActiveDiscountByStudent({ params: { studentId: '2' }, query: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to fetch active discount', details: 'lookup failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Faol chegirmani yuklab bo'lmadi", details: 'lookup failed' });
     });
   });
 
@@ -232,7 +232,7 @@ describe('discounts controller', () => {
         ip_address: '10.0.0.1',
       });
       expect(res.status).toHaveBeenCalledWith(201);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Discount created', discount: { discount_id: 7 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Chegirma yaratildi', discount: { discount_id: 7 } });
     });
 
     it('falls back to value_type and a system actor when the request is unauthenticated', async () => {
@@ -255,7 +255,7 @@ describe('discounts controller', () => {
       await discountController.createDiscount({ body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to create discount', details: 'insert failed' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Chegirmani yaratib bo'lmadi", details: 'insert failed' });
     });
   });
 
@@ -267,7 +267,7 @@ describe('discounts controller', () => {
       await discountController.updateDiscount({ params: { id: '3' }, body: { value: 20 }, user: {} }, res);
 
       expect(discountService.update).toHaveBeenCalledWith(3, { value: 20 }, 9);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Discount updated', discount: { discount_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: 'Chegirma yangilandi', discount: { discount_id: 3 } });
     });
 
     it('returns 404 when nothing was updated', async () => {
@@ -287,7 +287,7 @@ describe('discounts controller', () => {
       await discountController.updateDiscount({ params: { id: '3' }, body: {}, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to update discount', details: 'conflict' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Chegirmani yangilab bo'lmadi", details: 'conflict' });
     });
   });
 
@@ -299,7 +299,7 @@ describe('discounts controller', () => {
       await discountController.deleteDiscount({ params: { id: '3' }, user: {} }, res);
 
       expect(discountService.remove).toHaveBeenCalledWith(3, 9);
-      expect(res.json).toHaveBeenCalledWith({ message: 'Discount deleted', discount: { discount_id: 3 } });
+      expect(res.json).toHaveBeenCalledWith({ message: "Chegirma o'chirildi", discount: { discount_id: 3 } });
     });
 
     it('returns 404 when the discount is out of scope', async () => {
@@ -318,7 +318,7 @@ describe('discounts controller', () => {
       await discountController.deleteDiscount({ params: { id: '3' }, user: {} }, res);
 
       expect(res.status).toHaveBeenCalledWith(500);
-      expect(res.json).toHaveBeenCalledWith({ error: 'Failed to delete discount', details: 'locked' });
+      expect(res.json).toHaveBeenCalledWith({ error: "Chegirmani o'chirib bo'lmadi", details: 'locked' });
     });
   });
 });

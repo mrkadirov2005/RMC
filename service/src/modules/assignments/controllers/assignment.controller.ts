@@ -27,7 +27,7 @@ const getAllAssignments = async (req: any, res: any) => {
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch assignments', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifalarni yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -43,12 +43,12 @@ const getAssignmentById = async (req: any, res: any) => {
     }
     const assignment = await assignmentService.getAssignmentById(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!assignment) {
-      return res.status(404).json({ error: 'Assignment not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to fetch assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani yuklab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -76,7 +76,7 @@ const createAssignment = async (req: any, res: any) => {
     res.status(201).json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to create assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani yaratib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -92,12 +92,12 @@ const updateAssignment = async (req: any, res: any) => {
     }
     const assignment = await assignmentService.updateAssignment(Number(req.params.id), req.body, centerId ?? undefined, teacherId);
     if (!assignment) {
-      return res.status(404).json({ error: 'Assignment not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
     res.json(assignment);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to update assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -113,12 +113,12 @@ const deleteAssignment = async (req: any, res: any) => {
     }
     const assignment = await assignmentService.deleteAssignment(Number(req.params.id), centerId ?? undefined, teacherId);
     if (!assignment) {
-      return res.status(404).json({ error: 'Assignment not found' });
+      return res.status(404).json({ error: 'Vazifa topilmadi' });
     }
-    res.json({ message: 'Assignment deleted successfully', assignment });
+    res.json({ message: "Vazifa muvaffaqiyatli o'chirildi", assignment });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to delete assignment', details: error.message || String(error) });
+    res.status(500).json({ error: "Vazifani o'chirib bo'lmadi", details: error.message || String(error) });
   }
 };
 

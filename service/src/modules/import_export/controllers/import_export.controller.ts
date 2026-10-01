@@ -28,7 +28,7 @@ const exportEntity = async (req: any, res: any) => {
     res.send(csv);
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to export CSV', details: error.message || String(error) });
+    res.status(500).json({ error: "CSV'ni eksport qilib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -66,7 +66,7 @@ const importEntity = async (req: any, res: any) => {
     res.status(201).json({ message: `Imported ${created} ${entity}` });
   } catch (error: any) {
     console.error('Database error:', error);
-    res.status(500).json({ error: 'Failed to import CSV', details: error.message || String(error) });
+    res.status(500).json({ error: "CSV'ni import qilib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -103,7 +103,7 @@ const pushEntityToSheets = async (req: any, res: any) => {
     res.json({ message: `Updated Google Sheets with ${rows} ${entity}`, rows });
   } catch (error: any) {
     console.error('Google Sheets push error:', error);
-    res.status(500).json({ error: 'Failed to update Google Sheets', details: error.message || String(error) });
+    res.status(500).json({ error: "Google Sheets'ni yangilab bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -149,7 +149,7 @@ const pullEntityFromSheets = async (req: any, res: any) => {
     res.json({ message: `Imported ${rows} ${entity} from Google Sheets`, rows });
   } catch (error: any) {
     console.error('Google Sheets pull error:', error);
-    res.status(500).json({ error: 'Failed to import from Google Sheets', details: error.message || String(error) });
+    res.status(500).json({ error: "Google Sheets'dan import qilib bo'lmadi", details: error.message || String(error) });
   }
 };
 
