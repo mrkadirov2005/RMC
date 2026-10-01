@@ -7,6 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 export const defaultPageSizeOptions = [10, 25, 50, 100];
 export const defaultCardPageSizeOptions = [12, 24, 48];
@@ -54,11 +55,12 @@ export const PaginationBar = ({
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
 }) => {
+  const { t } = useLanguage();
   if (total === 0) return null;
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm shadow-sm dark:border-border dark:bg-card sm:flex-row sm:items-center sm:justify-between">
       <div className="text-muted-foreground">
-        Showing {start + 1}-{end} of {total}
+        {t('Showing')} {start + 1}-{end} {t('of')} {total}
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Select value={String(pageSize)} onValueChange={(value) => onPageSizeChange(Number(value))}>
@@ -68,7 +70,7 @@ export const PaginationBar = ({
           <SelectContent>
             {pageSizeOptions.map((option) => (
               <SelectItem key={option} value={String(option)}>
-                {option} / page
+                {option} {t('/ page')}
               </SelectItem>
             ))}
           </SelectContent>
@@ -81,7 +83,7 @@ export const PaginationBar = ({
           disabled={currentPage <= 1}
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
-          Previous
+          {t('Previous')}
         </Button>
         <div className="flex items-center gap-1">
           {buildPageNumbers(currentPage, totalPages).map((page, index, pages) => (
@@ -108,7 +110,7 @@ export const PaginationBar = ({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages}
         >
-          Next
+          {t('Next')}
           <ChevronRight className="ml-1 h-4 w-4" />
         </Button>
       </div>

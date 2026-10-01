@@ -1994,29 +1994,15 @@ const translations: Record<string, string> = {
   "Change the paper, its questions or its settings, then save.": "Testni, savollarini yoki sozlamalarini o'zgartiring, keyin saqlang.",
 };
 
-const escapeRegExp = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const buildTranslationPattern = (source: string) => {
-  const escaped = escapeRegExp(source);
-  if (/^[A-Za-z][A-Za-z\s]*[A-Za-z]$/.test(source)) {
-    return new RegExp(`\\b${escaped}\\b`, 'g');
-  }
-  return new RegExp(escaped, 'g');
-};
-
 const normalizeUzbekTranslation = fixUzbekSpelling;
 
+// Only text that equals a dictionary entry as a whole is replaced. Replacing single words inside longer
+// text rewrote names and notes ("Review request logs" -> "Ko'rib chiqish request logs") and blocked the page for ~1s.
 const translateExact = (value: string, translationMap: Record<string, string>) => {
   const trimmed = value.trim();
   if (!trimmed) return value;
   const translated = translationMap[trimmed];
-  if (translated) return value.replace(trimmed, translated);
-
-  const entries = Object.entries(translationMap).sort((a, b) => b[0].length - a[0].length);
-  return entries.reduce((nextValue, [source, target]) => {
-    if (source.length < 3) return nextValue;
-    return nextValue.replace(buildTranslationPattern(source), target);
-  }, value);
+  return translated ? value.replace(trimmed, translated) : value;
 };
 
 const translateStaticDom = (translationMap: Record<string, string>) => {

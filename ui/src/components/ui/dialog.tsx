@@ -4,6 +4,7 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type DialogContextValue = {
   open: boolean;
@@ -55,6 +56,7 @@ const DialogOverlay = ({ className, ...props }: React.HTMLAttributes<HTMLDivElem
 
 const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => {
+  const { t } = useLanguage();
     const ctx = React.useContext(DialogContext);
 
 // Runs side effects for this component.
@@ -88,7 +90,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTML
             type="button"
             onClick={() => ctx?.onOpenChange?.(false)}
             className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 hover:bg-accent hover:text-accent-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-            aria-label="Close"
+            aria-label={t('Close')}
           >
             <X className="h-4 w-4" />
           </button>

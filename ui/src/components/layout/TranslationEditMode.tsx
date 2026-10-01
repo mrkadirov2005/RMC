@@ -90,6 +90,7 @@ const getInitialForm = (text: string, rows: TranslationRow[], language: 'en' | '
 };
 
 export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
+  const { t } = useLanguage();
   const { language, translations, saveTranslation, refreshTranslations } = useLanguage();
   const [enabled, setEnabled] = useState(false);
   const [target, setTarget] = useState<EditableTarget | null>(null);
@@ -244,8 +245,8 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
           className="h-9 w-9 shadow-lg"
           onClick={refresh}
           disabled={refreshing}
-          aria-label="Refresh translations"
-          title="Refresh translations"
+          aria-label={t('Refresh translations')}
+          title={t('Refresh translations')}
         >
           <RefreshCw className={cn('h-4 w-4', refreshing && 'animate-spin')} />
         </Button>
@@ -257,7 +258,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
           onClick={() => setEnabled((current) => !current)}
         >
           {enabled ? <Check className="h-4 w-4" /> : <PencilLine className="h-4 w-4" />}
-          {enabled ? 'Content editing on' : 'Edit text and colors'}
+          {enabled ? t('Content editing on') : t('Edit text and colors')}
         </Button>
         {enabled && (
           <Button type="button" size="icon" variant="outline" className="h-9 w-9 shadow-lg" onClick={() => setEnabled(false)}>
@@ -268,7 +269,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
 
       {enabled && (
         <div className="pointer-events-none fixed left-1/2 top-4 z-[1590] -translate-x-1/2 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900 shadow-lg dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
-          Hold Alt/Option and click text or a themed card/tag to edit its content and visual styling.
+          {t('Hold Alt/Option and click text or a themed card/tag to edit its content and visual styling.')}
         </div>
       )}
 
@@ -277,17 +278,17 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Languages className="h-5 w-5" />
-              Edit text and visual styling
+              {t('Edit text and visual styling')}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             {target && <div className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-              Editing: <span className="font-semibold text-foreground">{targetDescription}</span>
+              {t('Editing:')} <span className="font-semibold text-foreground">{targetDescription}</span>
             </div>}
 
             {target && <div className="space-y-2">
-              <Label htmlFor="translation-id">ID / key</Label>
+              <Label htmlFor="translation-id">{t('ID / key')}</Label>
               <Input
                 id="translation-id"
                 value={form.id}
@@ -297,7 +298,7 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
             </div>}
             {colorSurface && (
               <div className="space-y-2 rounded-lg border p-3">
-                <Label htmlFor="selected-card-color">Selected background color</Label>
+                <Label htmlFor="selected-card-color">{t('Selected background color')}</Label>
                 <div className="flex items-center gap-3">
                   <Input id="selected-card-color" type="color" value={surfaceColor} onChange={(event) => setSurfaceColor(event.target.value)} className="h-11 w-20 cursor-pointer p-1" />
                 </div>
@@ -306,25 +307,25 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
 
             {target && (
               <div className="space-y-3 rounded-lg border p-3">
-                <Label>Selected text styling</Label>
+                <Label>{t('Selected text styling')}</Label>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <div className="space-y-1.5">
-                    <Label htmlFor="selected-text-color" className="text-xs">Font color</Label>
+                    <Label htmlFor="selected-text-color" className="text-xs">{t('Font color')}</Label>
                     <Input id="selected-text-color" type="color" value={textColor} onChange={(event) => setTextColor(event.target.value)} className="h-11 cursor-pointer p-1" />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="selected-font-size" className="text-xs">Font size (8–72 px)</Label>
+                    <Label htmlFor="selected-font-size" className="text-xs">{t('Font size (8–72 px)')}</Label>
                     <Input id="selected-font-size" type="number" min={8} max={72} value={fontSize} onChange={(event) => setFontSize(Math.max(8, Math.min(72, Number(event.target.value) || 8)))} />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="selected-font-weight" className="text-xs">Font weight</Label>
+                    <Label htmlFor="selected-font-weight" className="text-xs">{t('Font weight')}</Label>
                     <select id="selected-font-weight" value={fontWeight} onChange={(event) => setFontWeight(event.target.value as VisualOverride['fontWeight'])} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm">
-                      <option value="400">Regular</option><option value="500">Medium</option><option value="600">Semibold</option><option value="700">Bold</option>
+                      <option value="400">{t('Regular')}</option><option value="500">{t('Medium')}</option><option value="600">{t('Semibold')}</option><option value="700">{t('Bold')}</option>
                     </select>
                   </div>
                   <div className="flex items-end gap-2">
-                    <Button type="button" variant={fontStyle === 'italic' ? 'default' : 'outline'} onClick={() => setFontStyle((value) => value === 'italic' ? 'normal' : 'italic')} aria-pressed={fontStyle === 'italic'}>Italic</Button>
-                    <Button type="button" variant={textDecoration === 'underline' ? 'default' : 'outline'} onClick={() => setTextDecoration((value) => value === 'underline' ? 'none' : 'underline')} aria-pressed={textDecoration === 'underline'}>Underline</Button>
+                    <Button type="button" variant={fontStyle === 'italic' ? 'default' : 'outline'} onClick={() => setFontStyle((value) => value === 'italic' ? 'normal' : 'italic')} aria-pressed={fontStyle === 'italic'}>{t('Italic')}</Button>
+                    <Button type="button" variant={textDecoration === 'underline' ? 'default' : 'outline'} onClick={() => setTextDecoration((value) => value === 'underline' ? 'none' : 'underline')} aria-pressed={textDecoration === 'underline'}>{t('Underline')}</Button>
                   </div>
                 </div>
               </div>
@@ -353,13 +354,13 @@ export const TranslationEditMode = ({ isOwner }: { isOwner: boolean }) => {
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={closeDialog} disabled={saving}>
-              Cancel
+              {t('Cancel')}
             </Button>
             {(target || colorSurface) && <Button type="button" variant="outline" onClick={saveVisualStyle} disabled={saving}>
-              {saving ? 'Saving...' : 'Save styling'}
+              {saving ? t('Saving...') : t('Save styling')}
             </Button>}
             {target && <Button type="button" onClick={save} disabled={saving}>
-              {saving ? 'Saving...' : 'Save translation'}
+              {saving ? t('Saving...') : t('Save translation')}
             </Button>}
           </DialogFooter>
         </DialogContent>

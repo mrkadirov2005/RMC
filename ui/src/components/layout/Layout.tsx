@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import Sidebar from './Sidebar';
 import { useAppSelector } from '../../features/crm/hooks';
 import { TranslationEditMode } from './TranslationEditMode';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const SIDEBAR_MODE_KEY = 'crm_sidebar_mode';
 
@@ -14,14 +15,17 @@ const getInitialWidth = () => {
   return localStorage.getItem(SIDEBAR_MODE_KEY) === 'open' ? 280 : 72;
 };
 
-export const MainContentLoading = () => (
+export const MainContentLoading = () => {
+  const { t } = useLanguage();
+  return (
   <div className="flex min-h-[calc(100vh-3rem)] items-center justify-center rounded-lg border border-slate-200 bg-white/80 dark:border-white/10 dark:bg-white/[0.04]">
     <div className="flex flex-col items-center gap-3 text-center">
       <Loader2 className="h-9 w-9 animate-spin text-primary" />
-      <p className="text-sm font-semibold text-muted-foreground">Loading page...</p>
+      <p className="text-sm font-semibold text-muted-foreground">{t('Loading page...')}</p>
     </div>
   </div>
 );
+};
 
 interface LayoutProps {
   children: ReactNode;

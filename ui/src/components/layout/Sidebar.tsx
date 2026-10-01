@@ -335,19 +335,19 @@ const Sidebar = memo(() => {
               type="button"
               onClick={() => (isMobile ? setIsMobileOpen(true) : setMode('open'))}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-lg shadow-indigo-500/40"
-              aria-label="Open sidebar"
+              aria-label={t('Open sidebar')}
             >
               {isExpanded ? <LayoutDashboard className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
             {!isMobile && (
-              <div className="flex items-center gap-1 rounded-md border border-sidebar-border p-0.5" aria-label="Sidebar mode">
-                <button type="button" onClick={() => setMode('open')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'open' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label="Keep sidebar open">
+              <div className="flex items-center gap-1 rounded-md border border-sidebar-border p-0.5" aria-label={t('Sidebar mode')}>
+                <button type="button" onClick={() => setMode('open')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'open' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label={t('Keep sidebar open')}>
                   <PanelLeftOpen className="h-3.5 w-3.5" />
                 </button>
-                <button type="button" onClick={() => setMode('partial')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'partial' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label="Expand sidebar on hover">
+                <button type="button" onClick={() => setMode('partial')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'partial' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label={t('Expand sidebar on hover')}>
                   <PanelLeft className="h-3.5 w-3.5" />
                 </button>
-                <button type="button" onClick={() => setMode('closed')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'closed' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label="Keep sidebar closed">
+                <button type="button" onClick={() => setMode('closed')} className={cn('flex h-7 w-7 items-center justify-center rounded', sidebarMode === 'closed' ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-muted-foreground hover:bg-sidebar-accent')} aria-label={t('Keep sidebar closed')}>
                   <PanelLeftClose className="h-3.5 w-3.5" />
                 </button>
               </div>
@@ -360,7 +360,7 @@ const Sidebar = memo(() => {
                 type="button"
                 onClick={() => handleNavigation('/settings')}
                 className="flex h-8 w-8 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label="Settings"
+                aria-label={t('Settings')}
               >
                 <SettingsIcon className="w-4 h-4" />
               </button>
@@ -368,7 +368,7 @@ const Sidebar = memo(() => {
                 type="button"
                 onClick={toggleTheme}
                 className="flex h-8 w-8 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                aria-label={isDark ? t('Switch to light mode') : t('Switch to dark mode')}
               >
                 {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
               </button>
@@ -376,7 +376,7 @@ const Sidebar = memo(() => {
                 type="button"
                 onClick={() => (isMobile ? setIsMobileOpen(false) : setMode('closed'))}
                 className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                aria-label="Close sidebar"
+                aria-label={t('Close sidebar')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -389,7 +389,7 @@ const Sidebar = memo(() => {
               type="button"
               onClick={() => handleNavigation('/settings')}
               className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              aria-label="Settings"
+              aria-label={t('Settings')}
             >
               <SettingsIcon className="w-4 h-4" />
             </button>
@@ -397,7 +397,7 @@ const Sidebar = memo(() => {
               type="button"
               onClick={toggleTheme}
               className="flex h-9 w-9 items-center justify-center rounded-md border border-sidebar-border text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-              aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={isDark ? t('Switch to light mode') : t('Switch to dark mode')}
             >
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
@@ -546,7 +546,7 @@ const Sidebar = memo(() => {
               type="button"
               onClick={handleLogout}
               className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-rose-500/20 text-rose-500 transition-colors hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-400"
-              aria-label="Logout"
+              aria-label={t('Logout')}
             >
               <LogOut className="w-4 h-4" />
             </button>
@@ -559,12 +559,12 @@ const Sidebar = memo(() => {
                   type="button"
                   onClick={handleLogout}
                   className="flex h-9 w-9 mx-auto items-center justify-center rounded-md border border-rose-500/20 text-rose-500 transition-colors hover:bg-rose-500/10 hover:text-rose-600 dark:text-rose-400"
-                  aria-label="Logout"
+                  aria-label={t('Logout')}
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">Logout</TooltipContent>
+              <TooltipContent side="right">{t('Logout')}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
