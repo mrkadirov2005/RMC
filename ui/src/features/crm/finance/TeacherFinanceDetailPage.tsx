@@ -172,7 +172,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
         </Button>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <DollarSign className="h-8 w-8 text-green-600" />
-          {teacher?.first_name} {teacher?.last_name} - Finance
+          {teacher?.first_name} {teacher?.last_name} {t('- Finance')}
         </h1>
       </div>
 
@@ -272,12 +272,12 @@ const TeacherFinanceDetailPage: React.FC = () => {
                         {studentPayment.isPaid ? (
                           <div className="flex items-center gap-1 text-green-600 dark:text-green-400 text-sm">
                             <CheckCircle className="h-4 w-4" />
-                            Paid: {formatMoney(studentPayment.paidAmount)}
+                            {t('Paid:')} {formatMoney(studentPayment.paidAmount)}
                           </div>
                         ) : (
                           <div className="flex items-center gap-1 text-red-600 dark:text-red-400 text-sm">
                             <XCircle className="h-4 w-4" />
-                            Not Paid
+                            {t('Not Paid')}
                           </div>
                         )}
                       </div>

@@ -388,13 +388,13 @@ export const WeekView: React.FC<WeekViewProps> = ({
                 </p>
               </div>
               <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm dark:border-border dark:bg-muted/30">
-                <p className="text-xs font-bold uppercase text-muted-foreground">Room and time</p>
+                <p className="text-xs font-bold uppercase text-muted-foreground">{t('Room and time')}</p>
                 <p className="mt-1 font-black text-slate-950 dark:text-card-foreground">
                   {activeSlot?.item?.room_number} · {activeSlot?.item?.time} - {activeSlot?.item?.end_time}
                 </p>
               </div>
               <div className={cn('rounded-lg border p-3 text-sm', activeSession ? 'border-emerald-200 bg-emerald-50 text-emerald-950' : 'border-amber-200 bg-amber-50 text-amber-950')}>
-                <p className="text-xs font-bold uppercase opacity-70">Lesson status</p>
+                <p className="text-xs font-bold uppercase opacity-70">{t('Lesson status')}</p>
                 <p className="mt-1 font-black">{activeSession ? t('Conducted') : t('Not conducted yet')}</p>
               </div>
             </div>
@@ -402,7 +402,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
             {activeSession && activeClass ? (
               <div className={cn('flex items-center justify-between rounded-lg border p-3 text-sm', isSuperuser ? 'border-sky-200 bg-sky-50 text-sky-900' : 'border-border bg-background')}>
                 <div>
-                  <div className="font-semibold">Attendance session</div>
+                  <div className="font-semibold">{t('Attendance session')}</div>
                   <div className="text-xs text-muted-foreground">
                     {activeSession.start_time} - {activeSession.end_time}
                   </div>
@@ -414,12 +414,12 @@ export const WeekView: React.FC<WeekViewProps> = ({
                     setSelectedSlot(null);
                   }}
                 >
-                  Open attendance
+                  {t('Open attendance')}
                 </Button>
               </div>
             ) : (
               <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm font-semibold text-amber-950">
-                No attendance session has been created for this lesson yet.
+                {t('No attendance session has been created for this lesson yet.')}
               </div>
             )}
           </div>

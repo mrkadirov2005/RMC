@@ -101,19 +101,19 @@ export const AttendanceReportPanel = ({ collections }: { collections: OwnerManag
     </div>
 
     <Dialog open={detailGroupId !== null} onOpenChange={(open) => !open && setDetailGroupId(null)}>
-      <DialogContent className="max-w-md"><DialogHeader><DialogTitle>{getGroupName(selectedDetail)} attendance</DialogTitle><DialogDescription>Percentage distribution for this group.</DialogDescription></DialogHeader>
+      <DialogContent className="max-w-md"><DialogHeader><DialogTitle>{getGroupName(selectedDetail)} attendance</DialogTitle><DialogDescription>{t('Percentage distribution for this group.')}</DialogDescription></DialogHeader>
         {detail && <div className="space-y-3">
           {[['Attendance rate', detail.rate, 'bg-indigo-500'], ['Present', detail.total ? Math.round(detail.present / detail.total * 100) : 0, 'bg-emerald-500'], ['Late', detail.total ? Math.round(detail.late / detail.total * 100) : 0, 'bg-amber-500'], ['Absent', detail.total ? Math.round(detail.absent / detail.total * 100) : 0, 'bg-rose-500']].map(([label, value, color]: any) => <div key={label}><div className="mb-1 flex justify-between text-sm"><span>{label}</span><b>{value}%</b></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full ${color}`} style={{ width: `${value}%` }} /></div></div>)}
-          <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-muted"><Users className="h-4 w-4" />{detail.total} total attendance records</div>
+          <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-muted"><Users className="h-4 w-4" />{detail.total} {t('total attendance records')}</div>
         </div>}
       </DialogContent>
     </Dialog>
 
     <Dialog open={subjectDetailOpen} onOpenChange={setSubjectDetailOpen}>
-      <DialogContent className="max-w-md"><DialogHeader><DialogTitle>{selectedSubject?.name} attendance</DialogTitle><DialogDescription>Combined attendance across {selectedSubject?.classIds.length || 0} groups assigned to this subject.</DialogDescription></DialogHeader>
+      <DialogContent className="max-w-md"><DialogHeader><DialogTitle>{selectedSubject?.name} attendance</DialogTitle><DialogDescription>Combined attendance across {selectedSubject?.classIds.length || 0} {t('groups assigned to this subject.')}</DialogDescription></DialogHeader>
         {selectedSubjectStats && <div className="space-y-3">
           {[['Attendance rate', selectedSubjectStats.rate, 'bg-indigo-500'], ['Present', selectedSubjectStats.total ? Math.round(selectedSubjectStats.present / selectedSubjectStats.total * 100) : 0, 'bg-emerald-500'], ['Late', selectedSubjectStats.total ? Math.round(selectedSubjectStats.late / selectedSubjectStats.total * 100) : 0, 'bg-amber-500'], ['Absent', selectedSubjectStats.total ? Math.round(selectedSubjectStats.absent / selectedSubjectStats.total * 100) : 0, 'bg-rose-500']].map(([label, value, color]: any) => <div key={label}><div className="mb-1 flex justify-between text-sm"><span>{label}</span><b>{value}%</b></div><div className="h-2 overflow-hidden rounded-full bg-slate-100"><div className={`h-full ${color}`} style={{ width: `${value}%` }} /></div></div>) }
-          <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-muted"><Users className="h-4 w-4" />{selectedSubjectStats.total} total attendance records</div>
+          <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-3 text-sm dark:bg-muted"><Users className="h-4 w-4" />{selectedSubjectStats.total} {t('total attendance records')}</div>
         </div>}
       </DialogContent>
     </Dialog>

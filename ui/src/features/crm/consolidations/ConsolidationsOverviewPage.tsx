@@ -339,7 +339,7 @@ export default function ConsolidationsOverviewPage() {
                           <th className="py-2 pr-3">{t('Session')}</th>
                           {!isTeacher && <th className="py-2 pr-3">{t('Teacher')}</th>}
                           <th className="py-2 pr-3">{t('Title')}</th>
-                          <th className="py-2 pr-3">Words</th>
+                          <th className="py-2 pr-3">{t('Words')}</th>
                           <th className="py-2 pr-3">{t('Trials')}</th>
                           <th className="py-2 pr-3">{t('Students')}</th>
                           <th className="py-2 pr-3">{t('Pass rate')}</th>
@@ -375,7 +375,7 @@ export default function ConsolidationsOverviewPage() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Create or view a session's exercise</DialogTitle>
+            <DialogTitle>{t("Create or view a session's exercise")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid gap-4 md:grid-cols-3">
@@ -399,7 +399,7 @@ export default function ConsolidationsOverviewPage() {
                 <Label className="mb-1 block">{t('Class')}</Label>
                 <Select value={classId} onValueChange={setClassId} disabled={!teacherId || classesLoading}>
                   <SelectTrigger>
-                    <SelectValue placeholder={classesLoading ? 'Loading…' : 'Choose a class'} />
+                    <SelectValue placeholder={classesLoading ? t('Loading…') : t('Choose a class')} />
                   </SelectTrigger>
                   <SelectContent>
                     {classes.map((klass) => (
@@ -415,7 +415,7 @@ export default function ConsolidationsOverviewPage() {
                 <Label className="mb-1 block">{t('Session')}</Label>
                 <Select value={sessionId} onValueChange={setSessionId} disabled={!classId || sessionsLoading}>
                   <SelectTrigger>
-                    <SelectValue placeholder={sessionsLoading ? 'Loading…' : t('Choose a session')} />
+                    <SelectValue placeholder={sessionsLoading ? t('Loading…') : t('Choose a session')} />
                   </SelectTrigger>
                   <SelectContent>
                     {sessions.map((session) => (

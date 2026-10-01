@@ -96,12 +96,12 @@ export const PaymentAccessGate = () => {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Verifying...
+                {t('Verifying...')}
               </>
             ) : (
               <>
                 <KeyRound className="w-4 h-4 mr-2" />
-                Unlock Payments
+                {t('Unlock Payments')}
               </>
             )}
           </Button>

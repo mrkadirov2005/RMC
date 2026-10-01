@@ -59,21 +59,21 @@ export const ClassReportsPanel = ({ classes, students }: Props) => {
         ))}
       </div>
       <Card>
-        <CardHeader><CardTitle className="text-base">Class filling</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t('Class filling')}</CardTitle></CardHeader>
         <CardContent><LineChart data={rows.map((row) => ({ label: row.name, value: row.percentage }))} height={240} color="#0ea5e9" /></CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="text-base">Classes list</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{t('Classes list')}</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
           <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b text-muted-foreground"><tr><th className="px-2 py-2">{t('Class')}</th><th className="px-2 py-2">{t('Status')}</th><th className="px-2 py-2">{t('Students')}</th><th className="px-2 py-2">Limit</th><th className="px-2 py-2">Filling</th></tr></thead>
+            <thead className="border-b text-muted-foreground"><tr><th className="px-2 py-2">{t('Class')}</th><th className="px-2 py-2">{t('Status')}</th><th className="px-2 py-2">{t('Students')}</th><th className="px-2 py-2">{t('Limit')}</th><th className="px-2 py-2">{t('Filling')}</th></tr></thead>
             <tbody>{rows.map((row) => <tr key={row.id} className="border-b last:border-0">
               <td className="px-2 py-3 font-semibold">{row.name}</td>
               <td className="px-2 py-3 capitalize">{row.status}</td>
               <td className={`px-2 py-3 font-semibold ${row.exceeded ? 'text-red-600' : ''}`}>{row.enrolled}</td>
               <td className="px-2 py-3">{row.capacity || '—'}</td>
               <td className={`px-2 py-3 font-semibold ${row.exceeded ? 'text-red-600' : row.capacity > 0 && row.enrolled === row.capacity ? 'text-amber-600' : 'text-emerald-600'}`}>
-                {row.capacity > 0 ? `${row.percentage}%` : 'No limit'}
+                {row.capacity > 0 ? `${row.percentage}%` : t('No limit')}
               </td>
             </tr>)}</tbody>
           </table>

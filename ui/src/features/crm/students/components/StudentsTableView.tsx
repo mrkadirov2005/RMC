@@ -110,7 +110,7 @@ const PasswordResetDialog = ({
             {t('Cancel')}
           </Button>
           <Button type="button" onClick={save} disabled={saving || !value.trim()}>
-            {saving ? t('Saving...') : 'Save password'}
+            {saving ? t('Saving...') : t('Save password')}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -275,7 +275,7 @@ export const StudentsTableView = ({
       return (
         <span className={`${chipClass} border ${INCOMING_TRANSFER_VARIANT}`} title={t('Transferred into this group')}>
           <ArrowRightLeft className="h-3 w-3" />
-          New (Transferred)
+          {t('New (Transferred)')}
         </span>
       );
     }
@@ -318,7 +318,7 @@ export const StudentsTableView = ({
       <DropdownMenuTrigger asChild>
         <Button type="button" variant="outline" size="sm" className="h-7 w-7 rounded-md p-0">
           <MoreVertical className="h-4 w-4" />
-          <span className="sr-only">Open actions</span>
+          <span className="sr-only">{t('Open actions')}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
@@ -371,20 +371,20 @@ export const StudentsTableView = ({
           <DialogHeader>
             <DialogTitle>{bulkTransferOpen ? `Transfer ${selectedIds.size} students` : t('Transfer student')}</DialogTitle>
             <DialogDescription>
-              {bulkTransferOpen ? 'Move the selected students into another teacher’s group.' : 'Move this student into another group. The current group keeps a transferred record, and a new active student record is created in the target group.'}
+              {bulkTransferOpen ? t('Move the selected students into another teacher’s group.') : t('Move this student into another group. The current group keeps a transferred record, and a new active student record is created in the target group.')}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
             <div className="rounded-lg border bg-slate-50 px-3 py-2 text-sm dark:bg-muted/40">
               {bulkTransferOpen ? (
-                <p className="font-medium">{selectedIds.size} selected students</p>
+                <p className="font-medium">{selectedIds.size} {t('selected students')}</p>
               ) : <>
                 <p className="font-medium">{transferStudent?.first_name} {transferStudent?.last_name}</p>
-                <p className="text-xs text-muted-foreground">Current group: {transferStudent?.class_name || transferStudent?.class_id || 'Unassigned'}</p>
+                <p className="text-xs text-muted-foreground">{t('Current group:')} {transferStudent?.class_name || transferStudent?.class_id || 'Unassigned'}</p>
               </>}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="target-teacher">New teacher</Label>
+              <Label htmlFor="target-teacher">{t('New teacher')}</Label>
               <Select
                 value={targetTeacherId}
                 onValueChange={(value) => {
@@ -407,7 +407,7 @@ export const StudentsTableView = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="target-class">New group</Label>
+              <Label htmlFor="target-class">{t('New group')}</Label>
               <Select value={targetClassId} onValueChange={setTargetClassId} disabled={transferring || !targetTeacherId}>
                 <SelectTrigger id="target-class">
                   <SelectValue placeholder={targetTeacherId ? t('Select target group') : t('Choose a teacher first')} />
@@ -451,7 +451,7 @@ export const StudentsTableView = ({
       <DeleteStudentDialog
         open={deleteTarget != null}
         title={deleteTarget?.bulk ? `Delete ${deleteTarget.ids.length} students` : t('Delete student')}
-        description={deleteTarget?.bulk ? 'Pick why these students are being removed. This applies to every selected student.' : t('Pick why this student is being removed.')}
+        description={deleteTarget?.bulk ? t('Pick why these students are being removed. This applies to every selected student.') : t('Pick why this student is being removed.')}
         onOpenChange={(open) => (!open ? setDeleteTarget(null) : undefined)}
         onConfirm={confirmDelete}
       />

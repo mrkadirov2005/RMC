@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { translationAPI, type TranslationRow } from './api';
 import { sharedMessageTranslations } from './sharedMessages';
+import { pageLabelTranslations } from './labels';
 
 export type AppLanguage = 'en' | 'uz';
 
@@ -8,6 +9,7 @@ const LANGUAGE_STORAGE_KEY = 'crm_language';
 
 const translations: Record<string, string> = {
   ...sharedMessageTranslations,
+  ...pageLabelTranslations,
   Dashboard: 'Boshqaruv paneli',
   'My Portal': 'Mening portalim',
   'My Tests': 'Mening testlarim',

@@ -128,15 +128,15 @@ export const OwnerRegisterPage = () => {
         <div className="mt-8 max-w-xl lg:mt-28">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-normal sm:text-4xl lg:mt-4 lg:text-5xl">
-            Create protected owner access for the learning center.
+            {t('Create protected owner access for the learning center.')}
           </h1>
           <p className="mt-3 text-sm leading-6 text-white/75 sm:mt-5 sm:text-base sm:leading-7">
-            Owner creation is locked behind a shared keyword so daily staff accounts stay separate from system ownership.
+            {t('Owner creation is locked behind a shared keyword so daily staff accounts stay separate from system ownership.')}
           </p>
         </div>
 
         <div className="mt-8 hidden rounded-lg border border-white/15 bg-white/10 p-4 text-sm text-white/80 lg:block">
-          Use owner access only for branch oversight, global settings, and manager-level account control.
+          {t('Use owner access only for branch oversight, global settings, and manager-level account control.')}
         </div>
       </section>
 
@@ -182,7 +182,7 @@ export const OwnerRegisterPage = () => {
             <div className="space-y-5">
               <div className="space-y-2">
                 <label htmlFor="owner-keyword" className="text-sm font-semibold text-[#21116a]">
-                  Owner keyword
+                  {t('Owner keyword')}
                 </label>
                 <div className="relative">
                   <KeyRound className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#16a7e2]" />

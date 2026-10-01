@@ -380,14 +380,14 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
       <DialogContent className="max-w-6xl overflow-y-auto max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex justify-between items-center pr-8">
-            <span>Class: {classData.class_name}</span>
-            {selectedDate && <span className="text-sm font-normal text-muted-foreground mr-4">Date: {selectedDate}</span>}
+            <span>{t('Class:')} {classData.class_name}</span>
+            {selectedDate && <span className="text-sm font-normal text-muted-foreground mr-4">{t('Date:')} {selectedDate}</span>}
           </DialogTitle>
         </DialogHeader>
         
         <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
           <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="info">Info</TabsTrigger>
+            <TabsTrigger value="info">{t('Info')}</TabsTrigger>
             <TabsTrigger value="students">{t('Students')}</TabsTrigger>
             <TabsTrigger value="attendance">{t('Attendance')}</TabsTrigger>
             <TabsTrigger value="grades">{t('Exam Grades')}</TabsTrigger>
@@ -433,11 +433,11 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                       <strong>{t('Days:')}</strong> {parsedSchedule.days.join(', ')}
                     </p>
                     <p className="text-sm">
-                      <strong>Time:</strong> {parsedSchedule.time}
+                      <strong>{t('Time:')}</strong> {parsedSchedule.time}
                     </p>
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">No schedule set</p>
+                  <p className="text-sm text-muted-foreground">{t('No schedule set')}</p>
                 )}
               </div>
             </div>
@@ -451,7 +451,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
               </div>
             ) : classStudents.length === 0 ? (
               <Alert>
-                <AlertDescription>No students enrolled in this class</AlertDescription>
+                <AlertDescription>{t('No students enrolled in this class')}</AlertDescription>
               </Alert>
             ) : (
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -549,13 +549,13 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
               </div>
             ) : activeStudents.length === 0 ? (
               <Alert>
-                <AlertDescription>No students enrolled in this class to grade</AlertDescription>
+                <AlertDescription>{t('No students enrolled in this class to grade')}</AlertDescription>
               </Alert>
             ) : (
               <div className="space-y-4">
                 <Alert>
                   <AlertDescription>
-                    Enter marks for students below, then submit all grades at once.
+                    {t('Enter marks for students below, then submit all grades at once.')}
                   </AlertDescription>
                 </Alert>
 
@@ -604,9 +604,9 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                       value={gradeTerm}
                       onChange={(e) => setGradeTerm(e.target.value)}
                     >
-                      <option value="First">First</option>
-                      <option value="Second">Second</option>
-                      <option value="Third">Third</option>
+                      <option value="First">{t('First')}</option>
+                      <option value="Second">{t('Second')}</option>
+                      <option value="Third">{t('Third')}</option>
                     </select>
                   </div>
                 </div>
@@ -682,7 +682,7 @@ const ClassDetailModal: React.FC<ClassDetailModalProps> = ({
                 {/* Summary & Submit */}
                 <div className="flex justify-between items-center">
                   <p className="text-sm text-muted-foreground">
-                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} {t('of')} {activeStudents.length} students graded
+                    {Array.from(gradeMarks.values()).filter((v) => v !== '' && v !== undefined).length} {t('of')} {activeStudents.length} {t('students graded')}
                   </p>
                   <Button
                     size="lg"

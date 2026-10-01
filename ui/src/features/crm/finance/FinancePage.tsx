@@ -74,7 +74,7 @@ const FinancePage: React.FC = () => {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold flex items-center gap-2 dark:text-white">
           <DollarSign className="h-8 w-8 text-green-600" />
-          Finance Management
+          {t('Finance Management')}
         </h1>
         <ViewModeToggle value={viewMode} onChange={setViewMode} />
       </div>
@@ -107,7 +107,7 @@ const FinancePage: React.FC = () => {
                   <TableCell className="font-medium">{teacher.first_name} {teacher.last_name}</TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/finance/teacher/${teacher.teacher_id || teacher.id}`)}>
-                      View Finance Details
+                      {t('View Finance Details')}
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -153,7 +153,7 @@ const FinancePage: React.FC = () => {
                   className="w-full"
                   variant="outline"
                 >
-                  View Finance Details
+                  {t('View Finance Details')}
                 </Button>
               </div>
             </div>

@@ -35,8 +35,8 @@ const GradesStatisticsSection = ({
       <div className="rounded-3xl border border-slate-200/80 bg-gradient-to-br from-white via-violet-50/70 to-fuchsia-50/80 p-5 shadow-sm dark:border-white/10 dark:from-white/[0.04] dark:via-white/[0.03] dark:to-fuchsia-500/10">
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-700 dark:text-violet-300">Grade overview</p>
-            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">High-level view of class coverage, grading volume, and subject reach.</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.16em] text-violet-700 dark:text-violet-300">{t('Grade overview')}</p>
+            <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t('High-level view of class coverage, grading volume, and subject reach.')}</p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/80 px-3 py-2 text-right shadow-sm dark:border-white/10 dark:bg-slate-950/40">
             <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">{t('Average')}</p>
@@ -67,12 +67,12 @@ const GradesStatisticsSection = ({
         <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-black">Grade Distribution</p>
-              <p className="text-xs text-muted-foreground">Compact breakdown of A to F grade volume.</p>
+              <p className="text-sm font-black">{t('Grade Distribution')}</p>
+              <p className="text-xs text-muted-foreground">{t('Compact breakdown of A to F grade volume.')}</p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
-              <p>{gradeStatistics.totalGrades} total grades</p>
-              <p>{gradeStatistics.averagePercentage.toFixed(1)}% average</p>
+              <p>{gradeStatistics.totalGrades} {t('total grades')}</p>
+              <p>{gradeStatistics.averagePercentage.toFixed(1)}{t('% average')}</p>
             </div>
           </div>
           <div className="flex min-h-[9rem] items-end gap-3">
@@ -95,7 +95,7 @@ const GradesStatisticsSection = ({
               })
             ) : (
               <div className="flex h-28 w-full items-center justify-center rounded-xl border border-dashed text-sm text-muted-foreground">
-                No grade data yet
+                {t('No grade data yet')}
               </div>
             )}
           </div>
@@ -104,8 +104,8 @@ const GradesStatisticsSection = ({
         <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/[0.03]">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
-              <p className="text-sm font-black">Grade Mix</p>
-              <p className="text-xs text-muted-foreground">Relative share of grade letters.</p>
+              <p className="text-sm font-black">{t('Grade Mix')}</p>
+              <p className="text-xs text-muted-foreground">{t('Relative share of grade letters.')}</p>
             </div>
             <div className="text-right text-xs text-muted-foreground">
               <p>{gradeStatistics.passingGrades} passing</p>

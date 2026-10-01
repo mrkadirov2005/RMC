@@ -66,7 +66,7 @@ export const StudentFormDialog = ({
                 {t('Add Student')}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                Create a student from a single structured popup instead of leaving the students workspace.
+                {t('Create a student from a single structured popup instead of leaving the students workspace.')}
               </DialogDescription>
             </div>
           </div>

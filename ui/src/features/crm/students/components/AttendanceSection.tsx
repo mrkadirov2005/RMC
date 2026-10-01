@@ -162,7 +162,7 @@ export const AttendanceSection = ({
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>{t('Attendance Calendar')}</CardTitle>
         <Button size="sm" onClick={() => handleOpenModal()}>
-          <Plus className="h-4 w-4 mr-2" /> Add Record
+          <Plus className="h-4 w-4 mr-2" /> {t('Add Record')}
         </Button>
       </CardHeader>
       <CardContent>

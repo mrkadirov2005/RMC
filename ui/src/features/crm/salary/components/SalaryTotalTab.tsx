@@ -33,7 +33,7 @@ export const SalaryTotalTab = ({ year, month, summary }: SalaryTotalTabProps) =>
       </p>
 
       {teacherCount === 0 ? (
-        <div className="py-10 text-center text-sm text-muted-foreground">No teachers found.</div>
+        <div className="py-10 text-center text-sm text-muted-foreground">{t('No teachers found.')}</div>
       ) : (
         <div className="grid gap-6 lg:grid-cols-[auto_1fr] lg:items-center">
           <div className="relative mx-auto flex items-center justify-center">
@@ -71,7 +71,7 @@ export const SalaryTotalTab = ({ year, month, summary }: SalaryTotalTabProps) =>
               <p className="text-xl font-black text-rose-600">{unpaidCount}</p>
             </div>
             <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-              <p className="text-[11px] font-semibold text-muted-foreground">Total Paid</p>
+              <p className="text-[11px] font-semibold text-muted-foreground">{t('Total Paid')}</p>
               <p className="text-xl font-black">{formatMoney(totalPaidAmount)}</p>
             </div>
             <div className="col-span-2 rounded-md border bg-card px-3 py-2.5 shadow-sm sm:col-span-4">

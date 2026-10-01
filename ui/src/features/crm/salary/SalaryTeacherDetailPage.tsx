@@ -63,7 +63,7 @@ const SalaryTeacherDetailPage = () => {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/salary')}>
         <ArrowLeft className="h-4 w-4" />
-        Back to Salaries
+        {t('Back to Salaries')}
       </Button>
 
       <PageHeader
@@ -98,7 +98,7 @@ const SalaryTeacherDetailPage = () => {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : !detail || detail.history.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No salary history yet.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">{t('No salary history yet.')}</div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
@@ -106,7 +106,7 @@ const SalaryTeacherDetailPage = () => {
                 <TableRow>
                   <TableHead>{t('Month')}</TableHead>
                   <TableHead>{t('Amount')}</TableHead>
-                  <TableHead>Paid?</TableHead>
+                  <TableHead>{t('Paid?')}</TableHead>
                   <TableHead>{t('Marked By')}</TableHead>
                   <TableHead>{t('Students Paid')}</TableHead>
                   <TableHead>{t('Notes')}</TableHead>

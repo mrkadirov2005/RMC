@@ -73,7 +73,7 @@ export default function TeacherGradeDialog({
         <DialogHeader className="bg-fuchsia-600 p-4">
           <div className="flex items-center justify-between">
             <DialogTitle className="text-base font-semibold text-white">
-              Add Grades to Students
+              {t('Add Grades to Students')}
             </DialogTitle>
             <button onClick={onClose} className="text-white hover:text-white/80">
               <X className="h-5 w-5" />
@@ -114,7 +114,7 @@ export default function TeacherGradeDialog({
               </Select>
             </div>
             <div className="space-y-1">
-              <Label className="text-xs">Select Term</Label>
+              <Label className="text-xs">{t('Select Term')}</Label>
               <Select value={selectedTerm} onValueChange={setSelectedTerm}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder={t('Select term')} />

@@ -57,7 +57,7 @@ const OwnerManager = memo(() => {
         <DeleteStudentDialog
           open={vm.pendingStudentDelete != null}
           title={vm.pendingStudentDelete?.hard ? t('Permanently delete student') : t('Delete student')}
-          description={vm.pendingStudentDelete?.hard ? 'Pick why this student is being removed. This cannot be undone.' : t('Pick why this student is being removed.')}
+          description={vm.pendingStudentDelete?.hard ? t('Pick why this student is being removed. This cannot be undone.') : t('Pick why this student is being removed.')}
           onOpenChange={(open) => (!open ? vm.setPendingStudentDelete(null) : undefined)}
           onConfirm={vm.confirmStudentDelete}
         />

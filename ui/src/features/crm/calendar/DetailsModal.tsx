@@ -122,10 +122,10 @@ export const DetailsModal = ({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex flex-wrap gap-3 text-sm">
-                    <Badge variant="secondary">Present: {attendanceSummary.presentIds.size}</Badge>
-                    <Badge variant="secondary">Absent: {attendanceSummary.absentIds.size}</Badge>
-                    <Badge variant="secondary">Unmarked: {attendanceSummary.unmarkedCount}</Badge>
-                    <Badge variant="secondary">Total: {attendanceSummary.totalStudents}</Badge>
+                    <Badge variant="secondary">{t('Present:')} {attendanceSummary.presentIds.size}</Badge>
+                    <Badge variant="secondary">{t('Absent:')} {attendanceSummary.absentIds.size}</Badge>
+                    <Badge variant="secondary">{t('Unmarked:')} {attendanceSummary.unmarkedCount}</Badge>
+                    <Badge variant="secondary">{t('Total:')} {attendanceSummary.totalStudents}</Badge>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -148,7 +148,7 @@ export const DetailsModal = ({
                             </TooltipProvider>
                           ))}
                         {attendanceSummary.presentIds.size === 0 && (
-                          <p className="text-xs text-muted-foreground">No present records.</p>
+                          <p className="text-xs text-muted-foreground">{t('No present records.')}</p>
                         )}
                       </div>
                     </div>
@@ -172,7 +172,7 @@ export const DetailsModal = ({
                             </TooltipProvider>
                           ))}
                         {attendanceSummary.absentIds.size === 0 && (
-                          <p className="text-xs text-muted-foreground">No absent records.</p>
+                          <p className="text-xs text-muted-foreground">{t('No absent records.')}</p>
                         )}
                       </div>
                     </div>
@@ -189,7 +189,7 @@ export const DetailsModal = ({
               </CardHeader>
               <CardContent className="space-y-3">
                 {gradeSummary.gradeRows.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No grades available.</p>
+                  <p className="text-sm text-muted-foreground">{t('No grades available.')}</p>
                 ) : (
                   <>
                     {!isStudent && gradeSummary.topTwo.length > 0 && (

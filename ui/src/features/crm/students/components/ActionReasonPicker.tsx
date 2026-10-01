@@ -57,7 +57,7 @@ export const ActionReasonPicker = ({ reasonType, open, value, customValue, onCha
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => <SelectItem key={option.value} value={String(option.value)}>{option.label}</SelectItem>)}
-          <SelectItem value={String(CUSTOM_REASON_VALUE)}>+ Add a custom reason</SelectItem>
+          <SelectItem value={String(CUSTOM_REASON_VALUE)}>{t('+ Add a custom reason')}</SelectItem>
         </SelectContent>
       </Select>
       {Number(value) === CUSTOM_REASON_VALUE && (

@@ -30,7 +30,7 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Unable to determine center ID. Please try again.
+          {t('Unable to determine center ID. Please try again.')}
         </AlertDescription>
       </Alert>
     );
@@ -73,7 +73,7 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>{t('Room')} {selectedRoom.room_number} - Slots & Bookings</CardTitle>
+              <CardTitle>{t('Room')} {selectedRoom.room_number} {t('- Slots & Bookings')}</CardTitle>
               <RoomSlotsGenerator
                 roomId={selectedRoom.room_id}
                 centerId={centerId}
@@ -86,7 +86,7 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
               <Tabs defaultValue="calendar" className="w-full">
                 <TabsList>
                   <TabsTrigger value="calendar">{t('Calendar View')}</TabsTrigger>
-                  <TabsTrigger value="info">Info</TabsTrigger>
+                  <TabsTrigger value="info">{t('Info')}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="calendar" className="mt-4">
@@ -106,7 +106,7 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
                       </div>
                       {selectedRoom.class_name && (
                         <div>
-                          <h3 className="font-semibold text-sm text-gray-600">Associated Class</h3>
+                          <h3 className="font-semibold text-sm text-gray-600">{t('Associated Class')}</h3>
                           <p className="text-lg">{selectedRoom.class_name}</p>
                         </div>
                       )}
@@ -127,8 +127,7 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
                     <Alert>
                       <AlertCircle className="h-4 w-4" />
                       <AlertDescription>
-                        Use the Calendar View tab to manage slots and bookings for this room. 
-                        Click on a date to create new slots or view existing ones.
+                        {t('Use the Calendar View tab to manage slots and bookings for this room. Click on a date to create new slots or view existing ones.')}
                       </AlertDescription>
                     </Alert>
                   </div>
@@ -141,7 +140,7 @@ export const RoomSlotsPage: React.FC<RoomSlotsPageProps> = ({ roomId, onClose })
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Please select a room to view and manage its slots and bookings.
+            {t('Please select a room to view and manage its slots and bookings.')}
           </AlertDescription>
         </Alert>
       )}

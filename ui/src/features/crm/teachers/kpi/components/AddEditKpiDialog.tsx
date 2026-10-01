@@ -97,17 +97,17 @@ export const AddEditKpiDialog = ({
 
           <div className="grid grid-cols-2 gap-1.5 rounded-md border bg-muted/30 p-2.5 text-xs">
             <div>
-              <p className="text-muted-foreground">Student Scores (auto)</p>
+              <p className="text-muted-foreground">{t('Student Scores (auto)')}</p>
               <p className="font-bold text-primary">{formatScore(autoScores.student_score)}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Retention (auto)</p>
+              <p className="text-muted-foreground">{t('Retention (auto)')}</p>
               <p className="font-bold text-primary">{formatScore(autoScores.retention_score)}</p>
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label>Contribution (0–100)</Label>
+            <Label>{t('Contribution (0–100)')}</Label>
             <Input
               type="number"
               min="0"
@@ -119,7 +119,7 @@ export const AddEditKpiDialog = ({
             />
           </div>
           <div className="space-y-1">
-            <Label>Teaching Quality (0–100)</Label>
+            <Label>{t('Teaching Quality (0–100)')}</Label>
             <Input
               type="number"
               min="0"
@@ -142,7 +142,7 @@ export const AddEditKpiDialog = ({
 
           {finalScorePreview !== null && (
             <div className="rounded-md border bg-primary/5 p-2.5 text-xs">
-              <p className="text-muted-foreground">Final KPI (average of all 4 categories)</p>
+              <p className="text-muted-foreground">{t('Final KPI (average of all 4 categories)')}</p>
               <p className="text-lg font-black text-primary">{formatScore(finalScorePreview)}</p>
             </div>
           )}

@@ -487,7 +487,7 @@ export const StudentsTeacherGroupsTab = ({
       <Card>
         <CardContent className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Loading teachers and groups...
+          {t('Loading teachers and groups...')}
         </CardContent>
       </Card>
     );
@@ -499,7 +499,7 @@ export const StudentsTeacherGroupsTab = ({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Button type="button" variant="outline" size="sm" className="h-7 w-fit gap-1.5 text-xs" onClick={goBackToClasses}>
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to classes
+            {t('Back to classes')}
           </Button>
           <div className="text-xs text-muted-foreground">
             {selectedTeacher?.name || 'Teacher'} / {selectedClass.cls.class_name || `Class #${selectedClass.classId}`}
@@ -532,7 +532,7 @@ export const StudentsTeacherGroupsTab = ({
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <Button type="button" variant="outline" size="sm" className="h-7 w-fit gap-1.5 text-xs" onClick={goBackToTeachers}>
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to teachers
+            {t('Back to teachers')}
           </Button>
           <div className="text-xs text-muted-foreground">
             {selectedTeacher.name} · {teacherStudentTotal.toLocaleString()} {t('students')}
@@ -601,7 +601,7 @@ export const StudentsTeacherGroupsTab = ({
           <Card>
             <CardContent className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Loading this teacher...
+              {t('Loading this teacher...')}
             </CardContent>
           </Card>
         ) : selectedTeacherClasses.length === 0 ? (
@@ -627,7 +627,7 @@ export const StudentsTeacherGroupsTab = ({
               </span>
               <span>{t('Group')}</span>
               <span className="text-center">{t('Students')}</span>
-              <span className="text-right">Teacher transfer</span>
+              <span className="text-right">{t('Teacher transfer')}</span>
             </div>
             {selectedTeacherClasses.map(({ cls, classId, teacherId, studentCount }, index) => (
               <div key={classId} className="grid gap-1.5 border-b px-3 py-1.5 last:border-b-0 lg:grid-cols-[28px_minmax(0,1fr)_90px_minmax(240px,300px)] lg:items-center" style={{ backgroundColor: `var(${index % 2 === 0 ? '--list-row-primary' : '--list-row-alternate'})` }}>
@@ -691,7 +691,7 @@ export const StudentsTeacherGroupsTab = ({
   if (teachers.length === 0) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-sm text-muted-foreground">No teachers found.</CardContent>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">{t('No teachers found.')}</CardContent>
       </Card>
     );
   }
@@ -707,7 +707,7 @@ export const StudentsTeacherGroupsTab = ({
             onKeyDown={(event) => {
               if (event.key === 'Enter') applySearch();
             }}
-            placeholder="Search teacher, group, student..."
+            placeholder={t('Search teacher, group, student...')}
             className="h-8 pl-8 text-xs"
           />
         </div>
@@ -732,7 +732,7 @@ export const StudentsTeacherGroupsTab = ({
           <span className="text-right">{t('Open')}</span>
         </div>
         {filteredTeachers.length === 0 ? (
-          <div className="px-3 py-8 text-center text-sm text-muted-foreground">No teachers, groups, or students match this search.</div>
+          <div className="px-3 py-8 text-center text-sm text-muted-foreground">{t('No teachers, groups, or students match this search.')}</div>
         ) : (
           filteredTeachers.map((teacher, index) => {
             const groups = overviewClassRows.filter((row) => row.teacherId === teacher.id);

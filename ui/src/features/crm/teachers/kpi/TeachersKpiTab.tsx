@@ -55,11 +55,11 @@ export const TeachersKpiTab = () => {
             <TableHeader className="bg-slate-50/90 dark:bg-transparent">
               <TableRow>
                 <TableHead className="h-8 px-2">{t('Teacher')}</TableHead>
-                <TableHead className="h-8 px-2 text-right">Student Scores</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Student Scores')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">{t('Retention')}</TableHead>
-                <TableHead className="h-8 px-2 text-right">Contribution</TableHead>
-                <TableHead className="h-8 px-2 text-right">Teaching Quality</TableHead>
-                <TableHead className="h-8 px-2 text-right">Final KPI</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Contribution')}</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Teaching Quality')}</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Final KPI')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

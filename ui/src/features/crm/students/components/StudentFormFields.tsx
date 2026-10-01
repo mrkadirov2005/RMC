@@ -160,7 +160,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
 
       <FormSection
         title={t('Placement')}
-        detail="Pick the teacher first, then choose one of their groups."
+        detail={t('Pick the teacher first, then choose one of their groups.')}
         icon={<GraduationCap className="h-5 w-5" />}
         tone="emerald"
       >
@@ -192,7 +192,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             value={formData.class_id || ''}
             onChange={(value) => setFormData({ ...formData, class_id: Number(value) })}
             options={classOptionsForTeacher}
-            placeholder={selectedTeacherId ? t('Select class') : 'Select a teacher first'}
+            placeholder={selectedTeacherId ? t('Select class') : t('Select a teacher first')}
             disabled={!selectedTeacherId}
           />
         </div>
@@ -226,7 +226,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             </div>
             <div>
               <h3 className="text-sm font-bold leading-tight">{t('Discount')}</h3>
-              <p className="text-[11px] leading-snug text-white/85">Choose serial or one-time tuition discount.</p>
+              <p className="text-[11px] leading-snug text-white/85">{t('Choose serial or one-time tuition discount.')}</p>
             </div>
           </div>
           <Switch

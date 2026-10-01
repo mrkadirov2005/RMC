@@ -64,7 +64,7 @@ const TeacherKpiDetailPage = () => {
     <div className="space-y-4">
       <Button variant="ghost" size="sm" className="gap-2" onClick={() => navigate('/teachers')}>
         <ArrowLeft className="h-4 w-4" />
-        Back to Teachers
+        {t('Back to Teachers')}
       </Button>
 
       <PageHeader
@@ -89,19 +89,19 @@ const TeacherKpiDetailPage = () => {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : !detail || detail.history.length === 0 ? (
-          <div className="py-10 text-center text-sm text-muted-foreground">No KPI recorded yet.</div>
+          <div className="py-10 text-center text-sm text-muted-foreground">{t('No KPI recorded yet.')}</div>
         ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('Month')}</TableHead>
-                  <TableHead>Student Scores</TableHead>
+                  <TableHead>{t('Student Scores')}</TableHead>
                   <TableHead>{t('Retention')}</TableHead>
-                  <TableHead>Contribution</TableHead>
-                  <TableHead>Teaching Quality</TableHead>
-                  <TableHead>Final KPI</TableHead>
-                  <TableHead>Recorded By</TableHead>
+                  <TableHead>{t('Contribution')}</TableHead>
+                  <TableHead>{t('Teaching Quality')}</TableHead>
+                  <TableHead>{t('Final KPI')}</TableHead>
+                  <TableHead>{t('Recorded By')}</TableHead>
                   <TableHead>{t('Notes')}</TableHead>
                   {isOwner && <TableHead className="text-right">{t('Actions')}</TableHead>}
                 </TableRow>

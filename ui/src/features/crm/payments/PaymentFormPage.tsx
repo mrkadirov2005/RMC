@@ -599,7 +599,7 @@ const PaymentFormPage = () => {
                 )}
                 {(isEditing || selectedStudent) && (
                   <div className="space-y-2">
-                    <Label htmlFor="amount">{formData.discount_kind ? 'Original amount *' : `${t('Amount')} *`}</Label>
+                    <Label htmlFor="amount">{formData.discount_kind ? t('Original amount *') : `${t('Amount')} *`}</Label>
                     <Input
                       type="number"
                       id="amount"
@@ -643,13 +643,13 @@ const PaymentFormPage = () => {
                     {loadingDiscount
                       ? t('Checking active discounts...')
                       : activeDiscount
-                        ? `${activeDiscount.discount_kind === 'monthly_discount' ? 'One-month' : t('Serial')} discount is applied automatically.`
+                        ? `${activeDiscount.discount_kind === 'monthly_discount' ? t('One-month') : t('Serial')} discount is applied automatically.`
                         : t('Use a monthly discount only for this payment.')}
                   </p>
                 </div>
                 {formData.discount_kind === 'serial_discount' ? (
                   <Button type="button" variant="outline" size="sm" onClick={clearDiscount}>
-                    Remove
+                    {t('Remove')}
                   </Button>
                 ) : (
                   <div className="flex items-center gap-2">
@@ -697,11 +697,11 @@ const PaymentFormPage = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Discount amount</Label>
+                    <Label>{t('Discount amount')}</Label>
                     <Input readOnly value={discountAmount.toFixed(2)} />
                   </div>
                   <div className="space-y-2">
-                    <Label>Final payable</Label>
+                    <Label>{t('Final payable')}</Label>
                     <Input readOnly value={finalAmount.toFixed(2)} />
                   </div>
                 </div>

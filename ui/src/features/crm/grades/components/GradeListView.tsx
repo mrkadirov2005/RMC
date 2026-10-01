@@ -163,18 +163,18 @@ const GradeListView = ({
             </Select>
           </div>
           <div className="space-y-2">
-            <Label>Age Range</Label>
+            <Label>{t('Age Range')}</Label>
             <Select value={filterAgeRange} onValueChange={onFilterAgeRangeChange}>
               <SelectTrigger>
                 <SelectValue placeholder={t('All Ages')} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">{t('All Ages')}</SelectItem>
-                <SelectItem value="3-6">3-6 years</SelectItem>
-                <SelectItem value="7-10">7-10 years</SelectItem>
-                <SelectItem value="11-14">11-14 years</SelectItem>
-                <SelectItem value="15-18">15-18 years</SelectItem>
-                <SelectItem value="19-25">19-25 years</SelectItem>
+                <SelectItem value="3-6">{t('3-6 years')}</SelectItem>
+                <SelectItem value="7-10">{t('7-10 years')}</SelectItem>
+                <SelectItem value="11-14">{t('11-14 years')}</SelectItem>
+                <SelectItem value="15-18">{t('15-18 years')}</SelectItem>
+                <SelectItem value="19-25">{t('19-25 years')}</SelectItem>
               </SelectContent>
             </Select>
           </div>

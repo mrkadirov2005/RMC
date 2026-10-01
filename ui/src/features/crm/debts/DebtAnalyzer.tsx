@@ -148,7 +148,7 @@ const DebtAnalyzer = () => {
             <AlertDescription className="flex justify-between items-center">
               {t(getErrorMessage(error))}
               <button onClick={() => setError(null)} className="text-sm underline ml-2">
-                Dismiss
+                {t('Dismiss')}
               </button>
             </AlertDescription>
           </Alert>
@@ -162,19 +162,19 @@ const DebtAnalyzer = () => {
                 <p className="text-3xl font-bold text-indigo-600">
                   {analysis.summary.total_students_analyzed}
                 </p>
-                <p className="text-sm text-muted-foreground">Students Analyzed</p>
+                <p className="text-sm text-muted-foreground">{t('Students Analyzed')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-3xl font-bold text-red-600">
                   {analysis.summary.students_with_unpaid_months}
                 </p>
-                <p className="text-sm text-muted-foreground">With Unpaid Months</p>
+                <p className="text-sm text-muted-foreground">{t('With Unpaid Months')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-3xl font-bold text-amber-600">
                   {analysis.summary.total_unpaid_instances}
                 </p>
-                <p className="text-sm text-muted-foreground">Total Unpaid Instances</p>
+                <p className="text-sm text-muted-foreground">{t('Total Unpaid Instances')}</p>
               </div>
               <div className="rounded-lg border bg-card p-4 text-center">
                 <p className="text-sm text-muted-foreground">{t('Analysis Period')}</p>
@@ -221,8 +221,8 @@ const DebtAnalyzer = () => {
                           />
                         </TableHead>
                         <TableHead>{t('Student')}</TableHead>
-                        <TableHead className="text-center">Unpaid Months</TableHead>
-                        <TableHead className="text-center">Total Payments</TableHead>
+                        <TableHead className="text-center">{t('Unpaid Months')}</TableHead>
+                        <TableHead className="text-center">{t('Total Payments')}</TableHead>
                         <TableHead className="text-right">{t('Current Debt')}</TableHead>
                         <TableHead className="w-10" />
                       </TableRow>
@@ -324,7 +324,7 @@ const DebtAnalyzer = () => {
               <DialogTitle>{t('Generate Debt Records')}</DialogTitle>
             </DialogHeader>
             <p className="text-sm text-muted-foreground">
-              This will create debt records for {selectedStudents.length} selected student(s).
+              This will create debt records for {selectedStudents.length} {t('selected student(s).')}
             </p>
             <div className="mt-4 space-y-2">
               <Label htmlFor="monthlyFee">{t('Monthly Fee Amount')}</Label>

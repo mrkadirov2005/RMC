@@ -84,7 +84,7 @@ const GradeFormDialog = ({
                 {editingId ? t('Edit Grade') : t('Add Grade')}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                Record marks, term details, and the final grade from one clear, structured dialog.
+                {t('Record marks, term details, and the final grade from one clear, structured dialog.')}
               </DialogDescription>
             </div>
           </div>
@@ -136,9 +136,9 @@ const GradeFormDialog = ({
                 <UserRound className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Student and subject</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Student and subject')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Attach the grade to the right student, teacher, subject, and class.
+                  {t('Attach the grade to the right student, teacher, subject, and class.')}
                 </p>
               </div>
             </div>
@@ -192,15 +192,15 @@ const GradeFormDialog = ({
                 <Percent className="h-4 w-4" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Scoring</h3>
+                <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Scoring')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Enter the achieved marks and let the system keep percentage and grade letter aligned.
+                  {t('Enter the achieved marks and let the system keep percentage and grade letter aligned.')}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-2">
-                <Label htmlFor="marks_obtained" className={formLabelClassName}>Marks obtained</Label>
+                <Label htmlFor="marks_obtained" className={formLabelClassName}>{t('Marks obtained')}</Label>
                 <Input
                   type="number"
                   id="marks_obtained"
@@ -231,7 +231,7 @@ const GradeFormDialog = ({
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="grade_letter" className={formLabelClassName}>Grade letter</Label>
+                <Label htmlFor="grade_letter" className={formLabelClassName}>{t('Grade letter')}</Label>
                 <Input
                   type="text"
                   id="grade_letter"
@@ -251,13 +251,13 @@ const GradeFormDialog = ({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Academic context')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Keep the grade attached to the right year and term for reports.
+                  {t('Keep the grade attached to the right year and term for reports.')}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="academic_year" className={formLabelClassName}>Academic year</Label>
+                <Label htmlFor="academic_year" className={formLabelClassName}>{t('Academic year')}</Label>
                 <Input
                   type="number"
                   id="academic_year"

@@ -105,7 +105,7 @@ const StudentProfilePage = () => {
           </div>
           {student?.enrollment_number && (
             <div className="text-sm text-white/90">
-              Enrollment: {student.enrollment_number}
+              {t('Enrollment:')} {student.enrollment_number}
             </div>
           )}
         </div>
@@ -136,19 +136,19 @@ const StudentProfilePage = () => {
             {student?.parent_name && (
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4 text-muted-foreground" />
-                <span>Guardian: {student.parent_name}</span>
+                <span>{t('Guardian:')} {student.parent_name}</span>
               </div>
             )}
             {student?.parent_phone && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
-                <span>Guardian Phone: {student.parent_phone}</span>
+                <span>{t('Guardian Phone:')} {student.parent_phone}</span>
               </div>
             )}
             <div className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4 text-muted-foreground" />
               <span>
-                Added on: {(() => {
+                {t('Added on:')} {(() => {
                   const value = student?.created_at || student?.createdAt;
                   if (!value) return '-';
                   const date = new Date(value);
@@ -183,7 +183,7 @@ const StudentProfilePage = () => {
             {teacher?.first_name && (
               <div className="flex items-center gap-2">
                 <UserRound className="h-4 w-4 text-muted-foreground" />
-                <span>Teacher: {teacher.first_name} {teacher.last_name}</span>
+                <span>{t('Teacher:')} {teacher.first_name} {teacher.last_name}</span>
               </div>
             )}
             {teacher?.email && (

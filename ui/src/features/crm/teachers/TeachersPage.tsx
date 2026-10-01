@@ -311,7 +311,7 @@ const TeachersPage = () => {
         <div className="text-center py-16 text-muted-foreground">
           <User className="w-16 h-16 mx-auto opacity-30 mb-4" />
           <h3 className="text-lg font-semibold">{t('No teachers match your search')}</h3>
-          <p className="text-sm">Try a different name, ID, email, or specialization</p>
+          <p className="text-sm">{t('Try a different name, ID, email, or specialization')}</p>
         </div>
       ) : viewMode === 'list' ? (
         <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
@@ -347,7 +347,7 @@ const TeachersPage = () => {
                 <TableHead className="h-8 w-12 px-2">#</TableHead>
                 <TableHead className="h-8 px-2">{t('Teacher')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">{t('Students')}</TableHead>
-                <TableHead className="h-8 px-2 text-right">Share</TableHead>
+                <TableHead className="h-8 px-2 text-right">{t('Share')}</TableHead>
                 <TableHead className="h-8 px-2 text-right">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -599,7 +599,7 @@ const TeachersPage = () => {
                   <Input id="specialization" className="h-8 text-xs" required value={formData.specialization || ''} onChange={(e) => setFormData({ ...formData, specialization: e.target.value })} />
                 </div>
                 <div className="space-y-1">
-                  <Label htmlFor="salary_percentage" className="text-xs">Teacher Share (%)</Label>
+                  <Label htmlFor="salary_percentage" className="text-xs">{t('Teacher Share (%)')}</Label>
                   <Input
                     id="salary_percentage"
                     className="h-8 text-xs"

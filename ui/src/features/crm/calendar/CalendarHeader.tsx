@@ -44,7 +44,7 @@ export const CalendarHeader: React.FC<CalendarHeaderProps> = ({
         <Tabs value={calendarView} onValueChange={(v: any) => onViewChange(v)}>
           <TabsList className="bg-slate-100/80 dark:bg-muted">
             <TabsTrigger value="month">{t('Month')}</TabsTrigger>
-            <TabsTrigger value="week">Week</TabsTrigger>
+            <TabsTrigger value="week">{t('Week')}</TabsTrigger>
           </TabsList>
         </Tabs>
         <div className="flex gap-1 rounded-lg border border-slate-200 bg-white/70 p-1 shadow-sm dark:border-border dark:bg-background dark:shadow-none">

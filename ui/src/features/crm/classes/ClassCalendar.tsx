@@ -95,7 +95,7 @@ const ClassCalendar: React.FC<ClassCalendarProps> = ({ schedule }) => {
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No schedule configured</p>
+            <p className="text-sm text-muted-foreground">{t('No schedule configured')}</p>
           )}
         </div>
       </div>

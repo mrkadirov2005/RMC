@@ -168,7 +168,7 @@ export const AssignmentSection = ({
               {filteredAssignments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                    No assignments for this class
+                    {t('No assignments for this class')}
                   </TableCell>
                 </TableRow>
               ) : (

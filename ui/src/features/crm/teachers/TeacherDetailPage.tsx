@@ -106,11 +106,11 @@ const TeacherDetailPage = () => {
     return (
       <div className="p-6 text-center">
         <Alert variant="destructive">
-          <AlertDescription>Teacher not found</AlertDescription>
+          <AlertDescription>{t('Teacher not found')}</AlertDescription>
         </Alert>
         <Button variant="outline" className="mt-4" onClick={() => navigate('/teachers')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Teachers
+          {t('Back to Teachers')}
         </Button>
       </div>
     );
@@ -126,7 +126,7 @@ const TeacherDetailPage = () => {
           onClick={() => navigate('/teachers')}
         >
           <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
-          Back to Teachers
+          {t('Back to Teachers')}
         </Button>
         <div className="flex flex-wrap items-center gap-1.5">
           <Button
@@ -135,7 +135,7 @@ const TeacherDetailPage = () => {
             onClick={() => setIsPasswordUpdate((prev) => !prev)}
             disabled={resettingPassword}
           >
-            Update Password
+            {t('Update Password')}
           </Button>
           <Button
             size="sm"
@@ -187,11 +187,11 @@ const TeacherDetailPage = () => {
           <TabsList className="flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-none border-b border-slate-200 bg-white px-2 py-2 dark:border-border dark:bg-muted/40">
             <TabsTrigger value="info" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <User className="h-3.5 w-3.5" />
-              Information
+              {t('Information')}
             </TabsTrigger>
             <TabsTrigger value="classes" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <BookOpen className="h-3.5 w-3.5" />
-              Classes & Students
+              {t('Classes & Students')}
             </TabsTrigger>
             <TabsTrigger value="assignments" className="min-h-8 shrink-0 gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-slate-700 data-[state=active]:bg-indigo-600 data-[state=active]:text-white data-[state=active]:shadow-sm dark:text-muted-foreground dark:data-[state=active]:bg-background dark:data-[state=active]:text-foreground">
               <ClipboardList className="h-3.5 w-3.5" />

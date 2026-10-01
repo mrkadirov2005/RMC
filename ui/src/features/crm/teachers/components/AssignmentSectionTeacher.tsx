@@ -143,7 +143,7 @@ export const AssignmentSectionTeacher = ({ assignments, teacherId, onRefresh }: 
               {filteredAssignments.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                    No assignments for this teacher
+                    {t('No assignments for this teacher')}
                   </TableCell>
                 </TableRow>
               ) : (

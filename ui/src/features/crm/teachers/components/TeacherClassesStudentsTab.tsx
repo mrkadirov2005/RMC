@@ -27,7 +27,7 @@ export default function TeacherClassesStudentsTab({
     return (
       <div className="text-center py-12 text-muted-foreground">
         <BookOpen className="h-16 w-16 mx-auto opacity-30 mb-4" />
-        <h3 className="text-lg font-semibold">No classes or students assigned to this teacher</h3>
+        <h3 className="text-lg font-semibold">{t('No classes or students assigned to this teacher')}</h3>
       </div>
     );
   }

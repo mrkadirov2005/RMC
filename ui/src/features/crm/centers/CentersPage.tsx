@@ -154,7 +154,7 @@ const CentersPage = () => {
               </div>
               <h1 className="mt-4 text-3xl font-black tracking-tight">{t('Centers Management')}</h1>
               <p className="mt-2 max-w-2xl text-sm font-semibold text-white/65">
-                Switch active branch, compare center performance, and manage branch details from one focused workspace.
+                {t('Switch active branch, compare center performance, and manage branch details from one focused workspace.')}
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
                 <HeroSignal Icon={GraduationCap} label={t('Students')} value={totalStudents.toLocaleString()} />
@@ -175,7 +175,7 @@ const CentersPage = () => {
               </div>
               <Button onClick={() => handleOpenModal()} className="bg-slate-950 text-white hover:bg-slate-800">
                 <Plus className="mr-2 h-4 w-4" />
-                Add Center
+                {t('Add Center')}
               </Button>
             </div>
 
@@ -266,7 +266,7 @@ const CentersPage = () => {
           ))}
           {paginatedCenters.items.length === 0 && (
             <div className="rounded-lg border border-dashed border-slate-300 bg-white py-10 text-center text-sm font-semibold text-slate-500 dark:border-white/10 dark:bg-white/[0.04]">
-              No centers found.
+              {t('No centers found.')}
             </div>
           )}
         </div>
@@ -325,7 +325,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone *</Label>
+              <Label htmlFor="phone">{t('Phone *')}</Label>
               <Input
                 id="phone"
                 type="tel"
@@ -353,7 +353,7 @@ const CentersPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="principal_name">Principal Name *</Label>
+              <Label htmlFor="principal_name">{t('Principal Name *')}</Label>
               <Input
                 id="principal_name"
                 required

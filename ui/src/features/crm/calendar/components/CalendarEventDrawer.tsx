@@ -50,7 +50,7 @@ export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onSt
           <div className="space-y-3 text-sm">
             <Badge className={statusTone(event.status || 'planned')}>{String(event.status || 'planned').replace('_', ' ')}</Badge>
             <dl className="grid grid-cols-[110px_1fr] items-center gap-2 rounded-lg border p-3">
-              <dt className="text-muted-foreground">Date & time</dt>
+              <dt className="text-muted-foreground">{t('Date & time')}</dt>
               {editingTime ? (
                 <dd className="flex flex-wrap items-center gap-1.5">
                   <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="h-8 w-[110px]" />
@@ -67,7 +67,7 @@ export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onSt
                 <dd className="flex items-center gap-2">
                   <span>{event.date} · {event.start_time?.slice(0, 5)}–{event.end_time?.slice(0, 5)}</span>
                   {canManage && event.status !== 'conducted' && (
-                    <button type="button" onClick={() => setEditingTime(true)} className="text-muted-foreground hover:text-foreground" aria-label="Edit lesson time">
+                    <button type="button" onClick={() => setEditingTime(true)} className="text-muted-foreground hover:text-foreground" aria-label={t('Edit lesson time')}>
                       <Pencil className="h-3.5 w-3.5" />
                     </button>
                   )}
@@ -76,13 +76,13 @@ export const CalendarEventDrawer = ({ event, canManage, canDelete, onClose, onSt
               <dt className="text-muted-foreground">{t('Teacher')}</dt><dd>{event.teacher_name || 'Unassigned'}</dd>
               <dt className="text-muted-foreground">{t('Subject')}</dt><dd>{event.subject_name || 'Unassigned'}</dd>
               <dt className="text-muted-foreground">{t('Room')}</dt><dd>{event.room_name || 'Unassigned'}</dd>
-              {event.attendance && <><dt className="text-muted-foreground">{t('Attendance')}</dt><dd>{event.attendance.present} present · {event.attendance.absent} absent · {event.attendance.unmarked} unmarked</dd></>}
+              {event.attendance && <><dt className="text-muted-foreground">{t('Attendance')}</dt><dd>{event.attendance.present} {t('present ·')} {event.attendance.absent} {t('absent ·')} {event.attendance.unmarked} unmarked</dd></>}
             </dl>
             {canManage && (
               <div className="flex justify-end gap-2">
-                {event.source === 'recurring' ? <Button onClick={() => onStart(event)}>Start lesson</Button> : (
+                {event.source === 'recurring' ? <Button onClick={() => onStart(event)}>{t('Start lesson')}</Button> : (
                   <>
-                    <Button onClick={() => onOpen(event)}>Open lesson</Button>
+                    <Button onClick={() => onOpen(event)}>{t('Open lesson')}</Button>
                     {canDelete && <Button variant="destructive" onClick={() => onDelete(event)}>{t('Delete session')}</Button>}
                   </>
                 )}

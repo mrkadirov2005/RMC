@@ -147,7 +147,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            {t('Room')} {roomNumber} - Slots Schedule
+            {t('Room')} {roomNumber} {t('- Slots Schedule')}
           </CardTitle>
           <div className="flex items-center gap-2">
             <Button
@@ -256,7 +256,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
                             </div>
                             {booking && (
                               <div className="text-xs text-gray-600">
-                                Booked by: {booking.class_name}
+                                {t('Booked by:')} {booking.class_name}
                               </div>
                             )}
                           </div>
@@ -333,7 +333,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
               {t('Cancel')}
             </Button>
             <Button onClick={handleCreateSlot}>
-              Create Slot
+              {t('Create Slot')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -369,7 +369,7 @@ export const RoomSlotsCalendar: React.FC<RoomSlotsCalendarProps> = ({
               {t('Cancel')}
             </Button>
             <Button onClick={handleBookSlot}>
-              Book Slot
+              {t('Book Slot')}
             </Button>
           </DialogFooter>
         </DialogContent>

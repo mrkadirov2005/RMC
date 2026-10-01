@@ -239,7 +239,7 @@ const ClassDetailPage = () => {
       <div className="space-y-4 p-6">
         <Button variant="outline" onClick={() => navigate('/classes')}>
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Classes
+          {t('Back to Classes')}
         </Button>
         <Alert variant="destructive">
           <AlertDescription>{error || 'Class not found.'}</AlertDescription>
@@ -280,7 +280,7 @@ const ClassDetailPage = () => {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('Pick lesson actions')}</DialogTitle>
-            <DialogDescription>Select what you want to do in this lesson session.</DialogDescription>
+            <DialogDescription>{t('Select what you want to do in this lesson session.')}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-2">
             {lessonActionOptions.map((option) => {
@@ -313,7 +313,7 @@ const ClassDetailPage = () => {
             <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>{t('Cancel')}</Button>
             <Button onClick={handleStartLesson} disabled={startingLesson} className="bg-rose-600 text-white hover:bg-rose-700">
               {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-              Start
+              {t('Start')}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -381,7 +381,7 @@ const ClassDetailPage = () => {
                   onClick={handleOpenClassEditor}
                 >
                   <Pencil className="h-3.5 w-3.5" />
-                  Edit details
+                  {t('Edit details')}
                 </Button>
               </div>
               <dl data-alternating-list="true" className="divide-y divide-slate-200 text-sm dark:divide-border">
@@ -458,7 +458,7 @@ const ClassDetailPage = () => {
                             ? `${INCOMING_TRANSFER_VARIANT} hover:bg-emerald-100 dark:hover:bg-emerald-950/60`
                             : 'bg-emerald-600 text-black hover:bg-emerald-600 dark:bg-emerald-700 dark:text-white dark:hover:bg-emerald-700'
                       }>
-                        {isTransferred ? t('Transferred') : isIncoming ? 'New (Transferred)' : student.status || '-'}
+                        {isTransferred ? t('Transferred') : isIncoming ? t('New (Transferred)') : student.status || '-'}
                       </Badge>
                     </TableCell>
                     <TableCell>{student.phone || '-'}</TableCell>
@@ -498,7 +498,7 @@ const ClassDetailPage = () => {
 
           <TabsContent value="subjects" className="mt-0 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {subjects.length === 0 ? (
-              <div className="text-sm text-muted-foreground">No subjects assigned.</div>
+              <div className="text-sm text-muted-foreground">{t('No subjects assigned.')}</div>
             ) : subjects.map((subject) => (
               <Card key={subject.subject_id || subject.id}>
                 <CardContent className="p-4">
@@ -586,14 +586,14 @@ const ClassDetailPage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t('Date')}</TableHead>
-                  <TableHead>Start</TableHead>
+                  <TableHead>{t('Start')}</TableHead>
                   <TableHead>{t('Duration')}</TableHead>
                   <TableHead>{t('Status')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {sessions.length === 0 ? (
-                  <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">No sessions generated.</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={5} className="py-10 text-center text-muted-foreground">{t('No sessions generated.')}</TableCell></TableRow>
                 ) : sessions.slice(0, 80).map((session) => (
                   <TableRow key={session.session_id || session.id}>
                     <TableCell>{session.session_date ? new Date(session.session_date).toLocaleDateString() : '-'}</TableCell>
@@ -612,8 +612,8 @@ const ClassDetailPage = () => {
                           style={{ backgroundColor: '#dc2626', borderColor: '#dc2626', color: '#ffffff', opacity: 1 }}
                           onClick={() => void handleDeleteSession(session)}
                           disabled={deletingSessionId === Number(session.session_id || session.id)}
-                          aria-label={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : t('Delete session')}
-                          title={deletingSessionId === Number(session.session_id || session.id) ? 'Deleting session' : t('Delete session')}
+                          aria-label={deletingSessionId === Number(session.session_id || session.id) ? t('Deleting session') : t('Delete session')}
+                          title={deletingSessionId === Number(session.session_id || session.id) ? t('Deleting session') : t('Delete session')}
                         >
                           <Trash2 className="h-4 w-4" stroke="#ffffff" color="#ffffff" />
                         </button>

@@ -419,7 +419,7 @@ const StudentDetailPage = () => {
   if (!student) {
     return (
       <div className="p-6 text-center py-16 text-muted-foreground">
-        <h3 className="text-lg font-semibold">Student not found</h3>
+        <h3 className="text-lg font-semibold">{t('Student not found')}</h3>
       </div>
     );
   }
@@ -447,7 +447,7 @@ const StudentDetailPage = () => {
           className="h-8 w-fit rounded-lg bg-sky-600 text-xs text-white shadow-sm hover:bg-sky-700"
           onClick={() => navigate('/students')}
         >
-          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back to Students
+          <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> {t('Back to Students')}
         </Button>
         <Button
           size="sm"
@@ -460,7 +460,7 @@ const StudentDetailPage = () => {
           ) : (
             <KeyRound className="mr-1.5 h-3.5 w-3.5" />
           )}
-          Reset Password
+          {t('Reset Password')}
         </Button>
       </div>
 
@@ -484,7 +484,7 @@ const StudentDetailPage = () => {
               {changingStatus ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : String(student.status).toLowerCase() === 'active' ? <UserX className="mr-1.5 h-3.5 w-3.5" /> : <UserCheck className="mr-1.5 h-3.5 w-3.5" />}
               {changingStatus ? t('Updating...') : String(student.status).toLowerCase() === 'active' ? t('Set inactive') : t('Set active')}
             </Button>
-            <Button size="sm" className="h-8 text-xs" onClick={()=>setIsUpdatePassword((prev)=>!prev)}>Update student password</Button>
+            <Button size="sm" className="h-8 text-xs" onClick={()=>setIsUpdatePassword((prev)=>!prev)}>{t('Update student password')}</Button>
           </div>
 
         </CardContent>
@@ -518,7 +518,7 @@ const StudentDetailPage = () => {
               </div>
               <Button className="h-8 bg-emerald-600 text-xs text-white hover:bg-emerald-700" onClick={handleSetPassword} disabled={settingPassword || !newPassword.trim()}>
                 {settingPassword ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
-                Update Password
+                {t('Update Password')}
               </Button>
             </CardContent>
           </Card>}
@@ -563,7 +563,7 @@ const StudentDetailPage = () => {
                     </>
                   ) : (
                     <Button type="button" size="sm" className="h-8 bg-sky-600 text-xs text-white hover:bg-sky-700" onClick={startOverviewEdit}>
-                      <PencilLine className="mr-1.5 h-3.5 w-3.5" /> Edit information
+                      <PencilLine className="mr-1.5 h-3.5 w-3.5" /> {t('Edit information')}
                     </Button>
                   )}
                 </div>
@@ -671,17 +671,17 @@ const StudentDetailPage = () => {
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
                     <p className="text-2xl font-semibold">{coinBalance.toLocaleString()}</p>
-                    <p className="mt-1 text-xs text-white/80">Latest balance for this student.</p>
+                    <p className="mt-1 text-xs text-white/80">{t('Latest balance for this student.')}</p>
                   </CardContent>
                 </Card>
 
                 <Card className="border-slate-200 shadow-sm dark:border-border">
                   <CardHeader className="p-3">
-                    <CardTitle className="text-base">Transaction History</CardTitle>
+                    <CardTitle className="text-base">{t('Transaction History')}</CardTitle>
                   </CardHeader>
                   <CardContent className="p-3 pt-0">
                     {coinTransactions.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No coin transactions yet.</p>
+                      <p className="text-sm text-muted-foreground">{t('No coin transactions yet.')}</p>
                     ) : (
                       <Table className="text-xs">
                         <TableHeader>
@@ -742,7 +742,7 @@ const StudentDetailPage = () => {
             <DialogTitle>{t('Temporary Password')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Label htmlFor="student-temp-password">Share this password with the student.</Label>
+            <Label htmlFor="student-temp-password">{t('Share this password with the student.')}</Label>
             <div className="flex gap-2">
               <Input
                 id="student-temp-password"

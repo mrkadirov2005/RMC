@@ -297,7 +297,7 @@ export const DashboardStatDetailsDialog = ({
         <div className="max-h-[62vh] overflow-auto px-6 py-4">
           {rows.length === 0 ? (
             <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-              No records found for this card.
+              {t('No records found for this card.')}
             </div>
           ) : card?.detailsType === 'multiClassStudents' ? (
             <Table>
@@ -306,7 +306,7 @@ export const DashboardStatDetailsDialog = ({
                   <TableHead>{t('Student')}</TableHead>
                   <TableHead className="text-right">{t('Classes')}</TableHead>
                   <TableHead>{t('Class list')}</TableHead>
-                  <TableHead className="text-right">Matching rows</TableHead>
+                  <TableHead className="text-right">{t('Matching rows')}</TableHead>
                   <TableHead className="text-right">{t('Profile')}</TableHead>
                 </TableRow>
               </TableHeader>

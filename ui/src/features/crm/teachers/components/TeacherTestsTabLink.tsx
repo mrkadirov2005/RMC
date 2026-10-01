@@ -16,7 +16,7 @@ export default function TeacherTestsTabLink({ navigate }: TeacherTestsTabLinkPro
         <div className="flex gap-1.5">
           <Button size="sm" className="h-8 rounded-lg bg-cyan-600 text-xs text-white hover:bg-cyan-700" onClick={() => navigate('/tests')}>
             <FileQuestion className="mr-1.5 h-3.5 w-3.5" />
-            View All Tests
+            {t('View All Tests')}
           </Button>
           <Button size="sm" className="h-8 rounded-lg bg-fuchsia-600 text-xs text-white hover:bg-fuchsia-700" onClick={() => navigate('/tests/create')}>
             <Plus className="mr-1.5 h-3.5 w-3.5" />
@@ -26,7 +26,7 @@ export default function TeacherTestsTabLink({ navigate }: TeacherTestsTabLinkPro
       </div>
       <Alert className="rounded-lg border-blue-200 bg-blue-50 py-3 text-blue-800">
         <AlertDescription>
-          Navigate to the Tests section to create, assign, and manage tests for your classes and students.
+          {t('Navigate to the Tests section to create, assign, and manage tests for your classes and students.')}
         </AlertDescription>
       </Alert>
     </div>

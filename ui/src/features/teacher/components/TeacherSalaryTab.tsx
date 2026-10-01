@@ -33,7 +33,7 @@ const TeacherSalaryTab = ({ detail, loading }: TeacherSalaryTabProps) => {
   if (!detail || detail.history.length === 0) {
     return (
       <div className="py-10 text-center text-sm text-muted-foreground">
-        No salary records yet. Once your center marks a monthly salary as paid, it will show up here.
+        {t('No salary records yet. Once your center marks a monthly salary as paid, it will show up here.')}
       </div>
     );
   }
@@ -58,7 +58,7 @@ const TeacherSalaryTab = ({ detail, loading }: TeacherSalaryTabProps) => {
                 {entry.salary?.is_paid ? (
                   <Badge variant="success">{t('Paid')}</Badge>
                 ) : (
-                  <Badge variant="warning">Not yet paid</Badge>
+                  <Badge variant="warning">{t('Not yet paid')}</Badge>
                 )}
               </TableCell>
               <TableCell className="max-w-xs truncate text-xs text-muted-foreground">

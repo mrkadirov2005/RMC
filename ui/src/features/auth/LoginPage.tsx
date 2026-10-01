@@ -191,10 +191,10 @@ export const LoginPage = ({ userType }: LoginPageProps) => {
               </Badge>
             </div>
             <h1 className="mt-3 max-w-[680px] text-3xl font-semibold leading-tight tracking-normal text-[#21116a] sm:mt-4 sm:text-4xl lg:text-[3.65rem] lg:leading-[1.03] xl:text-[3.9rem]">
-              A focused workspace for learning center operations.
+              {t('A focused workspace for learning center operations.')}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:mt-5 sm:text-base sm:leading-7">
-              Secure access for administrators, teachers, and students of Temurbek School.
+              {t('Secure access for administrators, teachers, and students of Temurbek School.')}
             </p>
           </div>
 

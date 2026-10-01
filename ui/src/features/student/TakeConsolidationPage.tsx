@@ -255,7 +255,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
             </h1>
             {result.status === 'auto_submitted' && (
               <p className="text-sm text-red-600">
-                Your exercise was submitted automatically because you left the screen too many times.
+                {t('Your exercise was submitted automatically because you left the screen too many times.')}
               </p>
             )}
 
@@ -270,7 +270,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
                       </p>
                     </div>
                     {!item.is_correct && item.translations && (
-                      <p className="text-right text-slate-500">Accepted: {item.translations.join(', ')}</p>
+                      <p className="text-right text-slate-500">{t('Accepted:')} {item.translations.join(', ')}</p>
                     )}
                   </div>
                 ))}
@@ -286,7 +286,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
             <div className="flex justify-center gap-3 pt-2">
               <Button onClick={handleTryAgain} disabled={starting} className="bg-[#21116a] text-white hover:bg-[#160a4d]">
                 {starting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RotateCcw className="mr-2 h-4 w-4" />}
-                Try Again
+                {t('Try Again')}
               </Button>
               {onExit && (
                 <Button variant="outline" onClick={onExit}>
@@ -305,7 +305,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
       <main data-translation-skip className="flex min-h-screen items-center justify-center bg-[#f6fbff] px-5 py-10 text-[#21116a]">
         <Card className="w-full max-w-lg border-[#d8e4f1]">
           <CardContent className="space-y-5 p-8 text-center">
-            <h1 className="text-xl font-semibold">Ready to begin?</h1>
+            <h1 className="text-xl font-semibold">{t('Ready to begin?')}</h1>
             <p className="text-sm text-slate-600">
               This exercise runs in a locked, full-screen mode. Leaving the screen, switching tabs, or exiting
               fullscreen counts as a violation — after {violationLimit} violation{violationLimit === 1 ? '' : 's'} your
@@ -317,7 +317,7 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
               </Alert>
             )}
             <Button onClick={handleStartExercise} className="h-12 w-full bg-[#21116a] text-white hover:bg-[#160a4d]">
-              Start Exercise
+              {t('Start Exercise')}
             </Button>
           </CardContent>
         </Card>
@@ -337,11 +337,11 @@ export const TakeConsolidationPage = ({ context, initialTrial, initialWords, vio
           <div>
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold text-slate-500">
-                Word {index + 1} {t('of')} {words.length}
+                {t('Word')} {index + 1} {t('of')} {words.length}
               </p>
               {violationCount > 0 && (
                 <p className="text-xs font-medium text-red-600">
-                  Violations: {violationCount}/{violationLimit}
+                  {t('Violations:')} {violationCount}/{violationLimit}
                 </p>
               )}
             </div>

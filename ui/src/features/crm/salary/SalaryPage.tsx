@@ -97,7 +97,7 @@ const SalaryPage = () => {
               <p className="text-base font-black text-rose-600">{summary.unpaidCount}</p>
             </div>
             <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-              <p className="text-[11px] font-semibold text-muted-foreground">Avg. Students Paid</p>
+              <p className="text-[11px] font-semibold text-muted-foreground">{t('Avg. Students Paid')}</p>
               <p className="text-base font-black text-cyan-600">{summary.avgPaidPercent}%</p>
             </div>
           </div>
@@ -130,8 +130,8 @@ const SalaryPage = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('Teacher')}</TableHead>
-                      <TableHead>Last-Month Salary</TableHead>
-                      <TableHead>Paid?</TableHead>
+                      <TableHead>{t('Last-Month Salary')}</TableHead>
+                      <TableHead>{t('Paid?')}</TableHead>
                       <TableHead>{t('Marked By')}</TableHead>
                       <TableHead>{t('Students Paid')}</TableHead>
                     </TableRow>

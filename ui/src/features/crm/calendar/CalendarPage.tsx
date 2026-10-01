@@ -173,7 +173,7 @@ const CalendarPage = () => {
   })), [conflictEventIds, workspace.events]);
 
   return <div className="mx-auto max-w-[1600px] space-y-3 px-3 py-4 sm:px-5">
-    <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">{t('Calendar')}</h1><p className="text-xs text-muted-foreground">Lessons, rooms, teachers and attendance in one schedule.</p></div></header>
+    <header className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-primary text-primary-foreground"><CalendarDays className="h-5 w-5" /></div><div><h1 className="text-2xl font-bold">{t('Calendar')}</h1><p className="text-xs text-muted-foreground">{t('Lessons, rooms, teachers and attendance in one schedule.')}</p></div></header>
     <Card className="overflow-hidden border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
       <CalendarWorkspaceToolbar anchor={anchor} view={view} onView={setView} onMove={move} onToday={() => setAnchor(new Date())} onDate={setAnchor} />
       <CalendarWorkspaceFilters filters={filters} resources={workspace.resources} onChange={setFilters} onClear={() => setFilters(EMPTY_FILTERS)} />
@@ -193,16 +193,16 @@ const CalendarPage = () => {
     <Dialog open={showConflicts} onOpenChange={setShowConflicts}>
       <DialogContent className="max-h-[85vh] max-w-3xl overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Scheduling conflicts</DialogTitle>
+          <DialogTitle>{t('Scheduling conflicts')}</DialogTitle>
           <DialogDescription>
-            Each entry shows the two classes that overlap and the reason for the conflict.
+            {t('Each entry shows the two classes that overlap and the reason for the conflict.')}
           </DialogDescription>
         </DialogHeader>
         <div className="max-h-[60vh] space-y-2 overflow-y-auto pr-1">
           {conflictDetails.map((conflict, index) => (
             <div key={`${conflict.event_ids.join('-')}-${index}`} className="rounded-lg border border-rose-200 bg-rose-50/60 p-3 dark:border-rose-900 dark:bg-rose-950/20">
               <div className="mb-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-muted-foreground">Conflict {index + 1}</span>
+                <span className="text-xs font-semibold text-muted-foreground">{t('Conflict')} {index + 1}</span>
                 {conflict.reasons.map(reason => <Badge key={reason} variant="outline" className="border-rose-300 text-rose-700">{reason}</Badge>)}
               </div>
               <div className="grid gap-2 md:grid-cols-2">
@@ -214,7 +214,7 @@ const CalendarPage = () => {
                       {event.teacher_name && <span className="block text-xs text-muted-foreground">{event.teacher_name}</span>}
                     </span>
                   </Button>
-                )) : <p className="text-sm text-muted-foreground">The conflicting event details are outside the current loaded view.</p>}
+                )) : <p className="text-sm text-muted-foreground">{t('The conflicting event details are outside the current loaded view.')}</p>}
               </div>
             </div>
           ))}

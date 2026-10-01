@@ -83,7 +83,7 @@ const AttendanceFormDialog = ({
                 {editingId ? t('Edit Attendance') : t('Add Attendance')}
               </DialogTitle>
               <DialogDescription className="mt-1 max-w-3xl text-sm text-slate-600 dark:text-slate-300">
-                Mark attendance with a clearer, more colorful form that still keeps the workflow quick.
+                {t('Mark attendance with a clearer, more colorful form that still keeps the workflow quick.')}
               </DialogDescription>
             </div>
           </div>
@@ -137,7 +137,7 @@ const AttendanceFormDialog = ({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Attendance target')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Connect the attendance record to the right student, teacher, and class.
+                  {t('Connect the attendance record to the right student, teacher, and class.')}
                 </p>
               </div>
             </div>
@@ -173,7 +173,7 @@ const AttendanceFormDialog = ({
                 placeholder={t('Select a class')}
               />
               <div className="space-y-2">
-                <Label htmlFor="attendance_date" className={formLabelClassName}>Attendance date</Label>
+                <Label htmlFor="attendance_date" className={formLabelClassName}>{t('Attendance date')}</Label>
                 <Input
                   type="date"
                   id="attendance_date"
@@ -193,7 +193,7 @@ const AttendanceFormDialog = ({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Attendance result')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Set the attendance status and leave a short note if anything unusual happened.
+                  {t('Set the attendance status and leave a short note if anything unusual happened.')}
                 </p>
               </div>
             </div>

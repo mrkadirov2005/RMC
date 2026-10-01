@@ -139,7 +139,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
         className="gap-2"
       >
         <Calendar className="w-4 h-4" />
-        Generate Slots
+        {t('Generate Slots')}
       </Button>
 
       <Dialog open={showGenerator} onOpenChange={setShowGenerator}>
@@ -198,12 +198,12 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="15">15 minutes</SelectItem>
-                    <SelectItem value="30">30 minutes</SelectItem>
-                    <SelectItem value="45">45 minutes</SelectItem>
-                    <SelectItem value="60">1 hour</SelectItem>
-                    <SelectItem value="90">1.5 hours</SelectItem>
-                    <SelectItem value="120">2 hours</SelectItem>
+                    <SelectItem value="15">{t('15 minutes')}</SelectItem>
+                    <SelectItem value="30">{t('30 minutes')}</SelectItem>
+                    <SelectItem value="45">{t('45 minutes')}</SelectItem>
+                    <SelectItem value="60">{t('1 hour')}</SelectItem>
+                    <SelectItem value="90">{t('1.5 hours')}</SelectItem>
+                    <SelectItem value="120">{t('2 hours')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -233,18 +233,18 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
 
             {/* Preview */}
             <div className="bg-gray-50 p-4 rounded">
-              <h4 className="font-semibold mb-2">Preview</h4>
+              <h4 className="font-semibold mb-2">{t('Preview')}</h4>
               <p className="text-sm text-gray-600">
                 Creating slots from <strong>{startDate}</strong> to <strong>{endDate}</strong>
               </p>
               <p className="text-sm text-gray-600">
-                Time: <strong>{startTime}</strong> - <strong>{endTime}</strong> ({slotDuration} min intervals)
+                {t('Time:')} <strong>{startTime}</strong> - <strong>{endTime}</strong> ({slotDuration} min intervals)
               </p>
               <p className="text-sm text-gray-600 mt-2">
                 {t('Days:')} <strong>{selectedDays.join(', ')}</strong>
               </p>
               <div className="mt-3 text-sm">
-                <p className="font-medium">Sample slots for a single day:</p>
+                <p className="font-medium">{t('Sample slots for a single day:')}</p>
                 <div className="flex flex-wrap gap-2 mt-1">
                   {generateTimeSlots(startTime, endTime, parseInt(slotDuration))
                     .slice(0, 5)
@@ -269,7 +269,7 @@ export const RoomSlotsGenerator: React.FC<RoomSlotsGeneratorProps> = ({
             </Button>
             <Button onClick={handleGenerateSlots} disabled={loading}>
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Generate Slots
+              {t('Generate Slots')}
             </Button>
           </DialogFooter>
         </DialogContent>

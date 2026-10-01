@@ -46,7 +46,7 @@ interface EffectivenessChartProps {
 export default function EffectivenessChart({ effectiveness, totalAttempts, selected, onSelect }: EffectivenessChartProps) {
   const { t } = useLanguage();
   if (totalAttempts === 0) {
-    return <p className="py-8 text-center text-sm text-muted-foreground">No attempts recorded yet.</p>;
+    return <p className="py-8 text-center text-sm text-muted-foreground">{t('No attempts recorded yet.')}</p>;
   }
 
   const passRate = Math.round(((effectiveness.passed_1 + effectiveness.passed_2 + effectiveness.passed_3_plus) / totalAttempts) * 100);
@@ -101,7 +101,7 @@ export default function EffectivenessChart({ effectiveness, totalAttempts, selec
         </svg>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-3xl font-semibold tabular-nums text-foreground">{passRate}%</span>
-          <span className="text-xs text-muted-foreground">pass rate</span>
+          <span className="text-xs text-muted-foreground">{t('pass rate')}</span>
         </div>
       </div>
 
@@ -144,8 +144,7 @@ export default function EffectivenessChart({ effectiveness, totalAttempts, selec
           <span className="font-semibold tabular-nums text-foreground">{effectiveness.had_violations}</span>
         </button>
         <p className="px-2 text-xs text-muted-foreground">
-          Click a slice or the violations callout to see the students behind it. Violations overlap the ring above — a
-          student can pass and still have left the screen.
+          {t('Click a slice or the violations callout to see the students behind it. Violations overlap the ring above — a student can pass and still have left the screen.')}
         </p>
       </div>
     </div>

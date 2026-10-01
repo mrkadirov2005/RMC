@@ -1,9 +1,13 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { formatMoney } from '@/utils/helpers';
 import { OwnerFinancePanel } from '../components/OwnerFinancePanel';
 import type { OwnerManagerStatisticsCollections } from '../types';
+
+vi.mock('@/i18n/LanguageContext', () => ({
+  useLanguage: () => ({ t: (value: string) => value }),
+}));
 
 // formatMoney groups with non-breaking spaces; testing-library normalizes those away in the DOM.
 const money = (amount: number) => formatMoney(amount).replace(/\s+/g, ' ');

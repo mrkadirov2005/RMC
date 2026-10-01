@@ -91,7 +91,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
                     </div>
                     {hasClassDay && day.isCurrentMonth ? (
                       <span className="rounded-full border border-cyan-200 bg-white/80 px-2 py-0.5 text-[0.6rem] font-black uppercase text-cyan-800 shadow-sm dark:border-cyan-500/30 dark:bg-cyan-500/10 dark:text-cyan-200">
-                        Class day
+                        {t('Class day')}
                       </span>
                     ) : null}
                   </div>
@@ -118,7 +118,7 @@ export const MonthView: React.FC<MonthViewProps> = ({
 
 
                     {events.length === 0 && plannedForDay.length === 0 ? (
-                      <span className="text-[0.7rem] text-muted-foreground">No classes</span>
+                      <span className="text-[0.7rem] text-muted-foreground">{t('No classes')}</span>
                     ) : (
 
                       events.map(({ cls, session }, index) => {

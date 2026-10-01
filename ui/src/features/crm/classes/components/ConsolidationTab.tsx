@@ -470,7 +470,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
       <div className="space-y-4">
         <Alert>
           <AlertDescription>
-            No vocabulary consolidation exercise has been created for this session yet. Add up to 10 words below, each with up to 5 accepted translations, then share the link with your students.
+            {t('No vocabulary consolidation exercise has been created for this session yet. Add up to 10 words below, each with up to 5 accepted translations, then share the link with your students.')}
           </AlertDescription>
         </Alert>
 
@@ -502,7 +502,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
         <div>
           <Button type="submit" disabled={creating}>
             {creating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Create Consolidation Exercise
+            {t('Create Consolidation Exercise')}
           </Button>
         </div>
         </form>
@@ -518,7 +518,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
           <AlertDescription>
             {attempts > 0
               ? `Editing the words re-grades the ${attempts} attempt${attempts === 1 ? '' : 's'} already submitted. Removing a word also removes the answers students gave for it.`
-              : 'Change the words, their accepted translations, or the violation limit. The share link stays the same.'}
+              : t('Change the words, their accepted translations, or the violation limit. The share link stays the same.')}
           </AlertDescription>
         </Alert>
 
@@ -569,32 +569,30 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
         <CardContent className="space-y-3 pt-6">
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-700 dark:text-foreground">
             <Link2 className="h-4 w-4 text-violet-600" />
-            Shareable link
+            {t('Shareable link')}
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input readOnly value={shareUrl} className="font-mono text-xs" />
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={handleCopyLink}>
                 <Copy className="mr-1.5 h-3.5 w-3.5" />
-                Copy link
+                {t('Copy link')}
               </Button>
               <Button variant="outline" size="sm" onClick={handleRegenerateLink} disabled={regenerating}>
                 {regenerating ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="mr-1.5 h-3.5 w-3.5" />}
-                Regenerate link
+                {t('Regenerate link')}
               </Button>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            Share this link in the class group chat. Students pick their name — no login required. Anyone holding the link
-            can submit under any enrolled student&apos;s name, so treat submissions from this link as a soft signal, not a
-            verified identity (rows below flag exactly which trials came through the link).
+            {t("Share this link in the class group chat. Students pick their name — no login required. Anyone holding the link can submit under any enrolled student's name, so treat submissions from this link as a soft signal, not a verified identity (rows below flag exactly which trials came through the link).")}
           </p>
           <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-3">
-            <div className="text-xs text-muted-foreground">{words.length} word{words.length === 1 ? '' : 's'} · violation limit {set.violation_limit}</div>
+            <div className="text-xs text-muted-foreground">{words.length} word{words.length === 1 ? '' : 's'} {t('· violation limit')} {set.violation_limit}</div>
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={startEditing}>
                 <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                Edit words
+                {t('Edit words')}
               </Button>
               <Button variant="destructive" size="sm" onClick={handleDeleteSet} disabled={deleting}>
                 {deleting ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Trash2 className="mr-1.5 h-3.5 w-3.5" />}
@@ -603,7 +601,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
             </div>
           </div>
           <details className="text-xs text-muted-foreground">
-            <summary className="cursor-pointer select-none">Words in this exercise</summary>
+            <summary className="cursor-pointer select-none">{t('Words in this exercise')}</summary>
             <ul className="mt-2 space-y-1 pl-4">
               {words.map((word) => (
                 <li key={word.consolidation_word_id} className="list-disc">
@@ -624,7 +622,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
           ) : (
             <>
               <div className="mb-4 text-sm font-semibold text-slate-700 dark:text-foreground">
-                {results.summary.submitted} {t('of')} {results.summary.total} students submitted
+                {results.summary.submitted} {t('of')} {results.summary.total} {t('students submitted')}
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -633,8 +631,8 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                       <th className="py-2 pr-3">{t('Student')}</th>
                       <th className="py-2 pr-3">{t('Submitted')}</th>
                       <th className="py-2 pr-3">{t('Trials')}</th>
-                      <th className="py-2 pr-3">Best</th>
-                      <th className="py-2 pr-3">Latest violations</th>
+                      <th className="py-2 pr-3">{t('Best')}</th>
+                      <th className="py-2 pr-3">{t('Latest violations')}</th>
                       <th className="py-2 pr-3" />
                     </tr>
                   </thead>
@@ -651,7 +649,7 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                           <td className="py-2 pr-3">{formatScore(row.best_trial)}</td>
                           <td className="py-2 pr-3"><ViolationsCell trial={row.latest_trial} /></td>
                           <td className="py-2 pr-3">
-                            {row.latest_trial?.via_share_link && <Badge variant="outline">via link</Badge>}
+                            {row.latest_trial?.via_share_link && <Badge variant="outline">{t('via link')}</Badge>}
                           </td>
                         </tr>
                         {expandedStudentId === row.student_id && (
@@ -660,16 +658,15 @@ export default function ConsolidationTab({ sessionId, onChanged }: Consolidation
                               {trialDetailLoading ? (
                                 <Loader2 className="h-5 w-5 animate-spin text-indigo-500" />
                               ) : !row.latest_trial ? (
-                                <p className="text-xs text-muted-foreground">No trial yet.</p>
+                                <p className="text-xs text-muted-foreground">{t('No trial yet.')}</p>
                               ) : !trialDetail ? (
-                                <p className="text-xs text-muted-foreground">Failed to load detail.</p>
+                                <p className="text-xs text-muted-foreground">{t('Failed to load detail.')}</p>
                               ) : (
                                 <div className="space-y-2">
                                   {trialDetail.trial.violation_count > 0 && (
                                     <Alert variant="destructive" className="border-red-200 bg-red-50 py-2">
                                       <AlertDescription className="text-xs">
-                                        {trialDetail.trial.violation_count} lockdown violation{trialDetail.trial.violation_count === 1 ? '' : 's'} —
-                                        the student left the exercise screen, switched tabs, or exited fullscreen during this attempt
+                                        {trialDetail.trial.violation_count} lockdown violation{trialDetail.trial.violation_count === 1 ? '' : 's'} {t('— the student left the exercise screen, switched tabs, or exited fullscreen during this attempt')}
                                         {trialDetail.trial.status === 'auto_submitted' ? ', which auto-submitted the trial.' : '.'}
                                       </AlertDescription>
                                     </Alert>

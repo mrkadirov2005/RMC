@@ -87,11 +87,11 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading groups...</p>
+                <p className="text-muted-foreground">{t('Loading groups...')}</p>
               </div>
             ) : selectedTeacherClasses.length === 0 ? (
               <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">No groups found for this teacher</p>
+                <p className="text-muted-foreground">{t('No groups found for this teacher')}</p>
               </div>
             ) : (
               paginatedSelectedTeacherClasses.items.map((cls) => {
@@ -193,8 +193,8 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
                     <p className="text-xs text-muted-foreground">{t('Rounded payment share for this teacher')}</p>
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
-                    <p>{selectedTeacherProgress.paidPercent}% paid</p>
-                    <p>{selectedTeacherProgress.unpaidPercent}% unpaid</p>
+                    <p>{selectedTeacherProgress.paidPercent}{t('% paid')}</p>
+                    <p>{selectedTeacherProgress.unpaidPercent}{t('% unpaid')}</p>
                   </div>
                 </div>
 
@@ -213,13 +213,13 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="rounded-xl bg-emerald-50 p-3 dark:bg-emerald-500/10">
-                    <p className="text-xs text-emerald-700 dark:text-emerald-300">Paid amount</p>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-300">{t('Paid amount')}</p>
                     <p className="text-lg font-semibold text-emerald-700 dark:text-emerald-300">
                       {formatMoney(selectedTeacherStats.paidAmount)}
                     </p>
                   </div>
                   <div className="rounded-xl bg-rose-50 p-3 dark:bg-rose-500/10">
-                    <p className="text-xs text-rose-700 dark:text-rose-300">Unpaid amount</p>
+                    <p className="text-xs text-rose-700 dark:text-rose-300">{t('Unpaid amount')}</p>
                     <p className="text-lg font-semibold text-rose-700 dark:text-rose-300">
                       {formatMoney(selectedTeacherStats.unpaidAmount)}
                     </p>

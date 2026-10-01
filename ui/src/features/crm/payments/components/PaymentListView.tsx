@@ -158,7 +158,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
 
             <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm dark:border-border dark:bg-muted/30">
               <ReceiptText className="h-4 w-4 text-slate-500" />
-              <span className="text-muted-foreground">Monthly group fee:</span>
+              <span className="text-muted-foreground">{t('Monthly group fee:')}</span>
               <span className="font-bold text-slate-900 dark:text-foreground">
                 {formatAmount(Number(selectedGroupClass?.payment_amount || 0))}
               </span>
@@ -179,8 +179,8 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">{t('All students')}</SelectItem>
-                  <SelectItem value="paid">Payment done</SelectItem>
-                  <SelectItem value="unpaid">Payment undone</SelectItem>
+                  <SelectItem value="paid">{t('Payment done')}</SelectItem>
+                  <SelectItem value="unpaid">{t('Payment undone')}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -194,7 +194,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
                 <TableHead>{t('No')}</TableHead>
                 <TableHead>{t('Student')}</TableHead>
                 <TableHead className="text-center">{t('Payments')}</TableHead>
-                <TableHead>Payment date</TableHead>
+                <TableHead>{t('Payment date')}</TableHead>
                 <TableHead className="text-right">{t('Remaining')}</TableHead>
                 <TableHead className="text-right">{t('Paid')}</TableHead>
               </TableRow>
@@ -203,7 +203,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
               {state.loading ? (
                 <TableRow><TableCell colSpan={6} className="py-8  text-center">{t('Loading...')}</TableCell></TableRow>
               ) : groupStudentRows.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">No students match this filter.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="py-8 text-center text-muted-foreground">{t('No students match this filter.')}</TableCell></TableRow>
               ) : groupStudentRows.map((row, index) => (
                 <TableRow key={row.studentId}>
                   <TableCell>{index + 1}</TableCell>

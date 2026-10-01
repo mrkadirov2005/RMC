@@ -90,7 +90,7 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : !profile ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">Unable to load your profile.</p>
+          <p className="py-6 text-center text-sm text-muted-foreground">{t('Unable to load your profile.')}</p>
         ) : (
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
             <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -120,11 +120,11 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
       <div className="rounded-lg border bg-card p-5 shadow-sm">
         <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
           <KeyRound className="h-4 w-4 text-sky-600" />
-          Change Password
+          {t('Change Password')}
         </h3>
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="space-y-1.5">
-            <Label htmlFor="teacher-old-pw" className="text-xs">Current password</Label>
+            <Label htmlFor="teacher-old-pw" className="text-xs">{t('Current password')}</Label>
             <Input id="teacher-old-pw" type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} autoComplete="current-password" />
           </div>
           <div className="space-y-1.5">
@@ -132,7 +132,7 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
             <Input id="teacher-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="teacher-confirm-pw" className="text-xs">Confirm new password</Label>
+            <Label htmlFor="teacher-confirm-pw" className="text-xs">{t('Confirm new password')}</Label>
             <Input id="teacher-confirm-pw" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
           </div>
         </div>
@@ -152,12 +152,12 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
         <div className="mb-3 flex items-center justify-between">
           <h3 className="flex items-center gap-2 text-sm font-bold">
             <Wallet className="h-4 w-4 text-emerald-600" />
-            My Salary
+            {t('My Salary')}
           </h3>
           {salaryView === 'details' && (
             <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setSalaryView('stats')}>
               <ArrowLeft className="h-3.5 w-3.5" />
-              Back to Statistics
+              {t('Back to Statistics')}
             </Button>
           )}
         </div>

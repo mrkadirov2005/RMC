@@ -126,9 +126,9 @@ export const SharedTestPage = () => {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <FileQuestion className="h-6 w-6" />
             </div>
-            <h1 className="text-lg font-semibold text-foreground">Handed in</h1>
+            <h1 className="text-lg font-semibold text-foreground">{t('Handed in')}</h1>
             <p className="text-sm text-muted-foreground">
-              Your answers are with your teacher. You can close this page.
+              {t('Your answers are with your teacher. You can close this page.')}
             </p>
           </CardContent>
         </Card>
@@ -152,8 +152,8 @@ export const SharedTestPage = () => {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted text-muted-foreground">
               <FileQuestion className="h-6 w-6" />
             </div>
-            <h1 className="text-lg font-semibold text-foreground">This link is no longer active</h1>
-            <p className="text-sm text-muted-foreground">Ask your teacher for a new one.</p>
+            <h1 className="text-lg font-semibold text-foreground">{t('This link is no longer active')}</h1>
+            <p className="text-sm text-muted-foreground">{t('Ask your teacher for a new one.')}</p>
           </CardContent>
         </Card>
       </div>
@@ -199,17 +199,17 @@ export const SharedTestPage = () => {
             <div className="space-y-3">
               <Alert>
                 <AlertDescription>
-                  You have already attempted this test {stage.attempts === 1 ? 'once' : `${stage.attempts} times`}.
+                  {t('You have already attempted this test')} {stage.attempts === 1 ? 'once' : `${stage.attempts} times`}.
                   Starting again creates a new attempt.
                 </AlertDescription>
               </Alert>
               <div className="flex gap-2">
                 <Button onClick={() => start(test, true)} disabled={starting} className="flex-1">
                   {starting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Start again
+                  {t('Start again')}
                 </Button>
                 <Button variant="outline" onClick={() => setStage({ step: 'form', test })} disabled={starting}>
-                  Never mind
+                  {t('Never mind')}
                 </Button>
               </div>
             </div>
@@ -235,7 +235,7 @@ export const SharedTestPage = () => {
               </div>
               <Button type="submit" disabled={starting} className="w-full">
                 {starting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Start test
+                {t('Start test')}
               </Button>
             </form>
           )}

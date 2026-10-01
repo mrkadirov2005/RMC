@@ -295,7 +295,7 @@ const AttendanceFolderTabs = ({
             {loadingData ? (
               <div className="col-span-full text-center py-8">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                <p className="text-muted-foreground">Loading subjects...</p>
+                <p className="text-muted-foreground">{t('Loading subjects...')}</p>
               </div>
             ) : subjects.length === 0 ? (
               <div className="col-span-full text-center py-8">

@@ -39,7 +39,7 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
   if (!detail || stats.tracked === 0) {
     return (
       <div className="space-y-3 py-6 text-center text-sm text-muted-foreground">
-        <p>No salary records yet. Once your center marks a monthly salary as paid, statistics will show up here.</p>
+        <p>{t('No salary records yet. Once your center marks a monthly salary as paid, statistics will show up here.')}</p>
         <Button variant="outline" size="sm" onClick={onViewDetails}>{t('View Details')}</Button>
       </div>
     );
@@ -58,7 +58,7 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
         />
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
           <span className="text-2xl font-black">{stats.tracked}</span>
-          <span className="text-[10px] font-semibold uppercase text-muted-foreground">Months</span>
+          <span className="text-[10px] font-semibold uppercase text-muted-foreground">{t('Months')}</span>
         </div>
       </div>
 
@@ -79,7 +79,7 @@ const TeacherSalaryStatsView = ({ detail, loading, onViewDetails }: TeacherSalar
             <p className="text-xl font-black text-rose-600">{stats.unpaid}</p>
           </div>
           <div className="rounded-md border bg-card px-3 py-2.5 shadow-sm">
-            <p className="text-[11px] font-semibold text-muted-foreground">Total Received</p>
+            <p className="text-[11px] font-semibold text-muted-foreground">{t('Total Received')}</p>
             <p className="text-xl font-black">{formatMoney(stats.totalReceived)}</p>
           </div>
         </div>

@@ -90,7 +90,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">Pass Rate</p>
+              <p className="text-[10px] font-bold uppercase text-white/70">{t('Pass Rate')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.passRate}%</p>
           </CardContent>
@@ -116,7 +116,7 @@ const GradesPage = () => {
                 className={`rounded-b-none ${g.activeTab === 'subjects' ? 'bg-gradient-to-r from-cyan-500 to-teal-600 text-white border-0 shadow-lg shadow-cyan-500/30' : ''}`}
               >
                 <BookMarked className="h-4 w-4 mr-2" />
-                By Subjects
+                {t('By Subjects')}
               </Button>
               <Button
                 variant={g.activeTab === 'statistics' ? 'default' : 'ghost'}
@@ -132,7 +132,7 @@ const GradesPage = () => {
           {/* Tab Content */}
           <div>
             {g.activeTab === 'statistics' && (
-              <Suspense fallback={<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">Loading statistics...</div>}>
+              <Suspense fallback={<div className="rounded-2xl border bg-card p-6 text-sm text-muted-foreground">{t('Loading statistics...')}</div>}>
                 <GradesStatisticsSection
                   gradeStatistics={g.gradeStatistics}
                   studentsCount={g.students.length}

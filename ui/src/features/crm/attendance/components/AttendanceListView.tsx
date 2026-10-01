@@ -117,9 +117,9 @@ const AttendanceListView = ({
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="text-sm font-bold">{t('Filters')}</h2>
-            <p className="text-xs text-muted-foreground">Narrow the records without leaving this page.</p>
+            <p className="text-xs text-muted-foreground">{t('Narrow the records without leaving this page.')}</p>
           </div>
-          {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters}><X className="mr-1 h-4 w-4" />Reset filters</Button>}
+          {hasActiveFilters && <Button variant="ghost" size="sm" onClick={clearFilters}><X className="mr-1 h-4 w-4" />{t('Reset filters')}</Button>}
         </div>
         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
           <div className="relative xl:col-span-2">
@@ -196,12 +196,12 @@ const AttendanceListView = ({
                 <SelectValue placeholder={t('All Ages')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All ages</SelectItem>
-                <SelectItem value="3-6">3-6 years</SelectItem>
-                <SelectItem value="7-10">7-10 years</SelectItem>
-                <SelectItem value="11-14">11-14 years</SelectItem>
-                <SelectItem value="15-18">15-18 years</SelectItem>
-                <SelectItem value="19-25">19-25 years</SelectItem>
+                <SelectItem value="all">{t('All ages')}</SelectItem>
+                <SelectItem value="3-6">{t('3-6 years')}</SelectItem>
+                <SelectItem value="7-10">{t('7-10 years')}</SelectItem>
+                <SelectItem value="11-14">{t('11-14 years')}</SelectItem>
+                <SelectItem value="15-18">{t('15-18 years')}</SelectItem>
+                <SelectItem value="19-25">{t('19-25 years')}</SelectItem>
               </SelectContent>
             </Select>
           <div className="flex items-center justify-end text-sm font-semibold text-muted-foreground">{displayedAttendance.length} {t('records')}</div>

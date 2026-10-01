@@ -263,11 +263,11 @@ export const PaymentGroupsMatrixTab = () => {
             {groupsLoading ? (
               <div className="flex items-center justify-center gap-2 rounded-md border border-dashed py-8 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Loading groups...
+                {t('Loading groups...')}
               </div>
             ) : filteredGroups.length === 0 ? (
               <div className="rounded-md border border-dashed py-8 text-center text-sm text-muted-foreground">
-                No groups found
+                {t('No groups found')}
               </div>
             ) : (
               <div className="flex min-w-max flex-nowrap gap-2">
@@ -323,7 +323,7 @@ export const PaymentGroupsMatrixTab = () => {
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
                 <label htmlFor="group-payment-month" className="block text-[11px] font-semibold text-muted-foreground">
-                  Select month
+                  {t('Select month')}
                 </label>
                 <Input
                   id="group-payment-month"
@@ -350,15 +350,15 @@ export const PaymentGroupsMatrixTab = () => {
           {studentsLoading ? (
             <div className="flex min-h-[360px] items-center justify-center gap-2 text-sm font-semibold text-muted-foreground">
               <Loader2 className="h-5 w-5 animate-spin" />
-              Loading students and payments...
+              {t('Loading students and payments...')}
             </div>
           ) : !selectedGroup ? (
             <div className="flex min-h-[360px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-              Choose a group from the list.
+              {t('Choose a group from the list.')}
             </div>
           ) : students.length === 0 ? (
             <div className="flex min-h-[360px] items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
-              No students found for this group.
+              {t('No students found for this group.')}
             </div>
           ) : (
             <div className="overflow-x-auto rounded-md border border-slate-200/80 dark:border-border">

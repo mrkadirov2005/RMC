@@ -219,11 +219,11 @@ const SettingsPage = () => {
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" />
-              Save Settings
+              {t('Save Settings')}
             </Button>
             <Button variant="outline" onClick={handleResetAll}>
               <RotateCcw className="mr-2 h-4 w-4" />
-              Reset All
+              {t('Reset All')}
             </Button>
           </div>
         }
@@ -289,10 +289,10 @@ const SettingsPage = () => {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionPanel
-          title={<span className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white"><Palette className="h-4 w-4" /></span>Owner panel color palette</span>}
+          title={<span className="flex items-center gap-2"><span className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-600 text-white"><Palette className="h-4 w-4" /></span>{t('Owner panel color palette')}</span>}
         >
           <div className="space-y-4">
-            <p className="text-xs text-muted-foreground">Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.</p>
+            <p className="text-xs text-muted-foreground">{t('Controls primary cards, secondary tags, and tertiary cards on Student, Teacher, and Group pages.')}</p>
             <div className="grid gap-2 sm:grid-cols-2">
               {ownerPalettePresets.map((palette) => (
                 <button key={palette.id} type="button" onClick={async () => { const selected = saveOwnerPalette(palette); setOwnerPalette(selected); try { await settingsAPI.saveOwnerPalette(selected); showToast.success(`${palette.name} palette saved for this center.`); } catch { showToast.error('Palette applied locally, but could not be saved for other users.'); } }} className={cn('rounded-lg border-2 p-3 text-left transition', ownerPalette.id === palette.id ? 'border-slate-900 shadow-md dark:border-white' : 'border-slate-200 dark:border-border')}>
@@ -309,7 +309,7 @@ const SettingsPage = () => {
                 </div>
               ))}
             </div>
-            <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>Save custom colors</Button>
+            <Button type="button" variant="outline" onClick={async () => { try { await settingsAPI.saveOwnerPalette(ownerPalette); showToast.success('Custom palette saved for this center.'); } catch { showToast.error('Failed to save custom palette.'); } }}>{t('Save custom colors')}</Button>
           </div>
         </SectionPanel>
 
@@ -319,26 +319,26 @@ const SettingsPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-700 text-white shadow-sm">
                 <Palette className="h-4 w-4" />
               </span>
-              List row colors
+              {t('List row colors')}
             </span>
           }
         >
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="primaryRowColor">First row color</Label>
+                <Label htmlFor="primaryRowColor">{t('First row color')}</Label>
                 <Input id="primaryRowColor" type="color" value={primaryRowColor} onChange={(event) => setPrimaryRowColor(event.target.value)} className="h-11 cursor-pointer p-1" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="alternateRowColor">Alternate row color</Label>
+                <Label htmlFor="alternateRowColor">{t('Alternate row color')}</Label>
                 <Input id="alternateRowColor" type="color" value={alternateRowColor} onChange={(event) => setAlternateRowColor(event.target.value)} className="h-11 cursor-pointer p-1" />
               </div>
             </div>
             <div className="overflow-hidden rounded-lg border text-sm">
-              <div className="px-4 py-3" style={{ backgroundColor: primaryRowColor }}>Example first row</div>
-              <div className="px-4 py-3" style={{ backgroundColor: alternateRowColor }}>Example alternate row</div>
+              <div className="px-4 py-3" style={{ backgroundColor: primaryRowColor }}>{t('Example first row')}</div>
+              <div className="px-4 py-3" style={{ backgroundColor: alternateRowColor }}>{t('Example alternate row')}</div>
             </div>
-            <p className="text-xs text-muted-foreground">These colors apply to all table lists after saving and remain on this device.</p>
+            <p className="text-xs text-muted-foreground">{t('These colors apply to all table lists after saving and remain on this device.')}</p>
           </div>
         </SectionPanel>
 
@@ -348,7 +348,7 @@ const SettingsPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-sky-500 text-white shadow-sm">
                 <Timer className="h-4 w-4" />
               </span>
-              Lesson Length
+              {t('Lesson Length')}
             </span>
           }
         >
@@ -378,12 +378,12 @@ const SettingsPage = () => {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Use this to temporarily override the default when generating sessions.
+                {t('Use this to temporarily override the default when generating sessions.')}
               </p>
             </div>
 
             <Button variant="outline" onClick={handleClearOverride}>
-              Clear Override
+              {t('Clear Override')}
             </Button>
           </div>
         </SectionPanel>
@@ -394,7 +394,7 @@ const SettingsPage = () => {
               <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-sm">
                 <CalendarDays className="h-4 w-4" />
               </span>
-              Calendar Defaults
+              {t('Calendar Defaults')}
             </span>
           }
         >
@@ -441,17 +441,17 @@ const SettingsPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="calendarSlotDuration">Week timetable slot duration (minutes)</Label>
+              <Label htmlFor="calendarSlotDuration">{t('Week timetable slot duration (minutes)')}</Label>
               <Input id="calendarSlotDuration" type="number" min={15} max={480} step={15} value={calendarSlotDuration} onChange={(event) => setCalendarSlotDuration(Number(event.target.value))} />
-              <p className="text-xs text-muted-foreground">Controls every occupied and free row in the room timetable. Default: 120 minutes.</p>
+              <p className="text-xs text-muted-foreground">{t('Controls every occupied and free row in the room timetable. Default: 120 minutes.')}</p>
             </div>
             <p className="flex items-center gap-2 text-xs text-muted-foreground">
               <Clock className="h-4 w-4" />
-              Week view uses this time range for visible slots.
+              {t('Week view uses this time range for visible slots.')}
             </p>
             <Button variant="outline" onClick={handleResetCalendar}>
               <RotateCcw className="mr-2 h-4 w-4" />
-              Reset Calendar Defaults
+              {t('Reset Calendar Defaults')}
             </Button>
           </div>
         </SectionPanel>
@@ -463,7 +463,7 @@ const SettingsPage = () => {
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-amber-500 to-rose-500 text-white shadow-sm">
               <Coins className="h-4 w-4" />
             </span>
-            Lesson Scoring
+            {t('Lesson Scoring')}
           </span>
         }
       >
@@ -473,10 +473,10 @@ const SettingsPage = () => {
               <div className="text-sm font-semibold capitalize">{section}</div>
               <div className="overflow-x-auto rounded-lg border">
                 <div className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b bg-slate-50 px-3 py-2 text-xs font-semibold text-muted-foreground">
-                  <span>Label</span>
+                  <span>{t('Label')}</span>
                   <span>{t('Score')}</span>
-                  <span>Symbol</span>
-                  <span>Fill %</span>
+                  <span>{t('Symbol')}</span>
+                  <span>{t('Fill %')}</span>
                 </div>
                 {lessonScoring[section].map((option, index) => (
                   <div key={`${section}-${index}`} className="grid min-w-[620px] grid-cols-[1.3fr_90px_90px_90px] gap-2 border-b px-3 py-2 last:border-b-0">
@@ -492,7 +492,7 @@ const SettingsPage = () => {
 
           <div className="grid gap-4 lg:grid-cols-[220px_1fr]">
             <div className="space-y-2">
-              <Label htmlFor="stellarBonusCoins">Stellar bonus coins</Label>
+              <Label htmlFor="stellarBonusCoins">{t('Stellar bonus coins')}</Label>
               <Input
                 id="stellarBonusCoins"
                 type="number"
@@ -501,7 +501,7 @@ const SettingsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <div className="text-sm font-semibold">Coin mapping</div>
+              <div className="text-sm font-semibold">{t('Coin mapping')}</div>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                 {lessonScoring.coinScoreMapping.map((row, index) => (
                   <div key={`coin-${index}`} className="grid grid-cols-2 gap-2 rounded-lg border p-2">
@@ -510,7 +510,7 @@ const SettingsPage = () => {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">Each pair is score percent and coins awarded at or above that score.</p>
+              <p className="text-xs text-muted-foreground">{t('Each pair is score percent and coins awarded at or above that score.')}</p>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import type { ClassItem, SessionItem } from './types';
 import { SessionListItem } from './components/SessionListItem';
 import { PlannedClassItem } from './components/PlannedClassItem';
 import { isWithinScheduleRange, normalizeWeekdayName } from './utils';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 
 
@@ -44,6 +45,7 @@ export const DayModal = ({
   classes = [],
   schedule = [],
 }: DayModalProps) => {
+  const { t } = useLanguage();
   // Get planned classes for this day that don't have sessions yet
   const getPlannedClasses = () => {
     if (!selectedDay) return [];
@@ -70,12 +72,12 @@ export const DayModal = ({
           <DialogTitle>Sessions for {selectedDay}</DialogTitle>
         </DialogHeader>
         {selectedDayEvents.length === 0 && plannedClasses.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No sessions or planned classes for this day.</p>
+          <p className="text-sm text-muted-foreground">{t('No sessions or planned classes for this day.')}</p>
         ) : (
           <div className="space-y-4">
             {selectedDayEvents.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">Scheduled Sessions</h4>
+                <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-1">{t('Scheduled Sessions')}</h4>
                 {selectedDayEvents.map(({ cls, session }, index) => (
                   <SessionListItem
                     key={`session-${cls.class_id || cls.id}-${session?.session_id || 'no-session'}-${selectedDay}-${index}`}
@@ -100,7 +102,7 @@ export const DayModal = ({
 
             {plannedClasses.length > 0 && (
               <div className="space-y-2">
-                <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider px-1">Planned Classes</h4>
+                <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider px-1">{t('Planned Classes')}</h4>
                 {plannedClasses.map((item, index) => (
                   <PlannedClassItem
                     key={`planned-${item.class_id}-${item.time}-${index}`}

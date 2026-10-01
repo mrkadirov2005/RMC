@@ -162,7 +162,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
               {grades.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-6 text-muted-foreground">
-                    No grades
+                    {t('No grades')}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -217,7 +217,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="percentage">Percentage *</Label>
+              <Label htmlFor="percentage">{t('Percentage *')}</Label>
               <Input
                 id="percentage"
                 type="number"
@@ -230,7 +230,7 @@ export const GradesSection = ({ grades, onRefresh, studentId, classId, teacherId
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="letter">Grade Letter *</Label>
+              <Label htmlFor="letter">{t('Grade Letter *')}</Label>
               <Select value={formData.grade_letter || ''} onValueChange={(value) => setFormData({ ...formData, grade_letter: value })}>
                 <SelectTrigger id="letter">
                   <SelectValue placeholder={t('Select grade')} />

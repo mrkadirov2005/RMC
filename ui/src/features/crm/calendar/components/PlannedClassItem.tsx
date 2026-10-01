@@ -64,7 +64,7 @@ export const PlannedClassItem = ({
               }
             }}
           >
-            Summary
+            {t('Summary')}
           </Button>
         )}
       </div>

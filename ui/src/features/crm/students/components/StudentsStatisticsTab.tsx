@@ -228,7 +228,7 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
   if (loading) {
     return (
       <Card>
-        <CardContent className="py-8 text-center text-sm text-muted-foreground">Loading statistics...</CardContent>
+        <CardContent className="py-8 text-center text-sm text-muted-foreground">{t('Loading statistics...')}</CardContent>
       </Card>
     );
   }
@@ -263,8 +263,8 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
         <Card className="border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
           <CardContent className="p-3">
             <div className="mb-3 flex flex-col gap-0.5">
-              <h3 className="text-sm font-bold text-slate-950 dark:text-foreground">Student coverage</h3>
-              <p className="text-xs text-muted-foreground">Assignment, status, and coin readiness across the current scope.</p>
+              <h3 className="text-sm font-bold text-slate-950 dark:text-foreground">{t('Student coverage')}</h3>
+              <p className="text-xs text-muted-foreground">{t('Assignment, status, and coin readiness across the current scope.')}</p>
             </div>
             <div className="grid gap-3 md:grid-cols-2">
               <ProgressRow label={t('Active students')} value={activeCount} total={total} color="bg-blue-600" />
@@ -281,7 +281,7 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
               <div>
                 <p className="text-[11px] font-bold uppercase text-white/75">{t('Top teacher')}</p>
                 <h3 className="mt-1 text-lg font-extrabold">{topTeacher?.name || 'No assignments yet'}</h3>
-                <p className="mt-1 text-xs font-medium text-white/85">{topTeacher?.count || 0} assigned students</p>
+                <p className="mt-1 text-xs font-medium text-white/85">{topTeacher?.count || 0} {t('assigned students')}</p>
               </div>
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/18">
                 <Award className="h-5 w-5" />
@@ -302,8 +302,8 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
         <CardContent className="p-0">
           <div className="flex items-center justify-between border-b px-3 py-2">
             <div>
-              <h3 className="text-sm font-bold text-slate-950 dark:text-foreground">Teacher leaderboard</h3>
-              <p className="text-xs text-muted-foreground">Students assigned per teacher.</p>
+              <h3 className="text-sm font-bold text-slate-950 dark:text-foreground">{t('Teacher leaderboard')}</h3>
+              <p className="text-xs text-muted-foreground">{t('Students assigned per teacher.')}</p>
             </div>
             <div className="rounded-lg bg-blue-600 px-2 py-1.5 text-xs font-bold text-white">{teacherRows.length} teachers</div>
           </div>
@@ -319,7 +319,7 @@ export const StudentsStatisticsTab = ({ queryParams, teacherOptions, loading, ac
               {teacherRows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
-                    No teacher statistics found.
+                    {t('No teacher statistics found.')}
                   </TableCell>
                 </TableRow>
               ) : (

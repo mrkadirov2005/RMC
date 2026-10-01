@@ -100,15 +100,15 @@ export const OwnerLoginPage = () => {
         <div className="mt-8 max-w-[680px] lg:mt-auto">
           <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#16a7e2]">Temurbek School CRM</p>
           <h1 className="mt-3 text-3xl font-semibold leading-tight tracking-normal sm:text-4xl lg:mt-4 lg:text-[3.35rem] lg:leading-[1.05] xl:text-[3.65rem]">
-            System-level access for the learning center owner.
+            {t('System-level access for the learning center owner.')}
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-white/75 sm:mt-5 sm:text-base sm:leading-7">
-            Use this entry only for owner management, branch oversight, and global CRM settings.
+            {t('Use this entry only for owner management, branch oversight, and global CRM settings.')}
           </p>
         </div>
 
         <div className="mt-8 hidden rounded-lg border border-white/15 bg-white/10 p-4 text-sm text-white/80 lg:mt-auto lg:block xl:p-5">
-          Owner accounts can create and manage branch-level access. Keep these credentials separate from daily admin accounts.
+          {t('Owner accounts can create and manage branch-level access. Keep these credentials separate from daily admin accounts.')}
         </div>
       </section>
 

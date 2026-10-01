@@ -412,8 +412,8 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>{t('Teacher')}</TableHead>
-                      <TableHead>Last-Month Salary</TableHead>
-                      <TableHead>Paid?</TableHead>
+                      <TableHead>{t('Last-Month Salary')}</TableHead>
+                      <TableHead>{t('Paid?')}</TableHead>
                       <TableHead>{t('Students Paid')}</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -422,7 +422,7 @@ export const PaymentsFolderTabs = ({ hook }: PaymentsFolderTabsProps) => {
                       <TableRow>
                         <TableCell colSpan={4} className="text-center py-8">
                           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
-                          <p className="text-muted-foreground">Loading statistics...</p>
+                          <p className="text-muted-foreground">{t('Loading statistics...')}</p>
                         </TableCell>
                       </TableRow>
                     ) : salaryOverview.length === 0 ? (

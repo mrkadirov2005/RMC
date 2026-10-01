@@ -3,21 +3,23 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { RoomAssignment } from '../roomModel';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 type RoomGroup = { roomNumber: string; assignments: RoomAssignment[]; assignmentCount: number; classCount: number };
 
 export const RoomManagementTab = ({ rooms, selected, onSelect, onAssign, onEdit, onDeleteAssignment, onDeleteRoom }: {
   rooms: RoomGroup[]; selected: string; onSelect: (room: string) => void; onAssign: () => void; onEdit: (row: RoomAssignment) => void; onDeleteAssignment: (id: number) => void; onDeleteRoom: () => void;
 }) => {
+  const { t } = useLanguage();
   const room = rooms.find((item) => item.roomNumber === selected) || rooms[0];
   return <div className="space-y-4 p-4">
     <div className="flex flex-col gap-3 rounded-lg border bg-muted/20 p-3 sm:flex-row sm:items-center sm:justify-between">
-      <div><h2 className="font-bold">Choose a room</h2><p className="text-xs text-muted-foreground">Manage classes, times, capacity, and room actions.</p></div>
-      <select value={room?.roomNumber || ''} onChange={(event) => onSelect(event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm sm:w-64" aria-label="Current room">
+      <div><h2 className="font-bold">{t('Choose a room')}</h2><p className="text-xs text-muted-foreground">{t('Manage classes, times, capacity, and room actions.')}</p></div>
+      <select value={room?.roomNumber || ''} onChange={(event) => onSelect(event.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm sm:w-64" aria-label={t('Current room')}>
         {rooms.map((item) => <option key={item.roomNumber} value={item.roomNumber}>{item.roomNumber}</option>)}
       </select>
     </div>
-    {room ? <CardSection room={room} onAssign={onAssign} onEdit={onEdit} onDeleteAssignment={onDeleteAssignment} onDeleteRoom={onDeleteRoom} /> : <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">Create a room to begin managing classes.</div>}
+    {room ? <CardSection room={room} onAssign={onAssign} onEdit={onEdit} onDeleteAssignment={onDeleteAssignment} onDeleteRoom={onDeleteRoom} /> : <div className="rounded-lg border border-dashed p-10 text-center text-sm text-muted-foreground">{t('Create a room to begin managing classes.')}</div>}
   </div>;
 };
 

@@ -26,7 +26,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
       <div className="mb-4">
         <h3 className="text-base font-black text-slate-900 dark:text-white">{t('Lesson statistics')}</h3>
         <p className="text-xs text-muted-foreground">
-          See how each lesson has gone based on the score points added to students.
+          {t('See how each lesson has gone based on the score points added to students.')}
         </p>
       </div>
 
@@ -63,8 +63,8 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           {!stats.hasSelection && (
             <span className="text-xs text-muted-foreground">
               {stats.isGlobalMode
-                ? 'Pick a teacher, then a class, to enable the date range.'
-                : 'Pick a class from “Classes” to enable the date range.'}
+                ? t('Pick a teacher, then a class, to enable the date range.')
+                : t('Pick a class from “Classes” to enable the date range.')}
             </span>
           )}
         </div>
@@ -94,7 +94,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           <Users className="h-3.5 w-3.5" />
           {stats.isGlobalMode ? t('Browse') : t('Classes')}
           {stats.isGlobalMode && stats.scope === 'center' ? (
-            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">Whole center</span>
+            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">{t('Whole center')}</span>
           ) : stats.isGlobalMode && stats.selectedTeacher ? (
             <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">
               {stats.selectedTeacher.label}
@@ -112,7 +112,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                 <SelectValue placeholder={t('All students')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All students (class average)</SelectItem>
+                <SelectItem value="all">{t('All students (class average)')}</SelectItem>
                 {stats.classStudents.map((student: any) => {
                   const id = student.student_id ?? student.id;
                   const name = `${student.first_name || ''} ${student.last_name || ''}`.trim() || `Student #${id}`;
@@ -173,17 +173,17 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           {!stats.hasSelection ? (
             <div className="flex h-[220px] items-center justify-center px-6 text-center text-sm text-muted-foreground">
               {stats.isGlobalMode
-                ? 'Click “Browse” and pick a teacher, then a class, to see its lesson statistics.'
-                : 'Click “Classes” and pick a class to see its lesson statistics.'}
+                ? t('Click “Browse” and pick a teacher, then a class, to see its lesson statistics.')
+                : t('Click “Classes” and pick a class to see its lesson statistics.')}
             </div>
           ) : stats.sessionsLoading ? (
-            <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">Loading lessons…</div>
+            <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">{t('Loading lessons…')}</div>
           ) : (
             <>
               <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                 <span>
                   {stats.scope === 'center'
-                    ? 'Whole center · All classes average'
+                    ? t('Whole center · All classes average')
                     : (
                       <>
                         {stats.isGlobalMode && stats.selectedTeacher ? `${stats.selectedTeacher.label} · ` : ''}
@@ -231,7 +231,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                 >
                   <span className="flex min-w-0 items-center gap-2">
                     <BarChart3 className="h-3.5 w-3.5 shrink-0" />
-                    Whole center
+                    {t('Whole center')}
                   </span>
                   <ChevronRight className="h-3.5 w-3.5 shrink-0" />
                 </button>
@@ -240,7 +240,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                 <div className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">{t('By teacher')}</div>
 
                 {stats.teacherOptions.length === 0 ? (
-                  <div className="py-6 text-center text-xs text-muted-foreground">No teachers with classes found.</div>
+                  <div className="py-6 text-center text-xs text-muted-foreground">{t('No teachers with classes found.')}</div>
                 ) : (
                   stats.teacherOptions.map((teacher: { id: number; label: string; classCount: number }) => (
                     <button
@@ -272,11 +272,11 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                     className="mb-2 flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
-                    Back to teachers
+                    {t('Back to teachers')}
                   </button>
                 )}
                 {stats.groups.length === 0 ? (
-                  <div className="py-6 text-center text-xs text-muted-foreground">No classes found.</div>
+                  <div className="py-6 text-center text-xs text-muted-foreground">{t('No classes found.')}</div>
                 ) : (
                   <div className="space-y-1.5">
                     {stats.groups.map((group: { id: number; label: string }) => (

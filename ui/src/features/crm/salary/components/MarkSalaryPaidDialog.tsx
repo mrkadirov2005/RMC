@@ -105,11 +105,11 @@ export const MarkSalaryPaidDialog = ({
               <p className="font-bold text-emerald-600">{studentStats.paid_students}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Students Unpaid</p>
+              <p className="text-muted-foreground">{t('Students Unpaid')}</p>
               <p className="font-bold text-rose-600">{studentStats.unpaid_students}</p>
             </div>
             <div>
-              <p className="text-muted-foreground">Paid %</p>
+              <p className="text-muted-foreground">{t('Paid %')}</p>
               <p className="font-bold text-primary">{studentStats.paid_percent}%</p>
             </div>
             <div>
@@ -129,7 +129,7 @@ export const MarkSalaryPaidDialog = ({
               placeholder="e.g. 500"
             />
             <p className="text-[11px] text-muted-foreground">
-              Pre-filled from the amount collected this month — edit to set the actual salary.
+              {t('Pre-filled from the amount collected this month — edit to set the actual salary.')}
             </p>
           </div>
           <div className="space-y-1">

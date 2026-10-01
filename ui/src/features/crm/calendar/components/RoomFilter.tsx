@@ -30,7 +30,7 @@ export const RoomFilter = ({
         <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-sky-100 to-emerald-100 text-sky-700 dark:bg-muted dark:bg-none dark:text-muted-foreground">
           <Building2 className="h-4 w-4" />
         </span>
-        <span className="text-sm font-medium">Filter by Room:</span>
+        <span className="text-sm font-medium">{t('Filter by Room:')}</span>
       </div>
       <Select value={selectedRoom} onValueChange={setSelectedRoom}>
         <SelectTrigger className="w-[200px] border-white/80 bg-white/90 shadow-sm dark:border-input dark:bg-background dark:shadow-none">
@@ -52,7 +52,7 @@ export const RoomFilter = ({
           onClick={() => setSelectedRoom('all')} 
           className="text-xs"
         >
-          Clear Filter
+          {t('Clear Filter')}
         </Button>
       )}
     </div>

@@ -278,13 +278,13 @@ export const PaymentFormDialog = ({
               )}
             </div>
             <div className={statClass}>
-              <p className={formLabelClassName}>Current amount</p>
+              <p className={formLabelClassName}>{t('Current amount')}</p>
               <p className="mt-3 text-sm font-semibold text-slate-900 dark:text-slate-50">
                 {normalizedAmount > 0 ? `UZS ${normalizedAmount.toLocaleString()}` : t('Set amount')}
               </p>
               {selectedStudent?.amount ? (
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Monthly fee: UZS {Number(selectedStudent.amount).toLocaleString()}
+                  {t('Monthly fee: UZS')} {Number(selectedStudent.amount).toLocaleString()}
                 </p>
               ) : null}
             </div>
@@ -298,7 +298,7 @@ export const PaymentFormDialog = ({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Payer details')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Choose the student and center scope for this payment.
+                  {t('Choose the student and center scope for this payment.')}
                 </p>
               </div>
             </div>
@@ -475,26 +475,26 @@ export const PaymentFormDialog = ({
                   {discountLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <BadgePercent className="h-4 w-4" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">Student discount</h3>
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Student discount')}</h3>
                   {discountLoading ? (
-                    <p className="mt-1 text-xs text-slate-500">Checking active discount...</p>
+                    <p className="mt-1 text-xs text-slate-500">{t('Checking active discount...')}</p>
                   ) : discountLoadFailed ? (
-                    <p className="mt-1 text-xs font-medium text-rose-600">Could not load the student's discount.</p>
+                    <p className="mt-1 text-xs font-medium text-rose-600">{t("Could not load the student's discount.")}</p>
                   ) : activeDiscount ? (
                     <div className="mt-1 space-y-1 text-xs text-emerald-800 dark:text-emerald-200">
                       <p className="font-semibold">
-                        {t('Active')} {activeDiscount.discount_kind === 'monthly_discount' ? 'one-time' : 'serial'} discount applied automatically
+                        {t('Active')} {activeDiscount.discount_kind === 'monthly_discount' ? 'one-time' : 'serial'} {t('discount applied automatically')}
                       </p>
                       <p>
                         {activeDiscount.discount_type === 'percent'
                           ? `${Number(activeDiscount.value || 0)}% discount`
                           : `UZS ${Number(activeDiscount.value || 0).toLocaleString()} discount`}
-                        {' · '}Payable: UZS {finalAmount.toLocaleString()}
+                        {' · '}{t('Payable: UZS')} {finalAmount.toLocaleString()}
                       </p>
                     </div>
                   ) : (
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      This student has no active discount. You can enter a one-time discount below.
+                      {t('This student has no active discount. You can enter a one-time discount below.')}
                     </p>
                   )}
                 </div>
@@ -545,11 +545,11 @@ export const PaymentFormDialog = ({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label className={formLabelClassName}>Discount amount</Label>
+                    <Label className={formLabelClassName}>{t('Discount amount')}</Label>
                     <Input readOnly value={`UZS ${discountAmount.toLocaleString()}`} />
                   </div>
                   <div className="space-y-2">
-                    <Label className={formLabelClassName}>Final payable</Label>
+                    <Label className={formLabelClassName}>{t('Final payable')}</Label>
                     <Input readOnly value={`UZS ${finalAmount.toLocaleString()}`} />
                   </div>
                 </div>
@@ -565,13 +565,13 @@ export const PaymentFormDialog = ({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-50">{t('Payment details')}</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Keep the financial fields consistent across all payment entry points.
+                  {t('Keep the financial fields consistent across all payment entry points.')}
                 </p>
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <div className="space-y-2">
-                <Label htmlFor="payment_date" className={formLabelClassName}>Payment date</Label>
+                <Label htmlFor="payment_date" className={formLabelClassName}>{t('Payment date')}</Label>
                 <Input
                   id="payment_date"
                   type="date"

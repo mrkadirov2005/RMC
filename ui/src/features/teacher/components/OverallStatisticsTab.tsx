@@ -608,12 +608,12 @@ const OverallStatisticsTab = ({
                 </span>
                 <span className="font-black">{group.value}</span>
               </button>
-            )) : <div className="text-sm text-muted-foreground">No groups available.</div>}
+            )) : <div className="text-sm text-muted-foreground">{t('No groups available.')}</div>}
           </div>
         </div>
 
         <div className="space-y-3">
-          <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Next lessons</div>
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t('Next lessons')}</div>
           {nextLessons.length > 0 ? nextLessons.map((lesson) => (
             <div key={lesson.classId} className={`rounded-2xl border p-3 ${lesson.isActive ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30' : 'border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900/40'}`}>
               <div className="flex items-start justify-between gap-3">
@@ -630,23 +630,23 @@ const OverallStatisticsTab = ({
                   disabled={startingClassId !== null}
                   onClick={() => void openLessonPicker(lesson)}
                 >
-                  {startingClassId === lesson.classId ? t('Starting...') : 'Start lesson'}
+                  {startingClassId === lesson.classId ? t('Starting...') : t('Start lesson')}
                 </Button>
               </div>
             </div>
-          )) : <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">No scheduled lessons found.</div>}
+          )) : <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">{t('No scheduled lessons found.')}</div>}
         </div>
 
         <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingClassId && setLessonPickerOpen(open)}>
           <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Pick lesson session</DialogTitle>
+              <DialogTitle>{t('Pick lesson session')}</DialogTitle>
               <DialogDescription>
                 Choose the date and what you want to record for {selectedLesson?.label || 'this group'}.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2">
-              <Label>Session date</Label>
+              <Label>{t('Session date')}</Label>
               <div className="rounded-xl border p-3">
                 <div className="mb-3 flex items-center justify-between">
                   <Button
@@ -711,10 +711,10 @@ const OverallStatisticsTab = ({
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-emerald-700 dark:text-emerald-300">Green</span> means attendance was recorded, <span className="font-semibold text-red-700 dark:text-red-300">red</span> means a past lesson has no attendance, and <span className="font-semibold text-slate-600 dark:text-slate-300">gray</span> means the lesson has not happened yet.
+                <span className="font-semibold text-emerald-700 dark:text-emerald-300">{t('Green')}</span> {t('means attendance was recorded,')} <span className="font-semibold text-red-700 dark:text-red-300">red</span> {t('means a past lesson has no attendance, and')} <span className="font-semibold text-slate-600 dark:text-slate-300">gray</span> {t('means the lesson has not happened yet.')}
               </p>
-              {loadingAttendanceDates && <p className="text-xs text-muted-foreground">Loading attendance history...</p>}
-              <div className="text-sm font-semibold">Selected: {selectedLessonDate}</div>
+              {loadingAttendanceDates && <p className="text-xs text-muted-foreground">{t('Loading attendance history...')}</p>}
+              <div className="text-sm font-semibold">{t('Selected:')} {selectedLessonDate}</div>
             </div>
             <div className="grid gap-2">
               {lessonActionOptions.map((option) => {
@@ -748,7 +748,7 @@ const OverallStatisticsTab = ({
                 {t('Cancel')}
               </Button>
               <Button type="button" disabled={startingClassId !== null} onClick={() => void startNextLesson()}>
-                {startingClassId !== null ? t('Starting...') : 'Start session'}
+                {startingClassId !== null ? t('Starting...') : t('Start session')}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -763,15 +763,15 @@ const OverallStatisticsTab = ({
                 <DialogDescription className="mt-1">{selectedGroup ? `${studentsInSelectedGroup.length} students` : ''}</DialogDescription>
               </div>
               <div className="min-w-[220px]">
-                <Label className="mb-1 text-[11px] uppercase">Search students</Label>
-                <Input value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} placeholder="Name, email, or id" />
+                <Label className="mb-1 text-[11px] uppercase">{t('Search students')}</Label>
+                <Input value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} placeholder={t('Name, email, or id')} />
               </div>
             </div>
           </DialogHeader>
 
           <div className="mt-4 max-h-[420px] overflow-auto">
             {filteredGroupStudents.length === 0 ? (
-              <div className="p-6 text-center text-sm text-slate-500">No students found.</div>
+              <div className="p-6 text-center text-sm text-slate-500">{t('No students found.')}</div>
             ) : (
               <div className="divide-y">
                 {filteredGroupStudents.map((s) => {

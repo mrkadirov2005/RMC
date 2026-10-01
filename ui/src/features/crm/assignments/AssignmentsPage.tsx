@@ -370,7 +370,7 @@ const AssignmentsPage = () => {
                 {loadingData ? (
                   <div className="col-span-full text-center py-8 text-muted-foreground">
                     <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
-                    Loading personal tasks...
+                    {t('Loading personal tasks...')}
                   </div>
                 ) : (
                   (() => {
@@ -390,7 +390,7 @@ const AssignmentsPage = () => {
                             </div>
                             <h3 className={rowNameClass}>{t('Personal Tasks')}</h3>
                             <div className={rowMetaClass}>
-                              <span className={cn(infoPillClass, 'bg-orange-600 text-white')}>Independent</span>
+                              <span className={cn(infoPillClass, 'bg-orange-600 text-white')}>{t('Independent')}</span>
                               <span className={cn(infoPillClass, 'bg-sky-600 text-white')}>{personalCount} task</span>
                             </div>
                             <div className={rowStatsClass}>
@@ -600,7 +600,7 @@ const AssignmentsPage = () => {
       <Dialog open={isModalOpen} onOpenChange={(open) => !open && handleCloseModal()}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editingId ? t('Edit Assignment') : 'Add New Assignment'}</DialogTitle>
+            <DialogTitle>{editingId ? t('Edit Assignment') : t('Add New Assignment')}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -623,7 +623,7 @@ const AssignmentsPage = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <SelectField
-                label="Teacher (filters the class list below)"
+                label={t('Teacher (filters the class list below)')}
                 name="teacher_id"
                 value={selectedTeacherId || ''}
                 onChange={handleTeacherFilterChange}
@@ -654,7 +654,7 @@ const AssignmentsPage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Submission Date *</Label>
+                <Label>{t('Submission Date *')}</Label>
                 <Input
                   type="date"
                   required

@@ -76,7 +76,7 @@ export const SessionListItem = ({
                 }
               }}
             >
-              Attendance & Grading
+              {t('Attendance & Grading')}
             </Button>
           </>
         )}
@@ -98,7 +98,7 @@ export const SessionListItem = ({
               onOpenDetails(cls, selectedDay);
             }}
           >
-            Summary
+            {t('Summary')}
           </Button>
         )}
       </div>
