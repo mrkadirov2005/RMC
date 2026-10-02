@@ -71,7 +71,7 @@ const createAttendance = async (req: any, res: any) => {
       return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
     if (out && out.error === 'student_left_group') {
-      return res.status(400).json({ error: 'Student was transferred out of this group before this date.' });
+      return res.status(400).json({ error: "O'quvchi bu sanadan oldin boshqa guruhga ko'chirilgan." });
     }
     res.status(201).json(out);
   } catch (error: any) {
