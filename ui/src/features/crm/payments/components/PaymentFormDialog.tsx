@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SelectField } from '../../students/components/SelectField';
 import { formLabelClassName } from '@/components/ui/form-control';
 import { cn } from '@/lib/utils';
+import { getExpectedAmountForMonth, type BillingPeriodRecord } from '@/shared/billingPeriod';
 import type { Payment } from '../types';
 import { paymentMethodOptions, paymentStatusOptions, paymentTypeOptions } from '@/utils/dropdownOptions';
 import { discountAPI } from '../api';
@@ -52,6 +53,8 @@ interface PaymentFormDialogProps {
   onStudentGroupChange?: (studentId: number) => void;
   paymentHistory?: Partial<Payment>[];
   historyExpectedAmount?: number;
+  // The selected record's transfer dates, so months it only partly spent in the group expect a prorated fee.
+  historyBillingPeriod?: BillingPeriodRecord | null;
   amountHint?: string;
   disableCenterSelect?: boolean;
   submitDisabled?: boolean;
@@ -94,6 +97,7 @@ export const PaymentFormDialog = ({
   onStudentGroupChange,
   paymentHistory = [],
   historyExpectedAmount = 0,
+  historyBillingPeriod = null,
   amountHint,
   disableCenterSelect = false,
   submitDisabled = false,
@@ -448,7 +452,7 @@ export const PaymentFormDialog = ({
                 <div className="grid grid-cols-6 bg-white dark:bg-slate-950/70">
                   {historyMonths.map((month) => {
                     const rows = historyPaymentsByMonth.get(getMonthKey(month)) || [];
-                    const monthState = getMonthPaymentState(rows, Number(historyExpectedAmount || 0));
+                    const monthState = getMonthPaymentState(rows, getExpectedAmountForMonth(historyBillingPeriod, historyExpectedAmount, getMonthKey(month)));
                     const monthStatus = getMonthPaymentStatus(monthState);
                     return (
                       <div

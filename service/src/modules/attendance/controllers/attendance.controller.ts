@@ -70,6 +70,9 @@ const createAttendance = async (req: any, res: any) => {
     if (out && out.error === 'invalid_center') {
       return res.status(400).json({ error: "O'quvchi bu markazga tegishli emas." });
     }
+    if (out && out.error === 'student_left_group') {
+      return res.status(400).json({ error: 'Student was transferred out of this group before this date.' });
+    }
     res.status(201).json(out);
   } catch (error: any) {
     console.error('Database error:', error);

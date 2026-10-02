@@ -67,6 +67,8 @@ export interface Student {
   class_name?: string;
   school_name?: string | null;
   school_class?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 export type FolderType = 'teacher' | 'class' | 'student';

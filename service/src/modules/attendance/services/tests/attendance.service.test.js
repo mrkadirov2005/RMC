@@ -1,5 +1,5 @@
 jest.mock('../../repositories/attendance.repository', () => ({
-  findAll: jest.fn(), findById: jest.fn(), studentInCenter: jest.fn(), classInCenter: jest.fn(),
+  findAll: jest.fn(), findById: jest.fn(), studentInCenter: jest.fn(), studentLeftBefore: jest.fn(), classInCenter: jest.fn(),
   insert: jest.fn(), update: jest.fn(), findByStudent: jest.fn(), findByClass: jest.fn(),
   findBySession: jest.fn(), remove: jest.fn(),
 }));
@@ -45,6 +45,16 @@ describe('attendance service', () => {
       student_id: 1, class_id: 4, session_id: 9, attendance_date: '2026-08-08', status: 'Absent R', remarks: 'Excused',
     }, 2);
     expect(repository.insert).toHaveBeenCalledWith([2, 1, undefined, 4, 9, '2026-08-08', 'Absent R', 'Excused']);
+  });
+
+  test('rejects attendance dated after the student was transferred out of the group', async () => {
+    repository.studentInCenter.mockResolvedValue(true);
+    repository.classInCenter.mockResolvedValue(true);
+    repository.studentLeftBefore.mockResolvedValue(true);
+    await expect(service.create({ student_id: 1, class_id: 4, attendance_date: '2026-10-20' }, 2))
+      .resolves.toEqual({ error: 'student_left_group' });
+    expect(repository.studentLeftBefore).toHaveBeenCalledWith(1, '2026-10-20');
+    expect(repository.insert).not.toHaveBeenCalled();
   });
 
   test('updates only mutable attendance fields with actor scope', () => {

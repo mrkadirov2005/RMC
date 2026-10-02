@@ -223,6 +223,7 @@ const PaymentsPage = () => {
           onStudentGroupChange={handleStudentGroupChange}
           paymentHistory={selectedStudentHistory}
           historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
+          historyBillingPeriod={selectedStudent}
           amountHint={
             selectedClass?.payment_amount
               ? `Suggested from ${selectedClass.class_name || 'selected class'} fee: ${formatMoney(

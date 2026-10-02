@@ -481,17 +481,26 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
     const gradeRows: any[] = [];
     const coinRows: any[] = [];
 
+    const skippedStudentIds: number[] = [];
+
     for (const record of records) {
       const studentId = Number(record.student_id);
       if (!studentId) throw new Error('student_id is required for every record');
 
       if (resolvedCenterId) {
         const studentRows = await client
-          .select({ student_id: students.studentId })
+          .select({ student_id: students.studentId, end_date: students.endDate })
           .from(students)
           .where(and(eq(students.studentId, studentId), eq(students.centerId, resolvedCenterId), isNull(students.deletedAt)))
           .limit(1);
         if (studentRows.length === 0) throw new Error(`Student ${studentId} does not belong to this center.`);
+        // A student transferred out before this lesson no longer takes part in it. Skipping
+        // (rather than failing) keeps an older roster from blocking the rest of the class.
+        const endDate = studentRows[0].end_date ? String(studentRows[0].end_date).slice(0, 10) : null;
+        if (endDate && attendance_date && endDate < String(attendance_date).slice(0, 10)) {
+          skippedStudentIds.push(studentId);
+          continue;
+        }
       }
 
       if (record.attendance_status) {
@@ -533,7 +542,7 @@ const saveSessionWorkflow = async (body: any, centerId?: number) => {
       }
     }
 
-    return { attendance: attendanceRows, grades: gradeRows, coins: coinRows };
+    return { attendance: attendanceRows, grades: gradeRows, coins: coinRows, skipped_student_ids: skippedStudentIds };
   });
 };
 

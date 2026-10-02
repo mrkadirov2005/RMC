@@ -1,6 +1,7 @@
 const { and, asc, desc, eq, gte, ilike, isNotNull, isNull, lte, ne, or, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { centers, classes, discounts, parentStudents, payments, students, studentAcquisitionSources, studentActionReasons, subjects, teachers } = require('../../../db/schema');
+const { buildTransferAllocation, toDateOnly, todayInCenterTimeZone } = require('../../../utils/transferAllocation');
 
 const db = pool.db;
 
@@ -27,40 +28,6 @@ const createActionReason = async (reasonType: string, name: string) => {
   const code = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 50) || `reason_${Date.now()}`;
   const rows = await db.insert(studentActionReasons).values({ reasonType, reasonCode: code, reasonName: name.trim(), active: true }).onConflictDoUpdate({ target: [studentActionReasons.reasonType, studentActionReasons.reasonCode], set: { reasonName: name.trim(), active: true } }).returning({ reason_id: studentActionReasons.reasonId, reason_type: studentActionReasons.reasonType, reason_code: studentActionReasons.reasonCode, reason_name: studentActionReasons.reasonName });
   return rows[0];
-};
-
-const roundMoney = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
-
-const toDateOnly = (date: Date) => date.toISOString().slice(0, 10);
-
-const buildTransferAllocation = (source: any, targetClass: any, transferDate = new Date()) => {
-  const sourceMonthly = Number(source.source_payment_amount || 0);
-  const targetMonthly = Number(targetClass.payment_amount || 0);
-  const monthStart = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth(), 1));
-  const nextMonthStart = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth() + 1, 1));
-  const monthEnd = new Date(nextMonthStart.getTime() - 24 * 60 * 60 * 1000);
-  const effectiveDate = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth(), transferDate.getUTCDate()));
-  const totalDays = monthEnd.getUTCDate();
-  const transferDay = effectiveDate.getUTCDate();
-  const sourceDays = Math.max(transferDay - 1, 0);
-  const targetDays = Math.max(totalDays - sourceDays, 0);
-  const sourceEarned = roundMoney((sourceMonthly * sourceDays) / totalDays);
-  const sourceCredit = roundMoney(Math.max(sourceMonthly - sourceEarned, 0));
-  const targetCharge = roundMoney((targetMonthly * targetDays) / totalDays);
-
-  return {
-    monthStart,
-    monthEnd,
-    effectiveDate,
-    totalDays,
-    sourceDays,
-    targetDays,
-    sourceMonthly,
-    targetMonthly,
-    sourceEarned,
-    sourceCredit,
-    targetCharge,
-  };
 };
 
 interface StudentListFilters {
@@ -95,6 +62,9 @@ const studentSelection = {
   teacher_id: students.teacherId,
   class_id: students.classId,
   previous_class_id: students.previousClassId,
+  transferred_from_student_id: students.transferredFromStudentId,
+  start_date: students.startDate,
+  end_date: students.endDate,
   school_name: students.schoolName,
   school_class: students.schoolClass,
   is_frozen: students.isFrozen,
@@ -132,6 +102,14 @@ const studentInsertValues = (payload: Record<string, unknown>) => ({
 });
 
 const effectiveTeacherExpr = sql`COALESCE(${classes.teacherId}, ${students.teacherId})`;
+
+// A transferred-out record stays on its old group's roster until the month it ended is over.
+// Records transferred before end dates existed have no end_date and keep showing as before.
+const stillOnOldRoster = () => {
+  const today = todayInCenterTimeZone();
+  const currentMonthStart = toDateOnly(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)));
+  return or(isNull(students.status), ne(students.status, 'Transferred'), isNull(students.endDate), gte(students.endDate, currentMonthStart));
+};
 
 const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
   const conditions: any[] = [isNull(students.deletedAt)];
@@ -176,7 +154,7 @@ const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, 
 
   if (filters.class_id != null) {
     if (Number(filters.class_id) === -1) conditions.push(isNull(students.classId));
-    else conditions.push(eq(students.classId, filters.class_id));
+    else conditions.push(eq(students.classId, filters.class_id), stillOnOldRoster());
   }
 
   if (filters.subject_id != null) conditions.push(eq(subjects.subjectId, filters.subject_id));
@@ -330,7 +308,7 @@ const findDeletedWithClassAndTeacher = async (centerId?: number) => {
 };
 
 const findByClassIncludingTransferred = async (classId: number, centerId?: number, teacherId?: number) => {
-  const conditions: any[] = [eq(students.classId, classId), or(isNull(students.deletedAt), eq(students.status, 'Transferred'))];
+  const conditions: any[] = [eq(students.classId, classId), or(isNull(students.deletedAt), eq(students.status, 'Transferred')), stillOnOldRoster()];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(effectiveTeacherExpr, teacherId));
 
@@ -488,9 +466,16 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
     if (!targetClass) return { error: 'target_class_not_found' as const };
     if (Number(source.class_id) === Number(targetClass.class_id)) return { error: 'same_class' as const };
 
+    const transferDate = todayInCenterTimeZone();
     const transferredRows = await tx
       .update(students)
-      .set({ status: 'Transferred', deletedAt: null, transferReasonId: reasonId, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .set({
+        status: 'Transferred',
+        deletedAt: null,
+        transferReasonId: reasonId,
+        endDate: toDateOnly(new Date(transferDate.getTime() - 24 * 60 * 60 * 1000)),
+        updatedAt: sql`CURRENT_TIMESTAMP`,
+      })
       .where(eq(students.studentId, id))
       .returning(studentSelection);
 
@@ -513,6 +498,8 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         teacherId: targetClass.teacher_id || null,
         classId: targetClass.class_id,
         previousClassId: source.class_id,
+        transferredFromStudentId: id,
+        startDate: toDateOnly(transferDate),
         schoolName: source.school_name,
         schoolClass: source.school_class,
         acquisitionSourceId: source.acquisition_source_id,
@@ -524,7 +511,8 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
       .returning(studentSelection);
     const newStudent = newStudentRows[0];
 
-    const allocation = buildTransferAllocation(source, targetClass);
+    const monthStart = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth(), 1));
+    const monthEnd = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth() + 1, 0));
     const paidRows = await tx
       .select({ paid_amount: sql`COALESCE(SUM(${payments.amount}), 0)::numeric` })
       .from(payments)
@@ -534,13 +522,12 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
           eq(payments.centerId, source.center_id),
           isNull(payments.deletedAt),
           sql`LOWER(${payments.paymentStatus}) IN ('completed', 'paid')`,
-          ne(sql`COALESCE(${payments.paymentType}, '')`, 'Transfer Adjustment'),
-          gte(payments.paymentDate, toDateOnly(allocation.monthStart)),
-          lte(payments.paymentDate, toDateOnly(allocation.monthEnd))
+          // Includes money an earlier transfer this month moved onto this record.
+          gte(payments.paymentDate, toDateOnly(monthStart)),
+          lte(payments.paymentDate, toDateOnly(monthEnd))
         )
       );
-    const paidAmount = Number((paidRows[0] as any)?.paid_amount || 0);
-    const shouldAllocate = allocation.sourceMonthly > 0 && paidAmount >= allocation.sourceMonthly;
+    const allocation = buildTransferAllocation(source.source_payment_amount, targetClass.payment_amount, (paidRows[0] as any)?.paid_amount, transferDate, source.start_date);
 
     const insertTransferPayment = (studentId: number, amount: number, reference: string, notes: string, center: number) =>
       tx.insert(payments).values({
@@ -566,22 +553,21 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         coverageTotalDays: allocation.totalDays,
       });
 
-    if (shouldAllocate && allocation.sourceCredit > 0) {
+    // The same amount leaves the old record and lands on the new one, so the student's total
+    // paid never changes; the old group keeps exactly what it earned for the days it taught.
+    if (allocation.movedAmount > 0) {
       await insertTransferPayment(
         id,
-        -allocation.sourceCredit,
+        -allocation.movedAmount,
         `TRANSFER-${id}-${newStudent.student_id}-SOURCE`,
         `Transfer credit: ${allocation.sourceDays}/${allocation.totalDays} days kept in previous group`,
         source.center_id
       );
-    }
-
-    if (shouldAllocate && allocation.targetCharge > 0) {
       await insertTransferPayment(
         newStudent.student_id,
-        allocation.targetCharge,
+        allocation.movedAmount,
         `TRANSFER-${id}-${newStudent.student_id}-TARGET`,
-        `Transfer charge: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
+        `Transfer credit: ${allocation.targetDays}/${allocation.totalDays} days in new group`,
         targetClass.center_id
       );
     }
@@ -615,16 +601,18 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
       transferred: transferredRows[0],
       student: newStudent,
       payment_allocation: {
-        applied: shouldAllocate,
-        paid_amount: paidAmount,
+        applied: allocation.movedAmount > 0,
+        transfer_date: toDateOnly(allocation.effectiveDate),
+        paid_amount: allocation.paidAmount,
         source_monthly_amount: allocation.sourceMonthly,
         target_monthly_amount: allocation.targetMonthly,
         source_days: allocation.sourceDays,
         target_days: allocation.targetDays,
         total_days: allocation.totalDays,
         source_earned_amount: allocation.sourceEarned,
-        source_credit_amount: shouldAllocate ? allocation.sourceCredit : 0,
-        target_charge_amount: shouldAllocate ? allocation.targetCharge : 0,
+        moved_amount: allocation.movedAmount,
+        target_charge_amount: allocation.targetCharge,
+        target_balance: allocation.targetBalance,
       },
     };
   });

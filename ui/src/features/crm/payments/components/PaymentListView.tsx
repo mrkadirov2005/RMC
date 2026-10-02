@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { coversExpectedAmount, getExpectedAmountForMonth } from '@/shared/billingPeriod';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Table,
@@ -95,13 +96,14 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
 
   const groupStudentRows = useMemo(() => {
     if (selectedFolder?.type !== 'class') return [];
-    const expectedAmount = Number(selectedGroupClass?.payment_amount || 0);
+    const monthlyAmount = Number(selectedGroupClass?.payment_amount || 0);
     const search = searchTerm.trim().toLowerCase();
 
     return students
       .filter((student) => Number(student.class_id || 0) === Number(selectedFolder.id))
       .map((student) => {
         const studentId = Number(student.student_id || student.id || 0);
+        const expectedAmount = getExpectedAmountForMonth(student, monthlyAmount, groupPaymentMonth);
         const studentPayments = state.items.filter((payment) => {
           if (Number(payment.student_id) !== studentId) return false;
           if (!payment.payment_date || String(payment.payment_date).slice(0, 7) !== groupPaymentMonth) return false;
@@ -111,7 +113,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
         const paidAmount = studentPayments.reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
         const discountAmount = Math.max(0, ...studentPayments.map((payment) => Number(payment.discount_amount || 0)));
         const discountedExpectedAmount = Math.max(0, expectedAmount - discountAmount);
-        const paymentState = paidAmount <= 0 ? 'unpaid' : discountedExpectedAmount > 0 && paidAmount < discountedExpectedAmount ? 'partial' : 'paid';
+        const paymentState = paidAmount <= 0 ? 'unpaid' : discountedExpectedAmount > 0 && !coversExpectedAmount(paidAmount, discountedExpectedAmount) ? 'partial' : 'paid';
         const name = `${student.first_name || ''} ${student.last_name || ''}`.trim() || `Student #${studentId}`;
         return {
           student,
@@ -121,7 +123,7 @@ export const PaymentListView = ({ hook }: PaymentListViewProps) => {
           paidAmount,
           expectedAmount,
           discountAmount,
-          remainingAmount: Math.max(0, discountedExpectedAmount - paidAmount),
+          remainingAmount: paymentState === 'paid' ? 0 : Math.max(0, discountedExpectedAmount - paidAmount),
           paymentState,
           lastPaymentDate: studentPayments
             .map((payment) => String(payment.payment_date || ''))

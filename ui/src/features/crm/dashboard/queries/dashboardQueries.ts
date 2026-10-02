@@ -20,6 +20,7 @@ import type {
   DashboardStats,
   DashboardStudentGrowthPoint,
 } from '../types';
+import { coversExpectedAmount, getExpectedAmountForMonth } from '../../../../shared/billingPeriod';
 import { formatMoney } from '../../../../utils/helpers';
 
 const todayKey = new Date().toISOString().split('T')[0];
@@ -323,7 +324,8 @@ const getMonthlyCompletedPayments = (collections: DashboardCollections, selected
     return Boolean(date && isSameMonth(date, selectedMonth) && isCompletedPayment(item));
   });
 
-const getExpectedByStudent = (collections: DashboardCollections) => {
+const getExpectedByStudent = (collections: DashboardCollections, selectedMonth: Date) => {
+  const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`;
   const classesById = new Map<number, DashboardRecord>();
   collections.classes.forEach((item) => {
     const classId = getRecordNumber(item, 'class_id') || getRecordNumber(item, 'id');
@@ -336,7 +338,7 @@ const getExpectedByStudent = (collections: DashboardCollections) => {
     const classId = getRecordNumber(student, 'class_id');
     if (!studentId || !classId) return;
     const cls = classesById.get(classId);
-    const expectedAmount = cls ? getRecordNumber(cls, 'payment_amount') || 0 : 0;
+    const expectedAmount = cls ? getExpectedAmountForMonth(student, getRecordNumber(cls, 'payment_amount'), monthKey) : 0;
     if (expectedAmount > 0) expectedByStudent.set(studentId, expectedAmount);
   });
 
@@ -357,7 +359,7 @@ const getFinancialTotals = (collections: DashboardCollections, selectedMonth: Da
     (sum, item) => sum + (getRecordNumber(item, 'amount') || 0),
     0
   );
-  const expectedByStudent = getExpectedByStudent(collections);
+  const expectedByStudent = getExpectedByStudent(collections, selectedMonth);
   const paidByStudent = new Map<number, number>();
 
   paymentsCompletedThisMonth.forEach((payment) => {
@@ -371,7 +373,7 @@ const getFinancialTotals = (collections: DashboardCollections, selectedMonth: Da
   let unpaidStudents = 0;
   expectedByStudent.forEach((expected, studentId) => {
     const paid = paidByStudent.get(studentId) || 0;
-    if (paid >= expected) {
+    if (coversExpectedAmount(paid, expected)) {
       paidStudents += 1;
     } else {
       unpaidStudents += 1;

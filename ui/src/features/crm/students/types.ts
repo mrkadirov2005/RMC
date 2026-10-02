@@ -21,6 +21,9 @@ export interface Student {
   effective_teacher_id?: number;
   class_id?: number;
   previous_class_id?: number | null;
+  transferred_from_student_id?: number | null;
+  start_date?: string | null;
+  end_date?: string | null;
   school_name?: string | null;
   school_class?: string | null;
   class_name?: string | null;
