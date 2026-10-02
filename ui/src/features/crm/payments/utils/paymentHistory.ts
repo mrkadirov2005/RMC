@@ -1,3 +1,4 @@
+import { coversExpectedAmount } from '@/shared/billingPeriod';
 import type { Payment } from '../types';
 
 export const getMonthStart = (value = new Date()) => new Date(value.getFullYear(), value.getMonth(), 1);
@@ -31,7 +32,7 @@ export const getMonthPaymentState = (payments: Partial<Payment>[], expectedAmoun
     .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   if (paidAmount <= 0) return 'none';
-  if (expectedAmount > 0 && paidAmount < expectedAmount) return 'partial';
+  if (expectedAmount > 0 && !coversExpectedAmount(paidAmount, expectedAmount)) return 'partial';
   return 'full';
 };
 

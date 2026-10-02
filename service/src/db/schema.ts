@@ -285,6 +285,9 @@ const students = pgTable('students', {
   teacherId: integer('teacher_id'),
   classId: integer('class_id'),
   previousClassId: integer('previous_class_id'),
+  transferredFromStudentId: integer('transferred_from_student_id'),
+  startDate: date('start_date'),
+  endDate: date('end_date'),
   schoolName: varchar('school_name', { length: 255 }),
   schoolClass: varchar('school_class', { length: 50 }),
   isFrozen: boolean('is_frozen'),
@@ -307,6 +310,7 @@ const students = pgTable('students', {
     uniqueIndex('ux_students_enrollment_number_active').on(table.enrollmentNumber).where(sql`deleted_at IS NULL AND status IS DISTINCT FROM 'Transferred'`),
     uniqueIndex('ux_students_username_active').on(table.username).where(sql`username IS NOT NULL AND deleted_at IS NULL AND status IS DISTINCT FROM 'Transferred'`),
     index('idx_students_previous_class_id').on(table.previousClassId),
+    index('idx_students_transferred_from_student_id').on(table.transferredFromStudentId),
 ]);
 
 const roomSlots = pgTable('room_slots', {

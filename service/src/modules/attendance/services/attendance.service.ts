@@ -14,6 +14,9 @@ const create = async (body: any, centerId?: number) => {
     ]);
     if (!studentOk || !classOk) return { error: 'invalid_center' as const };
   }
+  if (attendance_date && (await attendanceRepository.studentLeftBefore(student_id, attendance_date))) {
+    return { error: 'student_left_group' as const };
+  }
   return attendanceRepository.insert([
     resolvedCenterId,
     student_id,

@@ -20,6 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { DashboardCollections, DashboardRecord, DashboardStatCard } from '../types';
+import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -163,12 +164,13 @@ export const DashboardStatDetailsDialog = ({
         paidByStudent.set(studentId, (paidByStudent.get(studentId) || 0) + (getNumber(payment, 'amount') || 0));
       });
 
+      const monthKey = `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, '0')}`;
       const expectedRows = collections.students
         .map((student) => {
           const studentId = getStudentId(student);
           const classId = getNumber(student, 'class_id');
           const cls = classId ? classMap.get(classId) : undefined;
-          const expected = cls ? getNumber(cls, 'payment_amount') || 0 : 0;
+          const expected = cls ? getExpectedAmountForMonth(student, getNumber(cls, 'payment_amount'), monthKey) : 0;
           const paid = studentId ? paidByStudent.get(studentId) || 0 : 0;
           return {
             student,

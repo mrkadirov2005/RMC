@@ -12,6 +12,7 @@ import { fetchPayments as fetchPaymentsThunk } from '@/slices/paymentsSlice';
 import { fetchTeachers as fetchTeachersThunk } from '@/slices/teachersSlice';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -30,6 +31,8 @@ interface Student {
   last_name: string;
   enrollment_number: string;
   class_id: number;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 interface Payment {
@@ -138,7 +141,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
           student,
           isPaid,
           paidAmount,
-          expectedAmount: cls.payment_amount,
+          expectedAmount: getExpectedAmountForMonth(student, cls.payment_amount, selectedMonth),
           records: studentPaymentRecords,
         });
       });
@@ -149,6 +152,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
         classEarnings,
         totalStudents: classStudents.length,
         paidCount: studentPayments.filter((sp) => sp.isPaid).length,
+        outstanding: studentPayments.filter((sp) => !sp.isPaid).reduce((sum, sp) => sum + sp.expectedAmount, 0),
       };
     });
 
@@ -241,7 +245,7 @@ const TeacherFinanceDetailPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <p className="text-2xl font-bold text-orange-600">
-                    {formatMoney((classData.totalStudents - classData.paidCount) * classData.class.payment_amount)}
+                    {formatMoney(classData.outstanding)}
                   </p>
                 </CardContent>
               </Card>

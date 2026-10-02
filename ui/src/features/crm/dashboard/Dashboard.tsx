@@ -143,6 +143,7 @@ const Dashboard = memo(() => {
         }
         paymentHistory={selectedStudentHistory}
         historyExpectedAmount={Number(selectedClass?.payment_amount || 0)}
+        historyBillingPeriod={selectedStudent}
         amountHint={
           selectedClass?.payment_amount
             ? `Suggested from ${selectedClass.class_name || 'selected class'} fee: ${Number(selectedClass.payment_amount).toLocaleString()}`

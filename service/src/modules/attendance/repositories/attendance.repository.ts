@@ -1,4 +1,4 @@
-const { and, desc, eq, isNull, sql } = require('drizzle-orm');
+const { and, desc, eq, isNull, lt, sql } = require('drizzle-orm');
 const pool = require('../../../db/pool');
 const { attendance, classes, students } = require('../../../db/schema');
 
@@ -116,6 +116,16 @@ const studentInCenter = async (studentId: number, centerId: number) => {
   return rows.length > 0;
 };
 
+// True when the student record's time in its group ended before this date (it was transferred out).
+const studentLeftBefore = async (studentId: number, date: string) => {
+  const rows = await db
+    .select({ student_id: students.studentId })
+    .from(students)
+    .where(and(eq(students.studentId, studentId), lt(students.endDate, date)))
+    .limit(1);
+  return rows.length > 0;
+};
+
 const classInCenter = async (classId: number, centerId: number) => {
   const rows = await db
     .select({ class_id: classes.classId })
@@ -136,6 +146,7 @@ module.exports = {
   remove,
   removeByClass,
   studentInCenter,
+  studentLeftBefore,
   classInCenter,
 };
 

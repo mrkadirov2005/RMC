@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
+import { wasInGroupOn } from '@/shared/billingPeriod';
 import { showToast } from '@/utils/toast';
 import { clearSessionWorkflowDraft, saveSessionWorkflowDraft, type SessionWorkflowDraft } from '@/slices/sessionWorkflowDraftsSlice';
 import { useAppDispatch, useAppSelector } from '../hooks';
@@ -110,7 +111,8 @@ export default function SessionWorkflowPage() {
         const nextClass = loaded.classData;
         const nextSessions = loaded.sessions;
         const nextSession = nextSessions.find((item) => Number(item.session_id || item.id) === numericSessionId);
-        const nextStudents = loaded.students;
+        // Students transferred in after, or out before, this lesson are not part of it.
+        const nextStudents = loaded.students.filter((student: any) => wasInGroupOn(student, toDateKey(nextSession?.session_date)));
         const nextAttendanceRecords = loaded.attendanceRecords;
         const nextGrades = loaded.grades;
         const nextScoringSettings = normalizeLessonScoringSettings(loaded.scoringSettings as Partial<LessonScoringSettings>);

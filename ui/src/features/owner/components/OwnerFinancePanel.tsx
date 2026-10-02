@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { getExpectedAmountForMonth } from '@/shared/billingPeriod';
 import { formatMoney } from '@/utils/helpers';
 import {
   buildOwnerDailyIncomeRows,
@@ -50,7 +51,8 @@ const initials = (name: string) =>
 const buildTeacherGroups = (
   collections: OwnerManagerStatisticsCollections,
   monthPayments: any[],
-  teacherId: number | null
+  teacherId: number | null,
+  monthKey: string
 ) => {
   if (!teacherId) return [];
   const teacherClasses = collections.classes.filter((cls) => Number(cls?.teacher_id || 0) === teacherId);
@@ -67,7 +69,7 @@ const buildTeacherGroups = (
         name: getName(student, `Student ${studentId}`),
         paid: studentPayments.length > 0,
         paidAmount,
-        expectedAmount: Number(student?.payment_amount || cls?.payment_amount || 0),
+        expectedAmount: getExpectedAmountForMonth(student, student?.payment_amount || cls?.payment_amount, monthKey),
       };
     });
     const paidCount = students.filter((student) => student.paid).length;
@@ -145,7 +147,8 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
     return map;
   }, [collections.classes]);
   const expectedMonthlyTotal = collections.students.reduce(
-    (sum, student) => sum + Number(student?.payment_amount || classPaymentAmountById.get(Number(student?.class_id || 0)) || 0),
+    (sum, student) =>
+      sum + getExpectedAmountForMonth(student, student?.payment_amount || classPaymentAmountById.get(Number(student?.class_id || 0)), selectedMonth),
     0
   );
   const unpaidEstimate = Math.max(expectedMonthlyTotal - totalCollected, 0);
@@ -158,16 +161,16 @@ export const OwnerFinancePanel = ({ collections, loading }: Props) => {
   const selectedTeacherName = selectedTeacherRow?.teacherName || (selectedTeacher ? getName(selectedTeacher, 'Teacher') : '');
 
   const teacherGroups = useMemo(
-    () => buildTeacherGroups(collections, monthPayments, selectedTeacherId),
-    [collections, monthPayments, selectedTeacherId]
+    () => buildTeacherGroups(collections, monthPayments, selectedTeacherId, selectedMonth),
+    [collections, monthPayments, selectedTeacherId, selectedMonth]
   );
 
   const selectedGroup = teacherGroups.find((group) => group.id === selectedGroupId) || null;
   const statsTeacherId = selectedStatsTeacherId ?? teacherRows[0]?.teacherId ?? null;
   const selectedStatsTeacher = teacherRows.find((teacher) => teacher.teacherId === statsTeacherId) || null;
   const statsTeacherGroups = useMemo(
-    () => buildTeacherGroups(collections, monthPayments, statsTeacherId),
-    [collections, monthPayments, statsTeacherId]
+    () => buildTeacherGroups(collections, monthPayments, statsTeacherId, selectedMonth),
+    [collections, monthPayments, statsTeacherId, selectedMonth]
   );
   const statsPaidStudents = statsTeacherGroups.reduce((sum, group) => sum + group.paidCount, 0);
   const statsUnpaidStudents = statsTeacherGroups.reduce((sum, group) => sum + group.unpaidCount, 0);

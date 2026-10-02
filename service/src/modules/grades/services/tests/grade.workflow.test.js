@@ -394,6 +394,34 @@ describe('grade service', () => {
       expect(result.coins).toHaveLength(1);
     });
 
+    it('skips a student who was transferred out before the lesson date', async () => {
+      const client = createClient();
+      client.queueSelect([{ student_id: 9, end_date: '2026-08-31' }]);
+      mockDb.transaction.mockImplementation(async (callback) => callback(client));
+
+      const body = baseBody({ records: [{ student_id: 9, attendance_status: 'Present', attendance_score: 10 }] });
+      const result = await gradeService.saveSessionWorkflow(body, 3);
+
+      expect(result).toMatchObject({ attendance: [], grades: [], coins: [], skipped_student_ids: [9] });
+      expect(client.inserts).toHaveLength(0);
+    });
+
+    it('still saves a lesson dated on or before the student left', async () => {
+      const client = createClient();
+      client.queueSelect([{ student_id: 9, end_date: '2026-09-01' }]);
+      client.queueSelect([]);
+      client.queueSelect([]);
+      client.queueSelect([{ student_id: 9, center_id: 3, coins: 10 }]);
+      client.queueSelect([]);
+      mockDb.transaction.mockImplementation(async (callback) => callback(client));
+
+      const body = baseBody({ records: [{ student_id: 9, attendance_status: 'Present', attendance_score: 10 }] });
+      const result = await gradeService.saveSessionWorkflow(body, 3);
+
+      expect(result.attendance).toHaveLength(1);
+      expect(result.skipped_student_ids).toEqual([]);
+    });
+
     it('scores the lesson against the configured coin mapping', async () => {
       const client = createClient();
       client.queueSelect([{ student_id: 9 }]);

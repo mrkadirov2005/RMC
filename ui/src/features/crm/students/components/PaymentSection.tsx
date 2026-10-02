@@ -36,6 +36,8 @@ interface Student {
   center_id?: number;
   first_name?: string;
   last_name?: string;
+  start_date?: string | null;
+  end_date?: string | null;
 }
 
 interface Class {
@@ -232,6 +234,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
         }}
         paymentHistory={payments}
         historyExpectedAmount={Number(classData?.payment_amount || 0)}
+        historyBillingPeriod={student}
         amountHint={
           classData?.payment_amount
             ? `Suggested from ${classData.class_name || 'current class'} fee: ${formatMoney(

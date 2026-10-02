@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
+import { coversExpectedAmount, getExpectedAmountForMonth } from '@/shared/billingPeriod';
 import { classAPI, paymentAPI, studentAPI, teacherAPI } from '../api';
 import type { Class, Payment, Student, Teacher } from '../types';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -63,7 +64,7 @@ const getMonthState = (payments: Payment[], monthKey: string, expectedAmount: nu
     .reduce((sum, payment) => sum + Number(payment.amount || 0), 0);
 
   if (paidAmount <= 0) return 'none';
-  if (expectedAmount > 0 && paidAmount < expectedAmount) return 'partial';
+  if (expectedAmount > 0 && !coversExpectedAmount(paidAmount, expectedAmount)) return 'partial';
   return 'full';
 };
 
@@ -131,7 +132,7 @@ export const PaymentGroupsMatrixTab = () => {
       const studentId = getStudentId(student);
       const payments = paymentsByStudent[studentId] || [];
       const states = months.reduce<Record<string, MonthCellState>>((acc, month) => {
-        acc[month.key] = getMonthState(payments, month.key, expectedAmount);
+        acc[month.key] = getMonthState(payments, month.key, getExpectedAmountForMonth(student, expectedAmount, month.key));
         return acc;
       }, {});
       return { student, studentId, states };

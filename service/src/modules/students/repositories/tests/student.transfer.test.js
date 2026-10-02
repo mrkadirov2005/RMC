@@ -144,6 +144,28 @@ describe('students repository transfer', () => {
     expect(tx.calls.updates[0]).toMatchObject({ status: 'Transferred', deletedAt: null, transferReasonId: 5 });
   });
 
+  it('ends the old record the day before the transfer and starts the new one on it', async () => {
+    const tx = createTx();
+    happyPath(tx);
+
+    await runTransfer(tx);
+
+    expect(tx.calls.updates[0].endDate).toBe('2026-09-10');
+    expect(tx.calls.inserts[0]).toMatchObject({ startDate: '2026-09-11', transferredFromStudentId: 1 });
+  });
+
+  it('dates the transfer in Tashkent time, not server UTC', async () => {
+    // 20:00 UTC on the 10th is already 01:00 on the 11th in Tashkent.
+    jest.setSystemTime(new Date(Date.UTC(2026, 8, 10, 20, 0)));
+    const tx = createTx();
+    happyPath(tx);
+
+    const result = await runTransfer(tx);
+
+    expect(result.payment_allocation.transfer_date).toBe('2026-09-11');
+    expect(tx.calls.updates[0].endDate).toBe('2026-09-10');
+  });
+
   it('copies the profile onto the new record and remembers the previous class', async () => {
     const tx = createTx();
     happyPath(tx);
@@ -207,7 +229,7 @@ describe('students repository transfer', () => {
   });
 
   describe('fee allocation', () => {
-    it('splits the month pro rata once the source month is fully paid', async () => {
+    it('keeps the earned days in the old group and moves the rest of the payment', async () => {
       const tx = createTx();
       happyPath(tx, { paid: 300000 });
 
@@ -215,23 +237,25 @@ describe('students repository transfer', () => {
 
       expect(result.payment_allocation).toMatchObject({
         applied: true,
+        transfer_date: '2026-09-11',
         paid_amount: 300000,
         source_days: 10,
         target_days: 20,
         total_days: 30,
         source_earned_amount: 100000,
-        source_credit_amount: 200000,
+        moved_amount: 200000,
         target_charge_amount: 400000,
+        target_balance: -200000,
       });
     });
 
-    it('writes a credit against the old record and a charge against the new one', async () => {
+    it('moves the same amount off the old record and onto the new one', async () => {
       const tx = createTx();
       happyPath(tx, { paid: 300000 });
 
       await runTransfer(tx);
 
-      const [, credit, charge] = tx.calls.inserts;
+      const [, credit, moved] = tx.calls.inserts;
       expect(credit).toMatchObject({
         studentId: 1,
         amount: -200000,
@@ -240,25 +264,67 @@ describe('students repository transfer', () => {
         coverageDays: 20,
         coverageTotalDays: 30,
       });
-      expect(charge).toMatchObject({
+      expect(moved).toMatchObject({
         studentId: 2,
-        amount: 400000,
+        amount: 200000,
+        paymentType: 'Transfer Adjustment',
         transactionReference: 'TRANSFER-1-2-TARGET',
       });
     });
 
-    it('skips the allocation when the source month was not fully paid', async () => {
+    it('leaves a balance in the new group when it is cheaper than the old one', async () => {
+      const tx = createTx();
+      tx.queueSelect([sourceStudent({ source_payment_amount: 600000 })]);
+      tx.queueSelect([targetClass({ payment_amount: 450000 })]);
+      tx.queueUpdate([{}]);
+      tx.queueInsert([{ student_id: 2 }]);
+      tx.queueSelect([{ paid_amount: 600000 }]);
+      tx.queueSelect([]);
+
+      const result = await runTransfer(tx);
+
+      expect(result.payment_allocation).toMatchObject({
+        source_earned_amount: 200000,
+        moved_amount: 400000,
+        target_charge_amount: 300000,
+        target_balance: 100000,
+      });
+    });
+
+    it('moves whatever a partial payment holds beyond the earned days', async () => {
+      const tx = createTx();
+      happyPath(tx, { paid: 150000 });
+
+      const result = await runTransfer(tx);
+
+      expect(result.payment_allocation).toMatchObject({ applied: true, moved_amount: 50000, target_balance: -350000 });
+      expect(tx.calls.inserts[1].amount).toBe(-50000);
+      expect(tx.calls.inserts[2].amount).toBe(50000);
+    });
+
+    it('moves nothing when the payment only covers the days already taught', async () => {
       const tx = createTx();
       happyPath(tx, { paid: 100000 });
 
       const result = await runTransfer(tx);
 
-      expect(result.payment_allocation).toMatchObject({
-        applied: false,
-        source_credit_amount: 0,
-        target_charge_amount: 0,
-      });
+      expect(result.payment_allocation).toMatchObject({ applied: false, moved_amount: 0, target_charge_amount: 400000 });
       expect(tx.calls.inserts).toHaveLength(1);
+    });
+
+    it('counts a second transfer in the same month from the day the record started', async () => {
+      const tx = createTx();
+      tx.queueSelect([sourceStudent({ start_date: '2026-09-05' })]);
+      tx.queueSelect([targetClass()]);
+      tx.queueUpdate([{}]);
+      tx.queueInsert([{ student_id: 2 }]);
+      tx.queueSelect([{ paid_amount: 250000 }]);
+      tx.queueSelect([]);
+
+      const result = await runTransfer(tx);
+
+      // Only Sept 5-10 belong to this record: 6 of 30 days of 300000.
+      expect(result.payment_allocation).toMatchObject({ source_days: 6, source_earned_amount: 60000, moved_amount: 190000 });
     });
 
     it('skips the allocation when the source class is free', async () => {
@@ -276,7 +342,7 @@ describe('students repository transfer', () => {
       expect(tx.calls.inserts).toHaveLength(1);
     });
 
-    it('writes no charge when the target class is free', async () => {
+    it('still moves the payment when the target class is free', async () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent()]);
       tx.queueSelect([targetClass({ payment_amount: 0 })]);
@@ -287,18 +353,19 @@ describe('students repository transfer', () => {
 
       const result = await runTransfer(tx);
 
-      expect(result.payment_allocation.target_charge_amount).toBe(0);
-      expect(tx.calls.inserts).toHaveLength(2);
+      expect(result.payment_allocation).toMatchObject({ target_charge_amount: 0, moved_amount: 200000, target_balance: 200000 });
+      expect(tx.calls.inserts).toHaveLength(3);
     });
 
-    it('writes no credit when the transfer happens on the first of the month', async () => {
+    it('moves the whole payment when the transfer happens on the first of the month', async () => {
       jest.setSystemTime(new Date(Date.UTC(2026, 8, 1)));
       const tx = createTx();
       happyPath(tx, { paid: 300000 });
 
       const result = await runTransfer(tx);
 
-      expect(result.payment_allocation).toMatchObject({ source_days: 0, target_days: 30, source_credit_amount: 300000 });
+      expect(result.payment_allocation).toMatchObject({ source_days: 0, target_days: 30, moved_amount: 300000 });
+      expect(tx.calls.updates[0].endDate).toBe('2026-08-31');
     });
 
     it('reads a paid amount of zero when the aggregate query returns nothing', async () => {
@@ -328,6 +395,7 @@ describe('students repository transfer', () => {
       const result = await runTransfer(tx);
 
       expect(result.payment_allocation.source_earned_amount).toBe(33.33);
+      expect(result.payment_allocation.moved_amount).toBe(66.67);
       expect(result.payment_allocation.target_charge_amount).toBe(66.67);
     });
   });
