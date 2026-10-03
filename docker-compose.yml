@@ -71,6 +71,29 @@ services:
     networks:
       - crm_network
 
+  # Drizzle Studio for browsing the database. Bound to 127.0.0.1 so it is never
+  # reachable from the internet; open it through an SSH tunnel (README.docker.md).
+  drizzle-studio:
+    build:
+      context: .
+      dockerfile: service/Dockerfile
+    container_name: crm_drizzle_studio
+    environment:
+      DB_HOST: "${STUDIO_DB_HOST:-postgres}"
+      DB_PORT: "${STUDIO_DB_PORT:-5432}"
+      DB_USER: "${STUDIO_DB_USER:-crm_user}"
+      DB_PASSWORD: "${STUDIO_DB_PASSWORD:-crm_password}"
+      DB_NAME: "${STUDIO_DB_NAME:-crm_db}"
+    command: ["npx", "drizzle-kit", "studio", "--config=drizzle.config.js", "--host=0.0.0.0", "--port=4983"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${STUDIO_PORT:-4983}:4983"
+    restart: unless-stopped
+    networks:
+      - crm_network
+
   telegram-bot:
     build:
       context: ./bot

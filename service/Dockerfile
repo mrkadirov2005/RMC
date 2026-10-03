@@ -10,7 +10,7 @@ COPY service/package.json service/package-lock.json ./
 RUN npm install --include=dev --no-audit --no-fund \
     && npm cache clean --force
 
-COPY service/tsconfig.json service/.sequelizerc ./
+COPY service/tsconfig.json service/.sequelizerc service/drizzle.config.js ./
 COPY service/src ./src
 COPY service/config ./config
 COPY service/db ./db

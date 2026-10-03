@@ -35,6 +35,7 @@ Services:
 - Mongo: `localhost:27017`
 - Telegram bot: `crm_telegram_bot` container
 - Nightly backup worker: `crm_backup` container
+- Drizzle Studio: `crm_drizzle_studio` container, server-only on `127.0.0.1:4983`
 
 The backup worker runs every day at 00:00 in `Asia/Tashkent` by default, stores
 archives in the persistent `backup_data` volume, and uploads the archive to the
@@ -48,6 +49,36 @@ integration, Telegram group setup, verification, and troubleshooting, see
 `docs/backup_important/README.md`.
 
 PostgreSQL schema is auto-initialized from `service/db/schema/` on first start (stored in the `postgres_data` volume).
+
+## Drizzle Studio (database browser)
+
+The `drizzle-studio` container starts with the stack. It listens only on the
+server itself (`127.0.0.1:4983`), so it is never reachable from the internet and
+needs no extra AWS security group rule. Anyone who reaches it can read and edit
+every table, so keep it that way.
+
+By default it uses the stack's own Postgres. To point it at another database,
+put the login in a `.env` file next to `docker-compose.yml` on the server:
+
+```bash
+STUDIO_DB_HOST=postgres
+STUDIO_DB_PORT=5432
+STUDIO_DB_USER=crm_user
+STUDIO_DB_PASSWORD=your-password
+STUDIO_DB_NAME=crm_db
+```
+
+Then restart it with `docker compose up -d drizzle-studio`.
+
+To open it, start an SSH tunnel from your own computer and keep it open:
+
+```bash
+ssh -L 4983:127.0.0.1:4983 ubuntu@your-server
+```
+
+Then open **Engineering → Drizzle Studio** in the owner dashboard (or visit
+https://local.drizzle.studio) in Chrome or Firefox. Safari blocks the connection
+to `localhost`.
 
 ## Logs (Mongo request logs)
 

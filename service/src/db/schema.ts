@@ -535,6 +535,7 @@ const invoices = pgTable('invoices', {
 const invoiceItems = pgTable('invoice_items', {
   itemId: serial('item_id').primaryKey(),
   invoiceId: integer('invoice_id'),
+  centerId: integer('center_id'),
   description: text('description'),
   quantity: numeric('quantity'),
   unitPrice: numeric('unit_price'),
@@ -583,6 +584,7 @@ const parents = pgTable('parents', {
 const parentStudents = pgTable('parent_students', {
   parentId: integer('parent_id'),
   studentId: integer('student_id'),
+  centerId: integer('center_id'),
   relationship: varchar('relationship', { length: 100 }),
   isPrimary: boolean('is_primary'),
   createdAt: timestamp('created_at'),
@@ -609,6 +611,7 @@ const paymentPlans = pgTable('payment_plans', {
 const paymentPlanInstallments = pgTable('payment_plan_installments', {
   installmentId: serial('installment_id').primaryKey(),
   planId: integer('plan_id'),
+  centerId: integer('center_id'),
   dueDate: date('due_date'),
   amount: numeric('amount'),
   status: varchar('status', { length: 50 }),

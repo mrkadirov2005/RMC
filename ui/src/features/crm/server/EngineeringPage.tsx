@@ -1,20 +1,22 @@
 import { useState } from 'react';
-import { AlertTriangle, Boxes, Database, DatabaseBackup, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
+import { AlertTriangle, Boxes, Database, DatabaseBackup, DatabaseZap, Network, ScrollText, Server, ShieldAlert, Table2 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import ServerMonitorPage from './ServerMonitorPage';
 import EngineeringDatabaseTab from './tabs/EngineeringDatabaseTab';
+import EngineeringDrizzleStudioTab from './tabs/EngineeringDrizzleStudioTab';
 import EngineeringBackupTab from './tabs/EngineeringBackupTab';
 import EngineeringLoggingTab from './tabs/EngineeringLoggingTab';
 import EngineeringOperationsTab from './tabs/EngineeringOperationsTab';
 import EngineeringRequestHealthTab from './tabs/EngineeringRequestHealthTab';
 import EngineeringStudioTab from './tabs/EngineeringStudioTab';
 
-type EngineeringTab = 'server' | 'database' | 'studio' | 'warnings' | 'failed' | 'logging' | 'operations' | 'backup';
+type EngineeringTab = 'server' | 'database' | 'studio' | 'drizzle' | 'warnings' | 'failed' | 'logging' | 'operations' | 'backup';
 
 const tabs: Array<{ id: EngineeringTab; label: string; icon: typeof Server }> = [
   { id: 'server', label: 'Server', icon: Server },
   { id: 'database', label: 'Database', icon: Database },
   { id: 'studio', label: 'Studio', icon: Table2 },
+  { id: 'drizzle', label: 'Drizzle Studio', icon: DatabaseZap },
   { id: 'warnings', label: 'Warnings', icon: AlertTriangle },
   { id: 'failed', label: 'Failed Requests', icon: ShieldAlert },
   { id: 'logging', label: 'Logging', icon: ScrollText },
@@ -56,6 +58,7 @@ const EngineeringPage = () => {
       {activeTab === 'server' && <ServerMonitorPage />}
       {activeTab === 'database' && <EngineeringDatabaseTab />}
       {activeTab === 'studio' && <EngineeringStudioTab />}
+      {activeTab === 'drizzle' && <EngineeringDrizzleStudioTab />}
       {activeTab === 'warnings' && <EngineeringRequestHealthTab mode="warnings" />}
       {activeTab === 'failed' && <EngineeringRequestHealthTab mode="failed" />}
       {activeTab === 'logging' && <EngineeringLoggingTab />}
