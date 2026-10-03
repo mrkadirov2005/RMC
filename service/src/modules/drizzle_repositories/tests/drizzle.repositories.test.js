@@ -262,6 +262,7 @@ describe('Drizzle repositories', () => {
     const classChain = queueSelect([{ roomId: 2 }]);
     await roomsRepository.findByClassId(9, 3);
     expect(classChain.innerJoin).toHaveBeenCalled();
+    expect(classChain.leftJoin).toHaveBeenCalled();
 
     const deleteChain = queueDelete([{ roomId: 2 }]);
     await expect(roomsRepository.remove(2, 3)).resolves.toEqual({ roomId: 2 });

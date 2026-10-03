@@ -15,6 +15,7 @@ jest.mock('../../services/consolidation.service', () => ({
   getPublicSetView: jest.fn(),
   startPublicTrial: jest.fn(),
   resolveTrialForToken: jest.fn(),
+  studentOwnsTrial: jest.fn(),
 }));
 jest.mock('../../../../shared/controller', () => ({
   getCenterScope: jest.fn(),

@@ -104,6 +104,18 @@ const purgeStudent = (id: number, centerId?: number, teacherId?: number) =>
 const transferStudent = (id: number, targetClassId: number, reasonId: number, centerId?: number, teacherId?: number) =>
   studentRepository.transferToClass(id, targetClassId, reasonId, centerId, teacherId);
 
+const listLinkedGroups = (id: number, centerId?: number) => studentRepository.findLinkedGroups(id, centerId);
+
+// Every record of the same child (their main record and each group record pointing at it).
+const listLinkedStudentIds = async (id: number, centerId?: number): Promise<number[]> => {
+  const rows = await studentRepository.findLinkedGroups(id, centerId);
+  const ids = rows.map((row: any) => Number(row.student_id));
+  return ids.length > 0 ? ids : [Number(id)];
+};
+
+const assignToGroup = (id: number, targetClassId: number, centerId?: number) =>
+  studentRepository.assignToGroup(id, targetClassId, centerId);
+
 const authenticate = async (username: string, password: string) => {
   const student = await studentRepository.findByUsername(username);
   if (!student) return { kind: 'invalid' as const };
@@ -144,6 +156,9 @@ module.exports = {
   deleteStudent,
   purgeStudent,
   transferStudent,
+  listLinkedGroups,
+  listLinkedStudentIds,
+  assignToGroup,
   authenticate,
   setPasswordByAdmin,
   changePassword,

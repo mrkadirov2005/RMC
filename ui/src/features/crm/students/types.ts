@@ -22,6 +22,7 @@ export interface Student {
   class_id?: number;
   previous_class_id?: number | null;
   transferred_from_student_id?: number | null;
+  main_student_id?: number | null;
   start_date?: string | null;
   end_date?: string | null;
   school_name?: string | null;

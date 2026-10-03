@@ -1,6 +1,6 @@
 const serviceMocks = {
   attendance: { byStudent: jest.fn() }, grades: { listByStudent: jest.fn() }, debts: { listByStudent: jest.fn() },
-  payments: { listByStudent: jest.fn() }, students: { getStudent: jest.fn() }, classes: { getClass: jest.fn() },
+  payments: { listByStudent: jest.fn() }, students: { getStudent: jest.fn(), listLinkedGroups: jest.fn() }, classes: { getClass: jest.fn() },
   subjects: { listByClass: jest.fn() }, teachers: { getTeacher: jest.fn() }, tests: { getAssignedTests: jest.fn() },
   assignments: { getAllAssignments: jest.fn() }, rooms: { findByClassId: jest.fn() },
 };
@@ -163,5 +163,45 @@ describe('student portal controller', () => {
     expect(serviceMocks.students.getStudent).toHaveBeenCalledWith(1, 2);
     expect(serviceMocks.rooms.findByClassId).toHaveBeenCalledWith(3, 2);
     expect(res.json).toHaveBeenCalledWith([{ slot_id: 'own' }]);
+  });
+
+  test('combines every linked group record into one dashboard', async () => {
+    serviceMocks.students.getStudent.mockResolvedValue({ student_id: 1, class_id: 3, teacher_id: 4, coins: 30 });
+    serviceMocks.students.listLinkedGroups.mockResolvedValue([
+      { student_id: 1, class_id: 3, class_name: 'Math', status: 'Active', is_main: true, coins: 30, effective_teacher_id: 4 },
+      { student_id: 7, class_id: 5, class_name: 'English', status: 'Active', is_main: false, coins: 12, effective_teacher_id: 6 },
+      { student_id: 8, class_id: 9, class_name: 'Old group', status: 'Transferred', is_main: false, coins: 0 },
+    ]);
+    serviceMocks.attendance.byStudent.mockImplementation(async (id) => [{ attendance_id: id, attendance_date: `2026-10-0${id}` }]);
+    serviceMocks.grades.listByStudent.mockResolvedValue([]); serviceMocks.debts.listByStudent.mockResolvedValue([]);
+    serviceMocks.payments.listByStudent.mockResolvedValue([]);
+    serviceMocks.tests.getAssignedTests.mockResolvedValue([{ test_id: 50 }]);
+    serviceMocks.assignments.getAllAssignments.mockResolvedValue([{ class_id: 3, assignment_id: 1 }, { class_id: 5, assignment_id: 2 }, { class_id: 9, assignment_id: 3 }]);
+    serviceMocks.classes.getClass.mockImplementation(async (classId) => ({ class_id: classId }));
+    serviceMocks.subjects.listByClass.mockImplementation(async (classId) => [{ subject_id: classId }]);
+    serviceMocks.teachers.getTeacher.mockImplementation(async (teacherId) => ({ teacher_id: teacherId }));
+    serviceMocks.rooms.findByClassId.mockImplementation(async (classId) => [{ class_id: classId }]);
+
+    const res = response(); await controller.getDashboardData({ user: { id: 1, center_id: 2 } }, res);
+    const body = res.json.mock.calls[0][0];
+
+    expect(body.student.coins).toBe(42);
+    // History comes from every record, including the one transferred out; newest first.
+    expect(body.attendance.map((row) => row.attendance_id)).toEqual([8, 7, 1]);
+    // Classes only from groups the child still attends.
+    expect(body.groups.map((group) => [group.class_name, group.teacher.teacher_id])).toEqual([['Math', 4], ['English', 6]]);
+    expect(body.subjects).toEqual([{ subject_id: 3 }, { subject_id: 5 }]);
+    expect(body.schedule).toEqual([{ class_id: 3 }, { class_id: 5 }]);
+    expect(body.assignments.map((row) => row.assignment_id)).toEqual([1, 2]);
+    expect(body.classInfo).toEqual({ class_id: 3 });
+    expect(body.tests).toEqual([{ test_id: 50 }]);
+  });
+
+  test('merges grades from every linked record', async () => {
+    serviceMocks.students.listLinkedGroups.mockResolvedValue([{ student_id: 1 }, { student_id: 7 }]);
+    serviceMocks.grades.listByStudent.mockImplementation(async (id) => [{ grade_id: id }]);
+    const res = response(); await controller.getMyGrades({ user: { id: 1, center_id: 2 } }, res);
+    expect(serviceMocks.grades.listByStudent).toHaveBeenCalledWith(7, 2);
+    expect(res.json.mock.calls[0][0]).toHaveLength(2);
   });
 });

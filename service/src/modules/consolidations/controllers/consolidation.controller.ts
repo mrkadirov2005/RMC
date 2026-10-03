@@ -132,7 +132,7 @@ const requireOwnInProgressTrial = async (req: any, res: any) => {
     res.status(404).json({ error: 'Urinish topilmadi' });
     return null;
   }
-  if (Number(trial.student_id) !== Number(req.user?.id)) {
+  if (Number(trial.student_id) !== Number(req.user?.id) && !(await consolidationService.studentOwnsTrial(trial, Number(req.user?.id)))) {
     res.status(403).json({ error: 'Kirish rad etildi.' });
     return null;
   }

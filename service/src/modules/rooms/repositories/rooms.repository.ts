@@ -99,6 +99,7 @@ const findByClassId = (classId: number, centerId: number) => {
   return db
     .select(roomColumns)
     .from(rooms)
+    .leftJoin(physicalRooms, eq(rooms.physicalRoomId, physicalRooms.physicalRoomId))
     .innerJoin(classes, and(eq(classes.classId, rooms.classId), sql`${classes.deletedAt} IS NULL`))
     .where(and(eq(rooms.classId, classId), eq(rooms.centerId, centerId)))
     .orderBy(asc(rooms.day), asc(rooms.time));

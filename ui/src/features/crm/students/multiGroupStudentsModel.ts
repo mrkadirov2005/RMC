@@ -29,6 +29,17 @@ export const getMultiGroupStudents = (students: Student[]): MultiGroupStudent[] 
   };
   const studentsByName = new Map<string, number[]>();
 
+  // Records linked to one main record are the same child for certain, whatever their names say.
+  const indexById = new Map<number, number>();
+  students.forEach((student, index) => {
+    const studentId = Number(student.student_id || student.id || 0);
+    if (studentId) indexById.set(studentId, index);
+  });
+  students.forEach((student, index) => {
+    const mainIndex = indexById.get(Number(student.main_student_id || 0));
+    if (mainIndex !== undefined) union(index, mainIndex);
+  });
+
   students.forEach((student, index) => {
     const normalizedName = normalizeText(`${student.first_name || ''} ${student.last_name || ''}`);
     if (!normalizedName) return;

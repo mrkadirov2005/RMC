@@ -224,6 +224,9 @@ export const studentAPI = {
     }),
   create: (data: any) => apiClient.post('/students', data),
   update: (id: number, data: any) => apiClient.put(`/students/${id}`, data),
+  // The child's group records (main record first) and adding them to another group under the same login.
+  getGroups: (id: number) => apiClient.get(`/students/${id}/groups`),
+  assignToGroup: (id: number, classId: number) => apiClient.post(`/students/${id}/groups`, { class_id: classId }),
   transfer: (id: number, targetClassId: number, reasonId: number) =>
     apiClient.post(`/students/${id}/transfer`, { target_class_id: targetClassId, reason_id: reasonId }),
   delete: (id: number, reasonId: number) => apiClient.delete(`/students/${id}`, { data: { reason_id: reasonId } }),

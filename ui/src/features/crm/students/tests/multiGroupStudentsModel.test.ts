@@ -55,4 +55,14 @@ describe('getMultiGroupStudents', () => {
 
     expect(results).toEqual([]);
   });
+
+  it('groups linked records of one child even when their details differ', () => {
+    const result = getMultiGroupStudents([
+      student({ student_id: 1, first_name: 'Ali', phone: '901', class_id: 10, class_name: 'Math' }),
+      student({ student_id: 2, first_name: 'Aliy', phone: '', main_student_id: 1, class_id: 20, class_name: 'English' }),
+    ]);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].groups.map((group) => group.name)).toEqual(['English', 'Math']);
+  });
 });

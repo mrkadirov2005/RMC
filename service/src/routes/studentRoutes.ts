@@ -6,6 +6,7 @@ const studentController = require('../modules/students/controllers/student.contr
 const { requireAuth, requireRole, requireMuzaffarHardDelete } = require('../middleware/auth');
 const { validateBody, validateParams, validateQuery } = require('../middleware/validation');
 const {
+  AssignStudentGroupDto,
   CredentialsDto,
   ClassIdParamDto,
   CreateStudentDto,
@@ -131,6 +132,9 @@ router_student.put('/:id', requireAuth, validateParams(IdParamDto), validateBody
 router_student.delete('/:id', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(DeleteStudentDto), studentController.deleteStudent);
 router_student.delete('/:id/purge', requireAuth, requireRole('superuser'), requireMuzaffarHardDelete, validateParams(IdParamDto), studentController.purgeStudent);
 router_student.post('/:id/transfer', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(TransferStudentDto), studentController.transferStudent);
+// The child's group records (main record first) and adding them to another group under the same login.
+router_student.get('/:id/groups', requireAuth, validateParams(IdParamDto), studentController.getStudentGroups);
+router_student.post('/:id/groups', requireAuth, requireRole('superuser'), validateParams(IdParamDto), validateBody(AssignStudentGroupDto), studentController.assignStudentToGroup);
 
 /**
  * @swagger

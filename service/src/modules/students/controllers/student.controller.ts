@@ -237,7 +237,7 @@ const transferStudent = async (req: any, res: any) => {
 
     if (result?.error === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
     if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Maqsadli guruh topilmadi' });
-    if (result?.error === 'same_class') return res.status(400).json({ error: "O'quvchi allaqachon shu guruhda" });
+    if (result?.error === 'same_class' || result?.error === 'already_in_group') return res.status(400).json({ error: "O'quvchi allaqachon shu guruhda" });
 
     res.status(201).json({
       message: "O'quvchi muvaffaqiyatli ko'chirildi",
@@ -247,6 +247,49 @@ const transferStudent = async (req: any, res: any) => {
   } catch (error: any) {
     console.error('Database error:', error);
     res.status(500).json({ error: "O'quvchini ko'chirib bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const getStudentGroups = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    if (req.user?.userType === 'student' || req.user?.userType === 'teacher') {
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
+    }
+    const groups = await studentService.listLinkedGroups(Number(req.params.id), centerId ?? undefined);
+    if (groups.length === 0) return res.status(404).json({ error: "O'quvchi topilmadi" });
+    const main = groups.find((group: any) => group.is_main) || groups[0];
+    res.json({
+      main_student_id: main.student_id,
+      total_coins: groups.reduce((sum: number, group: any) => sum + Number(group.coins || 0), 0),
+      groups,
+    });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "O'quvchi guruhlarini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
+const assignStudentToGroup = async (req: any, res: any) => {
+  try {
+    const { centerId, isGlobal } = getScopedCenterId(req);
+    if (!centerId && !isGlobal) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
+    }
+    if (req.user?.userType === 'student' || req.user?.userType === 'teacher') {
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
+    }
+    const result = await studentService.assignToGroup(Number(req.params.id), Number(req.body.class_id), centerId ?? undefined);
+    if (result?.error === 'not_found') return res.status(404).json({ error: "O'quvchi topilmadi" });
+    if (result?.error === 'target_class_not_found') return res.status(404).json({ error: 'Guruh topilmadi' });
+    if (result?.error === 'already_in_group') return res.status(400).json({ error: "O'quvchi allaqachon shu guruhda" });
+    res.status(201).json({ message: "O'quvchi yangi guruhga qo'shildi", student: result.student, main_student_id: result.main_student_id });
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "O'quvchini guruhga qo'shib bo'lmadi", details: error.message || String(error) });
   }
 };
 
@@ -342,6 +385,8 @@ module.exports = {
   deleteStudent,
   purgeStudent,
   transferStudent,
+  getStudentGroups,
+  assignStudentToGroup,
   studentLogin,
   setStudentPassword,
   changeStudentPassword,
