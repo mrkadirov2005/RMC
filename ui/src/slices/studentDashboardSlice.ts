@@ -17,6 +17,8 @@ interface DashboardData {
   subjects: any[];
   teacher: any;
   schedule: any[];
+  // Every group the student attends under this login (one entry for most students).
+  groups?: any[];
 }
 
 interface StudentDashboardState {

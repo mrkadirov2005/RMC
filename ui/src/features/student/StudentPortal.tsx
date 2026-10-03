@@ -12,19 +12,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { StudentTopHeader } from './components/StudentTopHeader';
 import { StudentProfileDialog } from './components/StudentProfileDialog';
 import { StudentPortalContent } from './components/StudentPortalContent';
-import type {
-  Assignment,
-  Attendance,
-  ClassInfo,
-  Debt,
-  Grade,
-  Payment,
-  ScheduleItem,
-  StudentProfile,
-  Subject,
-  Teacher,
-  Test,
-} from './types';
+import type { Assignment, Attendance, ClassInfo, Debt, Grade, Payment, ScheduleItem, StudentGroup, StudentProfile, Subject, Teacher, Test } from './types';
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -39,6 +27,7 @@ const StudentPortal = () => {
   const student = data?.student as StudentProfile | null;
   const teacher = data?.teacher as Teacher | null;
   const classInfo = data?.classInfo as ClassInfo | null;
+  const groups = (data?.groups || []) as StudentGroup[];
   const subjects = (data?.subjects || []) as Subject[];
   const tests = (data?.tests || []) as Test[];
   const attendance = (data?.attendance || []) as Attendance[];
@@ -171,6 +160,7 @@ const StudentPortal = () => {
       <StudentPortalContent
         studentFirstName={user?.first_name}
         classInfo={classInfo}
+        groups={groups}
         student={student}
         teacher={teacher}
         subjects={subjects}

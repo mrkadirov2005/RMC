@@ -13,6 +13,8 @@ jest.mock('../../services/student.service', () => ({
   deleteStudent: jest.fn(),
   purgeStudent: jest.fn(),
   transferStudent: jest.fn(),
+  listLinkedGroups: jest.fn(),
+  assignToGroup: jest.fn(),
   authenticate: jest.fn(),
   setPasswordByAdmin: jest.fn(),
   changePassword: jest.fn(),
@@ -513,6 +515,7 @@ describe('students controller handlers', () => {
       ['not_found', 404, { error: "O'quvchi topilmadi" }],
       ['target_class_not_found', 404, { error: 'Maqsadli guruh topilmadi' }],
       ['same_class', 400, { error: "O'quvchi allaqachon shu guruhda" }],
+      ['already_in_group', 400, { error: "O'quvchi allaqachon shu guruhda" }],
     ])('maps the %s result to a %d', async (error, status, payload) => {
       const res = createResponse();
       studentService.transferStudent.mockResolvedValue({ error });
@@ -742,6 +745,82 @@ describe('students controller handlers', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Parolni o'zgartirib bo'lmadi", details: 'hash failed' });
+    });
+  });
+
+  describe('getStudentGroups', () => {
+    it.each([['student'], ['teacher']])('keeps %s accounts out', async (userType) => {
+      const res = createResponse();
+
+      await controller.getStudentGroups({ params: { id: '9' }, user: { userType, id: 9 } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(studentService.listLinkedGroups).not.toHaveBeenCalled();
+    });
+
+    it('returns the groups with the main record and the combined coins', async () => {
+      const res = createResponse();
+      studentService.listLinkedGroups.mockResolvedValue([
+        { student_id: 9, is_main: true, coins: 30 },
+        { student_id: 12, is_main: false, coins: 5 },
+      ]);
+
+      await controller.getStudentGroups({ params: { id: '12' }, user: admin }, res);
+
+      expect(studentService.listLinkedGroups).toHaveBeenCalledWith(12, 2);
+      expect(res.json).toHaveBeenCalledWith({
+        main_student_id: 9,
+        total_coins: 35,
+        groups: [
+          { student_id: 9, is_main: true, coins: 30 },
+          { student_id: 12, is_main: false, coins: 5 },
+        ],
+      });
+    });
+
+    it('answers 404 when the student does not exist in the center', async () => {
+      const res = createResponse();
+      studentService.listLinkedGroups.mockResolvedValue([]);
+
+      await controller.getStudentGroups({ params: { id: '9' }, user: admin }, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+    });
+  });
+
+  describe('assignStudentToGroup', () => {
+    it.each([['student'], ['teacher']])('keeps %s accounts out', async (userType) => {
+      const res = createResponse();
+
+      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: 3 }, user: { userType, id: 9 } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(403);
+      expect(studentService.assignToGroup).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['not_found', 404, { error: "O'quvchi topilmadi" }],
+      ['target_class_not_found', 404, { error: 'Guruh topilmadi' }],
+      ['already_in_group', 400, { error: "O'quvchi allaqachon shu guruhda" }],
+    ])('maps the %s result to a %d', async (error, status, payload) => {
+      const res = createResponse();
+      studentService.assignToGroup.mockResolvedValue({ error });
+
+      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: 3 }, user: admin }, res);
+
+      expect(res.status).toHaveBeenCalledWith(status);
+      expect(res.json).toHaveBeenCalledWith(payload);
+    });
+
+    it('creates the group record in the caller center', async () => {
+      const res = createResponse();
+      studentService.assignToGroup.mockResolvedValue({ student: { student_id: 12, class_id: 3 }, main_student_id: 9 });
+
+      await controller.assignStudentToGroup({ params: { id: '9' }, body: { class_id: '3' }, user: admin }, res);
+
+      expect(studentService.assignToGroup).toHaveBeenCalledWith(9, 3, 2);
+      expect(res.status).toHaveBeenCalledWith(201);
+      expect(res.json).toHaveBeenCalledWith(expect.objectContaining({ student: { student_id: 12, class_id: 3 }, main_student_id: 9 }));
     });
   });
 });

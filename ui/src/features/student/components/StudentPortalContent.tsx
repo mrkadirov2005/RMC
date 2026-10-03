@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/common/PageHeader';
 import { SectionPanel } from '@/components/common/SectionPanel';
 import { formatTestType } from '@/features/crm/tests/testVisuals';
-import type { Assignment, AttendanceStats, ClassInfo, Grade, Payment, ScheduleItem, StudentProfile, Subject, Teacher, Test } from '../types';
+import type { Assignment, AttendanceStats, ClassInfo, Grade, Payment, ScheduleItem, StudentGroup, StudentProfile, Subject, Teacher, Test } from '../types';
 import { StudentPaymentHistory } from './StudentPaymentHistory';
 import { StudentSnapshotCards } from './StudentSnapshotCards';
 import { StudentWeeklySchedule } from './StudentWeeklySchedule';
@@ -13,6 +13,7 @@ import { StudentWeeklySchedule } from './StudentWeeklySchedule';
 interface StudentPortalContentProps {
   studentFirstName?: string;
   classInfo: ClassInfo | null;
+  groups?: StudentGroup[];
   student: StudentProfile | null;
   teacher: Teacher | null;
   subjects: Subject[];
@@ -39,6 +40,7 @@ interface StudentPortalContentProps {
 export const StudentPortalContent = ({
   studentFirstName,
   classInfo,
+  groups = [],
   student,
   teacher,
   subjects,
@@ -75,7 +77,11 @@ export const StudentPortalContent = ({
         meta={
           <>
             <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/20">{t('Student')}</Badge>
-            {classInfo?.class_name && <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/20">{classInfo.class_name}</Badge>}
+            {groups.length > 1
+              ? groups.map((group) => group.class_name && (
+                  <Badge key={group.student_id} className="border-white/20 bg-white/15 text-white hover:bg-white/20">{group.class_name}</Badge>
+                ))
+              : classInfo?.class_name && <Badge className="border-white/20 bg-white/15 text-white hover:bg-white/20">{classInfo.class_name}</Badge>}
           </>
         }
         actions={
@@ -128,6 +134,22 @@ export const StudentPortalContent = ({
       {error && <Card className="border-destructive/30 bg-destructive/10"><CardContent className="py-4 text-sm text-destructive">{t(getErrorMessage(error))}</CardContent></Card>}
       
       <StudentSnapshotCards student={student} teacher={teacher} classInfo={classInfo} subjects={subjects} t={t} />
+
+      {groups.length > 1 && (
+        <SectionPanel title={t('My groups')} description={t('Every group you attend with this account.')} contentClassName="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {groups.map((group) => {
+            const teacherName = [group.teacher?.first_name, group.teacher?.last_name].filter(Boolean).join(' ');
+            return (
+              <Card key={group.student_id} className="border border-slate-200 shadow-sm dark:border-border">
+                <CardContent className="space-y-1 p-3">
+                  <p className="font-semibold">{group.class_name || group.classInfo?.class_name || '-'}</p>
+                  <p className="text-sm text-muted-foreground">{teacherName || t('No teacher assigned')}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </SectionPanel>
+      )}
       <UpcomingLists upcomingTests={upcomingTests} assignmentsDue={assignmentsDue} t={t} formatDate={formatDate} formatStatusLabel={formatStatusLabel} onTests={onTests} />
       <RecentGrades grades={recentGrades} total={recentGrades.length} t={t} />
       <StudentWeeklySchedule daysOfWeek={daysOfWeek} scheduleByDay={scheduleByDay} t={t} />

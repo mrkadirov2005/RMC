@@ -129,6 +129,7 @@ describe('students repository transfer', () => {
   const happyPath = (tx, { paid = 300000, links = [] } = {}) => {
     tx.queueSelect([sourceStudent()]);
     tx.queueSelect([targetClass()]);
+    tx.queueSelect([]);
     tx.queueUpdate([{ student_id: 1, status: 'Transferred' }]);
     tx.queueInsert([{ student_id: 2 }]);
     tx.queueSelect([{ paid_amount: paid }]);
@@ -190,6 +191,7 @@ describe('students repository transfer', () => {
     const tx = createTx();
     tx.queueSelect([sourceStudent({ coins: null })]);
     tx.queueSelect([targetClass()]);
+    tx.queueSelect([]);
     tx.queueUpdate([{}]);
     tx.queueInsert([{ student_id: 2 }]);
     tx.queueSelect([{ paid_amount: 0 }]);
@@ -204,6 +206,7 @@ describe('students repository transfer', () => {
     const tx = createTx();
     tx.queueSelect([sourceStudent({ is_frozen: null })]);
     tx.queueSelect([targetClass()]);
+    tx.queueSelect([]);
     tx.queueUpdate([{}]);
     tx.queueInsert([{ student_id: 2 }]);
     tx.queueSelect([{ paid_amount: 0 }]);
@@ -218,6 +221,7 @@ describe('students repository transfer', () => {
     const tx = createTx();
     tx.queueSelect([sourceStudent()]);
     tx.queueSelect([targetClass({ teacher_id: null })]);
+    tx.queueSelect([]);
     tx.queueUpdate([{}]);
     tx.queueInsert([{ student_id: 2 }]);
     tx.queueSelect([{ paid_amount: 0 }]);
@@ -276,6 +280,7 @@ describe('students repository transfer', () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent({ source_payment_amount: 600000 })]);
       tx.queueSelect([targetClass({ payment_amount: 450000 })]);
+      tx.queueSelect([]);
       tx.queueUpdate([{}]);
       tx.queueInsert([{ student_id: 2 }]);
       tx.queueSelect([{ paid_amount: 600000 }]);
@@ -316,6 +321,7 @@ describe('students repository transfer', () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent({ start_date: '2026-09-05' })]);
       tx.queueSelect([targetClass()]);
+      tx.queueSelect([]);
       tx.queueUpdate([{}]);
       tx.queueInsert([{ student_id: 2 }]);
       tx.queueSelect([{ paid_amount: 250000 }]);
@@ -331,6 +337,7 @@ describe('students repository transfer', () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent({ source_payment_amount: 0 })]);
       tx.queueSelect([targetClass()]);
+      tx.queueSelect([]);
       tx.queueUpdate([{}]);
       tx.queueInsert([{ student_id: 2 }]);
       tx.queueSelect([{ paid_amount: 0 }]);
@@ -346,6 +353,7 @@ describe('students repository transfer', () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent()]);
       tx.queueSelect([targetClass({ payment_amount: 0 })]);
+      tx.queueSelect([]);
       tx.queueUpdate([{}]);
       tx.queueInsert([{ student_id: 2 }]);
       tx.queueSelect([{ paid_amount: 300000 }]);
@@ -372,6 +380,7 @@ describe('students repository transfer', () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent()]);
       tx.queueSelect([targetClass()]);
+      tx.queueSelect([]);
       tx.queueUpdate([{}]);
       tx.queueInsert([{ student_id: 2 }]);
       tx.queueSelect([]);
@@ -387,6 +396,7 @@ describe('students repository transfer', () => {
       const tx = createTx();
       tx.queueSelect([sourceStudent({ source_payment_amount: 100 })]);
       tx.queueSelect([targetClass({ payment_amount: 100 })]);
+      tx.queueSelect([]);
       tx.queueUpdate([{}]);
       tx.queueInsert([{ student_id: 2 }]);
       tx.queueSelect([{ paid_amount: 100 }]);
@@ -425,6 +435,42 @@ describe('students repository transfer', () => {
 
       expect(tx.calls.inserts).toHaveLength(1);
     });
+  });
+
+  it('refuses a group the student already attends through a linked record', async () => {
+    const tx = createTx();
+    tx.queueSelect([sourceStudent({ main_student_id: 7 })]);
+    tx.queueSelect([targetClass()]);
+    tx.queueSelect([{ student_id: 8 }]);
+
+    await expect(runTransfer(tx)).resolves.toEqual({ error: 'already_in_group' });
+    expect(tx.update).not.toHaveBeenCalled();
+  });
+
+  it('re-points the student\'s other group records when the main record moves', async () => {
+    const tx = createTx();
+    happyPath(tx);
+
+    await runTransfer(tx);
+
+    expect(tx.calls.inserts[0].mainStudentId).toBeNull();
+    expect(tx.calls.updates[1]).toMatchObject({ mainStudentId: 2 });
+  });
+
+  it('keeps a group record pointing at the same main record when it moves', async () => {
+    const tx = createTx();
+    tx.queueSelect([sourceStudent({ main_student_id: 7, username: null, source_password_hash: null })]);
+    tx.queueSelect([targetClass()]);
+    tx.queueSelect([]);
+    tx.queueUpdate([{}]);
+    tx.queueInsert([{ student_id: 2 }]);
+    tx.queueSelect([{ paid_amount: 0 }]);
+    tx.queueSelect([]);
+
+    await runTransfer(tx);
+
+    expect(tx.calls.inserts[0]).toMatchObject({ mainStudentId: 7, username: null, passwordHash: null });
+    expect(tx.calls.updates).toHaveLength(1);
   });
 
   it('returns both records alongside the allocation summary', async () => {

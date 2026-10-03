@@ -10,4 +10,7 @@ export const studentLabels: Record<string, string> = {
   'Try Again': 'Qayta urinish',
   'Violations:': 'Qoidabuzarliklar:',
   'Your exercise was submitted automatically because you left the screen too many times.': "Ekrandan juda ko'p marta chiqqaningiz uchun mashqingiz avtomatik topshirildi.",
+  // Portal list of every group the student attends under one login.
+  'Every group you attend with this account.': "Shu hisob bilan qatnashadigan barcha guruhlaringiz.",
+  'My groups': 'Mening guruhlarim',
 };

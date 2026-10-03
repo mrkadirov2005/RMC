@@ -63,6 +63,7 @@ const studentSelection = {
   class_id: students.classId,
   previous_class_id: students.previousClassId,
   transferred_from_student_id: students.transferredFromStudentId,
+  main_student_id: students.mainStudentId,
   start_date: students.startDate,
   end_date: students.endDate,
   school_name: students.schoolName,
@@ -109,6 +110,85 @@ const stillOnOldRoster = () => {
   const today = todayInCenterTimeZone();
   const currentMonthStart = toDateOnly(new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), 1)));
   return or(isNull(students.status), ne(students.status, 'Transferred'), isNull(students.endDate), gte(students.endDate, currentMonthStart));
+};
+
+// One child in several groups has one record per group. The main record (main_student_id IS
+// NULL) holds the login; the other group records point at it. This resolves any record id to
+// its main record's id inside SQL, so login-related writes always land on the main record.
+const mainIdExpr = (id: number) =>
+  sql`COALESCE((SELECT linked.main_student_id FROM students linked WHERE linked.student_id = ${id}), ${id})`;
+
+const isLinkedTo = (mainId: number) => or(eq(students.studentId, mainId), eq(students.mainStudentId, mainId));
+
+const findMainId = async (queryable: any, id: number) => {
+  const rows = await queryable
+    .select({ student_id: students.studentId, main_student_id: students.mainStudentId })
+    .from(students)
+    .where(eq(students.studentId, id))
+    .limit(1);
+  const row = rows[0];
+  return row ? Number(row.main_student_id || row.student_id) : null;
+};
+
+const copyParentLinks = async (tx: any, fromStudentId: number, toStudentId: number) => {
+  const links = await tx
+    .select({
+      parentId: parentStudents.parentId,
+      relationship: parentStudents.relationship,
+      isPrimary: parentStudents.isPrimary,
+    })
+    .from(parentStudents)
+    .where(eq(parentStudents.studentId, fromStudentId));
+
+  for (const link of links) {
+    const existing = await tx
+      .select({ parentId: parentStudents.parentId })
+      .from(parentStudents)
+      .where(and(eq(parentStudents.parentId, link.parentId), eq(parentStudents.studentId, toStudentId)))
+      .limit(1);
+    if (!existing[0]) {
+      await tx.insert(parentStudents).values({
+        parentId: link.parentId,
+        studentId: toStudentId,
+        relationship: link.relationship,
+        isPrimary: link.isPrimary,
+      });
+    }
+  }
+};
+
+// When the main record leaves (removed or transferred out), the oldest remaining active group
+// record takes over the login and the coin balance, and the other records re-point to it.
+const handOverMainRecord = async (tx: any, oldMain: any) => {
+  const candidates = await tx
+    .select({ student_id: students.studentId })
+    .from(students)
+    .where(and(eq(students.mainStudentId, oldMain.student_id), isNull(students.deletedAt), ne(students.status, 'Transferred')))
+    .orderBy(asc(students.studentId))
+    .limit(1);
+  const nextMainId = candidates[0]?.student_id;
+  if (!nextMainId) return null;
+
+  // Free the login first: the active-username index would reject two records holding it.
+  await tx
+    .update(students)
+    .set({ username: null, passwordHash: null, coins: 0, mainStudentId: nextMainId, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(eq(students.studentId, oldMain.student_id));
+  await tx
+    .update(students)
+    .set({ mainStudentId: nextMainId, updatedAt: sql`CURRENT_TIMESTAMP` })
+    .where(and(eq(students.mainStudentId, oldMain.student_id), ne(students.studentId, nextMainId)));
+  await tx
+    .update(students)
+    .set({
+      mainStudentId: null,
+      username: oldMain.username ?? null,
+      passwordHash: oldMain.password_hash ?? null,
+      coins: sql`COALESCE(${students.coins}, 0) + ${Number(oldMain.coins || 0)}`,
+      updatedAt: sql`CURRENT_TIMESTAMP`,
+    })
+    .where(eq(students.studentId, nextMainId));
+  return nextMainId;
 };
 
 const addStudentFilters = (filters: StudentListFilters = {}, centerId?: number, teacherId?: number) => {
@@ -407,6 +487,10 @@ const update = async (id: number, payload: Record<string, unknown>, centerId?: n
   for (const [snake, camel] of Object.entries(mapping)) {
     if (payload[snake] !== undefined && payload[snake] !== null) setData[camel] = payload[snake];
   }
+  // Only the main record carries a login; a group record keeps its (empty) username.
+  if (setData.username !== undefined) {
+    setData.username = sql`CASE WHEN ${students.mainStudentId} IS NULL THEN ${setData.username} ELSE ${students.username} END`;
+  }
 
   const rows = await db.update(students).set(setData).where(and(...conditions)).returning(studentSelection);
   return rows[0] || null;
@@ -416,12 +500,18 @@ const remove = async (id: number, reasonId: number, centerId?: number, teacherId
   const conditions = [eq(students.studentId, id), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId));
-  const rows = await db
-    .update(students)
-    .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Removed', deleteReasonId: reasonId, updatedAt: sql`CURRENT_TIMESTAMP` })
-    .where(and(...conditions))
-    .returning(studentSelection);
-  return rows[0] || null;
+  return db.transaction(async (tx: any) => {
+    const rows = await tx
+      .update(students)
+      .set({ deletedAt: sql`CURRENT_TIMESTAMP`, status: 'Removed', deleteReasonId: reasonId, updatedAt: sql`CURRENT_TIMESTAMP` })
+      .where(and(...conditions))
+      .returning({ ...studentSelection, password_hash: students.passwordHash });
+    const removed = rows[0];
+    if (!removed) return null;
+    if (!removed.main_student_id) await handOverMainRecord(tx, removed);
+    const { password_hash: _passwordHash, ...rest } = removed;
+    return rest;
+  });
 };
 
 const purge = async (id: number, centerId?: number, teacherId?: number) => {
@@ -466,6 +556,14 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
     if (!targetClass) return { error: 'target_class_not_found' as const };
     if (Number(source.class_id) === Number(targetClass.class_id)) return { error: 'same_class' as const };
 
+    const sourceMainId = Number(source.main_student_id || source.student_id);
+    const linkedInTarget = await tx
+      .select({ student_id: students.studentId })
+      .from(students)
+      .where(and(isLinkedTo(sourceMainId), eq(students.classId, targetClass.class_id), isNull(students.deletedAt), ne(students.status, 'Transferred')))
+      .limit(1);
+    if (linkedInTarget[0]) return { error: 'already_in_group' as const };
+
     const transferDate = todayInCenterTimeZone();
     const transferredRows = await tx
       .update(students)
@@ -499,6 +597,7 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         classId: targetClass.class_id,
         previousClassId: source.class_id,
         transferredFromStudentId: id,
+        mainStudentId: source.main_student_id ?? null,
         startDate: toDateOnly(transferDate),
         schoolName: source.school_name,
         schoolClass: source.school_class,
@@ -510,6 +609,14 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
       })
       .returning(studentSelection);
     const newStudent = newStudentRows[0];
+
+    // The new record already carries the login; the student's other group records follow it.
+    if (!source.main_student_id) {
+      await tx
+        .update(students)
+        .set({ mainStudentId: newStudent.student_id, updatedAt: sql`CURRENT_TIMESTAMP` })
+        .where(eq(students.mainStudentId, id));
+    }
 
     const monthStart = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth(), 1));
     const monthEnd = new Date(Date.UTC(transferDate.getUTCFullYear(), transferDate.getUTCMonth() + 1, 0));
@@ -572,30 +679,7 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
       );
     }
 
-    const links = await tx
-      .select({
-        parentId: parentStudents.parentId,
-        relationship: parentStudents.relationship,
-        isPrimary: parentStudents.isPrimary,
-      })
-      .from(parentStudents)
-      .where(eq(parentStudents.studentId, id));
-
-    for (const link of links) {
-      const existing = await tx
-        .select({ parentId: parentStudents.parentId })
-        .from(parentStudents)
-        .where(and(eq(parentStudents.parentId, link.parentId), eq(parentStudents.studentId, newStudent.student_id)))
-        .limit(1);
-      if (!existing[0]) {
-        await tx.insert(parentStudents).values({
-          parentId: link.parentId,
-          studentId: newStudent.student_id,
-          relationship: link.relationship,
-          isPrimary: link.isPrimary,
-        });
-      }
-    }
+    await copyParentLinks(tx, id, newStudent.student_id);
 
     return {
       transferred: transferredRows[0],
@@ -615,6 +699,91 @@ const transferToClass = async (id: number, targetClassId: number, reasonId: numb
         target_balance: allocation.targetBalance,
       },
     };
+  });
+
+const findLinkedGroups = async (id: number, centerId?: number) => {
+  const mainId = await findMainId(db, id);
+  if (!mainId) return [];
+  const conditions: any[] = [isLinkedTo(mainId), isNull(students.deletedAt)];
+  if (centerId) conditions.push(eq(students.centerId, centerId));
+  return db
+    .select({
+      ...studentSelection,
+      class_name: classes.className,
+      class_payment_amount: classes.paymentAmount,
+      effective_teacher_id: effectiveTeacherExpr,
+      teacher_first_name: teachers.firstName,
+      teacher_last_name: teachers.lastName,
+      is_main: sql`${students.mainStudentId} IS NULL`,
+    })
+    .from(students)
+    .leftJoin(classes, eq(classes.classId, students.classId))
+    .leftJoin(teachers, eq(teachers.teacherId, effectiveTeacherExpr))
+    .where(and(...conditions))
+    .orderBy(sql`CASE WHEN ${students.mainStudentId} IS NULL THEN 0 ELSE 1 END`, asc(students.studentId));
+};
+
+// Adds the child to another group as a new record that points at their main record. The new
+// record copies the profile and parent links but not the login, so the child keeps signing in
+// with the same username and password and sees every group from there.
+const assignToGroup = async (id: number, targetClassId: number, centerId?: number) =>
+  db.transaction(async (tx: any) => {
+    const mainId = await findMainId(tx, id);
+    if (!mainId) return { error: 'not_found' as const };
+
+    const mainConditions = [eq(students.studentId, mainId), isNull(students.deletedAt), ne(students.status, 'Transferred')];
+    if (centerId) mainConditions.push(eq(students.centerId, centerId));
+    const mainRows = await tx.select(studentSelection).from(students).where(and(...mainConditions)).limit(1);
+    const main = mainRows[0];
+    if (!main) return { error: 'not_found' as const };
+
+    const targetRows = await tx
+      .select({ class_id: classes.classId, center_id: classes.centerId, teacher_id: classes.teacherId })
+      .from(classes)
+      .where(and(eq(classes.classId, targetClassId), isNull(classes.deletedAt), eq(classes.centerId, main.center_id)))
+      .limit(1);
+    const targetClass = targetRows[0];
+    if (!targetClass) return { error: 'target_class_not_found' as const };
+
+    const existing = await tx
+      .select({ student_id: students.studentId })
+      .from(students)
+      .where(and(isLinkedTo(mainId), eq(students.classId, targetClass.class_id), isNull(students.deletedAt), ne(students.status, 'Transferred')))
+      .limit(1);
+    if (existing[0]) return { error: 'already_in_group' as const };
+
+    const insertedRows = await tx
+      .insert(students)
+      .values({
+        centerId: main.center_id,
+        enrollmentNumber: `${main.enrollment_number || mainId}-G${targetClass.class_id}`,
+        firstName: main.first_name,
+        lastName: main.last_name,
+        username: null,
+        passwordHash: null,
+        email: main.email,
+        phone: main.phone,
+        dateOfBirth: main.date_of_birth,
+        parentName: main.parent_name,
+        parentPhone: main.parent_phone,
+        gender: main.gender,
+        status: 'Active',
+        teacherId: targetClass.teacher_id || null,
+        classId: targetClass.class_id,
+        mainStudentId: mainId,
+        schoolName: main.school_name,
+        schoolClass: main.school_class,
+        acquisitionSourceId: main.acquisition_source_id,
+        acquisitionDetail: main.acquisition_detail,
+        referredByTeacherId: main.referred_by_teacher_id,
+        isFrozen: false,
+        coins: 0,
+      })
+      .returning(studentSelection);
+    const student = insertedRows[0];
+
+    await copyParentLinks(tx, mainId, student.student_id);
+    return { student, main_student_id: mainId };
   });
 
 const findByUsername = async (username: string) => {
@@ -639,12 +808,12 @@ const findPasswordHashById = async (id: number) => {
   const rows = await db
     .select({ password_hash: students.passwordHash })
     .from(students)
-    .where(and(eq(students.studentId, id), isNull(students.deletedAt)));
+    .where(and(eq(students.studentId, mainIdExpr(id)), isNull(students.deletedAt)));
   return rows[0]?.password_hash ?? null;
 };
 
 const setCredentials = async (id: number, username: string, password_hash: string, centerId?: number, teacherId?: number) => {
-  const conditions = [eq(students.studentId, id), isNull(students.deletedAt)];
+  const conditions = [eq(students.studentId, mainIdExpr(id)), isNull(students.deletedAt)];
   if (centerId) conditions.push(eq(students.centerId, centerId));
   if (teacherId) conditions.push(eq(students.teacherId, teacherId));
   const rows = await db
@@ -659,7 +828,7 @@ const updatePasswordHash = async (id: number, password_hash: string) => {
   await db
     .update(students)
     .set({ passwordHash: password_hash, updatedAt: sql`CURRENT_TIMESTAMP` })
-    .where(and(eq(students.studentId, id), isNull(students.deletedAt)));
+    .where(and(eq(students.studentId, mainIdExpr(id)), isNull(students.deletedAt)));
 };
 
 module.exports = {
@@ -677,6 +846,8 @@ module.exports = {
   remove,
   purge,
   transferToClass,
+  findLinkedGroups,
+  assignToGroup,
   findByUsername,
   findPasswordHashById,
   setCredentials,

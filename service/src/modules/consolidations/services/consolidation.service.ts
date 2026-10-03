@@ -8,9 +8,21 @@ const generateShareToken = () => crypto.randomBytes(24).toString('base64url');
 
 const withTransaction = async (handler: (db: any) => Promise<any>) => pool.db.transaction(handler);
 
-const isStudentEnrolled = async (classId: number, studentId: number, centerId?: number) => {
+// A child in several groups logs in with their main record but is enrolled in each class
+// through that class's own linked record. Returns the record that sits in this class, if any.
+const findEnrolledRecordId = async (classId: number, studentId: number, centerId?: number): Promise<number | null> => {
   const roster = await studentService.listClassStudentsWithTransfers(Number(classId), centerId ?? undefined);
-  return roster.some((student: any) => Number(student.student_id) === Number(studentId));
+  const rosterIds = new Set(roster.map((student: any) => Number(student.student_id)));
+  if (rosterIds.has(Number(studentId))) return Number(studentId);
+  const linkedIds: number[] = (await studentService.listLinkedStudentIds(Number(studentId), centerId ?? undefined)) || [];
+  return linkedIds.find((id) => rosterIds.has(Number(id))) ?? null;
+};
+
+// A trial belongs to the child when it was taken through any of their linked records.
+const studentOwnsTrial = async (trial: any, studentId: number) => {
+  if (Number(trial.student_id) === Number(studentId)) return true;
+  const linkedIds: number[] = (await studentService.listLinkedStudentIds(Number(studentId), trial.center_id ?? undefined)) || [];
+  return linkedIds.some((id) => Number(id) === Number(trial.student_id));
 };
 
 const teacherOwnsSet = (set: any, caller: { userType?: string; teacherId?: number }) =>
@@ -74,8 +86,8 @@ const getSetForTeacher = async (sessionId: number, centerId: number | undefined,
 const getSetForStudentView = async (sessionId: number, centerId: number | undefined, studentId: number) => {
   const set = await consolidationRepository.findSetBySession(sessionId, centerId);
   if (!set) return null;
-  const enrolled = await isStudentEnrolled(set.class_id, studentId, centerId);
-  if (!enrolled) return { error: 'forbidden' as const };
+  const enrolledRecordId = await findEnrolledRecordId(set.class_id, studentId, centerId);
+  if (!enrolledRecordId) return { error: 'forbidden' as const };
   const words = await consolidationRepository.findWordsBySetPublic(set.consolidation_set_id);
   return {
     consolidation_set_id: set.consolidation_set_id,
@@ -262,7 +274,7 @@ const getTrialDetail = async (trialId: number, requester: { userType?: string; i
   const trial = await consolidationRepository.findTrialById(trialId);
   if (!trial) return null;
   if (requester.userType === 'student') {
-    if (Number(trial.student_id) !== Number(requester.id)) return { error: 'forbidden' as const };
+    if (!(await studentOwnsTrial(trial, Number(requester.id)))) return { error: 'forbidden' as const };
   } else if (requester.centerId && Number(trial.center_id) !== Number(requester.centerId)) {
     return { error: 'forbidden' as const };
   }
@@ -393,8 +405,10 @@ const startTrialForSet = async (
   meta: { viaShareLink?: boolean; ipAddress?: string | null; userAgent?: string | null } = {},
   alreadyEnrolled = false
 ) => {
-  const enrolled = alreadyEnrolled || (await isStudentEnrolled(set.class_id, studentId, set.center_id));
-  if (!enrolled) return { error: 'forbidden' as const };
+  // The trial is recorded against the child's record in this class.
+  const enrolledRecordId = alreadyEnrolled ? studentId : await findEnrolledRecordId(set.class_id, studentId, set.center_id);
+  if (!enrolledRecordId) return { error: 'forbidden' as const };
+  studentId = enrolledRecordId;
 
   const accessToken = meta.viaShareLink ? generateShareToken() : null;
 
@@ -522,15 +536,10 @@ const startPublicTrial = async (shareToken: string, username: string, meta: { ip
   // publishing the whole class roster's names to anyone holding the link.
   const student = await studentService.findByUsername(String(username || '').trim());
   if (!student) return { error: 'invalid_student' as const };
-  const studentId = Number(student.student_id);
-
-  // Independent checks — enrollment doesn't depend on today's completion status —
-  // run concurrently instead of as two sequential round trips.
-  const [enrolled, existingToday] = await Promise.all([
-    isStudentEnrolled(set.class_id, studentId, set.center_id),
-    consolidationRepository.findCompletedTrialToday(set.consolidation_set_id, studentId),
-  ]);
-  if (!enrolled) return { error: 'invalid_student' as const };
+  // The username belongs to the child's main record; the class may hold a linked record.
+  const studentId = await findEnrolledRecordId(set.class_id, Number(student.student_id), set.center_id);
+  if (!studentId) return { error: 'invalid_student' as const };
+  const existingToday = await consolidationRepository.findCompletedTrialToday(set.consolidation_set_id, studentId);
 
   // Surface the "already completed today" nudge BEFORE creating a row — a student who
   // backs out at the confirmation must not leave a stray in_progress trial behind that
@@ -578,6 +587,7 @@ module.exports = {
   getPublicSetView,
   startPublicTrial,
   resolveTrialForToken,
+  studentOwnsTrial,
 };
 
 export {};

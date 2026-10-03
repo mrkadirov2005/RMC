@@ -36,4 +36,24 @@ describe('getPaymentStudentGroupOptions', () => {
 
     expect(getPaymentStudentGroupOptions(selected, [selected, unrelated], classes)).toHaveLength(1);
   });
+
+  it('offers every linked group record of the child, whatever the name or phone', () => {
+    const selected = student({ student_id: 1, phone: '901', class_id: 10 });
+    const options = getPaymentStudentGroupOptions(selected, [
+      selected,
+      student({ student_id: 2, first_name: 'Adaa', phone: '', class_id: 20, main_student_id: 1 }),
+    ], classes);
+
+    expect(options.map((option) => [option.studentId, option.groupName])).toEqual([[2, 'English'], [1, 'Math']]);
+  });
+
+  it('starts from a linked record as well as from the main one', () => {
+    const selected = student({ student_id: 2, class_id: 20, main_student_id: 1 });
+    const options = getPaymentStudentGroupOptions(selected, [
+      student({ student_id: 1, first_name: 'Other', class_id: 10 }),
+      selected,
+    ], classes);
+
+    expect(options.map((option) => option.studentId)).toEqual([2, 1]);
+  });
 });

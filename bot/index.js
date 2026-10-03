@@ -278,7 +278,12 @@ async function getStudentClasses(session) {
      FROM students s
      JOIN classes c ON c.class_id = s.class_id
      LEFT JOIN teachers t ON t.teacher_id = s.teacher_id
-     WHERE (s.student_id = $1 OR s.enrollment_number = $2 OR s.username = $3)
+     WHERE (
+         s.student_id = $1 OR s.enrollment_number = $2 OR s.username = $3
+         -- Group records linked to the student's main record (same login, another group).
+         OR s.main_student_id = $1
+         OR s.main_student_id IN (SELECT m.student_id FROM students m WHERE m.username = $3)
+       )
        AND (s.deleted_at IS NULL OR s.status = 'Transferred')
        AND c.deleted_at IS NULL
      ORDER BY c.class_name`,

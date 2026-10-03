@@ -35,6 +35,7 @@ jest.mock('../../repositories/consolidation.repository', () => ({
 }));
 jest.mock('../../../students/services/student.service', () => ({
   listClassStudentsWithTransfers: jest.fn(),
+  listLinkedStudentIds: jest.fn(),
   findByUsername: jest.fn(),
 }));
 
@@ -107,6 +108,28 @@ describe('consolidation service', () => {
       consolidationRepository.findWordsBySetPublic.mockResolvedValue([{ consolidation_word_id: 1, word_order: 1, main_word: 'salom' }]);
       const result = await service.getSetForStudentView(10, 2, 999);
       expect(result.words).toEqual([{ consolidation_word_id: 1, word_order: 1, main_word: 'salom' }]);
+    });
+
+    it('lets a child in through the linked record that sits in this class', async () => {
+      consolidationRepository.findSetBySession.mockResolvedValue({ consolidation_set_id: 1, class_id: 5, title: 'Unit 5', violation_limit: 3 });
+      studentService.listClassStudentsWithTransfers.mockResolvedValue([{ student_id: 42 }]);
+      studentService.listLinkedStudentIds.mockResolvedValueOnce([999, 42]);
+      consolidationRepository.findWordsBySetPublic.mockResolvedValue([]);
+      const result = await service.getSetForStudentView(10, 2, 999);
+      expect(result.error).toBeUndefined();
+      expect(studentService.listLinkedStudentIds).toHaveBeenCalledWith(999, 2);
+    });
+  });
+
+  describe('studentOwnsTrial', () => {
+    it('accepts a trial taken through one of the child\'s linked records', async () => {
+      studentService.listLinkedStudentIds.mockResolvedValueOnce([1, 7]);
+      await expect(service.studentOwnsTrial({ student_id: 7, center_id: 2 }, 1)).resolves.toBe(true);
+    });
+
+    it('refuses a trial of an unrelated student', async () => {
+      studentService.listLinkedStudentIds.mockResolvedValueOnce([1]);
+      await expect(service.studentOwnsTrial({ student_id: 8, center_id: 2 }, 1)).resolves.toBe(false);
     });
   });
 

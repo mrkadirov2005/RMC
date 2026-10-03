@@ -18,10 +18,11 @@ import {
   User,
   UserCheck,
   UserX,
+  Users,
   X,
 } from 'lucide-react';
 import { studentAPI, classAPI, teacherAPI } from './api';
-import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab } from './tabs';
+import { AttendanceTab, PaymentsTab, AssignmentsTab, IndividualTasksTab, GradesTab, GroupsTab } from './tabs';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { getErrorMessage } from '@/utils/errorMessage';
@@ -70,6 +71,7 @@ interface Student {
   teacher_id?: number;
   coins?: number;
   username?: string;
+  main_student_id?: number | null;
   school_name?: string | null;
   school_class?: string | null;
   created_at?: string;
@@ -431,6 +433,7 @@ const StudentDetailPage = () => {
   const overviewColumns = splitStudentOverviewRows(overviewRows);
   const tabItems = [
     { value: 'overview', label: 'Overview', icon: User },
+    { value: 'groups', label: 'Groups', icon: Users },
     { value: 'attendance', label: 'Attendance', icon: CalendarCheck },
     { value: 'payments', label: 'Payments', icon: Receipt },
     { value: 'assignments', label: 'Assignments', icon: ClipboardList },
@@ -500,6 +503,14 @@ const StudentDetailPage = () => {
                 {/* Account Password */}
               </CardTitle>
             </CardHeader>
+            {student?.main_student_id ? (
+            <CardContent className="flex flex-wrap items-center justify-between gap-2 p-3 pt-1">
+              <p className="text-xs text-muted-foreground">{t('This group record signs in through the main account.')}</p>
+              <Button size="sm" variant="outline" className="h-8 text-xs" onClick={() => navigate(`/students/${student.main_student_id}/profile`)}>
+                {t('Open main account')}
+              </Button>
+            </CardContent>
+            ) : (
             <CardContent className="grid gap-2 p-3 pt-1 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
               <div className="space-y-1">
                 <Label htmlFor="student-new-password" className="text-xs">{t('New Password')}</Label>
@@ -521,6 +532,7 @@ const StudentDetailPage = () => {
                 {t('Update Password')}
               </Button>
             </CardContent>
+            )}
           </Card>}
 
 
@@ -623,6 +635,10 @@ const StudentDetailPage = () => {
                 teacherId={classData?.teacher_id}
                 onRefresh={loadStudentDetails}
               />
+            )}
+
+            {activeTab === 'groups' && studentId && (
+              <GroupsTab studentId={Number(studentId)} onOpenStudent={(id) => navigate(`/students/${id}/profile`)} />
             )}
 
             {activeTab === 'payments' && (

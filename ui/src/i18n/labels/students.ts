@@ -43,4 +43,18 @@ export const studentsLabels: Record<string, string> = {
   'Update student password': "O'quvchi parolini yangilash",
   'assigned students': "biriktirilgan o'quvchi",
   'selected students': "tanlangan o'quvchi",
+  // Student groups tab: one login across several group records.
+  'A new record is created in the chosen group. The student keeps the same username and password.': "Tanlangan guruhda yangi yozuv yaratiladi. O'quvchi o'sha login va parol bilan kiraveradi.",
+  'Assign to new group': "Yangi guruhga qo'shish",
+  "Couldn't add the student to the group": "O'quvchini guruhga qo'shib bo'lmadi",
+  "Couldn't load groups": "Guruhlarni yuklab bo'lmadi",
+  "Couldn't load the student's groups": "O'quvchi guruhlarini yuklab bo'lmadi",
+  'Main account': 'Asosiy hisob',
+  'Open main account': 'Asosiy hisobni ochish',
+  'Open now': 'Hozir ochiq',
+  'Select a group': 'Guruhni tanlang',
+  'This group record signs in through the main account.': 'Bu guruh yozuvi asosiy hisob orqali kiradi.',
+  'Student added to the new group': "O'quvchi yangi guruhga qo'shildi",
+  'The student signs in once with the same username and password and sees every group.': "O'quvchi bitta login va parol bilan kiradi va barcha guruhlarini ko'radi.",
+  'Total coins: {count}': 'Jami coinlar: {count}',
 };

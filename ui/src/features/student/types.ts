@@ -35,6 +35,16 @@ export interface ClassInfo {
   room_number?: string;
 }
 
+// One group the student attends; a student in several groups has one per group.
+export interface StudentGroup {
+  student_id: number;
+  class_id?: number;
+  class_name?: string | null;
+  is_main?: boolean;
+  classInfo?: ClassInfo | null;
+  teacher?: Teacher | null;
+}
+
 export interface Subject {
   subject_id?: number;
   id?: number;

@@ -34,6 +34,8 @@ const identifiersMatch = (first: Student, second: Student) => {
   );
 };
 
+const getMainStudentId = (student: Student) => Number(student.main_student_id || student.student_id || student.id || 0);
+
 export const getPaymentStudentGroupOptions = (
   selectedStudent: Student | undefined,
   students: Student[],
@@ -41,7 +43,8 @@ export const getPaymentStudentGroupOptions = (
 ): PaymentStudentGroupOption[] => {
   if (!selectedStudent) return [];
   const selectedName = normalizeName(selectedStudent);
-  if (!selectedName) return [];
+  const selectedMainId = getMainStudentId(selectedStudent);
+  if (!selectedName && !selectedMainId) return [];
 
   const classesById = new Map(
     classes.map((classItem) => [
@@ -53,7 +56,10 @@ export const getPaymentStudentGroupOptions = (
   const options = students
     .filter((student) => {
       const studentId = Number(student.student_id || student.id || 0);
-      return studentId > 0 &&
+      if (studentId <= 0) return false;
+      // Linked group records belong to the same child; otherwise fall back to name matching.
+      if (selectedMainId && getMainStudentId(student) === selectedMainId) return true;
+      return Boolean(selectedName) &&
         normalizeName(student) === selectedName &&
         identifiersMatch(selectedStudent, student);
     })
