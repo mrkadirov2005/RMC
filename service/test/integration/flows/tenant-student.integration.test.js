@@ -146,14 +146,14 @@ describe('actor and student center isolation with PostgreSQL', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ enrollment_number: 'A-UNIQUE', first_name: 'X', last_name: 'Y', username: 'alpha_student' });
     expect(duplicateUsername.status).toBe(409);
-    expect(duplicateUsername.body.error).toContain('Username');
+    expect(duplicateUsername.body.error).toContain('foydalanuvchi nomi');
 
     const duplicateEnrollment = await request(server)
       .post('/api/students')
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ enrollment_number: 'A-EXISTING', first_name: 'X', last_name: 'Y', username: 'unique_student' });
     expect(duplicateEnrollment.status).toBe(409);
-    expect(duplicateEnrollment.body.error).toContain('Enrollment');
+    expect(duplicateEnrollment.body.error).toContain("Ro'yxat raqami");
     const after = Number((await pool.query('SELECT COUNT(*) AS count FROM students')).rows[0].count);
     expect(after).toBe(before);
   });

@@ -38,8 +38,8 @@ describe('Express application', () => {
   });
 
   test.each([
-    [undefined, 'Authentication required'],
-    ['Bearer invalid', 'Invalid token'],
+    [undefined, 'Tizimga kirish talab qilinadi'],
+    ['Bearer invalid', 'Sessiya yaroqsiz'],
   ])('protects center-scoped APIs for authorization %s', async (authorization, message) => {
     const call = request(server).get('/api/students');
     if (authorization) call.set('Authorization', authorization);
@@ -69,6 +69,6 @@ describe('Express application', () => {
       .set('Authorization', `Bearer ${token}`);
 
     expect(response.status).toBe(403);
-    expect(response.body.error).toContain('Owner privileges');
+    expect(response.body.error).toContain('Ega huquqlari talab qilinadi');
   });
 });
