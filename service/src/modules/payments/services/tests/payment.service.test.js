@@ -7,6 +7,8 @@ jest.mock('../../repositories/payment.repository', () => ({
   findByStudent: jest.fn(),
   remove: jest.fn(),
   purge: jest.fn(),
+  findReceipt: jest.fn(),
+  findStaffName: jest.fn(),
 }));
 
 jest.mock('../../../discounts/services/discount.service', () => ({
@@ -70,7 +72,7 @@ describe('payments service', () => {
       'Cash',
     ]), expect.anything());
     const payload = paymentRepository.insert.mock.calls[0][0];
-    expect(payload.slice(11)).toEqual([
+    expect(payload.slice(11, 19)).toEqual([
       null,
       'monthly_discount',
       'fixed',
@@ -98,7 +100,7 @@ describe('payments service', () => {
 
     const payload = paymentRepository.insert.mock.calls[0][0];
     expect(discountService.getActiveSerialByStudent).toHaveBeenCalledWith(3, 2);
-    expect(payload.slice(11)).toEqual([
+    expect(payload.slice(11, 19)).toEqual([
       7,
       'serial_discount',
       'percent',
@@ -129,7 +131,7 @@ describe('payments service', () => {
     expect(paymentRepository.withTransaction).toHaveBeenCalledTimes(1);
     expect(discountService.update).toHaveBeenCalledWith(12, { active: false }, 8, expect.any(Object));
     const payload = paymentRepository.insert.mock.calls[0][0];
-    expect(payload.slice(11)).toEqual([
+    expect(payload.slice(11, 19)).toEqual([
       12,
       'monthly_discount',
       'fixed',
@@ -139,6 +141,59 @@ describe('payments service', () => {
       75000,
       true,
     ]);
+  });
+
+  it('stores the cashier name last, and null when there is none', async () => {
+    await paymentService.createPayment({ student_id: 9, amount: 340000 }, 4, 'Jalolov Anvar');
+    expect(paymentRepository.insert.mock.calls[0][0][19]).toBe('Jalolov Anvar');
+
+    await paymentService.createPayment({ student_id: 9, amount: 340000 }, 4);
+    expect(paymentRepository.insert.mock.calls[1][0][19]).toBeNull();
+  });
+
+  it('names the cashier from the owner or admin account, and never from teachers or students', async () => {
+    paymentRepository.findStaffName.mockResolvedValueOnce('Owner Person').mockResolvedValueOnce(null);
+
+    await expect(paymentService.resolveCashierName({ id: 1, userType: 'superuser', role: 'owner' })).resolves.toBe('Owner Person');
+    expect(paymentRepository.findStaffName).toHaveBeenLastCalledWith('owners', 1);
+    // An admin without a first or last name falls back to the username.
+    await expect(paymentService.resolveCashierName({ id: 5, userType: 'superuser', role: 'admin', username: 'kassa1' })).resolves.toBe('kassa1');
+    expect(paymentRepository.findStaffName).toHaveBeenLastCalledWith('superusers', 5);
+    await expect(paymentService.resolveCashierName({ id: 3, userType: 'teacher' })).resolves.toBeNull();
+    await expect(paymentService.resolveCashierName(undefined)).resolves.toBeNull();
+  });
+
+  it('builds receipt fields from the payment, its group and the center', async () => {
+    paymentRepository.findReceipt.mockResolvedValueOnce({
+      payment_id: 12, receipt_number: 'R-12', payment_date: '2026-10-03', created_at: '2026-10-03T08:51:00.000Z',
+      amount: '340000', currency: 'UZS', payment_method: 'Cash', original_amount: '340000', discount_amount: '0',
+      covered_from: null, received_by_name: 'Jalolov Anvar',
+      student_first_name: 'Hojiakbar', student_last_name: 'Karimov',
+      class_name: 'English A1', class_payment_amount: '340000', subject_name: 'Ingliz tili',
+      teacher_first_name: 'Muhammad', teacher_last_name: 'Baxrillayev',
+      center_name: 'TEMURBEK SCHOOL', center_phone: '992969003', center_address: "Sobir Rahimov ko'chasi 10-uy",
+    });
+
+    await expect(paymentService.getReceipt(12, 4)).resolves.toEqual({
+      payment_id: 12, receipt_number: 'R-12', payer_name: 'Karimov Hojiakbar', subject: 'Ingliz tili',
+      expected_amount: 340000, discount_amount: 0, paid_amount: 340000, currency: 'UZS', payment_method: 'Cash',
+      teacher_name: 'Baxrillayev Muhammad', paid_at: '2026-10-03T08:51:00.000Z', billing_month: '2026-10',
+      cashier_name: 'Jalolov Anvar', center_name: 'TEMURBEK SCHOOL', center_phone: '992969003',
+      center_address: "Sobir Rahimov ko'chasi 10-uy",
+    });
+    expect(paymentRepository.findReceipt).toHaveBeenCalledWith(12, 4);
+  });
+
+  it('falls back to the class name and fee, and the covered month, for older payments', async () => {
+    paymentRepository.findReceipt.mockResolvedValueOnce({
+      payment_id: 13, amount: '200000', original_amount: null, discount_amount: null, class_payment_amount: '300000',
+      class_name: 'Math', subject_name: null, payment_date: '2026-10-03', covered_from: '2026-09-15', received_by_name: null,
+    });
+    const receipt = await paymentService.getReceipt(13, 4);
+    expect(receipt).toMatchObject({ subject: 'Math', expected_amount: 300000, paid_amount: 200000, billing_month: '2026-09', cashier_name: null, payer_name: null });
+
+    paymentRepository.findReceipt.mockResolvedValueOnce(null);
+    await expect(paymentService.getReceipt(99, 4)).resolves.toBeNull();
   });
 
   it('delegates list filters to repository', async () => {

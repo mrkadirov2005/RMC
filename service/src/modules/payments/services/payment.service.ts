@@ -59,7 +59,7 @@ const syncInvoiceAfterPayment = async (
   await invoiceRepository.updateStatus(invoice.invoice_id, nextStatus, client);
 };
 
-const createPayment = async (body: any, centerId?: number) => {
+const createPayment = async (body: any, centerId?: number, receivedByName?: string | null) => {
   const {
     student_id,
     payment_date,
@@ -144,6 +144,7 @@ const createPayment = async (body: any, centerId?: number) => {
     resolvedDiscountAmount,
     resolvedFinalAmount,
     complete,
+    receivedByName ?? null,
   ];
 
   return paymentRepository.withTransaction(async (client: any) => {
@@ -160,6 +161,43 @@ const createPayment = async (body: any, centerId?: number) => {
   });
 };
 
+// The cashier printed on a receipt: the owner or admin recording the payment. Owners and
+// admins both sign in as userType "superuser"; role "owner" tells them apart.
+const resolveCashierName = async (user: any): Promise<string | null> => {
+  if (!user?.id || user.userType !== 'superuser') return null;
+  const name = await paymentRepository.findStaffName(user.role === 'owner' ? 'owners' : 'superusers', Number(user.id));
+  return name || user.username || null;
+};
+
+const fullName = (lastName?: string | null, firstName?: string | null) =>
+  [lastName, firstName].map((part) => String(part || '').trim()).filter(Boolean).join(' ') || null;
+
+const getReceipt = async (id: number, centerId?: number) => {
+  const row = await paymentRepository.findReceipt(id, centerId);
+  if (!row) return null;
+  const paid = Number(row.amount || 0);
+  const discount = Number(row.discount_amount || 0);
+  const expected = row.original_amount != null ? Number(row.original_amount) : Number(row.class_payment_amount ?? paid);
+  return {
+    payment_id: row.payment_id,
+    receipt_number: row.receipt_number,
+    payer_name: fullName(row.student_last_name, row.student_first_name),
+    subject: row.subject_name || row.class_name || null,
+    expected_amount: expected,
+    discount_amount: discount,
+    paid_amount: paid,
+    currency: row.currency || 'UZS',
+    payment_method: row.payment_method,
+    teacher_name: fullName(row.teacher_last_name, row.teacher_first_name),
+    paid_at: row.created_at,
+    billing_month: String(row.covered_from || row.payment_date || '').slice(0, 7) || null,
+    cashier_name: row.received_by_name || null,
+    center_name: row.center_name || null,
+    center_phone: row.center_phone || null,
+    center_address: row.center_address || null,
+  };
+};
+
 const updatePayment = (id: number, body: any, centerId?: number, teacherId?: number) => {
   const { amount, payment_status, notes } = body;
   return paymentRepository.update(id, [amount, payment_status, notes], centerId, teacherId);
@@ -173,6 +211,8 @@ const deletePayment = (id: number, centerId?: number, teacherId?: number) => pay
 const purgePayment = (id: number, centerId?: number, teacherId?: number) => paymentRepository.purge(id, centerId, teacherId);
 
 module.exports = {
+  resolveCashierName,
+  getReceipt,
   listPayments,
   getPayment,
   createPayment,

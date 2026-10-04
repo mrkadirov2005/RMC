@@ -1,7 +1,7 @@
 // Source file for the students area in the crm feature.
 
 import { useState } from 'react';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Printer, Trash2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -11,6 +11,7 @@ import { showToast } from '../../../../utils/toast';
 import { formatMoney } from '../../../../utils/helpers';
 import { PaymentFormDialog } from '../../payments/components/PaymentFormDialog';
 import { createPaymentDraft, normalizePaymentFormData } from '../../payments/utils/paymentForm';
+import { getCreatedPaymentId, printPaymentReceipt } from '../../payments/utils/printPaymentReceipt';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 interface Payment {
@@ -126,8 +127,9 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
         await paymentAPI.update(editingId, paymentData);
         showToast.success('Payment updated successfully');
       } else {
-        await paymentAPI.create(paymentData);
+        const created = await paymentAPI.create(paymentData);
         showToast.success('Payment created successfully');
+        void printPaymentReceipt(getCreatedPaymentId(created));
       }
       onRefresh();
       handleCloseModal();
@@ -172,7 +174,7 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
                 <TableHead>{t('Method')}</TableHead>
                 <TableHead>{t('Status')}</TableHead>
                 <TableHead>{t('Notes')}</TableHead>
-                <TableHead className="w-24">{t('Actions')}</TableHead>
+                <TableHead className="w-32">{t('Actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -197,6 +199,15 @@ export const PaymentSection = ({ payments, student, classData, onRefresh }: Paym
                     <TableCell>{payment.notes || '-'}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          title={t('Print receipt')}
+                          aria-label={t('Print receipt')}
+                          onClick={() => printPaymentReceipt(payment.payment_id || payment.id)}
+                        >
+                          <Printer className="h-4 w-4" />
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleOpenModal(payment)}>
                           <Pencil className="h-4 w-4" />
                         </Button>

@@ -334,6 +334,7 @@ export const paymentAPI = {
       headers: options?.skipCenterScope ? { 'X-Skip-Center-Scope': '1' } : undefined,
     }),
   getById: (id: number) => apiClient.get(`/payments/${id}`),
+  getReceipt: (id: number) => apiClient.get(`/payments/${id}/receipt`),
   getByStudent: (studentId: number, params?: Record<string, unknown>) =>
     apiClient.get(`/payments/student/${studentId}`, { params }),
   create: (data: any) => apiClient.post('/payments', data),

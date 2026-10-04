@@ -73,12 +73,12 @@ Then restart it with `docker compose up -d drizzle-studio`.
 To open it, start an SSH tunnel from your own computer and keep it open:
 
 ```bash
-ssh -L 4983:127.0.0.1:4983 ubuntu@your-server
+ssh -N -L 4983:127.0.0.1:4983 ec2-user@YOUR-SERVER
 ```
 
 Then open **Engineering → Drizzle Studio** in the owner dashboard (or visit
 https://local.drizzle.studio) in Chrome or Firefox. Safari blocks the connection
-to `localhost`.
+to `localhost`. Full guide: `docs/owner/nested_docs/dzs.html`.
 
 ## Logs (Mongo request logs)
 

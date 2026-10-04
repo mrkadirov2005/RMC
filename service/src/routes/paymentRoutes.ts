@@ -51,6 +51,28 @@ router_payment.get('/:id', requireAuth, validateParams(IdParamDto), paymentContr
 
 /**
  * @swagger
+ * /payments/{id}/receipt:
+ *   get:
+ *     summary: Get the data for a printed payment receipt
+ *     tags: [Payments]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Receipt fields (payer, subject, amounts, teacher, cashier, center contacts)
+ *       403:
+ *         description: Teachers and students cannot print receipts
+ *       404:
+ *         description: Payment not found
+ */
+router_payment.get('/:id/receipt', requireAuth, validateParams(IdParamDto), paymentController.getPaymentReceipt);
+
+/**
+ * @swagger
  * /payments:
  *   post:
  *     summary: Create new payment
