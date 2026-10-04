@@ -100,7 +100,6 @@ table{width:100%;border-collapse:collapse}
 th,td{padding:.8mm 0;vertical-align:top;text-align:left;font-size:12px;overflow-wrap:anywhere}
 th{width:45%;padding-right:1.5mm;font-weight:700}
 .rule{border-top:1.5px solid #000;margin-top:4mm}
-.no{margin-top:2mm;text-align:center;font-size:11px}
 </style></head>
 <body>
 <div class="head"><img src="${escapeHtml(logoUrl)}" alt=""><div class="name">${escapeHtml(centerName)}</div></div>
@@ -108,7 +107,6 @@ th{width:45%;padding-right:1.5mm;font-weight:700}
 <p class="thanks">Rahmat! ${escapeHtml(centerName)} bilan birga o'sing</p>
 <table>${rows}</table>
 <div class="rule"></div>
-${receipt.payment_id ? `<div class="no">To'lov № ${escapeHtml(receipt.payment_id)}</div>` : ''}
 </body></html>`;
 };
 
