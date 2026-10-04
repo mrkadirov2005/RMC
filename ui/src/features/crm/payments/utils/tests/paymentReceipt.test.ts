@@ -68,7 +68,8 @@ describe('payment receipt', () => {
     expect(html).toContain('src="https://app.test/logo.jpg"');
     expect(html).toContain('&lt;b&gt;Ali&lt;/b&gt;');
     expect(html).not.toContain('<b>Ali</b>');
-    expect(html).toContain("To'lov № 12");
+    // Like the paper receipt, no receipt number is printed.
+    expect(html).not.toContain('№');
   });
 
   it('reads the new payment id from the create response', () => {
