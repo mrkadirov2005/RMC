@@ -81,10 +81,10 @@ export const createPayment = createAsyncThunk(
   'payments/create',
   async (payload: Partial<Payment>, { dispatch, rejectWithValue }) => {
     try {
-      await paymentAPI.create(payload);
+      const response = await paymentAPI.create(payload);
       showToast.success('Payment created successfully');
       dispatch(fetchPaymentsForce());
-      return true;
+      return (response?.data ?? null) as Partial<Payment> | null;
     } catch (err: any) {
       const msg = err?.response?.data?.message ?? 'Failed to create payment';
       showToast.error(msg);

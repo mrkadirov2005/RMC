@@ -652,6 +652,7 @@ const payments = pgTable('payments', {
   coveredTo: date('covered_to'),
   coverageDays: integer('coverage_days'),
   coverageTotalDays: integer('coverage_total_days'),
+  receivedByName: varchar('received_by_name', { length: 255 }),
   deletedAt: timestamp('deleted_at'),
   createdAt: timestamp('created_at'),
   updatedAt: timestamp('updated_at'),

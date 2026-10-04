@@ -33,6 +33,7 @@ import { getResolvedCenterId } from '../../../../shared/auth/centerScope';
 import { paginateItems } from '@/components/common/pagination';
 import type { Payment, Teacher, Class, Student, FolderType, TeacherDetailView } from '../types';
 import { createPaymentDraft, normalizePaymentFormData } from '../utils/paymentForm';
+import { getCreatedPaymentId, printPaymentReceipt } from '../utils/printPaymentReceipt';
 
 const folderPageSizeOptions = [12, 24, 48];
 const paymentPageSizeOptions = [10, 25, 50, 100];
@@ -153,7 +154,10 @@ export const usePaymentsPage = () => {
     if (editingId) {
       await dispatch(updatePayment({ id: editingId, data: payload }));
     } else {
-      await dispatch(createPayment(payload));
+      const result = await dispatch(createPayment(payload));
+      if (createPayment.fulfilled.match(result)) {
+        void printPaymentReceipt(getCreatedPaymentId({ data: result.payload }));
+      }
     }
     handleCloseModal();
   };

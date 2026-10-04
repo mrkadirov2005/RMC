@@ -6,6 +6,8 @@ jest.mock('../../services/payment.service', () => ({
   listByStudent: jest.fn(),
   deletePayment: jest.fn(),
   purgePayment: jest.fn(),
+  resolveCashierName: jest.fn(),
+  getReceipt: jest.fn(),
 }));
 
 jest.mock('../../../../shared/tenant', () => ({
@@ -63,6 +65,40 @@ describe('payments controller', () => {
 
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({ error: "O'qituvchilar to'lov yarata olmaydi." });
+  });
+
+  it('records the signed-in owner or admin as the cashier', async () => {
+    const user = { userType: 'superuser', role: 'admin', id: 7, center_id: 11 };
+    const req = { body: { student_id: 2, amount: 340000 }, user };
+    const res = createResponse();
+    paymentService.resolveCashierName.mockResolvedValue('Jalolov Anvar');
+    paymentService.createPayment.mockResolvedValue({ payment_id: 5 });
+
+    await paymentController.createPayment(req, res);
+
+    expect(paymentService.resolveCashierName).toHaveBeenCalledWith(user);
+    expect(paymentService.createPayment).toHaveBeenCalledWith(req.body, 11, 'Jalolov Anvar');
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  it('returns receipt data for staff, and refuses teachers and students', async () => {
+    const res = createResponse();
+    paymentService.getReceipt.mockResolvedValue({ payment_id: 5, payer_name: 'Karimov Hojiakbar' });
+
+    await paymentController.getPaymentReceipt({ params: { id: '5' }, user: { userType: 'superuser', role: 'admin', id: 7, center_id: 11 } }, res);
+    expect(paymentService.getReceipt).toHaveBeenCalledWith(5, 11);
+    expect(res.json).toHaveBeenCalledWith({ payment_id: 5, payer_name: 'Karimov Hojiakbar' });
+
+    for (const userType of ['teacher', 'student']) {
+      const denied = createResponse();
+      await paymentController.getPaymentReceipt({ params: { id: '5' }, user: { userType, id: 4 } }, denied);
+      expect(denied.status).toHaveBeenCalledWith(403);
+    }
+
+    const missing = createResponse();
+    paymentService.getReceipt.mockResolvedValue(null);
+    await paymentController.getPaymentReceipt({ params: { id: '6' }, user: { userType: 'superuser', role: 'admin', id: 7, center_id: 11 } }, missing);
+    expect(missing.status).toHaveBeenCalledWith(404);
   });
 
   it('checks teacher ownership when fetching student payments', async () => {

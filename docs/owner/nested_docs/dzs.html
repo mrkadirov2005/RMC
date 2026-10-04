@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drizzle Studio — Owner Docs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --ground:#f5f6f8; --surface:#ffffff; --ink:#17202b; --ink-2:#4c5868; --ink-3:#7a8595;
+  --rule:#dfe3e9; --chip:#eef1f5; --accent:#8a5a12; --accent-soft:color-mix(in srgb, #8a5a12 10%, transparent);
+  --warn:#8a4b00; --warn-soft:#fff4e2; --ok:#1d6b45; --ok-soft:#e7f5ed; --code-bg:#f0f2f5;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+    --rule:#2a313b; --chip:#212833; --accent:#e0b25c; --accent-soft:color-mix(in srgb, #e0b25c 14%, transparent);
+    --warn:#f0b35c; --warn-soft:#2a2115; --ok:#6fd3a0; --ok-soft:#15261d; --code-bg:#1e242c;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#12161c; --surface:#181d25; --ink:#e7ebf0; --ink-2:#aab3bf; --ink-3:#7d8794;
+  --rule:#2a313b; --chip:#212833; --accent:#e0b25c; --accent-soft:color-mix(in srgb, #e0b25c 14%, transparent);
+  --warn:#f0b35c; --warn-soft:#2a2115; --ok:#6fd3a0; --ok-soft:#15261d; --code-bg:#1e242c;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--ground);color:var(--ink);font:15px/1.6 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--accent)}
+strong{font-weight:600}
+code,pre,kbd{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace}
+code{background:var(--code-bg);padding:1px 5px;border-radius:4px;font-size:.9em}
+kbd{background:var(--surface);border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 5px;font-size:.85em}
+
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;border-right:1px solid var(--rule);background:var(--surface);padding:24px 16px}
+.sidebar .brand{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin:0 8px 4px}
+.sidebar .title{font-size:17px;font-weight:600;margin:0 8px 18px}
+.sidebar .group{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);margin:18px 8px 6px}
+.sidebar ol{list-style:none;margin:0;padding:0;counter-reset:step}
+.sidebar li a{display:flex;gap:10px;align-items:baseline;padding:7px 8px;border-radius:7px;color:var(--ink-2);text-decoration:none;font-size:14px;line-height:1.35}
+.sidebar li a:hover{background:var(--chip);color:var(--ink)}
+.sidebar li a.active{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.sidebar ol.steps-nav li a::before{counter-increment:step;content:counter(step);flex:none;width:20px;height:20px;border-radius:50%;background:var(--chip);color:var(--ink-3);font-size:11px;display:grid;place-items:center;font-weight:600}
+.sidebar ol.steps-nav li a.active::before{background:var(--accent);color:var(--surface)}
+.sidebar .back{display:block;margin:22px 8px 0;font-size:13px;color:var(--ink-3);text-decoration:none}
+.sidebar .back:hover{color:var(--accent)}
+
+.content{padding:32px clamp(16px,4vw,56px) 96px;max-width:900px}
+.crumbs{font-size:13px;color:var(--ink-3);margin-bottom:18px;display:flex;flex-wrap:wrap;gap:6px}
+.crumbs a{color:var(--ink-2);text-decoration:none}
+.crumbs a:hover{color:var(--accent)}
+h1{margin:0 0 8px;font-size:clamp(26px,3.6vw,34px);line-height:1.15;font-weight:600}
+.content{min-width:0}
+.lede{margin:0 0 26px;color:var(--ink-2);max-width:68ch}
+section{padding-block:26px;border-top:1px solid var(--rule);scroll-margin-top:12px}
+section:first-of-type{border-top:0;padding-top:4px}
+h2{margin:0 0 10px;font-size:21px;font-weight:600;display:flex;align-items:center;gap:10px}
+h2 .num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--surface);font-size:14px;display:grid;place-items:center}
+h3{margin:18px 0 6px;font-size:15.5px;font-weight:600}
+p{margin:0 0 12px}
+ol.steps,ul.list{margin:0 0 14px;padding-left:22px;display:grid;gap:7px}
+ol.steps>li,ul.list>li{min-width:0}
+.where{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;background:var(--chip);border:1px solid var(--rule);color:var(--ink-2);margin:0 0 12px}
+.where.server{color:var(--accent);border-color:color-mix(in srgb, var(--accent) 35%, var(--rule))}
+
+.code{position:relative;margin:0 0 14px}
+.code pre{margin:0;padding:13px 52px 13px 14px;background:var(--code-bg);border:1px solid var(--rule);border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.55}
+.code button{position:absolute;top:7px;right:7px;font:12px "IBM Plex Sans",system-ui,sans-serif;padding:4px 9px;border-radius:6px;border:1px solid var(--rule);background:var(--surface);color:var(--ink-2);cursor:pointer}
+.code button:hover{color:var(--ink);border-color:var(--accent)}
+
+.note{margin:0 0 14px;padding:10px 14px;border-radius:0 8px 8px 0;font-size:14px;border-left:3px solid}
+.note b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.note.tip{background:var(--chip);border-color:var(--ink-3);color:var(--ink-2)}
+.note.warn{background:var(--warn-soft);border-color:var(--warn)}
+.note.warn b{color:var(--warn)}
+.note.ok{background:var(--ok-soft);border-color:var(--ok)}
+.note.ok b{color:var(--ok)}
+
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 16px}
+.flow div{min-width:0;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--rule);border-radius:9px;padding:10px 12px;font-size:13px;color:var(--ink-2)}
+.flow b{display:block;color:var(--ink);font-size:13.5px;margin-bottom:2px}
+
+table{width:100%;border-collapse:collapse;margin:0 0 14px;font-size:14px;background:var(--surface);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+th,td{text-align:left;vertical-align:top;padding:9px 12px;border-top:1px solid var(--rule);overflow-wrap:anywhere}
+th{background:var(--chip);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-3);border-top:0}
+td:first-child{width:42%}
+
+.menu-toggle{display:none}
+@media (max-width:860px){
+  .layout{grid-template-columns:minmax(0,1fr)}
+  .sidebar{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding:14px 16px}
+  .sidebar nav{display:none}
+  .sidebar.open nav{display:block}
+  .menu-toggle{display:block;width:100%;margin-top:4px;padding:8px 12px;font:inherit;font-size:14px;text-align:left;border:1px solid var(--rule);border-radius:8px;background:var(--chip);color:var(--ink);cursor:pointer}
+  .sidebar .title{margin-bottom:8px}
+  .flow{grid-template-columns:1fr 1fr}
+  td:first-child{width:auto}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <p class="brand">Owner docs</p>
+    <p class="title">Drizzle Studio</p>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="sidebar-nav">Contents</button>
+    <nav id="sidebar-nav" aria-label="On this page">
+      <p class="group">Start here</p>
+      <ol>
+        <li><a href="#overview">How the connection works</a></li>
+        <li><a href="#before">Before you start</a></li>
+      </ol>
+      <p class="group">Connect step by step</p>
+      <ol class="steps-nav">
+        <li><a href="#server">Start Studio on the server</a></li>
+        <li><a href="#tunnel">Open the SSH tunnel</a></li>
+        <li><a href="#chrome">Allow local network access</a></li>
+        <li><a href="#open">Open Studio</a></li>
+        <li><a href="#close">Disconnect</a></li>
+      </ol>
+      <p class="group">Reference</p>
+      <ol>
+        <li><a href="#database">Use a different database</a></li>
+        <li><a href="#troubleshooting">Troubleshooting</a></li>
+        <li><a href="#safety">Safety rules</a></li>
+      </ol>
+      <a class="back" href="eng.html">← Engineering and journals</a>
+      <a class="back" href="index.html" style="margin-top:6px">← All owner guides</a>
+    </nav>
+  </aside>
+
+  <main class="content">
+    <p class="crumbs"><a href="../user-action-flows.html">Owner flows</a><span>/</span><a href="index.html">Getting started docs</a><span>/</span><a href="eng.html">Engineering and journals</a><span>/</span><span>Drizzle Studio</span></p>
+    <h1>Connect to Drizzle Studio</h1>
+    <p class="lede">Drizzle Studio is a full editor for the live database. It runs on the server and is never open to the internet, so you reach it through a private SSH tunnel from your own computer. This guide walks through the whole connection, from the server to your browser.</p>
+
+    <section id="overview">
+      <h2>How the connection works</h2>
+      <div class="flow">
+        <div><b>Database</b>Postgres in Docker on the server</div>
+        <div><b>Studio server</b><code>crm_drizzle_studio</code> on <code>127.0.0.1:4983</code>, server only</div>
+        <div><b>SSH tunnel</b>Carries port 4983 to your computer</div>
+        <div><b>Your browser</b>Studio page talks to <code>localhost:4983</code></div>
+      </div>
+      <ul class="list">
+        <li>The Studio container uses the same database login as the backend. You never type a database password.</li>
+        <li>Port 4983 is bound to the server itself, so there is no public address and no AWS security group rule for it.</li>
+        <li>The SSH tunnel uses your server key. Only someone who can SSH into the server can open Studio.</li>
+      </ul>
+      <div class="note tip"><b>Why not a normal web address?</b>The Studio page can only connect to a plain host and port. It cannot send your owner login, so a public Studio address would let anyone on the internet edit the database.</div>
+    </section>
+
+    <section id="before">
+      <h2>Before you start</h2>
+      <ul class="list">
+        <li>The server&#8217;s <strong>key file</strong> (<code>.pem</code>) on your computer, the same one you use to SSH into the server.</li>
+        <li>The <strong>server address</strong>. The login user is <code>ec2-user</code>. This guide writes the address as <code>YOUR-SERVER</code>.</li>
+        <li><strong>Chrome</strong> or <strong>Firefox</strong>. Safari and Brave block the connection to <code>localhost</code>.</li>
+        <li>A terminal: Terminal on macOS, PowerShell or Windows Terminal on Windows.</li>
+      </ul>
+    </section>
+
+    <section id="server">
+      <h2><span class="num">1</span>Start Studio on the server</h2>
+      <span class="where server">Run on the server</span>
+      <p>Studio starts with the rest of the stack. After pulling new code, rebuild and start everything from the project folder:</p>
+      <div class="code"><pre><code>cd RMC
+git pull
+docker compose up -d --build</code></pre></div>
+      <p>Check that Studio is running:</p>
+      <div class="code"><pre><code>docker logs --tail 5 crm_drizzle_studio</code></pre></div>
+      <div class="note ok"><b>Expected</b>The last line reads <code>Drizzle Studio is up and running</code>. It shows a link with <code>host=0.0.0.0</code>; ignore it and use the steps below.</div>
+      <p>You only need to do this once. The container restarts by itself when the server reboots. Then log out with <code>exit</code>.</p>
+    </section>
+
+    <section id="tunnel">
+      <h2><span class="num">2</span>Open the SSH tunnel</h2>
+      <span class="where">Run on your own computer</span>
+      <ol class="steps">
+        <li>Open a terminal in the folder that holds your key file.</li>
+        <li>The first time only, make the key private. SSH refuses keys that other users can read:
+          <div class="code" style="margin-top:8px"><pre><code>chmod 400 your-key.pem</code></pre></div>
+        </li>
+        <li>Open the tunnel. Replace <code>your-key.pem</code> and <code>YOUR-SERVER</code>:
+          <div class="code" style="margin-top:8px"><pre><code>ssh -i your-key.pem -N -L 4983:127.0.0.1:4983 ec2-user@YOUR-SERVER</code></pre></div>
+        </li>
+      </ol>
+      <div class="note ok"><b>Expected</b>The command prints nothing and keeps running. That means the tunnel is open. Leave this terminal open the whole time you use Studio.</div>
+      <h3>What each part means</h3>
+      <table>
+        <tr><th>Part</th><th>Meaning</th></tr>
+        <tr><td><code>-i your-key.pem</code></td><td>The key that signs you in. It must come right after <code>-i</code>.</td></tr>
+        <tr><td><code>-N</code></td><td>Open the tunnel only; don&#8217;t start a shell on the server.</td></tr>
+        <tr><td><code>-L 4983:127.0.0.1:4983</code></td><td>Port 4983 on your computer goes to port 4983 on the server.</td></tr>
+        <tr><td><code>ec2-user@YOUR-SERVER</code></td><td>The server login and address.</td></tr>
+      </table>
+      <div class="note tip"><b>First connection</b>SSH may ask <em>Are you sure you want to continue connecting?</em> for a new address. Type <code>yes</code>.</div>
+    </section>
+
+    <section id="chrome">
+      <h2><span class="num">3</span>Allow local network access</h2>
+      <span class="where">In Chrome, once per site</span>
+      <p>Recent Chrome versions ask before a website may reach your own computer. Without this, Studio shows <em>&#8220;Recent Chrome/Chromium updates may block local network access by default.&#8221;</em></p>
+      <ol class="steps">
+        <li>Open <a href="https://local.drizzle.studio" target="_blank" rel="noreferrer">https://local.drizzle.studio</a>.</li>
+        <li>Click the icon to the left of the address bar, then <strong>Site settings</strong>.</li>
+        <li>Set <strong>Apps on device</strong> (also called <strong>Local network access</strong>) to <strong>Allow</strong>.</li>
+        <li>Go back and reload the page.</li>
+      </ol>
+      <p>To use Studio inside the dashboard, repeat the same steps on the dashboard site.</p>
+    </section>
+
+    <section id="open">
+      <h2><span class="num">4</span>Open Studio</h2>
+      <span class="where">In your browser</span>
+      <h3>Inside the owner dashboard</h3>
+      <ol class="steps">
+        <li>Open <strong>Settings → Engineering</strong>, then the <strong>Drizzle Studio</strong> tab.</li>
+        <li>Studio loads inside the page. If the tab shows <strong>Connect to Drizzle Studio</strong>, check the tunnel and click <strong>Reconnect</strong>.</li>
+        <li>Click <strong>Open in new tab</strong> for a full-screen view.</li>
+      </ol>
+      <h3>Directly</h3>
+      <p>Go to <a href="https://local.drizzle.studio" target="_blank" rel="noreferrer">https://local.drizzle.studio</a>. With the tunnel open it connects straight away.</p>
+      <div class="note ok"><b>Connected</b>The table list appears on the left. Pick a table to browse, filter, sort, edit or add rows.</div>
+    </section>
+
+    <section id="close">
+      <h2><span class="num">5</span>Disconnect</h2>
+      <p>In the tunnel terminal press <kbd>Ctrl</kbd> + <kbd>C</kbd>. Studio stops working in your browser right away. Studio keeps running on the server, so next time you only repeat step 2 and step 4.</p>
+    </section>
+
+    <section id="database">
+      <h2>Use a different database</h2>
+      <span class="where server">Run on the server</span>
+      <p>By default Studio opens the stack&#8217;s own Postgres. To point it somewhere else, create a <code>.env</code> file next to <code>docker-compose.yml</code>:</p>
+      <div class="code"><pre><code>STUDIO_DB_HOST=postgres
+STUDIO_DB_PORT=5432
+STUDIO_DB_USER=crm_user
+STUDIO_DB_PASSWORD=your-password
+STUDIO_DB_NAME=crm_db</code></pre></div>
+      <p>Then restart Studio:</p>
+      <div class="code"><pre><code>docker compose up -d drizzle-studio</code></pre></div>
+      <div class="note warn"><b>Keep it on the server</b>Never commit this <code>.env</code> file or paste passwords into the docs.</div>
+    </section>
+
+    <section id="troubleshooting">
+      <h2>Troubleshooting</h2>
+      <table>
+        <tr><th>You see</th><th>Fix</th></tr>
+        <tr><td><code>Permission denied (publickey,gssapi-keyex,gssapi-with-mic)</code></td><td>The key is missing. Add <code>-i your-key.pem</code> right after <code>ssh</code>.</td></tr>
+        <tr><td><code>Bad local forwarding specification 'your-key.pem'</code></td><td>The key file was put after <code>-L</code>. Use <code>-i your-key.pem</code>, and keep <code>-L 4983:127.0.0.1:4983</code> as its own part.</td></tr>
+        <tr><td><code>WARNING: UNPROTECTED PRIVATE KEY FILE!</code></td><td>Run <code>chmod 400 your-key.pem</code> once, then retry.</td></tr>
+        <tr><td><code>bind [127.0.0.1]:4983: Address already in use</code></td><td>Another tunnel or Studio already uses port 4983. Close it, or use <code>-L 4984:127.0.0.1:4983</code> and open <code>https://local.drizzle.studio?port=4984</code>.</td></tr>
+        <tr><td>&#8220;Recent Chrome/Chromium updates may block local network access&#8221;</td><td>Do <a href="#chrome">step 3</a>: allow <strong>Apps on device</strong> for the site.</td></tr>
+        <tr><td>Studio keeps saying it is connecting to <code>localhost:4983</code></td><td>Check the tunnel terminal is still open. If it is, SSH into the server and run <code>docker logs --tail 20 crm_drizzle_studio</code>.</td></tr>
+        <tr><td>The dashboard tab shows <strong>Connect to Drizzle Studio</strong></td><td>Open the tunnel, then click <strong>Reconnect</strong>.</td></tr>
+        <tr><td>Blank page in Safari or Brave</td><td>Use Chrome or Firefox, or turn off Brave Shields for the site.</td></tr>
+      </table>
+    </section>
+
+    <section id="safety">
+      <h2>Safety rules</h2>
+      <ul class="list">
+        <li>Every edit saves straight to the live database. There is no undo; the nightly backup is the only way back.</li>
+        <li>Never publish port 4983 or add a security group rule for it. The tunnel is the only safe way in.</li>
+        <li>Keep the key file private and never commit it to the repository.</li>
+        <li>Close the tunnel when you are finished.</li>
+      </ul>
+    </section>
+  </main>
+</div>
+<script>
+(function(){
+  // Copy buttons on every code block.
+  document.querySelectorAll('.code').forEach(function(block){
+    var button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Copy';
+    button.addEventListener('click', function(){
+      var text = block.querySelector('code').innerText;
+      navigator.clipboard.writeText(text).then(function(){
+        button.textContent = 'Copied';
+        setTimeout(function(){ button.textContent = 'Copy'; }, 1500);
+      }, function(){ button.textContent = 'Select and copy'; });
+    });
+    block.appendChild(button);
+  });
+
+  // Mobile contents toggle.
+  var sidebar = document.getElementById('sidebar');
+  var toggle = sidebar.querySelector('.menu-toggle');
+  toggle.addEventListener('click', function(){
+    var open = sidebar.classList.toggle('open');
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+  sidebar.querySelectorAll('nav a[href^="#"]').forEach(function(link){
+    link.addEventListener('click', function(){ sidebar.classList.remove('open'); toggle.setAttribute('aria-expanded', 'false'); });
+  });
+
+  // Highlight the section in view.
+  var links = {};
+  sidebar.querySelectorAll('nav a[href^="#"]').forEach(function(link){ links[link.getAttribute('href').slice(1)] = link; });
+  if (!('IntersectionObserver' in window)) return;
+  var observer = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if (!entry.isIntersecting) return;
+      Object.keys(links).forEach(function(id){ links[id].classList.toggle('active', id === entry.target.id); });
+    });
+  }, { rootMargin: '0px 0px -70% 0px' });
+  document.querySelectorAll('main section[id]').forEach(function(section){ observer.observe(section); });
+})();
+</script>
+</body>
+</html>

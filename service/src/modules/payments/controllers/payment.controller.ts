@@ -77,9 +77,27 @@ const createPayment = async (req: any, res: any) => {
     const scope = getCenterScope(req, { requireConcreteCenter: true });
     if (sendScopeError(res, scope)) return;
     const { centerId } = scope;
-    res.status(201).json(await paymentService.createPayment(req.body, centerId ?? undefined));
+    const cashierName = await paymentService.resolveCashierName(req.user);
+    res.status(201).json(await paymentService.createPayment(req.body, centerId ?? undefined, cashierName));
   } catch (error: any) {
     sendError(res, error, "To'lovni yaratib bo'lmadi");
+  }
+};
+
+// Data for a printed receipt. Receipts are printed by the staff who take payments, so
+// teachers and students are refused.
+const getPaymentReceipt = async (req: any, res: any) => {
+  try {
+    if (req.user?.userType === 'teacher' || req.user?.userType === 'student') {
+      return res.status(403).json({ error: 'Kirish rad etildi.' });
+    }
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    const receipt = await paymentService.getReceipt(Number(req.params.id), scope.centerId ?? undefined);
+    if (!receipt) return res.status(404).json({ error: "To'lov topilmadi" });
+    res.json(receipt);
+  } catch (error: any) {
+    sendError(res, error, "To'lov chekini yuklab bo'lmadi");
   }
 };
 
@@ -167,6 +185,7 @@ module.exports = {
   getAllPayments,
   getPaymentById,
   createPayment,
+  getPaymentReceipt,
   updatePayment,
   getPaymentsByStudent,
   deletePayment,

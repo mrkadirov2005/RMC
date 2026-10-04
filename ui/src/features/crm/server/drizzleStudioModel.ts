@@ -3,7 +3,7 @@
 export const DRIZZLE_STUDIO_PORT = 4983;
 export const DRIZZLE_STUDIO_SERVER_URL = `http://localhost:${DRIZZLE_STUDIO_PORT}/`;
 export const DRIZZLE_STUDIO_APP_URL = 'https://local.drizzle.studio/';
-export const DRIZZLE_STUDIO_TUNNEL_COMMAND = `ssh -N -L ${DRIZZLE_STUDIO_PORT}:127.0.0.1:${DRIZZLE_STUDIO_PORT} ubuntu@your-server`;
+export const DRIZZLE_STUDIO_TUNNEL_COMMAND = `ssh -N -L ${DRIZZLE_STUDIO_PORT}:127.0.0.1:${DRIZZLE_STUDIO_PORT} ec2-user@YOUR-SERVER`;
 
 export type StudioConnection = 'checking' | 'connected' | 'offline';
 

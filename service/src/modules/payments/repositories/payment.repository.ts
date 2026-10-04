@@ -33,6 +33,7 @@ const paymentSelection = () => ({
   discount_amount: payments.discountAmount,
   final_amount: payments.finalAmount,
   is_complete: payments.isComplete,
+  received_by_name: payments.receivedByName,
   deleted_at: payments.deletedAt,
   created_at: payments.createdAt,
   updated_at: payments.updatedAt,
@@ -112,6 +113,7 @@ const insert = async (params: any[], queryable: any = db) => {
       discountAmount: params[16],
       finalAmount: params[17],
       isComplete: params[18],
+      receivedByName: params[19] ?? null,
     })
     .returning(paymentSelection());
   return rows[0];
@@ -172,6 +174,44 @@ const purge = async (id: number, centerId?: number, teacherId?: number) => {
   return deleted[0] || null;
 };
 
-module.exports = { findAll, findById, insert, withTransaction, update, findByStudent, remove, purge };
+// Everything a printed receipt shows, resolved from the payment's own group record:
+// subject (first subject of the class, else the class name), teacher, and the center's
+// contact details for the footer.
+const findReceipt = async (id: number, centerId?: number) => {
+  const result = await pool.query(
+    `SELECT p.payment_id, p.receipt_number, p.payment_date::text AS payment_date, p.created_at,
+            p.amount, p.currency, p.payment_method, p.original_amount, p.discount_amount,
+            p.covered_from::text AS covered_from, p.received_by_name,
+            s.first_name AS student_first_name, s.last_name AS student_last_name,
+            c.class_name, c.payment_amount AS class_payment_amount,
+            subj.subject_name,
+            t.first_name AS teacher_first_name, t.last_name AS teacher_last_name,
+            ec.center_name, ec.phone AS center_phone, ec.address AS center_address
+     FROM payments p
+     LEFT JOIN students s ON s.student_id = p.student_id
+     LEFT JOIN classes c ON c.class_id = s.class_id
+     LEFT JOIN LATERAL (
+       SELECT subject_name FROM subjects WHERE class_id = c.class_id ORDER BY subject_id LIMIT 1
+     ) subj ON true
+     LEFT JOIN teachers t ON t.teacher_id = COALESCE(c.teacher_id, s.teacher_id)
+     LEFT JOIN edu_centers ec ON ec.center_id = p.center_id
+     WHERE p.payment_id = $1 AND p.deleted_at IS NULL AND ($2::int IS NULL OR p.center_id = $2)`,
+    [id, centerId ?? null]
+  );
+  return result.rows[0] || null;
+};
+
+// Full name of the owner or admin account that is recording a payment.
+const findStaffName = async (table: 'owners' | 'superusers', id: number) => {
+  const key = table === 'owners' ? 'owner_id' : 'superuser_id';
+  const result = await pool.query(
+    `SELECT NULLIF(trim(concat_ws(' ', first_name, last_name)), '') AS full_name, username FROM ${table} WHERE ${key} = $1`,
+    [id]
+  );
+  const row = result.rows[0];
+  return row ? (row.full_name || row.username || null) : null;
+};
+
+module.exports = { findAll, findById, insert, withTransaction, update, findByStudent, remove, purge, findReceipt, findStaffName };
 
 export {};
