@@ -21,13 +21,14 @@ const fetchAllClassStudents = async (classId: number) => {
 };
 
 export const sessionWorkflowApi = {
-  async load(classId: number, sessionId: number) {
+  async load(classId: number, sessionId: number | null) {
     const [classResponse, sessionsResponse, students, attendanceResponse, gradesResponse, scoringResponse] = await Promise.all([
       classAPI.getById(classId),
       classAPI.getSessions(classId).catch(() => ({ data: [] })),
       fetchAllClassStudents(classId),
-      attendanceAPI.getBySession(sessionId).catch(() => ({ data: [] })),
-      gradeAPI.getBySession(sessionId).catch(() => ({ data: [] })),
+      // A lesson without a session row yet has nothing recorded to load.
+      sessionId ? attendanceAPI.getBySession(sessionId).catch(() => ({ data: [] })) : { data: [] },
+      sessionId ? gradeAPI.getBySession(sessionId).catch(() => ({ data: [] })) : { data: [] },
       settingsAPI.getLessonScoring().catch(() => ({ data: defaultLessonScoringSettings })),
     ]);
     return {
@@ -47,6 +48,19 @@ export const sessionWorkflowApi = {
     center_id?: number;
   }) {
     return getApiPayload<any>(await classAPI.createSession(classId, payload));
+  },
+  /** Sessions plus the dates that already have attendance, for the lesson picker calendar. */
+  async loadLessonCalendar(classId: number) {
+    const [sessionsResponse, attendanceResponse] = await Promise.all([
+      classAPI.getSessions(classId).catch(() => ({ data: [] })),
+      attendanceAPI.getByClass(classId).catch(() => ({ data: [] })),
+    ]);
+    const attendanceDates = new Set(
+      unwrapApiRows<any>(attendanceResponse)
+        .map((record) => String(record?.attendance_date || '').slice(0, 10))
+        .filter(Boolean),
+    );
+    return { sessions: unwrapApiRows<any>(sessionsResponse), attendanceDates };
   },
   save: (payload: Parameters<typeof gradeAPI.saveSessionWorkflow>[0]) => gradeAPI.saveSessionWorkflow(payload),
 };

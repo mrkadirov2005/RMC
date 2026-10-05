@@ -209,7 +209,9 @@ const saveSessionWorkflow = async (req: any, res: any) => {
         if (!ok) return res.status(403).json({ error: "Bir yoki bir nechta o'quvchi bu o'qituvchiga tegishli emas." });
       }
     }
-    const out = await gradeService.saveSessionWorkflow(req.body, centerId ?? req.body.center_id);
+    // A teacher always records their own lessons; never trust (or default) the id sent by the client.
+    const body = req.user?.userType === 'teacher' ? { ...req.body, teacher_id: Number(req.user.id) } : req.body;
+    const out = await gradeService.saveSessionWorkflow(body, centerId ?? body.center_id);
     if (out && out.error === 'invalid_payload') {
       return res.status(400).json({ error: "Dars jarayoni ma'lumotlari noto'g'ri." });
     }

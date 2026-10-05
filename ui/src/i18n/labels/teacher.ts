@@ -40,4 +40,8 @@ export const teacherLabels: Record<string, string> = {
   'means the lesson has not happened yet.': "dars hali o'tmaganini bildiradi.",
   'scheduled lesson day': 'rejalashtirilgan dars kuni',
   '· Class average': "· Guruh o'rtachasi",
+  "Today's lessons": 'Bugungi darslar',
+  'Attendance done': 'Davomat qilindi',
+  'Attendance not taken': 'Davomat qilinmagan',
+  'No lessons today.': "Bugun dars yo'q.",
 };

@@ -1,17 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, CalendarCheck, CheckCircle2, Coins, FileQuestion, Loader2, Pencil, PencilLine, PlayCircle, Star, Trash2, UserCog } from 'lucide-react';
+import { ArrowLeft, FileQuestion, Loader2, Pencil, PlayCircle, Trash2, UserCog } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { classAPI } from './api';
-import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { showToast } from '@/utils/toast';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -24,16 +20,14 @@ import { useClassDetailData } from './hooks/useClassDetailData';
 import { useClassesPage } from './hooks/useClassesPage';
 import { useMonthlyClassPoints } from './hooks/useMonthlyClassPoints';
 import { toDateKey } from './utils/date';
-import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
+import { parseSchedule } from './utils/schedule';
 import { mergeRoomInventories } from './classFormOptions';
 import { isIncomingTransfer, isTransferredStudentStatus, INCOMING_TRANSFER_VARIANT } from '../students/status';
 import { studentsApi } from '../students/api/studentsApi';
 import { DeleteStudentDialog } from '../students/components/DeleteStudentDialog';
 import { getClassStudentId, removeClassStudentById } from './classStudentActions';
-
-type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
-
-const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
+import { LessonPickerDialog } from './components/LessonPickerDialog';
+import { buildSessionWorkflowPath, defaultLessonActions, getSessionId } from './lessonStart';
 
 // Overview rows that get an inline "Edit"/"Assign" button opening the full class editor.
 // "Students" and "Capacity" are computed from actual enrollment, not raw editable fields.
@@ -48,14 +42,6 @@ const EDITABLE_OVERVIEW_FIELDS = new Set([
   'Group code',
 ]);
 
-const lessonActionOptions: Array<{ id: LessonAction; label: string; detail: string; icon: typeof CalendarCheck }> = [
-  { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
-  { id: 'homework', label: 'Homework', detail: 'Score homework completion.', icon: CheckCircle2 },
-  { id: 'activity', label: 'Activity', detail: 'Score class activity.', icon: Star },
-  { id: 'coins', label: 'Coins', detail: 'Apply coins from the final score.', icon: Coins },
-  { id: 'points', label: 'Points', detail: 'Enter manual points for each student.', icon: PencilLine },
-];
-
 const ClassDetailPage = () => {
   const { classId } = useParams<{ classId: string }>();
   const navigate = useNavigate();
@@ -67,9 +53,7 @@ const ClassDetailPage = () => {
     () => mergeRoomInventories(classesPage.physicalRooms, classesPage.rooms, classesPage.formData.room_number),
     [classesPage.physicalRooms, classesPage.rooms, classesPage.formData.room_number]
   );
-  const [startingLesson, setStartingLesson] = useState(false);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
-  const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
   const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null);
   const [deleteStudentTarget, setDeleteStudentTarget] = useState<(typeof students)[number] | null>(null);
   const [deletingSessionId, setDeletingSessionId] = useState<number | null>(null);
@@ -83,7 +67,6 @@ const ClassDetailPage = () => {
   const todayKey = toDateKey(new Date());
   const scheduleRange = schedule.time ? `${schedule.time}${schedule.endTime ? ` - ${schedule.endTime}` : ''}` : '';
   const scheduleText = [schedule.days.join(', '), scheduleRange].filter(Boolean).join(' / ') || 'No schedule';
-  const scheduleDurationMinutes = useMemo(() => getScheduleDurationMinutes(schedule), [schedule]);
   const studentRows = students.filter((student) => !student.deleted_at);
   const teacherName = classData?.teacher_name || 'No teacher assigned';
   const overviewItems = [
@@ -115,19 +98,10 @@ const ClassDetailPage = () => {
   });
   // const recentSessions = sessions.slice(0, 80);
 
-  const openSessionWorkflow = (session: any, actions: LessonAction[] = defaultLessonActions, tab?: LessonAction) => {
-    const nextSessionId = Number(session.session_id || session.id);
+  const openSessionWorkflow = (session: any) => {
+    const nextSessionId = getSessionId(session);
     if (!nextSessionId) return;
-    const params = new URLSearchParams({ actions: actions.join(',') });
-    if (tab) params.set('tab', tab);
-    navigate(`/classes/${classId}/sessions/${nextSessionId}/workflow?${params.toString()}`);
-  };
-
-  const toggleLessonAction = (action: LessonAction, checked: boolean) => {
-    setSelectedLessonActions((current) => {
-      if (checked) return Array.from(new Set([...current, action]));
-      return current.filter((item) => item !== action);
-    });
+    navigate(buildSessionWorkflowPath({ classId: Number(classId), sessionId: nextSessionId, actions: defaultLessonActions }));
   };
 
   const handleEditStudent = (student: (typeof students)[number]) => {
@@ -177,51 +151,6 @@ const ClassDetailPage = () => {
     }
   };
 
-  const handleStartLesson = async () => {
-    if (!classData || !classId) return;
-    const scoringActions = selectedLessonActions.filter((action) => action !== 'coins');
-    if (scoringActions.length === 0) {
-      showToast.error('Pick attendance, homework, activity, or points before starting.');
-      return;
-    }
-    const targetClassId = Number(classData.class_id || classData.id || classId);
-    const existingTodaySession = sessions.find((session) => {
-      if (!session.session_date) return false;
-      return new Date(session.session_date).toISOString().split('T')[0] === todayKey;
-    });
-
-    if (existingTodaySession) {
-      setLessonPickerOpen(false);
-      openSessionWorkflow(existingTodaySession, selectedLessonActions);
-      return;
-    }
-
-    setStartingLesson(true);
-    try {
-      const targetCenterId = Number(classData.center_id || 0) || getResolvedCenterId(authUser) || undefined;
-      if (!targetCenterId) {
-        showToast.error('Please select an active center before starting a lesson.');
-        return;
-      }
-      const response = await classAPI.createSession(targetClassId, {
-        center_id: targetCenterId,
-        session_date: todayKey,
-        start_time: schedule.time || new Date().toTimeString().slice(0, 5),
-        duration_minutes: scheduleDurationMinutes,
-        teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData.teacher_id || 0) || undefined,
-      });
-      const nextSession = response?.data ?? response;
-      setSessions((current) => [...current, nextSession]);
-      setLessonPickerOpen(false);
-      openSessionWorkflow(nextSession, selectedLessonActions);
-    } catch (err) {
-      console.error('Failed to start lesson:', err);
-      showToast.error('Failed to start lesson.');
-    } finally {
-      setStartingLesson(false);
-    }
-  };
-
   const handleOpenClassEditor = () => {
     if (classData) classesPage.handleOpenModal(classData as any);
   };
@@ -267,57 +196,21 @@ const ClassDetailPage = () => {
           </div>
           <Button
             onClick={() => setLessonPickerOpen(true)}
-            disabled={startingLesson}
             className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
           >
-            {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+            <PlayCircle className="mr-2 h-4 w-4" />
             {t('Start Lesson')}
           </Button>
         </div>
       </div>
 
-      <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingLesson && setLessonPickerOpen(open)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{t('Pick lesson actions')}</DialogTitle>
-            <DialogDescription>{t('Select what you want to do in this lesson session.')}</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-2">
-            {lessonActionOptions.map((option) => {
-              const Icon = option.icon;
-              const checked = selectedLessonActions.includes(option.id);
-              return (
-                <Label
-                  key={option.id}
-                  htmlFor={`lesson-action-${option.id}`}
-                  className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition hover:bg-slate-50 dark:hover:bg-muted/40"
-                >
-                  <Checkbox
-                    id={`lesson-action-${option.id}`}
-                    checked={checked}
-                    onCheckedChange={(value) => toggleLessonAction(option.id, value === true)}
-                    className="mt-1"
-                  />
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-white">
-                    <Icon className="h-4 w-4" />
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-sm font-semibold">{option.label}</span>
-                    <span className="block text-xs text-muted-foreground">{option.detail}</span>
-                  </span>
-                </Label>
-              );
-            })}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setLessonPickerOpen(false)} disabled={startingLesson}>{t('Cancel')}</Button>
-            <Button onClick={handleStartLesson} disabled={startingLesson} className="bg-rose-600 text-white hover:bg-rose-700">
-              {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
-              {t('Start')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <LessonPickerDialog
+        open={lessonPickerOpen}
+        onOpenChange={setLessonPickerOpen}
+        classId={Number(classData.class_id || classData.id || classId) || null}
+        label={className}
+        section={classData.section}
+      />
 
       <DeleteStudentDialog
         open={deleteStudentTarget != null}
