@@ -102,6 +102,8 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
             </span>
           ) : stats.selectedClass ? (
             <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">{stats.selectedClass.label}</span>
+          ) : stats.scope === 'center' ? (
+            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">{t('All my classes')}</span>
           ) : null}
         </Button>
 
@@ -183,7 +185,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
               <div className="mb-3 flex items-center justify-between text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
                 <span>
                   {stats.scope === 'center'
-                    ? t('Whole center · All classes average')
+                    ? stats.isGlobalMode ? t('Whole center · All classes average') : t('All my classes · Average')
                     : (
                       <>
                         {stats.isGlobalMode && stats.selectedTeacher ? `${stats.selectedTeacher.label} · ` : ''}
@@ -279,6 +281,26 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                   <div className="py-6 text-center text-xs text-muted-foreground">{t('No classes found.')}</div>
                 ) : (
                   <div className="space-y-1.5">
+                    {!stats.isGlobalMode && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={stats.selectCenter}
+                          className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-xs font-bold transition ${
+                            stats.scope === 'center'
+                              ? 'border-blue-600 bg-blue-600 text-white shadow-sm'
+                              : 'border-slate-200 bg-slate-50 text-slate-700 hover:border-blue-200 hover:bg-blue-50 dark:border-white/10 dark:bg-slate-900/50 dark:text-slate-200'
+                          }`}
+                        >
+                          <span className="flex min-w-0 items-center gap-2">
+                            <BarChart3 className="h-3.5 w-3.5 shrink-0" />
+                            {t('All my classes')}
+                          </span>
+                          <ChevronRight className="h-3.5 w-3.5 shrink-0" />
+                        </button>
+                        <div className="my-1 border-t border-slate-200 dark:border-white/10" />
+                      </>
+                    )}
                     {stats.groups.map((group: { id: number; label: string }) => (
                       <button
                         key={group.id}

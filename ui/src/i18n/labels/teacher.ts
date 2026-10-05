@@ -35,6 +35,8 @@ export const teacherLabels: Record<string, string> = {
   'Unable to load your profile.': "Profilingizni yuklab bo'lmadi.",
   'Whole center': 'Butun markaz',
   'Whole center · All classes average': "Butun markaz · Barcha guruhlar o'rtachasi",
+  'All my classes': 'Barcha guruhlarim',
+  'All my classes · Average': "Barcha guruhlarim · O'rtacha",
   'means a past lesson has no attendance, and': "o'tgan darsda davomat yo'qligini bildiradi, va",
   'means attendance was recorded,': 'davomat belgilanganini bildiradi,',
   'means the lesson has not happened yet.': "dars hali o'tmaganini bildiradi.",
