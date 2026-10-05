@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultLessonScoringSettings } from '../lessonScoringSettings';
 import {
+  buildLessonSummary,
   buildSessionWorkflowRecords,
   clampWorkflowPoints,
   getWorkflowCounts,
@@ -53,5 +54,60 @@ describe('session workflow model', () => {
     });
     expect(records[0]).toMatchObject({ student_id: 7, attendance_status: 'Present', homework_score: 20, activity_score: 30, stellar_bonus_coins: 30 });
     expect(records[1].stellar_bonus_coins).toBe(0);
+  });
+});
+
+describe('lesson summary', () => {
+  const students = [
+    { student_id: 1, first_name: 'Ali', last_name: 'Valiyev' },
+    { student_id: 2, first_name: 'Bobur' },
+    { student_id: 3, first_name: 'Dilnoza' },
+    { student_id: 4, first_name: 'Moved' },
+  ];
+  const attendance = new Map([[1, 'On time'], [2, 'Late'], [3, 'Absent'], [4, 'On time']]);
+  const homework = new Map([[1, 'Excellent'], [2, 'Half'], [3, ''], [4, 'Good']]);
+
+  const summary = buildLessonSummary({
+    students,
+    selectedActions: ['attendance', 'homework', 'coins'],
+    attendance,
+    homework,
+    activity: new Map(),
+    points: new Map(),
+    stellarStudentId: 1,
+    settings: defaultLessonScoringSettings,
+    saveResult: {
+      coins: [{ transaction: { student_id: 1, delta: 50 } }, { transaction: { student_id: 2, delta: -5 } }, { transaction: { student_id: 3, delta: -20 } }],
+      skipped_student_ids: [4],
+    },
+  });
+
+  it('leaves out students the server skipped', () => {
+    expect(summary.total).toBe(3);
+    expect(summary.skipped).toBe(1);
+  });
+
+  it('counts late students as present and lists who missed the lesson', () => {
+    expect(summary.attendance).toMatchObject({ present: 2, rate: 67 });
+    expect(summary.attendance?.breakdown.map((item) => [item.label, item.count])).toEqual([
+      ['On time', 1], ['Late', 1], ['Excused', 0], ['Absent', 1],
+    ]);
+    expect(summary.missedStudents).toEqual([{ id: 3, name: 'Dilnoza', status: 'Absent' }]);
+  });
+
+  it('scores the lesson against the best possible total for the chosen actions', () => {
+    // max = 50 attendance + 20 homework; scores 70, 50, 0 → average 40 → 57%
+    expect(summary.maxScore).toBe(70);
+    expect(summary.averageScore).toBe(40);
+    expect(summary.averagePercent).toBe(57);
+    expect(summary.status).toBe('fair');
+    expect(summary.activity).toBeNull();
+    expect(summary.pointsAverage).toBeNull();
+  });
+
+  it('ranks top students and reports the saved coins', () => {
+    expect(summary.topStudents.map((item) => item.name)).toEqual(['Ali Valiyev', 'Bobur']);
+    expect(summary.coins).toEqual({ total: 25, students: 3 });
+    expect(summary.stellarStudentName).toBe('Ali Valiyev');
   });
 });

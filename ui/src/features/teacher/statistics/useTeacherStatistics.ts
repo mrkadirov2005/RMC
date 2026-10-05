@@ -84,9 +84,8 @@ export const useTeacherStatistics = (
 
   const selectedTeacher = teacherOptions.find((teacher) => teacher.id === panelTeacherId) || null;
 
-  // Defaults to 'center' so the owner-wide view opens straight into a whole-center aggregate;
-  // this is meaningless for the teacher-portal (non-global) case, where loading is always gated
-  // on `selectedClassId` regardless of scope.
+  // Defaults to 'center' so both views open straight into an aggregate: the whole center for the
+  // owner, and all of the teacher's own classes in the teacher portal. Picking a class narrows it.
   const [scope, setScope] = useState<'center' | 'class'>('center');
   const [groupsOpen, setGroupsOpen] = useState(false);
   const [selectedClassId, setSelectedClassId] = useState<number | null>(null);
@@ -100,6 +99,12 @@ export const useTeacherStatistics = (
   const allClassIds = useMemo(
     () => Array.from(new Set(classes.map((item) => Number(item?.class_id ?? item?.id ?? 0)).filter((id) => id > 0))),
     [classes]
+  );
+
+  // The classes an aggregate covers: every class for the owner, only their own for a teacher.
+  const scopeClassIds = useMemo(
+    () => (isGlobalMode ? allClassIds : groups.map((group) => group.id)),
+    [isGlobalMode, allClassIds, groups]
   );
 
   const selectPanelTeacher = (id: number) => {
@@ -132,14 +137,14 @@ export const useTeacherStatistics = (
   useEffect(() => {
     let cancelled = false;
 
-    if (isGlobalMode && scope === 'center') {
-      if (allClassIds.length === 0) {
+    if (scope === 'center') {
+      if (scopeClassIds.length === 0) {
         setSessions([]);
         return;
       }
       setSessionsLoading(true);
       classAPI
-        .getSessionsBulk(allClassIds)
+        .getSessionsBulk(scopeClassIds)
         .then((response) => {
           if (!cancelled) setSessions(unwrapRows(response));
         })
@@ -173,7 +178,7 @@ export const useTeacherStatistics = (
     return () => {
       cancelled = true;
     };
-  }, [isGlobalMode, scope, allClassIds, selectedClassId]);
+  }, [scope, scopeClassIds, selectedClassId]);
 
   const classStudents = useMemo(() => {
     if (!selectedClassId) return [] as any[];
@@ -262,7 +267,7 @@ export const useTeacherStatistics = (
   }, [lessonPoints, granularity]);
 
   const selectedClass = groups.find((group) => group.id === selectedClassId) || null;
-  const hasSelection = isGlobalMode ? (scope === 'center' || !!selectedClassId) : !!selectedClassId;
+  const hasSelection = scope === 'center' || !!selectedClassId;
 
   return {
     isGlobalMode,

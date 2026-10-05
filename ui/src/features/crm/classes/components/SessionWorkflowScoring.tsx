@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { optionToneClasses } from './scoreTones';
 
 const stepToneClasses = {
   emerald: 'border-emerald-300 bg-emerald-50',
@@ -23,44 +24,6 @@ export type ScoreOption = {
   tone: ScoreTone;
 };
 
-const optionToneClasses: Record<ScoreTone, { idle: string; active: string; fill: string; track: string }> = {
-  emerald: {
-    idle: 'border-emerald-200 bg-emerald-50 text-emerald-900 hover:border-emerald-400',
-    active: 'border-emerald-600 bg-emerald-600 text-white shadow-emerald-100',
-    fill: '#10b981',
-    track: '#d1fae5',
-  },
-  sky: {
-    idle: 'border-sky-200 bg-sky-50 text-sky-900 hover:border-sky-400',
-    active: 'border-sky-600 bg-sky-600 text-white shadow-sky-100',
-    fill: '#0ea5e9',
-    track: '#e0f2fe',
-  },
-  violet: {
-    idle: 'border-violet-200 bg-violet-50 text-violet-900 hover:border-violet-400',
-    active: 'border-violet-600 bg-violet-600 text-white shadow-violet-100',
-    fill: '#7c3aed',
-    track: '#ede9fe',
-  },
-  amber: {
-    idle: 'border-amber-200 bg-amber-50 text-amber-900 hover:border-amber-400',
-    active: 'border-amber-500 bg-amber-500 text-white shadow-amber-100',
-    fill: '#f59e0b',
-    track: '#fef3c7',
-  },
-  rose: {
-    idle: 'border-rose-200 bg-rose-50 text-rose-900 hover:border-rose-400',
-    active: 'border-rose-600 bg-rose-600 text-white shadow-rose-100',
-    fill: '#f43f5e',
-    track: '#ffe4e6',
-  },
-  orange: {
-    idle: 'border-orange-200 bg-orange-50 text-orange-900 hover:border-orange-400',
-    active: 'border-orange-500 bg-orange-500 text-white shadow-orange-100',
-    fill: '#f97316',
-    track: '#ffedd5',
-  },
-};
 
 const ScoreCircle = ({ option, active }: { option: ScoreOption; active: boolean }) => {
   const tone = optionToneClasses[option.tone];
@@ -147,6 +110,7 @@ export const ScoreTable = ({
   onToggleStellar,
   stellarBonusCoins = 30,
   action,
+  readOnly = false,
 }: {
   students: any[];
   options: ScoreOption[];
@@ -158,12 +122,14 @@ export const ScoreTable = ({
   stellarStudentId?: number | null;
   onToggleStellar?: (studentId: number) => void;
   stellarBonusCoins?: number;
-  action: ReactNode;
+  action?: ReactNode;
+  /** Shows saved marks only: no fill-all bar, and the option buttons cannot be pressed. */
+  readOnly?: boolean;
 }) => {
   const { t } = useLanguage();
   return (
   <div className="overflow-x-auto rounded-lg border">
-    <div className="flex items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
+    {!readOnly && <div className="flex items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
       <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">{t('Fill all')}</span>
       {options.map((option) => {
         const tone = optionToneClasses[option.tone];
@@ -182,7 +148,7 @@ export const ScoreTable = ({
           </button>
         );
       })}
-    </div>
+    </div>}
     <Table>
       <TableHeader>
         <TableRow className="bg-primary">
@@ -219,11 +185,12 @@ export const ScoreTable = ({
                   <TableCell key={option.label} className="w-[72px] px-1 py-1 text-center">
                     <button
                       type="button"
-                      disabled={!enabled}
+                      disabled={!enabled || readOnly}
                       aria-label={`${option.label} ${t('{count} points', { count: option.score })}`}
                       className={cn(
                         'mx-auto flex h-7 w-12 items-center justify-center gap-1 rounded-full border px-0.5 shadow-sm transition disabled:pointer-events-none',
                         isSelected ? `${tone.active} ring-2 ring-offset-1 ring-offset-background` : tone.idle,
+                        readOnly && !isSelected && 'opacity-30',
                       )}
                       onClick={() => onToggle(studentId, option.label)}
                     >
@@ -242,7 +209,7 @@ export const ScoreTable = ({
                 <TableCell className="px-3 py-1.5 text-center">
                   <button
                     type="button"
-                    disabled={!enabled}
+                    disabled={!enabled || readOnly}
                     className={cn(
                       'inline-flex h-8 items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-bold shadow-sm transition disabled:pointer-events-none',
                       isStellar
@@ -261,7 +228,7 @@ export const ScoreTable = ({
         })}
       </TableBody>
     </Table>
-    <div className="flex justify-end gap-2 border-t p-3">{action}</div>
+    {action && <div className="flex justify-end gap-2 border-t p-3">{action}</div>}
   </div>
 );
 };
@@ -273,18 +240,20 @@ export const ManualPointsTable = ({
   onFillAll,
   getTotalScore,
   action,
+  readOnly = false,
 }: {
   students: any[];
   values: Map<number, string>;
   onChange: (studentId: number, value: string) => void;
   onFillAll: (value: string) => void;
   getTotalScore: (studentId: number) => number;
-  action: ReactNode;
+  action?: ReactNode;
+  readOnly?: boolean;
 }) => {
   const { t } = useLanguage();
   return (
   <div className="overflow-x-auto rounded-lg border">
-    <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
+    {!readOnly && <div className="flex flex-wrap items-center gap-2 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
       <span className="text-xs font-semibold text-muted-foreground">{t('Fill all points')}</span>
       {[0, 5, 10, 20, 50, 100].map((value) => (
         <button
@@ -296,7 +265,7 @@ export const ManualPointsTable = ({
           {value}
         </button>
       ))}
-    </div>
+    </div>}
     <Table>
       <TableHeader>
         <TableRow className="bg-primary">
@@ -321,7 +290,9 @@ export const ManualPointsTable = ({
                 <span className="block truncate">{[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}</span>
               </TableCell>
               <TableCell className="px-3 py-1.5">
-                <Input
+                {readOnly ? (
+                  <span className="block text-center text-sm font-semibold">{values.get(studentId) || '-'}</span>
+                ) : <Input
                   type="number"
                   min="0"
                   max="100"
@@ -330,7 +301,7 @@ export const ManualPointsTable = ({
                   onChange={(event) => onChange(studentId, event.target.value)}
                   className="mx-auto h-8 max-w-[120px] text-center text-sm font-semibold"
                   placeholder="0"
-                />
+                />}
               </TableCell>
               <TableCell className="px-3 py-1.5 text-center">
                 <span className={cn('inline-flex h-8 min-w-[92px] items-center justify-center gap-1.5 rounded-full border px-3 text-[11px] font-bold', status.className)}>
@@ -346,7 +317,7 @@ export const ManualPointsTable = ({
         })}
       </TableBody>
     </Table>
-    <div className="flex justify-end gap-2 border-t p-3">{action}</div>
+    {action && <div className="flex justify-end gap-2 border-t p-3">{action}</div>}
   </div>
 );
 };

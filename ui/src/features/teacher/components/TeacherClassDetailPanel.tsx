@@ -26,7 +26,6 @@ interface TeacherClassDetailPanelProps {
   loading?: boolean;
   onBack: () => void;
   onStartLesson: () => void;
-  startingLesson?: boolean;
   students: TeacherStudentItem[];
 }
 
@@ -37,7 +36,6 @@ export default function TeacherClassDetailPanel({
   loading = false,
   onBack,
   onStartLesson,
-  startingLesson = false,
   students,
 }: TeacherClassDetailPanelProps) {
   const { t } = useLanguage();
@@ -89,10 +87,9 @@ export default function TeacherClassDetailPanel({
             {/* here */}
             <Button
               onClick={onStartLesson}
-              disabled={startingLesson}
               className="h-9 bg-rose-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-rose-700"
             >
-              {startingLesson ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlayCircle className="mr-2 h-4 w-4" />}
+              <PlayCircle className="mr-2 h-4 w-4" />
               {t('Start Lesson')}
             </Button>
           </div>

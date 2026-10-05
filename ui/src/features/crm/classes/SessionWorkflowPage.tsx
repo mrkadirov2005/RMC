@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Loader2, Save } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Eye, Loader2, Pencil, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -14,15 +14,22 @@ import { useAppDispatch, useAppSelector } from '../hooks';
 import { ManualPointsTable, ScoreTable, StepTile, type ScoreOption } from './components/SessionWorkflowScoring';
 import { defaultLessonScoringSettings, normalizeLessonScoringSettings, type LessonScoringSettings } from './lessonScoringSettings';
 import {
+  buildLessonSummary,
   buildSessionWorkflowRecords,
   clampWorkflowPoints,
   getWorkflowCounts,
   getWorkflowStudentId,
   getWorkflowTotalScore,
   toWorkflowPointMap,
+  type LessonSummary,
 } from './sessionWorkflowModel';
 import { sessionWorkflowApi } from './api/sessionWorkflowApi';
+import { buildSessionWorkflowPath, findSessionOnDate, getSessionId, NEW_SESSION_SEGMENT, sessionDateKey } from './lessonStart';
+import { toDateKey } from './utils/date';
+import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 import ConsolidationTab from './components/ConsolidationTab';
+import { LessonSummaryDialog } from './components/LessonSummaryDialog';
+import { getApiPayload } from '@/shared/api/response';
 import { useLanguage } from '@/i18n/LanguageContext';
 
 const toPointMap = (options: ScoreOption[]) => toWorkflowPointMap(options);
@@ -47,8 +54,6 @@ const ACTION_LABELS: Record<WorkflowTab, string> = {
 
 const getStudentId = getWorkflowStudentId;
 
-const toDateKey = (value?: string) => (value ? new Date(value).toISOString().split('T')[0] : '');
-
 export default function SessionWorkflowPage() {
   const { t } = useLanguage();
   const { classId, sessionId } = useParams<{ classId: string; sessionId: string }>();
@@ -71,26 +76,37 @@ export default function SessionWorkflowPage() {
     return isPageTab(requestedTab) ? requestedTab : 'attendance';
   });
   const [selectedDate, setSelectedDate] = useState('');
-  const [switchingDate, setSwitchingDate] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const suppressDraftPersistence = useRef(false);
+  const createdSessionId = useRef(0);
+  const [lessonSummary, setLessonSummary] = useState<LessonSummary | null>(null);
 
   const numericClassId = Number(classId);
-  const numericSessionId = Number(sessionId);
-  const draftKey = `${numericClassId}:${numericSessionId}`;
+  // `/sessions/new/workflow?date=…` opens a lesson that has no session row yet; it is created on save.
+  const isNewSession = sessionId === NEW_SESSION_SEGMENT;
+  const numericSessionId = isNewSession ? 0 : Number(sessionId);
+  const requestedDate = searchParams.get('date') || toDateKey(new Date());
+  const lessonDate = isNewSession ? requestedDate : '';
+  const draftKey = isNewSession ? `${numericClassId}:new:${requestedDate}` : `${numericClassId}:${numericSessionId}`;
+  const [loadedDraftKey, setLoadedDraftKey] = useState('');
   const savedDraft = useAppSelector((state) => state.sessionWorkflowDrafts.drafts[draftKey]);
   const savedDraftRef = useRef(savedDraft);
   savedDraftRef.current = savedDraft;
-  const selectedActions = useMemo(() => {
+  // `mode=view` opens a saved lesson read-only; its steps come from what was actually recorded.
+  const isViewMode = searchParams.get('mode') === 'view' && !isNewSession;
+  const [recordedActions, setRecordedActions] = useState<WorkflowAction[] | null>(null);
+  const requestedActions = useMemo(() => {
     const raw = searchParams.get('actions');
     const values = raw ? raw.split(',') : DEFAULT_WORKFLOW_ACTIONS;
     const allowed = new Set<WorkflowAction>(['attendance', 'homework', 'activity', 'coins', 'points']);
     const next = values.filter((value): value is WorkflowAction => allowed.has(value as WorkflowAction));
     return next.length > 0 ? next : DEFAULT_WORKFLOW_ACTIONS;
   }, [searchParams]);
-  const backPath = searchParams.get('from') === 'teacher' ? '/teacher-portal' : `/classes/${numericClassId}`;
+  const selectedActions = isViewMode && recordedActions?.length ? recordedActions : requestedActions;
+  const from = searchParams.get('from');
+  const backPath = from === 'teacher' ? '/teacher-portal' : `/classes/${numericClassId}`;
   const selectedTabs = useMemo(
     () => WORKFLOW_TABS.filter((tab) => selectedActions.includes(tab)),
     [selectedActions],
@@ -98,21 +114,39 @@ export default function SessionWorkflowPage() {
   const shouldAwardCoins = selectedActions.includes('coins');
   const centerId = Number(session?.center_id || classData?.center_id || 0) || getResolvedCenterId(authUser) || undefined;
 
+  // Read by the loader without making it reload: switching view → edit or changing the tab
+  // updates the URL but must keep the marks already on screen.
+  const routeOptionsRef = useRef({ isViewMode, selectedActions, from, tab: searchParams.get('tab') });
+  routeOptionsRef.current = { isViewMode, selectedActions, from, tab: searchParams.get('tab') };
+
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      if (!numericClassId || !numericSessionId) return;
+      if (!numericClassId || (!isNewSession && !numericSessionId)) return;
+      const routeOptions = routeOptionsRef.current;
       setLoading(true);
       setError('');
+      createdSessionId.current = 0;
       try {
-        const loaded = await sessionWorkflowApi.load(numericClassId, numericSessionId);
+        const loaded = await sessionWorkflowApi.load(numericClassId, isNewSession ? null : numericSessionId);
         if (cancelled) return;
 
         const nextClass = loaded.classData;
         const nextSessions = loaded.sessions;
-        const nextSession = nextSessions.find((item) => Number(item.session_id || item.id) === numericSessionId);
+        if (isNewSession) {
+          // The lesson may have been saved since this link was built; reopen it instead of duplicating it.
+          const existing = findSessionOnDate(nextSessions, lessonDate);
+          if (existing) {
+            navigate(buildSessionWorkflowPath({ classId: numericClassId, sessionId: getSessionId(existing), actions: routeOptions.selectedActions, from: routeOptions.from, tab: routeOptions.tab }), { replace: true });
+            return;
+          }
+        }
+        const nextSession = isNewSession
+          ? null
+          : nextSessions.find((item) => getSessionId(item) === numericSessionId);
+        const nextSessionDate = isNewSession ? lessonDate : sessionDateKey(nextSession);
         // Students transferred in after, or out before, this lesson are not part of it.
-        const nextStudents = loaded.students.filter((student: any) => wasInGroupOn(student, toDateKey(nextSession?.session_date)));
+        const nextStudents = loaded.students.filter((student: any) => wasInGroupOn(student, nextSessionDate));
         const nextAttendanceRecords = loaded.attendanceRecords;
         const nextGrades = loaded.grades;
         const nextScoringSettings = normalizeLessonScoringSettings(loaded.scoringSettings as Partial<LessonScoringSettings>);
@@ -148,7 +182,8 @@ export default function SessionWorkflowPage() {
           if (id && String(grade.coin_comment || '').includes('Stellar student bonus')) nextStellarStudentId = id;
         });
 
-        if (savedDraftRef.current) {
+        // A read-only view shows what is saved, never an unsaved draft.
+        if (savedDraftRef.current && !routeOptions.isViewMode) {
             const draft = savedDraftRef.current;
               const studentIds = new Set(nextStudents.map(getStudentId).filter(Boolean));
               const restoreMap = (entries: [number, string][] | undefined, fallback: Map<number, string>) => {
@@ -179,14 +214,34 @@ export default function SessionWorkflowPage() {
         setClassData(nextClass);
         setScoringSettings(nextScoringSettings);
         setSessions(nextSessions);
-        setSession(nextSession || { session_id: numericSessionId, class_id: numericClassId, center_id: nextClass?.center_id });
-        setSelectedDate(toDateKey(nextSession?.session_date) || new Date().toISOString().split('T')[0]);
+        if (nextSession) {
+          setSession(nextSession);
+        } else {
+          const schedule = parseSchedule(nextClass?.section);
+          setSession({
+            session_id: isNewSession ? null : numericSessionId,
+            class_id: numericClassId,
+            center_id: nextClass?.center_id,
+            session_date: nextSessionDate,
+            start_time: schedule.time.slice(0, 5) || null,
+            duration_minutes: getScheduleDurationMinutes(schedule),
+          });
+        }
+        setSelectedDate(nextSessionDate || toDateKey(new Date()));
         setStudents(nextStudents.filter((student) => !student.deleted_at));
         setAttendance(nextAttendance);
         setHomeworkScores(nextHomework);
         setActivityScores(nextActivity);
         setPointsScores(nextPoints);
         setStellarStudentId(nextStellarStudentId);
+        setLoadedDraftKey(draftKey);
+        const recorded: WorkflowAction[] = [];
+        if (nextAttendanceRecords.length > 0) recorded.push('attendance');
+        if (nextGrades.some((grade) => grade.homework_score !== null && grade.homework_score !== undefined)) recorded.push('homework');
+        if (nextGrades.some((grade) => grade.activity_score !== null && grade.activity_score !== undefined)) recorded.push('activity');
+        if (nextGrades.some((grade) => grade.points_score !== null && grade.points_score !== undefined)) recorded.push('points');
+        if (nextGrades.some((grade) => Boolean(grade.coin_comment))) recorded.push('coins');
+        setRecordedActions(recorded);
       } catch (err: any) {
         if (!cancelled) setError(err?.response?.data?.error || err?.response?.data?.details || 'Failed to load lesson workflow.');
       } finally {
@@ -197,10 +252,12 @@ export default function SessionWorkflowPage() {
     return () => {
       cancelled = true;
     };
-  }, [numericClassId, numericSessionId]);
+  }, [draftKey, navigate, numericClassId, numericSessionId, isNewSession, lessonDate]);
 
   useEffect(() => {
-    if (loading || !numericClassId || !numericSessionId || suppressDraftPersistence.current) return;
+    // Only persist once this route's data is in state; otherwise switching dates would save the
+    // previous lesson's marks under the next lesson's key.
+    if (loading || isViewMode || loadedDraftKey !== draftKey || suppressDraftPersistence.current) return;
     const draft: SessionWorkflowDraft = {
       attendance: Array.from(attendance.entries()),
       homeworkScores: Array.from(homeworkScores.entries()),
@@ -210,7 +267,7 @@ export default function SessionWorkflowPage() {
       activeTab: activeTab === 'consolidation' ? 'attendance' : activeTab,
     };
     dispatch(saveSessionWorkflowDraft({ key: draftKey, draft }));
-  }, [activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, loading, numericClassId, numericSessionId, pointsScores, stellarStudentId]);
+  }, [activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, isViewMode, loadedDraftKey, loading, pointsScores, stellarStudentId]);
 
   useEffect(() => {
     if (selectedTabs.length === 0) return;
@@ -303,45 +360,35 @@ export default function SessionWorkflowPage() {
     });
   };
 
-  const handleDateChange = async (nextDate: string) => {
-    if (!nextDate || !numericClassId || !classData) return;
+  // Switching dates only navigates; a session for an unrecorded date is created when it is saved.
+  const handleDateChange = (nextDate: string) => {
+    if (!nextDate || !numericClassId || nextDate === selectedDate) return;
     setSelectedDate(nextDate);
-    const existingSession = sessions.find((item) => toDateKey(item.session_date) === nextDate);
-    const nextActions = selectedActions.join(',');
+    const existingSession = findSessionOnDate(sessions, nextDate);
     const nextTab = activeTab === 'consolidation' ? 'consolidation' : selectedTabs.includes(activeTab) ? activeTab : selectedTabs[0] || 'points';
+    navigate(buildSessionWorkflowPath({
+      classId: numericClassId,
+      sessionId: existingSession ? getSessionId(existingSession) : null,
+      date: nextDate,
+      actions: selectedActions,
+      from,
+      tab: nextTab,
+      view: isViewMode,
+    }), { replace: true });
+  };
 
-    if (existingSession) {
-      const nextSessionId = Number(existingSession.session_id || existingSession.id);
-      if (nextSessionId && nextSessionId !== numericSessionId) {
-        navigate(`/classes/${numericClassId}/sessions/${nextSessionId}/workflow?actions=${nextActions}&tab=${nextTab}`, { replace: true });
-      }
-      return;
-    }
-
-    setSwitchingDate(true);
-    try {
-      const nextSession = await sessionWorkflowApi.createSession(numericClassId, {
-        center_id: centerId,
-        session_date: nextDate,
-        start_time: session?.start_time || new Date().toTimeString().slice(0, 5),
-        duration_minutes: Number(session?.duration_minutes || 90),
-        teacher_id: authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id || session?.teacher_id || 0) || undefined,
-      });
-      const nextSessionId = Number(nextSession?.session_id || nextSession?.id || 0);
-      if (!nextSessionId) throw new Error('Session was created without an id.');
-      setSessions((current) => [...current, nextSession]);
-      navigate(`/classes/${numericClassId}/sessions/${nextSessionId}/workflow?actions=${nextActions}&tab=${nextTab}`, { replace: true });
-    } catch (err) {
-      console.error('Failed to switch lesson date:', err);
-      setSelectedDate(toDateKey(session?.session_date) || new Date().toISOString().split('T')[0]);
-      showToast.error('Failed to open lesson for this date.');
-    } finally {
-      setSwitchingDate(false);
-    }
+  const startEditing = () => {
+    navigate(buildSessionWorkflowPath({
+      classId: numericClassId,
+      sessionId: numericSessionId,
+      actions: selectedActions,
+      from,
+      tab: activeTab,
+    }), { replace: true });
   };
 
   const saveSession = async () => {
-    if (!numericSessionId || !numericClassId) return;
+    if (!numericClassId || (!isNewSession && !numericSessionId)) return;
     if (selectedTabs.length === 0) {
       showToast.error('Choose at least one scoring action before saving this lesson.');
       return;
@@ -358,7 +405,9 @@ export default function SessionWorkflowPage() {
 
     setSubmitting(true);
     try {
-      const teacherId = authUser?.userType === 'teacher' && authUser?.id ? Number(authUser.id) : Number(classData?.teacher_id || session?.teacher_id || 0);
+      const teacherId = authUser?.userType === 'teacher' && authUser?.id
+        ? Number(authUser.id)
+        : Number(classData?.teacher_id || session?.teacher_id || 0) || null;
       const records = buildSessionWorkflowRecords({
         students,
         selectedActions,
@@ -370,11 +419,26 @@ export default function SessionWorkflowPage() {
         settings: scoringSettings,
       });
 
-      await sessionWorkflowApi.save({
+      let targetSessionId = numericSessionId || createdSessionId.current;
+      if (!targetSessionId) {
+        // Creating a session for the same class/date/time returns the existing row, so a retry is safe.
+        const created = await sessionWorkflowApi.createSession(numericClassId, {
+          center_id: centerId,
+          session_date: selectedDate,
+          start_time: session?.start_time || new Date().toTimeString().slice(0, 5),
+          duration_minutes: Number(session?.duration_minutes || 90),
+          teacher_id: teacherId || undefined,
+        });
+        targetSessionId = getSessionId(created);
+        if (!targetSessionId) throw new Error('Session was created without an id.');
+        createdSessionId.current = targetSessionId;
+      }
+
+      const saveResponse = await sessionWorkflowApi.save({
         center_id: centerId,
         class_id: numericClassId,
-        session_id: numericSessionId,
-        teacher_id: teacherId || 1,
+        session_id: targetSessionId,
+        teacher_id: teacherId,
         attendance_date: selectedDate,
         subject: classData?.class_name || 'Class Session',
         total_marks: 100,
@@ -383,8 +447,17 @@ export default function SessionWorkflowPage() {
       });
       suppressDraftPersistence.current = true;
       dispatch(clearSessionWorkflowDraft(draftKey));
-      showToast.success(shouldAwardCoins ? 'Session data and coins saved successfully.' : 'Session data saved successfully.');
-      navigate(backPath);
+      setLessonSummary(buildLessonSummary({
+        students,
+        selectedActions,
+        attendance,
+        homework: homeworkScores,
+        activity: activityScores,
+        points: pointsScores,
+        stellarStudentId,
+        settings: scoringSettings,
+        saveResult: getApiPayload(saveResponse),
+      }));
     } catch (err) {
       console.error('Failed to save session data:', err);
       showToast.error('Failed to save session data.');
@@ -431,7 +504,7 @@ export default function SessionWorkflowPage() {
                 type="date"
                 value={selectedDate}
                 onChange={(event) => handleDateChange(event.target.value)}
-                disabled={switchingDate || submitting}
+                disabled={submitting}
                 className="h-7 w-[150px] border-0 bg-transparent p-0 text-xs font-bold shadow-none focus-visible:ring-0"
               />
             </label>
@@ -440,13 +513,25 @@ export default function SessionWorkflowPage() {
             <span>{students.length} {t('students')}</span>
             <span>/</span>
             <span>{shouldAwardCoins ? t('coins on') : t('coins off')}</span>
-            {switchingDate && <Loader2 className="h-4 w-4 animate-spin text-violet-600" />}
           </div>
         </div>
-        <Button className="h-9 bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveSession} disabled={submitting || students.length === 0}>
-          {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          {shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}
-        </Button>
+        {isViewMode ? (
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-9 items-center gap-1.5 rounded-md border bg-muted/40 px-3 text-xs font-semibold text-muted-foreground">
+              <Eye className="h-4 w-4" />
+              {t('View only')}
+            </span>
+            <Button variant="outline" className="h-9" onClick={startEditing}>
+              <Pencil className="mr-2 h-4 w-4" />
+              {t('Edit marks')}
+            </Button>
+          </div>
+        ) : (
+          <Button className="h-9 bg-emerald-600 text-white hover:bg-emerald-700" onClick={saveSession} disabled={submitting || students.length === 0}>
+            {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+            {shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}
+          </Button>
+        )}
       </div>
 
       <Card className="rounded-lg border-slate-200 bg-white shadow-sm dark:border-border dark:bg-card">
@@ -486,7 +571,8 @@ export default function SessionWorkflowPage() {
                 values={attendance}
                 onToggle={(studentId, value) => toggleMapValue(setAttendance, studentId, value)}
                 onFillAll={(value) => fillMapValue(setAttendance, value)}
-                action={<><Button variant="outline" onClick={() => navigate(backPath)}>{t('Cancel')}</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? t('Complete Attendance') : t('Save Scores')}</Button></>}
+                readOnly={isViewMode}
+                action={isViewMode ? undefined : <><Button variant="outline" onClick={() => navigate(backPath)}>{t('Cancel')}</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? t('Complete Attendance') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
@@ -495,10 +581,11 @@ export default function SessionWorkflowPage() {
                 students={students}
                 options={scoringSettings.homework}
                 values={homeworkScores}
-                isEnabled={(studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
+                isEnabled={isViewMode ? undefined : (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId))}
                 onToggle={(studentId, value) => toggleMapValue(setHomeworkScores, studentId, value)}
                 onFillAll={(value) => fillMapValue(setHomeworkScores, value, (studentId) => !selectedActions.includes('attendance') || Boolean(attendance.get(studentId)))}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? t('Complete Homework') : t('Save Scores')}</Button></>}
+                readOnly={isViewMode}
+                action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('homework') ? setActiveTab(getPreviousTab('homework')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('homework')}><ClipboardCheck className="mr-2 h-4 w-4" />{getNextTab('homework') ? t('Complete Homework') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
@@ -507,14 +594,15 @@ export default function SessionWorkflowPage() {
                 students={students}
                 options={scoringSettings.activity}
                 values={activityScores}
-                isEnabled={(studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
+                isEnabled={isViewMode ? undefined : (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId)))}
                 onToggle={(studentId, value) => toggleMapValue(setActivityScores, studentId, value)}
                 onFillAll={(value) => fillMapValue(setActivityScores, value, (studentId) => (!selectedActions.includes('attendance') || Boolean(attendance.get(studentId))) && (!selectedActions.includes('homework') || Boolean(homeworkScores.get(studentId))))}
                 getTotalScore={getTotalScore}
                 stellarStudentId={shouldAwardCoins ? stellarStudentId : null}
-                onToggleStellar={shouldAwardCoins ? (studentId) => setStellarStudentId((current) => current === studentId ? null : studentId) : undefined}
+                onToggleStellar={shouldAwardCoins ? (studentId) => { if (!isViewMode) setStellarStudentId((current) => current === studentId ? null : studentId); } : undefined}
                 stellarBonusCoins={scoringSettings.stellarBonusCoins}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? t('Complete Activity') : shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
+                readOnly={isViewMode}
+                action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('activity') ? setActiveTab(getPreviousTab('activity')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('activity')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : getNextTab('activity') ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Save className="mr-2 h-4 w-4" />}{getNextTab('activity') ? t('Complete Activity') : shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
@@ -525,16 +613,32 @@ export default function SessionWorkflowPage() {
                 onChange={setPointScore}
                 onFillAll={fillPointScores}
                 getTotalScore={getTotalScore}
-                action={<><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
+                readOnly={isViewMode}
+                action={isViewMode ? undefined : <><Button variant="outline" onClick={() => getPreviousTab('points') ? setActiveTab(getPreviousTab('points')!) : navigate(backPath)}>{t('Back')}</Button><Button onClick={() => completeTab('points')} disabled={submitting}>{submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{shouldAwardCoins ? t('Save Scores & Coins') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
 
             <TabsContent value="consolidation" className="pt-4">
-              <ConsolidationTab sessionId={numericSessionId} />
+              {numericSessionId ? (
+                <ConsolidationTab sessionId={numericSessionId} />
+              ) : (
+                <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  {t('Save this lesson first to add consolidation exercises.')}
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+
+      <LessonSummaryDialog
+        summary={lessonSummary}
+        className={classData?.class_name}
+        date={selectedDate}
+        doneLabel={from === 'teacher' ? t('Back to teacher portal') : t('Back to class')}
+        onDone={() => navigate(backPath)}
+        onReview={() => setLessonSummary(null)}
+      />
     </div>
   );
 }

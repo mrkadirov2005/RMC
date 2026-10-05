@@ -1,36 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarCheck, CalendarCheck2, CheckCircle2, ChevronLeft, ChevronRight, CircleDollarSign, Coins, PencilLine, Star, TrendingUp, Users } from 'lucide-react';
+import { BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, TrendingUp, Users } from 'lucide-react';
 import { PieChart } from '@/shared/components/PieChart';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { attendanceAPI, classAPI } from '../api';
-import { getResolvedCenterId } from '../../../shared/auth/centerScope';
-import { useAppSelector } from '../../crm/hooks';
-import { showToast } from '../../../utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { attendanceAPI } from '../api';
+import { LessonPickerDialog } from '../../crm/classes/components/LessonPickerDialog';
+import { buildSessionWorkflowPath, defaultLessonActions } from '../../crm/classes/lessonStart';
 
 type SectionKey = 'students' | 'attendance' | 'points' | 'payments';
-type LessonAction = 'attendance' | 'homework' | 'activity' | 'coins' | 'points';
-
-const defaultLessonActions: LessonAction[] = ['attendance', 'homework', 'activity', 'coins'];
-
-const lessonActionOptions: Array<{
-  id: LessonAction;
-  label: string;
-  detail: string;
-  icon: typeof CalendarCheck;
-}> = [
-  { id: 'attendance', label: 'Attendance', detail: 'Mark present, late, excused, or absent.', icon: CalendarCheck },
-  { id: 'homework', label: 'Homework', detail: 'Score homework completion.', icon: CheckCircle2 },
-  { id: 'activity', label: 'Activity', detail: 'Score class activity.', icon: Star },
-  { id: 'coins', label: 'Coins', detail: 'Apply coins from the final score.', icon: Coins },
-  { id: 'points', label: 'Points', detail: 'Enter manual points for each student.', icon: PencilLine },
-];
-
 interface OverallStatisticsTabProps {
   teacherId?: number;
   classes?: any[];
@@ -78,22 +59,6 @@ const localDateKey = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
-const parseDateKey = (value: string) => {
-  const [year, month, day] = value.split('-').map(Number);
-  return new Date(year, month - 1, day);
-};
-
-const getCalendarDays = (month: Date) => {
-  const first = new Date(month.getFullYear(), month.getMonth(), 1);
-  const start = new Date(first);
-  start.setDate(first.getDate() - first.getDay());
-  return Array.from({ length: 42 }, (_, index) => {
-    const date = new Date(start);
-    date.setDate(start.getDate() + index);
-    return date;
-  });
-};
-
 const OverallStatisticsTab = ({
   teacherId,
   classes = [],
@@ -104,21 +69,9 @@ const OverallStatisticsTab = ({
 }: OverallStatisticsTabProps) => {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  const { user } = useAppSelector((state) => state.auth);
   const [activeSection, setActiveSection] = useState<SectionKey>('students');
   const [now, setNow] = useState(() => new Date());
-  const [startingClassId, setStartingClassId] = useState<number | null>(null);
-  const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState<typeof nextLessons[number] | null>(null);
-  const [selectedLessonDate, setSelectedLessonDate] = useState(localDateKey(new Date()));
-  const [attendanceDates, setAttendanceDates] = useState<Record<string, boolean>>({});
-  const [loadingAttendanceDates, setLoadingAttendanceDates] = useState(false);
-  const [lessonCalendarMonth, setLessonCalendarMonth] = useState(() => {
-    const today = new Date();
-    return new Date(today.getFullYear(), today.getMonth(), 1);
-  });
-  const [selectedLessonActions, setSelectedLessonActions] = useState<LessonAction[]>(defaultLessonActions);
-
+  const [pickerLesson, setPickerLesson] = useState<typeof todayLessons[number] | null>(null);
   useEffect(() => {
     const timer = window.setInterval(() => setNow(new Date()), 30_000);
     return () => window.clearInterval(timer);
@@ -360,172 +313,79 @@ const OverallStatisticsTab = ({
   const [selectedGroup, setSelectedGroup] = useState<{ id: number; label: string } | null>(null);
   const [groupSearch, setGroupSearch] = useState('');
 
-  const nextLessons = useMemo(() => {
-    const currentDay = now.getDay();
+  const todayKey = localDateKey(now);
+
+  // Only the teacher's groups that meet today, in lesson order.
+  const todayLessons = useMemo(() => {
+    const todayName = dayNames[now.getDay()].toLowerCase();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
     return teacherClasses
       .map((item) => {
         const schedule = parseClassSchedule(item);
         const classId = Number(item?.class_id ?? item?.id ?? 0);
-        if (classId <= 0) return null;
-        if (!schedule) {
-          return {
-            classId,
-            label: getDisplayName(item, 'Group'),
-            date: null,
-            dayLabel: 'Schedule unavailable',
-            time: '',
-            endTime: '',
-            room: String(item?.room_number || ''),
-            isActive: false,
-            sortKey: Number.MAX_SAFE_INTEGER,
-          };
-        }
-
-        const normalizedDays: string[] = schedule.days.map((day: string) => day.toLowerCase());
-        const occurrences = Array.from({ length: 7 }, (_, offset) => {
-          const dayIndex = (currentDay + offset) % 7;
-          const dayName = dayNames[dayIndex].toLowerCase();
-          if (!normalizedDays.some((scheduledDay: string) => scheduledDay === dayName || scheduledDay.slice(0, 3) === dayName.slice(0, 3))) return null;
-          const date = new Date(now);
-          date.setHours(0, 0, 0, 0);
-          date.setDate(date.getDate() + offset);
-          return { offset, dayIndex, date };
-        }).filter(Boolean) as Array<{ offset: number; dayIndex: number; date: Date }>;
-
-        const occurrence = occurrences.find(({ offset }) => {
-          if (offset > 0) return true;
-          return timeToMinutes(schedule.endTime) >= currentMinutes;
+        if (classId <= 0 || !schedule) return null;
+        const meetsToday = schedule.days.some((day: string) => {
+          const normalized = day.toLowerCase();
+          return normalized === todayName || normalized.slice(0, 3) === todayName.slice(0, 3);
         });
-        if (!occurrence) return null;
-
+        if (!meetsToday) return null;
         const startMinutes = timeToMinutes(schedule.time);
         const endMinutes = timeToMinutes(schedule.endTime);
-        const isToday = occurrence.offset === 0;
-        const isActive = isToday && currentMinutes >= startMinutes && currentMinutes < endMinutes;
-        const nextDate = occurrence.date;
         return {
           classId,
           label: getDisplayName(item, 'Group'),
-          date: localDateKey(nextDate),
-          dayLabel: dayNames[occurrence.dayIndex],
           time: schedule.time,
           endTime: schedule.endTime,
           room: String(item?.room_number || ''),
-          isActive,
-          sortKey: occurrence.date.getTime() + startMinutes * 60_000,
+          isActive: currentMinutes >= startMinutes && currentMinutes < endMinutes,
+          hasEnded: currentMinutes >= endMinutes,
+          startMinutes,
         };
       })
-      .filter(Boolean)
-      .sort((a, b) => (a!.sortKey - b!.sortKey)) as Array<{
-        classId: number;
-        label: string;
-        date: string | null;
-        dayLabel: string;
-        time: string;
-        endTime: string;
-        room: string;
-        isActive: boolean;
-        sortKey: number;
-      }>;
+      .filter((lesson): lesson is NonNullable<typeof lesson> => lesson !== null)
+      .sort((a, b) => a.startMinutes - b.startMinutes);
   }, [now, teacherClasses]);
 
-  const toggleLessonAction = (action: LessonAction, checked: boolean) => {
-    setSelectedLessonActions((current) => {
-      if (checked) return Array.from(new Set([...current, action]));
-      return current.filter((item) => item !== action);
+  // Groups that already have attendance recorded today. Fetched fresh (not from the cached
+  // portal attendance) so a lesson saved a moment ago shows as done when the teacher returns.
+  const todayClassIdsKey = todayLessons.map((lesson) => lesson.classId).join(',');
+  // classId → today's session id (0 when the attendance row has no session).
+  const [attendanceDone, setAttendanceDone] = useState<{ date: string; sessions: Map<number, number> } | null>(null);
+  useEffect(() => {
+    const classIds = todayClassIdsKey ? todayClassIdsKey.split(',').map(Number) : [];
+    if (classIds.length === 0) return;
+    let cancelled = false;
+    Promise.all(classIds.map(async (classId) => {
+      const response = await attendanceAPI.getByClass(classId).catch(() => ({ data: [] }));
+      const rows = Array.isArray(response?.data) ? response.data : [];
+      const todayRow = rows.find((row: any) => String(row?.attendance_date || '').slice(0, 10) === todayKey);
+      return todayRow ? [classId, Number(todayRow.session_id || 0)] as const : null;
+    })).then((entries) => {
+      if (cancelled) return;
+      const sessions = new Map<number, number>();
+      entries.forEach((entry) => { if (entry) sessions.set(entry[0], entry[1]); });
+      setAttendanceDone({ date: todayKey, sessions });
     });
-  };
+    return () => {
+      cancelled = true;
+    };
+  }, [todayClassIdsKey, todayKey]);
+  const isAttendanceDone = (classId: number) => attendanceDone?.date === todayKey && attendanceDone.sessions.has(classId);
 
-  const openLessonPicker = async (lesson: typeof nextLessons[number]) => {
-    if (startingClassId) return;
-    setSelectedLesson(lesson);
-    const initialDate = lesson.date || localDateKey(new Date());
-    setSelectedLessonDate(initialDate);
-    const initialDateValue = parseDateKey(initialDate);
-    setLessonCalendarMonth(new Date(initialDateValue.getFullYear(), initialDateValue.getMonth(), 1));
-    setAttendanceDates({});
-    setSelectedLessonActions(defaultLessonActions);
-    setLessonPickerOpen(true);
-
-    setLoadingAttendanceDates(true);
-    try {
-      const response = await classAPI.getSessions(lesson.classId);
-      const sessions = Array.isArray(response?.data) ? response.data : [];
-      const statusEntries = await Promise.all(
-        sessions.map(async (session: any) => {
-          const sessionId = Number(session?.session_id || session?.id || 0);
-          const date = String(session?.session_date || '').slice(0, 10);
-          if (!sessionId || !date) return null;
-          const attendanceResponse = await attendanceAPI.getBySession(sessionId).catch(() => ({ data: [] }));
-          const records = Array.isArray(attendanceResponse?.data) ? attendanceResponse.data : [];
-          return [date, records.length > 0] as const;
-        })
-      );
-      setAttendanceDates(
-        Object.fromEntries(statusEntries.filter((entry): entry is readonly [string, boolean] => Boolean(entry)))
-      );
-    } catch (error) {
-      console.error('Failed to load lesson attendance dates:', error);
-    } finally {
-      setLoadingAttendanceDates(false);
-    }
-  };
-
-  const startNextLesson = async () => {
-    if (!selectedLesson || startingClassId) return;
-    const scoringActions = selectedLessonActions.filter((action) => action !== 'coins');
-    if (scoringActions.length === 0) {
-      showToast.error('Pick attendance, homework, activity, or points before starting.');
+  // A lesson already taken today opens read-only on its saved marks; otherwise pick what to record.
+  const openLesson = (lesson: typeof todayLessons[number]) => {
+    const sessionId = isAttendanceDone(lesson.classId) ? attendanceDone?.sessions.get(lesson.classId) : 0;
+    if (sessionId) {
+      navigate(buildSessionWorkflowPath({ classId: lesson.classId, sessionId, actions: defaultLessonActions, from: 'teacher', view: true }));
       return;
     }
-
-    const lesson = selectedLesson;
-    const sessionDate = selectedLessonDate;
-    if (!sessionDate) {
-      showToast.error('Choose a session date before starting the lesson.');
-      return;
-    }
-    setStartingClassId(lesson.classId);
-    try {
-      const centerId = getResolvedCenterId(user) || undefined;
-      const sessionsResponse = await classAPI.getSessions(lesson.classId);
-      const sessions = Array.isArray(sessionsResponse?.data) ? sessionsResponse.data : [];
-      const existing = sessions.find((session: any) => String(session?.session_date || '').slice(0, 10) === sessionDate);
-      let session = existing;
-      if (!session) {
-        const startTime = lesson.time || new Date().toTimeString().slice(0, 5);
-        const durationMinutes = lesson.time && lesson.endTime
-          ? Math.max(1, timeToMinutes(lesson.endTime) - timeToMinutes(lesson.time))
-          : 90;
-        const response = await classAPI.createSession(lesson.classId, {
-          center_id: centerId,
-          session_date: sessionDate,
-          start_time: startTime,
-          duration_minutes: durationMinutes,
-          teacher_id: teacherId || user?.id,
-        });
-        session = response?.data ?? response;
-      }
-      const sessionId = Number(session?.session_id || session?.id);
-      if (!sessionId) throw new Error('Missing lesson session');
-      setLessonPickerOpen(false);
-      navigate(`/classes/${lesson.classId}/sessions/${sessionId}/workflow?actions=${selectedLessonActions.join(',')}&from=teacher`);
-    } catch (error) {
-      console.error('Failed to start lesson:', error);
-      showToast.error('Failed to start lesson.');
-    } finally {
-      setStartingClassId(null);
-    }
+    setPickerLesson(lesson);
   };
 
-  const selectedLessonSchedule = selectedLesson
-    ? teacherClasses.find((item) => Number(item?.class_id ?? item?.id ?? 0) === selectedLesson.classId)
-    : null;
-  const selectedLessonDays = parseClassSchedule(selectedLessonSchedule)?.days.map((day: string) => day.toLowerCase()) || [];
-  const calendarDays = getCalendarDays(lessonCalendarMonth);
-  const calendarMonthLabel = lessonCalendarMonth.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+  const pickerSection = pickerLesson
+    ? teacherClasses.find((item) => Number(item?.class_id ?? item?.id ?? 0) === pickerLesson.classId)?.section
+    : undefined;
 
   const studentsInSelectedGroup = useMemo(() => {
     if (!selectedGroup) return [] as any[];
@@ -613,146 +473,57 @@ const OverallStatisticsTab = ({
         </div>
 
         <div className="space-y-3">
-          <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t('Next lessons')}</div>
-          {nextLessons.length > 0 ? nextLessons.map((lesson) => (
-            <div key={lesson.classId} className={`rounded-2xl border p-3 ${lesson.isActive ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30' : 'border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900/40'}`}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <div className="truncate text-sm font-bold">{lesson.label}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {lesson.dayLabel}{lesson.time ? ` · ${lesson.time}–${lesson.endTime}` : ''}
-                    {lesson.room ? ` · Room ${lesson.room}` : ''}
+          <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("Today's lessons")}</div>
+          {todayLessons.length > 0 ? todayLessons.map((lesson) => {
+            const done = isAttendanceDone(lesson.classId);
+            const cardTone = done
+              ? 'border-emerald-300 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/30'
+              : lesson.isActive
+                ? 'border-sky-300 bg-sky-50 dark:border-sky-800 dark:bg-sky-950/30'
+                : 'border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-slate-900/40';
+            return (
+              <div key={lesson.classId} className={`rounded-2xl border p-3 ${cardTone}`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-sm font-bold">{lesson.label}</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {lesson.time}–{lesson.endTime}
+                      {lesson.room ? ` · Room ${lesson.room}` : ''}
+                    </div>
+                    {done ? (
+                      <div className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                        {t('Attendance done')}
+                      </div>
+                    ) : lesson.isActive ? (
+                      <div className="mt-1.5 text-xs font-semibold text-sky-700 dark:text-sky-300">{t('In progress')}</div>
+                    ) : lesson.hasEnded ? (
+                      <div className="mt-1.5 text-xs font-semibold text-rose-700 dark:text-rose-300">{t('Attendance not taken')}</div>
+                    ) : null}
                   </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={done ? 'outline' : 'default'}
+                    onClick={() => openLesson(lesson)}
+                  >
+                    {done ? t('Open lesson') : t('Start lesson')}
+                  </Button>
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={startingClassId !== null}
-                  onClick={() => void openLessonPicker(lesson)}
-                >
-                  {startingClassId === lesson.classId ? t('Starting...') : t('Start lesson')}
-                </Button>
               </div>
-            </div>
-          )) : <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">{t('No scheduled lessons found.')}</div>}
+            );
+          }) : <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">{t('No lessons today.')}</div>}
         </div>
 
-        <Dialog open={lessonPickerOpen} onOpenChange={(open) => !startingClassId && setLessonPickerOpen(open)}>
-          <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t('Pick lesson session')}</DialogTitle>
-              <DialogDescription>
-                {t('Choose the date and what you want to record for {lesson}.', { lesson: selectedLesson?.label || t('this group') })}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2">
-              <Label>{t('Session date')}</Label>
-              <div className="rounded-xl border p-3">
-                <div className="mb-3 flex items-center justify-between">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setLessonCalendarMonth((month) => new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-                    disabled={startingClassId !== null}
-                    aria-label={t('Previous month')}
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <span className="text-sm font-bold capitalize">{calendarMonthLabel}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setLessonCalendarMonth((month) => new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-                    disabled={startingClassId !== null}
-                    aria-label={t('Next month')}
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="mb-1 grid grid-cols-7 text-center text-[10px] font-bold uppercase text-muted-foreground">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day: string) => <span key={day}>{day}</span>)}
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  {calendarDays.map((date) => {
-                    const dateKey = localDateKey(date);
-                    const inMonth = date.getMonth() === lessonCalendarMonth.getMonth();
-                    const dayName = dayNames[date.getDay()].toLowerCase();
-                    const isLessonDay = selectedLessonDays.some((day: string) => day === dayName || day.slice(0, 3) === dayName.slice(0, 3));
-                    const isSelected = dateKey === selectedLessonDate;
-                    const isPastOrToday = dateKey <= localDateKey(new Date());
-                    const hasAttendance = attendanceDates[dateKey] === true;
-                    const attendanceColor = hasAttendance
-                      ? 'bg-emerald-100 font-semibold text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-200 dark:hover:bg-emerald-900'
-                      : isLessonDay && isPastOrToday
-                        ? 'bg-red-100 font-semibold text-red-900 hover:bg-red-200 dark:bg-red-950 dark:text-red-200 dark:hover:bg-red-900'
-                        : isLessonDay
-                          ? 'bg-slate-200 font-semibold text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-                          : 'hover:bg-muted';
-                    return (
-                      <button
-                        key={dateKey}
-                        type="button"
-                        onClick={() => setSelectedLessonDate(dateKey)}
-                        disabled={startingClassId !== null}
-                        className={`relative h-9 rounded-md text-sm transition ${
-                          isSelected
-                            ? 'bg-primary font-bold text-primary-foreground'
-                            : attendanceColor
-                        } ${inMonth ? '' : 'text-muted-foreground/40'}`}
-                        aria-label={`${dateKey}${isLessonDay ? ' scheduled lesson day' : ''}`}
-                      >
-                        {date.getDate()}
-                        {isLessonDay && !isSelected && <span className={`absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${hasAttendance ? 'bg-emerald-600 dark:bg-emerald-400' : isPastOrToday ? 'bg-red-600 dark:bg-red-400' : 'bg-slate-500 dark:bg-slate-400'}`} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                <span className="font-semibold text-emerald-700 dark:text-emerald-300">{t('Green')}</span> {t('means attendance was recorded,')} <span className="font-semibold text-red-700 dark:text-red-300">red</span> {t('means a past lesson has no attendance, and')} <span className="font-semibold text-slate-600 dark:text-slate-300">gray</span> {t('means the lesson has not happened yet.')}
-              </p>
-              {loadingAttendanceDates && <p className="text-xs text-muted-foreground">{t('Loading attendance history...')}</p>}
-              <div className="text-sm font-semibold">{t('Selected:')} {selectedLessonDate}</div>
-            </div>
-            <div className="grid gap-2">
-              {lessonActionOptions.map((option) => {
-                const Icon = option.icon;
-                const checked = selectedLessonActions.includes(option.id);
-                return (
-                  <label
-                    key={option.id}
-                    htmlFor={`overview-lesson-action-${option.id}`}
-                    className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition hover:bg-slate-50 dark:hover:bg-muted/40"
-                  >
-                    <Checkbox
-                      id={`overview-lesson-action-${option.id}`}
-                      checked={checked}
-                      onCheckedChange={(value) => toggleLessonAction(option.id, value === true)}
-                      className="mt-1"
-                    />
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-900 text-white">
-                      <Icon className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-semibold">{option.label}</span>
-                      <span className="block text-xs text-muted-foreground">{option.detail}</span>
-                    </span>
-                  </label>
-                );
-              })}
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" disabled={startingClassId !== null} onClick={() => setLessonPickerOpen(false)}>
-                {t('Cancel')}
-              </Button>
-              <Button type="button" disabled={startingClassId !== null} onClick={() => void startNextLesson()}>
-                {startingClassId !== null ? t('Starting...') : t('Start session')}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+        <LessonPickerDialog
+          open={pickerLesson !== null}
+          onOpenChange={(open) => { if (!open) setPickerLesson(null); }}
+          classId={pickerLesson?.classId ?? null}
+          label={pickerLesson?.label}
+          section={pickerSection}
+          initialDate={todayKey}
+          from="teacher"
+        />
 
         <Dialog open={!!selectedGroup} onOpenChange={(open) => { if (!open) { setSelectedGroup(null); setGroupSearch(''); } }}>
         <DialogContent className="sm:max-w-2xl">

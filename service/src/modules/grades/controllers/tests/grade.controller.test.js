@@ -460,6 +460,28 @@ describe('grades controller', () => {
       expect(res.json).toHaveBeenCalledWith({ error: message });
     });
 
+    it('records a teacher save under the calling teacher, whatever id the body names', async () => {
+      const res = createResponse();
+      studentBelongsToTeacher.mockResolvedValue(true);
+      gradeService.saveSessionWorkflow.mockResolvedValue({ saved: 1 });
+
+      await gradeController.saveSessionWorkflow({
+        body: { teacher_id: 1, records: [{ student_id: 2 }] },
+        user: { userType: 'teacher', id: 4 },
+      }, res);
+
+      expect(gradeService.saveSessionWorkflow).toHaveBeenCalledWith({ teacher_id: 4, records: [{ student_id: 2 }] }, 7);
+    });
+
+    it('keeps the body teacher id for a superuser save', async () => {
+      const res = createResponse();
+      gradeService.saveSessionWorkflow.mockResolvedValue({ saved: 1 });
+
+      await gradeController.saveSessionWorkflow({ body: { teacher_id: 3, records: [] }, user: { userType: 'superuser' } }, res);
+
+      expect(gradeService.saveSessionWorkflow).toHaveBeenCalledWith({ teacher_id: 3, records: [] }, 7);
+    });
+
     it('returns the saved workflow', async () => {
       const res = createResponse();
       gradeService.saveSessionWorkflow.mockResolvedValue({ saved: 4 });
