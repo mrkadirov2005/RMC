@@ -15,6 +15,8 @@ export const teacherLabels: Record<string, string> = {
   'If everyone pays': "Hamma to'lasa",
   'Recorded salary: {amount} ({status})': 'Belgilangan maosh: {amount} ({status})',
   'Payment this month': "Shu oygi to'lov",
+  'Show details': "Tafsilotlarni ko'rsatish",
+  'Hide details': 'Tafsilotlarni yashirish',
   'All students (class average)': "Barcha o'quvchilar (guruh o'rtachasi)",
   'Back to Statistics': 'Statistikaga qaytish',
   'Change Password': "Parolni o'zgartirish",

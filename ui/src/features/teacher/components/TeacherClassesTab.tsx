@@ -1,7 +1,7 @@
 // Tab component for the teacher feature.
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { GraduationCap, Loader2, Search } from 'lucide-react';
+import { Eye, EyeClosed, GraduationCap, Loader2, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,8 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const [classData, setClassData] = useState<ClassInfo | null>(null);
   const [students, setStudents] = useState<TeacherStudentItem[]>([]);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
+  // Payment details stay hidden until the teacher opens them with the eye, as inside a class.
+  const [showPayments, setShowPayments] = useState(false);
   // This month's payments per group, from the same figures as Profile → Payments.
   const { data: groupPayments } = useMyGroupPayments();
   const paymentsByClass = useMemo(
@@ -268,6 +270,16 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
               className="pl-9"
             />
           </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowPayments((value) => !value)}
+            aria-label={showPayments ? t('Hide details') : t('Show details')}
+            title={showPayments ? t('Hide details') : t('Show details')}
+          >
+            {showPayments ? <EyeClosed className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </Button>
         </div>
 
         <div className="rounded-xl border border-slate-200/80 bg-white overflow-auto w-full" style={{ maxHeight: '60vh' }}>
@@ -279,7 +291,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                 <TableHead className="px-3 py-2 text-sm">{t('Students')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm">{t('Schedule')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm">{t('Room')}</TableHead>
-                <TableHead className="px-3 py-2 text-sm">{t('Payment this month')}</TableHead>
+                {showPayments && <TableHead className="px-3 py-2 text-sm">{t('Payment this month')}</TableHead>}
                 <TableHead className="px-3 py-2 text-sm">{t('Status')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm" />
               </TableRow>
@@ -297,7 +309,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                     <TableCell className="px-3 py-2 text-sm text-slate-700">{classItem.student_count || 0}</TableCell>
                     <TableCell className="px-3 py-2 text-sm text-slate-700">{scheduleText}</TableCell>
                     <TableCell className="px-3 py-2 text-sm text-slate-700">{classItem.room_number || t('No room')}</TableCell>
-                    <TableCell className="px-3 py-2">
+                    {showPayments && <TableCell className="px-3 py-2">
                       {(() => {
                         const payment = paymentsByClass.get(Number(classItem.class_id));
                         if (!payment) return <span className="text-xs text-muted-foreground">—</span>;
@@ -312,7 +324,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                           </div>
                         );
                       })()}
-                    </TableCell>
+                    </TableCell>}
                     <TableCell className="px-3 py-2">
                       <Badge variant={getStatusVariant(classItem.status) as any} className="text-sm">{t(classItem.status || 'Active')}</Badge>
                     </TableCell>
