@@ -11,6 +11,9 @@ import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel'
 import RetentionPage from '../crm/retention/RetentionPage';
 import { AttendanceReportPanel } from './components/AttendanceReportPanel';
 import { ClassReportsPanel } from './components/ClassReportsPanel';
+import { PERMISSION_CODES } from '@/types';
+import { useRBAC } from '../crm/hooks/useRBAC';
+import { resolveSubPageView } from '../crm/rbac/adminPageAccess';
 
 type ReportTab = 'finance' | 'students' | 'teachers' | 'discounts' | 'retention' | 'attendance' | 'classes';
 
@@ -27,7 +30,9 @@ const emptyCollections: OwnerManagerStatisticsCollections = {
 const OwnerReports = () => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
-  const requestedSection = searchParams.get('section');
+  const { canAccessSubPage } = useRBAC();
+  // Only the report sections this admin was given; a hidden one falls back to an allowed section.
+  const requestedSection = resolveSubPageView(PERMISSION_CODES.VIEW_REPORTS, searchParams.get('section') || 'finance', canAccessSubPage);
   const activeTab: ReportTab = ['finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes'].includes(String(requestedSection))
     ? requestedSection as ReportTab
     : 'finance';

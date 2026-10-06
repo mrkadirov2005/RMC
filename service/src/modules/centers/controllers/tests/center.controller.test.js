@@ -159,7 +159,6 @@ describe('centers controller', () => {
     it('stops a center admin editing a different center', async () => {
       const res = createResponse();
       isCenterAdmin.mockReturnValue(true);
-      centerService.getCenter.mockResolvedValue({ center_id: 9 });
 
       await centerController.updateCenter({ params: { id: '9' }, body: {}, user: { center_id: 3 } }, res);
 
@@ -168,12 +167,12 @@ describe('centers controller', () => {
       expect(centerService.updateCenter).not.toHaveBeenCalled();
     });
 
-    it('returns 404 to a center admin when the center does not exist', async () => {
+    it('returns 404 to a center admin when their own center does not exist', async () => {
       const res = createResponse();
       isCenterAdmin.mockReturnValue(true);
-      centerService.getCenter.mockResolvedValue(null);
+      centerService.updateCenter.mockResolvedValue(null);
 
-      await centerController.updateCenter({ params: { id: '9' }, body: {}, user: { center_id: 3 } }, res);
+      await centerController.updateCenter({ params: { id: '3' }, body: {}, user: { center_id: 3 } }, res);
 
       expect(res.status).toHaveBeenCalledWith(404);
       expect(res.json).toHaveBeenCalledWith({ error: 'Markaz topilmadi' });
@@ -182,7 +181,8 @@ describe('centers controller', () => {
     it('lets a center admin edit their own center', async () => {
       const res = createResponse();
       isCenterAdmin.mockReturnValue(true);
-      centerService.getCenter.mockResolvedValue({ center_id: 3 });
+      // The real center row uses camelCase keys; the check must not depend on the row's shape.
+      centerService.getCenter.mockResolvedValue({ centerId: 3 });
       centerService.updateCenter.mockResolvedValue({ center_id: 3, center_name: 'South' });
 
       await centerController.updateCenter({ params: { id: '3' }, body: { center_name: 'South' }, user: { center_id: '3' } }, res);

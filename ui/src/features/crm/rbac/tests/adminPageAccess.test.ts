@@ -12,10 +12,13 @@ describe('branch admin page access catalog', () => {
   it('lists every sidebar page an admin can be given, in sidebar order', () => {
     expect(ADMIN_PAGE_ACCESS.map((page) => page.label)).toEqual([
       'Dashboard', 'Students', 'Telegram Leads', 'Archive', 'Retention', 'Teachers', 'Classes', 'Consolidations',
-      'Rooms', 'Calendar', 'Tests', 'Payments', 'Salary', 'Assignments', 'Teacher Tasks', 'Subjects', 'Debts', 'Centers',
+      'Rooms', 'Calendar', 'Tests', 'Payments', 'Salary', 'Assignments', 'Teacher Tasks', 'Subjects', 'Debts', 'Reports', 'Centers',
     ]);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Salary')?.children?.map((child) => child.label)).toEqual(['Total', 'Monthly', 'List']);
     expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Retention')?.children?.map((child) => child.label)).toEqual(['Retention', 'Intake']);
+    expect(ADMIN_PAGE_ACCESS.find((page) => page.label === 'Reports')?.children?.map((child) => child.view)).toEqual([
+      'finance', 'students', 'teachers', 'discounts', 'retention', 'attendance', 'classes',
+    ]);
   });
 
   it('uses the same permission for the admin dialog and route guard', () => {
@@ -49,6 +52,12 @@ describe('admin submenu access', () => {
 
     expect(togglePagePermission(['CRUD_STUDENT'], 'VIEW_CONSOLIDATIONS', true)).toEqual(['CRUD_STUDENT', 'VIEW_CONSOLIDATIONS']);
     expect(togglePagePermission(['CRUD_STUDENT', 'MANAGE_SALARY', 'SALARY_TAB_LIST'], 'MANAGE_SALARY', false)).toEqual(['CRUD_STUDENT']);
+  });
+
+  it('opens only the report sections an admin was given', () => {
+    const allow = (parent: string, child: string) => canAccessSubPage(['VIEW_REPORTS', 'REPORTS_TAB_ATTENDANCE'], parent, child);
+    expect(resolveSubPageView('VIEW_REPORTS', 'finance', allow)).toBe('attendance');
+    expect(canAccessSubPage(['REPORTS_TAB_FINANCE'], 'VIEW_REPORTS', 'REPORTS_TAB_FINANCE')).toBe(false);
   });
 
   it('opens an allowed view when the requested one is hidden', () => {

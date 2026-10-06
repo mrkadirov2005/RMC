@@ -49,12 +49,10 @@ const createCenter = async (req: any, res: any) => {
 const updateCenter = async (req: any, res: any) => {
   try {
     const requestedId = Number(req.params.id);
-    if (isCenterAdmin(req.user)) {
-      const existing = await centerService.getCenter(requestedId);
-      if (existing && Number(existing.center_id) !== Number(req.user?.center_id)) {
-        return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
-      }
-      if (!existing) return res.status(404).json({ error: 'Markaz topilmadi' });
+    // A branch admin may only edit their own branch. Compare ids directly: the center row comes
+    // back with camelCase keys (centerId), so reading row.center_id here refused every admin.
+    if (isCenterAdmin(req.user) && requestedId !== Number(req.user?.center_id)) {
+      return res.status(403).json({ error: 'Markaz tanlanishi shart.' });
     }
     const row = await centerService.updateCenter(requestedId, req.body, req.user);
     if (!row) return res.status(404).json({ error: 'Markaz topilmadi' });
