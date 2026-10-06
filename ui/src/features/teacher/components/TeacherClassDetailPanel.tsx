@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/utils/helpers';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import TeacherStudentDirectory, { type TeacherStudentItem } from './TeacherStudentDirectory';
+import type { GroupPaymentStudent } from '../payments/types';
 import { useState } from 'react';
 
 type ClassItem = {
@@ -27,6 +28,7 @@ interface TeacherClassDetailPanelProps {
   onBack: () => void;
   onStartLesson: () => void;
   students: TeacherStudentItem[];
+  paymentStates?: Map<number, GroupPaymentStudent>;
 }
 
 // type ClassSchedule = { days: string[]; time: string; endTime?: string };
@@ -37,6 +39,7 @@ export default function TeacherClassDetailPanel({
   onBack,
   onStartLesson,
   students,
+  paymentStates,
 }: TeacherClassDetailPanelProps) {
   const { t } = useLanguage();
 
@@ -157,6 +160,7 @@ export default function TeacherClassDetailPanel({
           loading={loading}
           emptyMessage={t('No students enrolled.')}
           defaultClassName={className}
+          paymentStates={paymentStates}
         />
       </div>
 
