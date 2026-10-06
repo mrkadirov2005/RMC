@@ -19,6 +19,7 @@ import {
 import { selectOwnerManagerUi } from '../selectors';
 import { OWNER_MANAGER_TAB_META } from '../constants';
 import type { OwnerManagerColumnDef, OwnerManagerFormData, OwnerManagerTabType, OwnerOverviewCollections } from '../types';
+import { expandLegacySubPagePermissions, togglePagePermission } from '../../crm/rbac/adminPageAccess';
 import { buildOwnerStudentStatistics, createInitialFormState, getCenterOptionId, getCenterOptionName, getOwnerManagerRowId, normalizePermissions, summarizeOwnerAttendance } from '../utils';
 import { ownerManagerApi } from '../api';
 
@@ -646,7 +647,9 @@ export const useOwnerManager = () => {
             ...item,
             branch_id: item.branch_id ?? item.center_id,
             role: String(item.role || 'admin').toLowerCase(),
-            permissions: normalizePermissions(item.permissions),
+            // An admin saved before submenus could be chosen sees every submenu; tick them so
+            // the dialog shows what they can actually see.
+            permissions: expandLegacySubPagePermissions(normalizePermissions(item.permissions)),
           }
         : item
     );
@@ -657,10 +660,8 @@ export const useOwnerManager = () => {
 // Memoizes the handle permission toggle callback.
   const handlePermissionToggle = useCallback((permission: string, enabled: boolean) => {
     setFormData((prev) => {
-      const current = normalizePermissions(prev.permissions);
-      const nextPermissions = enabled
-        ? Array.from(new Set([...current, permission]))
-        : current.filter((item) => item !== permission);
+      // Pages and their submenus tick together; see togglePagePermission.
+      const nextPermissions = togglePagePermission(normalizePermissions(prev.permissions), permission, enabled);
 
       return {
         ...prev,

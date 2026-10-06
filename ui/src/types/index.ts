@@ -323,4 +323,12 @@ export const PERMISSION_CODES = {
   MANAGE_TESTS: 'MANAGE_TESTS',
   VIEW_REPORTS: 'VIEW_REPORTS',
   MANAGE_USERS: 'MANAGE_USERS',
+  VIEW_CONSOLIDATIONS: 'VIEW_CONSOLIDATIONS',
+  // Sidebar submenus. An admin with the parent page but none of its submenu codes sees every
+  // submenu (accounts saved before submenus could be chosen); see adminPageAccess.ts.
+  RETENTION_TAB_RETENTION: 'RETENTION_TAB_RETENTION',
+  RETENTION_TAB_INTAKE: 'RETENTION_TAB_INTAKE',
+  SALARY_TAB_TOTAL: 'SALARY_TAB_TOTAL',
+  SALARY_TAB_MONTHLY: 'SALARY_TAB_MONTHLY',
+  SALARY_TAB_LIST: 'SALARY_TAB_LIST',
 };

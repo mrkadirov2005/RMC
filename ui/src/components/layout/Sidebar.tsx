@@ -117,7 +117,8 @@ type MenuItem = {
   permission?: string;
   ownerOnly?: boolean;
   hideFromOwner?: boolean;
-  children?: Array<{ label: string; path: string; iconName: string }>;
+  // `permission` on a submenu is checked together with its parent's; see canAccessSubPage.
+  children?: Array<{ label: string; path: string; iconName: string; permission?: string }>;
 };
 
 // Renders the sidebar module.
@@ -132,7 +133,7 @@ const Sidebar = memo(() => {
   const { user } = useAppSelector((state) => state.auth);
   const { toggleTheme, isDark } = useThemeMode();
   const { t } = useLanguage();
-  const { canAccess } = useRBAC();
+  const { canAccess, canAccessSubPage } = useRBAC();
   const normalizedRole = String(user?.role || '').toLowerCase();
   const isGlobalSuperuser = user?.userType === 'superuser' && normalizedRole === 'owner';
   const [activeCenterId, setActiveCenterId] = useState<number | null>(getStoredActiveCenterId());
@@ -232,13 +233,13 @@ const Sidebar = memo(() => {
     {
       label: 'Retention', path: '/retention', iconName: 'Retention', roles: ['superuser'], permission: 'VIEW_RETENTION',
       children: [
-        { label: 'Retention', path: '/retention?view=retention', iconName: 'Retention' },
-        { label: 'Intake', path: '/retention?view=intake', iconName: 'Students' },
+        { label: 'Retention', path: '/retention?view=retention', iconName: 'Retention', permission: 'RETENTION_TAB_RETENTION' },
+        { label: 'Intake', path: '/retention?view=intake', iconName: 'Students', permission: 'RETENTION_TAB_INTAKE' },
       ],
     },
     { label: 'Teachers', path: '/teachers', iconName: 'Teachers', roles: ['superuser'], permission: 'CRUD_TEACHER' },
     { label: 'Classes', path: '/classes', iconName: 'Classes', roles: ['superuser'], permission: 'CRUD_CLASS' },
-    { label: 'Consolidations', path: '/consolidations', iconName: 'MdQuiz', roles: ['superuser'] },
+    { label: 'Consolidations', path: '/consolidations', iconName: 'MdQuiz', roles: ['superuser'], permission: 'VIEW_CONSOLIDATIONS' },
     { label: 'Rooms', path: '/rooms', iconName: 'Rooms', roles: ['superuser'], permission: 'CRUD_ROOM' },
     { label: 'Calendar', path: '/calendar', iconName: 'Calendar', roles: ['superuser', 'student'], permission: 'VIEW_CALENDAR' },
 
@@ -249,9 +250,9 @@ const Sidebar = memo(() => {
     {
       label: 'Salary', path: '/salary', iconName: 'Salary', roles: ['superuser'], permission: 'MANAGE_SALARY',
       children: [
-        { label: 'Total', path: '/salary?view=total', iconName: 'Salary' },
-        { label: 'Monthly', path: '/salary?view=monthly', iconName: 'Salary' },
-        { label: 'List', path: '/salary?view=list', iconName: 'Salary' },
+        { label: 'Total', path: '/salary?view=total', iconName: 'Salary', permission: 'SALARY_TAB_TOTAL' },
+        { label: 'Monthly', path: '/salary?view=monthly', iconName: 'Salary', permission: 'SALARY_TAB_MONTHLY' },
+        { label: 'List', path: '/salary?view=list', iconName: 'Salary', permission: 'SALARY_TAB_LIST' },
       ],
     },
     { label: 'Assignments', path: '/assignments', iconName: 'Assignments', roles: ['superuser'], permission: 'CRUD_ASSIGNMENT' },
@@ -275,18 +276,25 @@ const Sidebar = memo(() => {
       ],
     },
     { label: 'Owner Panel', path: '/owner/manage', iconName: 'Owner', roles: ['superuser'], ownerOnly: true },
-    { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], ownerOnly: true },
+    // Admins can be given their own branch here; creating or deleting branches stays owner-only.
+    { label: 'Centers', path: '/centers', iconName: 'Centers', roles: ['superuser'], permission: 'CRUD_CENTER' },
   ];
 
 
-  const filteredMenuItems = menuItems.filter((item) => {
-    if (!user?.userType) return false;
-    if (!item.roles?.includes(user.userType)) return false;
-    if (item.ownerOnly && (user.role || '').toLowerCase() !== 'owner') return false;
-    if (item.hideFromOwner && (user.role || '').toLowerCase() === 'owner') return false;
-    if (item.permission && !canAccess(item.permission)) return false;
-    return true;
-  });
+  const filteredMenuItems = menuItems
+    .filter((item) => {
+      if (!user?.userType) return false;
+      if (!item.roles?.includes(user.userType)) return false;
+      if (item.ownerOnly && (user.role || '').toLowerCase() !== 'owner') return false;
+      if (item.hideFromOwner && (user.role || '').toLowerCase() === 'owner') return false;
+      if (item.permission && !canAccess(item.permission)) return false;
+      return true;
+    })
+    .map((item) => {
+      if (!item.children?.length || !item.permission) return item;
+      const children = item.children.filter((child) => !child.permission || canAccessSubPage(item.permission!, child.permission));
+      return children.length === item.children.length ? item : { ...item, children };
+    });
   const orderIndex = new Map(sidebarOrder.map((path, index) => [path, index]));
   const orderedMenuItems = filteredMenuItems.slice().sort((a, b) => {
     const aIndex = orderIndex.get(a.path) ?? menuItems.findIndex((item) => item.path === a.path) + sidebarOrder.length;

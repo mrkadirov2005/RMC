@@ -111,7 +111,8 @@ export const CenterRow = ({
   active: boolean;
   onActivate: () => void;
   onEdit: () => void;
-  onDelete: () => void;
+  /** Left out for branch admins, who can't delete branches. */
+  onDelete?: () => void;
 }) => {
   const { t } = useLanguage();
   return (
@@ -143,7 +144,7 @@ export const CenterRow = ({
         {active ? t('Active branch') : t('Use Branch')}
       </Button>
       <Button variant="outline" size="sm" onClick={onEdit}>{t('Edit')}</Button>
-      <Button variant="outline" size="sm" onClick={onDelete} className="text-rose-600 hover:text-rose-700">{t('Delete')}</Button>
+      {onDelete && <Button variant="outline" size="sm" onClick={onDelete} className="text-rose-600 hover:text-rose-700">{t('Delete')}</Button>}
     </div>
   </div>
 );

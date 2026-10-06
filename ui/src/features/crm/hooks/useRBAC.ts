@@ -3,9 +3,12 @@
 import { useAppSelector } from './useAppSelector';
 import type { AuthUser } from '../../../types';
 import { hasPermission } from '../rbac/permissions';
+import { canAccessSubPage } from '../rbac/adminPageAccess';
 
 interface RBACContextType {
   canAccess: (permission: string) => boolean;
+  /** Whether a sidebar submenu (e.g. Salary → Monthly) is open to this user; owners see all. */
+  canAccessSubPage: (parentPermission: string, childPermission: string) => boolean;
   hasRole: (role: string) => boolean;
   user: AuthUser | null;
 }
@@ -20,6 +23,12 @@ export const useRBAC = (): RBACContextType => {
     return hasPermission(user, user.permissions || user.roles || [], permission);
   };
 
+  const canAccessSubPageForUser = (parentPermission: string, childPermission: string): boolean => {
+    if (!user) return false;
+    if ((user.role || '').toLowerCase() === 'owner') return true;
+    return canAccessSubPage(user.permissions || user.roles || [], parentPermission, childPermission);
+  };
+
 // Handles has role.
   const hasRole = (role: string): boolean => {
     if (!user) return false;
@@ -31,6 +40,7 @@ export const useRBAC = (): RBACContextType => {
 
   return {
     canAccess,
+    canAccessSubPage: canAccessSubPageForUser,
     hasRole,
     user,
   };

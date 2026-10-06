@@ -29,6 +29,7 @@ import { toDateKey } from './utils/date';
 import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 import ConsolidationTab from './components/ConsolidationTab';
 import { LessonSummaryDialog } from './components/LessonSummaryDialog';
+import { buildMonthlyAttendanceGrid, downloadCanvasPng, drawMonthlyAttendanceImage } from './monthlyAttendanceImage';
 import { getApiPayload } from '@/shared/api/response';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -387,6 +388,25 @@ export default function SessionWorkflowPage() {
     }), { replace: true });
   };
 
+  // "Suratni yuklash": the class's attendance for the lesson's month, including the lesson just saved.
+  const downloadMonthlyAttendanceImage = async () => {
+    const monthKey = (selectedDate || toDateKey(new Date())).slice(0, 7);
+    try {
+      const records = await sessionWorkflowApi.loadClassAttendance(numericClassId);
+      const grid = buildMonthlyAttendanceGrid({ students, records, monthKey });
+      const className = classData?.class_name || `#${numericClassId}`;
+      const canvas = drawMonthlyAttendanceImage(grid, {
+        title: className,
+        subtitle: classData?.teacher_name ? `O'qituvchi: ${classData.teacher_name}` : undefined,
+      });
+      if (!canvas) throw new Error('canvas unavailable');
+      const safeName = className.replace(/[^\p{L}\p{N}]+/gu, '_').replace(/^_+|_+$/g, '') || 'guruh';
+      await downloadCanvasPng(canvas, `davomat_${safeName}_${monthKey}.png`);
+    } catch {
+      showToast.error(t('Could not create the attendance image.'));
+    }
+  };
+
   const saveSession = async () => {
     if (!numericClassId || (!isNewSession && !numericSessionId)) return;
     if (selectedTabs.length === 0) {
@@ -638,6 +658,7 @@ export default function SessionWorkflowPage() {
         doneLabel={from === 'teacher' ? t('Back to teacher portal') : t('Back to class')}
         onDone={() => navigate(backPath)}
         onReview={() => setLessonSummary(null)}
+        onDownloadImage={downloadMonthlyAttendanceImage}
       />
     </div>
   );

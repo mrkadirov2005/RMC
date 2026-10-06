@@ -20,6 +20,9 @@ import { SalaryMonthlyTab } from './components/SalaryMonthlyTab';
 import { formatStudentPaidShare, monthInputValue, parseMonthInputValue, teacherFullName } from './model/salaryModel';
 import type { SalaryOverviewRow } from './types';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { PERMISSION_CODES } from '@/types';
+import { useRBAC } from '../hooks/useRBAC';
+import { resolveSubPageView } from '../rbac/adminPageAccess';
 
 type SalaryTab = 'total' | 'monthly' | 'list';
 
@@ -29,7 +32,10 @@ const SalaryPage = () => {
   const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const activeTab: SalaryTab = isSalaryTab(searchParams.get('view')) ? (searchParams.get('view') as SalaryTab) : 'total';
+  const { canAccessSubPage } = useRBAC();
+  // Only the salary views this admin was given; a hidden one falls back to an allowed view.
+  const allowedView = resolveSubPageView(PERMISSION_CODES.MANAGE_SALARY, searchParams.get('view') || 'total', canAccessSubPage);
+  const activeTab: SalaryTab = isSalaryTab(allowedView) ? allowedView : 'total';
   const {
     year,
     month,

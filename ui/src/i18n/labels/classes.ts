@@ -85,5 +85,7 @@ export const classesLabels: Record<string, string> = {
   'Did not attend': 'Qatnashmaganlar',
   '{count} transferred students were not part of this lesson and were skipped.': "{count} ta ko'chirilgan o'quvchi bu darsga kirmagani uchun o'tkazib yuborildi.",
   'Edit marks': 'Baholarni tahrirlash',
+  'Download image': 'Suratni yuklash',
+  'Could not create the attendance image.': "Davomat rasmini yaratib bo'lmadi.",
   'View only': "Faqat ko'rish",
 };

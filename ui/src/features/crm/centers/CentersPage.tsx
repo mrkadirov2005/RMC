@@ -38,10 +38,14 @@ import {
   MetricTile,
 } from './components/CentersVisuals';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { useAppSelector } from '../hooks';
 
 // Renders the centers page screen.
 const CentersPage = () => {
   const { t } = useLanguage();
+  // A branch admin given this page edits their own branch only; adding and deleting branches
+  // are owner-only (the server refuses them for admins too).
+  const isOwner = String(useAppSelector((state) => state.auth.user?.role) || '').toLowerCase() === 'owner';
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -173,10 +177,12 @@ const CentersPage = () => {
                   {activeSummary ? `${activeSummary.students} students, ${activeSummary.teachers} teachers, ${formatMoney(activeSummary.collected)} collected` : t('Pick a branch to start working.')}
                 </p>
               </div>
-              <Button onClick={() => handleOpenModal()} className="bg-slate-950 text-white hover:bg-slate-800">
-                <Plus className="mr-2 h-4 w-4" />
-                {t('Add Center')}
-              </Button>
+              {isOwner && (
+                <Button onClick={() => handleOpenModal()} className="bg-slate-950 text-white hover:bg-slate-800">
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('Add Center')}
+                </Button>
+              )}
             </div>
 
             <div className="mt-4">
@@ -261,7 +267,7 @@ const CentersPage = () => {
               active={Number(activeCenterId) === getCenterId(center)}
               onActivate={() => handleActivateCenter(getCenterId(center))}
               onEdit={() => handleOpenModal(center)}
-              onDelete={() => handleDelete(getCenterId(center))}
+              onDelete={isOwner ? () => handleDelete(getCenterId(center)) : undefined}
             />
           ))}
           {paginatedCenters.items.length === 0 && (
