@@ -334,7 +334,7 @@ function AppContent() {
         <Route
           path="/consolidations"
           element={
-            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']}>
+            <ProtectedRoute allowedUserTypes={['superuser', 'teacher']} requiredPermission={PERMISSION_CODES.VIEW_CONSOLIDATIONS}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <ConsolidationsOverviewPage />
@@ -735,7 +735,7 @@ function AppContent() {
         <Route
           path="/centers"
           element={
-            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.CRUD_CENTER}>
               <Layout>
                 <Suspense fallback={<LoadingSpinner />}>
                   <CentersPage />

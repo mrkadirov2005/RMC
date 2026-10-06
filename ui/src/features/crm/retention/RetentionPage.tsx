@@ -17,6 +17,9 @@ import { useLanguage } from '@/i18n/LanguageContext';
 import { reportAPI } from './api';
 import { studentAPI, teacherAPI } from './api';
 import { useAppSelector } from '../hooks';
+import { useRBAC } from '../hooks/useRBAC';
+import { resolveSubPageView } from '../rbac/adminPageAccess';
+import { PERMISSION_CODES } from '@/types';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { PieChart } from '@/shared/components/PieChart';
 import { Button } from '@/components/ui/button';
@@ -103,7 +106,9 @@ const getName = (student: Record<string, any>) =>
 const RetentionPage = ({ embedded = false }: { embedded?: boolean }) => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
-  const view = searchParams.get('view') === 'intake' ? 'intake' : 'retention';
+  const { canAccessSubPage } = useRBAC();
+  // Only the views this admin was given; a hidden one falls back to an allowed view.
+  const view = resolveSubPageView(PERMISSION_CODES.VIEW_RETENTION, searchParams.get('view') || 'retention', canAccessSubPage) === 'intake' ? 'intake' : 'retention';
   const isIntake = view === 'intake';
   const { user } = useAppSelector((state) => state.auth);
   const [month, setMonth] = useState(defaultMonth);

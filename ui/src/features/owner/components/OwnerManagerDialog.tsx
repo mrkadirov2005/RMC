@@ -201,24 +201,44 @@ export const OwnerManagerDialog = ({
                 {OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS.map((option) => {
                   const checked = selectedPermissions.includes(option.code);
                   return (
-                    <label
+                    <div
                       key={option.code}
-                      className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200/70 bg-white p-3 transition-colors hover:border-amber-400/40 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/40 dark:hover:border-amber-400/30 dark:hover:bg-slate-950/60"
+                      className="flex items-start gap-3 rounded-xl border border-slate-200/70 bg-white p-3 transition-colors hover:border-amber-400/40 hover:bg-slate-50 dark:border-white/10 dark:bg-slate-950/40 dark:hover:border-amber-400/30 dark:hover:bg-slate-950/60"
                     >
                       <input
+                        id={`admin-permission-${option.code}`}
                         type="checkbox"
                         checked={checked}
                         onChange={(event) => onPermissionToggle(option.code, event.target.checked)}
                         disabled={loading}
                         className="mt-1 h-4 w-4 rounded border-slate-300 bg-transparent text-amber-400 focus:ring-amber-400 dark:border-white/20"
                       />
-                      <div className="space-y-1">
-                        <p className="font-medium text-slate-900 dark:text-white">{t(option.label)}</p>
-                        <p className="text-xs leading-5 text-slate-500 dark:text-white/55">
-                          {t(PERMISSION_DESCRIPTIONS[option.code] || option.code)}
-                        </p>
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <label htmlFor={`admin-permission-${option.code}`} className="block cursor-pointer">
+                          <span className="block font-medium text-slate-900 dark:text-white">{t(option.label)}</span>
+                          <span className="block text-xs leading-5 text-slate-500 dark:text-white/55">
+                            {t(PERMISSION_DESCRIPTIONS[option.code] || option.code)}
+                          </span>
+                        </label>
+                        {/* Submenus of this page, shown once the page itself is ticked. */}
+                        {checked && option.children.length > 0 && (
+                          <div className="mt-2 space-y-1.5 border-l-2 border-amber-400/40 pl-3">
+                            {option.children.map((child) => (
+                              <label key={child.code} className="flex cursor-pointer items-center gap-2 text-sm text-slate-700 dark:text-white/80">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedPermissions.includes(child.code)}
+                                  onChange={(event) => onPermissionToggle(child.code, event.target.checked)}
+                                  disabled={loading}
+                                  className="h-3.5 w-3.5 rounded border-slate-300 bg-transparent text-amber-400 focus:ring-amber-400 dark:border-white/20"
+                                />
+                                {t(child.label)}
+                              </label>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    </label>
+                    </div>
                   );
                 })}
               </div>

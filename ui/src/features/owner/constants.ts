@@ -64,7 +64,11 @@ export const OWNER_MANAGER_STATUS_OPTIONS: Record<OwnerManagerTabType, string[]>
   statistics: ['Active'],
 };
 
-export const OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS = ADMIN_PAGE_ACCESS.map(({ permission, label }) => ({ code: permission, label }));
+export const OWNER_MANAGER_ADMIN_PERMISSION_OPTIONS = ADMIN_PAGE_ACCESS.map(({ permission, label, children }) => ({
+  code: permission,
+  label,
+  children: (children || []).map((child) => ({ code: child.permission, label: child.label })),
+}));
 
 export const OWNER_MANAGER_FIELDS: Record<OwnerManagerTabType, OwnerManagerFieldDef[]> = {
   centers: [

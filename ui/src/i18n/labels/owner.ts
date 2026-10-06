@@ -1,4 +1,13 @@
 export const ownerLabels: Record<string, string> = {
+  // Admin permission dialog: submenus and the newer pages
+  List: "Ro'yxat",
+  'Open consolidation exercises and their results': 'Mustahkamlash mashqlari va natijalarini ochish',
+  'Students who left': "Ketgan o'quvchilar",
+  'New students who joined': "Yangi qo'shilgan o'quvchilar",
+  'Salary totals': 'Maosh jami',
+  'Salaries by month': "Oylar bo'yicha maoshlar",
+  'Teacher salary list': "O'qituvchilar maosh ro'yxati",
+  "View and edit this branch's details (address, phone)": "Shu filial ma'lumotlarini ko'rish va tahrirlash (manzil, telefon)",
   'Applied on': "Qo'llangan sana",
   'Class filling': "Guruh to'lishi",
   'Classes list': "Guruhlar ro'yxati",
