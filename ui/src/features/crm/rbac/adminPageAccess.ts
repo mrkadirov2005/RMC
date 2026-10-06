@@ -2,7 +2,7 @@ import { PERMISSION_CODES } from '@/types';
 
 export interface AdminSubPageAccess {
   label: string;
-  /** The `view` query value the page reads, e.g. /salary?view=monthly. */
+  /** The query value the page reads to pick this submenu, e.g. /salary?view=monthly or /owner/reports?section=finance. */
   view: string;
   permission: string;
 }
@@ -15,8 +15,9 @@ export interface AdminPageAccess {
 }
 
 // Every sidebar page an owner can grant a branch admin, in sidebar order. The admin dialog lists
-// these, and the sidebar and route guards check the same permission codes. Reports and Owner
-// Panel are not here: they read every branch's data and stay owner-only.
+// these, and the sidebar and route guards check the same permission codes. Owner Panel is not
+// here: it manages admin accounts, so it stays owner-only. Reports is safe to grant because the
+// server limits an admin's data to their own branch.
 export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
   { label: 'Dashboard', path: '/dashboard', permission: PERMISSION_CODES.VIEW_DASHBOARD },
   { label: 'Students', path: '/students', permission: PERMISSION_CODES.CRUD_STUDENT },
@@ -52,6 +53,20 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
   { label: 'Teacher Tasks', path: '/teacher-tasks', permission: PERMISSION_CODES.CRUD_TEACHER_TASK },
   { label: 'Subjects', path: '/subjects', permission: PERMISSION_CODES.CRUD_SUBJECT },
   { label: 'Debts', path: '/debts', permission: PERMISSION_CODES.CRUD_DEBT },
+  {
+    label: 'Reports',
+    path: '/owner/reports',
+    permission: PERMISSION_CODES.VIEW_REPORTS,
+    children: [
+      { label: 'Moliya', view: 'finance', permission: PERMISSION_CODES.REPORTS_TAB_FINANCE },
+      { label: "O'quvchilar", view: 'students', permission: PERMISSION_CODES.REPORTS_TAB_STUDENTS },
+      { label: "O'qituvchilar", view: 'teachers', permission: PERMISSION_CODES.REPORTS_TAB_TEACHERS },
+      { label: 'Chegirmalar', view: 'discounts', permission: PERMISSION_CODES.REPORTS_TAB_DISCOUNTS },
+      { label: 'Retention', view: 'retention', permission: PERMISSION_CODES.REPORTS_TAB_RETENTION },
+      { label: 'Davomat', view: 'attendance', permission: PERMISSION_CODES.REPORTS_TAB_ATTENDANCE },
+      { label: 'Class Reports', view: 'classes', permission: PERMISSION_CODES.REPORTS_TAB_CLASSES },
+    ],
+  },
   // An admin only ever sees and edits their own branch here; creating or deleting branches
   // stays owner-only on the server.
   { label: 'Centers', path: '/centers', permission: PERMISSION_CODES.CRUD_CENTER },

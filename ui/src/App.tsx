@@ -307,7 +307,7 @@ function AppContent() {
         <Route
           path="/owner/reports"
           element={
-            <ProtectedRoute requiredUserType="superuser" requiredRole="owner">
+            <ProtectedRoute requiredUserType="superuser" requiredPermission={PERMISSION_CODES.VIEW_REPORTS}>
               <Layout>
                 <OwnerReports />
               </Layout>
