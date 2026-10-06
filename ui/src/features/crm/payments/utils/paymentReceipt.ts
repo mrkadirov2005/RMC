@@ -20,11 +20,13 @@ export interface PaymentReceiptData {
   center_address?: string | null;
 }
 
-// 57 mm thermal roll (often sold as 57x40 or 58 mm). The printer can only print the
-// middle ~48 mm, so the side padding keeps every line inside that area.
-export const RECEIPT_PAPER_WIDTH_MM = 57;
-const RECEIPT_SIDE_PADDING_MM = 4.5;
-const PX_PER_MM = 96 / 25.4;
+// The receipt is a 47 mm column at the top-left of the page, inside the 48 mm a 58 mm
+// thermal printer can print. It deliberately sets no page size: when the page is narrower
+// than the paper the printer driver is set to (often 80 mm by default), Chrome centres it,
+// which pushed the receipt ~11.5 mm right and cut off every line on a 58 mm roll. With no
+// size the page is the driver's paper, starting at its left edge, so the receipt prints
+// whole whatever paper the printer is set to (58 or 80 mm).
+export const RECEIPT_CONTENT_WIDTH_MM = 47;
 
 const UZ_MONTHS = ['Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun', 'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr'];
 const RECEIPT_TIME_ZONE = 'Asia/Tashkent';
@@ -87,13 +89,13 @@ export const buildReceiptHtml = (receipt: PaymentReceiptData, logoUrl = RECEIPT_
   return `<!doctype html>
 <html lang="uz"><head><meta charset="utf-8"><title>To'lov cheki</title>
 <style>
-@page{size:${RECEIPT_PAPER_WIDTH_MM}mm 200mm;margin:0}
+@page{margin:0}
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;background:#fff;color:#000}
-body{width:${RECEIPT_PAPER_WIDTH_MM}mm;padding:3mm ${RECEIPT_SIDE_PADDING_MM}mm 5mm;font:12px/1.35 Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{width:${RECEIPT_CONTENT_WIDTH_MM}mm;padding:3mm 0 5mm 1mm;font:12px/1.35 Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .head{display:flex;align-items:center;gap:3mm;margin-bottom:4mm}
-.head img{width:18mm;height:18mm;object-fit:contain;filter:grayscale(1) contrast(1.4)}
-.head .name{font-weight:700;font-size:14px;letter-spacing:.04em;text-transform:uppercase}
+.head img{width:16mm;height:16mm;flex-shrink:0;object-fit:contain;filter:grayscale(1) contrast(1.4)}
+.head .name{min-width:0;font-weight:700;font-size:14px;letter-spacing:.02em;text-transform:uppercase;overflow-wrap:anywhere}
 h1{margin:0 0 3mm;text-align:center;font-size:15px;text-decoration:underline;text-transform:uppercase}
 .thanks{margin:0 0 3mm;font-size:12px}
 table{width:100%;border-collapse:collapse}
@@ -125,10 +127,6 @@ export const printReceiptHtml = (html: string) => new Promise<void>((resolve) =>
   doc.write(html);
   doc.close();
   const print = () => {
-    const heightMm = Math.ceil(doc.documentElement.scrollHeight / PX_PER_MM) + 2;
-    const pageSize = doc.createElement('style');
-    pageSize.textContent = `@page{size:${RECEIPT_PAPER_WIDTH_MM}mm ${heightMm}mm;margin:0}`;
-    doc.head.appendChild(pageSize);
     win.focus();
     win.addEventListener('afterprint', cleanup, { once: true });
     win.print();

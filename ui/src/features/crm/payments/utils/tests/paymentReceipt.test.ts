@@ -72,6 +72,14 @@ describe('payment receipt', () => {
     expect(html).not.toContain('№');
   });
 
+  it('never sets a page size, so the printer cannot centre it off a 58 mm roll', () => {
+    const html = buildReceiptHtml(receipt);
+    expect(html).toContain('@page{margin:0}');
+    expect(html).not.toMatch(/@page\{[^}]*size/);
+    // The column stays inside the 48 mm a 58 mm printer can print.
+    expect(html).toContain('width:47mm');
+  });
+
   it('reads the new payment id from the create response', () => {
     expect(getCreatedPaymentId({ data: { payment_id: 41 } })).toBe(41);
     expect(getCreatedPaymentId({ data: { payment_id: '7' } })).toBe(7);

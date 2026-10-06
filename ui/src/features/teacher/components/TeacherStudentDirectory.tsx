@@ -109,7 +109,7 @@ interface TeacherStudentDirectoryProps {
   attendanceMap?: Map<string, any>;
   monthlyPointsBySessionStudent?: Map<string, any>;
   monthlySessionsByDate?: Map<string, any>;
-  /** This month's payment per student id (prorated, after discounts); shows a Payment column when given. */
+  /** This month's payment per student id (prorated, after discounts); used by the Payment column when details are shown. */
   paymentStates?: Map<number, GroupPaymentStudent>;
 }
 
@@ -522,7 +522,7 @@ export default function TeacherStudentDirectory({
                 <TableHeader>
                   <TableRow className="bg-muted/50 w-full">
                     <TableHead>{t('Student')}</TableHead>
-                  {(isViewDetails || paymentStates) && <TableHead>{t('Payment')}</TableHead>}
+                  {isViewDetails && <TableHead>{t('Payment')}</TableHead>}
                     <TableHead>{t('Status')}</TableHead>
                     <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
@@ -548,7 +548,7 @@ export default function TeacherStudentDirectory({
                             </div>
                           </div>
                         </TableCell>
-                        {paymentStates ? (
+                        {isViewDetails && paymentStates ? (
                           <TableCell>
                             {paymentStates.get(studentId) ? (
                               <span className="flex flex-wrap items-center gap-2">
