@@ -14,8 +14,16 @@ import { getApiPayload, unwrapApiRows } from '@/shared/api/response';
 import { getErrorMessage } from '@/utils/errorMessage';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
-import { classAPI, studentAPI } from '../api';
-import { getAssignableClasses, getClassId, type ClassOption, type StudentGroupRecord } from './groupsTabModel';
+import { classAPI, studentAPI, teacherAPI } from '../api';
+import {
+  getAssignableClasses,
+  getAssignableTeachers,
+  getClassId,
+  getTeacherClasses,
+  type ClassOption,
+  type StudentGroupRecord,
+  type TeacherOption,
+} from './groupsTabModel';
 
 interface StudentGroupsResponse {
   main_student_id: number;
@@ -36,6 +44,9 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
   const [error, setError] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [classes, setClasses] = useState<ClassOption[]>([]);
+  const [teachers, setTeachers] = useState<TeacherOption[]>([]);
+  // As in the transfer dialog: pick the teacher first, then one of that teacher's groups.
+  const [selectedTeacherId, setSelectedTeacherId] = useState('');
   const [selectedClassId, setSelectedClassId] = useState('');
   const [assigning, setAssigning] = useState(false);
 
@@ -58,13 +69,20 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
 
   const groups = useMemo(() => data?.groups || [], [data]);
   const assignableClasses = useMemo(() => getAssignableClasses(classes, groups), [classes, groups]);
+  const teacherChoices = useMemo(() => getAssignableTeachers(assignableClasses, teachers), [assignableClasses, teachers]);
+  const teacherClasses = useMemo(
+    () => (selectedTeacherId === '' ? [] : getTeacherClasses(assignableClasses, Number(selectedTeacherId))),
+    [assignableClasses, selectedTeacherId]
+  );
 
   const openAssignDialog = async () => {
+    setSelectedTeacherId('');
     setSelectedClassId('');
     setDialogOpen(true);
     try {
-      const response = await classAPI.getAll();
-      setClasses(unwrapApiRows<ClassOption>(response));
+      const [classResponse, teacherResponse] = await Promise.all([classAPI.getAll(), teacherAPI.getAll()]);
+      setClasses(unwrapApiRows<ClassOption>(classResponse));
+      setTeachers(unwrapApiRows<TeacherOption>(teacherResponse));
     } catch (err) {
       showToast.error(getErrorMessage(err) || t("Couldn't load groups"));
     }
@@ -174,13 +192,34 @@ export const GroupsTab = ({ studentId, onOpenStudent }: GroupsTabProps) => {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
-            <Label htmlFor="assign-group">{t('Group')}</Label>
-            <Select value={selectedClassId} onValueChange={setSelectedClassId}>
-              <SelectTrigger id="assign-group">
-                <SelectValue placeholder={t('Select a group')} />
+            <Label htmlFor="assign-teacher">{t('Teacher')}</Label>
+            <Select
+              value={selectedTeacherId}
+              onValueChange={(value) => {
+                setSelectedTeacherId(value);
+                setSelectedClassId('');
+              }}
+            >
+              <SelectTrigger id="assign-teacher">
+                <SelectValue placeholder={t('Select target teacher')} />
               </SelectTrigger>
               <SelectContent>
-                {assignableClasses.map((cls) => (
+                {teacherChoices.map((teacher) => (
+                  <SelectItem key={teacher.id} value={String(teacher.id)}>
+                    {teacher.id ? teacher.name : t('No teacher')} ({teacher.groups})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="assign-group">{t('Group')}</Label>
+            <Select value={selectedClassId} onValueChange={setSelectedClassId} disabled={selectedTeacherId === ''}>
+              <SelectTrigger id="assign-group">
+                <SelectValue placeholder={selectedTeacherId === '' ? t('Choose a teacher first') : t('Select a group')} />
+              </SelectTrigger>
+              <SelectContent>
+                {teacherClasses.map((cls) => (
                   <SelectItem key={getClassId(cls)} value={String(getClassId(cls))}>
                     {cls.class_name || `#${getClassId(cls)}`}
                   </SelectItem>
