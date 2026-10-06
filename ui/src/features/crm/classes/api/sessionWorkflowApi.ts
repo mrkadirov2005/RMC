@@ -62,5 +62,9 @@ export const sessionWorkflowApi = {
     );
     return { sessions: unwrapApiRows<any>(sessionsResponse), attendanceDates };
   },
+  /** All of the class's attendance records, fresh from the server (for the monthly attendance image). */
+  async loadClassAttendance(classId: number) {
+    return unwrapApiRows<any>(await attendanceAPI.getByClass(classId));
+  },
   save: (payload: Parameters<typeof gradeAPI.saveSessionWorkflow>[0]) => gradeAPI.saveSessionWorkflow(payload),
 };

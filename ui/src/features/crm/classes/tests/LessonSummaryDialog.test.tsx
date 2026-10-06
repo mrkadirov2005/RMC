@@ -50,4 +50,18 @@ describe('LessonSummaryDialog', () => {
     render(<LessonSummaryDialog summary={null} doneLabel="Done" onDone={() => {}} onReview={() => {}} />);
     expect(screen.queryByText('Attendance completed')).toBeNull();
   });
+
+  it('downloads the monthly attendance image from "Suratni yuklash"', async () => {
+    const onDownloadImage = vi.fn(() => Promise.resolve());
+    render(<LessonSummaryDialog summary={summary} doneLabel="Done" onDone={() => {}} onReview={() => {}} onDownloadImage={onDownloadImage} />);
+
+    fireEvent.click(screen.getByText('Download image'));
+    expect(onDownloadImage).toHaveBeenCalledTimes(1);
+    await screen.findByText('Download image');
+  });
+
+  it('has no download button when no download is offered', () => {
+    render(<LessonSummaryDialog summary={summary} doneLabel="Done" onDone={() => {}} onReview={() => {}} />);
+    expect(screen.queryByText('Download image')).toBeNull();
+  });
 });

@@ -1,4 +1,5 @@
-import { CheckCircle2, Coins, Star, TrendingUp, UserX, Users } from 'lucide-react';
+import { useState } from 'react';
+import { CheckCircle2, Coins, Download, Loader2, Star, TrendingUp, UserX, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -58,11 +59,24 @@ interface LessonSummaryDialogProps {
   doneLabel: string;
   onDone: () => void;
   onReview: () => void;
+  /** Downloads the class's attendance for the lesson's month as an image ("Suratni yuklash"). */
+  onDownloadImage?: () => Promise<void>;
 }
 
 // Shown once a lesson is saved: confirms it and gives the teacher the lesson at a glance.
-export function LessonSummaryDialog({ summary, className, date, doneLabel, onDone, onReview }: LessonSummaryDialogProps) {
+export function LessonSummaryDialog({ summary, className, date, doneLabel, onDone, onReview, onDownloadImage }: LessonSummaryDialogProps) {
   const { t } = useLanguage();
+  const [downloading, setDownloading] = useState(false);
+
+  const downloadImage = async () => {
+    if (!onDownloadImage) return;
+    setDownloading(true);
+    try {
+      await onDownloadImage();
+    } finally {
+      setDownloading(false);
+    }
+  };
   const style = summary ? statusStyles[summary.status] : statusStyles.good;
 
   return (
@@ -163,7 +177,13 @@ export function LessonSummaryDialog({ summary, className, date, doneLabel, onDon
               </p>
             )}
 
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2 sm:gap-2">
+              {onDownloadImage && (
+                <Button type="button" variant="outline" onClick={downloadImage} disabled={downloading} className="sm:mr-auto">
+                  {downloading ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Download className="mr-1.5 h-4 w-4" />}
+                  {t('Download image')}
+                </Button>
+              )}
               <Button type="button" variant="outline" onClick={onReview}>{t('Edit marks')}</Button>
               <Button type="button" onClick={onDone} className="bg-emerald-600 text-white hover:bg-emerald-700">{doneLabel}</Button>
             </DialogFooter>
