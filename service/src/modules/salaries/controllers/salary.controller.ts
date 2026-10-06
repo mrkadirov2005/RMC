@@ -71,6 +71,30 @@ const getMyDetail = async (req: any, res: any) => {
   }
 };
 
+// Centers bill by Tashkent time, so "this month" is the Tashkent month.
+const currentMonthKey = () =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit' }).format(new Date());
+
+const getMyGroupPayments = async (req: any, res: any) => {
+  try {
+    const teacherId = Number(req.user?.id);
+    if (!teacherId) {
+      return res.status(400).json({ error: "O'qituvchi ID sini aniqlab bo'lmadi." });
+    }
+    const requested = String(req.query.month || '');
+    const monthKey = /^\d{4}-(0[1-9]|1[0-2])$/.test(requested) ? requested : currentMonthKey();
+    const { centerId } = getScopedCenterId(req);
+    const result = await salaryService.getMyGroupPayments({ teacherId, centerId: centerId ?? undefined, monthKey });
+    if (!result) {
+      return res.status(404).json({ error: 'Maosh profili topilmadi.' });
+    }
+    res.json(result);
+  } catch (error: any) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: "To'lov statistikasini yuklab bo'lmadi", details: error.message || String(error) });
+  }
+};
+
 const markPaid = async (req: any, res: any) => {
   try {
     const { centerId, isGlobal } = getScopedCenterId(req);
@@ -163,6 +187,7 @@ module.exports = {
   getOverview,
   getTeacherDetail,
   getMyDetail,
+  getMyGroupPayments,
   markPaid,
   updatePatch,
   getMonthlySummary,

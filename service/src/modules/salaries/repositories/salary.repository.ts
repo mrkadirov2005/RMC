@@ -281,6 +281,82 @@ const listHistoryForTeacher = async (teacherId: number, centerId: number | undef
   return history;
 };
 
+// Raw rows behind a teacher's own per-group payment view for one month: their classes, the
+// students in them, and those students' completed payments dated inside the month.
+const findTeacherGroupPaymentRows = async ({
+  teacherId,
+  centerId,
+  year,
+  month,
+}: {
+  teacherId: number;
+  centerId?: number;
+  year: number;
+  month: number;
+}) => {
+  const teacherConditions = [eq(teachers.teacherId, teacherId)];
+  if (centerId) teacherConditions.push(eq(teachers.centerId, centerId));
+  const [teacher] = await db
+    .select({ teacher_id: teachers.teacherId, salary_percentage: teachers.salaryPercentage })
+    .from(teachers)
+    .where(and(...teacherConditions))
+    .limit(1);
+  if (!teacher) return null;
+
+  const classConditions = [eq(classes.teacherId, teacherId), isNull(classes.deletedAt)];
+  if (centerId) classConditions.push(eq(classes.centerId, centerId));
+  const classRows = await db
+    .select({
+      class_id: classes.classId,
+      class_name: classes.className,
+      payment_amount: classes.paymentAmount,
+    })
+    .from(classes)
+    .where(and(...classConditions))
+    .orderBy(asc(classes.className));
+
+  const classIds = classRows.map((row: any) => Number(row.class_id));
+  const studentRows = classIds.length
+    ? await db
+        .select({
+          student_id: students.studentId,
+          class_id: students.classId,
+          first_name: students.firstName,
+          last_name: students.lastName,
+          start_date: students.startDate,
+          end_date: students.endDate,
+        })
+        .from(students)
+        .where(and(inArray(students.classId, classIds), isNull(students.deletedAt)))
+    : [];
+
+  const { start, end } = monthRange(year, month);
+  const studentIds = studentRows.map((row: any) => Number(row.student_id));
+  const paymentRows = studentIds.length
+    ? await db
+        .select({
+          student_id: payments.studentId,
+          amount: payments.amount,
+          discount_amount: payments.discountAmount,
+        })
+        .from(payments)
+        .where(
+          and(
+            inArray(payments.studentId, studentIds),
+            // Same statuses the admin group payment view counts as money received.
+            sql`LOWER(${payments.paymentStatus}) IN ('completed', 'paid')`,
+            isNull(payments.deletedAt),
+            sql`${payments.paymentDate} >= ${start}`,
+            sql`${payments.paymentDate} < ${end}`
+          )
+        )
+    : [];
+
+  const salary = await findRecord(teacherId, year, month, centerId);
+
+  return { teacher, classes: classRows, students: studentRows, payments: paymentRows, salary };
+};
+
 // Trailing-N-months totals of paid salary amount + paid-teacher count, oldest first.
 const monthlySummary = async ({ centerId, months }: { centerId?: number; months: number }) => {
   const now = new Date();
@@ -326,6 +402,7 @@ module.exports = {
   listTeacherOverview,
   listHistoryForTeacher,
   monthlySummary,
+  findTeacherGroupPaymentRows,
 };
 
 export {};

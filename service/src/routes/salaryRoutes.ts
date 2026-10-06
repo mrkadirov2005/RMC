@@ -10,6 +10,7 @@ const { MarkSalaryPaidDto, UpdateSalaryDto } = require('../dtos/salaries.dto');
 router.get('/', requireAuth, requireRole('superuser'), salaryController.getOverview);
 router.get('/monthly-summary', requireAuth, requireRole('superuser'), salaryController.getMonthlySummary);
 router.get('/me', requireAuth, requireRole('teacher'), salaryController.getMyDetail);
+router.get('/me/payments', requireAuth, requireRole('teacher'), salaryController.getMyGroupPayments);
 router.get('/teacher/:teacherId', requireAuth, requireRole('superuser'), salaryController.getTeacherDetail);
 router.post('/mark-paid', requireAuth, requireRole('superuser'), validateBody(MarkSalaryPaidDto), salaryController.markPaid);
 router.patch('/:id', requireAuth, requireRole('superuser'), validateBody(UpdateSalaryDto), salaryController.updatePatch);

@@ -4,6 +4,7 @@ jest.mock('../../services/salary.service', () => ({
   markPaid: jest.fn(),
   updateSalaryRecord: jest.fn(),
   getMonthlySummary: jest.fn(),
+  getMyGroupPayments: jest.fn(),
 }));
 
 jest.mock('../../../../shared/tenant', () => ({
@@ -215,6 +216,46 @@ describe('salaries controller', () => {
 
       expect(res.status).toHaveBeenCalledWith(500);
       expect(res.json).toHaveBeenCalledWith({ error: "Maosh tafsilotini yuklab bo'lmadi", details: 'profile failed' });
+    });
+  });
+
+  describe('getMyGroupPayments', () => {
+    it('reads the signed-in teacher own groups for the requested month', async () => {
+      const res = createResponse();
+      salaryService.getMyGroupPayments.mockResolvedValue({ month: '2026-09', groups: [] });
+
+      await salaryController.getMyGroupPayments({ query: { month: '2026-09' }, user: { id: 7, userType: 'teacher' } }, res);
+
+      expect(salaryService.getMyGroupPayments).toHaveBeenCalledWith({ teacherId: 7, centerId: 4, monthKey: '2026-09' });
+      expect(res.json).toHaveBeenCalledWith({ month: '2026-09', groups: [] });
+    });
+
+    it('falls back to the current month for a malformed month', async () => {
+      const res = createResponse();
+      salaryService.getMyGroupPayments.mockResolvedValue({ groups: [] });
+
+      await salaryController.getMyGroupPayments({ query: { month: '2026-13' }, user: { id: 7 } }, res);
+
+      expect(salaryService.getMyGroupPayments.mock.calls[0][0].monthKey).toMatch(/^\d{4}-\d{2}$/);
+      expect(salaryService.getMyGroupPayments.mock.calls[0][0].monthKey).not.toBe('2026-13');
+    });
+
+    it('refuses a caller whose teacher id cannot be resolved', async () => {
+      const res = createResponse();
+
+      await salaryController.getMyGroupPayments({ query: {}, user: {} }, res);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(salaryService.getMyGroupPayments).not.toHaveBeenCalled();
+    });
+
+    it('returns 404 when the teacher is not found', async () => {
+      const res = createResponse();
+      salaryService.getMyGroupPayments.mockResolvedValue(null);
+
+      await salaryController.getMyGroupPayments({ query: {}, user: { id: 7 } }, res);
+
+      expect(res.status).toHaveBeenCalledWith(404);
     });
   });
 

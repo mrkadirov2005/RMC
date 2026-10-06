@@ -420,6 +420,9 @@ export const salaryAPI = {
     apiClient.get('/salaries/monthly-summary', { params }),
   getMine: (params?: { months?: number }) =>
     apiClient.get('/salaries/me', { params }),
+  /** The signed-in teacher's per-group payments for a month (YYYY-MM; defaults to this month). */
+  getMyPayments: (params?: { month?: string }) =>
+    apiClient.get('/salaries/me/payments', { params }),
 };
 
 export const kpiAPI = {

@@ -14,6 +14,9 @@ import { showToast } from '../../../utils/toast';
 import { useLanguage } from '../../../i18n/LanguageContext';
 import { LessonPickerDialog } from '../../crm/classes/components/LessonPickerDialog';
 import TeacherClassDetailPanel from './TeacherClassDetailPanel';
+import { useMyGroupPayments } from '../payments/useMyGroupPayments';
+import { GroupPaidBadge } from '../payments/PaymentStateBadge';
+import { formatMoney } from '@/utils/helpers';
 import type { TeacherStudentItem } from './TeacherStudentDirectory';
 
 interface ClassInfo {
@@ -54,6 +57,17 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
   const [classData, setClassData] = useState<ClassInfo | null>(null);
   const [students, setStudents] = useState<TeacherStudentItem[]>([]);
   const [lessonPickerOpen, setLessonPickerOpen] = useState(false);
+  // This month's payments per group, from the same figures as Profile → Payments.
+  const { data: groupPayments } = useMyGroupPayments();
+  const paymentsByClass = useMemo(
+    () => new Map((groupPayments?.groups || []).map((group) => [group.class_id, group])),
+    [groupPayments]
+  );
+  const selectedGroupPayment = selectedClassId ? paymentsByClass.get(selectedClassId) : undefined;
+  const selectedPaymentStates = useMemo(
+    () => (selectedGroupPayment ? new Map(selectedGroupPayment.students.map((student) => [student.student_id, student])) : undefined),
+    [selectedGroupPayment]
+  );
 
 // Runs side effects for this component.
   useEffect(() => {
@@ -227,6 +241,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           onBack={() => setSelectedClassId(null)}
           onStartLesson={() => setLessonPickerOpen(true)}
           students={students}
+          paymentStates={selectedPaymentStates}
         />
         <LessonPickerDialog
           open={lessonPickerOpen}
@@ -264,6 +279,7 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                 <TableHead className="px-3 py-2 text-sm">{t('Students')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm">{t('Schedule')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm">{t('Room')}</TableHead>
+                <TableHead className="px-3 py-2 text-sm">{t('Payment this month')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm">{t('Status')}</TableHead>
                 <TableHead className="px-3 py-2 text-sm" />
               </TableRow>
@@ -281,6 +297,22 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
                     <TableCell className="px-3 py-2 text-sm text-slate-700">{classItem.student_count || 0}</TableCell>
                     <TableCell className="px-3 py-2 text-sm text-slate-700">{scheduleText}</TableCell>
                     <TableCell className="px-3 py-2 text-sm text-slate-700">{classItem.room_number || t('No room')}</TableCell>
+                    <TableCell className="px-3 py-2">
+                      {(() => {
+                        const payment = paymentsByClass.get(Number(classItem.class_id));
+                        if (!payment) return <span className="text-xs text-muted-foreground">—</span>;
+                        return (
+                          <div className="space-y-0.5">
+                            <GroupPaidBadge paid={payment.paid_students} total={payment.total_students} />
+                            {payment.remaining > 0 && (
+                              <div className="text-xs font-semibold tabular-nums text-rose-600">
+                                {t('{amount} left', { amount: formatMoney(payment.remaining) })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </TableCell>
                     <TableCell className="px-3 py-2">
                       <Badge variant={getStatusVariant(classItem.status) as any} className="text-sm">{t(classItem.status || 'Active')}</Badge>
                     </TableCell>

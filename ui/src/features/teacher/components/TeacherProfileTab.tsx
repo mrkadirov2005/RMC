@@ -1,4 +1,5 @@
-// Teacher's own profile: read-only personal info + their salary history.
+// Teacher's own profile: read-only personal info + their salary history, and a Payments subpage
+// with what each of their groups has paid this month.
 
 import { useEffect, useState } from 'react';
 import { ArrowLeft, KeyRound, Loader2, Mail, Phone, IdCard, UserRound, Wallet } from 'lucide-react';
@@ -9,6 +10,8 @@ import { teacherAPI } from '../api';
 import { useMySalaryDetail } from '../hooks/useMySalaryDetail';
 import TeacherSalaryStatsView from './TeacherSalaryStatsView';
 import TeacherSalaryTab from './TeacherSalaryTab';
+import TeacherPaymentsOverview from '../payments/TeacherPaymentsOverview';
+import { cn } from '@/lib/utils';
 import { showToast } from '@/utils/toast';
 import { useLanguage } from '@/i18n/LanguageContext';
 
@@ -30,6 +33,7 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
   const { t } = useLanguage();
   const [profile, setProfile] = useState<TeacherProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [section, setSection] = useState<'profile' | 'payments'>('profile');
   const [salaryView, setSalaryView] = useState<'stats' | 'details'>('stats');
   const { detail: salaryDetail, loading: salaryLoading } = useMySalaryDetail(teacherId);
   const [oldPw, setOldPw] = useState('');
@@ -82,95 +86,123 @@ const TeacherProfileTab = ({ teacherId }: TeacherProfileTabProps) => {
 
   const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Teacher';
 
+  const sections = [
+    { id: 'profile' as const, label: t('Profile'), icon: UserRound },
+    { id: 'payments' as const, label: t('Payments'), icon: Wallet },
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border bg-card p-5 shadow-sm">
-        {loading ? (
-          <div className="flex justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-          </div>
-        ) : !profile ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">{t('Unable to load your profile.')}</p>
-        ) : (
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-              <UserRound className="h-7 w-7" />
+      <div className="inline-flex rounded-lg border bg-muted/40 p-1">
+        {sections.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setSection(id)}
+            className={cn(
+              'flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition',
+              section === id ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            <Icon className="h-4 w-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {section === 'payments' ? (
+        <TeacherPaymentsOverview />
+      ) : (
+        <>
+        <div className="rounded-lg border bg-card p-5 shadow-sm">
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-bold">{fullName}</h2>
-              <div className="mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Mail className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{profile.email || '—'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Phone className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{profile.phone || '—'}</span>
-                </div>
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <IdCard className="h-4 w-4 shrink-0" />
-                  <span className="truncate">{profile.employee_id || '—'}</span>
+          ) : !profile ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">{t('Unable to load your profile.')}</p>
+          ) : (
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                <UserRound className="h-7 w-7" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-lg font-bold">{fullName}</h2>
+                <div className="mt-2 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Mail className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{profile.email || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Phone className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{profile.phone || '—'}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <IdCard className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{profile.employee_id || '—'}</span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-
-      <div className="rounded-lg border bg-card p-5 shadow-sm">
-        <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
-          <KeyRound className="h-4 w-4 text-sky-600" />
-          {t('Change Password')}
-        </h3>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="teacher-old-pw" className="text-xs">{t('Current password')}</Label>
-            <Input id="teacher-old-pw" type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} autoComplete="current-password" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="teacher-new-pw" className="text-xs">{t('New password')}</Label>
-            <Input id="teacher-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="teacher-confirm-pw" className="text-xs">{t('Confirm new password')}</Label>
-            <Input id="teacher-confirm-pw" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
-          </div>
-        </div>
-        <div className="mt-3 flex justify-end">
-          <Button
-            size="sm"
-            onClick={handleChangePassword}
-            disabled={changing || !oldPw || !newPw || !confirmPw}
-          >
-            {changing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
-            {changing ? t('Saving...') : t('Update password')}
-          </Button>
-        </div>
-      </div>
-
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-sm font-bold">
-            <Wallet className="h-4 w-4 text-emerald-600" />
-            {t('My Salary')}
-          </h3>
-          {salaryView === 'details' && (
-            <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setSalaryView('stats')}>
-              <ArrowLeft className="h-3.5 w-3.5" />
-              {t('Back to Statistics')}
-            </Button>
           )}
         </div>
-        {salaryView === 'stats' ? (
-          <TeacherSalaryStatsView
-            detail={salaryDetail}
-            loading={salaryLoading}
-            onViewDetails={() => setSalaryView('details')}
-          />
-        ) : (
-          <TeacherSalaryTab detail={salaryDetail} loading={salaryLoading} />
-        )}
-      </div>
+
+        <div className="rounded-lg border bg-card p-5 shadow-sm">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
+            <KeyRound className="h-4 w-4 text-sky-600" />
+            {t('Change Password')}
+          </h3>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="teacher-old-pw" className="text-xs">{t('Current password')}</Label>
+              <Input id="teacher-old-pw" type="password" value={oldPw} onChange={(e) => setOldPw(e.target.value)} autoComplete="current-password" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="teacher-new-pw" className="text-xs">{t('New password')}</Label>
+              <Input id="teacher-new-pw" type="password" value={newPw} onChange={(e) => setNewPw(e.target.value)} autoComplete="new-password" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="teacher-confirm-pw" className="text-xs">{t('Confirm new password')}</Label>
+              <Input id="teacher-confirm-pw" type="password" value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} autoComplete="new-password" />
+            </div>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <Button
+              size="sm"
+              onClick={handleChangePassword}
+              disabled={changing || !oldPw || !newPw || !confirmPw}
+            >
+              {changing ? <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <KeyRound className="mr-1.5 h-3.5 w-3.5" />}
+              {changing ? t('Saving...') : t('Update password')}
+            </Button>
+          </div>
+        </div>
+
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-bold">
+              <Wallet className="h-4 w-4 text-emerald-600" />
+              {t('My Salary')}
+            </h3>
+            {salaryView === 'details' && (
+              <Button variant="ghost" size="sm" className="gap-1.5" onClick={() => setSalaryView('stats')}>
+                <ArrowLeft className="h-3.5 w-3.5" />
+                {t('Back to Statistics')}
+              </Button>
+            )}
+          </div>
+          {salaryView === 'stats' ? (
+            <TeacherSalaryStatsView
+              detail={salaryDetail}
+              loading={salaryLoading}
+              onViewDetails={() => setSalaryView('details')}
+            />
+          ) : (
+            <TeacherSalaryTab detail={salaryDetail} loading={salaryLoading} />
+          )}
+        </div>
+        </>
+      )}
     </div>
   );
 };

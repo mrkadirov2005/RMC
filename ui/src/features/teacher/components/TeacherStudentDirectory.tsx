@@ -14,6 +14,8 @@ import {
   X,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { PaymentStateBadge } from '../payments/PaymentStateBadge';
+import type { GroupPaymentStudent } from '../payments/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -107,6 +109,8 @@ interface TeacherStudentDirectoryProps {
   attendanceMap?: Map<string, any>;
   monthlyPointsBySessionStudent?: Map<string, any>;
   monthlySessionsByDate?: Map<string, any>;
+  /** This month's payment per student id (prorated, after discounts); shows a Payment column when given. */
+  paymentStates?: Map<number, GroupPaymentStudent>;
 }
 
 export default function TeacherStudentDirectory({
@@ -120,6 +124,7 @@ export default function TeacherStudentDirectory({
   attendanceMap = new Map(),
   monthlyPointsBySessionStudent = new Map(),
   monthlySessionsByDate = new Map(),
+  paymentStates,
 }: TeacherStudentDirectoryProps) {
   const { t } = useLanguage();
   const navigate = useNavigate();
@@ -517,7 +522,7 @@ export default function TeacherStudentDirectory({
                 <TableHeader>
                   <TableRow className="bg-muted/50 w-full">
                     <TableHead>{t('Student')}</TableHead>
-                  {isViewDetails &&  <TableHead>{t('Contact')}</TableHead>}
+                  {(isViewDetails || paymentStates) && <TableHead>{t('Payment')}</TableHead>}
                     <TableHead>{t('Status')}</TableHead>
                     <TableHead className="text-right">{t('Actions')}</TableHead>
                   </TableRow>
@@ -543,7 +548,22 @@ export default function TeacherStudentDirectory({
                             </div>
                           </div>
                         </TableCell>
-                        {isViewDetails && <TableCell>{renderPaymentChip(student)}</TableCell>}
+                        {paymentStates ? (
+                          <TableCell>
+                            {paymentStates.get(studentId) ? (
+                              <span className="flex flex-wrap items-center gap-2">
+                                <PaymentStateBadge state={paymentStates.get(studentId)!.state} />
+                                {paymentStates.get(studentId)!.remaining > 0 && (
+                                  <span className="text-xs font-semibold tabular-nums text-rose-600">
+                                    {t('{amount} left', { amount: formatMoney(paymentStates.get(studentId)!.remaining) })}
+                                  </span>
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                        ) : isViewDetails && <TableCell>{renderPaymentChip(student)}</TableCell>}
                         <TableCell>
                           <Badge className={`${student.status == 'active'?"text-black bg-green-300":"text-red-950 bg-red-200"}`} variant={getStatusVariant(student.status) as any}>
                             {t(student.status)}

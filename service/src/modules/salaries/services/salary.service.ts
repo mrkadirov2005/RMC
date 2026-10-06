@@ -1,5 +1,6 @@
 const { sql } = require('drizzle-orm');
 const salaryRepository = require('../repositories/salary.repository');
+const { buildTeacherGroupPayments } = require('./groupPayments');
 const teacherService = require('../../teachers/services/teacher.service');
 const ownerService = require('../../owners/services/owner.service');
 const superuserService = require('../../superusers/services/superuser.service');
@@ -112,12 +113,28 @@ const getMonthlySummary = async ({ centerId, months = 6 }: { centerId?: number; 
   return { months: summary };
 };
 
+// The signed-in teacher's per-group money for one month (YYYY-MM); null when the teacher is unknown.
+const getMyGroupPayments = async ({ teacherId, centerId, monthKey }: { teacherId: number; centerId?: number; monthKey: string }) => {
+  const [year, month] = monthKey.split('-').map(Number);
+  const rows = await salaryRepository.findTeacherGroupPaymentRows({ teacherId, centerId, year, month });
+  if (!rows) return null;
+  return buildTeacherGroupPayments({
+    monthKey,
+    salaryPercentage: rows.teacher.salary_percentage,
+    classes: rows.classes,
+    students: rows.students,
+    payments: rows.payments,
+    salary: rows.salary,
+  });
+};
+
 module.exports = {
   getOverview,
   getTeacherDetail,
   markPaid,
   updateSalaryRecord,
   getMonthlySummary,
+  getMyGroupPayments,
 };
 
 export {};
