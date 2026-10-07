@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { PaymentStateBadge } from '../payments/PaymentStateBadge';
+import { MonthlyRankBadge } from '../../crm/classes/components/MonthlyRankBadge';
+import { getMonthlyTotals, rankMonthlyTotals, rankRowClassName } from '../../crm/classes/utils/monthlyRanking';
 import type { GroupPaymentStudent } from '../payments/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -190,6 +192,14 @@ export default function TeacherStudentDirectory({
       return matchesSearch && matchesPayment && matchesStatus && matchesClass;
     });
   }, [normalizedStudents, searchTerm, paymentFilter, statusFilter, classFilter]);
+
+  // Places 1-5 (green) and the lowest five (red) by monthly points, over the whole group so a
+  // search or filter does not change anyone's place.
+  const monthlyRanks = useMemo(() => rankMonthlyTotals(getMonthlyTotals(
+    normalizedStudents.map((student) => Number(student.student_id || student.id || 0)),
+    monthlyLessonDates.map((date) => Number(monthlySessionsByDate.get(date)?.session_id || monthlySessionsByDate.get(date)?.id || 0)),
+    monthlyPointsBySessionStudent
+  )), [monthlyLessonDates, monthlyPointsBySessionStudent, monthlySessionsByDate, normalizedStudents]);
 
   const hasActiveFilters =
     paymentFilter !== 'all' || statusFilter !== 'all' || classFilter !== 'all';
@@ -452,12 +462,14 @@ export default function TeacherStudentDirectory({
                       const studentId = Number(student.student_id || student.id || 0);
                       let studentTotalPoints = 0;
                       let studentAttendanceCount = 0;
+                      const rank = monthlyRanks.get(studentId);
                       return (
-                        <TableRow key={studentId || index} className="group h-9">
+                        <TableRow key={studentId || index} className={`group h-9 ${rankRowClassName(rank)}`}>
                           <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold">
                             <div className="flex min-w-0 items-center gap-1.5">
                               <div>{index + 1}</div>
                               <span className="max-w-[180px] truncate text-[11px]">{student.last_name} {student.first_name}</span>
+                              <MonthlyRankBadge rank={rank} />
                             </div>
                           </TableCell>
                           {monthlyLessonDates.map((d) => {
