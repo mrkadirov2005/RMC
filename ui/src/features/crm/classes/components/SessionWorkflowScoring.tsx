@@ -133,7 +133,7 @@ export const ScoreTable = ({
   const columnCount = options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1;
   return (
   <div className="overflow-x-auto rounded-lg border">
-    {!readOnly && <div className="flex items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
+    {!readOnly && <div className="flex flex-wrap items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
       <span className="mr-1 shrink-0 text-xs font-semibold text-muted-foreground">{t('Fill all')}</span>
       {options.map((option) => {
         const tone = optionToneClasses[option.tone];
@@ -156,9 +156,9 @@ export const ScoreTable = ({
     <Table>
       <TableHeader>
         <TableRow className="bg-primary">
-          <TableHead className="h-10 w-[180px] min-w-[180px] px-3 text-xs font-semibold text-primary-foreground">{t('Student')}</TableHead>
+          <TableHead className="h-10 w-[100px] min-w-[100px] px-2 text-xs font-semibold text-primary-foreground sm:w-[180px] sm:min-w-[180px] sm:px-3">{t('Student')}</TableHead>
           {options.map((option) => (
-            <TableHead key={option.label} className="h-9 w-[72px] min-w-[72px] px-1 text-center text-[11px] font-semibold text-primary-foreground">
+            <TableHead key={option.label} className="h-9 w-[50px] min-w-[50px] px-0.5 text-center text-[10px] font-semibold text-primary-foreground sm:w-[72px] sm:min-w-[72px] sm:px-1 sm:text-[11px]">
               <span className="block truncate">{option.label}</span>
               <span className="block text-[10px] font-medium text-primary-foreground/80">{t('{count} points', { count: option.score })}</span>
             </TableHead>
@@ -181,20 +181,20 @@ export const ScoreTable = ({
           return (
             <Fragment key={studentId}>
             <TableRow className={cn('h-12', !enabled && 'opacity-40 grayscale', note && 'border-b-0')}>
-              <TableCell className="w-[180px] max-w-[180px] px-3 py-1.5 text-sm font-medium">
+              <TableCell className="w-[100px] max-w-[100px] px-2 py-1.5 text-xs font-medium sm:w-[180px] sm:max-w-[180px] sm:px-3 sm:text-sm">
                 <span className="block truncate">{[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}</span>
               </TableCell>
               {options.map((option) => {
                 const isSelected = selected === option.label;
                 const tone = optionToneClasses[option.tone];
                 return (
-                  <TableCell key={option.label} className="w-[72px] px-1 py-1 text-center">
+                  <TableCell key={option.label} className="w-[50px] px-0.5 py-1 text-center sm:w-[72px] sm:px-1">
                     <button
                       type="button"
                       disabled={!enabled || readOnly}
                       aria-label={`${option.label} ${t('{count} points', { count: option.score })}`}
                       className={cn(
-                        'mx-auto flex h-7 w-12 items-center justify-center gap-1 rounded-full border px-0.5 shadow-sm transition disabled:pointer-events-none',
+                        'mx-auto flex h-8 w-10 items-center justify-center gap-1 rounded-full border px-0.5 shadow-sm transition disabled:pointer-events-none sm:h-7 sm:w-12',
                         isSelected ? `${tone.active} ring-2 ring-offset-1 ring-offset-background` : tone.idle,
                         readOnly && !isSelected && 'opacity-30',
                       )}
@@ -240,7 +240,7 @@ export const ScoreTable = ({
         })}
       </TableBody>
     </Table>
-    {action && <div className="flex justify-end gap-2 border-t p-3">{action}</div>}
+    {action && <div className="flex flex-wrap justify-end gap-2 border-t p-3">{action}</div>}
   </div>
 );
 };
@@ -329,7 +329,7 @@ export const ManualPointsTable = ({
         })}
       </TableBody>
     </Table>
-    {action && <div className="flex justify-end gap-2 border-t p-3">{action}</div>}
+    {action && <div className="flex flex-wrap justify-end gap-2 border-t p-3">{action}</div>}
   </div>
 );
 };

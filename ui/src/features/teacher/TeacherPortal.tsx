@@ -1,8 +1,7 @@
 // Portal component for the teacher feature.
 
-import { useEffect, useCallback, useMemo, useState } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import {
-  Users,
   ClipboardList,
   FileQuestion,
   GraduationCap,
@@ -87,17 +86,6 @@ const storeTabOrder = (order: string[]) => {
   }
 };
 
-interface TeacherStats {
-  totalStudents: number;
-  totalClasses: number;
-  pendingTests: number;
-  completedTests: number;
-  pendingGrading: number;
-  todayAttendance: number;
-  pendingAssignments: number;
-  upcomingClasses: number;
-}
-
 // Renders the teacher portal portal.
 const TeacherPortal = () => {
   const { user } = useAppSelector((state: RootState) => state.auth);
@@ -110,11 +98,9 @@ const TeacherPortal = () => {
   const [tabOrder, setTabOrder] = useState<string[]>(getStoredTabOrder);
   const [draggedTabValue, setDraggedTabValue] = useState<string | null>(null);
 
-  const testsData = useAppSelector(state => state.tests.items);
   const studentsData = useAppSelector(state => state.students.items);
   const classesData = useAppSelector(state => state.classes.items);
   const attendanceData = useAppSelector(state => state.attendance.items);
-  const assignmentsData = useAppSelector(state => state.assignments.items);
   const gradesData = useAppSelector(state => state.grades.items);
   const paymentsData = useAppSelector(state => state.payments.items);
   
@@ -150,50 +136,6 @@ const TeacherPortal = () => {
     }
   }, [dispatch, tabValue]);
 
-  const stats = useMemo<TeacherStats>(() => {
-    const tests = testsData || [];
-    const students = studentsData || [];
-    const classes = classesData || [];
-    const attendance = attendanceData || [];
-    const assignments = assignmentsData || [];
-
-    const teacherId = user?.id;
-    const scopedClasses = teacherId
-      ? classes.filter((c: any) => Number(c.teacher_id) === Number(teacherId))
-      : classes;
-    const scopedStudents = teacherId
-      ? students.filter((s: any) => Number(s.teacher_id) === Number(teacherId))
-      : students;
-    const scopedAttendance = teacherId
-      ? attendance.filter((a: any) => Number(a.teacher_id) === Number(teacherId))
-      : attendance;
-    const teacherClassIds = new Set(scopedClasses.map((c: any) => Number(c.class_id || c.id)));
-    const scopedAssignments = teacherClassIds.size > 0
-      ? assignments.filter((a: any) => teacherClassIds.has(Number(a.class_id)))
-      : assignments;
-
-    const today = new Date().toISOString().split('T')[0];
-    const todayAttendance = scopedAttendance.filter(
-      (a: any) => a.attendance_date?.split('T')[0] === today
-    ).length;
-
-    const pendingTests = tests.filter((t: any) => t.is_active).length;
-    const completedTests = tests.length - pendingTests;
-    const pendingGrading = tests.filter((t: any) => (t.submission_count || 0) > 0).length;
-    const pendingAssignments = scopedAssignments.filter((a: any) => a.status === 'Pending').length;
-
-    return {
-      totalStudents: scopedStudents.length,
-      totalClasses: scopedClasses.length,
-      pendingTests,
-      completedTests,
-      pendingGrading,
-      todayAttendance,
-      pendingAssignments,
-      upcomingClasses: scopedClasses.filter((c: any) => c.status === 'Active').length,
-    };
-  }, [testsData, studentsData, classesData, attendanceData, assignmentsData, user?.id]);
-
 // Handles quick action.
   const handleQuickAction = (action: string) => {
     switch (action) {
@@ -210,15 +152,6 @@ const TeacherPortal = () => {
         break;
     }
   };
-
-  const statsCards = [
-    { title: t('My Students'), value: stats.totalStudents, icon: Users, tone: 'blue' as const, detail: t('Assigned to you'), tab: 'classes' },
-    { title: t('My Classes'), value: stats.totalClasses, icon: GraduationCap, tone: 'green' as const, detail: `${stats.upcomingClasses} ${t('active')}`, tab: 'classes' },
-    { title: t('Active Tests'), value: stats.pendingTests, icon: FileQuestion, tone: 'amber' as const, detail: t('Open test work'), tab: 'tests' },
-    { title: t('Pending Grading'), value: stats.pendingGrading, icon: Star, tone: 'red' as const, detail: stats.pendingGrading > 0 ? t('Needs attention') : t('Nothing pending'), tab: 'tests' },
-    { title: t("Today's Attendance"), value: stats.todayAttendance, icon: CalendarDays, tone: 'neutral' as const, detail: t('Records today'), tab: 'attendance' },
-    { title: t('Assignments'), value: stats.pendingAssignments, icon: ClipboardList, tone: 'amber' as const, detail: stats.pendingAssignments > 0 ? t('To review') : t('Clear'), tab: 'assignments' },
-  ];
 
   const tabs = [
      // here I am adding a tab called Overall, which should have overal statistics like 
@@ -325,16 +258,12 @@ const TeacherPortal = () => {
         }
       />
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {statsCards.map((stat, index) => (
-          <div key={stat.title} className="relative">
-            
-            {loading && index === 0 && (
-              <Loader2 className="absolute right-3 top-3 h-4 w-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-        ))}
-      </div>
+      {/* The stat cards were removed; their empty grid left a large gap, worst on phones. */}
+      {loading && (
+        <div className="flex justify-end">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        </div>
+      )}
 
       <SectionPanel
         className="animate-slide-up animation-delay-500"

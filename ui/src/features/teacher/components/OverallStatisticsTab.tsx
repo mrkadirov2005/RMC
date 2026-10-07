@@ -435,8 +435,8 @@ const OverallStatisticsTab = ({
         ))}
       </div>
 
-      <div className="mt-5 grid gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
-        <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4 dark:border-white/10 dark:from-slate-900/50 dark:via-slate-900/70 dark:to-slate-900">
+      <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.25fr)_minmax(260px,0.75fr)]">
+        <div className="min-w-0 rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-sky-50 p-4 dark:border-white/10 dark:from-slate-900/50 dark:via-slate-900/70 dark:to-slate-900">
           <div className="mb-2 flex items-center justify-between text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
             <span>{selectedSection.label}</span>
             <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
@@ -444,8 +444,9 @@ const OverallStatisticsTab = ({
             </span>
           </div>
 
-          <div className="relative mx-auto flex h-[300px] w-[300px] items-center justify-center">
-            <div className="absolute inset-0 flex items-center justify-center">
+          {/* Scales down to the card on a phone; 300px at most. */}
+          <div className="relative mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center">
+            <div className="absolute inset-[6.5%] flex items-center justify-center [&_svg]:h-full [&_svg]:w-full">
               <PieChart data={chartData} size={260} strokeWidth={42} />
             </div>
             <div className="relative z-10 flex h-[118px] w-[118px] items-center justify-center rounded-full border border-slate-200 bg-white shadow-inner dark:border-white/10 dark:bg-slate-950">
@@ -476,7 +477,7 @@ const OverallStatisticsTab = ({
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("Today's lessons")}</div>
           {todayLessons.length > 0 ? todayLessons.map((lesson) => {
             const done = isAttendanceDone(lesson.classId);
@@ -532,12 +533,12 @@ const OverallStatisticsTab = ({
         <Dialog open={!!selectedGroup} onOpenChange={(open) => { if (!open) { setSelectedGroup(null); setGroupSearch(''); } }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
               <div>
                 <DialogTitle className="flex items-center gap-2">{selectedGroup ? selectedGroup.label : t('Group')} <span className="text-sm font-normal text-slate-500">{t('students')}</span></DialogTitle>
                 <DialogDescription className="mt-1">{selectedGroup ? `${studentsInSelectedGroup.length} students` : ''}</DialogDescription>
               </div>
-              <div className="min-w-[220px]">
+              <div className="w-full sm:w-auto sm:min-w-[220px]">
                 <Label className="mb-1 text-[11px] uppercase">{t('Search students')}</Label>
                 <Input value={groupSearch} onChange={(e) => setGroupSearch(e.target.value)} placeholder={t('Name, email, or id')} />
               </div>
