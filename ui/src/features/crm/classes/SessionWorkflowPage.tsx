@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Eye, Loader2, Pencil, Save } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CalendarDays, CheckCircle2, ClipboardCheck, Eye, Loader2, Pencil, Save } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { cn } from '@/lib/utils';
 import { getResolvedCenterId } from '@/shared/auth/centerScope';
 import { wasInGroupOn } from '@/shared/billingPeriod';
 import { showToast } from '@/utils/toast';
@@ -29,6 +30,7 @@ import { toDateKey } from './utils/date';
 import { getScheduleDurationMinutes, parseSchedule } from './utils/schedule';
 import ConsolidationTab from './components/ConsolidationTab';
 import { LessonSummaryDialog } from './components/LessonSummaryDialog';
+import { findAbsenceStreakStudents, getMissingAbsenceReasons, toAbsenceReason } from './absenceStreak';
 import { buildMonthlyAttendanceGrid, downloadCanvasPng, drawMonthlyAttendanceImage } from './monthlyAttendanceImage';
 import { getApiPayload } from '@/shared/api/response';
 import { useLanguage } from '@/i18n/LanguageContext';
@@ -71,6 +73,10 @@ export default function SessionWorkflowPage() {
   const [activityScores, setActivityScores] = useState<Map<number, string>>(new Map());
   const [pointsScores, setPointsScores] = useState<Map<number, string>>(new Map());
   const [stellarStudentId, setStellarStudentId] = useState<number | null>(null);
+  // Students absent from the class's previous two lessons in a row need a written reason.
+  const [absenceStreakIds, setAbsenceStreakIds] = useState<Set<number>>(new Set());
+  const [absenceReasons, setAbsenceReasons] = useState<Map<number, string>>(new Map());
+  const [showReasonErrors, setShowReasonErrors] = useState(false);
   const [scoringSettings, setScoringSettings] = useState<LessonScoringSettings>(defaultLessonScoringSettings);
   const [activeTab, setActiveTab] = useState<PageTab>(() => {
     const requestedTab = searchParams.get('tab');
@@ -129,7 +135,11 @@ export default function SessionWorkflowPage() {
       setError('');
       createdSessionId.current = 0;
       try {
-        const loaded = await sessionWorkflowApi.load(numericClassId, isNewSession ? null : numericSessionId);
+        const [loaded, classAttendance] = await Promise.all([
+          sessionWorkflowApi.load(numericClassId, isNewSession ? null : numericSessionId),
+          // Without the history nobody is flagged; the lesson can still be taken.
+          sessionWorkflowApi.loadClassAttendance(numericClassId).catch(() => []),
+        ]);
         if (cancelled) return;
 
         const nextClass = loaded.classData;
@@ -149,6 +159,17 @@ export default function SessionWorkflowPage() {
         // Students transferred in after, or out before, this lesson are not part of it.
         const nextStudents = loaded.students.filter((student: any) => wasInGroupOn(student, nextSessionDate));
         const nextAttendanceRecords = loaded.attendanceRecords;
+        const lessonStudentIds = new Set(nextStudents.map(getStudentId).filter(Boolean));
+        const nextStreakIds = new Set(
+          Array.from(findAbsenceStreakStudents({ records: classAttendance, lessonDate: nextSessionDate })).filter((id) => lessonStudentIds.has(id))
+        );
+        // A saved lesson shows the reasons written for it.
+        const nextReasons = new Map<number, string>();
+        nextAttendanceRecords.forEach((record: any) => {
+          const id = Number(record.student_id);
+          const reason = toAbsenceReason(record.remarks);
+          if (id && reason) nextReasons.set(id, reason);
+        });
         const nextGrades = loaded.grades;
         const nextScoringSettings = normalizeLessonScoringSettings(loaded.scoringSettings as Partial<LessonScoringSettings>);
         const nextHomeworkPoints = toPointMap(nextScoringSettings.homework);
@@ -209,6 +230,9 @@ export default function SessionWorkflowPage() {
               nextPoints.clear();
               restoredPoints.forEach((value, key) => nextPoints.set(key, value));
               nextStellarStudentId = draft.stellarStudentId && studentIds.has(Number(draft.stellarStudentId)) ? Number(draft.stellarStudentId) : null;
+              (draft.absenceReasons || []).forEach(([studentId, reason]) => {
+                if (studentIds.has(Number(studentId))) nextReasons.set(Number(studentId), String(reason ?? ''));
+              });
               if (isPageTab(draft.activeTab)) setActiveTab(draft.activeTab);
         }
 
@@ -235,6 +259,9 @@ export default function SessionWorkflowPage() {
         setActivityScores(nextActivity);
         setPointsScores(nextPoints);
         setStellarStudentId(nextStellarStudentId);
+        setAbsenceStreakIds(nextStreakIds);
+        setAbsenceReasons(nextReasons);
+        setShowReasonErrors(false);
         setLoadedDraftKey(draftKey);
         const recorded: WorkflowAction[] = [];
         if (nextAttendanceRecords.length > 0) recorded.push('attendance');
@@ -266,9 +293,10 @@ export default function SessionWorkflowPage() {
       pointsScores: Array.from(pointsScores.entries()),
       stellarStudentId,
       activeTab: activeTab === 'consolidation' ? 'attendance' : activeTab,
+      absenceReasons: Array.from(absenceReasons.entries()),
     };
     dispatch(saveSessionWorkflowDraft({ key: draftKey, draft }));
-  }, [activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, isViewMode, loadedDraftKey, loading, pointsScores, stellarStudentId]);
+  }, [absenceReasons, activeTab, activityScores, attendance, dispatch, draftKey, homeworkScores, isViewMode, loadedDraftKey, loading, pointsScores, stellarStudentId]);
 
   useEffect(() => {
     if (selectedTabs.length === 0) return;
@@ -308,11 +336,27 @@ export default function SessionWorkflowPage() {
     return counts.allPointsMarked;
   };
 
+  // Blocks moving on until every student absent twice in a row has a reason; shows the gaps.
+  const checkAbsenceReasons = () => {
+    if (!selectedActions.includes('attendance')) return true;
+    const missing = getMissingAbsenceReasons(absenceStreakIds, absenceReasons, students.map(getStudentId));
+    if (missing.length === 0) return true;
+    setShowReasonErrors(true);
+    setActiveTab('attendance');
+    showToast.error(t('Write a reason for every student absent from the last two lessons.'));
+    return false;
+  };
+
+  const setAbsenceReason = (studentId: number, value: string) => {
+    setAbsenceReasons((current) => new Map(current).set(studentId, value));
+  };
+
   const completeTab = (tab: WorkflowTab) => {
     if (!isTabComplete(tab)) {
       showToast.error(`Complete ${ACTION_LABELS[tab].toLowerCase()} for every student first.`);
       return;
     }
+    if (tab === 'attendance' && !checkAbsenceReasons()) return;
     const nextTab = getNextTab(tab);
     if (nextTab) setActiveTab(nextTab);
     else saveSession();
@@ -418,6 +462,7 @@ export default function SessionWorkflowPage() {
       showToast.error(`Complete ${ACTION_LABELS[incompleteTab].toLowerCase()} for every student.`);
       return;
     }
+    if (!checkAbsenceReasons()) return;
     if (!centerId) {
       showToast.error('Please select an active center before saving this lesson.');
       return;
@@ -437,6 +482,7 @@ export default function SessionWorkflowPage() {
         points: pointsScores,
         stellarStudentId,
         settings: scoringSettings,
+        attendanceReasons: absenceReasons,
       });
 
       let targetSessionId = numericSessionId || createdSessionId.current;
@@ -592,6 +638,31 @@ export default function SessionWorkflowPage() {
                 onToggle={(studentId, value) => toggleMapValue(setAttendance, studentId, value)}
                 onFillAll={(value) => fillMapValue(setAttendance, value)}
                 readOnly={isViewMode}
+                renderRowNote={(studentId) => {
+                  if (!absenceStreakIds.has(studentId)) return null;
+                  const reason = absenceReasons.get(studentId) || '';
+                  const missing = showReasonErrors && !reason.trim();
+                  return (
+                    <div className={cn('flex flex-col gap-2 rounded-md border px-3 py-2 sm:flex-row sm:items-center', missing ? 'border-rose-300 bg-rose-50 dark:border-rose-900 dark:bg-rose-950/40' : 'border-amber-200 bg-amber-50 dark:border-amber-900 dark:bg-amber-950/30')}>
+                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-amber-800 dark:text-amber-300">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        {t('Absent from the last 2 lessons')}
+                      </span>
+                      {isViewMode ? (
+                        <span className="text-sm">{reason || '—'}</span>
+                      ) : (
+                        <Input
+                          value={reason}
+                          onChange={(event) => setAbsenceReason(studentId, event.target.value)}
+                          placeholder={t('Reason (required)')}
+                          aria-label={t('Reason (required)')}
+                          aria-invalid={missing}
+                          className={cn('h-8 flex-1 bg-background text-sm', missing && 'border-rose-400 focus-visible:ring-rose-400')}
+                        />
+                      )}
+                    </div>
+                  );
+                }}
                 action={isViewMode ? undefined : <><Button variant="outline" onClick={() => navigate(backPath)}>{t('Cancel')}</Button><Button onClick={() => completeTab('attendance')}><CheckCircle2 className="mr-2 h-4 w-4" />{getNextTab('attendance') ? t('Complete Attendance') : t('Save Scores')}</Button></>}
               />
             </TabsContent>}
