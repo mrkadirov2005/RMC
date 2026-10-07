@@ -97,7 +97,12 @@ export const ClassMonthlyPointsView = ({
       </div>
     </div>
 
-    {scheduleDays.length === 0 ? (
+    {scheduleDays.length === 0 && monthlyLessonDays.length > 0 && (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+        {t('Lesson weekdays are not set for this group, so only lessons already recorded are shown. Set them in class settings.')}
+      </div>
+    )}
+    {scheduleDays.length === 0 && monthlyLessonDays.length === 0 ? (
       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
         {t('No class weekdays are configured in class settings.')}
       </div>
