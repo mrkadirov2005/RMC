@@ -71,6 +71,22 @@ const teacherTasks = pgTable('teacher_tasks', {
     index('idx_teacher_tasks_assignee_type').on(table.assigneeType),
 ]);
 
+const absenceAlertResolutions = pgTable('absence_alert_resolutions', {
+  resolutionId: serial('resolution_id').primaryKey(),
+  centerId: integer('center_id'),
+  studentId: integer('student_id').notNull(),
+  classId: integer('class_id'),
+  resolvedThrough: date('resolved_through').notNull(),
+  outcome: varchar('outcome', { length: 40 }).notNull(),
+  note: text('note'),
+  resolvedById: integer('resolved_by_id'),
+  resolvedByType: varchar('resolved_by_type', { length: 20 }),
+  resolvedByName: varchar('resolved_by_name', { length: 200 }),
+  createdAt: timestamp('created_at'),
+}, (table) => [
+    index('idx_absence_alert_resolutions_student').on(table.studentId, table.classId),
+]);
+
 const teacherSalaries = pgTable('teacher_salaries', {
   salaryId: serial('salary_id').primaryKey(),
   centerId: integer('center_id'),
@@ -1041,6 +1057,7 @@ const consolidationAnswers = pgTable('consolidation_answers', {
 ]);
 
 module.exports = {
+  absenceAlertResolutions,
   appSettings,
   translations,
   savedFilters,

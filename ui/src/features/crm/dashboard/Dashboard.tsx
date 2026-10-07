@@ -10,6 +10,7 @@ import { usePaymentsPage } from '../payments/hooks/usePaymentsPage';
 import { PaymentFormDialog } from '../payments/components/PaymentFormDialog';
 import type { DashboardScope } from './types';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { AbsenceAlertsPanel } from '../absenceAlerts/AbsenceAlertsPanel';
 
 // Renders the dashboard module.
 const Dashboard = memo(() => {
@@ -78,6 +79,8 @@ const Dashboard = memo(() => {
         </div>
         <Button onClick={() => handleOpenModal()}><Plus className="mr-2 h-4 w-4" /> {t('Add payment')}</Button>
       </div>
+
+      <AbsenceAlertsPanel canResolve />
 
       <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">
         {(['payments', 'attendance'] as const).map((tab) => (

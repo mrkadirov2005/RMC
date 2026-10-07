@@ -1,4 +1,4 @@
-import type { Dispatch, SetStateAction } from 'react';
+import { useMemo, type Dispatch, type SetStateAction } from 'react';
 import { ChevronLeft, ChevronRight, Loader2, PencilLine } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,6 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { getMonthKey, monthLabel, shiftMonth } from '../utils/date';
 import { getCombinedLessonPoints, getPointTone } from '../utils/points';
 import { useLanguage } from '@/i18n/LanguageContext';
+import { cn } from '@/lib/utils';
+import { getMonthlyTotals, rankMonthlyTotals, rankRowClassName } from '../utils/monthlyRanking';
+import { MonthlyRankBadge } from './MonthlyRankBadge';
 
 type StudentRow = {
   student_id?: number;
@@ -48,6 +51,12 @@ export const ClassMonthlyPointsView = ({
   monthlyPointsBySessionStudent,
 }: ClassMonthlyPointsViewProps) => {
   const { t } = useLanguage();
+  // Places 1-5 (green) and the lowest five (red) by monthly total.
+  const ranks = useMemo(() => rankMonthlyTotals(getMonthlyTotals(
+    studentRows.map((student) => Number(student.student_id || student.id || 0)),
+    monthlyLessonDays.map((day) => Number(day.session?.session_id || day.session?.id || 0)),
+    monthlyPointsBySessionStudent
+  )), [monthlyLessonDays, monthlyPointsBySessionStudent, studentRows]);
   return (
   <div className="space-y-3">
     <div className="flex flex-col gap-2 rounded-lg border border-violet-100 bg-violet-50/60 p-3 dark:border-violet-900/60 dark:bg-violet-950/25 sm:flex-row sm:items-center sm:justify-between">
@@ -97,7 +106,12 @@ export const ClassMonthlyPointsView = ({
       </div>
     </div>
 
-    {scheduleDays.length === 0 ? (
+    {scheduleDays.length === 0 && monthlyLessonDays.length > 0 && (
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300">
+        {t('Lesson weekdays are not set for this group, so only lessons already recorded are shown. Set them in class settings.')}
+      </div>
+    )}
+    {scheduleDays.length === 0 && monthlyLessonDays.length === 0 ? (
       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
         {t('No class weekdays are configured in class settings.')}
       </div>
@@ -132,14 +146,16 @@ export const ClassMonthlyPointsView = ({
               const studentId = Number(student.student_id || student.id || 0);
               let studentTotal = 0;
               let studentFilled = 0;
+              const rank = ranks.get(studentId);
               return (
-                <TableRow key={studentId || index} className="group h-9">
+                <TableRow key={studentId || index} className={cn('group h-9', rankRowClassName(rank))}>
                   <TableCell className="sticky left-0 z-10 bg-transparent px-2 py-1 font-semibold text-slate-950 group-hover:bg-violet-50/40 dark:text-slate-100 dark:group-hover:bg-slate-700">
                     <div className="flex min-w-0 items-center gap-1.5">
                       <div className="text-slate-950 dark:text-slate-100">
                        {index+1}
                       </div>
                       <span className="max-w-[128px] truncate text-[11px]">{student.last_name} {student.first_name} </span>
+                      <MonthlyRankBadge rank={rank} />
                     </div>
                   </TableCell>
                   {monthlyLessonDays.map((day) => {

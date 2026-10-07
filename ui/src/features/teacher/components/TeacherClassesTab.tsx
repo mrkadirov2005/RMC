@@ -282,7 +282,45 @@ const TeacherClassesTab = ({ teacherId, onRefresh: _onRefresh }: TeacherClassesT
           </Button>
         </div>
 
-        <div className="rounded-xl border border-slate-200/80 bg-white overflow-auto w-full" style={{ maxHeight: '60vh' }}>
+        {/* Phones: one card per group instead of a table that is cut off at the side. */}
+        <div className="space-y-2 sm:hidden">
+          {filteredClasses.map((classItem) => {
+            const scheduleText = parseSchedulePreview(classItem.section) || classItem.schedule || t('No schedule');
+            const payment = paymentsByClass.get(Number(classItem.class_id));
+            return (
+              <button
+                key={classItem.class_id}
+                type="button"
+                onClick={() => setSelectedClassId(Number(classItem.class_id))}
+                className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm active:bg-muted/40 dark:border-border dark:bg-card"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="truncate font-semibold text-slate-900 dark:text-card-foreground">{classItem.class_name}</div>
+                    <div className="text-xs text-muted-foreground">{t('{count} students', { count: String(classItem.student_count || 0) })}</div>
+                  </div>
+                  <Badge variant={getStatusVariant(classItem.status) as any} className="shrink-0 text-xs">{t(classItem.status || 'Active')}</Badge>
+                </div>
+                <div className="mt-2 space-y-0.5 text-xs text-slate-600 dark:text-muted-foreground">
+                  <div>{scheduleText}</div>
+                  <div>{classItem.room_number || t('No room')}</div>
+                </div>
+                {showPayments && payment && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <GroupPaidBadge paid={payment.paid_students} total={payment.total_students} />
+                    {payment.remaining > 0 && (
+                      <span className="text-xs font-semibold tabular-nums text-rose-600">
+                        {t('{amount} left', { amount: formatMoney(payment.remaining) })}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="hidden w-full overflow-auto rounded-xl border border-slate-200/80 bg-white sm:block" style={{ maxHeight: '60vh' }}>
           <Table className="w-full">
             <TableHeader>
               <TableRow className="bg-muted/50">

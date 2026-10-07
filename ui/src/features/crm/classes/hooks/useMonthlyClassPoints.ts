@@ -72,7 +72,9 @@ export const useMonthlyClassPoints = ({ authUser, centerId, schedule, sessions, 
         day: index + 1,
         dayName,
         session: sessionsByDate.get(dateKey),
-        isClassDay: scheduledDays.has(dayName.toLowerCase()),
+        // A group's weekdays, plus any day a lesson was actually recorded: groups whose weekdays
+        // were never filled in still show their lessons instead of an empty table.
+        isClassDay: scheduledDays.has(dayName.toLowerCase()) || sessionsByDate.has(dateKey),
       };
     }).filter((day) => day.isClassDay);
   }, [pointsMonth, schedule.days, sessionsByDate]);
@@ -149,5 +151,7 @@ export const useMonthlyClassPoints = ({ authUser, centerId, schedule, sessions, 
     monthlyPointStats,
     sessionsByDate,
     latestLessonDate,
+    /** False when the group's lesson weekdays were never set; only recorded lessons show then. */
+    hasSchedule: schedule.days.some((day) => day.trim()),
   };
 };
