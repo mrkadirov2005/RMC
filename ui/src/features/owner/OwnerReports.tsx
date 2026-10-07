@@ -10,6 +10,7 @@ import { StudentStatsCarousel } from './components/student-stats/StudentStatsCar
 import { TeacherStatsPanel } from './components/teacher-stats/TeacherStatsPanel';
 import RetentionPage from '../crm/retention/RetentionPage';
 import { AttendanceReportPanel } from './components/AttendanceReportPanel';
+import { AbsenceAlertsPanel } from '../crm/absenceAlerts/AbsenceAlertsPanel';
 import { ClassReportsPanel } from './components/ClassReportsPanel';
 import { PERMISSION_CODES } from '@/types';
 import { useRBAC } from '../crm/hooks/useRBAC';
@@ -185,7 +186,12 @@ const OwnerReports = () => {
             {activeTab === 'retention' && <RetentionPage embedded />}
             {activeTab === 'students' && <StudentStatsCarousel data={collections.students} collections={collections} />}
             {activeTab === 'teachers' && <TeacherStatsPanel data={collections.teachers} collections={collections} />}
-            {activeTab === 'attendance' && <AttendanceReportPanel collections={collections} />}
+            {activeTab === 'attendance' && (
+              <div className="space-y-4">
+                <AbsenceAlertsPanel canResolve />
+                <AttendanceReportPanel collections={collections} />
+              </div>
+            )}
             {activeTab === 'classes' && <ClassReportsPanel classes={collections.classes} students={collections.students} />}
           </>
         )}

@@ -407,6 +407,13 @@ export const teacherTaskAPI = {
     apiClient.patch(`/teacher-tasks/${id}/status`, data),
 };
 
+// Students who missed their group's latest lessons in a row; admins close each with an outcome.
+export const absenceAlertAPI = {
+  getAll: () => apiClient.get('/absence-alerts'),
+  resolve: (data: { student_id: number; class_id: number; outcome: 'sick' | 'not_interested' | 'excused' | 'left'; note?: string }) =>
+    apiClient.post('/absence-alerts/resolve', data),
+};
+
 export const salaryAPI = {
   getOverview: (params?: { year?: number; month?: number; center_id?: number }) =>
     apiClient.get('/salaries', { params }),
