@@ -9,6 +9,8 @@ export type SessionWorkflowDraft = {
   pointsScores: [number, string][];
   stellarStudentId: number | null;
   activeTab: SessionWorkflowTab;
+  /** Reasons typed for students absent from the previous lessons in a row. */
+  absenceReasons?: [number, string][];
 };
 
 type SessionWorkflowDraftsState = {

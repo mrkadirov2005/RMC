@@ -1,5 +1,6 @@
 import type { LessonScoringSettings } from './lessonScoringSettings';
 import type { ScoreOption } from './components/SessionWorkflowScoring';
+import { DEFAULT_ATTENDANCE_REMARK } from './absenceStreak';
 
 export type WorkflowScoreMap = Map<number, string>;
 export type WorkflowScoringAction = 'attendance' | 'homework' | 'activity' | 'points' | 'coins';
@@ -90,6 +91,7 @@ export const buildSessionWorkflowRecords = ({
   points,
   stellarStudentId,
   settings,
+  attendanceReasons,
 }: {
   students: WorkflowStudent[];
   selectedActions: WorkflowScoringAction[];
@@ -99,6 +101,8 @@ export const buildSessionWorkflowRecords = ({
   points: WorkflowScoreMap;
   stellarStudentId: number | null;
   settings: LessonScoringSettings;
+  /** Reasons written for students absent from the previous lessons in a row; saved as remarks. */
+  attendanceReasons?: WorkflowScoreMap;
 }) => {
   const attendancePoints = toWorkflowPointMap(settings.attendance);
   const homeworkPoints = toWorkflowPointMap(settings.homework);
@@ -117,7 +121,7 @@ export const buildSessionWorkflowRecords = ({
       is_stellar_student: awardsCoins && stellarStudentId === studentId,
       stellar_bonus_coins: awardsCoins && stellarStudentId === studentId ? settings.stellarBonusCoins : 0,
       attendance_status: selectedActions.includes('attendance') ? (statusMap[attendanceStatus] || attendanceStatus) : null,
-      attendance_remarks: selectedActions.includes('attendance') ? 'Daily Session Grading' : null,
+      attendance_remarks: selectedActions.includes('attendance') ? (attendanceReasons?.get(studentId)?.trim() || DEFAULT_ATTENDANCE_REMARK) : null,
       attendance_score: selectedActions.includes('attendance') ? (attendancePoints[attendanceStatus] || 0) : null,
       homework_score: selectedActions.includes('homework') && homeworkStatus ? (homeworkPoints[homeworkStatus] ?? 0) : null,
       activity_score: selectedActions.includes('activity') && activityStatus ? (activityPoints[activityStatus] ?? 0) : null,

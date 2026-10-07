@@ -55,6 +55,22 @@ describe('session workflow model', () => {
     expect(records[0]).toMatchObject({ student_id: 7, attendance_status: 'Present', homework_score: 20, activity_score: 30, stellar_bonus_coins: 30 });
     expect(records[1].stellar_bonus_coins).toBe(0);
   });
+
+  it('saves a written absence reason as the attendance remarks', () => {
+    const records = buildSessionWorkflowRecords({
+      students: [{ student_id: 7 }, { student_id: 8 }],
+      selectedActions: ['attendance'],
+      attendance: new Map([[7, 'Absent'], [8, 'On time']]),
+      homework: new Map(),
+      activity: new Map(),
+      points: new Map(),
+      stellarStudentId: null,
+      settings: defaultLessonScoringSettings,
+      attendanceReasons: new Map([[7, ' Kasal, ota-onasi bilan gaplashildi ']]),
+    });
+    expect(records[0].attendance_remarks).toBe('Kasal, ota-onasi bilan gaplashildi');
+    expect(records[1].attendance_remarks).toBe('Daily Session Grading');
+  });
 });
 
 describe('lesson summary', () => {

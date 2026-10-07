@@ -66,3 +66,20 @@ describe('scoring tables in read-only mode', () => {
     expect(screen.getAllByText('35').length).toBeGreaterThan(0);
   });
 });
+
+describe('row notes', () => {
+  it('shows a note row only under the students that have one', () => {
+    render(
+      <ScoreTable
+        students={[{ student_id: 1, first_name: 'Ali' }, { student_id: 2, first_name: 'Bek' }]}
+        options={defaultLessonScoringSettings.attendance}
+        values={new Map()}
+        onToggle={() => {}}
+        onFillAll={() => {}}
+        renderRowNote={(studentId) => (studentId === 2 ? <input aria-label="Reason for Bek" /> : null)}
+      />,
+    );
+    expect(screen.getByLabelText('Reason for Bek')).toBeTruthy();
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+  });
+});

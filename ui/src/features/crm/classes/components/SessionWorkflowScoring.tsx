@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 import { AlertCircle, CheckCircle2, Circle, MinusCircle, Star, TrendingUp } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -111,6 +111,7 @@ export const ScoreTable = ({
   stellarBonusCoins = 30,
   action,
   readOnly = false,
+  renderRowNote,
 }: {
   students: any[];
   options: ScoreOption[];
@@ -125,8 +126,11 @@ export const ScoreTable = ({
   action?: ReactNode;
   /** Shows saved marks only: no fill-all bar, and the option buttons cannot be pressed. */
   readOnly?: boolean;
+  /** Extra content shown in a full-width row under a student, e.g. a required absence reason. */
+  renderRowNote?: (studentId: number) => ReactNode;
 }) => {
   const { t } = useLanguage();
+  const columnCount = options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1;
   return (
   <div className="overflow-x-auto rounded-lg border">
     {!readOnly && <div className="flex items-center gap-1.5 border-b bg-slate-50 px-3 py-2 dark:bg-slate-900/40">
@@ -166,15 +170,17 @@ export const ScoreTable = ({
       <TableBody>
         {students.length === 0 ? (
           <TableRow>
-            <TableCell colSpan={options.length + (getTotalScore ? 1 : 0) + (onToggleStellar ? 1 : 0) + 1} className="py-10 text-center text-muted-foreground">{t('No students found for this class.')}</TableCell>
+            <TableCell colSpan={columnCount} className="py-10 text-center text-muted-foreground">{t('No students found for this class.')}</TableCell>
           </TableRow>
         ) : students.map((student) => {
           const studentId = getStudentId(student);
           const selected = values.get(studentId) || '';
           const enabled = isEnabled ? isEnabled(studentId) : true;
           const isStellar = stellarStudentId === studentId;
+          const note = renderRowNote?.(studentId);
           return (
-            <TableRow key={studentId} className={cn('h-12', !enabled && 'opacity-40 grayscale')}>
+            <Fragment key={studentId}>
+            <TableRow className={cn('h-12', !enabled && 'opacity-40 grayscale', note && 'border-b-0')}>
               <TableCell className="w-[180px] max-w-[180px] px-3 py-1.5 text-sm font-medium">
                 <span className="block truncate">{[student.first_name, student.last_name].filter(Boolean).join(' ') || 'Unnamed student'}</span>
               </TableCell>
@@ -224,6 +230,12 @@ export const ScoreTable = ({
                 </TableCell>
               )}
             </TableRow>
+            {note && (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={columnCount} className="px-3 pb-3 pt-0">{note}</TableCell>
+              </TableRow>
+            )}
+            </Fragment>
           );
         })}
       </TableBody>
