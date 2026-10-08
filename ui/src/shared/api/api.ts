@@ -216,6 +216,8 @@ export const studentAPI = {
       },
     }),
   getById: (id: number) => apiClient.get(`/students/${id}`),
+  /** A group's roster. Pass `exclude_transferred: 1` for "who is in the group now" student lists;
+   * billing and lesson pages leave it out to keep students transferred out this month. */
   getByClassWithTransfers: (classId: number, params?: Record<string, unknown>) =>
     apiClient.get(`/students/class/${classId}`, { params }),
   getDeleted: (options?: { skipCenterScope?: boolean }) =>

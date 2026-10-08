@@ -104,7 +104,8 @@ const getClassStudentsWithTransfers = async (req: any, res: any) => {
     if (req.user?.userType === 'student' && Number(req.params.classId) !== Number(req.user?.class_id)) {
       return res.status(403).json({ error: 'Kirish rad etildi.' });
     }
-    const rows = await studentService.listClassStudentsWithTransfers(Number(req.params.classId), centerId ?? undefined, teacherId);
+    const excludeTransferred = ['1', 'true'].includes(String(req.query?.exclude_transferred || '').toLowerCase());
+    const rows = await studentService.listClassStudentsWithTransfers(Number(req.params.classId), centerId ?? undefined, teacherId, excludeTransferred);
     res.json(rows);
   } catch (error: any) {
     console.error('Database error:', error);
