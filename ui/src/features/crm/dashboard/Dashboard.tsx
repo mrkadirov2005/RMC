@@ -2,7 +2,7 @@
 
 import { memo, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, Plus, UserRoundX, Users } from 'lucide-react';
+import { BarChart3, CalendarCheck2, CheckCircle2, CircleDollarSign, Plus, UserRoundX, Users, Wallet } from 'lucide-react';
 import { useAppSelector } from '../hooks';
 import { useDashboardData } from './hooks/useDashboardData';
 import { Button } from '@/components/ui/button';
@@ -78,7 +78,11 @@ const Dashboard = memo(() => {
           <h1 className="mt-1 text-2xl font-black text-slate-950 dark:text-white">{t('Operations dashboard')}</h1>
           <p className="mt-1 text-sm text-slate-500">{t('Monitor payments and attendance across the center.')}</p>
         </div>
-        <Button onClick={() => handleOpenModal()}><Plus className="mr-2 h-4 w-4" /> {t('Add payment')}</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={() => handleOpenModal()}><Plus className="mr-2 h-4 w-4" /> {t('Add payment')}</Button>
+          {/* Every student's payments, with filters (status, dates, teacher, subject, group). */}
+          <Button variant="outline" onClick={() => navigate('/dashboard/payments')}><Wallet className="mr-2 h-4 w-4" /> {t('Payments')}</Button>
+        </div>
       </div>
 
       <AbsenceAlertsPanel canResolve />
@@ -86,8 +90,8 @@ const Dashboard = memo(() => {
 
       <div className="flex gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1 dark:border-white/10 dark:bg-white/[0.04]">
         {(['payments', 'attendance'] as const).map((tab) => (
-          <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`rounded-md px-4 py-2 text-sm font-bold capitalize ${activeTab === tab ? 'bg-white text-slate-950 shadow-sm dark:bg-slate-800 dark:text-white' : 'text-slate-500'}`}>
-            {tab}
+          <button key={tab} type="button" onClick={() => setActiveTab(tab)} className={`rounded-md px-4 py-2 text-sm font-bold ${activeTab === tab ? 'bg-white text-slate-950 shadow-sm dark:bg-slate-800 dark:text-white' : 'text-slate-500'}`}>
+            {tab === 'payments' ? "To'lovlar" : t('Attendance')}
           </button>
         ))}
       </div>

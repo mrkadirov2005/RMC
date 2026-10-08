@@ -20,6 +20,18 @@ const toTeacherPaymentView = (row: any) => {
   };
 };
 
+// Admins and the owner: every student's payments for the dashboard payments page.
+const getStudentPaymentSummary = async (req: any, res: any) => {
+  try {
+    if (req.user?.userType !== 'superuser') return res.status(403).json({ error: 'Kirish rad etildi.' });
+    const scope = getCenterScope(req);
+    if (sendScopeError(res, scope)) return;
+    res.json(await paymentService.listStudentPaymentSummary(req.query || {}, scope.centerId ?? undefined));
+  } catch (error: any) {
+    sendError(res, error, "To'lovlar ro'yxatini yuklab bo'lmadi");
+  }
+};
+
 const getAllPayments = async (req: any, res: any) => {
   try {
     if (!ensurePaymentAccess(req, res)) return;
@@ -182,6 +194,7 @@ const purgePayment = async (req: any, res: any) => {
 };
 
 module.exports = {
+  getStudentPaymentSummary,
   getAllPayments,
   getPaymentById,
   createPayment,

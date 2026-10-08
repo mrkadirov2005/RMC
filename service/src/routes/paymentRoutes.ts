@@ -47,6 +47,7 @@ router_payment.get('/', requireAuth, paymentController.getAllPayments);
  *       404:
  *         description: Payment not found
  */
+router_payment.get('/students-summary', requireAuth, paymentController.getStudentPaymentSummary);
 router_payment.get('/:id', requireAuth, validateParams(IdParamDto), paymentController.getPaymentById);
 
 /**
