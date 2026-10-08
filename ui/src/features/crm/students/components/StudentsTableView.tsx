@@ -256,7 +256,7 @@ export const StudentsTableView = ({
   const getSchoolName = (student: Student) => student.school_name || 'No school';
   const getSchoolClass = (student: Student) => student.school_class || '-';
   const getPhone = (student: Student) => student.phone || student.parent_phone || '-';
-  const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[11px] font-bold leading-none';
+  const chipClass = 'inline-flex h-6 max-w-full items-center gap-1 rounded-md px-2 text-[0.6875rem] font-bold leading-none';
   const getTransferRowClass = (student: Student) => {
     if (isTransferredStudentStatus(student.status)) return 'bg-rose-50/70 dark:bg-rose-950/20';
     if (isIncomingTransfer(student)) return 'bg-emerald-50/70 dark:bg-emerald-950/20';
@@ -509,7 +509,7 @@ export const StudentsTableView = ({
                   ]
                 )}
               >
-                <span className="absolute left-2 top-2 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[10px] font-bold text-white">
+                <span className="absolute left-2 top-2 z-10 inline-flex h-5 min-w-5 items-center justify-center rounded-md bg-slate-900/80 px-1.5 text-[0.625rem] font-bold text-white">
                   {getPaginatedRowNumber(index + startIndex)}
                 </span>
                 <div className="absolute right-2 top-2 z-10">

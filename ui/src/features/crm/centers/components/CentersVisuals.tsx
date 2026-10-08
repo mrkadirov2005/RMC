@@ -75,14 +75,14 @@ export const buildCenterSummaries = (centers: Center[], metrics: CenterMetrics) 
 export const HeroSignal = ({ Icon, label, value }: { Icon: LucideIcon; label: string; value: string }) => (
   <div className="rounded-md border border-white/10 bg-white/10 p-3">
     <Icon className="mb-2 h-4 w-4 text-cyan-200" />
-    <p className="text-[10px] font-black uppercase text-white/55">{label}</p>
+    <p className="text-[0.625rem] font-black uppercase text-white/55">{label}</p>
     <p className="text-lg font-black">{value}</p>
   </div>
 );
 
 export const InsightCard = ({ label, value, detail }: { label: string; value: string; detail: string }) => (
   <div className="rounded-md border border-slate-200 bg-slate-50 p-3 dark:border-white/10 dark:bg-white/[0.03]">
-    <p className="text-[10px] font-black uppercase text-slate-500">{label}</p>
+    <p className="text-[0.625rem] font-black uppercase text-slate-500">{label}</p>
     <p className="mt-1 truncate text-sm font-black text-slate-950 dark:text-white">{value}</p>
     <p className="text-xs font-semibold text-slate-500">{detail}</p>
   </div>
@@ -93,7 +93,7 @@ export const MetricTile = ({ Icon, label, value, tone }: { Icon: LucideIcon; lab
     <div className="mb-3 flex h-10 w-10 items-center justify-center rounded bg-white/20">
       <Icon className="h-5 w-5" />
     </div>
-    <p className="text-[10px] font-black uppercase text-white/75">{label}</p>
+    <p className="text-[0.625rem] font-black uppercase text-white/75">{label}</p>
     <p className="text-xl font-black">{value}</p>
   </div>
 );
@@ -152,7 +152,7 @@ export const CenterRow = ({
 
 const SmallStat = ({ label, value }: { label: string; value: string | number }) => (
   <div className="rounded-md bg-slate-50 px-3 py-2 dark:bg-white/[0.04]">
-    <p className="text-[10px] font-black uppercase text-slate-500">{label}</p>
+    <p className="text-[0.625rem] font-black uppercase text-slate-500">{label}</p>
     <p className="truncate text-sm font-black text-slate-950 dark:text-white">{typeof value === 'number' ? value.toLocaleString() : value}</p>
   </div>
 );

@@ -51,7 +51,7 @@ import { PaginationBar, defaultCardPageSizeOptions, defaultPageSizeOptions, pagi
 const folderListClass = 'overflow-hidden rounded-md border border-slate-200/80 bg-white shadow-sm dark:border-border dark:bg-card';
 const folderCardClass =
   'cursor-pointer overflow-hidden rounded-none border-0 border-b border-slate-200/80 bg-white shadow-none transition-colors last:border-b-0 hover:bg-slate-50 dark:border-border dark:bg-card dark:hover:bg-muted/30 [&_.folder-card-content]:p-0';
-const infoPillClass = 'rounded px-1.5 py-0.5 text-[10px] font-black leading-none whitespace-nowrap';
+const infoPillClass = 'rounded px-1.5 py-0.5 text-[0.625rem] font-black leading-none whitespace-nowrap';
 const rowClass = 'flex flex-nowrap items-center gap-1.5 border-l-4 px-2 py-1 text-xs';
 const rowIconClass = 'flex h-6 w-6 shrink-0 items-center justify-center rounded';
 const rowNameClass = 'w-56 shrink-0 truncate text-xs font-semibold';
@@ -225,7 +225,7 @@ const AssignmentsPage = () => {
             ['Baholandi', assignmentStats.graded || `${assignmentStats.completeRate}%`, 'from-fuchsia-500 to-pink-600'],
           ].map(([label, value, color]) => (
             <div key={label} className={cn('rounded-md bg-gradient-to-br p-2 text-white shadow-sm', color as string)}>
-              <p className="text-[10px] font-black uppercase text-white/75">{label}</p>
+              <p className="text-[0.625rem] font-black uppercase text-white/75">{label}</p>
               <p className="text-lg font-black leading-tight">{value}</p>
             </div>
           ))}
@@ -526,7 +526,7 @@ const AssignmentsPage = () => {
                             {assignment.description?.substring(0, 50)}...
                           </TableCell>
                           <TableCell className="py-1.5">
-                            <span className="inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-black text-amber-700">
+                            <span className="inline-flex items-center rounded bg-amber-100 px-1.5 py-0.5 text-[0.625rem] font-black text-amber-700">
                               <CalendarDays className="mr-1 h-3 w-3" />
                               {formatDate(assignment.due_date)}
                             </span>
@@ -535,7 +535,7 @@ const AssignmentsPage = () => {
                           <TableCell className="py-1.5">
                             <span
                               className={cn(
-                                'inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-black text-white shadow-sm',
+                                'inline-flex items-center rounded px-1.5 py-0.5 text-[0.625rem] font-black text-white shadow-sm',
                                 getStatusColor(assignment.status)
                               )}
                             >
@@ -543,7 +543,7 @@ const AssignmentsPage = () => {
                             </span>
                           </TableCell>
                           <TableCell className="py-1.5">
-                            <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-black text-indigo-700">
+                            <span className="rounded bg-indigo-100 px-1.5 py-0.5 text-[0.625rem] font-black text-indigo-700">
                               {assignment.grade || '-'}
                             </span>
                           </TableCell>

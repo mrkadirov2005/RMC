@@ -129,10 +129,10 @@ export const TestTypeChart = ({ counts, selected, onSelect }: TestTypeChartProps
             />
           ))}
         </g>
-        <text x="100" y="96" textAnchor="middle" className="fill-foreground text-[26px] font-semibold tabular-nums">
+        <text x="100" y="96" textAnchor="middle" className="fill-foreground text-[1.625rem] font-semibold tabular-nums">
           {total}
         </text>
-        <text x="100" y="116" textAnchor="middle" className="fill-muted-foreground text-[11px]">
+        <text x="100" y="116" textAnchor="middle" className="fill-muted-foreground text-[0.6875rem]">
           tests
         </text>
       </svg>

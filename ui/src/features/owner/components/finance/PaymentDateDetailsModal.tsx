@@ -103,7 +103,7 @@ export const PaymentDateDetailsModal = ({ open, onOpenChange, collections }: Pro
         <div className="space-y-3 px-6 py-4">
           <div className="grid grid-cols-3 gap-2">
             <div>
-              <p className="mb-1 text-[10px] font-black uppercase text-slate-500">Yil</p>
+              <p className="mb-1 text-[0.625rem] font-black uppercase text-slate-500">Yil</p>
               <Select value={year ? String(year) : undefined} onValueChange={(value) => { setYear(Number(value)); setMonth(null); setDay(null); }}>
                 <SelectTrigger className="h-9 text-xs font-bold"><SelectValue placeholder="Yil" /></SelectTrigger>
                 <SelectContent>
@@ -114,7 +114,7 @@ export const PaymentDateDetailsModal = ({ open, onOpenChange, collections }: Pro
               </Select>
             </div>
             <div>
-              <p className="mb-1 text-[10px] font-black uppercase text-slate-500">Oy</p>
+              <p className="mb-1 text-[0.625rem] font-black uppercase text-slate-500">Oy</p>
               <Select
                 value={month ? String(month) : undefined}
                 onValueChange={(value) => { setMonth(Number(value)); setDay(null); }}
@@ -129,7 +129,7 @@ export const PaymentDateDetailsModal = ({ open, onOpenChange, collections }: Pro
               </Select>
             </div>
             <div>
-              <p className="mb-1 text-[10px] font-black uppercase text-slate-500">Kun</p>
+              <p className="mb-1 text-[0.625rem] font-black uppercase text-slate-500">Kun</p>
               <Select
                 value={day ? String(day) : undefined}
                 onValueChange={(value) => setDay(Number(value))}

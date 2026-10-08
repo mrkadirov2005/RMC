@@ -62,7 +62,7 @@ const FormSection = ({ title, detail, icon, tone, children }: FormSectionProps) 
         </div>
         <div className="min-w-0">
           <h3 className="text-sm font-bold leading-tight">{title}</h3>
-          <p className="text-[11px] leading-snug text-white/85">{detail}</p>
+          <p className="text-[0.6875rem] leading-snug text-white/85">{detail}</p>
         </div>
       </div>
       <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-3">{children}</div>
@@ -226,7 +226,7 @@ export const StudentFormFields = ({ formData, setFormData, centerOptions, classO
             </div>
             <div>
               <h3 className="text-sm font-bold leading-tight">{t('Discount')}</h3>
-              <p className="text-[11px] leading-snug text-white/85">{t('Choose serial or one-time tuition discount.')}</p>
+              <p className="text-[0.6875rem] leading-snug text-white/85">{t('Choose serial or one-time tuition discount.')}</p>
             </div>
           </div>
           <Switch

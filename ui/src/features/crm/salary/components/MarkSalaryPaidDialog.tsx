@@ -128,7 +128,7 @@ export const MarkSalaryPaidDialog = ({
               onChange={(e) => setAmount(e.target.value)}
               placeholder="e.g. 500"
             />
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-[0.6875rem] text-muted-foreground">
               {t('Pre-filled from the amount collected this month — edit to set the actual salary.')}
             </p>
           </div>

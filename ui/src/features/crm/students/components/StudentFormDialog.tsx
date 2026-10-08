@@ -75,7 +75,7 @@ export const StudentFormDialog = ({
         <form onSubmit={onSubmit} className="space-y-4 px-6 py-5">
           <div className="grid gap-3 md:grid-cols-3">
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
                 {t('Class')}
               </p>
               <div className="mt-2 flex items-center gap-2">
@@ -86,7 +86,7 @@ export const StudentFormDialog = ({
               </div>
             </div>
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
                 {t('Discount')}
               </p>
               <div className="mt-2 flex items-center gap-2">
@@ -97,7 +97,7 @@ export const StudentFormDialog = ({
               </div>
             </div>
             <div className="rounded-xl border border-slate-200/80 bg-slate-50/80 px-3 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
+              <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400">
                 {t('Status')}
               </p>
               <div className="mt-2 flex items-center gap-2">

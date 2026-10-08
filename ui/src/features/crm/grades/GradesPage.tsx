@@ -54,7 +54,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <Award className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">{t('Total Grades')}</p>
+              <p className="text-[0.625rem] font-bold uppercase text-white/70">{t('Total Grades')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.totalGrades}</p>
           </CardContent>
@@ -63,7 +63,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">{t('Average')}</p>
+              <p className="text-[0.625rem] font-bold uppercase text-white/70">{t('Average')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.averagePercentage.toFixed(1)}%</p>
           </CardContent>
@@ -72,7 +72,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">{t('Passing')}</p>
+              <p className="text-[0.625rem] font-bold uppercase text-white/70">{t('Passing')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.passingGrades}</p>
           </CardContent>
@@ -81,7 +81,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <XCircle className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">{t('Failing')}</p>
+              <p className="text-[0.625rem] font-bold uppercase text-white/70">{t('Failing')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.failingGrades}</p>
           </CardContent>
@@ -90,7 +90,7 @@ const GradesPage = () => {
           <CardContent className="p-2">
             <div className="flex items-center gap-1.5">
               <TrendingUp className="h-3.5 w-3.5 text-white/70" />
-              <p className="text-[10px] font-bold uppercase text-white/70">{t('Pass Rate')}</p>
+              <p className="text-[0.625rem] font-bold uppercase text-white/70">{t('Pass Rate')}</p>
             </div>
             <p className="text-lg font-black text-white">{g.gradeStatistics.passRate}%</p>
           </CardContent>

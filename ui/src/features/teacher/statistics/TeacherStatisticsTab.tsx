@@ -37,7 +37,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
         </div>
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <Label className="mb-1 text-[10px] uppercase text-muted-foreground">{t('From')}</Label>
+            <Label className="mb-1 text-[0.625rem] uppercase text-muted-foreground">{t('From')}</Label>
             <Input
               type="date"
               value={stats.dateRange.start}
@@ -49,7 +49,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
             />
           </div>
           <div>
-            <Label className="mb-1 text-[10px] uppercase text-muted-foreground">{t('To')}</Label>
+            <Label className="mb-1 text-[0.625rem] uppercase text-muted-foreground">{t('To')}</Label>
             <Input
               type="date"
               value={stats.dateRange.end}
@@ -94,16 +94,16 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
           <Users className="h-3.5 w-3.5" />
           {stats.isGlobalMode ? t('Browse') : t('Classes')}
           {stats.isGlobalMode && stats.scope === 'center' ? (
-            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">{t('Whole center')}</span>
+            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[0.625rem]">{t('Whole center')}</span>
           ) : stats.isGlobalMode && stats.selectedTeacher ? (
-            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">
+            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[0.625rem]">
               {stats.selectedTeacher.label}
               {stats.selectedClass ? ` · ${stats.selectedClass.label}` : ''}
             </span>
           ) : stats.selectedClass ? (
-            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">{stats.selectedClass.label}</span>
+            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[0.625rem]">{stats.selectedClass.label}</span>
           ) : stats.scope === 'center' ? (
-            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[10px]">{t('All my classes')}</span>
+            <span className="ml-1 rounded-full bg-white/20 px-1.5 text-[0.625rem]">{t('All my classes')}</span>
           ) : null}
         </Button>
 
@@ -196,7 +196,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                       </>
                     )}
                 </span>
-                <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                <span className="rounded-full bg-slate-100 px-2 py-1 text-[0.625rem] text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                   {t('{count} lesson(s)', { count: stats.lessonCount })}
                 </span>
               </div>
@@ -239,7 +239,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                 </button>
 
                 <div className="my-1 border-t border-slate-200 dark:border-white/10" />
-                <div className="px-1 pb-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400">{t('By teacher')}</div>
+                <div className="px-1 pb-0.5 text-[0.625rem] font-bold uppercase tracking-wide text-slate-400">{t('By teacher')}</div>
 
                 {stats.teacherOptions.length === 0 ? (
                   <div className="py-6 text-center text-xs text-muted-foreground">{t('No teachers with classes found.')}</div>
@@ -256,7 +256,7 @@ const TeacherStatisticsTab = ({ teacherId, classes = [], students = [], teachers
                         <span className="truncate">{teacher.label}</span>
                       </span>
                       <span className="flex items-center gap-1 shrink-0 text-slate-400">
-                        <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+                        <span className="rounded-full bg-slate-200 px-1.5 py-0.5 text-[0.625rem] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
                           {teacher.classCount}
                         </span>
                         <ChevronRight className="h-3.5 w-3.5" />

@@ -103,22 +103,22 @@ export const FinanceStatsView = ({ selectedMonth, paymentStats, totalCollected, 
           <p className="mt-1 text-xs text-slate-500">To'lovi yo'q yoki oylik summasi hali to'liq qoplanmagan o'quvchilar.</p>
         </div>
         <div className="rounded-lg border border-slate-200 p-3 text-center">
-          <p className="text-[10px] font-bold uppercase text-slate-500">Jami o'quvchilar</p>
+          <p className="text-[0.625rem] font-bold uppercase text-slate-500">Jami o'quvchilar</p>
           <p className="text-lg font-black text-slate-900">{paymentStats.paidStudents + paymentStats.unpaidStudents}</p>
         </div>
       </div>
     </div>
     <div className="mx-auto mt-4 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-3">
       <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-center dark:border-emerald-900/40 dark:bg-emerald-950/20">
-        <p className="text-[10px] font-bold uppercase text-emerald-700">To'langan summa</p>
+        <p className="text-[0.625rem] font-bold uppercase text-emerald-700">To'langan summa</p>
         <p className="mt-1 text-lg font-black text-emerald-800">{formatMoney(totalCollected)}</p>
       </div>
       <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-center dark:border-amber-900/40 dark:bg-amber-950/20">
-        <p className="text-[10px] font-bold uppercase text-amber-700">Qolgan summa</p>
+        <p className="text-[0.625rem] font-bold uppercase text-amber-700">Qolgan summa</p>
         <p className="mt-1 text-lg font-black text-amber-800">{formatMoney(Math.max(expectedMonthlyTotal - totalCollected, 0))}</p>
       </div>
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center dark:border-white/10 dark:bg-white/[0.04]">
-        <p className="text-[10px] font-bold uppercase text-slate-600">Umumiy summa</p>
+        <p className="text-[0.625rem] font-bold uppercase text-slate-600">Umumiy summa</p>
         <p className="mt-1 text-lg font-black text-slate-900">{formatMoney(expectedMonthlyTotal)}</p>
       </div>
     </div>
@@ -190,7 +190,7 @@ export const FinanceChart = ({
             ["Kutilgan to'lov", formatMoney(statsExpected), 'bg-slate-100 text-slate-700'],
           ].map(([label, value, tone]) => (
             <div key={label} className={cn('rounded px-3 py-2', tone as string)}>
-              <p className="text-[10px] font-black uppercase opacity-70">{label}</p>
+              <p className="text-[0.625rem] font-black uppercase opacity-70">{label}</p>
               <p className="text-lg font-black">{value}</p>
             </div>
           ))}
@@ -245,7 +245,7 @@ const FinanceLineChart = ({ monthlyTrend, maxTrendCollected, linePoints }: { mon
     <div className="grid grid-cols-2 gap-1.5 md:grid-cols-4">
       {monthlyTrend.slice(-4).map((item) => (
         <div key={item.month} className="rounded bg-blue-50 px-2 py-1.5 text-blue-800">
-          <p className="text-[10px] font-black">{item.month}</p>
+          <p className="text-[0.625rem] font-black">{item.month}</p>
           <p className="text-xs font-black">{formatMoney(item.collected)}</p>
         </div>
       ))}

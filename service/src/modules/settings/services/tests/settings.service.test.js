@@ -24,6 +24,15 @@ describe('settings service', () => {
     expect(saved.activity[0].stellar).toBe(true);
     expect(saved.activity[1].stellar).toBeUndefined();
   });
+  test('keeps a valid text size per account type and defaults the rest to normal', async () => {
+    expect(service.normalizeTextSizes({ owner: 'large', admin: 'xlarge', teacher: 'huge' })).toEqual({
+      owner: 'large', admin: 'xlarge', teacher: 'normal', student: 'normal',
+    });
+    repository.getSetting.mockResolvedValue(null);
+    await expect(service.getTextSizes(2)).resolves.toEqual({ owner: 'normal', admin: 'normal', teacher: 'normal', student: 'normal' });
+    await service.saveTextSizes({ teacher: 'large' }, 2);
+    expect(repository.saveSetting).toHaveBeenCalledWith('text_size', expect.objectContaining({ teacher: 'large', student: 'normal' }), 2);
+  });
   test('loads defaults when no center setting exists and saves normalized values', async () => {
     repository.getSetting.mockResolvedValue(null);
     const loaded = await service.getLessonScoring(2);

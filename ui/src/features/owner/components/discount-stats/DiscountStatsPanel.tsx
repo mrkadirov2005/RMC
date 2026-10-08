@@ -219,9 +219,9 @@ export const DiscountStatsPanel = ({ collections }: Props) => {
                 data={pieRows.map((row) => ({ label: row.label, value: row.value, color: row.color }))}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[10px] font-black uppercase text-slate-400">{t('Total')}</span>
+                <span className="text-[0.625rem] font-black uppercase text-slate-400">{t('Total')}</span>
                 <span className="text-3xl font-black text-slate-950 dark:text-white">{stats.records.length.toLocaleString()}</span>
-                <span className="text-[11px] font-bold text-slate-500">{formatMoney(stats.totalDiscount)}</span>
+                <span className="text-[0.6875rem] font-bold text-slate-500">{formatMoney(stats.totalDiscount)}</span>
               </div>
             </button>
 
@@ -352,7 +352,7 @@ const DiscountStudentsDialog = ({
 
 const ModalStat = ({ label, value }: { label: string; value: string }) => (
   <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 dark:border-white/10 dark:bg-white/[0.04]">
-    <p className="text-[10px] font-black uppercase text-slate-500">{label}</p>
+    <p className="text-[0.625rem] font-black uppercase text-slate-500">{label}</p>
     <p className="text-sm font-black text-slate-950 dark:text-white">{value}</p>
   </div>
 );

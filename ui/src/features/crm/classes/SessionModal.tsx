@@ -302,7 +302,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
               type="button"
               size="sm"
               variant="outline"
-              className="text-[11px]"
+              className="text-[0.6875rem]"
               disabled={targetCount === 0}
               onClick={() => onApply(option)}
             >
@@ -465,7 +465,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                                 size="sm"
                                 variant={status === s ? 'default' : 'outline'}
                                 className={cn(
-                                  'text-[11px] h-8 px-2 min-w-[92px]',
+                                  'text-[0.6875rem] h-8 px-2 min-w-[92px]',
                                   status === s && (s === 'On time' ? 'bg-green-600' : s === 'Late' ? 'bg-yellow-600' : 'bg-red-600')
                                 )}
                                 onClick={() => handleAttendanceToggle(sid, s)}
@@ -534,7 +534,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                                 size="sm"
                                 disabled={!enabled}
                                 variant={hStatus === s ? 'default' : 'outline'}
-                                className={cn('text-[11px] h-8 px-2 min-w-[108px]', hStatus === s && 'bg-blue-600')}
+                                className={cn('text-[0.6875rem] h-8 px-2 min-w-[108px]', hStatus === s && 'bg-blue-600')}
                                 onClick={() => handleHomeworkToggle(sid, s)}
                               >
                                 {s} ({HOMETASK_POINTS[s]})
@@ -609,7 +609,7 @@ const SessionModal: React.FC<SessionModalProps> = ({
                                 size="sm"
                                 disabled={!enabled}
                                 variant={aStatus === s ? 'default' : 'outline'}
-                                className={cn('text-[11px] h-8 px-2 min-w-[108px]', aStatus === s && 'bg-purple-600')}
+                                className={cn('text-[0.6875rem] h-8 px-2 min-w-[108px]', aStatus === s && 'bg-purple-600')}
                                 onClick={() => handleActivityToggle(sid, s)}
                               >
                                 {s} ({ACTIVITY_POINTS[s]})

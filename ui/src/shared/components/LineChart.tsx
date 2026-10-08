@@ -71,10 +71,10 @@ export const LineChart = memo(({ data, height = 200, color = '#2563eb', showEmpt
         {points.map((point, index) => (
           <g key={`${point.label}-${index}`}>
             <circle cx={point.x} cy={point.y} r={4} fill={color} stroke="white" strokeWidth={1.5} />
-            <text x={point.x} y={Math.max(point.y - 10, 12)} textAnchor="middle" className="fill-foreground text-[10px] font-black">
+            <text x={point.x} y={Math.max(point.y - 10, 12)} textAnchor="middle" className="fill-foreground text-[0.625rem] font-black">
               {point.value}
             </text>
-            <text x={point.x} y={height - 6} textAnchor="middle" className="fill-muted-foreground text-[9px] font-semibold">
+            <text x={point.x} y={height - 6} textAnchor="middle" className="fill-muted-foreground text-[0.5625rem] font-semibold">
               {point.label}
             </text>
           </g>

@@ -101,23 +101,23 @@ const TeacherTasksTab = ({ teacherId }: TeacherTasksTabProps) => {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-5">
         <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">{t('Done')}</p>
+          <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Done')}</p>
           <p className="text-base font-black text-emerald-600">{stats?.done ?? 0}</p>
         </div>
         <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">{t('Rejected')}</p>
+          <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Rejected')}</p>
           <p className="text-base font-black text-rose-600">{stats?.rejected ?? 0}</p>
         </div>
         <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">{t('Accepted')}</p>
+          <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Accepted')}</p>
           <p className="text-base font-black text-cyan-600">{stats?.accepted ?? 0}</p>
         </div>
         <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">{t('Pending')}</p>
+          <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Pending')}</p>
           <p className="text-base font-black text-amber-600">{stats?.pending ?? 0}</p>
         </div>
         <div className="flex items-center justify-between rounded-md border bg-card px-2.5 py-2 shadow-sm">
-          <p className="text-[11px] font-semibold text-muted-foreground">{t('Efficiency')}</p>
+          <p className="text-[0.6875rem] font-semibold text-muted-foreground">{t('Efficiency')}</p>
           <p className="text-base font-black text-primary">{(stats?.efficiency ?? 0).toFixed(1)}%</p>
         </div>
       </div>

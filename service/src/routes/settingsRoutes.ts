@@ -11,6 +11,8 @@ router.get('/owner-palette', requireAuth, settingsController.getOwnerPalette);
 router.put('/owner-palette', requireAuth, requireRole('superuser'), validateBody(SaveOwnerPaletteDto), settingsController.saveOwnerPalette);
 router.get('/visual-overrides', requireAuth, settingsController.getVisualOverrides);
 router.put('/visual-overrides', requireAuth, requireRole('superuser'), validateBody(SaveVisualOverridesDto), settingsController.saveVisualOverrides);
+router.get('/text-size', requireAuth, settingsController.getTextSizes);
+router.put('/text-size', requireAuth, requireRole('superuser'), settingsController.saveTextSizes);
 router.get('/sidebar-order', requireAuth, settingsController.getSidebarOrder);
 router.put('/sidebar-order', requireAuth, settingsController.saveSidebarOrder);
 

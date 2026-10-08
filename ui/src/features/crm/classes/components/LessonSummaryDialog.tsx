@@ -16,7 +16,7 @@ const statusStyles: Record<LessonSummaryStatus, { label: string; badge: string; 
 
 const StatTile = ({ icon: Icon, label, value, hint }: { icon: typeof Users; label: string; value: string; hint?: string }) => (
   <div className="rounded-lg border bg-muted/30 p-3">
-    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <div className="flex items-center gap-1.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
       <Icon className="h-3.5 w-3.5" />
       {label}
     </div>

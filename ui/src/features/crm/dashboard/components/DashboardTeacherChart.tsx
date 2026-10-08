@@ -69,7 +69,7 @@ export const DashboardTeacherChart = ({ collections }: Props) => {
                   className={`absolute inset-y-0 left-0 rounded-md bg-gradient-to-r ${barColors[i % barColors.length]} transition-all duration-700`}
                   style={{ width: `${pct}%` }}
                 />
-                <span className="absolute inset-y-0 right-2 flex items-center text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                <span className="absolute inset-y-0 right-2 flex items-center text-[0.6875rem] font-bold text-slate-600 dark:text-slate-300">
                   {teacher.count}
                 </span>
               </div>

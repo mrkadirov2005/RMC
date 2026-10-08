@@ -508,7 +508,7 @@ const ClassPanel = ({ rows, intake }: { rows: RetentionReport['by_class']; intak
             </div>
             <div className="text-right">
               <p className="text-lg font-black text-rose-600">{row.left_count}</p>
-              <p className="text-[11px] text-slate-500">{formatDate(row.latest_deleted_at)}</p>
+              <p className="text-[0.6875rem] text-slate-500">{formatDate(row.latest_deleted_at)}</p>
             </div>
           </div>
         ))}

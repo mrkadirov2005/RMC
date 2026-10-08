@@ -112,15 +112,15 @@ export const PaymentTeacherDetail = ({ hook }: PaymentTeacherDetailProps) => {
                           </div>
                           <div className="flex min-w-0 items-center gap-1.5">
                             <h3 className="w-44 truncate text-xs font-semibold">{cls.class_name}</h3>
-                            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[10px] font-bold text-sky-700">{t('Level')} {cls.level}</span>
+                            <span className="rounded bg-sky-100 px-1.5 py-0.5 text-[0.625rem] font-bold text-sky-700">{t('Level')} {cls.level}</span>
                           </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-1.5 text-right">
-                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-700">
+                          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[0.625rem] font-bold text-amber-700">
                             <CreditCard className="mr-1 inline h-3 w-3" />
                             {paymentCount}
                           </span>
-                          <span className="rounded bg-cyan-100 px-1.5 py-0.5 text-[10px] font-black text-cyan-700">
+                          <span className="rounded bg-cyan-100 px-1.5 py-0.5 text-[0.625rem] font-black text-cyan-700">
                             {formatMoney(totalAmount)}
                           </span>
                         </div>

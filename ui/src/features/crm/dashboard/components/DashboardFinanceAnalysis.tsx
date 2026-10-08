@@ -119,7 +119,7 @@ export const DashboardFinanceAnalysis = ({
               <p className={`mt-1 text-xl font-bold ${metric.valueClass}`}>
                 {formatMoney(Number(finance[metric.valueKey]) || 0)}
               </p>
-              <p className="mt-1 text-[11px] font-medium text-slate-500">{t('View details')}</p>
+              <p className="mt-1 text-[0.6875rem] font-medium text-slate-500">{t('View details')}</p>
             </button>
           ))}
         </div>
@@ -158,7 +158,7 @@ export const DashboardFinanceAnalysis = ({
                     </div>
                     <div className="text-center">
                       <p className="text-xs font-semibold">{bucket.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{formatMoney(bucket.paid)}</p>
+                      <p className="text-[0.6875rem] text-muted-foreground">{formatMoney(bucket.paid)}</p>
                     </div>
                   </div>
                 );

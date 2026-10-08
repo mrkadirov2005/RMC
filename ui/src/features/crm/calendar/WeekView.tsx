@@ -278,19 +278,19 @@ export const WeekView: React.FC<WeekViewProps> = ({
                         className="grid"
                         style={{ gridTemplateColumns: template }}
                       >
-                        <div className="border-b border-r border-slate-500 bg-yellow-300 px-1 py-1 text-center text-[11px] font-black leading-tight text-slate-950">
+                        <div className="border-b border-r border-slate-500 bg-yellow-300 px-1 py-1 text-center text-[0.6875rem] font-black leading-tight text-slate-950">
                           <div>TEMURBEK</div>
                           <div>SCHOOL</div>
                         </div>
                         {bandRooms.map((room) => (
-                          <div key={`${group.label}-${room}-day`} className="border-b border-r border-slate-500 bg-yellow-300 px-1.5 py-1 text-center text-[12px] font-black text-slate-950">
+                          <div key={`${group.label}-${room}-day`} className="border-b border-r border-slate-500 bg-yellow-300 px-1.5 py-1 text-center text-[0.75rem] font-black text-slate-950">
                             {group.label}
                           </div>
                         ))}
 
-                        <div className="border-b border-r border-slate-500 bg-yellow-300 px-1 py-1 text-center text-[11px] font-black text-slate-950" />
+                        <div className="border-b border-r border-slate-500 bg-yellow-300 px-1 py-1 text-center text-[0.6875rem] font-black text-slate-950" />
                         {bandRooms.map((room) => (
-                          <div key={`${group.label}-${room}-room`} className="border-b border-r border-slate-500 bg-yellow-300 px-1.5 py-1 text-center text-[12px] font-black text-slate-950">
+                          <div key={`${group.label}-${room}-room`} className="border-b border-r border-slate-500 bg-yellow-300 px-1.5 py-1 text-center text-[0.75rem] font-black text-slate-950">
                             {room}
                           </div>
                         ))}
@@ -299,7 +299,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                           const isBreak = row.start >= parseTimeToMinutes('13:00') && row.start < parseTimeToMinutes('13:30');
                           return (
                             <Fragment key={`${group.label}-${bandIndex}-${row.label}`}>
-                              <div className={cn('border-b border-r border-slate-500 px-1 py-0.5 text-center text-[11px] font-black text-slate-950', isBreak ? 'bg-orange-500' : 'bg-emerald-300')}>
+                              <div className={cn('border-b border-r border-slate-500 px-1 py-0.5 text-center text-[0.6875rem] font-black text-slate-950', isBreak ? 'bg-orange-500' : 'bg-emerald-300')}>
                                 {row.label}
                               </div>
                               {bandRooms.map((room) => {
@@ -323,7 +323,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                       if (item) openSlot(day, row.label, cellSessions, item, cls);
                                     }}
                                     className={cn(
-                                      'min-h-7 border-b border-r border-slate-500 px-1 py-0.5 text-center text-[11px] font-black leading-tight transition-colors',
+                                      'min-h-7 border-b border-r border-slate-500 px-1 py-0.5 text-center text-[0.6875rem] font-black leading-tight transition-colors',
                                       isBreak && !item && 'bg-orange-500',
                                       !isBreak && !item && 'bg-white text-slate-950 hover:bg-slate-50',
                                       item && color,
@@ -334,7 +334,7 @@ export const WeekView: React.FC<WeekViewProps> = ({
                                     {item ? (
                                       <span className="flex min-w-0 flex-col items-center gap-0.5">
                                         <span className="line-clamp-1 max-w-full">{className}</span>
-                                        <span className="line-clamp-1 max-w-full text-[9px] font-extrabold opacity-90">
+                                        <span className="line-clamp-1 max-w-full text-[0.5625rem] font-extrabold opacity-90">
                                           {teacherName}
                                         </span>
                                       </span>

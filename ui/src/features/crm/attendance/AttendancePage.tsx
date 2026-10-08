@@ -74,7 +74,7 @@ const AttendancePage = () => {
           <Card key={label} className={`border-0 bg-gradient-to-br ${tone} text-white shadow-sm`}>
             <CardContent className="flex items-center justify-between p-3">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wide text-white/75">{label}</p>
+                <p className="text-[0.625rem] font-bold uppercase tracking-wide text-white/75">{label}</p>
                 <p className="text-xl font-black">{value}</p>
               </div>
               <Icon className="h-5 w-5 text-white/70" />

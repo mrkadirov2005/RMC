@@ -57,6 +57,23 @@ const saveLessonScoring = async (settings: any, centerId?: number) => {
   return settingsRepository.saveSetting(LESSON_SCORING_KEY, normalized, centerId);
 };
 
+// Text size per account type, chosen by the owner or an admin in Settings and applied when that
+// person signs in. Sizes scale the whole interface: normal 100%, large 115%, extra large 130%.
+const TEXT_SIZE_KEY = 'text_size';
+const TEXT_SIZE_ROLES = ['owner', 'admin', 'teacher', 'student'] as const;
+const TEXT_SIZES = ['normal', 'large', 'xlarge'];
+
+const normalizeTextSizes = (value: any) =>
+  Object.fromEntries(TEXT_SIZE_ROLES.map((role) => [role, TEXT_SIZES.includes(value?.[role]) ? value[role] : 'normal']));
+
+const getTextSizes = async (centerId?: number) => normalizeTextSizes(await settingsRepository.getSetting(TEXT_SIZE_KEY, centerId));
+
+const saveTextSizes = async (value: unknown, centerId?: number) => {
+  const sizes = normalizeTextSizes(value);
+  await settingsRepository.saveSetting(TEXT_SIZE_KEY, sizes, centerId);
+  return sizes;
+};
+
 const validHex = (value: unknown, fallback: string) => /^#[0-9a-f]{6}$/i.test(String(value)) ? String(value).toLowerCase() : fallback;
 const normalizeOwnerPalette = (value: any) => {
   const preset = OWNER_PALETTES[String(value?.id || value)] || OWNER_PALETTES.ocean;
@@ -109,6 +126,9 @@ const saveSidebarOrder = async (userType: string, userId: number, order: unknown
   return settingsRepository.saveSetting(sidebarOrderKey(userType, userId), normalized);
 };
 
-module.exports = { getLessonScoring, saveLessonScoring, normalizeLessonScoring, getOwnerPalette, saveOwnerPalette, normalizeOwnerPalette, getVisualOverrides, saveVisualOverrides, normalizeVisualOverrides, getSidebarOrder, saveSidebarOrder };
+module.exports = {
+  getTextSizes,
+  saveTextSizes,
+  normalizeTextSizes, getLessonScoring, saveLessonScoring, normalizeLessonScoring, getOwnerPalette, saveOwnerPalette, normalizeOwnerPalette, getVisualOverrides, saveVisualOverrides, normalizeVisualOverrides, getSidebarOrder, saveSidebarOrder };
 
 export {};

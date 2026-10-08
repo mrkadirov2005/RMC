@@ -224,14 +224,14 @@ const StudentsPage = () => {
               <Users className="h-3.5 w-3.5" />
             </span>
             {activeTab === 'teachers' && openedTeacherSummary ? (
-              <div className="flex min-w-0 items-center gap-1 text-[11px] font-semibold text-slate-700 dark:text-slate-200">
+              <div className="flex min-w-0 items-center gap-1 text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-200">
                 <span className="max-w-[120px] truncate">{openedTeacherSummary.name}</span>
                 <ChevronRight className="h-3 w-3 shrink-0 text-slate-400" />
                 <span className="shrink-0">{openedTeacherSummary.students.toLocaleString()} {t('Students').toLowerCase()}</span>
                 {openedTeacherSummary.group && <><ChevronRight className="h-3 w-3 shrink-0 text-slate-400" /><span className="max-w-[120px] truncate">{openedTeacherSummary.group}</span></>}
               </div>
             ) : <div className="min-w-0 leading-none">
-              <p className="max-w-[150px] truncate text-[9px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <p className="max-w-[150px] truncate text-[0.5625rem] font-semibold uppercase tracking-wide text-muted-foreground">
                 {/* {t('Total Students')} */}
               </p>
               <p className="mt-1 text-sm font-bold text-slate-950 dark:text-white">

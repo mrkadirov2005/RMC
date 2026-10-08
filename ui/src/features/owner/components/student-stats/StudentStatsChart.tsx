@@ -66,7 +66,7 @@ export const StudentStatsChart = ({ mode, rows, total, modalListTitle }: Props) 
                 }))}
               />
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                <span className="text-[11px] font-black uppercase text-slate-400">{modalListTitle}</span>
+                <span className="text-[0.6875rem] font-black uppercase text-slate-400">{modalListTitle}</span>
                 <span className="text-3xl font-black text-slate-950 dark:text-white">{total.toLocaleString()}</span>
               </div>
             </div>
@@ -196,8 +196,8 @@ const ColorNotes = ({ rows, total }: { rows: StudentStatRow[]; total: number }) 
         className="flex min-w-0 items-center gap-1.5 rounded border border-slate-100 bg-white px-2 py-1 dark:border-white/10 dark:bg-white/[0.04]"
       >
         <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: row.color || '#2563eb' }} />
-        <span className="truncate text-[11px] font-black text-slate-700 dark:text-white/80">{row.label}</span>
-        <span className="ml-auto shrink-0 text-[10px] font-bold text-slate-500">{percentOf(row.count, total)}%</span>
+        <span className="truncate text-[0.6875rem] font-black text-slate-700 dark:text-white/80">{row.label}</span>
+        <span className="ml-auto shrink-0 text-[0.625rem] font-bold text-slate-500">{percentOf(row.count, total)}%</span>
       </div>
     ))}
   </div>
@@ -212,7 +212,7 @@ const StatLegend = ({ rows, total, compact = false }: { rows: StudentStatRow[]; 
           <p className="truncate text-xs font-black text-slate-800 dark:text-white/85">{row.label}</p>
         </div>
         <p className="mt-1 text-lg font-black text-slate-950 dark:text-white">{row.count.toLocaleString()}</p>
-        <p className="text-[10px] font-bold text-slate-500">{percentOf(row.count, total)}%</p>
+        <p className="text-[0.625rem] font-bold text-slate-500">{percentOf(row.count, total)}%</p>
       </div>
     ))}
   </div>

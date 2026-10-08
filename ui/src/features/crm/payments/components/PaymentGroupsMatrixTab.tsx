@@ -297,7 +297,7 @@ export const PaymentGroupsMatrixTab = () => {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate font-bold leading-tight">{group.class_name}</span>
-                        <span className="block truncate text-[11px] font-semibold leading-tight text-muted-foreground">
+                        <span className="block truncate text-[0.6875rem] font-semibold leading-tight text-muted-foreground">
                           {getTeacherName(group.teacher_id)}
                         </span>
                       </span>
@@ -323,7 +323,7 @@ export const PaymentGroupsMatrixTab = () => {
             </div>
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
-                <label htmlFor="group-payment-month" className="block text-[11px] font-semibold text-muted-foreground">
+                <label htmlFor="group-payment-month" className="block text-[0.6875rem] font-semibold text-muted-foreground">
                   {t('Select month')}
                 </label>
                 <Input
@@ -334,7 +334,7 @@ export const PaymentGroupsMatrixTab = () => {
                   className="h-8 w-[170px] text-xs"
                 />
               </div>
-              <div className="flex flex-wrap items-center gap-2 pb-1 text-[11px] font-semibold text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-2 pb-1 text-[0.6875rem] font-semibold text-muted-foreground">
                 <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-emerald-500" /> {t('Fully done')}</span>
                 <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-orange-400" /> {t('Partly done')}</span>
                 <span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full bg-rose-500" /> {t('None')}</span>
@@ -370,10 +370,10 @@ export const PaymentGroupsMatrixTab = () => {
                     <TableHead className="sticky left-44 z-20 w-24 bg-slate-50 text-xs dark:bg-muted/40">{t('Status')}</TableHead>
                     {months.map((month) => (
                       <TableHead key={month.key} className="w-12 px-1 text-center">
-                        <div className="text-[11px] font-black text-slate-600 dark:text-muted-foreground">
+                        <div className="text-[0.6875rem] font-black text-slate-600 dark:text-muted-foreground">
                           {monthPercentages[month.key]}%
                         </div>
-                        <div className="mt-0.5 text-[10px] font-semibold text-muted-foreground">
+                        <div className="mt-0.5 text-[0.625rem] font-semibold text-muted-foreground">
                           {month.label}
                         </div>
                       </TableHead>
@@ -392,7 +392,7 @@ export const PaymentGroupsMatrixTab = () => {
                         <TableCell className="sticky left-44 z-10 bg-white py-1.5 dark:bg-card">
                           <span
                             className={cn(
-                              'inline-flex min-w-16 justify-center rounded-full px-2 py-0.5 text-[11px] font-black shadow-sm',
+                              'inline-flex min-w-16 justify-center rounded-full px-2 py-0.5 text-[0.6875rem] font-black shadow-sm',
                               active ? 'bg-emerald-500 text-black shadow-emerald-200' : 'bg-orange-400 text-red-800 shadow-orange-200'
                             )}
                           >

@@ -37,9 +37,9 @@ export const DashboardStatCards = ({ cards, onCardClick }: DashboardStatCardsPro
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="min-h-7 text-[11px] font-semibold uppercase leading-4 text-slate-500">{t(card.label)}</p>
+                <p className="min-h-7 text-[0.6875rem] font-semibold uppercase leading-4 text-slate-500">{t(card.label)}</p>
                 <p className="mt-1 text-2xl font-bold text-slate-950 dark:text-card-foreground">{card.value}</p>
-                <p className="mt-1 min-h-6 text-[11px] leading-4 text-slate-500">
+                <p className="mt-1 min-h-6 text-[0.6875rem] leading-4 text-slate-500">
                   {card.subValue ? t(card.subValue) : clickable ? t('Open details') : ''}
                 </p>
               </div>

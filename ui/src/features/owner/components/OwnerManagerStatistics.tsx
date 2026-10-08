@@ -410,7 +410,7 @@ export const OwnerManagerStatistics = ({ summary, collections, loading }: Props)
                                 style={{ height: `${height}%` }}
                               />
                             </div>
-                            <span className="text-[11px] text-slate-500 dark:text-white/45">{row.label}</span>
+                            <span className="text-[0.6875rem] text-slate-500 dark:text-white/45">{row.label}</span>
                           </div>
                         );
                       })}

@@ -70,6 +70,9 @@ export const ADMIN_PAGE_ACCESS: readonly AdminPageAccess[] = [
   // An admin only ever sees and edits their own branch here; creating or deleting branches
   // stays owner-only on the server.
   { label: 'Centers', path: '/centers', permission: PERMISSION_CODES.CRUD_CENTER },
+  // Opened from the gear icon in the header, not the sidebar: text size per account type, lesson
+  // scoring, calendar and list colours.
+  { label: 'Settings', path: '/settings', permission: PERMISSION_CODES.MANAGE_USERS },
 ];
 
 const pageWithChildren = (parentPermission: string) =>

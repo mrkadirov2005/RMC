@@ -493,7 +493,7 @@ const Sidebar = memo(() => {
                         />
                       </span>
                       {isExpanded && <span className="flex-1 text-left">{t(item.label)}</span>}
-                      {isExpanded && <span className="text-[10px] font-semibold tabular-nums text-muted-foreground">{itemIndex + 1}</span>}
+                      {isExpanded && <span className="text-[0.625rem] font-semibold tabular-nums text-muted-foreground">{itemIndex + 1}</span>}
                       {isExpanded && <GripVertical className="h-3.5 w-3.5 cursor-grab text-muted-foreground active:cursor-grabbing" />}
                       {isExpanded && item.children?.length ? (
                         <ChevronDown className={cn('h-4 w-4 transition-transform', isGroupExpanded && 'rotate-180')} />

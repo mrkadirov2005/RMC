@@ -50,7 +50,7 @@ export const BarChart = memo(({ data, height = 180, barSize = 28, showEmptyState
               />
               <style>{`@keyframes bar-grow-${index} { from { height: 0; } to { height: ${barHeight}px; } }`}</style>
             </div>
-            <span className="max-w-[64px] truncate text-[10px] font-semibold text-muted-foreground" title={bar.label}>
+            <span className="max-w-[64px] truncate text-[0.625rem] font-semibold text-muted-foreground" title={bar.label}>
               {bar.label}
             </span>
           </div>

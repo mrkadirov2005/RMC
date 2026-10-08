@@ -331,7 +331,7 @@ export const ClassesMainView = ({
                           size="sm"
                           variant="outline"
                           onClick={() => toggleTeacherExpanded(row.id)}
-                          className="h-7 rounded-md border-slate-300 bg-transparent px-2 text-[11px] font-semibold text-slate-700 hover:bg-transparent hover:text-sky-700 dark:text-slate-200"
+                          className="h-7 rounded-md border-slate-300 bg-transparent px-2 text-[0.6875rem] font-semibold text-slate-700 hover:bg-transparent hover:text-sky-700 dark:text-slate-200"
                         >
                           <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isTeacherExpanded && 'rotate-180')} />
                           {isTeacherExpanded ? t('Back') : t('Open')}
@@ -359,22 +359,22 @@ export const ClassesMainView = ({
                                       onClick={() => toggleClassExpanded(classId)}
                                       className="min-w-0 text-left"
                                     >
-                                      <span className="mr-2 inline-flex h-5 min-w-5 items-center justify-center px-1.5 text-[10px] font-bold text-slate-500">
+                                      <span className="mr-2 inline-flex h-5 min-w-5 items-center justify-center px-1.5 text-[0.625rem] font-bold text-slate-500">
                                         {classIndex + 1}
                                       </span>
                                       <span className="inline-flex flex-col align-middle">
                                         <span className="text-xs font-bold text-slate-950 hover:text-blue-700 dark:text-card-foreground">{cls.class_name}</span>
-                                        <span className="owner-secondary-tag rounded px-1.5 py-0.5 text-[10px] font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</span>
+                                        <span className="owner-secondary-tag rounded px-1.5 py-0.5 text-[0.625rem] font-medium text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</span>
                                       </span>
                                     </button>
-                                    <span className="px-2 py-1 text-center text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || t('No room')}</span>
+                                    <span className="px-2 py-1 text-center text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || t('No room')}</span>
                                     {renderClassActions(cls)}
                                     <Button
                                       type="button"
                                       size="sm"
                                       variant="outline"
                                       onClick={() => toggleClassExpanded(classId)}
-                                      className="h-7 rounded-md border-slate-300 bg-transparent px-2 text-[11px] font-semibold text-slate-700 hover:bg-transparent hover:text-sky-700 dark:text-slate-200"
+                                      className="h-7 rounded-md border-slate-300 bg-transparent px-2 text-[0.6875rem] font-semibold text-slate-700 hover:bg-transparent hover:text-sky-700 dark:text-slate-200"
                                     >
                                       <ChevronDown className={cn('mr-1 h-3.5 w-3.5 transition-transform', isClassExpanded && 'rotate-180')} />
                                       {studentCount}
@@ -402,7 +402,7 @@ export const ClassesMainView = ({
                                                 <TableRow key={student.student_id || student.id} className="hover:bg-sky-50/60 dark:hover:bg-muted/50">
                                                   <TableCell className="px-2 py-2">
                                                     <div className="flex min-w-0 items-center gap-2">
-                                                      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[10px] font-bold tabular-nums text-slate-500">
+                                                      <span className="flex h-6 w-6 shrink-0 items-center justify-center text-[0.625rem] font-bold tabular-nums text-slate-500">
                                                         {studentIndex + 1}
                                                       </span>
                                                       <span className="truncate font-semibold text-slate-950 dark:text-card-foreground">
@@ -498,11 +498,11 @@ export const ClassesMainView = ({
                   </TableCell>
                   <TableCell className="py-2 text-xs font-semibold text-teal-700 dark:text-teal-300">{getClassSubjectLabel(cls)}</TableCell>
                   <TableCell className="py-2">
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getTeacherName(cls.teacher_id)}</span>
+                    <span className="text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-200">{getTeacherName(cls.teacher_id)}</span>
                   </TableCell>
                   <TableCell className="max-w-[180px] py-2 text-xs text-muted-foreground">{formatSchedule(cls)}</TableCell>
                   <TableCell className="py-2">
-                    <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || '-'}</span>
+                    <span className="text-[0.6875rem] font-semibold text-slate-700 dark:text-slate-200">{getClassRoomLabel(cls) || '-'}</span>
                   </TableCell>
                   <TableCell className="text-right">
                     {renderClassActions(cls)}
